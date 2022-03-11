@@ -16,9 +16,14 @@ package com.liferay.portal.servlet.filters.aggregate;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+
+import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,7 +34,6 @@ import org.junit.runner.RunWith;
 
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -38,7 +42,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 /**
  * @author Cleydyr de Albuquerque
  */
-@PrepareForTest({PortalUtil.class, ServiceProxyFactory.class})
+@PrepareForTest(ServiceProxyFactory.class)
 @RunWith(PowerMockRunner.class)
 public class AggregateFilterTest extends PowerMockito {
 
@@ -49,9 +53,17 @@ public class AggregateFilterTest extends PowerMockito {
 
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
+		ReflectionTestUtil.setFieldValue(
+			PortalUtil.class, "_portal",
+			ProxyUtil.newProxyInstance(
+				Portal.class.getClassLoader(), new Class<?>[] {Portal.class},
+				(proxy, method, args) -> {
+					if (Objects.equals(method.getName(), "getPathModule")) {
+						return "";
+					}
 
-		_setUpPortalUtil();
+					return null;
+				}));
 		_setUpServiceProxyFactory();
 	}
 
@@ -115,16 +127,6 @@ public class AggregateFilterTest extends PowerMockito {
 		);
 
 		return servletPaths;
-	}
-
-	private void _setUpPortalUtil() {
-		mockStatic(PortalUtil.class);
-
-		PowerMockito.when(
-			PortalUtil.getPathModule()
-		).thenReturn(
-			StringPool.BLANK
-		);
 	}
 
 	private void _setUpServiceProxyFactory() {
