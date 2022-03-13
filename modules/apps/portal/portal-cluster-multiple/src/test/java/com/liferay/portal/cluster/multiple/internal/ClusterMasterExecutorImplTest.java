@@ -38,7 +38,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
-import com.liferay.portal.test.rule.AdviseWith;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.reflect.Field;
@@ -55,10 +54,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
-
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -404,8 +399,6 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 				isMasterTokenAcquiredNotified());
 	}
 
-	@AdviseWith(adviceClasses = ClusterExecutorAdvice.class)
-	@NewEnv(type = NewEnv.Type.CLASSLOADER)
 	@Test
 	public void testGetMasterClusterNodeIdRetry() throws Exception {
 
@@ -414,7 +407,24 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 		final ClusterMasterExecutorImpl clusterMasterExecutorImpl =
 			new ClusterMasterExecutorImpl();
 
-		MockClusterExecutor mockClusterExecutor = new MockClusterExecutor(true);
+		MockClusterExecutor mockClusterExecutor = new MockClusterExecutor(
+			true) {
+
+			@Override
+			protected String getClusterNodeId(Address address) {
+				try {
+					ClusterExecutorAdvice.acquire();
+
+					String result = super.getClusterNodeId(address);
+
+					return ClusterExecutorAdvice.exchange(result);
+				}
+				catch (Throwable throwable) {
+					return null;
+				}
+			}
+
+		};
 
 		clusterMasterExecutorImpl.setClusterExecutorImpl(mockClusterExecutor);
 
@@ -634,11 +644,26 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 				isMasterTokenReleasedNotified());
 	}
 
-	@Aspect
 	public static class ClusterExecutorAdvice {
+
+		public static void acquire() throws Throwable {
+			Semaphore semaphore = _semaphore;
+
+			if (semaphore != null) {
+				semaphore.acquire();
+			}
+		}
 
 		public static void block() {
 			_semaphore = new Semaphore(0);
+		}
+
+		public static String exchange(String result)
+			throws InterruptedException {
+
+			_clusterNodeIdExchanger.exchange(result);
+
+			return result;
 		}
 
 		public static void unblock(int permits) {
@@ -661,26 +686,6 @@ public class ClusterMasterExecutorImplTest extends BaseClusterTestCase {
 			if (semaphore != null) {
 				while (semaphore.getQueueLength() < threadCount);
 			}
-		}
-
-		@Around(
-			"execution(protected * com.liferay.portal.cluster.multiple." +
-				"internal.ClusterExecutorImpl.getClusterNodeId(..))"
-		)
-		public Object getClusterNodeId(ProceedingJoinPoint proceedingJoinPoint)
-			throws Throwable {
-
-			Semaphore semaphore = _semaphore;
-
-			if (semaphore != null) {
-				semaphore.acquire();
-			}
-
-			Object result = proceedingJoinPoint.proceed();
-
-			_clusterNodeIdExchanger.exchange((String)result);
-
-			return result;
 		}
 
 		private static final Exchanger<String> _clusterNodeIdExchanger =
