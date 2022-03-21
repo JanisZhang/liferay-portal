@@ -25,7 +25,6 @@ import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.impl.DDMStructureImpl;
-import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
@@ -41,10 +40,10 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,44 +57,56 @@ import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.mockito.Matchers;
 import org.mockito.Mockito;
-
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareOnlyThisForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * @author Lino Alves
  * @author André de Oliveira
  */
-@PrepareOnlyThisForTest(
-	{DDMStructureLocalServiceUtil.class, ResourceBundleUtil.class}
-)
-@RunWith(PowerMockRunner.class)
-@SuppressStaticInitializationFor(
-	"com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil"
-)
 public class DDMIndexerImplTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
+	@BeforeClass
+	public static void setUpClass() {
+		PortalUtil portalUtil = new PortalUtil();
+
+		Portal portal = Mockito.mock(Portal.class);
+
+		ResourceBundle resourceBundle = Mockito.mock(ResourceBundle.class);
+
+		Mockito.when(
+			portal.getResourceBundle(Matchers.any(Locale.class))
+		).thenReturn(
+			resourceBundle
+		);
+
+		portalUtil.setPortal(portal);
+
+		PropsTestUtil.setProps(
+			PropsKeys.INDEX_SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH, "255");
+
+		ddmIndexer = _createDDMIndexer();
+	}
 
 	@Before
 	public void setUp() throws Exception {
 		ddmFixture.setUp();
 		documentFixture.setUp();
-		_setUpPortalUtil();
-		_setUpPropsUtil();
-
-		ddmIndexer = _createDDMIndexer();
 	}
 
 	@After
-	public void tearDown() throws Exception {
+	public void tearDown() {
 		ddmFixture.tearDown();
-
 		documentFixture.tearDown();
 	}
 
@@ -261,11 +272,26 @@ public class DDMIndexerImplTest {
 		return ddmFormSerializerSerializeResponse.getContent();
 	}
 
+	protected static DDMIndexer ddmIndexer;
+
 	protected final DDMFixture ddmFixture = new DDMFixture();
 	protected final DDMFormJSONSerializer ddmFormJSONSerializer =
 		_createDDMFormJSONSerializer();
-	protected DDMIndexer ddmIndexer;
 	protected final DocumentFixture documentFixture = new DocumentFixture();
+
+	private static DDMIndexer _createDDMIndexer() {
+		return new DDMIndexerImpl() {
+			{
+				DDMIndexerConfiguration ddmIndexerConfiguration = () -> false;
+
+				ReflectionTestUtil.setFieldValue(
+					this, "_ddmIndexerConfiguration", ddmIndexerConfiguration);
+
+				setDDMFormValuesToFieldsConverter(
+					new DDMFormValuesToFieldsConverterImpl());
+			}
+		};
+	}
 
 	private DDMFormField _createDDMFormField(
 		String fieldName, String indexType) {
@@ -289,27 +315,6 @@ public class DDMIndexerImplTest {
 		};
 	}
 
-	private DDMIndexer _createDDMIndexer() {
-		return new DDMIndexerImpl() {
-			{
-				DDMIndexerConfiguration ddmIndexerConfiguration =
-					new DDMIndexerConfiguration() {
-
-						public boolean enableLegacyDDMIndexFields() {
-							return false;
-						}
-
-					};
-
-				ReflectionTestUtil.setFieldValue(
-					this, "_ddmIndexerConfiguration", ddmIndexerConfiguration);
-
-				setDDMFormValuesToFieldsConverter(
-					new DDMFormValuesToFieldsConverterImpl());
-			}
-		};
-	}
-
 	private DDMStructure _createDDMStructure(DDMForm ddmForm) {
 		DDMStructure ddmStructure = new DDMStructureImpl();
 
@@ -323,27 +328,6 @@ public class DDMIndexerImplTest {
 		ddmFixture.whenDDMStructureLocalServiceFetchStructure(ddmStructure);
 
 		return ddmStructure;
-	}
-
-	private void _setUpPortalUtil() {
-		PortalUtil portalUtil = new PortalUtil();
-
-		Portal portal = PowerMockito.mock(Portal.class);
-
-		ResourceBundle resourceBundle = PowerMockito.mock(ResourceBundle.class);
-
-		PowerMockito.when(
-			portal.getResourceBundle(Matchers.any(Locale.class))
-		).thenReturn(
-			resourceBundle
-		);
-
-		portalUtil.setPortal(portal);
-	}
-
-	private void _setUpPropsUtil() {
-		PropsTestUtil.setProps(
-			PropsKeys.INDEX_SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH, "255");
 	}
 
 	private Map<String, String> _withSortableValues(Map<String, String> map) {
