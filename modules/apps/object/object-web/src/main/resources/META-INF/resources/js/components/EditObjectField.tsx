@@ -184,7 +184,8 @@ function SearchableContainer({
 }: ISearchableProps) {
 	const isSearchableString =
 		objectField.indexed &&
-		(objectField.DBType === 'String' ||
+		(objectField.DBType === 'Clob' ||
+			objectField.DBType === 'String' ||
 			objectField.businessType === 'Attachment');
 
 	const selectedLanguage = useMemo(() => {

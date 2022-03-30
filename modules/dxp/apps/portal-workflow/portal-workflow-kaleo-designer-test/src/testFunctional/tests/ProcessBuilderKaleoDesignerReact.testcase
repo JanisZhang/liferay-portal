@@ -46,21 +46,26 @@ definition {
 	}
 
 	@description = "Verify that Assignment can be added"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test CanAddAssignment {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanAddAssignment";
 
-		// TODO LRQA-72955 CanAddAssignment pending implementation
+		Workflow.openWorkflowListView();
 
-	}
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Title");
 
-	@description = "Verify that Assignment can be added"
-	@ignore = "Test Stub"
-	@priority = "4"
-	test CanAddMultipleAssignment {
+		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(
+			nodeLabel = "Task",
+			nodePosition = "-20,-100",
+			nodeType = "task");
 
-		// TODO LRQA-72956 CanAddMultipleAssignment pending implementation
+		ProcessBuilderKaleoDesignerReact.selectNode(nodeType = "task");
 
+		ProcessBuilderKaleoDesignerReact.viewAndFillAssignments(
+			assignmentType = "Resource Actions",
+			resourceActionsText = "Test");
+
+		ProcessBuilderKaleoDesignerReact.viewSelectedAssignments(selectedAssignments = "Resource Actions: Test");
 	}
 
 	@description = "Verify that Notification can be added"
@@ -461,12 +466,26 @@ definition {
 	}
 
 	@description = "LPS-139388 - Verify that is not possible to save a process with the node ID not filled"
-	@ignore = "Test Stub"
 	@priority = "4"
 	test CanNotSaveProcessWithEmptyNodeID {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanNotSaveProcessWithEmptyNodeID";
 
-		// TODO LRQA-72987 CanNotSaveProcessWithEmptyNodeID pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.dragSidebarNodeAndMove(
+			nodeLabel = "Task",
+			nodePosition = "-20,-100",
+			nodeType = "task");
+
+		ProcessBuilderKaleoDesignerReact.editNodeInformationField(
+			infoOption = "Id",
+			infoValue = "");
+
+		ProcessBuilderKaleoDesignerReact.viewRequiredField(
+			requiredField = "nodeId",
+			save = "true");
 	}
 
 	@description = "LPS-139388 - Verify that, when all the parallel reviews are complete, the Join node will allow the instance to progress to the next step"
@@ -710,12 +729,17 @@ definition {
 	}
 
 	@description = "LPS-129928 - Verify that when the user clicks on the Source button the Source editor appears"
-	@ignore = "Test Stub"
 	@priority = "4"
-	test CanViewSorceEditor {
+	test CanViewSourceEditor {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#CanViewSourceEditor";
 
-		// TODO LRQA-72995 CanViewSorceEditor pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.diagramSourceSwitchView();
+
+		ProcessBuilderKaleoDesignerReact.viewSourceEditor();
 	}
 
 	@description = "LPS-129928 - Verify that when the user makes changes to the Process Builder these changes are reflected in the XML code"
@@ -1142,12 +1166,15 @@ definition {
 	}
 
 	@description = "LPS-129928 - Verify that when hovering the Source button the text Source view is displayed"
-	@ignore = "Test Stub"
 	@priority = "2"
 	test SourceViewToolTipIsDisplayed {
+		property test.name.skip.portal.instance = "ProcessBuilderKaleoDesignerReact#SourceViewToolTipIsDisplayed";
 
-		// TODO LRQA-72996 SourceViewToolTipIsDisplayed pending implementation
+		Workflow.openWorkflowListView();
 
+		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition");
+
+		ProcessBuilderKaleoDesignerReact.viewSourceDiagramToolTipDisplayed(content = "Source View");
 	}
 
 	@description = "Verify that Start node can't have incoming transition"

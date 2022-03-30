@@ -14,8 +14,9 @@
 
 import ClayLink from '@clayui/link';
 import ClayTable from '@clayui/table';
+import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import SaveTemplate from '../SaveTemplate';
 import {
@@ -60,27 +61,100 @@ function ImportForm({
 	});
 	const [formEvaluated, setFormEvaluated] = useState(false);
 	const [fileFields, setFileFields] = useState();
+	const [fileContent, setFileContent] = useState();
 	const [demoFileValues, setDemoFileValues] = useState({});
 	const [fieldsSelections, setFieldsSelections] = useState({});
 	const [mappingsToBeEvaluated, setMappingsToBeEvaluated] = useState(
 		mappedFields
 	);
 	const useTemplateMappingRef = useRef();
+	const [formIsValid, setFormIsValid] = useState(false);
+	const [csvHeaders, setCsvHeaders] = useState(true);
 
-	const formIsValid = useMemo(() => {
-		if (
-			!Object.keys(fieldsSelections).length ||
-			!(dbFields.optional.length + dbFields.required.length)
-		) {
-			return false;
-		}
+	useEffect(() => {
+		const requiredFieldNotFilled = dbFields.required
+			? dbFields.required.some(
+					(dbField) => !fieldsSelections[dbField.name]
+			  )
+			: false;
 
-		const requiredFieldNotFilled = dbFields.required.some(
-			(dbField) => !fieldsSelections[dbField.name]
+		const containsEmptyValue = Object.values(fieldsSelections).some(
+			(element) => element === ''
 		);
 
-		return !requiredFieldNotFilled;
+		if (
+			Object.values(fieldsSelections).length > 0 &&
+			!containsEmptyValue &&
+			dbFields.optional?.length > 0 &&
+			!requiredFieldNotFilled
+		) {
+			setFormIsValid(false);
+		}
+		else if (containsEmptyValue) {
+			const cleanSelectedFields = Object.entries(fieldsSelections).reduce(
+				(updatedSelectedFields, [key, value]) => {
+					if (value !== '') {
+						updatedSelectedFields[key] = value;
+					}
+
+					return updatedSelectedFields;
+				},
+				{}
+			);
+			setFieldsSelections(cleanSelectedFields);
+			setFormIsValid(true);
+		}
+		else {
+			setFormIsValid(true);
+		}
 	}, [fieldsSelections, dbFields]);
+
+	useEffect(() => {
+		setFieldsSelections({});
+	}, [csvHeaders]);
+
+	const fileContentPreview = useMemo(() => {
+		const fieldsIndex = [];
+		let filePreview;
+		if (Object.keys(fieldsSelections)?.length > 0) {
+			fileFields.filter((element, index) => {
+				if (csvHeaders) {
+					if (Object.values(fieldsSelections).indexOf(element) > -1) {
+						fieldsIndex.push(index);
+					}
+				}
+				else {
+					if (
+						Object.values(fieldsSelections).indexOf(
+							element.toString()
+						) > -1
+					) {
+						fieldsIndex.push(parseInt(index, 10));
+					}
+				}
+			});
+			if (!csvHeaders) {
+				filePreview = fileContent?.map((row) => {
+					return row.filter((element, index) => {
+						if (fieldsIndex.includes(index)) {
+							return element;
+						}
+					});
+				});
+			}
+			else {
+				filePreview = fileContent?.map((row) => {
+					return row.filter((element, index) => {
+						if (fieldsIndex.includes(index)) {
+							return element;
+						}
+					});
+				});
+			}
+
+			return filePreview;
+		}
+	}, [fileFields, fieldsSelections, fileContent, csvHeaders]);
 
 	const updateFieldMapping = (fileField, dbFieldName) => {
 		setFieldsSelections((prevSelections) => ({
@@ -116,10 +190,16 @@ function ImportForm({
 			setDbFields(newDBFields);
 		}
 
-		function handleFileSchemaUpdate({firstItemDetails, schema}) {
+		function handleFileSchemaUpdate({
+			fileContent,
+			firstItemDetails,
+			options,
+			schema,
+		}) {
+			setFileContent(fileContent);
 			setFileFields(schema);
-
 			setDemoFileValues(firstItemDetails);
+			setCsvHeaders(options);
 		}
 
 		function handleTemplateSelect({template}) {
@@ -142,6 +222,20 @@ function ImportForm({
 	const formIsVisible = !!(
 		dbFields.optional.length + dbFields.required.length
 	);
+
+	const handleEvaluateForm = useCallback(() => {
+		if (!formIsValid) {
+			openToast({
+				message: Liferay.Language.get(
+					'you-must-map-all-required-fields-before-continuing'
+				),
+				title: Liferay.Language.get('error'),
+				type: 'danger',
+			});
+		}
+
+		setFormEvaluated(true);
+	}, [formIsValid]);
 
 	return (
 		<>
@@ -269,7 +363,7 @@ function ImportForm({
 				</ClayLink>
 
 				<SaveTemplate
-					evaluateForm={() => setFormEvaluated(true)}
+					evaluateForm={handleEvaluateForm}
 					formIsValid={formIsValid}
 					formIsVisible={formIsVisible}
 					formSaveAsTemplateDataQuerySelector={formDataQuerySelector}
@@ -279,12 +373,16 @@ function ImportForm({
 				/>
 
 				<ImportSubmit
-					evaluateForm={() => setFormEvaluated(true)}
+					disabled={!formIsValid}
+					evaluateForm={handleEvaluateForm}
+					fieldsSelections={fieldsSelections}
+					fileContentPreview={fileContentPreview}
 					formDataQuerySelector={formDataQuerySelector}
 					formImportURL={formImportURL}
 					formIsValid={formIsValid}
 					formIsVisible={formIsVisible}
 					portletNamespace={portletNamespace}
+					setFileContent={setFileContent}
 				/>
 			</div>
 		</>

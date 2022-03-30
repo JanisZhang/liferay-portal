@@ -71,13 +71,13 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 
 		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
 			() -> {
-				ServiceContext serviceContext =
-					ServiceContextTestUtil.getServiceContext(
-						group.getGroupId(), TestPropsValues.getUserId());
-
 				byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 				InputStream inputStream = new ByteArrayInputStream(bytes);
+
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						group.getGroupId(), TestPropsValues.getUserId());
 
 				DLFileEntry dlFileEntry1 =
 					_dlFileEntryLocalService.addFileEntry(
@@ -97,7 +97,6 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 						dlFileEntry1.getFileEntryId());
 
 				Assert.assertNotNull(friendlyURLEntry1);
-
 				Assert.assertEquals(
 					"urltitle", friendlyURLEntry1.getUrlTitle());
 
@@ -124,7 +123,6 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 						dlFileEntry2.getFileEntryId());
 
 				Assert.assertNotNull(friendlyURLEntry2);
-
 				Assert.assertEquals(
 					"urltitle-1", friendlyURLEntry2.getUrlTitle());
 			},
@@ -135,13 +133,13 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 	public void testAddFileEntryAddsFriendlyURLEntry() throws Exception {
 		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
 			() -> {
-				ServiceContext serviceContext =
-					ServiceContextTestUtil.getServiceContext(
-						group.getGroupId(), TestPropsValues.getUserId());
-
 				byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 				InputStream inputStream = new ByteArrayInputStream(bytes);
+
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						group.getGroupId(), TestPropsValues.getUserId());
 
 				DLFileEntry dlFileEntry = _dlFileEntryLocalService.addFileEntry(
 					null, TestPropsValues.getUserId(), group.getGroupId(),
@@ -159,7 +157,6 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 						dlFileEntry.getFileEntryId());
 
 				Assert.assertNotNull(friendlyURLEntry);
-
 				Assert.assertEquals("urltitle", friendlyURLEntry.getUrlTitle());
 			},
 			true);
@@ -171,13 +168,13 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 
 		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
 			() -> {
-				ServiceContext serviceContext =
-					ServiceContextTestUtil.getServiceContext(
-						group.getGroupId(), TestPropsValues.getUserId());
-
 				byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 				InputStream inputStream = new ByteArrayInputStream(bytes);
+
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						group.getGroupId(), TestPropsValues.getUserId());
 
 				DLFileEntry dlFileEntry = _dlFileEntryLocalService.addFileEntry(
 					null, TestPropsValues.getUserId(), group.getGroupId(),
@@ -195,7 +192,6 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 						dlFileEntry.getFileEntryId());
 
 				Assert.assertNotNull(friendlyURLEntry);
-
 				Assert.assertEquals("title", friendlyURLEntry.getUrlTitle());
 			},
 			true);
@@ -207,13 +203,13 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 
 		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
 			() -> {
-				ServiceContext serviceContext =
-					ServiceContextTestUtil.getServiceContext(
-						group.getGroupId(), TestPropsValues.getUserId());
-
 				byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 				InputStream inputStream = new ByteArrayInputStream(bytes);
+
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						group.getGroupId(), TestPropsValues.getUserId());
 
 				DLFileEntry dlFileEntry = _dlFileEntryLocalService.addFileEntry(
 					null, TestPropsValues.getUserId(), group.getGroupId(),
@@ -231,7 +227,6 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 						dlFileEntry.getFileEntryId());
 
 				Assert.assertNotNull(friendlyURLEntry);
-
 				Assert.assertEquals("title", friendlyURLEntry.getUrlTitle());
 			},
 			true);
@@ -241,13 +236,13 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 	public void testDeleteFileEntryDeletesFriendlyURLEntry() throws Exception {
 		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
 			() -> {
-				ServiceContext serviceContext =
-					ServiceContextTestUtil.getServiceContext(
-						group.getGroupId(), TestPropsValues.getUserId());
-
 				byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 				InputStream inputStream = new ByteArrayInputStream(bytes);
+
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						group.getGroupId(), TestPropsValues.getUserId());
 
 				DLFileEntry dlFileEntry = _dlFileEntryLocalService.addFileEntry(
 					null, TestPropsValues.getUserId(), group.getGroupId(),
@@ -279,18 +274,80 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 	}
 
 	@Test
-	public void testUpdateFileEntryUpdatesCreateFriendlyURLEntryIfPreviousExisted()
+	public void testUpdateFileEntryUpdatesBlankCreateFriendlyURLEntryWithTitle()
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				group.getGroupId(), TestPropsValues.getUserId());
+		AtomicLong fileEntryId = new AtomicLong();
 
 		byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 		InputStream inputStream = new ByteArrayInputStream(bytes);
 
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
+
+		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
+			() -> {
+				DLFileEntry dlFileEntry = _dlFileEntryLocalService.addFileEntry(
+					null, TestPropsValues.getUserId(), group.getGroupId(),
+					group.getGroupId(), parentFolder.getFolderId(),
+					RandomTestUtil.randomString(),
+					ContentTypes.APPLICATION_OCTET_STREAM,
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomString(), StringPool.BLANK,
+					StringPool.BLANK,
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
+					null, null, inputStream, bytes.length, null, null,
+					serviceContext);
+
+				fileEntryId.set(dlFileEntry.getFileEntryId());
+
+				FriendlyURLEntry friendlyURLEntry =
+					_friendlyURLEntryLocalService.fetchMainFriendlyURLEntry(
+						_portal.getClassNameId(FileEntry.class),
+						fileEntryId.get());
+
+				Assert.assertNull(friendlyURLEntry);
+			},
+			false);
+
+		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
+			() -> {
+				_dlFileEntryLocalService.updateFileEntry(
+					group.getCreatorUserId(), fileEntryId.get(),
+					StringUtil.randomString(),
+					ContentTypes.APPLICATION_OCTET_STREAM, "title",
+					StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
+					DLVersionNumberIncrease.MAJOR,
+					DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
+					Collections.emptyMap(), null, inputStream, 0, null, null,
+					serviceContext);
+
+				FriendlyURLEntry friendlyURLEntry =
+					_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
+						_portal.getClassNameId(FileEntry.class),
+						fileEntryId.get());
+
+				Assert.assertNotNull(friendlyURLEntry);
+				Assert.assertEquals("title", friendlyURLEntry.getUrlTitle());
+			},
+			true);
+	}
+
+	@Test
+	public void testUpdateFileEntryUpdatesCreateFriendlyURLEntryIfPreviousExisted()
+		throws Exception {
+
 		AtomicLong fileEntryId = new AtomicLong();
+
+		byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
+
+		InputStream inputStream = new ByteArrayInputStream(bytes);
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
 
 		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
 			() -> {
@@ -335,7 +392,6 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 						fileEntryId.get());
 
 				Assert.assertNotNull(friendlyURLEntry);
-
 				Assert.assertEquals("urltitle", friendlyURLEntry.getUrlTitle());
 			},
 			true);
@@ -345,13 +401,13 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 	public void testUpdateFileEntryUpdatesFriendlyURLEntry() throws Exception {
 		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
 			() -> {
-				ServiceContext serviceContext =
-					ServiceContextTestUtil.getServiceContext(
-						group.getGroupId(), TestPropsValues.getUserId());
-
 				byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 				InputStream inputStream = new ByteArrayInputStream(bytes);
+
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						group.getGroupId(), TestPropsValues.getUserId());
 
 				DLFileEntry dlFileEntry = _dlFileEntryLocalService.addFileEntry(
 					null, TestPropsValues.getUserId(), group.getGroupId(),
@@ -391,13 +447,13 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 
 		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
 			() -> {
-				ServiceContext serviceContext =
-					ServiceContextTestUtil.getServiceContext(
-						group.getGroupId(), TestPropsValues.getUserId());
-
 				byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 				InputStream inputStream = new ByteArrayInputStream(bytes);
+
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						group.getGroupId(), TestPropsValues.getUserId());
 
 				DLFileEntry dlFileEntry = _dlFileEntryLocalService.addFileEntry(
 					null, TestPropsValues.getUserId(), group.getGroupId(),
@@ -437,13 +493,13 @@ public class FriendlyURLDLFileEntryLocalServiceWrapperTest
 
 		_testWithActiveFFFriendlyURLEntryFileEntryConfiguration(
 			() -> {
-				ServiceContext serviceContext =
-					ServiceContextTestUtil.getServiceContext(
-						group.getGroupId(), TestPropsValues.getUserId());
-
 				byte[] bytes = TestDataConstants.TEST_BYTE_ARRAY;
 
 				InputStream inputStream = new ByteArrayInputStream(bytes);
+
+				ServiceContext serviceContext =
+					ServiceContextTestUtil.getServiceContext(
+						group.getGroupId(), TestPropsValues.getUserId());
 
 				DLFileEntry dlFileEntry = _dlFileEntryLocalService.addFileEntry(
 					null, TestPropsValues.getUserId(), group.getGroupId(),

@@ -130,8 +130,6 @@
 /portal/jaxws-api.jar
 /portal/jaxws-rt.jar
 /portal/jcl-over-slf4j.jar
-/portal/jdom2.jar
-/portal/jericho-html.jar
 /portal/jersey-common.jar
 /portal/jhlabs-filters.jar
 /portal/jodd-json.jar
@@ -173,8 +171,6 @@
 /portal/tomcat-juli.jar
 /portal/transaction.jar
 /portal/wstx.jar
-/portal/xbean-spring.jar
-/portal/xbean.jar
 /portal/xercesImpl.jar
 /portal/xml-apis.jar
 /portal/xmlsec.jar

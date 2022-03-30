@@ -53,6 +53,7 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -187,15 +188,14 @@ public class CommerceSearchResource {
 		String subtitle = cpCatalogEntry.getShortDescription();
 
 		if (Validator.isNull(subtitle)) {
-			subtitle = HtmlUtil.extractText(cpCatalogEntry.getDescription());
+			subtitle = _htmlParser.extractText(cpCatalogEntry.getDescription());
 		}
 
 		searchItemModel.setSubtitle(subtitle);
 
-		String url = _cpDefinitionHelper.getFriendlyURL(
-			cpCatalogEntry.getCPDefinitionId(), themeDisplay);
-
-		searchItemModel.setUrl(url);
+		searchItemModel.setUrl(
+			_cpDefinitionHelper.getFriendlyURL(
+				cpCatalogEntry.getCPDefinitionId(), themeDisplay));
 
 		return searchItemModel;
 	}
@@ -431,6 +431,9 @@ public class CommerceSearchResource {
 
 	@Reference
 	private CPDefinitionHelper _cpDefinitionHelper;
+
+	@Reference
+	private HtmlParser _htmlParser;
 
 	@Reference
 	private Http _http;

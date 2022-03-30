@@ -28,11 +28,13 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsEntryConstants;
@@ -40,6 +42,7 @@ import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsEntryLocalServiceUtil;
+import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 import com.liferay.segments.service.SegmentsExperienceServiceUtil;
 import com.liferay.translation.exporter.TranslationInfoItemFieldValuesExporter;
 import com.liferay.translation.exporter.TranslationInfoItemFieldValuesExporterTracker;
@@ -200,6 +203,17 @@ public class ExportTranslationDisplayContext {
 		).put(
 			"exportTranslationURL", _getExportTranslationURLString()
 		).put(
+			"multipleExperiences", _isMultipleExperiences()
+		).put(
+			"multiplePagesSelected",
+			() -> {
+				if (_classPKs.length > 1) {
+					return true;
+				}
+
+				return false;
+			}
+		).put(
 			"pathModule", PortalUtil.getPathModule()
 		).put(
 			"redirectURL", getRedirect()
@@ -353,6 +367,26 @@ public class ExportTranslationDisplayContext {
 		else {
 			list1.retainAll(list2);
 		}
+	}
+
+	private boolean _isMultipleExperiences() {
+		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-142736")) ||
+			!_className.equals(Layout.class.getName())) {
+
+			return false;
+		}
+
+		for (long classPK : _classPKs) {
+			int segmentsExperiencesCount =
+				SegmentsExperienceLocalServiceUtil.getSegmentsExperiencesCount(
+					_groupId, _classNameId, classPK);
+
+			if (segmentsExperiencesCount >= 1) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private final String _className;

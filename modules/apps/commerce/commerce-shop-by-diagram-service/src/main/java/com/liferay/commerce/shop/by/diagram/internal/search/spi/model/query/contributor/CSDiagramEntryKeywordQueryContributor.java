@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.generic.MultiMatchQuery;
 import com.liferay.portal.kernel.search.generic.TermQueryImpl;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.query.QueryHelper;
 import com.liferay.portal.search.spi.model.query.contributor.KeywordQueryContributor;
@@ -51,13 +52,25 @@ public class CSDiagramEntryKeywordQueryContributor
 		SearchContext searchContext =
 			keywordQueryContributorHelper.getSearchContext();
 
+		_queryHelper.addSearchLocalizedTerm(
+			booleanQuery, searchContext, CPField.SHORT_DESCRIPTION, false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, CPField.SHORT_DESCRIPTION, false);
+		_queryHelper.addSearchLocalizedTerm(
+			booleanQuery, searchContext, Field.DESCRIPTION, false);
 		_queryHelper.addSearchTerm(
 			booleanQuery, searchContext, Field.ENTRY_CLASS_PK, false);
+		_queryHelper.addSearchLocalizedTerm(
+			booleanQuery, searchContext, Field.NAME, false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, Field.NAME, false);
 		_queryHelper.addSearchTerm(
 			booleanQuery, searchContext, "sequence", false);
 
 		try {
 			if (!Validator.isBlank(keywords)) {
+				keywords = StringUtil.toLowerCase(keywords);
+
 				booleanQuery.add(
 					new TermQueryImpl("sku.1_10_ngram", keywords),
 					BooleanClauseOccur.SHOULD);

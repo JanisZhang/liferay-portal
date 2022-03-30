@@ -70,6 +70,52 @@ definition {
 	}
 
 	@priority = "4"
+	test AssertSimilarResultsDisplayWithBlogsWidget {
+		for (var count : list "1,2,3") {
+			JSONBlog.addEntry(
+				entryContent = "Blogs Entry Content",
+				entryTitle = "Blogs Entry Title ${count}");
+		}
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Similar Results Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = "1",
+			groupName = "Guest",
+			layoutName = "Similar Results Page",
+			widgetName = "Similar Results");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = "2",
+			groupName = "Guest",
+			layoutName = "Similar Results Page",
+			widgetName = "Blogs");
+
+		Navigator.gotoPage(pageName = "Similar Results Page");
+
+		SearchPortlets.configureSimilarResults(
+			displayTemplate = "Compact Layout",
+			fields = "localized_title_en_US",
+			minimumDocumentFrequency = "1",
+			minimumTermFrequency = "1");
+
+		BlogsNavigator.openToBlogEntry(
+			entryTitle = "Blogs Entry Title 1",
+			layoutName = "Similar Results Page",
+			siteURLKey = "guest");
+
+		AssertElementPresent(
+			key_linkResultTitle = "Blogs Entry Title 2",
+			locator1 = "Search#SIMILAR_RESULTS_LINK_TITLE");
+
+		AssertElementPresent(
+			key_linkResultTitle = "Blogs Entry Title 3",
+			locator1 = "Search#SIMILAR_RESULTS_LINK_TITLE");
+	}
+
+	@priority = "4"
 	test AssertSimilarResultsMatchesAssetType {
 		for (var count : list "1,2,3") {
 			JSONBlog.addEntry(
@@ -732,6 +778,63 @@ definition {
 			key_assetTitle = "Similar Results WC Title 2",
 			locator1 = "AP#ASSET_ABSTRACT_TITLE",
 			value1 = "Similar Results WC Title 2");
+	}
+
+	@priority = "4"
+	test ViewSimilarResultsWithDifferentScope {
+		for (var siteName : list "Site Name 1,Site Name 2,Site Name 3") {
+			JSONGroup.addGroup(groupName = "${siteName}");
+		}
+
+		var count = "0";
+
+		for (var siteName : list "Guest,Site Name 1,Site Name 2,Site Name 3") {
+			JSONBlog.addEntry(
+				entryContent = "Blogs Entry Content",
+				entryTitle = "Blogs Entry Title ${count}",
+				groupName = "${siteName}");
+
+			JSONDocument.addFile(
+				dmDocumentDescription = "DM Document Description ${count}",
+				dmDocumentTitle = "DM Document Title ${count}",
+				groupName = "${siteName}");
+
+			JSONWebcontent.addWebContent(
+				content = "WC Content",
+				groupName = "${siteName}",
+				title = "WC Title ${count}");
+
+			JSONWiki.addWikiPage(
+				groupName = "${siteName}",
+				wikiNodeName = "Main",
+				wikiPageContent = "Wiki Page Content",
+				wikiPageName = "Wiki Page Title ${count}");
+
+			var count = ${count} + 1;
+		}
+
+		SearchPortlets.setupSimilarResultsPage();
+
+		SearchPortlets.configureSimilarResults(
+			displayTemplate = "Compact Layout",
+			fields = "localized_title_en_US",
+			minimumDocumentFrequency = "1",
+			minimumTermFrequency = "1",
+			searchScope = "Everything");
+
+		AssetPublisherPortlet.configureAssetLinkBehaviorPG(assetLinkBehavior = "Show Full Content");
+
+		for (var assetTitle : list "WC Title,DM Document Title,Blogs Entry Title,Wiki Page Title") {
+			AssetPublisherPortlet.clickAssetTitle(assetTitle = "${assetTitle} 0");
+
+			for (var count : list "1,2,3") {
+				AssertElementPresent(
+					key_linkResultTitle = "${assetTitle} ${count}",
+					locator1 = "Search#SIMILAR_RESULTS_LINK_TITLE");
+			}
+
+			Click(locator1 = "Icon#ANGLE_LEFT_BACK");
+		}
 	}
 
 }

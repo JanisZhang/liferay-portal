@@ -35,6 +35,7 @@ import com.liferay.object.service.ObjectViewLocalService;
 import com.liferay.object.service.base.ObjectFieldLocalServiceBaseImpl;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
 import com.liferay.object.service.persistence.ObjectEntryPersistence;
+import com.liferay.object.service.persistence.ObjectFieldPersistence;
 import com.liferay.object.service.persistence.ObjectFieldSettingPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutColumnPersistence;
 import com.liferay.object.service.persistence.ObjectViewColumnPersistence;
@@ -64,7 +65,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -165,6 +168,25 @@ public class ObjectFieldLocalServiceImpl
 		}
 
 		return _deleteObjectField(objectField);
+	}
+
+	@Override
+	public void deleteObjectFieldByObjectDefinitionId(Long objectDefinitionId)
+		throws PortalException {
+
+		for (ObjectField objectField :
+				_objectFieldPersistence.findByObjectDefinitionId(
+					objectDefinitionId)) {
+
+			if (Validator.isNotNull(objectField.getRelationshipType())) {
+				continue;
+			}
+
+			objectFieldPersistence.remove(objectField);
+
+			_objectFieldSettingPersistence.removeByObjectFieldId(
+				objectField.getObjectFieldId());
+		}
 	}
 
 	@Indexable(type = IndexableType.DELETE)
@@ -285,8 +307,6 @@ public class ObjectFieldLocalServiceImpl
 			_validateName(objectFieldId, objectDefinition, name);
 		}
 
-		String oldBusinessType = objectField.getBusinessType();
-
 		_setBusinessTypeAndDBType(businessType, dbType, objectField);
 
 		objectField.setListTypeDefinitionId(listTypeDefinitionId);
@@ -298,10 +318,6 @@ public class ObjectFieldLocalServiceImpl
 		objectField.setRequired(required);
 
 		objectField = objectFieldPersistence.update(objectField);
-
-		if (!Objects.equals(objectField.getBusinessType(), oldBusinessType)) {
-			_objectFieldSettingPersistence.removeByObjectFieldId(objectFieldId);
-		}
 
 		_addOrUpdateObjectFieldSettings(objectField, objectFieldSettings);
 
@@ -361,6 +377,27 @@ public class ObjectFieldLocalServiceImpl
 
 		objectFieldBusinessType.validateObjectFieldSettings(
 			objectField.getName(), objectFieldSettings);
+
+		List<ObjectFieldSetting> oldObjectFieldSettings =
+			_objectFieldSettingPersistence.findByObjectFieldId(
+				objectField.getObjectFieldId());
+
+		for (ObjectFieldSetting oldObjectFieldSetting :
+				oldObjectFieldSettings) {
+
+			Stream<ObjectFieldSetting> stream = objectFieldSettings.stream();
+
+			Optional<ObjectFieldSetting> objectFieldSettingOptional =
+				stream.filter(
+					newObjectFieldSetting -> Objects.equals(
+						newObjectFieldSetting.getName(),
+						oldObjectFieldSetting.getName())
+				).findFirst();
+
+			if (!objectFieldSettingOptional.isPresent()) {
+				_objectFieldSettingPersistence.remove(oldObjectFieldSetting);
+			}
+		}
 
 		for (ObjectFieldSetting newObjectFieldSetting : objectFieldSettings) {
 			ObjectFieldSetting oldObjectFieldSetting =
@@ -494,13 +531,14 @@ public class ObjectFieldLocalServiceImpl
 
 		if (((!Objects.equals(
 				businessType, ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT) &&
+			  !Objects.equals(dbType, ObjectFieldConstants.DB_TYPE_CLOB) &&
 			  !Objects.equals(dbType, ObjectFieldConstants.DB_TYPE_STRING)) ||
 			 indexedAsKeyword) &&
 			!Validator.isBlank(indexedLanguageId)) {
 
 			throw new ObjectFieldDBTypeException(
-				"Indexed language ID can only be applied with type " +
-					"\"String\" that is not indexed as a keyword");
+				"Indexed language ID can only be applied with type \"Clob\" " +
+					"or \"String\" that is not indexed as a keyword");
 		}
 	}
 
@@ -592,6 +630,9 @@ public class ObjectFieldLocalServiceImpl
 	@Reference
 	private ObjectFieldBusinessTypeServicesTracker
 		_objectFieldBusinessTypeServicesTracker;
+
+	@Reference
+	private ObjectFieldPersistence _objectFieldPersistence;
 
 	@Reference
 	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;

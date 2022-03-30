@@ -21,7 +21,7 @@ import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeServicesTracker;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
-import com.liferay.object.web.internal.configuration.FFBusinessTypeAttachmentConfiguration;
+import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.web.internal.constants.ObjectWebKeys;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
 import com.liferay.object.web.internal.util.ObjectFieldBusinessTypeUtil;
@@ -36,13 +36,16 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,16 +61,12 @@ import javax.servlet.http.HttpServletRequest;
 public class ObjectDefinitionsFieldsDisplayContext {
 
 	public ObjectDefinitionsFieldsDisplayContext(
-		FFBusinessTypeAttachmentConfiguration
-			ffBusinessTypeAttachmentConfiguration,
 		HttpServletRequest httpServletRequest,
 		ModelResourcePermission<ObjectDefinition>
 			objectDefinitionModelResourcePermission,
 		ObjectFieldBusinessTypeServicesTracker
 			objectFieldBusinessTypeServicesTracker) {
 
-		_ffBusinessTypeAttachmentConfiguration =
-			ffBusinessTypeAttachmentConfiguration;
 		_objectDefinitionModelResourcePermission =
 			objectDefinitionModelResourcePermission;
 		_objectFieldBusinessTypeServicesTracker =
@@ -155,12 +154,13 @@ public class ObjectDefinitionsFieldsDisplayContext {
 					objectFieldBusinessType.isVisible() &&
 					(!StringUtil.equals(
 						objectFieldBusinessType.getName(),
-						ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT) ||
-					 _ffBusinessTypeAttachmentConfiguration.enabled()) &&
+						ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP) ||
+					 includeRelationshipObjectFieldBusinessType) &&
 					(!StringUtil.equals(
 						objectFieldBusinessType.getName(),
-						ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP) ||
-					 includeRelationshipObjectFieldBusinessType)
+						ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT) ||
+					 GetterUtil.getBoolean(
+						 PropsUtil.get("feature.flag.LPS-143064")))
 			).collect(
 				Collectors.toList()
 			));
@@ -225,14 +225,42 @@ public class ObjectDefinitionsFieldsDisplayContext {
 				JSONUtil.put(
 					"name", objectFieldSetting.getName()
 				).put(
-					"value", objectFieldSetting.getValue()
+					"value",
+					_getObjectFieldSettingValue(
+						objectField.getBusinessType(), objectFieldSetting)
 				)));
 
 		return jsonArray;
 	}
 
-	private final FFBusinessTypeAttachmentConfiguration
-		_ffBusinessTypeAttachmentConfiguration;
+	private Object _getObjectFieldSettingValue(
+		String businessType, ObjectFieldSetting objectFieldSetting) {
+
+		if (Objects.equals(
+				ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT, businessType) &&
+			Objects.equals(objectFieldSetting.getName(), "maximumFileSize")) {
+
+			return GetterUtil.getInteger(objectFieldSetting.getValue());
+		}
+		else if (Objects.equals(
+					ObjectFieldConstants.BUSINESS_TYPE_LONG_TEXT,
+					businessType) ||
+				 Objects.equals(
+					 ObjectFieldConstants.BUSINESS_TYPE_TEXT, businessType)) {
+
+			if (Objects.equals(objectFieldSetting.getName(), "maxLength")) {
+				return GetterUtil.getInteger(objectFieldSetting.getValue());
+			}
+			else if (Objects.equals(
+						objectFieldSetting.getName(), "showCounter")) {
+
+				return GetterUtil.getBoolean(objectFieldSetting.getValue());
+			}
+		}
+
+		return objectFieldSetting.getValue();
+	}
+
 	private final ModelResourcePermission<ObjectDefinition>
 		_objectDefinitionModelResourcePermission;
 	private final ObjectFieldBusinessTypeServicesTracker

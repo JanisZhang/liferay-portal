@@ -84,6 +84,8 @@ public class ContainerStyledLayoutStructureItem
 		).put(
 			"htmlTag", _htmlTag
 		).put(
+			"indexed", _indexed
+		).put(
 			"justify", _justify
 		).put(
 			"link", _linkJSONObject
@@ -110,6 +112,10 @@ public class ContainerStyledLayoutStructureItem
 		return HashUtil.hash(0, getItemId());
 	}
 
+	public boolean isIndexed() {
+		return _indexed;
+	}
+
 	public void setAlign(String align) {
 		_align = align;
 	}
@@ -124,6 +130,10 @@ public class ContainerStyledLayoutStructureItem
 
 	public void setHtmlTag(String htmlTag) {
 		_htmlTag = htmlTag;
+	}
+
+	public void setIndexed(boolean indexed) {
+		_indexed = indexed;
 	}
 
 	public void setJustify(String justify) {
@@ -166,6 +176,10 @@ public class ContainerStyledLayoutStructureItem
 
 		if (itemConfigJSONObject.has("link")) {
 			setLinkJSONObject(itemConfigJSONObject.getJSONObject("link"));
+		}
+
+		if (itemConfigJSONObject.has("indexed")) {
+			setIndexed(itemConfigJSONObject.getBoolean("indexed"));
 		}
 
 		if (itemConfigJSONObject.has("containerType") ||
@@ -266,6 +280,7 @@ public class ContainerStyledLayoutStructureItem
 	private String _contentDisplay = "";
 	private String _flexWrap = "";
 	private String _htmlTag = "div";
+	private boolean _indexed = true;
 	private String _justify = "";
 	private JSONObject _linkJSONObject;
 	private String _widthType = "fluid";

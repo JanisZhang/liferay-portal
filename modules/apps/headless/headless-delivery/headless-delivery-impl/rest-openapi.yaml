@@ -3332,6 +3332,11 @@ components:
                     items:
                         $ref: "#/components/schemas/FragmentViewport"
                     type: array
+                indexed:
+                    # @review
+                    description:
+                        A flag that indicates whether the page fragment instance is indexed or not.
+                    type: boolean
                 widgetInstances:
                     # @review
                     description:
@@ -3367,6 +3372,11 @@ components:
                     # @review
                     description:
                         A flag that indicates whether the page row has gutters.
+                    type: boolean
+                indexed:
+                    # @review
+                    description:
+                        A flag that indicates whether the page row is indexed or not.
                     type: boolean
                 modulesPerRow:
                     # @review
@@ -3478,6 +3488,11 @@ components:
                     items:
                         $ref: "#/components/schemas/FragmentViewport"
                     type: array
+                indexed:
+                    # @review
+                    description:
+                        A flag that indicates whether the page section is indexed or not.
+                    type: boolean
                 layout:
                     # @review
                     description:

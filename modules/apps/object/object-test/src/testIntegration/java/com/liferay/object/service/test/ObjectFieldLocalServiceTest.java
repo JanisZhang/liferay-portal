@@ -102,7 +102,8 @@ public class ObjectFieldLocalServiceTest {
 
 		String[] businessTypes = {
 			"Boolean", "Date", "Decimal", "Integer", "LargeFile", "LongInteger",
-			"LongText", "Picklist", "PrecisionDecimal", "Relationship", "Text"
+			"LongText", "Picklist", "PrecisionDecimal", "Relationship",
+			"RichText", "Text"
 		};
 
 		for (String businessType : businessTypes) {
@@ -166,8 +167,8 @@ public class ObjectFieldLocalServiceTest {
 		}
 		catch (ObjectFieldDBTypeException objectFieldDBTypeException) {
 			Assert.assertEquals(
-				"Indexed language ID can only be applied with type " +
-					"\"String\" that is not indexed as a keyword",
+				"Indexed language ID can only be applied with type \"Clob\" " +
+					"or \"String\" that is not indexed as a keyword",
 				objectFieldDBTypeException.getMessage());
 		}
 
@@ -181,8 +182,8 @@ public class ObjectFieldLocalServiceTest {
 		}
 		catch (ObjectFieldDBTypeException objectFieldDBTypeException) {
 			Assert.assertEquals(
-				"Indexed language ID can only be applied with type " +
-					"\"String\" that is not indexed as a keyword",
+				"Indexed language ID can only be applied with type \"Clob\" " +
+					"or \"String\" that is not indexed as a keyword",
 				objectFieldDBTypeException.getMessage());
 		}
 
@@ -196,8 +197,8 @@ public class ObjectFieldLocalServiceTest {
 		}
 		catch (ObjectFieldDBTypeException objectFieldDBTypeException) {
 			Assert.assertEquals(
-				"Indexed language ID can only be applied with type " +
-					"\"String\" that is not indexed as a keyword",
+				"Indexed language ID can only be applied with type \"Clob\" " +
+					"or \"String\" that is not indexed as a keyword",
 				objectFieldDBTypeException.getMessage());
 		}
 

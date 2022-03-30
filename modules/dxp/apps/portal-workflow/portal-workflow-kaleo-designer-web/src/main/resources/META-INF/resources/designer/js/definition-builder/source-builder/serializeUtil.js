@@ -438,7 +438,7 @@ function appendXMLTaskTimers(buffer, taskTimers) {
 	}
 }
 
-function appendXMLTransitions(buffer, transitions, publishing) {
+function appendXMLTransitions(buffer, transitions, exporting) {
 	if (transitions.length) {
 		const xmlTransitions = XMLUtil.createObj('transitions');
 
@@ -464,7 +464,7 @@ function appendXMLTransitions(buffer, transitions, publishing) {
 
 			buffer.push(xmlLabels.close);
 
-			const tagTransitionNameId = publishing ? 'name' : 'id';
+			const tagTransitionNameId = exporting ? 'name' : 'id';
 
 			buffer.push(XMLUtil.create(`${tagTransitionNameId}`, item.id));
 
@@ -484,7 +484,7 @@ function serializeDefinition(
 	metadata,
 	nodes,
 	transitions,
-	publishing
+	exporting
 ) {
 	const description = metadata.description;
 	const name = metadata.name;
@@ -528,7 +528,7 @@ function serializeDefinition(
 
 		const xmlNode = XMLUtil.createObj(xmlType);
 
-		const tagNodeNameId = publishing ? 'name' : 'id';
+		const tagNodeNameId = exporting ? 'name' : 'id';
 
 		buffer.push(xmlNode.open, XMLUtil.create(`${tagNodeNameId}`, id));
 
@@ -581,7 +581,7 @@ function serializeDefinition(
 			(transition) => transition.source === id
 		);
 
-		appendXMLTransitions(buffer, nodeTransitions, publishing);
+		appendXMLTransitions(buffer, nodeTransitions, exporting);
 
 		buffer.push(xmlNode.close);
 	});

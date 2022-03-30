@@ -17,7 +17,6 @@ package com.liferay.site.initializer.extender.internal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.liferay.account.constants.AccountConstants;
-import com.liferay.account.model.AccountRole;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
@@ -43,6 +42,7 @@ import com.liferay.headless.admin.taxonomy.dto.v1_0.TaxonomyVocabulary;
 import com.liferay.headless.admin.taxonomy.resource.v1_0.TaxonomyCategoryResource;
 import com.liferay.headless.admin.taxonomy.resource.v1_0.TaxonomyVocabularyResource;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
+import com.liferay.headless.admin.user.dto.v1_0.AccountRole;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.resource.v1_0.AccountResource;
 import com.liferay.headless.admin.user.resource.v1_0.AccountRoleResource;
@@ -2812,16 +2812,18 @@ public class BundleSiteInitializer implements SiteInitializer {
 			"roleBriefs");
 
 		for (int i = 0; i < jsonArray.length(); i++) {
-			Role role = _roleLocalService.fetchRole(
-				serviceContext.getCompanyId(), jsonArray.getString(i));
+			Page<AccountRole> accountRolePage =
+				accountRoleResource.
+					getAccountAccountRolesByExternalReferenceCodePage(
+						accountBriefsJSONObject.getString(
+							"externalReferenceCode"),
+						null,
+						accountRoleResource.toFilter(
+							StringBundler.concat(
+								"name eq '", jsonArray.getString(i), "'")),
+						null, null);
 
-			if (role == null) {
-				continue;
-			}
-
-			AccountRole accountRole =
-				_accountRoleLocalService.fetchAccountRoleByRoleId(
-					role.getRoleId());
+			AccountRole accountRole = accountRolePage.fetchFirstItem();
 
 			if (accountRole == null) {
 				continue;
@@ -2830,7 +2832,7 @@ public class BundleSiteInitializer implements SiteInitializer {
 			accountRoleResource.
 				postAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress(
 					accountBriefsJSONObject.getString("externalReferenceCode"),
-					accountRole.getAccountRoleId(), emailAddress);
+					accountRole.getId(), emailAddress);
 		}
 	}
 

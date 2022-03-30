@@ -150,6 +150,9 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				new ObjectEntryKeywordQueryContributor(
 					_objectFieldLocalService, _objectViewLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(
+					"component.name",
+					ObjectEntryKeywordQueryContributor.class.getName()
+				).put(
 					"indexer.class.name", objectDefinition.getClassName()
 				).build()),
 			_bundleContext.registerService(
@@ -157,8 +160,7 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				new ObjectEntryModelDocumentContributor(
 					objectDefinition.getClassName(),
 					_objectDefinitionLocalService, _objectEntryLocalService,
-					_objectFieldLocalService,
-					_persistedModelLocalServiceRegistry),
+					_objectFieldLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"indexer.class.name", objectDefinition.getClassName()
 				).build()),

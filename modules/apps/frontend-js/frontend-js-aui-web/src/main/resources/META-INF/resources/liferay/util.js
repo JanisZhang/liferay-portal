@@ -435,25 +435,6 @@
 			return columnId;
 		},
 
-		getGeolocation(success, fallback, options) {
-			if (success && navigator.geolocation) {
-				navigator.geolocation.getCurrentPosition(
-					(position) => {
-						success(
-							position.coords.latitude,
-							position.coords.longitude,
-							position
-						);
-					},
-					fallback,
-					options
-				);
-			}
-			else if (fallback) {
-				fallback();
-			}
-		},
-
 		getLexiconIconTpl(icon, cssClass) {
 			return Liferay.Util.sub(TPL_LEXICON_ICON, icon, cssClass || '');
 		},
@@ -464,7 +445,7 @@
 			if (!openingWindow) {
 				var topUtil = Liferay.Util.getTop().Liferay.Util;
 
-				var windowName = Liferay.Util.getWindowName();
+				var windowName = window.name;
 
 				var dialog = topUtil.Window.getById(windowName);
 
@@ -571,6 +552,9 @@
 			return Util.getTop().Liferay.Util.Window.getById(id);
 		},
 
+		/**
+		 * @deprecated As of Cavanaugh (7.4.x), replaced by `window.name`
+		 */
 		getWindowName() {
 			return window.name || Window._name || '';
 		},
@@ -1714,17 +1698,4 @@
 	// 200-400: Portlet Developer
 	// 400+: Liferay
 
-	Liferay.zIndex = {
-		ALERT: 430,
-		DOCK: 10,
-		DOCK_PARENT: 20,
-		DRAG_ITEM: 460,
-		DROP_AREA: 440,
-		DROP_POSITION: 450,
-		MENU: 5000,
-		OVERLAY: 1000,
-		POPOVER: 1600,
-		TOOLTIP: 10000,
-		WINDOW: 1200,
-	};
 })(AUI());

@@ -1479,31 +1479,6 @@
 				</licenses>
 			</library>
 			<library>
-				<file-name>lib/portal/jdom2.jar</file-name>
-				<version>2.0.6.LIFERAY-PATCHED-1</version>
-				<project-name>JDOM</project-name>
-				<project-url>http://www.jdom.org</project-url>
-				<licenses>
-					<license>
-						<license-name>BSD Style License</license-name>
-						<license-url>http://en.wikipedia.org/wiki/BSD_licenses</license-url>
-						<copyright-notice>Copyright (c) 2000-2012 Jason Hunter &amp; Brett McLaughlin. All rights reserved.</copyright-notice>
-					</license>
-				</licenses>
-			</library>
-			<library>
-				<file-name>lib/portal/jericho-html.jar</file-name>
-				<version>3.1</version>
-				<project-name>Jericho HTML Parser</project-name>
-				<project-url>http://jerichohtml.sourceforge.net</project-url>
-				<licenses>
-					<license>
-						<license-name>LGPL 2.1</license-name>
-						<license-url>http://www.gnu.org/licenses/lgpl-2.1.html</license-url>
-					</license>
-				</licenses>
-			</library>
-			<library>
 				<file-name>lib/portal/jersey-common.jar</file-name>
 				<version>2.26</version>
 				<project-name>Jersey core common packages</project-name>
@@ -2010,32 +1985,6 @@
 					<license>
 						<license-name>Apache License 2.0</license-name>
 						<license-url>http://www.apache.org/licenses/LICENSE-2.0</license-url>
-					</license>
-				</licenses>
-			</library>
-			<library>
-				<file-name>lib/portal/xbean.jar</file-name>
-				<version>3.0.2</version>
-				<project-name>XMLBeans</project-name>
-				<project-url>http://xmlbeans.apache.org</project-url>
-				<licenses>
-					<license>
-						<license-name>Apache License 2.0</license-name>
-						<license-url>http://www.apache.org/licenses/LICENSE-2.0</license-url>
-						<copyright-notice>Copyright (c) 2004-2009 The Apache Software Foundation</copyright-notice>
-					</license>
-				</licenses>
-			</library>
-			<library>
-				<file-name>lib/portal/xbean-spring.jar</file-name>
-				<version>2.8</version>
-				<project-name>XBean</project-name>
-				<project-url>http://geronimo.apache.org/xbean</project-url>
-				<licenses>
-					<license>
-						<license-name>Apache License 2.0</license-name>
-						<license-url>http://www.apache.org/licenses/LICENSE-2.0</license-url>
-						<copyright-notice>Copyright (c) 2005-2006 The Apache Software Foundation</copyright-notice>
 					</license>
 				</licenses>
 			</library>

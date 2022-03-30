@@ -30,6 +30,7 @@ import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.base.ObjectRelationshipLocalServiceBaseImpl;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
 import com.liferay.object.service.persistence.ObjectFieldPersistence;
+import com.liferay.object.service.persistence.ObjectLayoutTabPersistence;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -162,6 +163,9 @@ public class ObjectRelationshipLocalServiceImpl
 
 		objectRelationship = objectRelationshipPersistence.remove(
 			objectRelationship);
+
+		_objectLayoutTabPersistence.removeByObjectRelationshipId(
+			objectRelationship.getObjectRelationshipId());
 
 		if (Objects.equals(
 				objectRelationship.getType(),
@@ -538,6 +542,9 @@ public class ObjectRelationshipLocalServiceImpl
 
 	@Reference
 	private ObjectFieldPersistence _objectFieldPersistence;
+
+	@Reference
+	private ObjectLayoutTabPersistence _objectLayoutTabPersistence;
 
 	@Reference
 	private UserLocalService _userLocalService;

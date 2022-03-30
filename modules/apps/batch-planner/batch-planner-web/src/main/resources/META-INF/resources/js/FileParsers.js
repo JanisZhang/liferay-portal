@@ -69,24 +69,34 @@ export function extractFieldsFromCSV(
 ) {
 	const splitLines = content.split('\n');
 	const newLineFound = content.indexOf('\n') > -1;
+	let fileContent;
 
 	if (csvContainsHeaders && splitLines.length > 2) {
 		const [schema, firstItemData] = parseCSV(content, csvSeparator);
+		if (firstItemData) {
+			fileContent = parseCSV(content, csvSeparator).slice(
+				1,
+				content.length
+			);
 
-		return {
-			firstItemDetails: getItemDetails(firstItemData, schema),
-			schema,
-		};
+			return {
+				fileContent,
+				firstItemDetails: getItemDetails(firstItemData, schema),
+				schema,
+			};
+		}
 	}
 
 	if (!csvContainsHeaders && newLineFound) {
-		const [firstItemData] = parseCSV(splitLines[0], csvSeparator);
+		fileContent = parseCSV(content, csvSeparator);
+		const firstItemData = Object.values(fileContent[0]);
 
 		const schema = new Array(firstItemData.length)
 			.fill()
 			.map((_, index) => index);
 
 		return {
+			fileContent,
 			firstItemDetails: getItemDetails(firstItemData, schema),
 			schema,
 		};
@@ -94,61 +104,42 @@ export function extractFieldsFromCSV(
 }
 
 export function extractFieldsFromJSONL(content) {
-	let contentToParse;
+	if (content.trim().charAt(content.length - 1) === '}') {
+		const contentLines = content.replace(/\r?\n/g, ',');
 
-	if (content.indexOf('\n') > -1) {
-		const splitLines = content.split('\n');
+		const jsonStringContent = `[${contentLines}]`;
 
-		contentToParse = splitLines.find((line) => line.length > 0);
-	}
-	else {
-		contentToParse = content;
-	}
+		const jsonContent = JSON.parse(jsonStringContent);
 
-	try {
-		const data = JSON.parse(contentToParse);
+		try {
+			const data = Object.keys(jsonContent[0]);
 
-		const schema = Object.keys(data);
+			const schema = Object.values(data);
 
-		return {
-			firstItemDetails: getItemDetails(Object.values(data), schema),
-			schema,
-		};
-	}
-	catch (error) {
-		console.error(error);
-
-		return;
+			return {
+				fileContent: jsonContent
+					.map((row) => Object.values(row))
+					.slice(1, content.length),
+				firstItemDetails: getItemDetails(Object.values(data), schema),
+				schema,
+			};
+		}
+		catch (error) {
+			console.error(error);
+		}
 	}
 }
 
 export function extractFieldsFromJSON(content) {
-	const jsonArray = content.split('');
-	let parsedJSON;
+	if (content.trim().charAt(content.length - 1) === ']') {
+		const jsonfile = JSON.parse(content);
+		const fileContent = jsonfile.map((row) => Object.values(row));
 
-	jsonArray.shift();
-
-	for (let index = 0; index < jsonArray.length - 1; index++) {
-		if (jsonArray[index] === '}') {
-			const partialJson = jsonArray.slice(0, index + 1).join('');
-
-			try {
-				parsedJSON = JSON.parse(partialJson);
-
-				const schema = Object.keys(parsedJSON);
-
-				return {
-					firstItemDetails: getItemDetails(
-						Object.values(parsedJSON),
-						schema
-					),
-					schema,
-				};
-			}
-			catch (error) {
-				console.error(error);
-			}
-		}
+		return {
+			fileContent,
+			firstItemDetails: fileContent[0],
+			schema: Object.keys(jsonfile[0]),
+		};
 	}
 }
 
@@ -185,6 +176,7 @@ function parseInChunk({
 		if (parsedData) {
 			return onComplete({
 				extension,
+				fileContent: parsedData.fileContent,
 				firstItemDetails: parsedData.firstItemDetails,
 				schema: parsedData.schema,
 			});

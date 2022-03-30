@@ -362,6 +362,12 @@ definition {
 				value1 = "${minimumWordLength}");
 		}
 
+		if (isSet(searchScope)) {
+			Select(
+				locator1 = "Select#SCOPE_CONFIGURATION",
+				value1 = "${searchScope}");
+		}
+
 		if (isSet(stopWords)) {
 			Type(
 				key_fieldLabel = "Stop Words",

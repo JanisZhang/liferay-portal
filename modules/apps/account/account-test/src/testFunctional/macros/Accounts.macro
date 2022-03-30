@@ -213,7 +213,7 @@ definition {
 	macro addAssigneeToRoleViaUsersTab {
 		Navigator.gotoNavTab(navTab = "Users");
 
-		LexiconEntry.gotoEntryMenuItem(
+		Accounts.goToEntryMenuItem(
 			menuItem = "Assign Roles",
 			rowEntry = "${accountUserName}");
 
@@ -1026,6 +1026,16 @@ definition {
 			value1 = "Edit ${accountName}");
 	}
 
+	// Add new macro to avoid failure addressed in LRQA-74074, and that's why we not using the exist macro in LexiconEntry.macro.
+
+	macro goToEntryMenuItem {
+		Click(
+			key_rowEntry = "${rowEntry}",
+			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
+
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+	}
+
 	macro openAccountsAdmin {
 		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet");
 	}
@@ -1324,7 +1334,7 @@ definition {
 	macro unassignUserRole {
 		Navigator.gotoNavTab(navTab = "Users");
 
-		LexiconEntry.gotoEntryMenuItem(
+		Accounts.goToEntryMenuItem(
 			menuItem = "Assign Roles",
 			rowEntry = "${accountUserName}");
 
