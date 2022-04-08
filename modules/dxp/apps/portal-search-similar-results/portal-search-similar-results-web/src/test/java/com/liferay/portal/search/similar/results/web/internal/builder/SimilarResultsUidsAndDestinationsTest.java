@@ -32,7 +32,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.similar.results.web.internal.contributor.asset.publisher.AssetPublisherSimilarResultsContributor;
 import com.liferay.portal.search.similar.results.web.internal.contributor.blogs.BlogsSimilarResultsContributor;
@@ -88,13 +87,7 @@ public class SimilarResultsUidsAndDestinationsTest {
 	public void setUp() {
 		MockitoAnnotations.initMocks(this);
 
-		_http = TestHttp.getInstance();
-
-		_httpHelper = new HttpHelperImpl() {
-			{
-				setHttp(_http);
-			}
-		};
+		_httpHelper = new HttpHelperImpl();
 
 		_similarResultsContributorsRegistry =
 			_createSimilarResultsContributorsRegistry();
@@ -695,7 +688,7 @@ public class SimilarResultsUidsAndDestinationsTest {
 		String urlString, SimilarResultsRoute similarResultsRoute) {
 
 		DestinationBuilderImpl destinationBuilderImpl =
-			new DestinationBuilderImpl(urlString, _http);
+			new DestinationBuilderImpl(urlString);
 
 		SimilarResultsContributor similarResultsContributor =
 			similarResultsRoute.getContributor();
@@ -846,7 +839,6 @@ public class SimilarResultsUidsAndDestinationsTest {
 
 		return new SimilarResultsContributorsRegistryImpl() {
 			{
-				setHttp(_http);
 				setSimilarResultsContributorsHolder(
 					similarResultsContributorsHolderImpl);
 			}
@@ -1046,7 +1038,6 @@ public class SimilarResultsUidsAndDestinationsTest {
 	private DLFolderLocalService _dlFolderLocalService;
 
 	private long _groupId;
-	private Http _http;
 	private HttpHelper _httpHelper;
 
 	@Mock
