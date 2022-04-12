@@ -32,7 +32,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Iterator;
 import java.util.List;
@@ -41,26 +41,19 @@ import java.util.Objects;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * @author Marcellus Tavares
  */
-@PrepareForTest({LocaleUtil.class, PropsValues.class})
-@RunWith(PowerMockRunner.class)
-@SuppressStaticInitializationFor(
-	{
-		"com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil",
-		"com.liferay.portal.kernel.xml.SAXReaderUtil",
-		"com.liferay.portal.util.PropsValues"
-	}
-)
 public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -223,24 +216,6 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 			ddmFormSerializerSerializeResponse.getContent());
 	}
 
-	protected DDMFormField createRadioDDMFormField(
-		String name, boolean required, int availableOptions) {
-
-		DDMFormField ddmFormField = new DDMFormField(name, "radio");
-
-		ddmFormField.setDataType("string");
-		ddmFormField.setRequired(required);
-
-		LocalizedValue label = ddmFormField.getLabel();
-
-		label.addString(LocaleUtil.US, StringUtil.randomString());
-
-		ddmFormField.setDDMFormFieldOptions(
-			createDDMFormFieldOptions(availableOptions));
-
-		return ddmFormField;
-	}
-
 	protected DDMFormField createSelectDDMFormField(
 		String name, boolean required, int availableOptions) {
 
@@ -289,8 +264,7 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 	}
 
 	protected Map<String, DDMFormField> getDDMFormFieldsMap(
-			DDMTemplate ddmTemplate)
-		throws Exception {
+		DDMTemplate ddmTemplate) {
 
 		DDMFormDeserializerDeserializeRequest.Builder builder =
 			DDMFormDeserializerDeserializeRequest.Builder.newBuilder(
@@ -319,7 +293,7 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 		}
 	}
 
-	protected void testFormTemplatesAfterAddRequiredFields() throws Exception {
+	protected void testFormTemplatesAfterAddRequiredFields() {
 
 		// Create
 
@@ -341,8 +315,7 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 	}
 
 	protected void testFormTemplatesAfterChangeDDMFormFieldOptionsProperty(
-			DDMForm structureForm, String... fields)
-		throws Exception {
+		DDMForm structureForm, String... fields) {
 
 		Map<String, DDMFormField> structureDDMFormFieldsMap =
 			structureForm.getDDMFormFieldsMap(true);
@@ -383,7 +356,7 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 		}
 	}
 
-	protected void testFormTemplatesAfterRemoveFields() throws Exception {
+	protected void testFormTemplatesAfterRemoveFields() {
 
 		// Create
 
@@ -403,8 +376,7 @@ public class DDMFormTemplateSynchonizerTest extends BaseDDMTestCase {
 		Assert.assertNull(ddmFormField);
 	}
 
-	protected void testFormTemplatesAfterUpdateRequiredFieldProperties()
-		throws Exception {
+	protected void testFormTemplatesAfterUpdateRequiredFieldProperties() {
 
 		// Create
 
