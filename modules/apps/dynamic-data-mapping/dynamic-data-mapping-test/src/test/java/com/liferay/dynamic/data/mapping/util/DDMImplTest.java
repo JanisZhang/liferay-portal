@@ -36,7 +36,7 @@ import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.Serializable;
 
@@ -45,27 +45,21 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import org.skyscreamer.jsonassert.JSONAssert;
 
 /**
  * @author Marcellus Tavares
  */
-@PrepareForTest(PropsValues.class)
-@RunWith(PowerMockRunner.class)
-@SuppressStaticInitializationFor(
-	{
-		"com.liferay.portal.kernel.xml.SAXReaderUtil",
-		"com.liferay.portal.util.PropsValues"
-	}
-)
 public class DDMImplTest extends BaseDDMTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -111,9 +105,7 @@ public class DDMImplTest extends BaseDDMTestCase {
 	}
 
 	@Test
-	public void testMergeAfterNewFieldIsAddedAndPublishingContentAtBranch()
-		throws Exception {
-
+	public void testMergeAfterNewFieldIsAddedAndPublishingContentAtBranch() {
 		DDMForm ddmForm = createDDMForm();
 
 		addDDMFormFields(
@@ -159,9 +151,7 @@ public class DDMImplTest extends BaseDDMTestCase {
 	}
 
 	@Test
-	public void testMergeFieldsAfterFieldValueIsRemovedFromTheMiddleOfSeries()
-		throws Exception {
-
+	public void testMergeFieldsAfterFieldValueIsRemovedFromTheMiddleOfSeries() {
 		DDMForm ddmForm = createDDMForm();
 
 		addDDMFormFields(
@@ -247,9 +237,7 @@ public class DDMImplTest extends BaseDDMTestCase {
 	}
 
 	@Test
-	public void testMergeFieldsAfterNewFieldValueIsInsertedInTheMiddleOfSeries()
-		throws Exception {
-
+	public void testMergeFieldsAfterNewFieldValueIsInsertedInTheMiddleOfSeries() {
 		DDMForm ddmForm = createDDMForm();
 
 		addDDMFormFields(
@@ -295,9 +283,7 @@ public class DDMImplTest extends BaseDDMTestCase {
 	}
 
 	@Test
-	public void testMergeFieldsAfterNewLocalizedFieldValueIsAdded()
-		throws Exception {
-
+	public void testMergeFieldsAfterNewLocalizedFieldValueIsAdded() {
 		DDMForm ddmForm = createDDMForm();
 
 		addDDMFormFields(ddmForm, createTextDDMFormField("Title"));
@@ -337,9 +323,7 @@ public class DDMImplTest extends BaseDDMTestCase {
 	}
 
 	@Test
-	public void testMergeFieldsAfterRepeatableParentAndChildAreModified()
-		throws Exception {
-
+	public void testMergeFieldsAfterRepeatableParentAndChildAreModified() {
 		DDMForm ddmForm = createDDMForm();
 
 		DDMFormField textDDMFormField = createTextDDMFormField(
@@ -423,9 +407,7 @@ public class DDMImplTest extends BaseDDMTestCase {
 	}
 
 	@Test
-	public void testMergeFieldsAfterRepeatableTransientParentIsAppended()
-		throws Exception {
-
+	public void testMergeFieldsAfterRepeatableTransientParentIsAppended() {
 		DDMForm ddmForm = createDDMForm();
 
 		DDMFormField separatorDDMFormField = createSeparatorDDMFormField(
@@ -477,9 +459,7 @@ public class DDMImplTest extends BaseDDMTestCase {
 	}
 
 	@Test
-	public void testMergeFieldsWhenAddingTranslationAtBranch()
-		throws Exception {
-
+	public void testMergeFieldsWhenAddingTranslationAtBranch() {
 		DDMForm ddmForm = createDDMForm();
 
 		addDDMFormFields(
@@ -535,9 +515,7 @@ public class DDMImplTest extends BaseDDMTestCase {
 	}
 
 	@Test
-	public void testMergeFieldsWithFieldsValuesWithNoInstanceSuffix()
-		throws Exception {
-
+	public void testMergeFieldsWithFieldsValuesWithNoInstanceSuffix() {
 		DDMForm ddmForm = createDDMForm();
 
 		addDDMFormFields(
@@ -575,7 +553,7 @@ public class DDMImplTest extends BaseDDMTestCase {
 	}
 
 	@Test
-	public void testMergeFieldsWithMatchingFieldNames() throws Exception {
+	public void testMergeFieldsWithMatchingFieldNames() {
 		DDMForm ddmForm = createDDMForm();
 
 		DDMFormField textDDMFormField = createTextDDMFormField(
