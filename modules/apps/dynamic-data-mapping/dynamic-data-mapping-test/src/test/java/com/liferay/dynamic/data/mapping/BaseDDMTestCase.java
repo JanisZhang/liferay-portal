@@ -84,7 +84,6 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.util.LocalizationImpl;
 import com.liferay.portal.util.PropsImpl;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.xml.SAXReaderImpl;
 
 import java.io.IOException;
@@ -101,31 +100,16 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 import org.junit.Before;
-import org.junit.runner.RunWith;
 
 import org.mockito.Matchers;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 /**
  * @author Pablo Carvalho
  * @author Miguel Angelo Caldas Gallindo
  */
-@PrepareForTest(PropsValues.class)
-@RunWith(PowerMockRunner.class)
-@SuppressStaticInitializationFor(
-	{
-		"com.liferay.portal.kernel.xml.SAXReaderUtil",
-		"com.liferay.portal.util.PropsValues"
-	}
-)
-public abstract class BaseDDMTestCase extends PowerMockito {
+public abstract class BaseDDMTestCase {
 
 	@Before
 	public void setUp() throws Exception {
@@ -435,8 +419,8 @@ public abstract class BaseDDMTestCase extends PowerMockito {
 
 		setUpDefaultDDMFormFieldType();
 
-		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker = mock(
-			DDMFormFieldTypeServicesTracker.class);
+		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker =
+			Mockito.mock(DDMFormFieldTypeServicesTracker.class);
 
 		DDMFormFieldRenderer ddmFormFieldRenderer = Mockito.mock(
 			DDMFormFieldRenderer.class);
@@ -752,10 +736,6 @@ public abstract class BaseDDMTestCase extends PowerMockito {
 		PropsUtil.setProps(new PropsImpl());
 	}
 
-	protected void setUpPropsValues() {
-		mockStatic(PropsValues.class);
-	}
-
 	protected void setUpResourceBundleUtil() {
 		ResourceBundleLoader resourceBundleLoader = Mockito.mock(
 			ResourceBundleLoader.class);
@@ -849,9 +829,7 @@ public abstract class BaseDDMTestCase extends PowerMockito {
 		ddmFormValuesJSONSerializer = new DDMFormValuesJSONSerializer();
 	protected static final JSONFactory jsonFactory = new JSONFactoryImpl();
 
-	@Mock
-	protected Language language;
-
+	protected Language language = Mockito.mock(Language.class);
 	protected Map<Long, DDMStructure> structures = new HashMap<>();
 	protected Map<Long, DDMTemplate> templates = new HashMap<>();
 
@@ -880,19 +858,14 @@ public abstract class BaseDDMTestCase extends PowerMockito {
 
 	}
 
-	@Mock
-	private ClassLoader _classLoader;
-
-	@Mock
-	private Configuration _configuration;
-
-	@Mock
-	private ConfigurationFactory _configurationFactory;
-
-	@Mock
-	private DDMFormFieldType _defaultDDMFormFieldType;
-
-	@Mock
-	private ResourceBundle _resourceBundle;
+	private final ClassLoader _classLoader = Mockito.mock(ClassLoader.class);
+	private final Configuration _configuration = Mockito.mock(
+		Configuration.class);
+	private final ConfigurationFactory _configurationFactory = Mockito.mock(
+		ConfigurationFactory.class);
+	private final DDMFormFieldType _defaultDDMFormFieldType = Mockito.mock(
+		DDMFormFieldType.class);
+	private final ResourceBundle _resourceBundle = Mockito.mock(
+		ResourceBundle.class);
 
 }
