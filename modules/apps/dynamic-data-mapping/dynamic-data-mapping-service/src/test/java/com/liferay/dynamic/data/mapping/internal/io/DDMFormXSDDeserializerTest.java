@@ -20,30 +20,24 @@ import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portal.util.HtmlImpl;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.xml.SAXReaderImpl;
 
 import org.junit.Before;
-import org.junit.runner.RunWith;
-
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.ClassRule;
+import org.junit.Rule;
 
 /**
  * @author Pablo Carvalho
  */
-@PrepareForTest(PropsValues.class)
-@RunWith(PowerMockRunner.class)
-@SuppressStaticInitializationFor(
-	{
-		"com.liferay.portal.kernel.xml.SAXReaderUtil",
-		"com.liferay.portal.util.PropsValues"
-	}
-)
 public class DDMFormXSDDeserializerTest
 	extends BaseDDMFormDeserializerTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -51,7 +45,6 @@ public class DDMFormXSDDeserializerTest
 		super.setUp();
 
 		_setUpHtmlUtil();
-		_setUpPropsValues();
 		_setUpSAXReaderUtil();
 		_setUpDDMFormXSDDeserializer();
 	}
@@ -91,10 +84,6 @@ public class DDMFormXSDDeserializerTest
 		HtmlUtil htmlUtil = new HtmlUtil();
 
 		htmlUtil.setHtml(new HtmlImpl());
-	}
-
-	private void _setUpPropsValues() {
-		mockStatic(PropsValues.class);
 	}
 
 	private void _setUpSAXReaderUtil() {
