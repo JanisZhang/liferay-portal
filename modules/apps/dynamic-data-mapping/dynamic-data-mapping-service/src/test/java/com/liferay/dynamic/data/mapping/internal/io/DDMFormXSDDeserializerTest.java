@@ -17,6 +17,7 @@ package com.liferay.dynamic.data.mapping.internal.io;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
@@ -73,11 +74,8 @@ public class DDMFormXSDDeserializerTest
 	}
 
 	private void _setUpDDMFormXSDDeserializer() throws Exception {
-		field(
-			DDMFormXSDDeserializer.class, "_saxReader"
-		).set(
-			_ddmFormXSDDeserializer, new SAXReaderImpl()
-		);
+		ReflectionTestUtil.setFieldValue(
+			_ddmFormXSDDeserializer, "_saxReader", new SAXReaderImpl());
 	}
 
 	private void _setUpHtmlUtil() {
