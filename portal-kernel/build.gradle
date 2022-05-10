@@ -1,1 +1,3 @@
-apply from: "../modules/build-portal.gradle"
+apply from: "." +
+        "" +
+        "./modules/build-portal.gradle"
