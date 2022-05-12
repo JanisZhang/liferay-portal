@@ -290,18 +290,6 @@
 				</licenses>
 			</library>
 			<library>
-				<file-name>com.liferay.commerce.order.content.web.jar!commons-csv.jar</file-name>
-				<version>1.8</version>
-				<project-name>Apache Commons CSV</project-name>
-				<project-url>https://commons.apache.org/proper/commons-csv/</project-url>
-				<licenses>
-					<license>
-						<license-name>Apache License, Version 2.0</license-name>
-						<license-url>https://www.apache.org/licenses/LICENSE-2.0.txt</license-url>
-					</license>
-				</licenses>
-			</library>
-			<library>
 				<file-name>com.liferay.commerce.payment.method.authorize.net.jar!anet-java-sdk.jar</file-name>
 				<version>1.9.9</version>
 				<project-name>Authorize.Net Java SDK</project-name>
@@ -5164,6 +5152,18 @@
 				</licenses>
 			</library>
 			<library>
+				<file-name>com.liferay.shared.dependencies.apache.commons.jar!commons-csv.jar</file-name>
+				<version>1.9.0</version>
+				<project-name>Apache Commons CSV</project-name>
+				<project-url>https://commons.apache.org/proper/commons-csv/</project-url>
+				<licenses>
+					<license>
+						<license-name>Apache License, Version 2.0</license-name>
+						<license-url>https://www.apache.org/licenses/LICENSE-2.0.txt</license-url>
+					</license>
+				</licenses>
+			</library>
+			<library>
 				<file-name>com.liferay.shared.dependencies.apache.commons.jar!commons-digester.jar</file-name>
 				<version>1.8.1</version>
 				<project-name>Commons Digester</project-name>
@@ -5606,18 +5606,6 @@
 					<license>
 						<license-name>The Apache Software License, Version 2.0</license-name>
 						<license-url>http://www.apache.org/licenses/LICENSE-2.0.txt</license-url>
-					</license>
-				</licenses>
-			</library>
-			<library>
-				<file-name>com.liferay.translation.web.jar!commons-csv.jar</file-name>
-				<version>1.8</version>
-				<project-name>Apache Commons CSV</project-name>
-				<project-url>https://commons.apache.org/proper/commons-csv/</project-url>
-				<licenses>
-					<license>
-						<license-name>Apache License, Version 2.0</license-name>
-						<license-url>https://www.apache.org/licenses/LICENSE-2.0.txt</license-url>
 					</license>
 				</licenses>
 			</library>
@@ -6331,8 +6319,20 @@
 				</licenses>
 			</library>
 			<library>
-				<file-name>lib/development/mockito.jar</file-name>
-				<version>1.9.5</version>
+				<file-name>lib/development/mockito-core.jar</file-name>
+				<version>4.5.1</version>
+				<project-name>Mockito</project-name>
+				<project-url>http://code.google.com/p/mockito</project-url>
+				<licenses>
+					<license>
+						<license-name>MIT License</license-name>
+						<license-url>http://opensource.org/licenses/MIT</license-url>
+					</license>
+				</licenses>
+			</library>
+			<library>
+				<file-name>lib/development/mockito-inline.jar</file-name>
+				<version>4.5.1</version>
 				<project-name>Mockito</project-name>
 				<project-url>http://code.google.com/p/mockito</project-url>
 				<licenses>
