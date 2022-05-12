@@ -58,8 +58,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -1033,7 +1033,7 @@ public class DDMFormValuesFactoryTest extends PowerMockito {
 		mockStatic(ServiceTrackerMapFactory.class);
 
 		when(
-			_serviceTrackerMap.containsKey(Matchers.anyString())
+			_serviceTrackerMap.containsKey(Mockito.anyString())
 		).thenReturn(
 			false
 		);
@@ -1067,7 +1067,7 @@ public class DDMFormValuesFactoryTest extends PowerMockito {
 
 	protected void setUpLanguageUtil() {
 		when(
-			_language.getLanguageId(Matchers.any(HttpServletRequest.class))
+			_language.getLanguageId(Mockito.any(HttpServletRequest.class))
 		).thenReturn(
 			"es_ES"
 		);
@@ -1133,7 +1133,7 @@ public class DDMFormValuesFactoryTest extends PowerMockito {
 		);
 
 		when(
-			LocaleUtil.toLanguageIds(Matchers.anyCollection())
+			LocaleUtil.toLanguageIds(Mockito.anyCollection())
 		).thenReturn(
 			new String[] {"en_US", "pt_BR"}
 		);
