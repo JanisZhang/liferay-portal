@@ -28,6 +28,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 /**
@@ -82,7 +83,8 @@ public class GooglePlacesUtilTest {
 
 		Mockito.when(
 			portletPreferences.getValue(
-				Mockito.anyString(), Mockito.anyString())
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_COMPANY_GOOGLE_PLACES_API_KEY
 		);

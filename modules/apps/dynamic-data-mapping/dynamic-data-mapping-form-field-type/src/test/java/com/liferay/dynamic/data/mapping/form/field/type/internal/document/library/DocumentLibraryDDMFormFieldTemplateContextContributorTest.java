@@ -71,6 +71,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -218,8 +220,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 	public void testGetParametersForUserWithoutPermission() throws Exception {
 		Mockito.when(
 			_modelResourcePermission.contains(
-				Mockito.any(PermissionChecker.class), Mockito.anyLong(),
-				Mockito.anyString())
+				AdditionalMatchers.or(
+					Mockito.isNull(), Mockito.any(PermissionChecker.class)),
+				Mockito.anyLong(), Mockito.anyString())
 		).thenReturn(
 			false
 		);
@@ -618,12 +621,19 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 			_itemSelector.getItemSelectorURL(
 				Mockito.any(),
 				Mockito.argThat(
-					group -> {
-						if ((group == _group) || (group == _scopeGroup)) {
-							return true;
+					new ArgumentMatcher<Group>() {
+
+						@Override
+						public boolean matches(Group argument) {
+							if ((argument == _group) ||
+								(argument == _scopeGroup)) {
+
+								return true;
+							}
+
+							return false;
 						}
 
-						return false;
 					}),
 				Mockito.eq(_GROUP_ID),
 				Mockito.eq(_PORTLET_NAMESPACE + "selectDocumentLibrary"),
@@ -649,8 +659,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 	private void _setUpModelResourcePermission() throws Exception {
 		Mockito.when(
 			_modelResourcePermission.contains(
-				Mockito.any(PermissionChecker.class), Mockito.anyLong(),
-				Mockito.anyString())
+				AdditionalMatchers.or(
+					Mockito.any(PermissionChecker.class), Mockito.isNull()),
+				Mockito.anyLong(), Mockito.anyString())
 		).thenReturn(
 			true
 		);
@@ -716,7 +727,8 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 		).when(
 			portletURLFactory
 		).create(
-			Mockito.any(PortletRequest.class),
+			AdditionalMatchers.or(
+				Mockito.isNull(), Mockito.any(PortletRequest.class)),
 			Mockito.eq(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM),
 			Mockito.anyString()
 		);
@@ -726,7 +738,8 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 		).when(
 			portletURLFactory
 		).create(
-			Mockito.any(HttpServletRequest.class),
+			AdditionalMatchers.or(
+				Mockito.isNull(), Mockito.any(HttpServletRequest.class)),
 			Mockito.eq(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM),
 			Mockito.anyLong(), Mockito.anyString()
 		);

@@ -45,6 +45,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 /**
@@ -228,7 +229,8 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			Optional.of(
 				new AMImageConfigurationEntryImpl(
@@ -238,7 +240,8 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageEntryLocalService.fetchAMImageEntry(
-				Mockito.anyString(), Mockito.anyLong())
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				Mockito.anyLong())
 		).thenReturn(
 			_amImageEntry
 		);
@@ -274,7 +277,8 @@ public class AMImageProcessorImplTest {
 		);
 
 		Mockito.when(
-			_amImageScalerTracker.getAMImageScaler(Mockito.anyString())
+			_amImageScalerTracker.getAMImageScaler(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_amImageScaler
 		);
@@ -316,7 +320,8 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			Optional.of(
 				new AMImageConfigurationEntryImpl(
@@ -326,7 +331,8 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageEntryLocalService.fetchAMImageEntry(
-				Mockito.anyString(), Mockito.anyLong())
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				Mockito.anyLong())
 		).thenReturn(
 			Mockito.mock(AMImageEntry.class)
 		);
@@ -344,7 +350,8 @@ public class AMImageProcessorImplTest {
 		);
 
 		Mockito.when(
-			_amImageScalerTracker.getAMImageScaler(Mockito.anyString())
+			_amImageScalerTracker.getAMImageScaler(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_amImageScaler
 		);
@@ -398,13 +405,15 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			Optional.of(amImageConfigurationEntry)
 		);
 
 		Mockito.when(
-			_amImageScalerTracker.getAMImageScaler(Mockito.anyString())
+			_amImageScalerTracker.getAMImageScaler(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			null
 		);
@@ -433,7 +442,8 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			Optional.empty()
 		);
@@ -444,7 +454,8 @@ public class AMImageProcessorImplTest {
 		Mockito.verify(
 			_amImageEntryLocalService, Mockito.never()
 		).fetchAMImageEntry(
-			Mockito.anyString(), Mockito.anyLong()
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+			Mockito.anyLong()
 		);
 	}
 
@@ -463,7 +474,8 @@ public class AMImageProcessorImplTest {
 		Mockito.verify(
 			_amImageConfigurationHelper, Mockito.never()
 		).getAMImageConfigurationEntry(
-			Mockito.anyLong(), Mockito.anyString()
+			Mockito.anyLong(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 	}
 
@@ -491,13 +503,15 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			Optional.of(amImageConfigurationEntry)
 		);
 
 		Mockito.when(
-			_amImageScalerTracker.getAMImageScaler(Mockito.anyString())
+			_amImageScalerTracker.getAMImageScaler(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_amImageScaler
 		);
@@ -543,13 +557,15 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			Optional.of(amImageConfigurationEntry)
 		);
 
 		Mockito.when(
-			_amImageScalerTracker.getAMImageScaler(Mockito.anyString())
+			_amImageScalerTracker.getAMImageScaler(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_amImageScaler
 		);
@@ -618,13 +634,15 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			Optional.of(amImageConfigurationEntry)
 		);
 
 		Mockito.when(
-			_amImageScalerTracker.getAMImageScaler(Mockito.anyString())
+			_amImageScalerTracker.getAMImageScaler(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_amImageScaler
 		);
@@ -662,13 +680,15 @@ public class AMImageProcessorImplTest {
 
 		Mockito.when(
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			Optional.of(amImageConfigurationEntry)
 		);
 
 		Mockito.when(
-			_amImageScalerTracker.getAMImageScaler(Mockito.anyString())
+			_amImageScalerTracker.getAMImageScaler(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_amImageScaler
 		);

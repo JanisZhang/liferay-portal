@@ -42,16 +42,14 @@ import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.MockitoAnnotations;
 
 /**
  * @author André de Oliveira
  */
-@RunWith(MockitoJUnitRunner.class)
 public class SearchResultUtilTest extends BaseSearchResultUtilTestCase {
 
 	@ClassRule
@@ -61,6 +59,8 @@ public class SearchResultUtilTest extends BaseSearchResultUtilTestCase {
 
 	@Test
 	public void testBlankDocument() {
+		MockitoAnnotations.openMocks(this);
+
 		SearchResult searchResult = assertOneSearchResult(new DocumentImpl());
 
 		Assert.assertNull(searchResult.getSummary());
