@@ -47,6 +47,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 /**
@@ -693,11 +694,19 @@ public class UserBuilderTest extends BaseVLDAPTestCase {
 
 		Mockito.when(
 			userLocalService.search(
-				Mockito.anyLong(), Mockito.anyString(), Mockito.anyString(),
-				Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
-				Mockito.anyInt(), Mockito.any(LinkedHashMap.class),
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				Mockito.anyInt(),
+				AdditionalMatchers.or(
+					Mockito.any(LinkedHashMap.class), Mockito.isNull()),
 				Mockito.anyBoolean(), Mockito.anyInt(), Mockito.anyInt(),
-				Mockito.any(UserScreenNameComparator.class))
+				AdditionalMatchers.or(
+					Mockito.any(UserScreenNameComparator.class),
+					Mockito.isNull()))
 		).thenReturn(
 			_users
 		);
@@ -742,7 +751,8 @@ public class UserBuilderTest extends BaseVLDAPTestCase {
 			FastDateFormatFactory.class);
 
 		Mockito.when(
-			fastDateFormatFactory.getSimpleDateFormat(Mockito.anyString())
+			fastDateFormatFactory.getSimpleDateFormat(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			fastDateFormat
 		);
@@ -779,9 +789,11 @@ public class UserBuilderTest extends BaseVLDAPTestCase {
 		Mockito.when(
 			groupLocalService.search(
 				Mockito.anyLong(), Mockito.any(long[].class),
-				Mockito.anyString(), Mockito.anyString(),
-				Mockito.any(LinkedHashMap.class), Mockito.anyBoolean(),
-				Mockito.anyInt(), Mockito.anyInt())
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(
+					Mockito.any(LinkedHashMap.class), Mockito.isNull()),
+				Mockito.anyBoolean(), Mockito.anyInt(), Mockito.anyInt())
 		).thenReturn(
 			Arrays.asList(group)
 		);

@@ -32,6 +32,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 /**
@@ -125,7 +126,9 @@ public class AssetAutoTaggerCompanyConfigurationModelListenerTest {
 			resourceBundleLoader);
 
 		Mockito.when(
-			resourceBundleLoader.loadResourceBundle(Mockito.any(Locale.class))
+			resourceBundleLoader.loadResourceBundle(
+				AdditionalMatchers.or(
+					Mockito.any(Locale.class), Mockito.isNull()))
 		).thenReturn(
 			ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE
 		);

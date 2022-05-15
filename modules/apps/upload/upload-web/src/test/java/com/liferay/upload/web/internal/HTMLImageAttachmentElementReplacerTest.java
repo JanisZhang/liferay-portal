@@ -57,7 +57,7 @@ public class HTMLImageAttachmentElementReplacerTest {
 
 		Mockito.when(
 			_portletFileRepository.getPortletFileEntryURL(
-				AdditionalMatchers.and(
+				AdditionalMatchers.or(
 					Mockito.isNull(), Mockito.isA(ThemeDisplay.class)),
 				Mockito.eq(_fileEntry), Mockito.eq(StringPool.BLANK))
 		).thenReturn(

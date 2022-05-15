@@ -80,6 +80,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.mockito.AdditionalAnswers;
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -149,7 +150,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			complexQueryPartBuilder
 		).query(
-			Mockito.any()
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull())
 		);
 
 		Mockito.doReturn(
@@ -423,9 +424,12 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			portal
 		).getControlPanelPortletURL(
-			Mockito.any(HttpServletRequest.class), Mockito.any(Group.class),
-			Mockito.anyString(), Mockito.anyLong(), Mockito.anyLong(),
-			Mockito.anyString()
+			AdditionalMatchers.or(
+				Mockito.any(HttpServletRequest.class), Mockito.isNull()),
+			AdditionalMatchers.or(Mockito.any(Group.class), Mockito.isNull()),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+			Mockito.anyLong(), Mockito.anyLong(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		return portletURL;
@@ -542,7 +546,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchResultInterpreterProvider
 		).getSearchResultInterpreter(
-			Mockito.anyString()
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		RankingResultUtil rankingResultUtil = new RankingResultUtil();
@@ -661,7 +665,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searcher
 		).search(
-			Mockito.any()
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull())
 		);
 	}
 
@@ -681,7 +685,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchRequestBuilder
 		).addComplexQueryPart(
-			Mockito.any()
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull())
 		);
 
 		Mockito.doReturn(
@@ -697,7 +701,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchRequestBuilder
 		).queryString(
-			Mockito.anyString()
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		Mockito.doReturn(
@@ -713,7 +717,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchRequestBuilder
 		).withSearchContext(
-			Mockito.any(Consumer.class)
+			AdditionalMatchers.or(Mockito.any(Consumer.class), Mockito.isNull())
 		);
 
 		return searchRequestBuilder;
@@ -733,7 +737,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchRequestBuilderFactory
 		).builder(
-			Mockito.any()
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull())
 		);
 	}
 
