@@ -149,7 +149,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			complexQueryPartBuilder
 		).query(
-			Mockito.any()
+			Mockito.nullable(Mockito.any())
 		);
 
 		Mockito.doReturn(
@@ -423,9 +423,9 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			portal
 		).getControlPanelPortletURL(
-			Mockito.any(HttpServletRequest.class), Mockito.any(Group.class),
-			Mockito.anyString(), Mockito.anyLong(), Mockito.anyLong(),
-			Mockito.anyString()
+			Mockito.nullable(HttpServletRequest.class),
+			Mockito.nullable(Group.class), Mockito.nullable(String.class),
+			Mockito.anyLong(), Mockito.anyLong(), Mockito.nullable(String.class)
 		);
 
 		return portletURL;
@@ -542,7 +542,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchResultInterpreterProvider
 		).getSearchResultInterpreter(
-			Mockito.anyString()
+			Mockito.nullable(String.class)
 		);
 
 		RankingResultUtil rankingResultUtil = new RankingResultUtil();
@@ -661,7 +661,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searcher
 		).search(
-			Mockito.any()
+			Mockito.nullable(Mockito.any())
 		);
 	}
 
@@ -681,7 +681,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchRequestBuilder
 		).addComplexQueryPart(
-			Mockito.any()
+			Mockito.nullable(Mockito.any())
 		);
 
 		Mockito.doReturn(
@@ -697,7 +697,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchRequestBuilder
 		).queryString(
-			Mockito.anyString()
+			Mockito.nullable(String.class)
 		);
 
 		Mockito.doReturn(
@@ -713,7 +713,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchRequestBuilder
 		).withSearchContext(
-			Mockito.any(Consumer.class)
+			Mockito.nullable(Consumer.class)
 		);
 
 		return searchRequestBuilder;
@@ -733,7 +733,7 @@ public abstract class BaseRankingsWebTestCase {
 		).when(
 			searchRequestBuilderFactory
 		).builder(
-			Mockito.any()
+			Mockito.nullable(Mockito.any())
 		);
 	}
 

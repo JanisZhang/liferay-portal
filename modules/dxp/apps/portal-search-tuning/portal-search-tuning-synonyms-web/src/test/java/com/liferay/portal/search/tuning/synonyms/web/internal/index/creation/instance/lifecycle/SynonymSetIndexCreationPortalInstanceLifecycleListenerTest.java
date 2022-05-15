@@ -77,12 +77,12 @@ public class SynonymSetIndexCreationPortalInstanceLifecycleListenerTest
 		Mockito.verify(
 			_synonymSetIndexCreator, Mockito.times(1)
 		).create(
-			Mockito.any()
+			Mockito.nullable(Mockito.any())
 		);
 		Mockito.verify(
 			_filterToIndexSynchronizer, Mockito.times(1)
 		).copyToIndex(
-			Mockito.anyString(), Mockito.any()
+			Mockito.nullable(String.class), Mockito.nullable(Mockito.any())
 		);
 	}
 
