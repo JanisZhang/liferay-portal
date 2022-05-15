@@ -28,6 +28,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 /**
@@ -182,7 +183,8 @@ public class UserInitialsGeneratorImplTest {
 		).when(
 			language
 		).get(
-			Mockito.any(Locale.class), Mockito.anyString(), Mockito.anyString()
+			Mockito.any(Locale.class), Mockito.anyString(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		LanguageUtil languageUtil = new LanguageUtil();

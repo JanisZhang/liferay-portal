@@ -68,6 +68,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -300,8 +301,11 @@ public class DDMFormRendererTagTest {
 
 		Mockito.when(
 			ddmFormInstanceModelResourcePermission.contains(
-				Mockito.any(PermissionChecker.class),
-				Mockito.any(DDMFormInstance.class), Mockito.anyString())
+				AdditionalMatchers.or(
+					Mockito.any(PermissionChecker.class), Mockito.isNull()),
+				AdditionalMatchers.or(
+					Mockito.any(DDMFormInstance.class), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			true
 		);

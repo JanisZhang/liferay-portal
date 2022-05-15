@@ -44,6 +44,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -97,16 +98,19 @@ public class OAuth2ControllerTest {
 
 		Mockito.when(
 			_portletURLFactory.create(
-				Mockito.any(PortletRequest.class), Mockito.anyString(),
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.any(PortletRequest.class),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_liferayPortletURL
 		);
 
 		Mockito.when(
 			_portletURLFactory.create(
-				Mockito.any(PortletRequest.class), Mockito.anyString(),
-				Mockito.anyString())
+				Mockito.any(PortletRequest.class),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_liferayPortletURL
 		);

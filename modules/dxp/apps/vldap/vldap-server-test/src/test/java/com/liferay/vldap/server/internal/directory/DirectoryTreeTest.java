@@ -90,6 +90,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 /**
@@ -1338,7 +1339,8 @@ public class DirectoryTreeTest extends BaseVLDAPTestCase {
 			FastDateFormatFactory.class);
 
 		Mockito.when(
-			fastDateFormatFactory.getSimpleDateFormat(Mockito.anyString())
+			fastDateFormatFactory.getSimpleDateFormat(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			fastDateFormat
 		);
@@ -1466,8 +1468,12 @@ public class DirectoryTreeTest extends BaseVLDAPTestCase {
 
 		Mockito.when(
 			userLocalService.search(
-				Mockito.anyLong(), Mockito.anyString(), Mockito.anyString(),
-				Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
 				Mockito.anyInt(), Mockito.any(LinkedHashMap.class),
 				Mockito.anyBoolean(), Mockito.anyInt(), Mockito.anyInt(),
 				Mockito.any(UserScreenNameComparator.class))

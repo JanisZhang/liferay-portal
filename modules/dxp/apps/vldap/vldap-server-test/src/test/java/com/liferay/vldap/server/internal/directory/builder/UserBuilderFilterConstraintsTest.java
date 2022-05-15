@@ -40,6 +40,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 /**
@@ -369,30 +370,42 @@ public class UserBuilderFilterConstraintsTest extends BaseVLDAPTestCase {
 
 		Mockito.when(
 			userLocalService.search(
-				Mockito.anyLong(), Mockito.anyString(), Mockito.anyString(),
-				Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
 				Mockito.anyInt(),
 				Mockito.eq(
 					LinkedHashMapBuilder.<String, Object>put(
 						"usersRoles", PRIMARY_KEY
 					).build()),
 				Mockito.anyBoolean(), Mockito.anyInt(), Mockito.anyInt(),
-				Mockito.any(UserScreenNameComparator.class))
+				AdditionalMatchers.or(
+					Mockito.any(UserScreenNameComparator.class),
+					Mockito.isNull()))
 		).thenReturn(
 			Arrays.asList(_hasRoleUser)
 		);
 
 		Mockito.when(
 			userLocalService.search(
-				Mockito.anyLong(), Mockito.anyString(), Mockito.anyString(),
-				Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
 				Mockito.anyInt(),
 				Mockito.eq(
 					LinkedHashMapBuilder.<String, Object>put(
 						"usersOrgs", PRIMARY_KEY
 					).build()),
 				Mockito.anyBoolean(), Mockito.anyInt(), Mockito.anyInt(),
-				Mockito.any(UserScreenNameComparator.class))
+				AdditionalMatchers.or(
+					Mockito.any(UserScreenNameComparator.class),
+					Mockito.isNull()))
 		).thenReturn(
 			Arrays.asList(_hasOrganizationUser)
 		);

@@ -32,6 +32,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 /**
@@ -58,7 +59,8 @@ public class DDMDataProviderInstanceSettingsImplTest {
 	@Test
 	public void testGetSettings() {
 		Mockito.when(
-			_ddmDataProviderTracker.getDDMDataProvider(Mockito.anyString())
+			_ddmDataProviderTracker.getDDMDataProvider(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_ddmDataProvider
 		);
@@ -98,7 +100,8 @@ public class DDMDataProviderInstanceSettingsImplTest {
 	@Test(expected = IllegalStateException.class)
 	public void testGetSettingsCatchException() {
 		Mockito.when(
-			_ddmDataProviderTracker.getDDMDataProvider(Mockito.anyString())
+			_ddmDataProviderTracker.getDDMDataProvider(
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenThrow(
 			IllegalStateException.class
 		);

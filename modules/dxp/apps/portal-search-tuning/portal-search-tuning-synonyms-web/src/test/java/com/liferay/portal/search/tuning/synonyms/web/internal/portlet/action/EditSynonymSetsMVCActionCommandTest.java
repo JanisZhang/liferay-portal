@@ -36,6 +36,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -122,7 +123,9 @@ public class EditSynonymSetsMVCActionCommandTest
 		Mockito.verify(
 			_indexToFilterSynchronizer, Mockito.times(1)
 		).copyToFilter(
-			Mockito.any(), Mockito.anyString(), Mockito.anyBoolean()
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull()),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+			Mockito.anyBoolean()
 		);
 	}
 

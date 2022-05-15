@@ -28,6 +28,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -63,7 +64,8 @@ public class SynonymSetStorageAdapterTest {
 		).when(
 			_synonymSetJSONStorageHelper
 		).addJSONStorageEntry(
-			Mockito.anyString(), Mockito.anyString()
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		Assert.assertEquals(

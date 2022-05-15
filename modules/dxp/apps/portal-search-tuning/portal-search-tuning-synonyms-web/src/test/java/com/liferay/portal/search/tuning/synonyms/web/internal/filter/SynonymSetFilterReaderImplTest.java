@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -66,7 +67,7 @@ public class SynonymSetFilterReaderImplTest extends BaseSynonymsWebTestCase {
 		).when(
 			jsonObject
 		).getJSONArray(
-			Mockito.anyString()
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		Mockito.doReturn(
@@ -74,7 +75,7 @@ public class SynonymSetFilterReaderImplTest extends BaseSynonymsWebTestCase {
 		).when(
 			_jsonFactory
 		).createJSONObject(
-			Mockito.anyString()
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		Assert.assertArrayEquals(

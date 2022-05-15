@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextFunction;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
@@ -57,6 +56,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -218,9 +218,11 @@ public class PingbackMethodImplTest {
 		).when(
 			_commentManager
 		).addComment(
-			Mockito.anyLong(), Mockito.anyLong(), Mockito.anyString(),
-			Mockito.anyLong(), Mockito.anyString(),
-			Mockito.<ServiceContextFunction>any()
+			Mockito.anyLong(), Mockito.anyLong(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+			Mockito.anyLong(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull())
 		);
 
 		execute();
@@ -245,7 +247,7 @@ public class PingbackMethodImplTest {
 				StringBundler.concat(
 					"[...] ", _EXCERPT_BODY, " [...] <a href=", _SOURCE_URI,
 					">", _READ_MORE, "</a>")),
-			Mockito.<ServiceContextFunction>any()
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull())
 		);
 	}
 
@@ -460,7 +462,8 @@ public class PingbackMethodImplTest {
 
 		Mockito.when(
 			_blogsEntryLocalService.getEntry(
-				Mockito.anyLong(), Mockito.anyString())
+				Mockito.anyLong(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			_blogsEntry
 		);
@@ -542,7 +545,8 @@ public class PingbackMethodImplTest {
 
 		Mockito.when(
 			_portal.getPlidFromFriendlyURL(
-				Mockito.eq(_COMPANY_ID), Mockito.anyString())
+				Mockito.eq(_COMPANY_ID),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			RandomTestUtil.randomLong()
 		);
@@ -564,7 +568,8 @@ public class PingbackMethodImplTest {
 		).when(
 			_portletIdLookup
 		).getPortletId(
-			Mockito.anyString(), Mockito.any()
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull())
 		);
 	}
 
@@ -619,7 +624,9 @@ public class PingbackMethodImplTest {
 		Fault fault = Mockito.mock(Fault.class);
 
 		Mockito.when(
-			_xmlRpc.createFault(Mockito.anyInt(), Mockito.anyString())
+			_xmlRpc.createFault(
+				Mockito.anyInt(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			fault
 		);
@@ -635,13 +642,14 @@ public class PingbackMethodImplTest {
 		Mockito.verify(
 			_commentManager
 		).addComment(
-			Mockito.anyLong(), Mockito.anyLong(), Mockito.anyString(),
+			Mockito.anyLong(), Mockito.anyLong(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
 			Mockito.anyLong(),
 			Mockito.eq(
 				StringBundler.concat(
 					"[...] ", excerpt, " [...] <a href=", _SOURCE_URI, ">",
 					_READ_MORE, "</a>")),
-			Mockito.<ServiceContextFunction>any()
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull())
 		);
 	}
 
@@ -676,7 +684,9 @@ public class PingbackMethodImplTest {
 		).when(
 			_friendlyURLMapper
 		).populateParams(
-			Mockito.eq(friendlyURLPath), Mockito.anyMap(), Mockito.anyMap()
+			Mockito.eq(friendlyURLPath),
+			AdditionalMatchers.or(Mockito.anyMap(), Mockito.isNull()),
+			AdditionalMatchers.or(Mockito.anyMap(), Mockito.isNull())
 		);
 	}
 
@@ -690,7 +700,10 @@ public class PingbackMethodImplTest {
 
 	private void _whenLanguageGet(String key, String returnValue) {
 		Mockito.when(
-			_language.get((Locale)Mockito.any(), Mockito.eq(key))
+			_language.get(
+				AdditionalMatchers.or(
+					Mockito.isNull(), Mockito.any(Locale.class)),
+				Mockito.eq(key))
 		).thenReturn(
 			returnValue
 		);

@@ -49,6 +49,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -212,8 +213,10 @@ public class DLEditFileShortcutDisplayContextTest {
 
 		Mockito.when(
 			_language.format(
-				Mockito.any(HttpServletRequest.class),
-				Mockito.eq("shortcut-to-x"), Mockito.anyString(),
+				AdditionalMatchers.or(
+					Mockito.any(HttpServletRequest.class), Mockito.isNull()),
+				Mockito.eq("shortcut-to-x"),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
 				Mockito.anyBoolean())
 		).thenReturn(
 			"Short Cut To X"

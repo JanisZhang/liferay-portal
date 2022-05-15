@@ -28,6 +28,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -135,7 +136,8 @@ public class RankingIndexReaderImplTest extends BaseRankingsIndexTestCase {
 		).when(
 			_documentToRankingTranslator
 		).translate(
-			Mockito.any(), Mockito.anyString()
+			Mockito.any(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		return ranking;

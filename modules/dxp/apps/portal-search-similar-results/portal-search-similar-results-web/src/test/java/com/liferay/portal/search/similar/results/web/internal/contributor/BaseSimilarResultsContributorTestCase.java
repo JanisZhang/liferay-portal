@@ -30,6 +30,7 @@ import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiNodeLocalService;
 import com.liferay.wiki.service.WikiPageLocalService;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -99,7 +100,8 @@ public abstract class BaseSimilarResultsContributorTestCase {
 		).when(
 			assetEntryLocalService
 		).fetchEntry(
-			Mockito.anyLong(), Mockito.anyString()
+			Mockito.anyLong(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		Mockito.doReturn(
@@ -221,7 +223,8 @@ public abstract class BaseSimilarResultsContributorTestCase {
 		).when(
 			uidFactory
 		).getUID(
-			Mockito.any(ClassedModel.class)
+			AdditionalMatchers.or(
+				Mockito.any(ClassedModel.class), Mockito.isNull())
 		);
 
 		return uidFactory;
@@ -245,7 +248,8 @@ public abstract class BaseSimilarResultsContributorTestCase {
 		).when(
 			wikiNodeLocalService
 		).fetchNode(
-			Mockito.anyLong(), Mockito.anyString()
+			Mockito.anyLong(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 	}
 
@@ -273,7 +277,9 @@ public abstract class BaseSimilarResultsContributorTestCase {
 		).when(
 			wikiPageLocalService
 		).fetchPage(
-			Mockito.anyLong(), Mockito.anyString(), Mockito.anyDouble()
+			Mockito.anyLong(),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+			Mockito.anyDouble()
 		);
 	}
 
