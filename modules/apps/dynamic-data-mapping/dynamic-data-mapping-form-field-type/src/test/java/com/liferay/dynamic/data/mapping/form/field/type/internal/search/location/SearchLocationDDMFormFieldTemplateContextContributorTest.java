@@ -52,6 +52,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -152,7 +153,8 @@ public class SearchLocationDDMFormFieldTemplateContextContributorTest {
 
 		Mockito.when(
 			portletPreferences.getValue(
-				Mockito.anyString(), Mockito.anyString())
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			"googlePlacesAPIKey"
 		);

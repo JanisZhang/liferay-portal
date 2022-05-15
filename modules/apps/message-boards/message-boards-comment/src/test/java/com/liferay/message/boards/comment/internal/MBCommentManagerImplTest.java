@@ -40,6 +40,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -425,10 +426,11 @@ public class MBCommentManagerImplTest extends Mockito {
 
 		when(
 			_mbMessageLocalService.addDiscussionMessage(
-				Mockito.anyString(), Mockito.anyLong(), Mockito.anyString(),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
 				Mockito.anyLong(), Mockito.anyString(), Mockito.anyLong(),
-				Mockito.anyLong(), Mockito.anyLong(), Mockito.anyString(),
-				Mockito.anyString(), Mockito.any())
+				Mockito.anyString(), Mockito.anyLong(), Mockito.anyLong(),
+				Mockito.anyLong(), Mockito.anyString(), Mockito.anyString(),
+				Mockito.any())
 		).thenReturn(
 			_mbMessage
 		);
