@@ -41,6 +41,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -66,7 +67,7 @@ public class WikiAttachmentImageCreoleEditorConfigContributorTest {
 
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 
 		_inputEditorTaglibAttributes.put(
 			"liferay-ui:input-editor:name", "testEditor");
@@ -81,8 +82,11 @@ public class WikiAttachmentImageCreoleEditorConfigContributorTest {
 
 		Mockito.when(
 			_itemSelector.getItemSelectorURL(
-				Mockito.any(RequestBackedPortletURLFactory.class),
-				Mockito.anyString(), Mockito.any(ItemSelectorCriterion.class))
+				AdditionalMatchers.or(
+					Mockito.any(RequestBackedPortletURLFactory.class),
+					Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				Mockito.any(ItemSelectorCriterion.class))
 		).thenReturn(
 			new PortletURLWrapper(null) {
 

@@ -79,7 +79,7 @@ public class SearchResponseResourceImplTest {
 
 	@Before
 	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 
 		_searchResponseResourceImpl = new SearchResponseResourceImpl();
 
@@ -156,7 +156,7 @@ public class SearchResponseResourceImplTest {
 		).when(
 			searchRequestBuilder
 		).withSearchContext(
-			Mockito.anyObject()
+			Mockito.any()
 		);
 
 		SearchResponseBuilder searchResponseBuilder = Mockito.mock(
@@ -167,7 +167,7 @@ public class SearchResponseResourceImplTest {
 		).when(
 			searchRequestBuilder
 		).withSearchContextGet(
-			Mockito.anyObject()
+			Mockito.any()
 		);
 	}
 
@@ -625,7 +625,7 @@ public class SearchResponseResourceImplTest {
 		).when(
 			searchResponse
 		).withSearchContextGet(
-			Mockito.anyObject()
+			Mockito.any()
 		);
 
 		return searchResponse;

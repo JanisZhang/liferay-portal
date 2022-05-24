@@ -24,6 +24,7 @@ import com.liferay.portal.search.tuning.rankings.web.internal.index.name.Ranking
 
 import java.util.Optional;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -39,7 +40,8 @@ public abstract class BaseRankingResultsBuilderTestCase
 		).when(
 			rankingIndexReader
 		).fetchOptional(
-			Mockito.anyObject(), Mockito.anyString()
+			AdditionalMatchers.or(Mockito.any(), Mockito.isNull()),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 	}
 

@@ -26,6 +26,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -42,7 +43,7 @@ public class SynonymSetToDocumentTranslatorImplTest {
 
 	@Before
 	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 
 		_synonymSetToDocumentTranslatorImpl =
 			new SynonymSetToDocumentTranslatorImpl();
@@ -69,7 +70,8 @@ public class SynonymSetToDocumentTranslatorImplTest {
 		).when(
 			documentBuilder
 		).setString(
-			Mockito.anyString(), Mockito.anyString()
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+			AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull())
 		);
 
 		Mockito.doReturn(

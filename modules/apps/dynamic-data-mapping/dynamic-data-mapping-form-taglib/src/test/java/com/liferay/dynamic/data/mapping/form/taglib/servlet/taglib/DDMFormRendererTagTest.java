@@ -68,7 +68,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mockito;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -249,7 +249,7 @@ public class DDMFormRendererTagTest {
 
 		Mockito.when(
 			_ddmFormInstanceLocalService.fetchFormInstance(
-				Matchers.eq(ddmFormInstanceId))
+				Mockito.eq(ddmFormInstanceId))
 		).thenReturn(
 			ddmFormInstanceImpl
 		);
@@ -301,8 +301,11 @@ public class DDMFormRendererTagTest {
 
 		Mockito.when(
 			ddmFormInstanceModelResourcePermission.contains(
-				Mockito.any(PermissionChecker.class),
-				Mockito.any(DDMFormInstance.class), Mockito.anyString())
+				AdditionalMatchers.or(
+					Mockito.any(PermissionChecker.class), Mockito.isNull()),
+				AdditionalMatchers.or(
+					Mockito.any(DDMFormInstance.class), Mockito.isNull()),
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()))
 		).thenReturn(
 			true
 		);
@@ -401,7 +404,7 @@ public class DDMFormRendererTagTest {
 
 	protected void setUpLanguageUtil() {
 		Mockito.when(
-			_language.getLanguageId(Matchers.eq(_httpServletRequest))
+			_language.getLanguageId(Mockito.eq(_httpServletRequest))
 		).thenReturn(
 			"en_US"
 		);
@@ -431,13 +434,13 @@ public class DDMFormRendererTagTest {
 		portalUtil.setPortal(portal);
 
 		Mockito.when(
-			portal.getHttpServletRequest(Matchers.any(RenderRequest.class))
+			portal.getHttpServletRequest(Mockito.any(RenderRequest.class))
 		).thenReturn(
 			_httpServletRequest
 		);
 
 		Mockito.when(
-			portal.getHttpServletResponse(Matchers.any(RenderResponse.class))
+			portal.getHttpServletResponse(Mockito.any(RenderResponse.class))
 		).thenReturn(
 			new MockHttpServletResponse()
 		);

@@ -17,6 +17,7 @@ package com.liferay.portal.search.tuning.synonyms.web.internal.filter;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.search.engine.adapter.index.CloseIndexRequest;
+import com.liferay.portal.search.engine.adapter.index.IndexRequest;
 import com.liferay.portal.search.tuning.synonyms.web.internal.BaseSynonymsWebTestCase;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
@@ -24,7 +25,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -60,7 +61,8 @@ public class SynonymSetFilterWriterImplTest extends BaseSynonymsWebTestCase {
 		Mockito.verify(
 			searchEngineAdapter, Mockito.times(3)
 		).execute(
-			Matchers.any(CloseIndexRequest.class)
+			AdditionalMatchers.or(
+				Mockito.any(IndexRequest.class), Mockito.isNull())
 		);
 	}
 
@@ -72,7 +74,7 @@ public class SynonymSetFilterWriterImplTest extends BaseSynonymsWebTestCase {
 		Mockito.verify(
 			searchEngineAdapter, Mockito.never()
 		).execute(
-			Matchers.any(CloseIndexRequest.class)
+			Mockito.any(CloseIndexRequest.class)
 		);
 	}
 

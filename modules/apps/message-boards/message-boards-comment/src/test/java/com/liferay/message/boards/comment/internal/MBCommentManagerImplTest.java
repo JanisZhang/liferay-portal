@@ -40,7 +40,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.mockito.Matchers;
+import org.mockito.AdditionalMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -57,7 +57,7 @@ public class MBCommentManagerImplTest extends Mockito {
 
 	@Before
 	public void setUp() throws Exception {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 
 		ReflectionTestUtil.setFieldValue(
 			_mbCommentManagerImpl, "_mbMessageLocalService",
@@ -419,27 +419,28 @@ public class MBCommentManagerImplTest extends Mockito {
 		);
 
 		when(
-			_mbMessageLocalService.getMessage(Matchers.anyLong())
+			_mbMessageLocalService.getMessage(Mockito.anyLong())
 		).thenReturn(
 			_mbMessage
 		);
 
 		when(
 			_mbMessageLocalService.addDiscussionMessage(
-				Matchers.anyString(), Matchers.anyLong(), Matchers.anyString(),
-				Matchers.anyLong(), Matchers.anyString(), Matchers.anyLong(),
-				Matchers.anyLong(), Matchers.anyLong(), Matchers.anyString(),
-				Matchers.anyString(), Matchers.any())
+				AdditionalMatchers.or(Mockito.anyString(), Mockito.isNull()),
+				Mockito.anyLong(), Mockito.anyString(), Mockito.anyLong(),
+				Mockito.anyString(), Mockito.anyLong(), Mockito.anyLong(),
+				Mockito.anyLong(), Mockito.anyString(), Mockito.anyString(),
+				Mockito.any())
 		).thenReturn(
 			_mbMessage
 		);
 
 		when(
 			_mbMessageLocalService.addDiscussionMessage(
-				Matchers.anyString(), Matchers.anyLong(), Matchers.anyString(),
-				Matchers.anyLong(), Matchers.anyString(), Matchers.anyLong(),
-				Matchers.anyLong(), Matchers.anyLong(), Matchers.anyString(),
-				Matchers.anyString(), Matchers.any())
+				Mockito.anyString(), Mockito.anyLong(), Mockito.anyString(),
+				Mockito.anyLong(), Mockito.anyString(), Mockito.anyLong(),
+				Mockito.anyLong(), Mockito.anyLong(), Mockito.anyString(),
+				Mockito.anyString(), Mockito.any())
 		).thenReturn(
 			_mbMessage
 		);

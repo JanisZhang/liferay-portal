@@ -71,8 +71,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.AdditionalMatchers;
 import org.mockito.ArgumentMatcher;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -220,8 +220,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 	public void testGetParametersForUserWithoutPermission() throws Exception {
 		Mockito.when(
 			_modelResourcePermission.contains(
-				Matchers.any(PermissionChecker.class), Mockito.anyLong(),
-				Mockito.anyString())
+				AdditionalMatchers.or(
+					Mockito.isNull(), Mockito.any(PermissionChecker.class)),
+				Mockito.anyLong(), Mockito.anyString())
 		).thenReturn(
 			false
 		);
@@ -428,7 +429,7 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 		).when(
 			documentLibraryDDMFormFieldTemplateContextContributor
 		).getResourceBundle(
-			Matchers.any(Locale.class)
+			Mockito.any(Locale.class)
 		);
 
 		Mockito.doReturn(
@@ -436,7 +437,7 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 		).when(
 			documentLibraryDDMFormFieldTemplateContextContributor
 		).getThemeDisplay(
-			Matchers.any(HttpServletRequest.class)
+			Mockito.any(HttpServletRequest.class)
 		);
 
 		return documentLibraryDDMFormFieldTemplateContextContributor;
@@ -623,10 +624,10 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 					new ArgumentMatcher<Group>() {
 
 						@Override
-						public boolean matches(Object object) {
-							Group group = (Group)object;
+						public boolean matches(Group argument) {
+							if ((argument == _group) ||
+								(argument == _scopeGroup)) {
 
-							if ((group == _group) || (group == _scopeGroup)) {
 								return true;
 							}
 
@@ -658,8 +659,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 	private void _setUpModelResourcePermission() throws Exception {
 		Mockito.when(
 			_modelResourcePermission.contains(
-				Matchers.any(PermissionChecker.class), Mockito.anyLong(),
-				Mockito.anyString())
+				AdditionalMatchers.or(
+					Mockito.any(PermissionChecker.class), Mockito.isNull()),
+				Mockito.anyLong(), Mockito.anyString())
 		).thenReturn(
 			true
 		);
@@ -725,8 +727,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 		).when(
 			portletURLFactory
 		).create(
-			Matchers.any(PortletRequest.class),
-			Matchers.eq(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM),
+			AdditionalMatchers.or(
+				Mockito.isNull(), Mockito.any(PortletRequest.class)),
+			Mockito.eq(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM),
 			Mockito.anyString()
 		);
 
@@ -735,8 +738,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 		).when(
 			portletURLFactory
 		).create(
-			Matchers.any(HttpServletRequest.class),
-			Matchers.eq(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM),
+			AdditionalMatchers.or(
+				Mockito.isNull(), Mockito.any(HttpServletRequest.class)),
+			Mockito.eq(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM),
 			Mockito.anyLong(), Mockito.anyString()
 		);
 

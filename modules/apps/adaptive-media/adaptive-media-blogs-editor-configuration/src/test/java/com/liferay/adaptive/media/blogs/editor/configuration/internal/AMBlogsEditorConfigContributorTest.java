@@ -67,7 +67,7 @@ public class AMBlogsEditorConfigContributorTest {
 
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 
 		_inputEditorTaglibAttributes.put(
 			"liferay-ui:input-editor:name", "testEditor");
@@ -294,7 +294,7 @@ public class AMBlogsEditorConfigContributorTest {
 		Mockito.when(
 			_itemSelector.getItemSelectorURL(
 				Mockito.any(RequestBackedPortletURLFactory.class),
-				Mockito.anyString(), Mockito.<ItemSelectorCriterion>anyVararg())
+				Mockito.anyString(), Mockito.<ItemSelectorCriterion>any())
 		).thenReturn(
 			_portletURL
 		);
