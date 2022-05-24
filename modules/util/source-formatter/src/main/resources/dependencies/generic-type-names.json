@@ -1986,10 +1986,6 @@
 		},
 		{
 			"genericTypeCount": 1,
-			"name": "org.powermock.api.mockito.expectation.ConstructorExpectationSetup"
-		},
-		{
-			"genericTypeCount": 1,
 			"name": "org.quartz.TriggerBuilder"
 		},
 		{
