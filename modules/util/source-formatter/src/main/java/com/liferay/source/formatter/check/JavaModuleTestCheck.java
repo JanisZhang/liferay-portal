@@ -59,7 +59,7 @@ public class JavaModuleTestCheck extends BaseJavaTermCheck {
 		if (className.endsWith("Test") &&
 			packageName.startsWith("com.liferay")) {
 
-			_checkTestPackage(fileName, absolutePath, content, packageName);
+			_checkTestPackage(fileName, absolutePath, packageName);
 		}
 
 		return content;
@@ -121,18 +121,10 @@ public class JavaModuleTestCheck extends BaseJavaTermCheck {
 	}
 
 	private void _checkTestPackage(
-		String fileName, String absolutePath, String content,
-		String packageName) {
+		String fileName, String absolutePath, String packageName) {
 
 		if (absolutePath.contains("/src/testIntegration/java/") ||
 			absolutePath.contains("/test/integration/")) {
-
-			if (content.contains("@RunWith(Arquillian.class)") &&
-				content.contains("import org.powermock.")) {
-
-				addMessage(
-					fileName, "Do not use PowerMock inside Arquillian tests");
-			}
 
 			if (!packageName.endsWith(".test")) {
 				addMessage(
