@@ -52,16 +52,14 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.MockitoAnnotations;
 
 /**
  * @author Alejandro Tardín
  */
-@RunWith(MockitoJUnitRunner.class)
 public class MediaQueryProviderImplTest {
 
 	@ClassRule
@@ -71,6 +69,8 @@ public class MediaQueryProviderImplTest {
 
 	@Before
 	public void setUp() throws PortalException {
+		MockitoAnnotations.openMocks(this);
+
 		Mockito.when(
 			_amImageFinder.getAdaptiveMediaStream(Mockito.any(Function.class))
 		).thenAnswer(
@@ -654,7 +654,7 @@ public class MediaQueryProviderImplTest {
 		).thenAnswer(
 			invocation -> {
 				Function<AMImageQueryBuilder, AMQuery<?, ?>>
-					amImageQueryBuilderFunction = invocation.getArgumentAt(
+					amImageQueryBuilderFunction = invocation.getArgument(
 						0, Function.class);
 
 				AMImageQueryBuilderImpl amImageQueryBuilderImpl =
