@@ -70,9 +70,8 @@ public class MBMessageHTMLFormatUploadHandlerTest {
 		).when(
 			_portletFileRepository
 		).getPortletFileEntryURL(
-			AdditionalMatchers.and(
-				Mockito.isNull(), Mockito.isA(ThemeDisplay.class)),
-			Mockito.eq(fileEntry), Mockito.eq(StringPool.BLANK)
+			Mockito.nullable(ThemeDisplay.class), Mockito.eq(fileEntry),
+			Mockito.eq(StringPool.BLANK)
 		);
 
 		fileEntryReferences.add(
