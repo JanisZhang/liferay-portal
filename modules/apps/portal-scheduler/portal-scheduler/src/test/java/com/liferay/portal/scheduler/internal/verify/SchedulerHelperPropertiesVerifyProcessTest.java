@@ -27,14 +27,12 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import org.osgi.service.cm.Configuration;
@@ -43,7 +41,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 /**
  * @author Michael C. Han
  */
-@RunWith(MockitoJUnitRunner.class)
 public class SchedulerHelperPropertiesVerifyProcessTest {
 
 	@ClassRule
@@ -53,7 +50,7 @@ public class SchedulerHelperPropertiesVerifyProcessTest {
 
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 	}
 
 	@Test
