@@ -354,6 +354,9 @@ public class MembershipRequestLocalServiceImpl
 
 		Company company = _companyLocalService.getCompany(user.getCompanyId());
 
+		String friendlyURL =
+			company.getPortalURL(0) + PortalUtil.getPathContext();
+
 		MailTemplateContextBuilder mailTemplateContextBuilder =
 			MailTemplateFactoryUtil.createMailTemplateContextBuilder();
 
@@ -369,6 +372,7 @@ public class MembershipRequestLocalServiceImpl
 			"[$FROM_NAME$]", HtmlUtil.escape(fromName));
 		mailTemplateContextBuilder.put(
 			"[$PORTAL_URL$]", company.getPortalURL(0));
+		mailTemplateContextBuilder.put("[$PORTAL_FRIENDLY_URL$]", friendlyURL);
 		mailTemplateContextBuilder.put(
 			"[$REPLY_COMMENTS$]",
 			HtmlUtil.escape(membershipRequest.getReplyComments()));

@@ -655,6 +655,9 @@ public class AnnouncementsEntryLocalServiceImpl
 			AnnouncementsEntry entry)
 		throws PortalException {
 
+		String friendlyURL =
+			company.getPortalURL(0) + PortalUtil.getPathContext();
+
 		MailTemplateContextBuilder mailTemplateContextBuilder =
 			MailTemplateFactoryUtil.createMailTemplateContextBuilder();
 
@@ -678,6 +681,7 @@ public class AnnouncementsEntryLocalServiceImpl
 			"[$FROM_NAME$]", HtmlUtil.escape(fromName));
 		mailTemplateContextBuilder.put(
 			"[$PORTAL_URL$]", company.getPortalURL(0));
+		mailTemplateContextBuilder.put("[$PORTAL_FRIENDLY_URL$]", friendlyURL);
 		mailTemplateContextBuilder.put(
 			"[$PORTLET_NAME$]",
 			new EscapableLocalizableFunction(

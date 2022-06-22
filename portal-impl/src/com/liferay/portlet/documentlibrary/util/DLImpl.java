@@ -277,6 +277,14 @@ public class DLImpl implements DL {
 				return company.getVirtualHostname();
 			}
 		).put(
+			"[$PORTAL_FRIENDLY_URL$]",
+			() -> {
+				Company company = themeDisplay.getCompany();
+
+				return company.getVirtualHostname() +
+					PortalUtil.getPathContext();
+			}
+		).put(
 			"[$PORTLET_NAME$]",
 			() -> {
 				PortletDisplay portletDisplay =

@@ -3660,6 +3660,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			serviceContext.getPortalURL(), serviceContext.getPathMain(),
 			"/portal/verify_email_address?ticketKey=", ticket.getKey());
 
+		String friendlyURL =
+			serviceContext.getPortalURL() + PortalUtil.getPathContext();
+
 		long plid = serviceContext.getPlid();
 
 		if (plid > 0) {
@@ -3717,6 +3720,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			"[$FROM_NAME$]", HtmlUtil.escape(fromName));
 		mailTemplateContextBuilder.put(
 			"[$PORTAL_URL$]", serviceContext.getPortalURL());
+		mailTemplateContextBuilder.put("[$PORTAL_FRIENDLY_URL$]", friendlyURL);
 		mailTemplateContextBuilder.put(
 			"[$REMOTE_ADDRESS$]", serviceContext.getRemoteAddr());
 		mailTemplateContextBuilder.put(
@@ -5921,6 +5925,21 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		return birthday;
 	}
 
+	protected String getContextPath(String contextPath) {
+		contextPath = GetterUtil.getString(contextPath);
+
+		if ((contextPath.length() == 0) ||
+			contextPath.equals(StringPool.SLASH)) {
+
+			contextPath = StringPool.BLANK;
+		}
+		else if (!contextPath.startsWith(StringPool.SLASH)) {
+			contextPath = StringPool.SLASH.concat(contextPath);
+		}
+
+		return contextPath;
+	}
+
 	protected String getLogin(String login) {
 		return StringUtil.lowerCase(StringUtil.trim(login));
 	}
@@ -6097,7 +6116,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		String fromName = PrefsPropsUtil.getString(
 			user.getCompanyId(), PropsKeys.ADMIN_EMAIL_FROM_NAME);
 		String passwordResetURL = StringPool.BLANK;
-		String portalURL = serviceContext.getPortalURL();
+
+		String friendlyURL =
+			serviceContext.getPortalURL() + PortalUtil.getPathContext();
 
 		PortletPreferences companyPortletPreferences =
 			PrefsPropsUtil.getPreferences(user.getCompanyId(), true);
@@ -6158,7 +6179,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		mailTemplateContextBuilder.put("[$FROM_ADDRESS$]", fromAddress);
 		mailTemplateContextBuilder.put(
 			"[$FROM_NAME$]", HtmlUtil.escape(fromName));
-		mailTemplateContextBuilder.put("[$PORTAL_URL$]", portalURL);
+		mailTemplateContextBuilder.put(
+			"[$PORTAL_URL$]", serviceContext.getPortalURL());
+		mailTemplateContextBuilder.put("[$PORTAL_FRIENDLY_URL$]", friendlyURL);
 		mailTemplateContextBuilder.put(
 			"[$TO_ADDRESS$]", user.getEmailAddress());
 		mailTemplateContextBuilder.put(
@@ -6286,6 +6309,9 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		String prefix = null;
 		String subjectProperty = null;
 
+		String friendlyURL =
+			serviceContext.getPortalURL() + PortalUtil.getPathContext();
+
 		if (Validator.isNotNull(passwordResetURL)) {
 			bodyProperty = PropsKeys.ADMIN_EMAIL_PASSWORD_RESET_BODY;
 			prefix = "adminEmailPasswordReset";
@@ -6328,6 +6354,7 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			"[$FROM_NAME$]", HtmlUtil.escape(fromName));
 		mailTemplateContextBuilder.put(
 			"[$PASSWORD_RESET_URL$]", passwordResetURL);
+		mailTemplateContextBuilder.put("[$PORTAL_FRIENDLY_URL$]", friendlyURL);
 		mailTemplateContextBuilder.put(
 			"[$PORTAL_URL$]", serviceContext.getPortalURL());
 		mailTemplateContextBuilder.put(

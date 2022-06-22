@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PwdGenerator;
 
 import javax.mail.internet.InternetAddress;
@@ -194,6 +195,9 @@ public class SendMFAEmailOTPMVCResourceCommand implements MVCResourceCommand {
 
 		String emailOTPBody = bodyLocalizedValuesMap.get(user.getLocale());
 
+		String friendlyURL =
+				_portal.getPortalURL(httpServletRequest) + PortalUtil.getPathContext();
+
 		MailTemplateContextBuilder mailTemplateContextBuilder =
 			MailTemplateFactoryUtil.createMailTemplateContextBuilder();
 
@@ -205,7 +209,9 @@ public class SendMFAEmailOTPMVCResourceCommand implements MVCResourceCommand {
 		mailTemplateContextBuilder.put(
 			"[$ONE_TIME_PASSWORD$]", HtmlUtil.escape(generatedMFAEmailOTP));
 		mailTemplateContextBuilder.put(
-			"[$PORTAL_URL$]", _portal.getPortalURL(httpServletRequest));
+				"[$PORTAL_URL$]", _portal.getPortalURL(httpServletRequest));
+		mailTemplateContextBuilder.put(
+			"[$PORTAL_FRIENDLY_URL$]", friendlyURL);
 		mailTemplateContextBuilder.put(
 			"[$REMOTE_ADDRESS$]", httpServletRequest.getRemoteAddr());
 		mailTemplateContextBuilder.put(
