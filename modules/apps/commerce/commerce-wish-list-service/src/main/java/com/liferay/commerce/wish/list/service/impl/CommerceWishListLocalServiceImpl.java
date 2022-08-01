@@ -14,13 +14,22 @@
 
 package com.liferay.commerce.wish.list.service.impl;
 
+import com.liferay.commerce.product.exception.NoSuchCPInstanceException;
+import com.liferay.commerce.product.model.CPInstance;
+import com.liferay.commerce.product.model.CProduct;
+import com.liferay.commerce.product.service.CPInstanceLocalService;
+import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.util.DDMFormValuesHelper;
 import com.liferay.commerce.wish.list.exception.CommerceWishListNameException;
+import com.liferay.commerce.wish.list.exception.GuestWishListItemMaxAllowedException;
 import com.liferay.commerce.wish.list.exception.GuestWishListMaxAllowedException;
 import com.liferay.commerce.wish.list.internal.configuration.CommerceWishListConfiguration;
 import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.model.CommerceWishListItem;
 import com.liferay.commerce.wish.list.service.base.CommerceWishListLocalServiceBaseImpl;
+import com.liferay.commerce.wish.list.service.persistence.CommerceWishListItemPersistence;
+import com.liferay.commerce.wish.list.service.persistence.CommerceWishListPersistence;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
@@ -92,7 +101,7 @@ public class CommerceWishListLocalServiceImpl
 
 		// Commerce wish list items
 
-		commerceWishListItemLocalService.deleteCommerceWishListItems(
+		_commerceWishListItemPersistence.removeByCommerceWishListId(
 			commerceWishList.getCommerceWishListId());
 
 		return commerceWishList;
@@ -260,12 +269,12 @@ public class CommerceWishListLocalServiceImpl
 		// Commerce wish list items
 
 		List<CommerceWishListItem> fromCommerceWishListItems =
-			commerceWishListItemLocalService.getCommerceWishListItems(
+			_commerceWishListItemPersistence.findByCommerceWishListId(
 				fromCommerceWishListId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				null);
 
 		List<CommerceWishListItem> toCommerceWishListItems =
-			commerceWishListItemLocalService.getCommerceWishListItems(
+			_commerceWishListItemPersistence.findByCommerceWishListId(
 				toCommerceWishListId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 				null);
 
@@ -293,11 +302,35 @@ public class CommerceWishListLocalServiceImpl
 			}
 
 			if (!found) {
-				commerceWishListItemLocalService.addCommerceWishListItem(
-					toCommerceWishListId,
-					fromCommerceWishListItem.getCProductId(),
-					fromCommerceWishListItem.getCPInstanceUuid(), json,
-					serviceContext);
+				CommerceWishList commerceWishList =
+					_commerceWishListPersistence.findByPrimaryKey(
+						toCommerceWishListId);
+				User user = userLocalService.getUser(
+					serviceContext.getUserId());
+
+				validate(
+					commerceWishList, fromCommerceWishListItem.getCProductId(),
+					fromCommerceWishListItem.getCPInstanceUuid());
+
+				long commerceWishListItemId = counterLocalService.increment();
+
+				CommerceWishListItem commerceWishListItem =
+					_commerceWishListItemPersistence.create(
+						commerceWishListItemId);
+
+				commerceWishListItem.setGroupId(commerceWishList.getGroupId());
+				commerceWishListItem.setCompanyId(user.getCompanyId());
+				commerceWishListItem.setUserId(user.getUserId());
+				commerceWishListItem.setUserName(user.getFullName());
+				commerceWishListItem.setCommerceWishListId(
+					commerceWishList.getCommerceWishListId());
+				commerceWishListItem.setCPInstanceUuid(
+					fromCommerceWishListItem.getCPInstanceUuid());
+				commerceWishListItem.setCProductId(
+					fromCommerceWishListItem.getCProductId());
+				commerceWishListItem.setJson(json);
+
+				_commerceWishListItemPersistence.update(commerceWishListItem);
 			}
 		}
 
@@ -305,6 +338,41 @@ public class CommerceWishListLocalServiceImpl
 
 		commerceWishListLocalService.deleteCommerceWishList(
 			fromCommerceWishListId);
+	}
+
+	protected void validate(
+			CommerceWishList commerceWishList, long cProductId,
+			String cpInstanceUuid)
+		throws PortalException {
+
+		if (commerceWishList.getUserId() == 0) {
+			int count =
+				commerceWishListItemPersistence.countByCommerceWishListId(
+					commerceWishList.getCommerceWishListId());
+
+			if (count >=
+					_commerceWishListConfiguration.
+						guestWishListItemMaxAllowed()) {
+
+				throw new GuestWishListItemMaxAllowedException();
+			}
+		}
+
+		if (Validator.isNotNull(cpInstanceUuid)) {
+			CPInstance cpInstance = _cpInstanceLocalService.getCProductInstance(
+				cProductId, cpInstanceUuid);
+
+			if (cpInstance == null) {
+				CProduct cProduct = _cProductLocalService.getCProduct(
+					cProductId);
+
+				throw new NoSuchCPInstanceException(
+					StringBundler.concat(
+						"CPInstance ", cpInstanceUuid,
+						" belongs to a different CPDefinition than ",
+						cProduct.getPublishedCPDefinitionId()));
+			}
+		}
 	}
 
 	protected void validate(
@@ -343,6 +411,18 @@ public class CommerceWishListLocalServiceImpl
 
 	@Reference
 	private CommerceWishListConfiguration _commerceWishListConfiguration;
+
+	@Reference
+	private CommerceWishListItemPersistence _commerceWishListItemPersistence;
+
+	@Reference
+	private CommerceWishListPersistence _commerceWishListPersistence;
+
+	@Reference
+	private CPInstanceLocalService _cpInstanceLocalService;
+
+	@Reference
+	private CProductLocalService _cProductLocalService;
 
 	@Reference
 	private DDMFormValuesHelper _ddmFormValuesHelper;
