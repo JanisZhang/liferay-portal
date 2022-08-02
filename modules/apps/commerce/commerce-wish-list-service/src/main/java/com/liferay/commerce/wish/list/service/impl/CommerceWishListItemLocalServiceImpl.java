@@ -26,6 +26,7 @@ import com.liferay.commerce.wish.list.internal.configuration.CommerceWishListCon
 import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.model.CommerceWishListItem;
 import com.liferay.commerce.wish.list.service.base.CommerceWishListItemLocalServiceBaseImpl;
+import com.liferay.commerce.wish.list.service.persistence.CommerceWishListPersistence;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -84,8 +85,7 @@ public class CommerceWishListItemLocalServiceImpl
 		throws PortalException {
 
 		CommerceWishList commerceWishList =
-			commerceWishListLocalService.getCommerceWishList(
-				commerceWishListId);
+			_commerceWishListPersistence.findByPrimaryKey(commerceWishListId);
 		User user = userLocalService.getUser(serviceContext.getUserId());
 
 		validate(commerceWishList, cProductId, cpInstanceUuid);
@@ -223,6 +223,9 @@ public class CommerceWishListItemLocalServiceImpl
 
 	@Reference
 	private CommerceWishListConfiguration _commerceWishListConfiguration;
+
+	@Reference
+	private CommerceWishListPersistence _commerceWishListPersistence;
 
 	@Reference
 	private CPDefinitionLocalService _cpDefinitionLocalService;
