@@ -576,9 +576,8 @@ public class CommerceDiscountLocalServiceImpl
 
 		// Commerce discount usage entries
 
-		commerceDiscountUsageEntryLocalService.
-			deleteCommerceUsageEntryByDiscountId(
-				commerceDiscount.getCommerceDiscountId());
+		commerceDiscountUsageEntryPersistence.removeByCommerceDiscountId(
+			commerceDiscount.getCommerceDiscountId());
 
 		// Commerce discount rels
 
@@ -598,9 +597,8 @@ public class CommerceDiscountLocalServiceImpl
 
 		// Commerce discount order type rels
 
-		commerceDiscountOrderTypeRelLocalService.
-			deleteCommerceDiscountOrderTypeRels(
-				commerceDiscount.getCommerceDiscountId());
+		commerceDiscountOrderTypeRelPersistence.removeByCommerceDiscountId(
+			commerceDiscount.getCommerceDiscountId());
 
 		// Commerce discount
 
