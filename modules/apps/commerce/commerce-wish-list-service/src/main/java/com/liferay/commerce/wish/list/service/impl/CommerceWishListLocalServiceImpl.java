@@ -32,6 +32,7 @@ import com.liferay.commerce.wish.list.service.persistence.CommerceWishListPersis
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -45,15 +46,19 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Andrea Di Giorgi
  */
 @Component(
+	configurationPid = "com.liferay.commerce.wish.list.internal.configuration.CommerceWishListConfiguration",
 	enabled = false,
 	property = "model.class.name=com.liferay.commerce.wish.list.model.CommerceWishList",
 	service = AopService.class
@@ -257,6 +262,13 @@ public class CommerceWishListLocalServiceImpl
 		return commerceWishListPersistence.update(commerceWishList);
 	}
 
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_commerceWishListConfiguration = ConfigurableUtil.createConfigurable(
+			CommerceWishListConfiguration.class, properties);
+	}
+
 	protected String getCookieName(long groupId) {
 		return CommerceWishList.class.getName() + StringPool.POUND + groupId;
 	}
@@ -409,8 +421,8 @@ public class CommerceWishListLocalServiceImpl
 		}
 	}
 
-	@Reference
-	private CommerceWishListConfiguration _commerceWishListConfiguration;
+	private volatile CommerceWishListConfiguration
+		_commerceWishListConfiguration;
 
 	@Reference
 	private CommerceWishListItemPersistence _commerceWishListItemPersistence;
