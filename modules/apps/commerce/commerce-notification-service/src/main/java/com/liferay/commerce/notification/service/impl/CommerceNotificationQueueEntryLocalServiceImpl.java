@@ -16,11 +16,13 @@ package com.liferay.commerce.notification.service.impl;
 
 import com.liferay.commerce.notification.model.CommerceNotificationAttachment;
 import com.liferay.commerce.notification.model.CommerceNotificationQueueEntry;
+import com.liferay.commerce.notification.service.CommerceNotificationAttachmentLocalService;
 import com.liferay.commerce.notification.service.base.CommerceNotificationQueueEntryLocalServiceBaseImpl;
 import com.liferay.commerce.notification.util.comparator.CommerceNotificationAttachmentCreateDateComparator;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -34,7 +36,6 @@ import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,9 +43,17 @@ import java.util.List;
 
 import javax.mail.internet.InternetAddress;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 /**
  * @author Alessio Antonio Rendina
  */
+@Component(
+	enabled = false,
+	property = "model.class.name=com.liferay.commerce.notification.model.CommerceNotificationQueueEntry",
+	service = AopService.class
+)
 public class CommerceNotificationQueueEntryLocalServiceImpl
 	extends CommerceNotificationQueueEntryLocalServiceBaseImpl {
 
@@ -114,7 +123,7 @@ public class CommerceNotificationQueueEntryLocalServiceImpl
 
 		// Commerce notification attachments
 
-		commerceNotificationAttachmentLocalService.
+		_commerceNotificationAttachmentLocalService.
 			deleteCommerceNotificationAttachments(
 				commerceNotificationQueueEntry.
 					getCommerceNotificationQueueEntryId());
@@ -236,7 +245,7 @@ public class CommerceNotificationQueueEntryLocalServiceImpl
 
 			List<CommerceNotificationAttachment>
 				commerceNotificationAttachments =
-					commerceNotificationAttachmentLocalService.
+					_commerceNotificationAttachmentLocalService.
 						getCommerceNotificationAttachments(
 							commerceNotificationQueueEntry.
 								getCommerceNotificationQueueEntryId(),
@@ -347,7 +356,11 @@ public class CommerceNotificationQueueEntryLocalServiceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceNotificationQueueEntryLocalServiceImpl.class);
 
-	@ServiceReference(type = MailService.class)
+	@Reference
+	private CommerceNotificationAttachmentLocalService
+		_commerceNotificationAttachmentLocalService;
+
+	@Reference
 	private MailService _mailService;
 
 }
