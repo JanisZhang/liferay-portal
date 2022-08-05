@@ -443,6 +443,8 @@ public class CommerceCurrencyLocalServiceImpl
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
+		super.setAopProxy(commerceCurrencyLocalService);
+
 		_serviceRegistration = bundleContext.registerService(
 			PortalInstanceLifecycleListener.class,
 			new PortalInstanceLifecycleListenerImpl(
@@ -450,7 +452,6 @@ public class CommerceCurrencyLocalServiceImpl
 			null);
 	}
 
-	@Deactivate
 	@Override
 	protected void deactivate() {
 		super.deactivate();
