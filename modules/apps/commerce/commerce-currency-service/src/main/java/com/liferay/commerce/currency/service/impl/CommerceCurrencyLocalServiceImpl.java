@@ -24,6 +24,7 @@ import com.liferay.commerce.currency.exception.CommerceCurrencyNameException;
 import com.liferay.commerce.currency.exception.NoSuchCurrencyException;
 import com.liferay.commerce.currency.internal.model.listener.PortalInstanceLifecycleListenerImpl;
 import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.service.base.CommerceCurrencyLocalServiceBaseImpl;
 import com.liferay.commerce.currency.util.ExchangeRateProvider;
 import com.liferay.commerce.currency.util.ExchangeRateProviderRegistry;
@@ -444,7 +445,7 @@ public class CommerceCurrencyLocalServiceImpl
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		super.setAopProxy(commerceCurrencyLocalService);
+		super.setAopProxy(_commerceCurrencyLocalService);
 
 		_serviceRegistration = bundleContext.registerService(
 			PortalInstanceLifecycleListener.class,
@@ -524,5 +525,8 @@ public class CommerceCurrencyLocalServiceImpl
 
 	@Reference
 	private UserLocalService _userLocalService;
+
+	@Reference
+	private CommerceCurrencyLocalService _commerceCurrencyLocalService;
 
 }
