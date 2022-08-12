@@ -61,7 +61,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -442,15 +444,17 @@ public class CommerceCurrencyLocalServiceImpl
 			ArrayUtil.toLongArray(commerceCurrencyFinder.getCompanyIds()));
 	}
 
-	@Activate
-	protected void activate(BundleContext bundleContext) {
-		super.setAopProxy(commerceCurrencyLocalService);
+	@Override
+	public void setAopProxy(Object aopProxy) {
+		super.setAopProxy(aopProxy);
+
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
+
+		BundleContext bundleContext = bundle.getBundleContext();
 
 		_serviceRegistration = bundleContext.registerService(
-			PortalInstanceLifecycleListener.class,
-			new PortalInstanceLifecycleListenerImpl(
-				commerceCurrencyLocalService),
-			null);
+				PortalInstanceLifecycleListener.class,
+				new PortalInstanceLifecycleListenerImpl(commerceCurrencyLocalService), null);
 	}
 
 	@Deactivate
