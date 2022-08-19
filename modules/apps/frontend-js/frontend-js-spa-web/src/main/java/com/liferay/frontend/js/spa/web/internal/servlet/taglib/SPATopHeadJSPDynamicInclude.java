@@ -137,7 +137,7 @@ public class SPATopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 	}
 
 	@Override
-	protected ServletContext getServletContext() {
+	public ServletContext getServletContext() {
 		return null;
 	}
 
