@@ -63,6 +63,6 @@ public abstract class BaseJSPDynamicInclude extends BaseDynamicInclude {
 
 	protected abstract Log getLog();
 
-	protected abstract ServletContext getServletContext();
+	public abstract ServletContext getServletContext();
 
 }
