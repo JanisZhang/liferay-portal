@@ -66,6 +66,11 @@ public class CPDefinitionVirtualSettingDetailsTermsOfUseFormNavigatorEntry
 	}
 
 	@Override
+	public ServletContext getServletContext() {
+		return null;
+	}
+
+	@Override
 	public void include(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
