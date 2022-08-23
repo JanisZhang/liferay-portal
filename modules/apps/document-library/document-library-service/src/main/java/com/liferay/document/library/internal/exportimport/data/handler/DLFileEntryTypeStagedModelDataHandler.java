@@ -438,7 +438,7 @@ public class DLFileEntryTypeStagedModelDataHandler
 	private GroupLocalService _groupLocalService;
 
 	@Reference(
-		target = "(&(verify.process.name=com.liferay.document.library.service))"
+		target = "(verify.process.name=com.liferay.document.library.service)"
 	)
 	private Object _object;
 
