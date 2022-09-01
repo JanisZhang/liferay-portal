@@ -48,9 +48,8 @@ public class CMISWebServicesRepositoryFactory
 
 	@Activate
 	protected void activate(Map<String, Object> properties) {
-		super.setCMISRepositoryConfiguration(
-			ConfigurableUtil.createConfigurable(
-				CMISRepositoryConfiguration.class, properties));
+		_cmisRepositoryConfiguration = ConfigurableUtil.createConfigurable(
+			CMISRepositoryConfiguration.class, properties);
 	}
 
 	@Override
@@ -59,69 +58,83 @@ public class CMISWebServicesRepositoryFactory
 	}
 
 	@Override
-	@Reference(unbind = "-")
-	protected void setAssetEntryLocalService(
-		AssetEntryLocalService assetEntryLocalService) {
-
-		super.setAssetEntryLocalService(assetEntryLocalService);
+	protected AssetEntryLocalService getAssetEntryLocalService() {
+		return _assetEntryLocalService;
 	}
 
 	@Override
-	@Reference(unbind = "-")
-	protected void setCMISSessionCache(CMISSessionCache cmisSessionCache) {
-		super.setCMISSessionCache(cmisSessionCache);
+	protected CMISRepositoryConfiguration getCMISRepositoryConfiguration() {
+		return _cmisRepositoryConfiguration;
 	}
 
 	@Override
-	@Reference(unbind = "-")
-	protected void setCompanyLocalService(
-		CompanyLocalService companyLocalService) {
-
-		super.setCompanyLocalService(companyLocalService);
+	protected CMISSessionCache getCMISSessionCache() {
+		return _cmisSessionCache;
 	}
 
 	@Override
-	@Reference(unbind = "-")
-	protected void setDLAppHelperLocalService(
-		DLAppHelperLocalService dlAppHelperLocalService) {
-
-		super.setDLAppHelperLocalService(dlAppHelperLocalService);
+	protected CompanyLocalService getCompanyLocalService() {
+		return _companyLocalService;
 	}
 
 	@Override
-	@Reference(unbind = "-")
-	protected void setDLFolderLocalService(
-		DLFolderLocalService dlFolderLocalService) {
-
-		super.setDLFolderLocalService(dlFolderLocalService);
+	protected DLAppHelperLocalService getDLAppHelperLocalService() {
+		return _dlAppHelperLocalService;
 	}
 
 	@Override
-	@Reference(unbind = "-")
-	protected void setLockManager(LockManager lockManager) {
-		super.setLockManager(lockManager);
+	protected DLFolderLocalService getDLFolderLocalService() {
+		return _dlFolderLocalService;
 	}
 
 	@Override
-	@Reference(unbind = "-")
-	protected void setRepositoryEntryLocalService(
-		RepositoryEntryLocalService repositoryEntryLocalService) {
-
-		super.setRepositoryEntryLocalService(repositoryEntryLocalService);
+	protected LockManager getLockManager() {
+		return _lockManager;
 	}
 
 	@Override
-	@Reference(unbind = "-")
-	protected void setRepositoryLocalService(
-		RepositoryLocalService repositoryLocalService) {
-
-		super.setRepositoryLocalService(repositoryLocalService);
+	protected RepositoryEntryLocalService getRepositoryEntryLocalService() {
+		return _repositoryEntryLocalService;
 	}
 
 	@Override
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		super.setUserLocalService(userLocalService);
+	protected RepositoryLocalService getRepositoryLocalService() {
+		return _repositoryLocalService;
 	}
+
+	@Override
+	protected UserLocalService getUserLocalService() {
+		return _userLocalService;
+	}
+
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
+	private CMISRepositoryConfiguration _cmisRepositoryConfiguration;
+
+	@Reference
+	private CMISSessionCache _cmisSessionCache;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private DLAppHelperLocalService _dlAppHelperLocalService;
+
+	@Reference
+	private DLFolderLocalService _dlFolderLocalService;
+
+	@Reference
+	private LockManager _lockManager;
+
+	@Reference
+	private RepositoryEntryLocalService _repositoryEntryLocalService;
+
+	@Reference
+	private RepositoryLocalService _repositoryLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }
