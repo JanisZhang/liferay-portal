@@ -149,7 +149,8 @@ public class CommerceCurrencyServiceImpl
 		_portletResourcePermission.check(
 			getPermissionChecker(), null,
 			CommerceCurrencyActionKeys.MANAGE_COMMERCE_CURRENCIES);
-
+		System.out.println("9-14-test cummercecurrencyServiceImpl---------- " +
+				"findByC_C");
 		return commerceCurrencyLocalService.getCommerceCurrency(
 			companyId, code);
 	}

@@ -187,6 +187,12 @@ public class CommerceCurrencyDefaultValueImportUpgradeProcess
 				preparedStatement.setBoolean(18, true);
 
 				preparedStatement.executeUpdate();
+
+				System.out.println(
+					"9-14-test insert default value: " +
+						commerceCurrency.getCompanyId() + "," +
+							commerceCurrency.getPrimary() + "," +
+								commerceCurrency.getCode());
 			}
 		}
 	}

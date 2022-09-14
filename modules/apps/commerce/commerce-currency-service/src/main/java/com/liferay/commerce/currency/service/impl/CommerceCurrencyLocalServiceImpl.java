@@ -192,7 +192,8 @@ public class CommerceCurrencyLocalServiceImpl
 	@Override
 	public CommerceCurrency getCommerceCurrency(long companyId, String code)
 		throws NoSuchCurrencyException {
-
+		System.out.println("9-14-test ---------- " +
+				"findByC_C");
 		return commerceCurrencyPersistence.findByC_C(companyId, code);
 	}
 

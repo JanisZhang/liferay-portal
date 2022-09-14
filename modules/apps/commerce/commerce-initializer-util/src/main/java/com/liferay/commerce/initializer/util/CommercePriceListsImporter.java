@@ -158,7 +158,9 @@ public class CommercePriceListsImporter {
 		if (accountGroupsJSONArray != null) {
 			int priority = jsonObject.getInt("priority");
 			boolean neverExpire = jsonObject.getBoolean("neverExpire", true);
-
+			System.out.println("9-14-test commerce price list " +
+					"importer---------- " +
+					"findByC_C");
 			CommerceCurrency commerceCurrency =
 				_commerceCurrencyLocalService.getCommerceCurrency(
 					serviceContext.getCompanyId(), currencyCode);
