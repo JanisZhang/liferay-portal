@@ -70,12 +70,22 @@ public class CommerceCurrencyDefaultValueImportUpgradeProcess
 						return;
 					}
 
+					_deleteFromCommerceCurrency();
+
 					_importDefaultValues(company);
 				}
 				catch (Exception exception) {
 					_log.error(exception);
 				}
 			});
+	}
+
+	private void _deleteFromCommerceCurrency() throws Exception {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				"delete from CommerceCurrency")) {
+
+			preparedStatement.executeUpdate();
+		}
 	}
 
 	private Boolean _hasPrimaryCommerceCurrency(Company company)
