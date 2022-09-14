@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.servlet.ServletOutputStreamAdapter;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -37,6 +38,8 @@ import com.liferay.portal.kernel.uuid.PortalUUID;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
@@ -66,6 +69,8 @@ public class CommerceCurrencyDefaultValueImportUpgradeProcess
 		_companyLocalService.forEachCompany(
 			company -> {
 				try {
+					_selectFromDB();
+
 					if (_hasPrimaryCommerceCurrency(company)) {
 						return;
 					}
@@ -76,6 +81,32 @@ public class CommerceCurrencyDefaultValueImportUpgradeProcess
 					_log.error(exception);
 				}
 			});
+	}
+
+	private void _selectFromDB() throws SQLException {
+
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				"select * from CommerceCurrency")) {
+
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				ResultSetMetaData rsmd = resultSet.getMetaData();
+				int columnsNumber = rsmd.getColumnCount();
+
+
+				while (resultSet.next()) {
+					System.out.println("9-14-test selectFromDB");
+					for (int i = 1; i <= columnsNumber; i++) {
+						if (i > 1) System.out.print(",  ");
+						String columnValue = resultSet.getString(i);
+						System.out.print(columnValue + " " + rsmd.getColumnName(i));
+					}
+					System.out.println("");
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private Boolean _hasPrimaryCommerceCurrency(Company company)
@@ -187,6 +218,9 @@ public class CommerceCurrencyDefaultValueImportUpgradeProcess
 				preparedStatement.setBoolean(18, true);
 
 				preparedStatement.executeUpdate();
+
+				System.out.println("9-14-test insert default value: "+commerceCurrency.getCompanyId()+","+commerceCurrency.getPrimary()+","+commerceCurrency.getCode());
+
 			}
 		}
 	}
