@@ -1720,7 +1720,7 @@ public class CommerceCurrencyPersistenceImpl
 	@Override
 	public CommerceCurrency findByC_C(long companyId, String code)
 		throws NoSuchCurrencyException {
-
+		System.out.println("9-14-test getCommerceCurrency---------- findByC_C");
 		CommerceCurrency commerceCurrency = fetchByC_C(companyId, code);
 
 		if (commerceCurrency == null) {
