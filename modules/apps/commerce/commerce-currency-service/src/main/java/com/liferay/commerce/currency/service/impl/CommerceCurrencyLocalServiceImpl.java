@@ -73,7 +73,7 @@ public class CommerceCurrencyLocalServiceImpl
 			double priority, boolean active)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		if (primary) {
 			rate = BigDecimal.ONE;
