@@ -20,7 +20,6 @@ import com.liferay.asset.categories.admin.web.internal.constants.AssetCategories
 import com.liferay.asset.category.property.exception.CategoryPropertyKeyException;
 import com.liferay.asset.category.property.exception.CategoryPropertyValueException;
 import com.liferay.asset.category.property.exception.DuplicateCategoryPropertyException;
-import com.liferay.asset.display.page.portlet.AssetDisplayPageEntryFormProcessor;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.NoSuchClassTypeException;
 import com.liferay.asset.kernel.exception.AssetCategoryLimitException;
@@ -32,8 +31,6 @@ import com.liferay.asset.kernel.exception.NoSuchCategoryException;
 import com.liferay.asset.kernel.exception.NoSuchEntryException;
 import com.liferay.asset.kernel.exception.NoSuchVocabularyException;
 import com.liferay.asset.kernel.exception.VocabularyNameException;
-import com.liferay.asset.kernel.service.AssetCategoryLocalService;
-import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.asset.kernel.service.AssetVocabularyService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
@@ -144,16 +141,6 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 
 	private volatile AssetCategoriesAdminWebConfiguration
 		_assetCategoriesAdminWebConfiguration;
-
-	@Reference
-	private AssetCategoryLocalService _assetCategoryLocalService;
-
-	@Reference
-	private AssetCategoryService _assetCategoryService;
-
-	@Reference
-	private AssetDisplayPageEntryFormProcessor
-		_assetDisplayPageEntryFormProcessor;
 
 	@Reference
 	private AssetDisplayPageFriendlyURLProvider
