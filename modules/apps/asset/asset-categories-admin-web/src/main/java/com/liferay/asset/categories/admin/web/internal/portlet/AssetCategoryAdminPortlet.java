@@ -36,7 +36,6 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
-import com.liferay.portal.kernel.util.Portal;
 
 import java.io.IOException;
 
@@ -148,8 +147,5 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 
 	@Reference
 	private AssetVocabularyService _assetVocabularyService;
-
-	@Reference
-	private Portal _portal;
 
 }
