@@ -41,7 +41,7 @@ public class PortletConfigurationImporterTracker {
 	protected void activate(BundleContext bundleContext) {
 		_portletConfigurationImporterServiceTrackerMap =
 			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, portletConfigurationImporter.class, null,
+				bundleContext, PortletConfigurationImporter.class, null,
 				ServiceReferenceMapperFactory.create(
 					bundleContext,
 					(portletConfigurationImporter, emitter) -> emitter.emit(
