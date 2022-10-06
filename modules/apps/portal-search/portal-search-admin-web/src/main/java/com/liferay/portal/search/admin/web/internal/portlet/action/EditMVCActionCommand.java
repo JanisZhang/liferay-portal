@@ -17,10 +17,8 @@ package com.liferay.portal.search.admin.web.internal.portlet.action;
 import com.liferay.portal.instances.service.PortalInstancesLocalService;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.messaging.DestinationNames;
-import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.messaging.MessageListener;
-import com.liferay.portal.kernel.messaging.MessageListenerException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
@@ -134,7 +132,7 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 		_indexReindexers.remove(clazz.getName());
 	}
 
-	private void _reindex(final ActionRequest actionRequest) throws Exception {
+	private void _reindex(ActionRequest actionRequest) throws Exception {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
@@ -152,46 +150,37 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 			return;
 		}
 
-		final String jobName = "reindex-".concat(_portalUUID.generate());
+		String jobName = "reindex-".concat(_portalUUID.generate());
 
-		final CountDownLatch countDownLatch = new CountDownLatch(1);
+		CountDownLatch countDownLatch = new CountDownLatch(1);
 
-		MessageListener messageListener = new MessageListener() {
+		MessageListener messageListener = message -> {
+			int status = message.getInteger("status");
 
-			@Override
-			public void receive(Message message)
-				throws MessageListenerException {
+			if ((status != BackgroundTaskConstants.STATUS_CANCELLED) &&
+				(status != BackgroundTaskConstants.STATUS_FAILED) &&
+				(status != BackgroundTaskConstants.STATUS_SUCCESSFUL)) {
 
-				int status = message.getInteger("status");
-
-				if ((status != BackgroundTaskConstants.STATUS_CANCELLED) &&
-					(status != BackgroundTaskConstants.STATUS_FAILED) &&
-					(status != BackgroundTaskConstants.STATUS_SUCCESSFUL)) {
-
-					return;
-				}
-
-				if (!jobName.equals(message.getString("name"))) {
-					return;
-				}
-
-				PortletSession portletSession =
-					actionRequest.getPortletSession();
-
-				long lastAccessedTime = portletSession.getLastAccessedTime();
-				int maxInactiveInterval =
-					portletSession.getMaxInactiveInterval();
-
-				int extendedMaxInactiveIntervalTime =
-					(int)(System.currentTimeMillis() - lastAccessedTime +
-						maxInactiveInterval);
-
-				portletSession.setMaxInactiveInterval(
-					extendedMaxInactiveIntervalTime);
-
-				countDownLatch.countDown();
+				return;
 			}
 
+			if (!jobName.equals(message.getString("name"))) {
+				return;
+			}
+
+			PortletSession portletSession = actionRequest.getPortletSession();
+
+			long lastAccessedTime = portletSession.getLastAccessedTime();
+			int maxInactiveInterval = portletSession.getMaxInactiveInterval();
+
+			int extendedMaxInactiveIntervalTime =
+				(int)(System.currentTimeMillis() - lastAccessedTime +
+					maxInactiveInterval);
+
+			portletSession.setMaxInactiveInterval(
+				extendedMaxInactiveIntervalTime);
+
+			countDownLatch.countDown();
 		};
 
 		_messageBus.registerMessageListener(
