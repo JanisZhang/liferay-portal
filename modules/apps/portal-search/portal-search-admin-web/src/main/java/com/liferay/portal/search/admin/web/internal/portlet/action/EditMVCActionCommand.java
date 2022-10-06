@@ -15,7 +15,6 @@
 package com.liferay.portal.search.admin.web.internal.portlet.action;
 
 import com.liferay.portal.instances.service.PortalInstancesLocalService;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
@@ -242,9 +241,6 @@ public class EditMVCActionCommand extends BaseMVCActionCommand {
 				ParamUtil.getLongValues(actionRequest, "companyIds"));
 		}
 	}
-
-	@Reference
-	private BackgroundTaskManager _backgroundTaskManager;
 
 	private final Map<String, IndexReindexer> _indexReindexers =
 		new ConcurrentHashMap<>();
