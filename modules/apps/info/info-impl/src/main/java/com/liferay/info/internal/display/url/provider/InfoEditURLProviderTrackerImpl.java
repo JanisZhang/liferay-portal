@@ -16,11 +16,8 @@ package com.liferay.info.internal.display.url.provider;
 
 import com.liferay.info.display.url.provider.InfoEditURLProvider;
 import com.liferay.info.display.url.provider.InfoEditURLProviderTracker;
-import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-
-import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -40,17 +37,13 @@ public class InfoEditURLProviderTrackerImpl
 	}
 
 	@Activate
-	protected void activate(
-		BundleContext bundleContext, Map<String, Object> properties) {
-
+	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
 			bundleContext,
 			(Class<InfoEditURLProvider<?>>)(Class<?>)InfoEditURLProvider.class,
 			null,
-			ServiceReferenceMapperFactory.create(
-				bundleContext,
-				(infoEditURLProvider, emitter) -> emitter.emit(
-					(String)properties.get("model.class.name"))));
+			(infoEditURLProvider, emitter) -> emitter.emit(
+				(String)infoEditURLProvider.getProperty("model.class.name")));
 	}
 
 	@Deactivate
