@@ -33,13 +33,14 @@ import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.util.CommerceBigDecimalUtil;
 import com.liferay.commerce.util.CommerceUtil;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.math.BigDecimal;
@@ -47,16 +48,13 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Riccardo Alberti
@@ -179,32 +177,11 @@ public class CommerceDiscountCalculationV2Impl
 			productUnitPrice, quantity, commerceContext, commerceDiscounts);
 	}
 
-	public void unsetCommerceDiscountApplicationStrategy(
-		CommerceDiscountApplicationStrategy commerceDiscountApplicationStrategy,
-		Map<String, Object> properties) {
-
-		String commerceDiscountApplicationStrategyKey = GetterUtil.getString(
-			properties.get("commerce.discount.application.strategy.key"));
-
-		_commerceDiscountApplicationStrategyMap.remove(
-			commerceDiscountApplicationStrategyKey);
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void setCommerceDiscountApplicationStrategy(
-		CommerceDiscountApplicationStrategy commerceDiscountApplicationStrategy,
-		Map<String, Object> properties) {
-
-		String commerceDiscountApplicationStrategyKey = GetterUtil.getString(
-			properties.get("commerce.discount.application.strategy.key"));
-
-		_commerceDiscountApplicationStrategyMap.put(
-			commerceDiscountApplicationStrategyKey,
-			commerceDiscountApplicationStrategy);
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, CommerceDiscountApplicationStrategy.class,
+			"commerce.discount.application.strategy.key");
 	}
 
 	private CommerceDiscountApplicationStrategy
@@ -218,7 +195,7 @@ public class CommerceDiscountCalculationV2Impl
 		String commerceDiscountApplicationStrategy =
 			commercePricingConfiguration.commerceDiscountApplicationStrategy();
 
-		if (!_commerceDiscountApplicationStrategyMap.containsKey(
+		if (!_serviceTrackerMap.containsKey(
 				commerceDiscountApplicationStrategy)) {
 
 			if (_log.isWarnEnabled()) {
@@ -230,7 +207,7 @@ public class CommerceDiscountCalculationV2Impl
 			return null;
 		}
 
-		return _commerceDiscountApplicationStrategyMap.get(
+		return _serviceTrackerMap.getService(
 			commerceDiscountApplicationStrategy);
 	}
 
@@ -531,9 +508,6 @@ public class CommerceDiscountCalculationV2Impl
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceDiscountCalculationV2Impl.class);
 
-	private final Map<String, CommerceDiscountApplicationStrategy>
-		_commerceDiscountApplicationStrategyMap = new ConcurrentHashMap<>();
-
 	@Reference
 	private CommerceDiscountUsageEntryLocalService
 		_commerceDiscountUsageEntryLocalService;
@@ -553,5 +527,8 @@ public class CommerceDiscountCalculationV2Impl
 
 	@Reference
 	private CPInstanceLocalService _cpInstanceLocalService;
+
+	private ServiceTrackerMap<String, CommerceDiscountApplicationStrategy>
+		_serviceTrackerMap;
 
 }
