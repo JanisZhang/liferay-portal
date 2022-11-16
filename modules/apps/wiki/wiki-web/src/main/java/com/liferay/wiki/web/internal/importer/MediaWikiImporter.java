@@ -80,7 +80,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Jorge Ferrer
  */
 @Component(
-	property = {"importer=MediaWiki", "page=/wiki/import/mediawiki.jsp"},
+	property = "importer=MediaWiki",
 	service = WikiImporter.class
 )
 public class MediaWikiImporter implements WikiImporter {
@@ -156,6 +156,11 @@ public class MediaWikiImporter implements WikiImporter {
 		catch (Exception exception) {
 			throw new PortalException(exception);
 		}
+	}
+
+	@Override
+	public String getPage() {
+		return "/wiki/import/mediawiki.jsp";
 	}
 
 	private String _getCreoleRedirectContent(String redirectTitle) {

@@ -31,4 +31,6 @@ public interface WikiImporter {
 			Map<String, String[]> options)
 		throws PortalException;
 
+	public String getPage();
+
 }
