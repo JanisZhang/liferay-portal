@@ -78,11 +78,8 @@ public class CompositeFacetProcessor
 		_facetProcessors.remove(className);
 	}
 
-	@Reference(
-		cardinality = ReferenceCardinality.MANDATORY,
-		target = "(class.name=DEFAULT)"
-	)
-	protected FacetProcessor<SearchRequestBuilder> defaultFacetProcessor;
+	@Reference
+	protected DefaultFacetProcessor defaultFacetProcessor;
 
 	private final Map<String, FacetProcessor<SearchRequestBuilder>>
 		_facetProcessors = new HashMap<>();
