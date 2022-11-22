@@ -207,7 +207,7 @@ public class SearchRequestExecutorFixture {
 		if (_facetProcessor != null) {
 			ReflectionTestUtil.setFieldValue(
 				defaultFacetTranslator, "defaultFacetProcessor",
-				_facetProcessor);
+				(FacetProcessor<SearchRequestBuilder>)_facetProcessor);
 		}
 		else {
 			BundleContext bundleContext = SystemBundleUtil.getBundleContext();
