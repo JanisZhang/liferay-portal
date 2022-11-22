@@ -14,13 +14,13 @@
 
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.search;
 
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.query.QueryTranslator;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.search.elasticsearch7.internal.SearchHitDocumentTranslatorImpl;
 import com.liferay.portal.search.elasticsearch7.internal.aggregation.ElasticsearchAggregationVisitorFixture;
 import com.liferay.portal.search.elasticsearch7.internal.aggregation.pipeline.ElasticsearchPipelineAggregationVisitorFixture;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
-import com.liferay.portal.search.elasticsearch7.internal.facet.CompositeFacetProcessor;
 import com.liferay.portal.search.elasticsearch7.internal.facet.DefaultFacetProcessor;
 import com.liferay.portal.search.elasticsearch7.internal.facet.DefaultFacetTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.facet.FacetProcessor;
@@ -44,8 +44,6 @@ import com.liferay.portal.search.engine.adapter.search.SearchRequestExecutor;
 import com.liferay.portal.search.filter.ComplexQueryBuilderFactory;
 import com.liferay.portal.search.internal.aggregation.AggregationResultsImpl;
 import com.liferay.portal.search.internal.document.DocumentBuilderFactoryImpl;
-import com.liferay.portal.search.internal.facet.ModifiedFacetImpl;
-import com.liferay.portal.search.internal.facet.NestedFacetImpl;
 import com.liferay.portal.search.internal.filter.ComplexQueryBuilderFactoryImpl;
 import com.liferay.portal.search.internal.geolocation.GeoBuildersImpl;
 import com.liferay.portal.search.internal.groupby.GroupByResponseFactoryImpl;
@@ -60,10 +58,10 @@ import com.liferay.portal.search.internal.stats.StatsResponseBuilderFactoryImpl;
 import com.liferay.portal.search.legacy.stats.StatsRequestBuilderFactory;
 import com.liferay.portal.search.query.Queries;
 
-import java.util.Collections;
-
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+
+import org.osgi.framework.BundleContext;
 
 /**
  * @author Michael C. Han
@@ -75,8 +73,6 @@ public class SearchRequestExecutorFixture {
 	}
 
 	public void setUp() {
-		FacetProcessor<?> facetProcessor = _getFacetProcessor();
-
 		ElasticsearchQueryTranslatorFixture
 			elasticsearchQueryTranslatorFixture =
 				new ElasticsearchQueryTranslatorFixture();
@@ -101,14 +97,13 @@ public class SearchRequestExecutorFixture {
 			_elasticsearchClientResolver, elasticsearchQueryTranslator,
 			elasticsearchSortFieldTranslatorFixture.
 				getElasticsearchSortFieldTranslator(),
-			facetProcessor, new StatsRequestBuilderFactoryImpl(),
-			statsTranslator);
+			new StatsRequestBuilderFactoryImpl(), statsTranslator);
 	}
 
 	protected static CommonSearchSourceBuilderAssembler
 		createCommonSearchSourceBuilderAssembler(
 			ElasticsearchQueryTranslator elasticsearchQueryTranslator,
-			FacetProcessor<?> facetProcessor, StatsTranslator statsTranslator,
+			StatsTranslator statsTranslator,
 			ComplexQueryBuilderFactory complexQueryBuilderFactory) {
 
 		com.liferay.portal.search.elasticsearch7.internal.legacy.query.
@@ -147,8 +142,7 @@ public class SearchRequestExecutorFixture {
 			complexQueryBuilderFactory);
 		ReflectionTestUtil.setFieldValue(
 			commonSearchSourceBuilderAssembler, "_facetTranslator",
-			_createFacetTranslator(
-				facetProcessor, legacyElasticsearchQueryTranslator));
+			_createFacetTranslator(legacyElasticsearchQueryTranslator));
 		ReflectionTestUtil.setFieldValue(
 			commonSearchSourceBuilderAssembler,
 			"_filterToQueryBuilderTranslator",
@@ -196,23 +190,44 @@ public class SearchRequestExecutorFixture {
 	}
 
 	private static FacetTranslator _createFacetTranslator(
-		FacetProcessor<?> facetProcessor,
 		QueryTranslator<QueryBuilder> queryTranslator) {
-
-		DefaultFacetTranslator defaultFacetTranslator =
-			new DefaultFacetTranslator();
 
 		ElasticsearchFilterTranslatorFixture
 			elasticsearchFilterTranslatorFixture =
 				new ElasticsearchFilterTranslatorFixture(queryTranslator);
 
-		ReflectionTestUtil.setFieldValue(
-			defaultFacetTranslator, "_facetProcessor",
-			(FacetProcessor<SearchRequestBuilder>)facetProcessor);
+		DefaultFacetTranslator defaultFacetTranslator =
+			new DefaultFacetTranslator();
+
 		ReflectionTestUtil.setFieldValue(
 			defaultFacetTranslator, "_filterTranslator",
 			elasticsearchFilterTranslatorFixture.
 				getElasticsearchFilterTranslator());
+
+		if (_facetProcessor != null) {
+			ReflectionTestUtil.setFieldValue(
+				defaultFacetTranslator, "defaultFacetProcessor",
+				_facetProcessor);
+		}
+		else {
+			BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+			ReflectionTestUtil.setFieldValue(
+				defaultFacetTranslator, "defaultFacetProcessor",
+				new DefaultFacetProcessor());
+			ReflectionTestUtil.invoke(
+				defaultFacetTranslator, "activate",
+				new Class<?>[] {BundleContext.class}, bundleContext);
+
+			bundleContext.registerService(
+				(Class<FacetProcessor<SearchRequestBuilder>>)
+					(Class<?>)FacetProcessor.class,
+				new ModifiedFacetProcessor(), null);
+			bundleContext.registerService(
+				(Class<FacetProcessor<SearchRequestBuilder>>)
+					(Class<?>)FacetProcessor.class,
+				new NestedFacetProcessor(), null);
+		}
 
 		return defaultFacetTranslator;
 	}
@@ -272,13 +287,12 @@ public class SearchRequestExecutorFixture {
 		ElasticsearchClientResolver elasticsearchClientResolver,
 		ElasticsearchQueryTranslator elasticsearchQueryTranslator,
 		ElasticsearchSortFieldTranslator elasticsearchSortFieldTranslator,
-		FacetProcessor<?> facetProcessor,
 		StatsRequestBuilderFactory statsRequestBuilderFactory,
 		StatsTranslator statsTranslator) {
 
 		CommonSearchSourceBuilderAssembler commonSearchSourceBuilderAssembler =
 			createCommonSearchSourceBuilderAssembler(
-				elasticsearchQueryTranslator, facetProcessor, statsTranslator,
+				elasticsearchQueryTranslator, statsTranslator,
 				complexQueryBuilderFactory);
 
 		SearchSearchRequestAssembler searchSearchRequestAssembler =
@@ -460,29 +474,9 @@ public class SearchRequestExecutorFixture {
 		return suggestSearchRequestExecutor;
 	}
 
-	private FacetProcessor<?> _getFacetProcessor() {
-		if (_facetProcessor != null) {
-			return _facetProcessor;
-		}
-
-		return new CompositeFacetProcessor() {
-			{
-				defaultFacetProcessor = new DefaultFacetProcessor();
-
-				setFacetProcessor(
-					new ModifiedFacetProcessor(),
-					Collections.singletonMap(
-						"class.name", ModifiedFacetImpl.class.getName()));
-				setFacetProcessor(
-					new NestedFacetProcessor(),
-					Collections.singletonMap(
-						"class.name", NestedFacetImpl.class.getName()));
-			}
-		};
-	}
+	private static FacetProcessor<?> _facetProcessor;
 
 	private ElasticsearchClientResolver _elasticsearchClientResolver;
-	private FacetProcessor<?> _facetProcessor;
 	private SearchRequestExecutor _searchRequestExecutor;
 
 }
