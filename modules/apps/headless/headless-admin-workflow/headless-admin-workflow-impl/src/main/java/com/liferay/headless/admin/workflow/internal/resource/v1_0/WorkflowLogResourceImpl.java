@@ -35,10 +35,9 @@ import com.liferay.portal.workflow.kaleo.definition.LogType;
 import com.liferay.portal.workflow.kaleo.definition.util.KaleoLogUtil;
 import com.liferay.portal.workflow.kaleo.service.KaleoLogLocalService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -122,18 +121,18 @@ public class WorkflowLogResourceImpl extends BaseWorkflowLogResourceImpl {
 	}
 
 	private List<Integer> _toLogTypes(String[] types) {
-		return Stream.of(
-			types
-		).map(
-			WorkflowLog.Type::create
-		).map(
-			this::_toLogTypeName
-		).map(
-			KaleoLogUtil::convert
-		).distinct(
-		).collect(
-			Collectors.toList()
-		);
+		List<Integer> logTypes = new ArrayList<>();
+
+		for (String type : types) {
+			int value = KaleoLogUtil.convert(
+				_toLogTypeName(WorkflowLog.Type.create(type)));
+
+			if (!logTypes.contains(value)) {
+				logTypes.add(value);
+			}
+		}
+
+		return logTypes;
 	}
 
 	private Role _toRole(long roleId) throws Exception {
