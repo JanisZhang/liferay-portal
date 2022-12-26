@@ -15,10 +15,12 @@
 package com.liferay.headless.admin.user.internal.resource.v1_0;
 
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
+import com.liferay.headless.admin.user.dto.v1_0.EmailAddress;
 import com.liferay.headless.admin.user.dto.v1_0.HoursAvailable;
 import com.liferay.headless.admin.user.dto.v1_0.Location;
 import com.liferay.headless.admin.user.dto.v1_0.Organization;
 import com.liferay.headless.admin.user.dto.v1_0.OrganizationContactInformation;
+import com.liferay.headless.admin.user.dto.v1_0.Phone;
 import com.liferay.headless.admin.user.dto.v1_0.Service;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.AccountResourceDTOConverter;
@@ -39,12 +41,10 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Address;
-import com.liferay.portal.kernel.model.EmailAddress;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.OrgLabor;
 import com.liferay.portal.kernel.model.OrganizationConstants;
-import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.Website;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -87,7 +87,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -545,48 +544,52 @@ public class OrganizationResourceImpl
 	}
 
 	private List<Address> _getAddresses(Organization organization) {
-		return Optional.ofNullable(
-			organization.getOrganizationContactInformation()
-		).map(
-			OrganizationContactInformation::getPostalAddresses
-		).map(
-			postalAddresses -> ListUtil.filter(
+		OrganizationContactInformation organizationContactInformation =
+			organization.getOrganizationContactInformation();
+
+		if (organizationContactInformation != null) {
+			return ListUtil.filter(
 				transformToList(
-					postalAddresses,
+					organizationContactInformation.getPostalAddresses(),
 					_postalAddress ->
 						ServiceBuilderAddressUtil.toServiceBuilderAddress(
 							contextCompany.getCompanyId(), _postalAddress,
 							ListTypeConstants.ORGANIZATION_ADDRESS)),
-				Objects::nonNull)
-		).orElse(
-			Collections.emptyList()
-		);
+				Objects::nonNull);
+		}
+
+		return Collections.emptyList();
 	}
 
 	private long _getCountryId(Organization organization) {
-		return Optional.ofNullable(
-			organization.getLocation()
-		).map(
-			Location::getAddressCountry
-		).map(
-			addressCountry ->
+		Location location = organization.getLocation();
+
+		if (location != null) {
+			Long countryId =
 				ServiceBuilderCountryUtil.toServiceBuilderCountryId(
-					contextCompany.getCompanyId(), addressCountry)
-		).orElse(
-			0L
-		);
+					contextCompany.getCompanyId(),
+					location.getAddressCountry());
+
+			if (countryId != null) {
+				return countryId;
+			}
+		}
+
+		return 0L;
 	}
 
 	private long _getDefaultParentOrganizationId(Organization organization) {
-		return Optional.ofNullable(
-			organization.getParentOrganization()
-		).map(
-			Organization::getId
-		).map(
-			Long::valueOf
-		).orElse(
-			(long)OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID
-		);
+		Organization parentOrganization = organization.getParentOrganization();
+
+		if (parentOrganization != null) {
+			String id = parentOrganization.getId();
+
+			if (id != null) {
+				return Long.valueOf(id);
+			}
+		}
+
+		return (long)OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID;
 	}
 
 	private DefaultDTOConverterContext _getDTOConverterContext(
@@ -631,24 +634,25 @@ public class OrganizationResourceImpl
 			contextUriInfo, contextUser);
 	}
 
-	private List<EmailAddress> _getEmailAddresses(Organization organization) {
-		return Optional.ofNullable(
-			organization.getOrganizationContactInformation()
-		).map(
-			OrganizationContactInformation::getEmailAddresses
-		).map(
-			emailAddresses -> ListUtil.filter(
+	private List<com.liferay.portal.kernel.model.EmailAddress>
+		_getEmailAddresses(Organization organization) {
+
+		OrganizationContactInformation organizationContactInformation =
+			organization.getOrganizationContactInformation();
+
+		if (organizationContactInformation != null) {
+			return ListUtil.filter(
 				transformToList(
-					emailAddresses,
+					organizationContactInformation.getEmailAddresses(),
 					emailAddress ->
 						ServiceBuilderEmailAddressUtil.
 							toServiceBuilderEmailAddress(
 								emailAddress,
 								ListTypeConstants.ORGANIZATION_EMAIL_ADDRESS)),
-				Objects::nonNull)
-		).orElse(
-			Collections.emptyList()
-		);
+				Objects::nonNull);
+		}
+
+		return Collections.emptyList();
 	}
 
 	private Page<Organization> _getOrganizationsPage(
@@ -701,44 +705,34 @@ public class OrganizationResourceImpl
 	}
 
 	private List<OrgLabor> _getOrgLabors(Organization organization) {
-		return Optional.ofNullable(
-			organization.getServices()
-		).map(
-			services -> ListUtil.filter(
-				transformToList(services, this::_toOrgLabor), Objects::nonNull)
-		).orElse(
-			Collections.emptyList()
-		);
+		return ListUtil.filter(
+			transformToList(organization.getServices(), this::_toOrgLabor),
+			Objects::nonNull);
 	}
 
-	private List<Phone> _getPhones(Organization organization) {
-		return Optional.ofNullable(
-			organization.getOrganizationContactInformation()
-		).map(
-			OrganizationContactInformation::getTelephones
-		).map(
-			telephones -> ListUtil.filter(
-				transformToList(
-					telephones,
-					telephone -> ServiceBuilderPhoneUtil.toServiceBuilderPhone(
-						telephone, ListTypeConstants.ORGANIZATION_PHONE)),
-				Objects::nonNull)
-		).orElse(
-			Collections.emptyList()
-		);
+	private List<com.liferay.portal.kernel.model.Phone> _getPhones(
+		Organization organization) {
+
+		OrganizationContactInformation organizationContactInformation =
+			organization.getOrganizationContactInformation();
+
+		return ListUtil.filter(
+			transformToList(
+				organizationContactInformation.getTelephones(),
+				telephone -> ServiceBuilderPhoneUtil.toServiceBuilderPhone(
+					telephone, ListTypeConstants.ORGANIZATION_PHONE)),
+			Objects::nonNull);
 	}
 
 	private long _getRegionId(Organization organization, long countryId) {
-		return Optional.ofNullable(
-			organization.getLocation()
-		).map(
-			Location::getAddressRegion
-		).map(
-			addressRegion -> ServiceBuilderRegionUtil.getServiceBuilderRegionId(
-				addressRegion, countryId)
-		).orElse(
-			(long)0
-		);
+		Location location = organization.getLocation();
+
+		if (location != null) {
+			return ServiceBuilderRegionUtil.getServiceBuilderRegionId(
+				location.getAddressRegion(), countryId);
+		}
+
+		return 0;
 	}
 
 	private long _getServiceBuilderOrganizationId(String organizationId)
@@ -760,20 +754,19 @@ public class OrganizationResourceImpl
 	}
 
 	private List<Website> _getWebsites(Organization organization) {
-		return Optional.ofNullable(
-			organization.getOrganizationContactInformation()
-		).map(
-			OrganizationContactInformation::getWebUrls
-		).map(
-			webUrls -> ListUtil.filter(
+		OrganizationContactInformation organizationContactInformation =
+			organization.getOrganizationContactInformation();
+
+		if (organizationContactInformation != null) {
+			return ListUtil.filter(
 				transformToList(
-					webUrls,
+					organizationContactInformation.getWebUrls(),
 					webUrl -> ServiceBuilderWebsiteUtil.toServiceBuilderWebsite(
 						ListTypeConstants.ORGANIZATION_WEBSITE, webUrl)),
-				Objects::nonNull)
-		).orElse(
-			Collections.emptyList()
-		);
+				Objects::nonNull);
+		}
+
+		return Collections.emptyList();
 	}
 
 	private Organization _toOrganization(String organizationId)
