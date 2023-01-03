@@ -195,22 +195,21 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 			InfoItemFieldValues infoItemFieldValues = _getInfoItemFieldValues(
 				httpServletRequest, layout);
 
-			Optional<String> descriptionOptional = _getMappedValueOptional(
+			String description = _getMappedValue(
 				layout.getTypeSettingsProperty(
 					"mapped-openGraphDescription", "${description}"),
 				infoItemFieldValues, themeDisplay.getLocale());
 
-			String description = descriptionOptional.orElseGet(
-				() -> {
-					if ((layoutSEOEntry != null) &&
-						layoutSEOEntry.isOpenGraphDescriptionEnabled()) {
+			if (description == null) {
+				if ((layoutSEOEntry != null) &&
+					layoutSEOEntry.isOpenGraphDescriptionEnabled()) {
 
-						return layoutSEOEntry.getOpenGraphDescription(
-							themeDisplay.getLocale());
-					}
+					description = layoutSEOEntry.getOpenGraphDescription(
+						themeDisplay.getLocale());
+				}
 
-					return layout.getDescription(themeDisplay.getLocale());
-				});
+				description = layout.getDescription(themeDisplay.getLocale());
+			}
 
 			printWriter.println(
 				_getOpenGraphTag(
@@ -231,22 +230,21 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 			printWriter.println(
 				_getOpenGraphTag("og:site_name", group.getDescriptiveName()));
 
-			Optional<String> titleOptional = _getMappedValueOptional(
+			String title = _getMappedValue(
 				layout.getTypeSettingsProperty(
 					"mapped-openGraphTitle", "${title}"),
 				infoItemFieldValues, themeDisplay.getLocale());
 
-			String title = titleOptional.orElseGet(
-				() -> {
-					if ((layoutSEOEntry != null) &&
-						layoutSEOEntry.isOpenGraphTitleEnabled()) {
+			if (title == null) {
+				if ((layoutSEOEntry != null) &&
+					layoutSEOEntry.isOpenGraphTitleEnabled()) {
 
-						return layoutSEOEntry.getOpenGraphTitle(
-							themeDisplay.getLocale());
-					}
+					title = layoutSEOEntry.getOpenGraphTitle(
+						themeDisplay.getLocale());
+				}
 
-					return _getTitle(httpServletRequest);
-				});
+				title = _getTitle(httpServletRequest);
+			}
 
 			printWriter.println(_getOpenGraphTag("og:title", title));
 
@@ -418,17 +416,16 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 		return infoItemFieldValuesProvider.getInfoItemFieldValues(infoItem);
 	}
 
-	private Optional<String> _getMappedValueOptional(
+	private String _getMappedValue(
 		String template, InfoItemFieldValues infoItemFieldValues,
 		Locale locale) {
 
 		if ((infoItemFieldValues == null) || Validator.isNull(template)) {
-			return Optional.empty();
+			return null;
 		}
 
-		return Optional.ofNullable(
-			_layoutSEOTemplateProcessor.processTemplate(
-				template, infoItemFieldValues, locale));
+		return _layoutSEOTemplateProcessor.processTemplate(
+			template, infoItemFieldValues, locale);
 	}
 
 	private String _getOpenGraphTag(String property, String content) {
