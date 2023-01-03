@@ -61,15 +61,12 @@ import com.liferay.translation.info.item.provider.InfoItemLanguagesProvider;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -258,49 +255,44 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 			printWriter.println(
 				_getOpenGraphTag("og:url", layoutSEOLink.getHref()));
 
-			Optional<OpenGraphImageProvider.OpenGraphImage>
-				openGraphImageOptional =
-					_openGraphImageProvider.getOpenGraphImageOptional(
-						infoItemFieldValues, layout, layoutSEOEntry,
-						themeDisplay);
+			OpenGraphImageProvider.OpenGraphImage openGraphImage =
+				_openGraphImageProvider.getOpenGraphImage(
+					infoItemFieldValues, layout, layoutSEOEntry, themeDisplay);
 
-			openGraphImageOptional.ifPresent(
-				openGraphImage -> {
+			if (openGraphImage != null) {
+				printWriter.println(
+					_getOpenGraphTag("og:image", openGraphImage.getUrl()));
+
+				String alt = openGraphImage.getAlt();
+
+				if (alt != null) {
+					printWriter.println(_getOpenGraphTag("og:image:alt", alt));
+				}
+
+				if (themeDisplay.isSecure()) {
 					printWriter.println(
-						_getOpenGraphTag("og:image", openGraphImage.getUrl()));
+						_getOpenGraphTag(
+							"og:image:secure_url", openGraphImage.getUrl()));
+				}
 
-					openGraphImage.getAltOptional(
-					).ifPresent(
-						alt -> printWriter.println(
-							_getOpenGraphTag("og:image:alt", alt))
-					);
+				String type = openGraphImage.getMimeType();
 
-					if (themeDisplay.isSecure()) {
-						printWriter.println(
-							_getOpenGraphTag(
-								"og:image:secure_url",
-								openGraphImage.getUrl()));
-					}
+				if (type != null) {
+					printWriter.println(
+						_getOpenGraphTag("og:image:type", type));
+				}
 
-					openGraphImage.getMimeTypeOptional(
-					).ifPresent(
-						type -> printWriter.println(
-							_getOpenGraphTag("og:image:type", type))
-					);
+				printWriter.println(
+					_getOpenGraphTag("og:image:url", openGraphImage.getUrl()));
+
+				for (KeyValuePair keyValuePair :
+						openGraphImage.getMetadataTagKeyValuePairs()) {
 
 					printWriter.println(
 						_getOpenGraphTag(
-							"og:image:url", openGraphImage.getUrl()));
-
-					for (KeyValuePair keyValuePair :
-							openGraphImage.getMetadataTagKeyValuePairs()) {
-
-						printWriter.println(
-							_getOpenGraphTag(
-								keyValuePair.getKey(),
-								keyValuePair.getValue()));
-					}
-				});
+							keyValuePair.getKey(), keyValuePair.getValue()));
+				}
+			}
 		}
 		catch (RuntimeException runtimeException) {
 			throw runtimeException;
@@ -371,13 +363,13 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 			return siteAvailableLocales;
 		}
 
-		Stream<String> stream = Arrays.stream(
-			infoItemLanguagesProvider.getAvailableLanguageIds(layout));
+		Set<Locale> availableLocales = new HashSet<>();
 
-		Stream<Locale> localesStream = stream.map(LocaleUtil::fromLanguageId);
+		for (String languageId :
+				infoItemLanguagesProvider.getAvailableLanguageIds(layout)) {
 
-		Set<Locale> availableLocales = localesStream.collect(
-			Collectors.toSet());
+			availableLocales.add(LocaleUtil.fromLanguageId(languageId));
+		}
 
 		if (!availableLocales.contains(siteDefaultLocale)) {
 			availableLocales.add(siteDefaultLocale);
