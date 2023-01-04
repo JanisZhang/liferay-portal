@@ -31,7 +31,6 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -55,28 +54,32 @@ public class AlternateURLMapperProvider {
 	public AlternateURLMapperProvider.AlternateURLMapper getAlternateURLMapper(
 		HttpServletRequest httpServletRequest) {
 
-		return Optional.ofNullable(
+		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
 			(LayoutDisplayPageObjectProvider<?>)httpServletRequest.getAttribute(
-				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER)
-		).filter(
-			layoutDisplayPageObjectProvider ->
-				AssetDisplayPageUtil.hasAssetDisplayPage(
-					layoutDisplayPageObjectProvider.getGroupId(),
-					layoutDisplayPageObjectProvider.getClassNameId(),
-					layoutDisplayPageObjectProvider.getClassPK(),
-					layoutDisplayPageObjectProvider.getClassTypeId())
-		).map(
-			layoutDisplayPageObjectProvider ->
-				(AlternateURLMapperProvider.AlternateURLMapper)
+				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER);
+
+		if ((layoutDisplayPageObjectProvider != null) &&
+			AssetDisplayPageUtil.hasAssetDisplayPage(
+				layoutDisplayPageObjectProvider.getGroupId(),
+				layoutDisplayPageObjectProvider.getClassNameId(),
+				layoutDisplayPageObjectProvider.getClassPK(),
+				layoutDisplayPageObjectProvider.getClassTypeId())) {
+
+			AlternateURLMapperProvider.AlternateURLMapper
+				pageAlternateURLMapper =
 					new AlternateURLMapperProvider.
 						AssetDisplayPageAlternateURLMapper(
 							_assetDisplayPageFriendlyURLProvider,
 							_classNameLocalService,
-							layoutDisplayPageObjectProvider, _portal)
-		).orElseGet(
-			() -> new AlternateURLMapperProvider.DefaultPageAlternateURLMapper(
-				_portal)
-		);
+							layoutDisplayPageObjectProvider, _portal);
+
+			if (pageAlternateURLMapper != null) {
+				return pageAlternateURLMapper;
+			}
+		}
+
+		return new AlternateURLMapperProvider.DefaultPageAlternateURLMapper(
+			_portal);
 	}
 
 	public static class AssetDisplayPageAlternateURLMapper
