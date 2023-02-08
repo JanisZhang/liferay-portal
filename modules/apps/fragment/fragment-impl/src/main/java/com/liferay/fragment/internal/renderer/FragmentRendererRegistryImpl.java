@@ -27,6 +27,7 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -34,8 +35,6 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -70,13 +69,9 @@ public class FragmentRendererRegistryImpl implements FragmentRendererRegistry {
 		Collection<FragmentRenderer> fragmentRenderers =
 			_serviceTrackerMap.values();
 
-		Stream<FragmentRenderer> stream = fragmentRenderers.stream();
-
-		return stream.filter(
-			fragmentRenderer -> fragmentRenderer.getType() == type
-		).collect(
-			Collectors.toList()
-		);
+		return ListUtil.filter(
+			fragmentRenderers,
+			fragmentRenderer -> fragmentRenderer.getType() == type);
 	}
 
 	@Activate
