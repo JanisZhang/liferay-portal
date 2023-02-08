@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.osgi.framework.BundleContext;
@@ -66,11 +65,8 @@ public class FragmentRendererRegistryImpl implements FragmentRendererRegistry {
 
 	@Override
 	public List<FragmentRenderer> getFragmentRenderers(int type) {
-		Collection<FragmentRenderer> fragmentRenderers =
-			_serviceTrackerMap.values();
-
 		return ListUtil.filter(
-			fragmentRenderers,
+			_serviceTrackerMap.values(),
 			fragmentRenderer -> fragmentRenderer.getType() == type);
 	}
 
