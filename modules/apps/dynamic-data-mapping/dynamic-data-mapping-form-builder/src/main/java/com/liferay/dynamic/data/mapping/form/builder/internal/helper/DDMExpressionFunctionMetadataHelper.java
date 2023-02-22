@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
@@ -84,46 +83,36 @@ public class DDMExpressionFunctionMetadataHelper {
 
 			Class<?> clazz = ddmExpressionFunction.getClass();
 
-			Optional<Method> optional = Optional.empty();
-
 			for (Method method : clazz.getMethods()) {
-				if (Objects.equals(method.getName(), "apply") &&
-					Objects.equals(method.getReturnType(), Boolean.class)) {
+				if (!Objects.equals(method.getName(), "apply") ||
+					!Objects.equals(method.getReturnType(), Boolean.class)) {
 
-					optional = Optional.of(method);
-
-					break;
+					continue;
 				}
+
+				int parameterCount = method.getParameterCount();
+
+				if (parameterCount > 2) {
+					continue;
+				}
+
+				String label = ddmExpressionFunction.getLabel(locale);
+
+				if (Validator.isNull(label)) {
+					label = entry.getKey();
+				}
+
+				_addDDMExpressionFunctionMetadata(
+					ddmExpressionFunctionMetadatasMap,
+					new DDMExpressionFunctionMetadata(
+						entry.getKey(), label, _TYPE_BOOLEAN,
+						_getParameterClassNames(parameterCount, _TYPE_NUMBER)));
+				_addDDMExpressionFunctionMetadata(
+					ddmExpressionFunctionMetadatasMap,
+					new DDMExpressionFunctionMetadata(
+						entry.getKey(), label, _TYPE_BOOLEAN,
+						_getParameterClassNames(parameterCount, _TYPE_TEXT)));
 			}
-
-			if (!optional.isPresent()) {
-				continue;
-			}
-
-			Method method = optional.get();
-
-			int parameterCount = method.getParameterCount();
-
-			if (parameterCount > 2) {
-				continue;
-			}
-
-			String label = ddmExpressionFunction.getLabel(locale);
-
-			if (Validator.isNull(label)) {
-				label = entry.getKey();
-			}
-
-			_addDDMExpressionFunctionMetadata(
-				ddmExpressionFunctionMetadatasMap,
-				new DDMExpressionFunctionMetadata(
-					entry.getKey(), label, _TYPE_BOOLEAN,
-					_getParameterClassNames(parameterCount, _TYPE_NUMBER)));
-			_addDDMExpressionFunctionMetadata(
-				ddmExpressionFunctionMetadatasMap,
-				new DDMExpressionFunctionMetadata(
-					entry.getKey(), label, _TYPE_BOOLEAN,
-					_getParameterClassNames(parameterCount, _TYPE_TEXT)));
 		}
 	}
 
