@@ -17,13 +17,12 @@ package com.liferay.dynamic.data.mapping.util;
 import com.liferay.dynamic.data.mapping.BaseDDMTestCase;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.hamcrest.CoreMatchers;
 
@@ -72,14 +71,9 @@ public class DDMFormValuesConverterUtilTest extends BaseDDMTestCase {
 			nestedDDMFormFieldValues.toString(), 2,
 			nestedDDMFormFieldValues.size());
 
-		Stream<DDMFormFieldValue> stream = nestedDDMFormFieldValues.stream();
-
 		Assert.assertThat(
-			stream.map(
-				DDMFormFieldValue::getName
-			).collect(
-				Collectors.toSet()
-			),
+			TransformUtil.transform(
+				nestedDDMFormFieldValues, DDMFormFieldValue::getName),
 			CoreMatchers.hasItems("Text1", "Text2"));
 
 		Assert.assertEquals(
