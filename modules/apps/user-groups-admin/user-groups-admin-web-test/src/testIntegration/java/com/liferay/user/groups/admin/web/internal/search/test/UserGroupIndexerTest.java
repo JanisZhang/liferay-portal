@@ -44,10 +44,9 @@ import com.liferay.users.admin.test.util.search.GroupBlueprint;
 import com.liferay.users.admin.test.util.search.GroupSearchFixture;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -96,13 +95,8 @@ public class UserGroupIndexerTest {
 		String baseName = RandomTestUtil.randomString();
 		int i = 2;
 
-		List<UserGroup> userGroups = Stream.generate(
-			() -> addUserGroup(baseName)
-		).limit(
-			i
-		).collect(
-			Collectors.toList()
-		);
+		List<UserGroup> userGroups = Collections.nCopies(
+			i, addUserGroup(baseName));
 
 		groupLocalService.addRoleGroup(role.getRoleId(), _group.getGroupId());
 
@@ -114,11 +108,14 @@ public class UserGroupIndexerTest {
 				baseName
 			).build());
 
-		Stream<UserGroup> stream = userGroups.stream();
+		for (int index = 0; index < i; index++) {
+			UserGroup userGroup = userGroups.get(index);
 
-		DocumentsAssert.assertValuesIgnoreRelevance(
-			searchResponse1.getRequestString(), searchResponse1.getDocuments(),
-			Field.NAME, stream.map(UserGroup::getName));
+			DocumentsAssert.assertValuesIgnoreRelevance(
+				searchResponse1.getRequestString(),
+				searchResponse1.getDocuments(), Field.NAME,
+				userGroup.getName());
+		}
 
 		SearchRequestBuilder searchRequestBuilder2 = _getSearchRequestBuilder(
 			companyId);
