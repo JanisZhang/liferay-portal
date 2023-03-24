@@ -58,9 +58,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.url.URLConstants;
 import org.osgi.service.url.URLStreamHandlerService;
 import org.osgi.util.tracker.BundleTracker;
@@ -89,6 +86,8 @@ public class WabGenerator
 
 	@Activate
 	protected void activate(BundleContext bundleContext) throws Exception {
+		_portalIsReady.set(true);
+
 		_registerURLStreamHandlerService(bundleContext);
 
 		_registerArtifactUrlTransformer(bundleContext);
@@ -170,28 +169,21 @@ public class WabGenerator
 
 	@Deactivate
 	protected void deactivate(BundleContext bundleContext) throws Exception {
+		_portalIsReady.set(false);
+
 		_serviceRegistration.unregister();
 
 		_serviceRegistration = null;
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(&(original.bean=true)(bean.id=javax.servlet.ServletContext))"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		_portalIsReady.set(true);
 	}
 
 	protected void unsetModuleServiceLifecycle(
 		ModuleServiceLifecycle moduleServiceLifecycle) {
 	}
 
-	protected void unsetServletContext(ServletContext servletContext) {
-		_portalIsReady.set(false);
-	}
+	@Reference(
+		target = "(&(original.bean=true)(bean.id=javax.servlet.ServletContext))"
+	)
+	protected ServletContext servletContext;
 
 	private Set<String> _getRequiredForStartupContextPaths(Path path)
 		throws Exception {
