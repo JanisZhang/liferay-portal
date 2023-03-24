@@ -176,10 +176,6 @@ public class WabGenerator
 		_serviceRegistration = null;
 	}
 
-	protected void unsetModuleServiceLifecycle(
-		ModuleServiceLifecycle moduleServiceLifecycle) {
-	}
-
 	@Reference(
 		target = "(&(original.bean=true)(bean.id=javax.servlet.ServletContext))"
 	)
