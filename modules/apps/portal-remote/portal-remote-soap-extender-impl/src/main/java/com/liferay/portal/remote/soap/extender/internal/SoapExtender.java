@@ -14,6 +14,8 @@
 
 package com.liferay.portal.remote.soap.extender.internal;
 
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.remote.soap.extender.SoapDescriptorBuilder;
@@ -28,14 +30,13 @@ import org.apache.felix.dm.DependencyManager;
 import org.apache.felix.dm.ServiceDependency;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Carlos Sierra Andrés
@@ -54,6 +55,45 @@ public class SoapExtender {
 	protected void activate(
 		BundleContext bundleContext, Map<String, Object> properties) {
 
+		_serviceTrackerList = ServiceTrackerListFactory.open(
+			bundleContext, SoapDescriptorBuilder.class, null,
+			new ServiceTrackerCustomizer
+				<SoapDescriptorBuilder, SoapDescriptorBuilder>() {
+
+				@Override
+				public SoapDescriptorBuilder addingService(
+					ServiceReference<SoapDescriptorBuilder> serviceReference) {
+
+					SoapDescriptorBuilder soapDescriptorBuilder =
+						bundleContext.getService(serviceReference);
+
+					_soapDescriptorBuilder = soapDescriptorBuilder;
+
+					if (_dependencyManager != null) {
+						_dependencyManager.clear();
+
+						_enableComponent();
+					}
+
+					return soapDescriptorBuilder;
+				}
+
+				@Override
+				public void modifiedService(
+					ServiceReference<SoapDescriptorBuilder> serviceReference,
+					SoapDescriptorBuilder soapDescriptorBuilder) {
+				}
+
+				@Override
+				public void removedService(
+					ServiceReference<SoapDescriptorBuilder> serviceReference,
+					SoapDescriptorBuilder soapDescriptorBuilder) {
+
+					bundleContext.ungetService(serviceReference);
+				}
+
+			});
+
 		_soapExtenderConfiguration = ConfigurableUtil.createConfigurable(
 			SoapExtenderConfiguration.class, properties);
 
@@ -64,27 +104,8 @@ public class SoapExtender {
 
 	@Deactivate
 	protected void deactivate() {
+		_serviceTrackerList.close();
 		_dependencyManager.clear();
-	}
-
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected void setSoapDescriptorBuilder(
-		SoapDescriptorBuilder soapDescriptorBuilder) {
-
-		_soapDescriptorBuilder = soapDescriptorBuilder;
-
-		if (_dependencyManager != null) {
-			_dependencyManager.clear();
-
-			_enableComponent();
-		}
-	}
-
-	protected void unsetSoapDescriptorBuilder(
-		SoapDescriptorBuilder soapDescriptorBuilder) {
 	}
 
 	private void _addBusDependencies(org.apache.felix.dm.Component component) {
@@ -206,6 +227,8 @@ public class SoapExtender {
 	}
 
 	private DependencyManager _dependencyManager;
+	private volatile ServiceTrackerList<SoapDescriptorBuilder>
+		_serviceTrackerList;
 	private SoapDescriptorBuilder _soapDescriptorBuilder;
 	private volatile SoapExtenderConfiguration _soapExtenderConfiguration;
 
