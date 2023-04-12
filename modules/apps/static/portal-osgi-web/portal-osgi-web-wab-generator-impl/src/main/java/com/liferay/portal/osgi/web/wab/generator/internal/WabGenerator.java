@@ -44,7 +44,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -224,8 +223,7 @@ public class WabGenerator
 
 	private void _registerArtifactUrlTransformer(BundleContext bundleContext) {
 		_serviceRegistration = bundleContext.registerService(
-			FileInstaller.class, new WarArtifactUrlTransformer(_portalIsReady),
-			null);
+			FileInstaller.class, new WarArtifactUrlTransformer(), null);
 	}
 
 	private void _registerURLStreamHandlerService(BundleContext bundleContext) {
@@ -248,7 +246,6 @@ public class WabGenerator
 	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
 	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
-	private final AtomicBoolean _portalIsReady = new AtomicBoolean();
 	private ServiceRegistration<FileInstaller> _serviceRegistration;
 
 	@Reference(
