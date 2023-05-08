@@ -56,12 +56,12 @@ public class LDAPConfigurationListener implements ConfigurationListener {
 				factoryPid, ".scoped", StringPool.BLANK);
 		}
 
-		if (!_serviceTrackerMap.containsKey(factoryPid)) {
-			return;
-		}
-
 		ConfigurationProvider<?> configurationProvider =
 			_serviceTrackerMap.getService(factoryPid);
+
+		if (configurationProvider == null) {
+			return;
+		}
 
 		try {
 			if (configurationEvent.getType() == ConfigurationEvent.CM_DELETED) {
