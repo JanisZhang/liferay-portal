@@ -230,6 +230,15 @@ public class ServiceProxyFactory {
 
 			boolean calledSystemCheckers = false;
 
+			if (_log.isWarnEnabled()) {
+				String className = _field.getDeclaringClass(
+				).getName();
+
+				_log.warn(
+					StringBundler.concat(
+						"BLOCKING:", className, ".", _field.getName()));
+			}
+
 			while (true) {
 				_lock.lock();
 
