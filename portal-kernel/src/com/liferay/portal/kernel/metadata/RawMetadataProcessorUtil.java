@@ -43,7 +43,7 @@ public class RawMetadataProcessorUtil {
 		return _rawMetadataProcessor;
 	}
 
-	private static volatile RawMetadataProcessor _rawMetadataProcessor =
+	private static volatile    RawMetadataProcessor _rawMetadataProcessor =
 		ServiceProxyFactory.newServiceTrackedInstance(
 			RawMetadataProcessor.class, RawMetadataProcessorUtil.class,
 			"_rawMetadataProcessor", false);
