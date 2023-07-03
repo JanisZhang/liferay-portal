@@ -535,7 +535,7 @@ public class WorkflowInstanceViewDisplayContext
 			WorkflowLogManagerUtil.getWorkflowLogsByWorkflowInstance(
 				workflowInstanceRequestHelper.getCompanyId(),
 				workflowInstance.getWorkflowInstanceId(), null, 0, 1,
-				_workflowComparatorFactory.getLogCreateDateComparator());
+				_workflowComparatorFactory.getLogCreateDateComparator(false));
 
 		if (workflowLogs.isEmpty()) {
 			return null;
