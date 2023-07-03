@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.portal.kernel.workflow.comparator;
+package com.liferay.portal.workflow.comparator;
 
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
@@ -20,12 +20,9 @@ import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowLog;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 
-import org.osgi.annotation.versioning.ProviderType;
-
 /**
  * @author Michael C. Han
  */
-@ProviderType
 public interface WorkflowComparatorFactory {
 
 	public OrderByComparator<WorkflowDefinition>
