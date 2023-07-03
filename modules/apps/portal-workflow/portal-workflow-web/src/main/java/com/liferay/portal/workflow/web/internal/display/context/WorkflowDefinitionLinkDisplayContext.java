@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.workflow.WorkflowDefinitionManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerVisibleFilter;
+import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactory;
 import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactoryUtil;
 import com.liferay.portal.workflow.constants.WorkflowDefinitionConstants;
 import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
@@ -91,7 +92,8 @@ public class WorkflowDefinitionLinkDisplayContext {
 		RenderRequest renderRequest, RenderResponse renderResponse,
 		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService,
 		ResourceBundleLoader resourceBundleLoader,
-		WorkflowHandlerVisibleFilter workflowHandlerVisibleFilter) {
+		WorkflowHandlerVisibleFilter workflowHandlerVisibleFilter,
+		WorkflowComparatorFactory workflowComparatorFactory) {
 
 		_workflowDefinitionLinkLocalService =
 			workflowDefinitionLinkLocalService;
@@ -109,6 +111,7 @@ public class WorkflowDefinitionLinkDisplayContext {
 
 		_resourceBundleLoader = resourceBundleLoader;
 		_workflowHandlerVisibleFilter = workflowHandlerVisibleFilter;
+		_workflowComparatorFactory = workflowComparatorFactory;
 	}
 
 	public WorkflowDefinition fetchDefaultWorkflowDefinition(String className)
@@ -676,6 +679,7 @@ public class WorkflowDefinitionLinkDisplayContext {
 	private String _orderByType;
 	private final PortalPreferences _portalPreferences;
 	private final ResourceBundleLoader _resourceBundleLoader;
+	private final WorkflowComparatorFactory _workflowComparatorFactory;
 	private final WorkflowDefinitionLinkLocalService
 		_workflowDefinitionLinkLocalService;
 	private final WorkflowDefinitionLinkRequestHelper
