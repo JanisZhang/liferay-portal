@@ -66,7 +66,6 @@ import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowTransition;
 import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactory;
-import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactoryUtil;
 import com.liferay.portal.kernel.workflow.search.WorkflowModelSearchResult;
 import com.liferay.portal.workflow.task.web.internal.display.context.helper.WorkflowTaskRequestHelper;
 import com.liferay.portal.workflow.task.web.internal.search.WorkflowTaskSearch;
@@ -953,7 +952,7 @@ public class WorkflowTaskDisplayContext {
 			WorkflowLogManagerUtil.getWorkflowLogsByWorkflowTask(
 				_workflowTaskRequestHelper.getCompanyId(),
 				workflowTask.getWorkflowTaskId(), null, 0, 1,
-				WorkflowComparatorFactoryUtil.getLogCreateDateComparator());
+				_workflowComparatorFactory.getLogCreateDateComparator());
 
 		if (!workflowLogs.isEmpty()) {
 			return workflowLogs.get(0);
