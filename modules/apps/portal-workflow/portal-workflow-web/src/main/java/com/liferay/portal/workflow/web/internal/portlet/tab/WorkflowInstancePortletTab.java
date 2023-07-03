@@ -178,7 +178,8 @@ public class WorkflowInstancePortletTab extends BaseWorkflowPortletTab {
 				WebKeys.PORTLET_DISPLAY_CONTEXT,
 				new WorkflowInstanceViewDisplayContext(
 					portal.getLiferayPortletRequest(renderRequest),
-					portal.getLiferayPortletResponse(renderResponse)));
+					portal.getLiferayPortletResponse(renderResponse),
+					_workflowComparatorFactory));
 		}
 
 		renderRequest.setAttribute(
