@@ -53,7 +53,6 @@ import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerVisibleFilter;
 import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactory;
-import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactoryUtil;
 import com.liferay.portal.workflow.constants.WorkflowDefinitionConstants;
 import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
 import com.liferay.portal.workflow.constants.WorkflowWebKeys;
@@ -408,8 +407,7 @@ public class WorkflowDefinitionLinkDisplayContext {
 			WorkflowDefinitionManagerUtil.getActiveWorkflowDefinitions(
 				_workflowDefinitionLinkRequestHelper.getCompanyId(),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				WorkflowComparatorFactoryUtil.getDefinitionNameComparator(
-					true)),
+				_workflowComparatorFactory.getDefinitionNameComparator(true)),
 			new WorkflowDefinitionScopePredicate(
 				WorkflowDefinitionConstants.SCOPE_ALL));
 
