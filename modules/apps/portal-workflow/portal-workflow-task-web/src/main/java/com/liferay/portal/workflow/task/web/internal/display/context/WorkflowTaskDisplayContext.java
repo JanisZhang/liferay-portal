@@ -952,7 +952,7 @@ public class WorkflowTaskDisplayContext {
 			WorkflowLogManagerUtil.getWorkflowLogsByWorkflowTask(
 				_workflowTaskRequestHelper.getCompanyId(),
 				workflowTask.getWorkflowTaskId(), null, 0, 1,
-				_workflowComparatorFactory.getLogCreateDateComparator());
+				_workflowComparatorFactory.getLogCreateDateComparator(false));
 
 		if (!workflowLogs.isEmpty()) {
 			return workflowLogs.get(0);
