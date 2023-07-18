@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -77,7 +78,8 @@ public class DLPortletToolbarContributorHelper {
 		try {
 			DLPortletInstanceSettings dlPortletInstanceSettings =
 				DLPortletInstanceSettings.getInstance(
-					themeDisplay.getLayout(), portletDisplay.getId());
+					themeDisplay.getLayout(), portletDisplay.getId(),
+					_settingsFactory);
 
 			rootFolderId = dlPortletInstanceSettings.getRootFolderId();
 		}
@@ -118,7 +120,8 @@ public class DLPortletToolbarContributorHelper {
 			try {
 				DLPortletInstanceSettings dlPortletInstanceSettings =
 					DLPortletInstanceSettings.getInstance(
-						themeDisplay.getLayout(), portletDisplayId);
+						themeDisplay.getLayout(), portletDisplayId,
+						_settingsFactory);
 
 				if (!dlPortletInstanceSettings.isShowActions()) {
 					return false;
@@ -137,5 +140,8 @@ public class DLPortletToolbarContributorHelper {
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

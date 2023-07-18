@@ -90,6 +90,7 @@ import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.LiferayFileItemException;
@@ -894,7 +895,8 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 		DLPortletInstanceSettings dlPortletInstanceSettings =
 			DLPortletInstanceSettings.getInstance(
-				themeDisplay.getLayout(), portletDisplay.getId());
+				themeDisplay.getLayout(), portletDisplay.getId(),
+				_settingsFactory);
 
 		Set<String> extensions = new HashSet<>();
 
@@ -1294,7 +1296,8 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 					DLPortletInstanceSettings dlPortletInstanceSettings =
 						DLPortletInstanceSettings.getInstance(
-							themeDisplay.getLayout(), portletDisplay.getId());
+							themeDisplay.getLayout(), portletDisplay.getId(),
+							_settingsFactory);
 
 					int count = Arrays.binarySearch(
 						dlPortletInstanceSettings.getMimeTypes(), contentType);
@@ -1469,6 +1472,9 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private TrashEntryService _trashEntryService;
