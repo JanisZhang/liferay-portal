@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -87,7 +88,7 @@ public class EditEntryMVCRenderCommand implements MVCRenderCommand {
 					_getAssetAutoTaggerConfiguration(renderRequest), entry,
 					_blogsFileUploadsConfiguration,
 					BlogsGroupServiceSettings.getInstance(
-						themeDisplay.getScopeGroupId()),
+						themeDisplay.getScopeGroupId(), _settingsFactory),
 					httpServletRequest,
 					_portal.getLiferayPortletResponse(renderResponse)));
 		}
@@ -136,5 +137,8 @@ public class EditEntryMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

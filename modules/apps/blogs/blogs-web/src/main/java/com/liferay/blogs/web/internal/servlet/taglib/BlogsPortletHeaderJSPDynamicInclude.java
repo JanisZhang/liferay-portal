@@ -15,10 +15,12 @@
 package com.liferay.blogs.web.internal.servlet.taglib;
 
 import com.liferay.blogs.constants.BlogsPortletKeys;
+import com.liferay.blogs.web.internal.constants.BlogsWebConstants;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseJSPDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -65,6 +67,9 @@ public class BlogsPortletHeaderJSPDynamicInclude extends BaseJSPDynamicInclude {
 			return;
 		}
 
+		httpServletRequest.setAttribute(
+			BlogsWebConstants.SETTINGS_FACTORY, _settingsFactory);
+
 		super.include(httpServletRequest, httpServletResponse, key);
 	}
 
@@ -89,5 +94,8 @@ public class BlogsPortletHeaderJSPDynamicInclude extends BaseJSPDynamicInclude {
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.blogs.web)")
 	private ServletContext _servletContext;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

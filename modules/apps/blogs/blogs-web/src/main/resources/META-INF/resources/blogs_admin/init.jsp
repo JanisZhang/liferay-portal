@@ -18,8 +18,4 @@
 
 <%@ taglib uri="http://liferay.com/tld/document-library" prefix="liferay-document-library" %>
 
-<%
-BlogsGroupServiceSettings blogsGroupServiceSettings = BlogsGroupServiceSettings.getInstance(scopeGroupId);
-%>
-
 <%@ include file="/blogs_admin/init-ext.jsp" %>

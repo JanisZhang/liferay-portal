@@ -20,7 +20,7 @@ import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.settings.ParameterMapSettings;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.settings.TypedSettings;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 
@@ -32,26 +32,28 @@ import java.util.Map;
 @Settings.Config
 public class BlogsGroupServiceSettings {
 
-	public static BlogsGroupServiceSettings getInstance(long groupId)
-		throws PortalException {
-
-		Settings settings = SettingsFactoryUtil.getSettings(
-			new GroupServiceSettingsLocator(
-				groupId, BlogsConstants.SERVICE_NAME));
-
-		return new BlogsGroupServiceSettings(settings);
-	}
-
 	public static BlogsGroupServiceSettings getInstance(
-			long groupId, Map<String, String[]> parameterMap)
+			long groupId, Map<String, String[]> parameterMap,
+			SettingsFactory settingsFactory)
 		throws PortalException {
 
-		Settings settings = SettingsFactoryUtil.getSettings(
+		Settings settings = settingsFactory.getSettings(
 			new GroupServiceSettingsLocator(
 				groupId, BlogsConstants.SERVICE_NAME));
 
 		return new BlogsGroupServiceSettings(
 			new ParameterMapSettings(parameterMap, settings));
+	}
+
+	public static BlogsGroupServiceSettings getInstance(
+			long groupId, SettingsFactory settingsFactory)
+		throws PortalException {
+
+		Settings settings = settingsFactory.getSettings(
+			new GroupServiceSettingsLocator(
+				groupId, BlogsConstants.SERVICE_NAME));
+
+		return new BlogsGroupServiceSettings(settings);
 	}
 
 	public BlogsGroupServiceSettings(Settings settings) {

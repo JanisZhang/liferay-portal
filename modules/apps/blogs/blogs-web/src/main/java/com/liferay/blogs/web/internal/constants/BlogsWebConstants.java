@@ -28,4 +28,6 @@ public class BlogsWebConstants {
 	public static final String BLOGS_PORTLET_INSTANCE_CONFIGURATION =
 		"BLOGS_PORTLET_INSTANCE_CONFIGURATION";
 
+	public static final String SETTINGS_FACTORY = "SETTINGS_FACTORY";
+
 }

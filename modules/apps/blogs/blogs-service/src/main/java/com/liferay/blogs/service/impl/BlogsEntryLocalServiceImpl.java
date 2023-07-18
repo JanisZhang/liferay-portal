@@ -81,6 +81,7 @@ import com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector;
 import com.liferay.portal.kernel.servlet.taglib.ui.ImageSelectorProcessor;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.social.SocialActivityManagerUtil;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -1670,7 +1671,8 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 		try {
 			BlogsGroupServiceSettings blogsGroupServiceSettings =
-				BlogsGroupServiceSettings.getInstance(groupId);
+				BlogsGroupServiceSettings.getInstance(
+					groupId, _settingsFactory);
 
 			ImageSelectorProcessor imageSelectorProcessor =
 				new ImageSelectorProcessor(imageSelector.getImageBytes());
@@ -1907,7 +1909,8 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 		}
 
 		BlogsGroupServiceSettings blogsGroupServiceSettings =
-			BlogsGroupServiceSettings.getInstance(entry.getGroupId());
+			BlogsGroupServiceSettings.getInstance(
+				entry.getGroupId(), _settingsFactory);
 
 		boolean invokedByCheckEntries = GetterUtil.getBoolean(
 			serviceContext.getAttribute(_INVOKED_BY_CHECK_ENTRIES));
@@ -2443,6 +2446,9 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

@@ -62,7 +62,6 @@ page import="com.liferay.blogs.exception.EntryUrlTitleException" %><%@
 page import="com.liferay.blogs.exception.NoSuchEntryException" %><%@
 page import="com.liferay.blogs.model.BlogsEntry" %><%@
 page import="com.liferay.blogs.service.BlogsEntryLocalServiceUtil" %><%@
-page import="com.liferay.blogs.settings.BlogsGroupServiceSettings" %><%@
 page import="com.liferay.blogs.web.internal.configuration.BlogsPortletInstanceConfiguration" %><%@
 page import="com.liferay.blogs.web.internal.constants.BlogsWebConstants" %><%@
 page import="com.liferay.blogs.web.internal.display.context.BlogsAggregatorViewDisplayContext" %><%@

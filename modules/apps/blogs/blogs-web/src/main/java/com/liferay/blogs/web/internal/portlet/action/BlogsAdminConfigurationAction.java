@@ -15,8 +15,10 @@
 package com.liferay.blogs.web.internal.portlet.action;
 
 import com.liferay.blogs.constants.BlogsPortletKeys;
+import com.liferay.blogs.web.internal.constants.BlogsWebConstants;
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -26,8 +28,10 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Iván Zaera
@@ -42,6 +46,18 @@ public class BlogsAdminConfigurationAction
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {
 		return "/blogs_admin/configuration.jsp";
+	}
+
+	@Override
+	public void include(
+			PortletConfig portletConfig, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+		throws Exception {
+
+		httpServletRequest.setAttribute(
+			BlogsWebConstants.SETTINGS_FACTORY, _settingsFactory);
+
+		super.include(portletConfig, httpServletRequest, httpServletResponse);
 	}
 
 	@Override
@@ -60,5 +76,8 @@ public class BlogsAdminConfigurationAction
 
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }
