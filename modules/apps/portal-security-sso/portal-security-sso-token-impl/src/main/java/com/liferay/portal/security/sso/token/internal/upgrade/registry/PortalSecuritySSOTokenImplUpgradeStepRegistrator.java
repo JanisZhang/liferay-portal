@@ -15,6 +15,7 @@
 package com.liferay.portal.security.sso.token.internal.upgrade.registry;
 
 import com.liferay.portal.configuration.persistence.upgrade.ConfigurationUpgradeStepFactory;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.security.sso.token.internal.upgrade.v2_0_0.TokenConfigurationUpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
@@ -41,7 +42,8 @@ public class PortalSecuritySSOTokenImplUpgradeStepRegistrator
 					"configuration.TokenConfiguration"));
 
 		registry.register(
-			"1.0.0", "1.0.1", new TokenConfigurationUpgradeProcess());
+			"1.0.0", "1.0.1",
+			new TokenConfigurationUpgradeProcess(_settingsFactory));
 
 		registry.register(
 			"1.0.1", "2.0.0",
@@ -54,5 +56,8 @@ public class PortalSecuritySSOTokenImplUpgradeStepRegistrator
 
 	@Reference
 	private ConfigurationUpgradeStepFactory _configurationUpgradeStepFactory;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

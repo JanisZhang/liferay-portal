@@ -19,7 +19,7 @@ import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.settings.SettingsDescriptor;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.settings.SettingsLocatorHelperUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -36,6 +36,10 @@ import java.util.Dictionary;
  */
 public class TokenConfigurationUpgradeProcess extends UpgradeProcess {
 
+	public TokenConfigurationUpgradeProcess(SettingsFactory settingsFactory) {
+		settingsFactory = _settingsFactory;
+	}
+
 	@Override
 	protected void doUpgrade() throws Exception {
 		_upgradeConfiguration();
@@ -46,7 +50,7 @@ public class TokenConfigurationUpgradeProcess extends UpgradeProcess {
 			Dictionary<String, String> dictionary)
 		throws Exception {
 
-		Settings settings = SettingsFactoryUtil.getSettings(
+		Settings settings = _settingsFactory.getSettings(
 			new CompanyServiceSettingsLocator(companyId, settingsId));
 
 		ModifiableSettings modifiableSettings =
@@ -132,5 +136,7 @@ public class TokenConfigurationUpgradeProcess extends UpgradeProcess {
 			TokenConfigurationKeys.USER_TOKEN_NAME
 		}
 	};
+
+	private SettingsFactory _settingsFactory;
 
 }
