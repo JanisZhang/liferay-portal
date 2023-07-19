@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sharing.configuration.SharingConfiguration;
@@ -96,7 +97,7 @@ public class SharingDLDisplayContextFactory implements DLDisplayContextFactory {
 				parentDLViewFileVersionDisplayContext, httpServletRequest,
 				httpServletResponse, fileEntry, fileVersion,
 				_sharingEntryLocalService, _sharingDropdownItemFactory,
-				_sharingPermission, sharingConfiguration);
+				_sharingPermission, sharingConfiguration, _settingsFactory);
 		}
 		catch (PortalException portalException) {
 			throw new SystemException(
@@ -130,6 +131,9 @@ public class SharingDLDisplayContextFactory implements DLDisplayContextFactory {
 
 		return sharingConfiguration;
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private SharingConfigurationFactory _sharingConfigurationFactory;

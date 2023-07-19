@@ -26,7 +26,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.settings.PortletInstanceSettingsLocator;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.settings.TypedSettings;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -58,7 +58,8 @@ public class SharingDLViewFileVersionDisplayContext
 		SharingEntryLocalService sharingEntryLocalService,
 		SharingDropdownItemFactory sharingDropdownItemFactory,
 		SharingPermission sharingPermission,
-		SharingConfiguration sharingConfiguration) {
+		SharingConfiguration sharingConfiguration,
+		SettingsFactory settingsFactory) {
 
 		super(
 			_UUID, parentDLDisplayContext, httpServletRequest,
@@ -70,6 +71,7 @@ public class SharingDLViewFileVersionDisplayContext
 		_sharingDropdownItemFactory = sharingDropdownItemFactory;
 		_sharingPermission = sharingPermission;
 		_sharingConfiguration = sharingConfiguration;
+		_settingsFactory = settingsFactory;
 
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -201,7 +203,7 @@ public class SharingDLViewFileVersionDisplayContext
 			return true;
 		}
 
-		Settings settings = SettingsFactoryUtil.getSettings(
+		Settings settings = _settingsFactory.getSettings(
 			new PortletInstanceSettingsLocator(
 				_themeDisplay.getLayout(), portletDisplay.getId()));
 
@@ -234,6 +236,7 @@ public class SharingDLViewFileVersionDisplayContext
 
 	private final FileEntry _fileEntry;
 	private final HttpServletRequest _httpServletRequest;
+	private final SettingsFactory _settingsFactory;
 	private final SharingConfiguration _sharingConfiguration;
 	private final SharingDropdownItemFactory _sharingDropdownItemFactory;
 	private final SharingEntryLocalService _sharingEntryLocalService;
