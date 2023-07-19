@@ -17,6 +17,7 @@ package com.liferay.portal.workflow.kaleo.runtime.internal.notification;
 import com.liferay.mail.kernel.model.MailMessage;
 import com.liferay.mail.kernel.service.MailService;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -77,7 +78,8 @@ public class EmailNotificationSender
 			workflowContext.get(WorkflowConstants.CONTEXT_COMPANY_ID));
 
 		WorkflowGroupServiceSettings workflowGroupServiceSettings =
-			WorkflowGroupServiceSettings.getInstance(companyId);
+			WorkflowGroupServiceSettings.getInstance(
+				companyId, _settingsFactory);
 
 		String fromAddress = (String)workflowContext.get(
 			WorkflowConstants.CONTEXT_NOTIFICATION_SENDER_ADDRESS);
@@ -157,5 +159,8 @@ public class EmailNotificationSender
 
 	@Reference
 	private MailService _mailService;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }
