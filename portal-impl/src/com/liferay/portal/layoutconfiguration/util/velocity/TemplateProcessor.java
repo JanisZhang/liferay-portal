@@ -16,31 +16,19 @@ package com.liferay.portal.layoutconfiguration.util.velocity;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletContainerUtil;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
-import com.liferay.portal.kernel.portlet.PortletProvider;
-import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.BufferCacheServletResponse;
-import com.liferay.portal.kernel.settings.ModifiableSettings;
-import com.liferay.portal.kernel.settings.PortletInstanceSettingsLocator;
-import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.layoutconfiguration.util.PortletRenderer;
-import com.liferay.portlet.PreferencesValueUtil;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -144,143 +132,6 @@ public class TemplateProcessor implements ColumnProcessor {
 			_httpServletRequest, bufferCacheServletResponse, _portlet);
 
 		return bufferCacheServletResponse.getString();
-	}
-
-	@Override
-	public String processPortlet(String portletId) throws Exception {
-		return processPortlet(portletId, (Map<String, ?>)null);
-	}
-
-	@Override
-	public String processPortlet(
-			String portletId, Map<String, ?> defaultSettingsMap)
-		throws Exception {
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)_httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		Layout layout = themeDisplay.getLayout();
-
-		Portlet portlet = PortletLocalServiceUtil.getPortletById(
-			themeDisplay.getCompanyId(), portletId);
-
-		if (layout.isTypePortlet()) {
-			LayoutTypePortlet layoutTypePortlet =
-				(LayoutTypePortlet)layout.getLayoutType();
-
-			if (!layoutTypePortlet.hasPortletId(portletId, true) &&
-				!layout.isPortletEmbedded(portletId, layout.getGroupId())) {
-
-				String defaultPreferences = portlet.getDefaultPreferences();
-
-				Settings currentSettings = SettingsFactoryUtil.getSettings(
-					new PortletInstanceSettingsLocator(layout, portletId));
-
-				ModifiableSettings currentModifiableSettings =
-					currentSettings.getModifiableSettings();
-
-				Collection<String> currentModifiableSettingsKeys =
-					currentModifiableSettings.getModifiedKeys();
-
-				if (!currentModifiableSettingsKeys.isEmpty()) {
-					StringBundler sb = new StringBundler();
-
-					sb.append("<portlet-preferences>");
-
-					for (String key : currentModifiableSettingsKeys) {
-						String[] values = currentModifiableSettings.getValues(
-							key, null);
-
-						if (values == null) {
-							continue;
-						}
-
-						sb.append("<preference><name>");
-						sb.append(key);
-						sb.append("</name>");
-
-						for (String value : values) {
-							sb.append("<value>");
-							sb.append(
-								PreferencesValueUtil.toCompactSafe(value));
-							sb.append("</value>");
-						}
-
-						sb.append("</preference>");
-					}
-
-					sb.append("</portlet-preferences>");
-
-					defaultPreferences = sb.toString();
-				}
-
-				PortletPreferencesFactoryUtil.getLayoutPortletSetup(
-					layout.getCompanyId(), layout.getGroupId(),
-					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, layout.getPlid(),
-					portletId, defaultPreferences);
-			}
-		}
-
-		if (defaultSettingsMap != null) {
-			Settings settings = SettingsFactoryUtil.getSettings(
-				new PortletInstanceSettingsLocator(layout, portletId));
-
-			ModifiableSettings modifiableSettings =
-				settings.getModifiableSettings();
-
-			boolean modified = false;
-
-			for (Map.Entry<String, ?> entry : defaultSettingsMap.entrySet()) {
-				String key = entry.getKey();
-				Object value = entry.getValue();
-
-				if (value instanceof String) {
-					Object storedValue = modifiableSettings.getValue(key, null);
-
-					if (storedValue == null) {
-						modifiableSettings.setValue(key, (String)value);
-
-						modified = true;
-					}
-				}
-				else if (value instanceof String[]) {
-					Object[] storedValues = modifiableSettings.getValues(
-						key, null);
-
-					if (storedValues == null) {
-						modifiableSettings.setValues(key, (String[])value);
-
-						modified = true;
-					}
-				}
-				else {
-					throw new IllegalArgumentException(
-						StringBundler.concat(
-							"Key ", key, " has unsupported value of type ",
-							ClassUtil.getClassName(value.getClass())));
-				}
-			}
-
-			if (modified) {
-				modifiableSettings.store();
-			}
-		}
-
-		StringBundler sb = _renderPortlet(portlet, null, null, null);
-
-		return sb.toString();
-	}
-
-	@Override
-	public String processPortlet(
-			String portletProviderClassName,
-			PortletProvider.Action portletProviderAction)
-		throws Exception {
-
-		return processPortlet(
-			PortletProviderUtil.getPortletId(
-				portletProviderClassName, portletProviderAction));
 	}
 
 	private String _processColumn(

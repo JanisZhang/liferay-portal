@@ -15,11 +15,9 @@
 package com.liferay.portal.layoutconfiguration.util.velocity;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.portlet.PortletProvider;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Ivica Cardic
@@ -56,26 +54,6 @@ public class InitColumnProcessor implements ColumnProcessor {
 
 	@Override
 	public String processMax() {
-		return StringPool.BLANK;
-	}
-
-	@Override
-	public String processPortlet(String portletId) {
-		return StringPool.BLANK;
-	}
-
-	@Override
-	public String processPortlet(
-		String portletId, Map<String, ?> defaultSettingsMap) {
-
-		return StringPool.BLANK;
-	}
-
-	@Override
-	public String processPortlet(
-		String portletProviderClassName,
-		PortletProvider.Action portletProviderAction) {
-
 		return StringPool.BLANK;
 	}
 
