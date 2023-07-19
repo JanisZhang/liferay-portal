@@ -18,6 +18,7 @@ import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.settings.portlet.action.PortalSettingsFormContributor;
 
@@ -69,7 +70,7 @@ public class PortalSettingsContributorServiceTrackerCustomizer
 		SavePortalSettingsFormMVCActionCommand
 			savePortalSettingsFormMVCActionCommand =
 				new SavePortalSettingsFormMVCActionCommand(
-					portalSettingsFormContributor);
+					portalSettingsFormContributor, _settingsFactory);
 
 		mvcActionCommandServiceRegistrationHolder.
 			_saveMVCActionCommandServiceRegistration =
@@ -167,6 +168,9 @@ public class PortalSettingsContributorServiceTrackerCustomizer
 	private ServiceTracker
 		<PortalSettingsFormContributor, PortalSettingsFormContributor>
 			_serviceTracker;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	private class MVCActionCommandServiceRegistrationHolder {
 
