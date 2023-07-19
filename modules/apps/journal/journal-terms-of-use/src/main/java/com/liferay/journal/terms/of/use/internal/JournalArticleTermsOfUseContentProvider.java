@@ -18,6 +18,7 @@ import com.liferay.journal.configuration.JournalServiceConfiguration;
 import com.liferay.journal.terms.of.use.internal.constants.JournalArticleTermsOfUseWebConstants;
 import com.liferay.journal.terms.of.use.internal.display.context.JournalArticleTermsOfUseDisplayContext;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.terms.of.use.TermsOfUseContentProvider;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -80,7 +81,7 @@ public class JournalArticleTermsOfUseContentProvider
 			JournalArticleTermsOfUseWebConstants.
 				JOURNAL_ARTICLE_TERMS_OF_USE_DISPLAY_CONTEXT,
 			new JournalArticleTermsOfUseDisplayContext(
-				journalServiceConfiguration, themeDisplay));
+				journalServiceConfiguration, themeDisplay, _settingsFactory));
 
 		requestDispatcher.include(httpServletRequest, httpServletResponse);
 	}
@@ -96,5 +97,8 @@ public class JournalArticleTermsOfUseContentProvider
 		target = "(osgi.web.symbolicname=com.liferay.journal.terms.of.use)"
 	)
 	private ServletContext _servletContext;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

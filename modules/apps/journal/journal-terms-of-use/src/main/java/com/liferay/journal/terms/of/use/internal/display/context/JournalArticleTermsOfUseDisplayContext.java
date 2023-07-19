@@ -19,7 +19,7 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.Settings;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -31,12 +31,12 @@ public class JournalArticleTermsOfUseDisplayContext {
 
 	public JournalArticleTermsOfUseDisplayContext(
 			JournalServiceConfiguration journalServiceConfiguration,
-			ThemeDisplay themeDisplay)
+			ThemeDisplay themeDisplay, SettingsFactory settingsFactory)
 		throws Exception {
 
 		_journalServiceConfiguration = journalServiceConfiguration;
 
-		_settings = SettingsFactoryUtil.getSettings(
+		_settings = settingsFactory.getSettings(
 			new CompanyServiceSettingsLocator(
 				themeDisplay.getCompanyId(),
 				JournalServiceConfiguration.class.getName()));
