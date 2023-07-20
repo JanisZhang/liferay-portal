@@ -16,13 +16,11 @@ package com.liferay.portal.security.content.security.policy.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporarySwapper;
-import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.FeatureFlags;
-import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.io.BufferedReader;
@@ -188,8 +186,7 @@ public class ContentSecurityPolicyFilterTest {
 				"excludedPaths", excludedPaths
 			).put(
 				"policy", policy
-			).build(),
-			_settingsFactory);
+			).build());
 	}
 
 	private String _getContent(HttpURLConnection httpURLConnection)
@@ -220,8 +217,5 @@ public class ContentSecurityPolicyFilterTest {
 
 		return httpURLConnection;
 	}
-
-	@Inject
-	private SettingsFactory _settingsFactory;
 
 }
