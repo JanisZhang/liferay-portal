@@ -19,7 +19,9 @@
 <%
 Set<Locale> locales = LanguageUtil.getAvailableLocales(themeDisplay.getSiteGroupId());
 
-mbGroupServiceSettings = MBGroupServiceSettings.getInstance(themeDisplay.getSiteGroupId(), request.getParameterMap());
+SettingsFactory settingsFactory = (SettingsFactory)request.getAttribute(MessageBoardWebKeys.SETTINGS_FACTORY);
+
+mbGroupServiceSettings = MBGroupServiceSettings.getInstance(themeDisplay.getSiteGroupId(), request.getParameterMap(), settingsFactory);
 %>
 
 <liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL">

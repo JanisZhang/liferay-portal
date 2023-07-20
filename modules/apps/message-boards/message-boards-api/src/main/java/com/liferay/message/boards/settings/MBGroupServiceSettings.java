@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.settings.ParameterMapSettings;
 import com.liferay.portal.kernel.settings.Settings;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
 import com.liferay.portal.kernel.settings.TypedSettings;
 import com.liferay.portal.kernel.util.LocalizationUtil;
@@ -57,6 +58,30 @@ public class MBGroupServiceSettings {
 			parameterMap, settings);
 
 		return new MBGroupServiceSettings(parameterMapSettings);
+	}
+
+	public static MBGroupServiceSettings getInstance(
+			long groupId, Map<String, String[]> parameterMap,
+			SettingsFactory settingsFactory)
+		throws PortalException {
+
+		Settings settings = settingsFactory.getSettings(
+			new GroupServiceSettingsLocator(groupId, MBConstants.SERVICE_NAME));
+
+		ParameterMapSettings parameterMapSettings = new ParameterMapSettings(
+			parameterMap, settings);
+
+		return new MBGroupServiceSettings(parameterMapSettings);
+	}
+
+	public static MBGroupServiceSettings getInstance(
+			long groupId, SettingsFactory settingsFactory)
+		throws PortalException {
+
+		Settings settings = settingsFactory.getSettings(
+			new GroupServiceSettingsLocator(groupId, MBConstants.SERVICE_NAME));
+
+		return new MBGroupServiceSettings(settings);
 	}
 
 	public MBGroupServiceSettings(Settings settings) {

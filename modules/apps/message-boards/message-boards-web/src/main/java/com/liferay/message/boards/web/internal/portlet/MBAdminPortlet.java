@@ -17,8 +17,10 @@ package com.liferay.message.boards.web.internal.portlet;
 import com.liferay.asset.constants.AssetWebKeys;
 import com.liferay.asset.util.AssetHelper;
 import com.liferay.message.boards.constants.MBPortletKeys;
+import com.liferay.message.boards.web.internal.constants.MessageBoardWebKeys;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.util.TrashWebKeys;
 
@@ -71,6 +73,8 @@ public class MBAdminPortlet extends MVCPortlet {
 		throws IOException, PortletException {
 
 		renderRequest.setAttribute(AssetWebKeys.ASSET_HELPER, _assetHelper);
+		renderRequest.setAttribute(
+			MessageBoardWebKeys.SETTINGS_FACTORY, _settingsFactory);
 		renderRequest.setAttribute(TrashWebKeys.TRASH_HELPER, _trashHelper);
 
 		super.render(renderRequest, renderResponse);
@@ -83,6 +87,9 @@ public class MBAdminPortlet extends MVCPortlet {
 		target = "(&(release.bundle.symbolic.name=com.liferay.message.boards.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
 	)
 	private Release _release;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private TrashHelper _trashHelper;
