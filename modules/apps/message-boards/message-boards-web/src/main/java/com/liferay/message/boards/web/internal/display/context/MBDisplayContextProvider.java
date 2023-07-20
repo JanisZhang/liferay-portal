@@ -20,6 +20,7 @@ import com.liferay.message.boards.display.context.MBHomeDisplayContext;
 import com.liferay.message.boards.display.context.MBListDisplayContext;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,6 +29,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Iván Zaera
@@ -85,7 +87,7 @@ public class MBDisplayContextProvider {
 		MBListDisplayContext mbListDisplayContext =
 			new DefaultMBListDisplayContext(
 				httpServletRequest, httpServletResponse, categoryId,
-				mvcRenderCommandName);
+				mvcRenderCommandName, _settingsFactory);
 
 		for (MBDisplayContextFactory mbDisplayContextFactory :
 				_serviceTrackerList) {
@@ -111,5 +113,8 @@ public class MBDisplayContextProvider {
 	}
 
 	private ServiceTrackerList<MBDisplayContextFactory> _serviceTrackerList;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

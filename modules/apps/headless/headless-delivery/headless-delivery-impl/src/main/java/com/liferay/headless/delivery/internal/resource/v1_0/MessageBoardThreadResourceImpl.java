@@ -65,6 +65,7 @@ import com.liferay.portal.kernel.security.permission.resource.PortletResourcePer
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
@@ -765,7 +766,7 @@ public class MessageBoardThreadResourceImpl
 		}
 
 		MBGroupServiceSettings mbGroupServiceSettings =
-			MBGroupServiceSettings.getInstance(siteId);
+			MBGroupServiceSettings.getInstance(siteId, _settingsFactory);
 
 		String[] priorities = mbGroupServiceSettings.getPriorities(
 			contextAcceptLanguage.getPreferredLanguageId());
@@ -861,6 +862,9 @@ public class MessageBoardThreadResourceImpl
 
 	@Reference
 	private RatingsStatsLocalService _ratingsStatsLocalService;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private UserLocalService _userLocalService;

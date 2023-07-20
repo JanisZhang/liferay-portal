@@ -68,6 +68,7 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
@@ -477,7 +478,7 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 		MBGroupServiceSettings mbGroupServiceSettings =
 			MBRequestUtil.getMBGroupServiceSettings(
 				_portal.getHttpServletRequest(actionRequest),
-				themeDisplay.getSiteGroupId());
+				themeDisplay.getSiteGroupId(), _settingsFactory);
 
 		List<ObjectValuePair<String, InputStream>> inputStreamOVPs =
 			new ArrayList<>(5);
@@ -674,6 +675,9 @@ public class EditMessageMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private PortletFileRepository _portletFileRepository;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private UniqueFileNameProvider _uniqueFileNameProvider;

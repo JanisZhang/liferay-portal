@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -118,7 +119,7 @@ public class SplitThreadMVCActionCommand extends BaseMVCActionCommand {
 			MBGroupServiceSettings mbGroupServiceSettings =
 				MBRequestUtil.getMBGroupServiceSettings(
 					_portal.getHttpServletRequest(actionRequest),
-					themeDisplay.getScopeGroupId());
+					themeDisplay.getScopeGroupId(), _settingsFactory);
 
 			String layoutFullURL = _portal.getLayoutFullURL(themeDisplay);
 
@@ -164,5 +165,8 @@ public class SplitThreadMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

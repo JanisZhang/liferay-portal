@@ -110,6 +110,7 @@ import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.social.SocialActivityManagerUtil;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -414,7 +415,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		if (anonymous || user.isGuestUser()) {
 			MBGroupServiceSettings mbGroupServiceSettings =
-				MBGroupServiceSettings.getInstance(groupId);
+				MBGroupServiceSettings.getInstance(groupId, _settingsFactory);
 
 			if ((mbGroupServiceSettings != null) &&
 				!mbGroupServiceSettings.isAllowAnonymousPosting()) {
@@ -2394,7 +2395,8 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		}
 
 		MBGroupServiceSettings mbGroupServiceSettings =
-			MBGroupServiceSettings.getInstance(message.getGroupId());
+			MBGroupServiceSettings.getInstance(
+				message.getGroupId(), _settingsFactory);
 
 		if (serviceContext.isCommandAdd() &&
 			mbGroupServiceSettings.isEmailMessageAddedEnabled()) {
@@ -2982,6 +2984,9 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

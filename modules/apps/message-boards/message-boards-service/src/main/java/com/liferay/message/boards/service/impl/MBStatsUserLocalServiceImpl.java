@@ -43,6 +43,7 @@ import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -229,7 +230,7 @@ public class MBStatsUserLocalServiceImpl
 		throws PortalException {
 
 		MBGroupServiceSettings mbGroupServiceSettings =
-			MBGroupServiceSettings.getInstance(groupId);
+			MBGroupServiceSettings.getInstance(groupId, _settingsFactory);
 
 		String[] rank = {StringPool.BLANK, StringPool.BLANK};
 
@@ -350,6 +351,9 @@ public class MBStatsUserLocalServiceImpl
 
 	@Reference
 	private RoleLocalService _roleLocalService;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private UserGroupLocalService _userGroupLocalService;

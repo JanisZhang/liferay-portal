@@ -37,6 +37,7 @@ import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -161,7 +162,7 @@ public class MessageBoardThreadDTOConverter
 		throws Exception {
 
 		MBGroupServiceSettings mbGroupServiceSettings =
-			MBGroupServiceSettings.getInstance(siteId);
+			MBGroupServiceSettings.getInstance(siteId, _settingsFactory);
 
 		for (String priorityString :
 				mbGroupServiceSettings.getPriorities(languageId)) {
@@ -202,6 +203,9 @@ public class MessageBoardThreadDTOConverter
 
 	@Reference
 	private RatingsStatsLocalService _ratingsStatsLocalService;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

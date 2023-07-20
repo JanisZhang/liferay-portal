@@ -19,6 +19,7 @@ import com.liferay.message.boards.settings.MBGroupServiceSettings;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -49,7 +50,8 @@ public class MBRequestUtil {
 	}
 
 	public static MBGroupServiceSettings getMBGroupServiceSettings(
-			HttpServletRequest httpServletRequest, long groupId)
+			HttpServletRequest httpServletRequest, long groupId,
+			SettingsFactory settingsFactory)
 		throws PortalException {
 
 		MBGroupServiceSettings mbGroupServiceSettings =
@@ -60,7 +62,8 @@ public class MBRequestUtil {
 			return mbGroupServiceSettings;
 		}
 
-		mbGroupServiceSettings = MBGroupServiceSettings.getInstance(groupId);
+		mbGroupServiceSettings = MBGroupServiceSettings.getInstance(
+			groupId, settingsFactory);
 
 		httpServletRequest.setAttribute(
 			_MB_GROUP_SERVICE_SETTINGS, mbGroupServiceSettings);

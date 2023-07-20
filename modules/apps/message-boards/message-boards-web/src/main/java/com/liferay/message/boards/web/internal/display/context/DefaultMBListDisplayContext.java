@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchContextFactory;
 import com.liferay.portal.kernel.search.SearchResultUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -60,10 +61,11 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 	public DefaultMBListDisplayContext(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse, long categoryId,
-		String mvcRenderCommandName) {
+		String mvcRenderCommandName, SettingsFactory settingsFactory) {
 
 		_httpServletRequest = httpServletRequest;
 		_categoryId = categoryId;
+		_settingsFactory = settingsFactory;
 
 		boolean showMyPosts = false;
 		boolean showRecentPosts = false;
@@ -228,7 +230,8 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 
 			MBGroupServiceSettings mbGroupServiceSettings =
 				MBRequestUtil.getMBGroupServiceSettings(
-					_httpServletRequest, themeDisplay.getSiteGroupId());
+					_httpServletRequest, themeDisplay.getSiteGroupId(),
+					_settingsFactory);
 
 			int offset = GetterUtil.getInteger(
 				mbGroupServiceSettings.getRecentPostsDateOffset());
@@ -386,6 +389,7 @@ public class DefaultMBListDisplayContext implements MBListDisplayContext {
 
 	private final long _categoryId;
 	private final HttpServletRequest _httpServletRequest;
+	private final SettingsFactory _settingsFactory;
 	private final boolean _showMyPosts;
 	private final boolean _showRecentPosts;
 	private final boolean _showSearch;

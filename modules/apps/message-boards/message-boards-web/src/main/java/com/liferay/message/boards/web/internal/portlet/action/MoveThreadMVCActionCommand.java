@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -110,7 +111,7 @@ public class MoveThreadMVCActionCommand extends BaseMVCActionCommand {
 			MBGroupServiceSettings mbGroupServiceSettings =
 				MBRequestUtil.getMBGroupServiceSettings(
 					_portal.getHttpServletRequest(actionRequest),
-					themeDisplay.getScopeGroupId());
+					themeDisplay.getScopeGroupId(), _settingsFactory);
 
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
 				MBMessage.class.getName(), actionRequest);
@@ -146,5 +147,8 @@ public class MoveThreadMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

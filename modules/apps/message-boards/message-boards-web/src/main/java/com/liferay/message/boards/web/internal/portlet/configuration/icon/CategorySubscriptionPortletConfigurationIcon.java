@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfiguration
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.Portal;
@@ -127,7 +128,7 @@ public class CategorySubscriptionPortletConfigurationIcon
 			MBGroupServiceSettings mbGroupServiceSettings =
 				MBRequestUtil.getMBGroupServiceSettings(
 					_portal.getHttpServletRequest(portletRequest),
-					themeDisplay.getScopeGroupId());
+					themeDisplay.getScopeGroupId(), _settingsFactory);
 
 			if (!mbGroupServiceSettings.isEmailMessageAddedEnabled() &&
 				!mbGroupServiceSettings.isEmailMessageUpdatedEnabled()) {
@@ -173,6 +174,9 @@ public class CategorySubscriptionPortletConfigurationIcon
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

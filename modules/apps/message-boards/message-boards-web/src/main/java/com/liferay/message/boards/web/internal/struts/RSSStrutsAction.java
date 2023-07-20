@@ -23,6 +23,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -178,7 +179,8 @@ public class RSSStrutsAction implements StrutsAction {
 
 		MBGroupServiceSettings mbGroupServiceSettings =
 			MBRequestUtil.getMBGroupServiceSettings(
-				httpServletRequest, themeDisplay.getSiteGroupId());
+				httpServletRequest, themeDisplay.getSiteGroupId(),
+				_settingsFactory);
 
 		return mbGroupServiceSettings.isEnableRSS();
 	}
@@ -188,5 +190,8 @@ public class RSSStrutsAction implements StrutsAction {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }
