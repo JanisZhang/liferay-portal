@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutTemplateLocalService;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -82,6 +83,8 @@ public class NestedPortletsConfigurationAction
 				actionRequest, portletResource, layoutTemplateId,
 				oldLayoutTemplateId);
 		}
+
+		setSettingsFactory(_settingsFactory);
 
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
@@ -160,5 +163,8 @@ public class NestedPortletsConfigurationAction
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

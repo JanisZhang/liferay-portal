@@ -21,6 +21,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -35,6 +36,7 @@ import javax.portlet.ReadOnlyException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -83,6 +85,8 @@ public class IFrameConfigurationAction extends DefaultConfigurationAction {
 			setPreference(actionRequest, key, value);
 		}
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -109,5 +113,8 @@ public class IFrameConfigurationAction extends DefaultConfigurationAction {
 			}
 		}
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

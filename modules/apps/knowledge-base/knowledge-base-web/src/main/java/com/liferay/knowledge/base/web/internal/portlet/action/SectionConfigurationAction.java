@@ -18,6 +18,7 @@ import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.ArrayUtil;
 
 import javax.portlet.ActionRequest;
@@ -27,6 +28,7 @@ import javax.portlet.PortletConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Peter Shin
@@ -50,6 +52,8 @@ public class SectionConfigurationAction extends DefaultConfigurationAction {
 
 		_updateKBArticlesSections(actionRequest);
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -66,5 +70,8 @@ public class SectionConfigurationAction extends DefaultConfigurationAction {
 				actionRequest, "kbArticlesSections", kbArticlesSections);
 		}
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

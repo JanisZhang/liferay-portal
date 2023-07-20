@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -31,6 +32,8 @@ import com.liferay.portal.kernel.util.Validator;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
+
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Jorge Ferrer
@@ -51,6 +54,8 @@ public abstract class BaseValidateRootFolderConfigurationAction
 			validate(actionRequest);
 		}
 
+		setSettingsFactory(settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -59,6 +64,9 @@ public abstract class BaseValidateRootFolderConfigurationAction
 
 		_validateRootFolder(actionRequest);
 	}
+
+	@Reference
+	protected SettingsFactory settingsFactory;
 
 	private void _validateRootFolder(ActionRequest actionRequest)
 		throws PortalException {

@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
@@ -63,6 +64,8 @@ public class MBAdminConfigurationAction
 		validateEmail(actionRequest, "emailMessageAdded");
 		validateEmail(actionRequest, "emailMessageUpdated");
 		validateEmailFrom(actionRequest);
+
+		setSettingsFactory(_settingsFactory);
 
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
@@ -180,5 +183,8 @@ public class MBAdminConfigurationAction
 
 	@Reference
 	private Localization _localization;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

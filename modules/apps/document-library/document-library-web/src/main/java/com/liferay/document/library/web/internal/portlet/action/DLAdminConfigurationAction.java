@@ -18,6 +18,7 @@ import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -72,6 +73,8 @@ public class DLAdminConfigurationAction
 			_validate(actionRequest);
 		}
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -83,5 +86,8 @@ public class DLAdminConfigurationAction
 
 	@Reference
 	private ItemSelector _itemSelector;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

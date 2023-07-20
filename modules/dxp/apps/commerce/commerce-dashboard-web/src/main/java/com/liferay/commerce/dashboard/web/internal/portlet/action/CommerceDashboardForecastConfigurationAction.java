@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -90,6 +91,8 @@ public class CommerceDashboardForecastConfigurationAction
 			actionRequest, "assetCategoryIds",
 			StringUtil.merge(assetCategoryIds));
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -103,5 +106,8 @@ public class CommerceDashboardForecastConfigurationAction
 	)
 	private volatile ModelResourcePermission<AccountEntry>
 		_accountEntryModelResourcePermission;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

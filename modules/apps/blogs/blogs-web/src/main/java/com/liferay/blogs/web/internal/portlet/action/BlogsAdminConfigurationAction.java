@@ -74,6 +74,8 @@ public class BlogsAdminConfigurationAction
 			validateEmailFrom(actionRequest);
 		}
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 

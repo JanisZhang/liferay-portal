@@ -17,6 +17,7 @@ package com.liferay.calendar.web.internal.portlet.action;
 import com.liferay.calendar.constants.CalendarPortletKeys;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SessionClicks;
@@ -54,6 +55,8 @@ public class CalendarConfigurationAction extends DefaultConfigurationAction {
 
 		_updateDisplaySettings(actionRequest);
 		_updateUserSettings(actionRequest);
+
+		setSettingsFactory(_settingsFactory);
 
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
@@ -136,5 +139,8 @@ public class CalendarConfigurationAction extends DefaultConfigurationAction {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -38,6 +39,7 @@ import javax.portlet.PortletRequest;
 import javax.portlet.ReadOnlyException;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -119,10 +121,15 @@ public class LoginConfigurationActionImpl extends DefaultConfigurationAction {
 
 		validateEmailFrom(actionRequest);
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LoginConfigurationActionImpl.class);
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

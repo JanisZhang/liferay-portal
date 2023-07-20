@@ -17,6 +17,7 @@ package com.liferay.portal.reports.engine.console.web.internal.admin.portlet.act
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.reports.engine.console.constants.ReportsEngineConsolePortletKeys;
@@ -28,6 +29,7 @@ import javax.portlet.PortletConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Gavin Wan
@@ -63,6 +65,8 @@ public class ReportsAdminConfigurationAction
 			_validateEmailNotifications(actionRequest);
 		}
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -97,5 +101,8 @@ public class ReportsAdminConfigurationAction
 			SessionErrors.add(actionRequest, "emailNotificationsBody");
 		}
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

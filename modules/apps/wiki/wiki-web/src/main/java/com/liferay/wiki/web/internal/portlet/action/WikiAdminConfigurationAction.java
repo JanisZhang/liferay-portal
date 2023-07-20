@@ -16,6 +16,7 @@ package com.liferay.wiki.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.wiki.constants.WikiPortletKeys;
 
 import javax.portlet.ActionRequest;
@@ -25,6 +26,7 @@ import javax.portlet.PortletConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Iván Zaera
@@ -51,7 +53,12 @@ public class WikiAdminConfigurationAction
 		validateEmail(actionRequest, "emailPageUpdated");
 		validateEmailFrom(actionRequest);
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

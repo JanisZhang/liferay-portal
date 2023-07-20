@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
@@ -124,6 +125,8 @@ public class CPPublisherConfigurationAction extends DefaultConfigurationAction {
 				if (selectionStyle.equals("dynamic")) {
 					_updateQueryLogic(actionRequest, preferences);
 				}
+
+				setSettingsFactory(_settingsFactory);
 
 				super.processAction(
 					portletConfig, actionRequest, actionResponse);
@@ -500,5 +503,8 @@ public class CPPublisherConfigurationAction extends DefaultConfigurationAction {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

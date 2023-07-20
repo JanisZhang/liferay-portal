@@ -59,6 +59,7 @@ import com.liferay.portal.kernel.service.LayoutRevisionLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -252,6 +253,8 @@ public class AssetPublisherConfigurationAction
 				}
 
 				_updateDefaultAssetPublisher(actionRequest);
+
+				setSettingsFactory(_settingsFactory);
 
 				super.processAction(
 					portletConfig, actionRequest, actionResponse);
@@ -889,5 +892,8 @@ public class AssetPublisherConfigurationAction
 				queryRule.getName());
 		}
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

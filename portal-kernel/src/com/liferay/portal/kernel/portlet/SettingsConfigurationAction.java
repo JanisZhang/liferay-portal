@@ -28,7 +28,7 @@ import com.liferay.portal.kernel.settings.ModifiableSettings;
 import com.liferay.portal.kernel.settings.PortletInstanceSettingsLocator;
 import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.settings.SettingsDescriptor;
-import com.liferay.portal.kernel.settings.SettingsFactoryUtil;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.settings.SettingsLocatorHelperUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
@@ -198,6 +198,10 @@ public abstract class SettingsConfigurationAction
 		throws Exception {
 	}
 
+	public void setParameterNamePrefix(String parameterNamePrefix) {
+		_parameterNamePrefix = parameterNamePrefix;
+	}
+
 	public void setPreference(
 		PortletRequest portletRequest, String name, String value) {
 
@@ -252,12 +256,12 @@ public abstract class SettingsConfigurationAction
 			actionRequest, "settingsScope");
 
 		if (settingsScope.equals("company")) {
-			return SettingsFactoryUtil.getSettings(
+			return _settingsFactory.getSettings(
 				new CompanyServiceSettingsLocator(
 					themeDisplay.getCompanyId(), serviceName));
 		}
 		else if (settingsScope.equals("group")) {
-			return SettingsFactoryUtil.getSettings(
+			return _settingsFactory.getSettings(
 				new GroupServiceSettingsLocator(
 					themeDisplay.getScopeGroupId(), serviceName));
 		}
@@ -265,7 +269,7 @@ public abstract class SettingsConfigurationAction
 			String portletResource = ParamUtil.getString(
 				actionRequest, "portletResource");
 
-			return SettingsFactoryUtil.getSettings(
+			return _settingsFactory.getSettings(
 				new PortletInstanceSettingsLocator(
 					themeDisplay.getLayout(), portletResource));
 		}
@@ -292,8 +296,8 @@ public abstract class SettingsConfigurationAction
 		throws PortalException {
 	}
 
-	protected void setParameterNamePrefix(String parameterNamePrefix) {
-		_parameterNamePrefix = parameterNamePrefix;
+	protected void setSettingsFactory(SettingsFactory settingsFactory) {
+		_settingsFactory = settingsFactory;
 	}
 
 	protected void updateMultiValuedKeys(ActionRequest actionRequest) {
@@ -357,5 +361,6 @@ public abstract class SettingsConfigurationAction
 	}
 
 	private String _parameterNamePrefix;
+	private SettingsFactory _settingsFactory;
 
 }

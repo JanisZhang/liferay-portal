@@ -17,6 +17,7 @@ package com.liferay.rss.web.internal.portlet.action;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
@@ -35,6 +36,7 @@ import javax.portlet.PortletConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -58,6 +60,7 @@ public class RSSConfigurationAction extends DefaultConfigurationAction {
 
 		_updateSubscriptions(actionRequest);
 
+		setSettingsFactory(_settingsFactory);
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -110,5 +113,8 @@ public class RSSConfigurationAction extends DefaultConfigurationAction {
 		setPreference(actionRequest, "urls", urls);
 		setPreference(actionRequest, "titles", titles);
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

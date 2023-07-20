@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
@@ -73,12 +74,13 @@ public class PortletExtenderConfigurationAction
 	public PortletExtenderConfigurationAction(
 			DDM ddm, DDMFormRenderer ddmFormRenderer,
 			DDMFormValuesFactory ddmFormValuesFactory,
-			JSONObject preferencesJSONObject)
+			JSONObject preferencesJSONObject, SettingsFactory settingsFactory)
 		throws PortalException {
 
 		_ddmFormRenderer = ddmFormRenderer;
 		_ddmFormValuesFactory = ddmFormValuesFactory;
 		_preferencesJSONObject = preferencesJSONObject;
+		_settingsFactory = settingsFactory;
 
 		_ddmForm = ddm.getDDMForm(preferencesJSONObject.toString());
 
@@ -166,6 +168,8 @@ public class PortletExtenderConfigurationAction
 					},
 					String.class));
 		}
+
+		setSettingsFactory(_settingsFactory);
 
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
@@ -342,5 +346,6 @@ public class PortletExtenderConfigurationAction
 	private final DDMFormValuesFactory _ddmFormValuesFactory;
 	private final Set<String> _fieldNames = new HashSet<>();
 	private final JSONObject _preferencesJSONObject;
+	private final SettingsFactory _settingsFactory;
 
 }

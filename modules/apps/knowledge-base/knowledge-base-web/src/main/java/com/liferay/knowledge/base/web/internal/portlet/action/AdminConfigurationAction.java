@@ -18,6 +18,7 @@ import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -28,6 +29,7 @@ import javax.portlet.PortletConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Peter Shin
@@ -58,6 +60,8 @@ public class AdminConfigurationAction
 		validateEmail(actionRequest, "emailKBArticleUpdated");
 		validateEmailFrom(actionRequest);
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -83,5 +87,8 @@ public class AdminConfigurationAction
 			SessionErrors.add(actionRequest, emailParam + "Body");
 		}
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -185,7 +186,7 @@ public class JSPortletExtender {
 			ConfigurationAction configurationAction =
 				new PortletExtenderConfigurationAction(
 					_ddm, _ddmFormRenderer, _ddmFormValuesFactory,
-					portletPreferencesJSONObject);
+					portletPreferencesJSONObject, _settingsFactory);
 
 			Dictionary<String, Object> properties = new Hashtable<>();
 
@@ -315,5 +316,8 @@ public class JSPortletExtender {
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

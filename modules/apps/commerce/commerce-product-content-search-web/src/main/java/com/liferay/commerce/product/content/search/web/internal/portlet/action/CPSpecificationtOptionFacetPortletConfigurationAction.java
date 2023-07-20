@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -34,6 +35,7 @@ import javax.portlet.PortletConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Crescenzo Rega
@@ -78,6 +80,7 @@ public class CPSpecificationtOptionFacetPortletConfigurationAction
 		}
 
 		if (SessionErrors.isEmpty(actionRequest)) {
+			setSettingsFactory(_settingsFactory);
 			super.processAction(portletConfig, actionRequest, actionResponse);
 		}
 	}
@@ -86,5 +89,8 @@ public class CPSpecificationtOptionFacetPortletConfigurationAction
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CPSpecificationtOptionFacetPortletConfigurationAction.class);
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

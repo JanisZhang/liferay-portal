@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.BaseJSPSettingsConfigurationAction;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 
 import javax.portlet.ActionRequest;
@@ -60,6 +61,8 @@ public class BookmarksAdminConfigurationAction
 		validateEmailFrom(actionRequest);
 		_validateRootFolder(actionRequest);
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -91,5 +94,8 @@ public class BookmarksAdminConfigurationAction
 
 	@Reference
 	private BookmarksFolderLocalService _bookmarksFolderLocalService;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -138,6 +139,8 @@ public class JournalContentConfigurationAction
 			StringUtil.merge(userToolAssetAddonEntryKeys));
 
 		_addDDMTemplateLinks(actionRequest);
+
+		setSettingsFactory(_settingsFactory);
 
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
@@ -263,6 +266,9 @@ public class JournalContentConfigurationAction
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private TrashHelper _trashHelper;

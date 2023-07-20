@@ -18,6 +18,7 @@ import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -30,6 +31,7 @@ import javax.portlet.PortletConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Andrea Sbarra
@@ -64,10 +66,14 @@ public class CPOptionFacetPortletConfigurationAction
 		}
 
 		if (SessionErrors.isEmpty(actionRequest)) {
+			setSettingsFactory(_settingsFactory);
 			super.processAction(portletConfig, actionRequest, actionResponse);
 		}
 	}
 
 	private static final int _MAX_TERMS_LIMIT = 100;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.search.web.constants.SearchPortletKeys;
 import com.liferay.portal.search.web.facet.SearchFacet;
@@ -89,6 +90,8 @@ public class SearchConfigurationAction extends DefaultConfigurationAction {
 		setPreference(
 			actionRequest, "searchConfiguration", jsonObject.toString());
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -97,5 +100,8 @@ public class SearchConfigurationAction extends DefaultConfigurationAction {
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

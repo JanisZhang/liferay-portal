@@ -17,6 +17,7 @@ package com.liferay.wiki.navigation.web.internal.portlet.action;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.wiki.exception.NoSuchNodeException;
 import com.liferay.wiki.navigation.web.internal.constants.WikiNavigationPortletKeys;
@@ -54,6 +55,8 @@ public class WikiNavigationPageMenuConfigurationAction
 
 		validateNode(actionRequest);
 
+		setSettingsFactory(_settingsFactory);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -68,6 +71,9 @@ public class WikiNavigationPageMenuConfigurationAction
 			SessionErrors.add(actionRequest, noSuchNodeException.getClass());
 		}
 	}
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 	@Reference
 	private WikiNodeService _wikiNodeService;
