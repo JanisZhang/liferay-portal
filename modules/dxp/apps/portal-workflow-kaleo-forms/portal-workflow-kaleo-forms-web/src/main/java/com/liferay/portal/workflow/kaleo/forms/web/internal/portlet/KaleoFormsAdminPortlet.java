@@ -33,7 +33,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
-import com.liferay.portal.kernel.workflow.WorkflowTaskManagerUtil;
+import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
 import com.liferay.portal.workflow.kaleo.forms.constants.KaleoFormsPortletKeys;
 import com.liferay.portal.workflow.kaleo.forms.constants.KaleoFormsWebKeys;
 import com.liferay.portal.workflow.kaleo.forms.exception.NoSuchKaleoProcessException;
@@ -264,7 +264,7 @@ public class KaleoFormsAdminPortlet extends MVCPortlet {
 		if (workflowTaskId > 0) {
 			renderRequest.setAttribute(
 				KaleoFormsWebKeys.WORKFLOW_TASK,
-				WorkflowTaskManagerUtil.getWorkflowTask(
+				_workflowTaskManager.getWorkflowTask(
 					themeDisplay.getCompanyId(), workflowTaskId));
 		}
 	}
@@ -450,5 +450,8 @@ public class KaleoFormsAdminPortlet extends MVCPortlet {
 	private Language _language;
 
 	private final List<String> _parameterNames;
+
+	@Reference
+	private WorkflowTaskManager _workflowTaskManager;
 
 }
