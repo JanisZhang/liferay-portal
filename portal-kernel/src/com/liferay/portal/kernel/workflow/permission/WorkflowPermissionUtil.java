@@ -6,15 +6,12 @@
 package com.liferay.portal.kernel.workflow.permission;
 
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 /**
  * @author Jorge Ferrer
  */
 public class WorkflowPermissionUtil {
-
-	public static WorkflowPermission getWorkflowPermission() {
-		return _workflowPermission;
-	}
 
 	public static Boolean hasPermission(
 		PermissionChecker permissionChecker, long groupId, String className,
@@ -24,10 +21,9 @@ public class WorkflowPermissionUtil {
 			permissionChecker, groupId, className, classPK, actionId);
 	}
 
-	public void setWorkflowPermission(WorkflowPermission workflowPermission) {
-		_workflowPermission = workflowPermission;
-	}
-
-	private static WorkflowPermission _workflowPermission;
+	private static volatile WorkflowPermission _workflowPermission =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			WorkflowPermission.class, WorkflowPermissionUtil.class,
+			"_workflowPermission", false);
 
 }
