@@ -224,8 +224,7 @@ public class KaleoProcessAssetRenderer
 			httpServletRequest, "workflowTaskId");
 
 		if (workflowTaskId > 0) {
-			workflowTask = _workflowTaskManager.getWorkflowTask(
-				themeDisplay.getCompanyId(), workflowTaskId);
+			workflowTask = _workflowTaskManager.getWorkflowTask(workflowTaskId);
 		}
 
 		return workflowTask;
