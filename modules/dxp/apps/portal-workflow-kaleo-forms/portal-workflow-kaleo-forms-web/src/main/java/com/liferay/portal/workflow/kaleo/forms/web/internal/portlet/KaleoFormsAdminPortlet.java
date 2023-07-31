@@ -264,8 +264,7 @@ public class KaleoFormsAdminPortlet extends MVCPortlet {
 		if (workflowTaskId > 0) {
 			renderRequest.setAttribute(
 				KaleoFormsWebKeys.WORKFLOW_TASK,
-				_workflowTaskManager.getWorkflowTask(
-					themeDisplay.getCompanyId(), workflowTaskId));
+				_workflowTaskManager.getWorkflowTask(workflowTaskId));
 		}
 	}
 
