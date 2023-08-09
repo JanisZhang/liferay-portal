@@ -14,7 +14,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.kernel.workflow.WorkflowDefinitionFileException;
-import com.liferay.portal.kernel.workflow.WorkflowDefinitionManagerUtil;
+import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.workflow.constants.WorkflowPortletKeys;
 import com.liferay.portal.workflow.constants.WorkflowWebKeys;
@@ -27,6 +27,8 @@ import java.util.ResourceBundle;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+
+import jdk.nashorn.internal.ir.annotations.Reference;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -65,7 +67,7 @@ public class RevertWorkflowDefinitionMVCActionCommand
 			actionRequest, "previousVersion");
 
 		WorkflowDefinition previousWorkflowDefinition =
-			WorkflowDefinitionManagerUtil.getWorkflowDefinition(
+			_workflowDefinitionManager.getWorkflowDefinition(
 				themeDisplay.getCompanyId(), previousName, previousVersion);
 
 		actionRequest.setAttribute(
@@ -154,5 +156,8 @@ public class RevertWorkflowDefinitionMVCActionCommand
 		return DateFormatFactoryUtil.getSimpleDateFormat(
 			"MMM d, yyyy, HH:mm", locale);
 	}
+
+	@Reference
+	private WorkflowDefinitionManager _workflowDefinitionManager;
 
 }
