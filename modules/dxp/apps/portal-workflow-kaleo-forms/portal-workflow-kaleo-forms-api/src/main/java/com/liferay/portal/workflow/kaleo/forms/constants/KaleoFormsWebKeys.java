@@ -45,6 +45,9 @@ public class KaleoFormsWebKeys {
 	 */
 	public static final String KALEO_PROCESS_LINK = "KALEO_PROCESS_LINK";
 
+	public static final String WORKFLOW_DEFINITION_MANAGER =
+		"WORKFLOW_DEFINITION_MANAGER";
+
 	/**
 	 * {@value #WORKFLOW_INSTANCE} is the key to use to retrieve the workflow
 	 * instance from the request attribute.

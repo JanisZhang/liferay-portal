@@ -1,3 +1,5 @@
+<%@ page import="com.liferay.portal.kernel.workflow.*" %>
+
 <%--
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
@@ -8,7 +10,9 @@
 <%@ include file="/admin/init.jsp" %>
 
 <%
-KaleoFormsTaskTemplateSearchDisplayContext kaleoFormsTaskTemplateSearchDisplayContext = new KaleoFormsTaskTemplateSearchDisplayContext(request, liferayPortletRequest, liferayPortletResponse, renderRequest);
+WorkflowDefinitionManager workflowDefinitionManager = (WorkflowDefinitionManager)request.getAttribute(KaleoFormsWebKeys.WORKFLOW_DEFINITION_MANAGER);
+
+KaleoFormsTaskTemplateSearchDisplayContext kaleoFormsTaskTemplateSearchDisplayContext = new KaleoFormsTaskTemplateSearchDisplayContext(request, liferayPortletRequest, liferayPortletResponse, renderRequest, workflowDefinitionManager);
 %>
 
 <div id="<portlet:namespace />formsSearchContainer">
