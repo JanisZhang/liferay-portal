@@ -43,7 +43,7 @@ if (Validator.isNotNull(workflowDefinition)) {
 	String workflowDefinitionDisplay = StringPool.BLANK;
 
 	if (Validator.isNotNull(workflowDefinitionName)) {
-		WorkflowDefinition kaleoWorkflowDefinition = KaleoFormsUtil.getWorkflowDefinition(themeDisplay.getCompanyId(), workflowDefinitionName, workflowDefinitionVersion);
+		WorkflowDefinition kaleoWorkflowDefinition = KaleoFormsUtil.getWorkflowDefinition(themeDisplay.getCompanyId(), workflowDefinitionName, workflowDefinitionVersion, workflowDefinitionManager);
 
 		if (kaleoWorkflowDefinition != null) {
 			workflowDefinitionDisplay = kaleoWorkflowDefinition.getTitle(themeDisplay.getLanguageId());

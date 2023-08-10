@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
-import com.liferay.portal.kernel.workflow.WorkflowDefinitionManagerUtil;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
@@ -369,10 +368,11 @@ public class KaleoFormsUtil {
 	 * @return the workflow definition
 	 */
 	public static WorkflowDefinition getWorkflowDefinition(
-		long companyId, String name, int version) {
+		long companyId, String name, int version,
+		WorkflowDefinitionManager workflowDefinitionManager) {
 
 		try {
-			return WorkflowDefinitionManagerUtil.getWorkflowDefinition(
+			return workflowDefinitionManager.getWorkflowDefinition(
 				companyId, name, version);
 		}
 		catch (Exception exception) {
