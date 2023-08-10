@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.sites.kernel.util.Sites;
 
@@ -186,7 +187,8 @@ public class LayoutSetPrototypeStagedModelDataHandler
 			serviceContext);
 
 		portletDataContext.importClassedModel(
-			layoutSetPrototype, importedLayoutSetPrototype);
+			layoutSetPrototype, importedLayoutSetPrototype,
+			_workflowDefinitionManager);
 	}
 
 	@Override
@@ -339,5 +341,8 @@ public class LayoutSetPrototypeStagedModelDataHandler
 
 	@Reference
 	private Sites _sites;
+
+	@Reference
+	private WorkflowDefinitionManager _workflowDefinitionManager;
 
 }
