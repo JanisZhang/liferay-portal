@@ -10,8 +10,6 @@
 <%@ include file="/admin/init.jsp" %>
 
 <%
-WorkflowDefinitionManager workflowDefinitionManager = (WorkflowDefinitionManager)request.getAttribute(KaleoFormsWebKeys.WORKFLOW_DEFINITION_MANAGER);
-
 KaleoFormsTaskTemplateSearchDisplayContext kaleoFormsTaskTemplateSearchDisplayContext = new KaleoFormsTaskTemplateSearchDisplayContext(request, liferayPortletRequest, liferayPortletResponse, renderRequest, workflowDefinitionManager);
 %>
 

@@ -62,6 +62,8 @@ page import="javax.portlet.WindowState" %>
 <%
 KaleoFormsAdminDisplayContext kaleoFormsAdminDisplayContext = (KaleoFormsAdminDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
+WorkflowDefinitionManager workflowDefinitionManager = (WorkflowDefinitionManager)request.getAttribute(KaleoFormsWebKeys.WORKFLOW_DEFINITION_MANAGER);
+
 DDMDisplay ddmDisplay = kaleoFormsAdminDisplayContext.getDDMDisplay();
 
 long scopeClassNameId = PortalUtil.getClassNameId(ddmDisplay.getStructureType());

@@ -12,8 +12,6 @@
 <%
 KaleoProcess kaleoProcess = (KaleoProcess)request.getAttribute(KaleoFormsWebKeys.KALEO_PROCESS);
 
-WorkflowDefinitionManager workflowDefinitionManager = (WorkflowDefinitionManager)request.getAttribute(KaleoFormsWebKeys.WORKFLOW_DEFINITION_MANAGER);
-
 long kaleoProcessId = BeanParamUtil.getLong(kaleoProcess, request, "kaleoProcessId");
 
 long ddmStructureId = KaleoFormsUtil.getKaleoProcessDDMStructureId(kaleoProcess, portletSession);
