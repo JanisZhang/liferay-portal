@@ -3,24 +3,34 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-package com.liferay.portlet.documentlibrary.messaging;
+package com.liferay.document.library.internal.messaging;
 
 import com.liferay.document.library.kernel.util.RawMetadataProcessorUtil;
+import com.liferay.dynamic.data.mapping.kernel.DDMStructureManager;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.BaseMessageListener;
+import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
+import com.liferay.portal.kernel.messaging.MessageListener;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Miguel Pastor
  */
+@Component(
+	property = "destination.name=" + DestinationNames.DOCUMENT_LIBRARY_RAW_METADATA_PROCESSOR,
+	service = MessageListener.class
+)
 public class RawMetadataProcessorMessageListener extends BaseMessageListener {
 
 	@Override
 	protected void doReceive(Message message) throws Exception {
-		if (StartupHelperUtil.isUpgrading()) {
+		if (StartupHelperUtil.isUpgrading() || (_ddmStructureManager == null)) {
 			return;
 		}
 
@@ -41,5 +51,8 @@ public class RawMetadataProcessorMessageListener extends BaseMessageListener {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		RawMetadataProcessorMessageListener.class);
+
+	@Reference
+	private DDMStructureManager _ddmStructureManager;
 
 }
