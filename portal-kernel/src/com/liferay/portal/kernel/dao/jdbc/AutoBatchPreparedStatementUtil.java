@@ -82,7 +82,7 @@ public class AutoBatchPreparedStatementUtil {
 	private static volatile PortalExecutorManager _portalExecutorManager =
 		ServiceProxyFactory.newServiceTrackedInstance(
 			PortalExecutorManager.class, AutoBatchPreparedStatementUtil.class,
-			"_portalExecutorManager", true);
+			"_portalExecutorManager", false, true);
 
 	static {
 		try {
@@ -220,31 +220,42 @@ public class AutoBatchPreparedStatementUtil {
 
 			PreparedStatement localPreparedStatement = getPreparedStatement();
 
-			NoticeableFuture<Void> noticeableFuture =
-				_noticeableExecutorService.submit(
-					() -> {
+			if (_noticeableExecutorService != null) {
+				NoticeableFuture<Void> noticeableFuture =
+					_noticeableExecutorService.submit(
+						() -> {
+							try {
+								actionUnsafeConsumer.accept(
+									localPreparedStatement);
+							}
+							finally {
+								localPreparedStatement.close();
+							}
+
+							return null;
+						});
+
+				_futures.add(noticeableFuture);
+
+				noticeableFuture.addFutureListener(
+					future -> {
 						try {
-							actionUnsafeConsumer.accept(localPreparedStatement);
-						}
-						finally {
-							localPreparedStatement.close();
-						}
+							future.get();
 
-						return null;
+							_futures.remove(future);
+						}
+						catch (Throwable throwable) {
+						}
 					});
-
-			_futures.add(noticeableFuture);
-
-			noticeableFuture.addFutureListener(
-				future -> {
-					try {
-						future.get();
-
-						_futures.remove(future);
-					}
-					catch (Throwable throwable) {
-					}
-				});
+			}
+			else {
+				try {
+					actionUnsafeConsumer.accept(localPreparedStatement);
+				}
+				finally {
+					localPreparedStatement.close();
+				}
+			}
 
 			preparedStatement = null;
 		}
