@@ -33,6 +33,9 @@ public class KaleoInstanceSearchRegistrar {
 					Field.ENTRY_CLASS_PK, Field.UID, "kaleoInstanceId");
 				modelSearchDefinition.setModelIndexWriteContributor(
 					modelIndexWriterContributor);
+				modelSearchDefinition.setPermissionAware(false);
+				modelSearchDefinition.setSearchResultPermissionFilterSuppressed(
+					true);
 			});
 	}
 
