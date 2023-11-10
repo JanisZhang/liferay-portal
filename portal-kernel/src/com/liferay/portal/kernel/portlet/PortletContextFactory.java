@@ -24,4 +24,7 @@ public interface PortletContextFactory {
 
 	public void destroy(Portlet portlet);
 
+
+	public void testWorkflow(Portlet portlet);
+
 }
