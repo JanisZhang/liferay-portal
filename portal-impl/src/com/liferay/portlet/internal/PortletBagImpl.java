@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.servlet.URLEncoder;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.webdav.WebDAVStorage;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.xmlrpc.Method;
@@ -186,6 +187,11 @@ public class PortletBagImpl implements PortletBag {
 		ResourceBundleLoader resourceBundleLoader =
 			_resourceBundleLoaderSnapshot.get();
 
+		if (resourceBundleLoader == null) {
+			resourceBundleLoader =
+				DummyResourceBundleLoader._dummyResourceBundleLoader;
+		}
+
 		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(
 			locale);
 
@@ -310,6 +316,13 @@ public class PortletBagImpl implements PortletBag {
 	private final Map<Class<?>, ServiceTrackerList<Class<?>>>
 		_serviceTrackerListMap = new ConcurrentHashMap<>();
 	private final ServletContext _servletContext;
+
+	private static class DummyResourceBundleLoader {
+
+		private static final ResourceBundleLoader _dummyResourceBundleLoader =
+			ProxyFactory.newDummyInstance(ResourceBundleLoader.class);
+
+	}
 
 	@SuppressWarnings("deprecation")
 	private static class PermissionPropagatorServiceTrackerCustomizer
