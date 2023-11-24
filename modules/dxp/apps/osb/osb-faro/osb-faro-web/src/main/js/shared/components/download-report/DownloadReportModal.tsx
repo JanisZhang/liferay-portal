@@ -18,6 +18,11 @@ import {spritemap} from 'shared/util/constants';
 import {useDispatch} from 'react-redux';
 import {useHistory} from 'react-router-dom';
 
+export enum ReportType {
+	CSV = 'CSV',
+	PDF = 'PDF'
+}
+
 interface IDownloadReportModal {
 	alertMessage: string;
 	descriptionMessage: string;
@@ -25,7 +30,10 @@ interface IDownloadReportModal {
 	infoMessage: string;
 	observer: any;
 	onClose: () => void;
-	onSubmit: () => void;
+	onSubmit: (dateRange?: MomentDateRange) => void;
+	requiredDateRange?: boolean;
+	showDateRange?: boolean;
+	type?: ReportType;
 }
 
 export const DownloadReportModal: React.FC<IDownloadReportModal> = ({
@@ -36,7 +44,10 @@ export const DownloadReportModal: React.FC<IDownloadReportModal> = ({
 	infoMessage,
 	observer,
 	onClose,
-	onSubmit
+	onSubmit,
+	requiredDateRange = false,
+	showDateRange = true,
+	type
 }) => {
 	const dispatch = useDispatch();
 	const history = useHistory();
@@ -63,6 +74,12 @@ export const DownloadReportModal: React.FC<IDownloadReportModal> = ({
 							message: alertMessage
 						})
 					);
+
+					if (type === 'CSV') {
+						onSubmit(dateRange);
+
+						return;
+					}
 
 					if (dateRange && dateRange.end && dateRange.start) {
 						history.push(
@@ -121,63 +138,74 @@ export const DownloadReportModal: React.FC<IDownloadReportModal> = ({
 
 					<p>{descriptionMessage}</p>
 
-					<ClayForm.Group>
-						<label htmlFor='timeRange'>
-							{Liferay.Language.get('date-range-optional')}
-						</label>
+					{showDateRange && (
+						<ClayForm.Group>
+							<label htmlFor='timeRange'>
+								{requiredDateRange
+									? Liferay.Language.get('date-range')
+									: Liferay.Language.get(
+											'date-range-optional'
+									  )}
+							</label>
 
-						<ClayDropDown
-							alignmentPosition={Align.BottomLeft}
-							menuElementAttrs={{
-								style: {maxWidth: 'none', minWidth: 'none'}
-							}}
-							trigger={
-								<ClayInput.Group>
-									<ClayInput.GroupItem prepend>
-										<ClayInput
-											id='timeRange'
-											placeholder={`${Liferay.Language.get(
-												'yyyy-mm-dd'
-											)} - ${Liferay.Language.get(
-												'yyyy-mm-dd'
-											)}`}
-											readOnly
-											type='text'
-											value={
-												dateRange.start && dateRange.end
-													? `${formatDate(
-															dateRange.start
-													  )} - ${formatDate(
-															dateRange.end
-													  )}`
-													: ''
-											}
-										/>
-									</ClayInput.GroupItem>
+							<ClayDropDown
+								alignmentPosition={Align.BottomLeft}
+								menuElementAttrs={{
+									style: {maxWidth: 'none', minWidth: 'none'}
+								}}
+								trigger={
+									<ClayInput.Group>
+										<ClayInput.GroupItem prepend>
+											<ClayInput
+												id='timeRange'
+												placeholder={`${Liferay.Language.get(
+													'yyyy-mm-dd'
+												)} - ${Liferay.Language.get(
+													'yyyy-mm-dd'
+												)}`}
+												readOnly
+												type='text'
+												value={
+													dateRange.start &&
+													dateRange.end
+														? `${formatDate(
+																dateRange.start
+														  )} - ${formatDate(
+																dateRange.end
+														  )}`
+														: ''
+												}
+											/>
+										</ClayInput.GroupItem>
 
-									<ClayInput.GroupItem append shrink>
-										<ClayInput.GroupText>
-											<ClayIcon symbol='calendar' />
-										</ClayInput.GroupText>
-									</ClayInput.GroupItem>
-								</ClayInput.Group>
-							}
-						>
-							<DatePicker
-								className='p-2'
-								date={dateRange}
-								displayLabel={false}
-								maxDate={moment().subtract(0, 'd')}
-								minDate={moment().subtract(1, 'years')}
-								onSelect={({end, start}: MomentDateRange) => {
-									setDateRange({
+										<ClayInput.GroupItem append shrink>
+											<ClayInput.GroupText>
+												<ClayIcon symbol='calendar' />
+											</ClayInput.GroupText>
+										</ClayInput.GroupItem>
+									</ClayInput.Group>
+								}
+							>
+								<DatePicker
+									className='p-2'
+									date={dateRange}
+									displayLabel={false}
+									maxDate={moment().subtract(1, 'days')}
+									maxRange={365}
+									minDate={moment().subtract(10, 'years')}
+									onSelect={({
 										end,
 										start
-									});
-								}}
-							/>
-						</ClayDropDown>
-					</ClayForm.Group>
+									}: MomentDateRange) => {
+										setDateRange({
+											end,
+											start
+										});
+									}}
+								/>
+							</ClayDropDown>
+						</ClayForm.Group>
+					)}
 
 					{children}
 				</ClayModal.Body>
@@ -186,6 +214,7 @@ export const DownloadReportModal: React.FC<IDownloadReportModal> = ({
 					last={
 						<ClayButton.Group spaced>
 							<ClayButton
+								data-testid='cancel'
 								displayType='secondary'
 								onClick={onClose}
 							>
@@ -193,7 +222,14 @@ export const DownloadReportModal: React.FC<IDownloadReportModal> = ({
 							</ClayButton>
 
 							<ClayButton
-								disabled={disabled || submitDisabled}
+								data-testid='submit'
+								disabled={
+									(requiredDateRange &&
+										!dateRange.end &&
+										!dateRange.start) ||
+									disabled ||
+									submitDisabled
+								}
 								type='submit'
 							>
 								{Liferay.Language.get('download')}

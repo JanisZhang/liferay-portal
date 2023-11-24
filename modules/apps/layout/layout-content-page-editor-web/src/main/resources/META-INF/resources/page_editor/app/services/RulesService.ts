@@ -5,6 +5,7 @@
 
 import {Action} from '../../plugins/page_rules/components/Action';
 import {Condition} from '../../plugins/page_rules/components/Condition';
+import {ConditionType} from '../../plugins/page_rules/components/RuleBuilderSection';
 import {LayoutData} from '../../types/layout_data/LayoutData';
 import updateNetwork from '../actions/updateNetwork';
 import {config} from '../config/index';
@@ -16,6 +17,7 @@ import serviceFetch from './serviceFetch';
  */
 type AddRuleProps = {
 	actions: Action[];
+	conditionType: ConditionType;
 	conditions: Condition[];
 	name: string;
 	onNetworkStatus: (action: ReturnType<typeof updateNetwork>) => void;
@@ -24,6 +26,7 @@ type AddRuleProps = {
 
 function addRule({
 	actions,
+	conditionType,
 	conditions,
 	name,
 	onNetworkStatus,
@@ -34,6 +37,7 @@ function addRule({
 		{
 			body: {
 				actions: JSON.stringify(actions),
+				conditionType,
 				conditions: JSON.stringify(conditions),
 				name,
 				segmentsExperienceId,
@@ -70,6 +74,13 @@ function deleteRule({
 }
 
 /**
+ * Get roles
+ */
+function getRoles(): Promise<Array<{name: string; roleId: string}>> {
+	return serviceFetch(config.getRolesURL, {});
+}
+
+/**
  * Get users
  */
 function getUsers(): Promise<Array<{screenName: string; userId: string}>> {
@@ -81,6 +92,7 @@ function getUsers(): Promise<Array<{screenName: string; userId: string}>> {
  */
 type UpdateRuleProps = {
 	actions: Action[];
+	conditionType: ConditionType;
 	conditions: Condition[];
 	name: string;
 	onNetworkStatus: (action: ReturnType<typeof updateNetwork>) => void;
@@ -90,6 +102,7 @@ type UpdateRuleProps = {
 
 function updateRule({
 	actions,
+	conditionType,
 	conditions,
 	name,
 	onNetworkStatus,
@@ -101,6 +114,7 @@ function updateRule({
 		{
 			body: {
 				actions: JSON.stringify(actions),
+				conditionType,
 				conditions: JSON.stringify(conditions),
 				name,
 				ruleId,
@@ -111,4 +125,4 @@ function updateRule({
 	);
 }
 
-export default {addRule, deleteRule, getUsers, updateRule};
+export default {addRule, deleteRule, getRoles, getUsers, updateRule};

@@ -13,6 +13,7 @@ import RouteNotFound from 'shared/components/RouteNotFound';
 import StatesRenderer from 'shared/components/states-renderer/StatesRenderer';
 import URLConstants from 'shared/util/url-constants';
 import {getMatchedRoute, Routes, toRoute} from 'shared/util/router';
+import {sub} from 'shared/util/lang';
 import {Switch, useParams} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
 import {useDataSource} from 'shared/hooks/useDataSource';
@@ -111,36 +112,45 @@ export const Dashboard: React.FC<IDashboardProps> = ({currentUser, router}) => {
 				/>
 			</BasePage.Header>
 
-			<BasePage.SubHeader>
-				<div className='d-flex justify-content-end w-100'>
-					{matchedRoute === Routes.SITES && (
-						<DownloadPDFReport
-							containers={[
-								Containers.SiteActivityCard,
-								Containers.TopPagesCard,
-								Containers.AcquisitionsCard,
-								Containers.VisitorsByTimeCard,
-								Containers.SearchTermsCard,
-								Containers.InterestsCard,
-								Containers.SessionsByLocationCard,
-								Containers.SessionTechnologyCard,
-								Containers.CohortAnalysisCard
-							]}
-							disabled={dataSourceStates.empty}
-							subtitle={selectedChannelName}
-							title={Liferay.Language.get('sites-dashboard')}
-						/>
-					)}
+			{matchedRoute !== Routes.SITES_INTERESTS && (
+				<BasePage.SubHeader>
+					<div className='d-flex justify-content-end w-100'>
+						{matchedRoute === Routes.SITES && (
+							<DownloadPDFReport
+								containers={[
+									Containers.SiteActivityCard,
+									Containers.TopPagesCard,
+									Containers.AcquisitionsCard,
+									Containers.VisitorsByTimeCard,
+									Containers.SearchTermsCard,
+									Containers.InterestsCard,
+									Containers.SessionsByLocationCard,
+									Containers.SessionTechnologyCard,
+									Containers.CohortAnalysisCard
+								]}
+								disabled={dataSourceStates.empty}
+								subtitle={selectedChannelName}
+								title={Liferay.Language.get('sites-dashboard')}
+							/>
+						)}
 
-					{matchedRoute === Routes.SITES_TOUCHPOINTS && (
-						<DownloadCSVReport
-							disabled={dataSourceStates.empty}
-							subtitle={selectedChannelName}
-							title={Liferay.Language.get('sites-dashboard')}
-						/>
-					)}
-				</div>
-			</BasePage.SubHeader>
+						{matchedRoute === Routes.SITES_TOUCHPOINTS && (
+							<DownloadCSVReport
+								disabled={dataSourceStates.empty}
+								infoMessage={
+									sub(
+										Liferay.Language.get(
+											'the-x-list-will-be-downloaded-respecting-the-current-ordering,-filter,-and-search-results.-please-verify-if-the-desired-changes-are-applied'
+										),
+										[Liferay.Language.get('pages')]
+									) as string
+								}
+								type='page'
+							/>
+						)}
+					</div>
+				</BasePage.SubHeader>
+			)}
 
 			<BasePage.Context.Provider
 				value={{

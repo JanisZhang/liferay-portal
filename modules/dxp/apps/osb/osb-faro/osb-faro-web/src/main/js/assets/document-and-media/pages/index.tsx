@@ -1,6 +1,7 @@
 import * as breadcrumbs from 'shared/util/breadcrumbs';
 import BasePage from 'shared/components/base-page';
 import BundleRouter from 'route-middleware/BundleRouter';
+import DownloadCSVReport from 'shared/components/download-report/DownloadCSVReport';
 import DownloadPDFReport, {
 	Containers
 } from 'shared/components/download-report/DownloadPDFReport';
@@ -17,6 +18,7 @@ import {Router} from 'shared/types';
 import {sub} from 'shared/util/lang';
 import {Switch} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
+import {useDataSource} from 'shared/hooks/useDataSource';
 
 const Overview = lazy(
 	() =>
@@ -52,6 +54,8 @@ const DocumentAndMedia: React.FC<{
 	} = router;
 
 	const [filters, setFilters] = useState({});
+
+	const dataSourceStates = useDataSource();
 
 	const decodedTitle = decodeURIComponent(title);
 
@@ -104,13 +108,35 @@ const DocumentAndMedia: React.FC<{
 								Containers.DownloadsByTechnologyCard,
 								Containers.AssetAppearsOnCard
 							]}
-							disabled={false}
+							disabled={dataSourceStates.empty}
 							subtitle={selectedChannel?.name}
 							title={
 								sub(Liferay.Language.get('x-dashboard'), [
 									decodedTitle
 								]) as string
 							}
+						/>
+					</div>
+				</BasePage.SubHeader>
+			)}
+
+			{getMatchedRoute(NAV_ITEMS) ===
+				Routes.ASSETS_DOCUMENTS_AND_MEDIA_KNOWN_INDIVIDUALS && (
+				<BasePage.SubHeader>
+					<div className='d-flex justify-content-end w-100'>
+						<DownloadCSVReport
+							assetId={assetId}
+							assetType='document'
+							disabled={dataSourceStates.empty}
+							infoMessage={
+								sub(
+									Liferay.Language.get(
+										'the-x-list-will-be-downloaded-respecting-the-current-ordering,-filter,-and-search-results.-please-verify-if-the-desired-changes-are-applied'
+									),
+									[Liferay.Language.get('individuals')]
+								) as string
+							}
+							type='individual'
 						/>
 					</div>
 				</BasePage.SubHeader>

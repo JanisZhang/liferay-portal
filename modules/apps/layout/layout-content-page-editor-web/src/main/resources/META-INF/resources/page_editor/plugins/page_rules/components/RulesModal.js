@@ -3,26 +3,37 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
 import classNames from 'classnames';
 import {useId} from 'frontend-js-components-web';
-import React, {useState} from 'react';
+import {openToast} from 'frontend-js-web';
+import React, {useMemo, useState} from 'react';
+import {v4 as uuidv4} from 'uuid';
 
+import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
 import {useDispatch, useSelector} from '../../../app/contexts/StoreContext';
+import selectLayoutDataItemLabel from '../../../app/selectors/selectLayoutDataItemLabel';
 import addRule from '../../../app/thunks/addRule';
 import updateRule from '../../../app/thunks/updateRule';
 import {
 	RuleBuilderActionSection,
 	RuleBuilderConditionSection,
 } from './RuleBuilderSection';
+import ScreenReaderAnnouncerContext from './ScreenReaderContext';
 
 export default function RulesModal({editingRule, onCloseModal}) {
-	const {observer, onClose} = useModal({onClose: () => onCloseModal()});
+	const {observer, onClose} = useModal({
+		onClose: () => onCloseModal(editingRule?.id),
+	});
 
-	const rules = useSelector((state) => state.layoutData.pageRules);
+	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
+	const layoutData = useSelector((state) => state.layoutData);
+
+	const rules = layoutData.pageRules;
 
 	const dispatch = useDispatch();
 	const nameId = useId();
@@ -32,9 +43,39 @@ export default function RulesModal({editingRule, onCloseModal}) {
 	);
 
 	const [nameError, setNameError] = useState(false);
+	const [ruleError, setRuleError] = useState(false);
 
-	const [actions, setActions] = useState(editingRule?.actions || []);
-	const [conditions, setConditions] = useState(editingRule?.conditions || []);
+	const [actions, setActions] = useState(
+		() => editingRule?.actions || [{id: uuidv4()}]
+	);
+	const [conditions, setConditions] = useState(
+		() => editingRule?.conditions || [{id: uuidv4()}]
+	);
+	const [conditionType, setConditionType] = useState('all');
+
+	const layoutDataItems = useMemo(() => {
+		const items = [];
+
+		Object.values(layoutData.items).forEach((item) => {
+			if (
+				item.type !== LAYOUT_DATA_ITEM_TYPES.collectionItem &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.column &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.dropZone &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.fragmentDropZone &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.root
+			) {
+				items.push({
+					label: selectLayoutDataItemLabel(
+						{fragmentEntryLinks},
+						item
+					),
+					value: item.itemId,
+				});
+			}
+		});
+
+		return items;
+	}, [layoutData, fragmentEntryLinks]);
 
 	const onSave = () => {
 		if (!name) {
@@ -43,32 +84,52 @@ export default function RulesModal({editingRule, onCloseModal}) {
 			return;
 		}
 
-		const filteredActions = actions.filter((action) => action.itemId);
-		const filteredConditions = conditions.filter(
-			(condition) => condition.value
-		);
+		if (
+			actions.some((action) => !action.itemId) ||
+			conditions.some((condition) => !condition.value)
+		) {
+			setRuleError(true);
+
+			return;
+		}
 
 		if (editingRule) {
 			dispatch(
 				updateRule({
-					actions: filteredActions,
-					conditions: filteredConditions,
+					actions,
+					conditionType,
+					conditions,
 					name,
 					ruleId: editingRule.id,
+				})
+			).then(() =>
+				openToast({
+					message: Liferay.Language.get(
+						'the-rule-was-updated-successfully'
+					),
+					type: 'success',
 				})
 			);
 		}
 		else {
 			dispatch(
 				addRule({
-					actions: filteredActions,
-					conditions: filteredConditions,
+					actions,
+					conditionType,
+					conditions,
 					name,
+				})
+			).then(() =>
+				openToast({
+					message: Liferay.Language.get(
+						'the-rule-was-created-successfully'
+					),
+					type: 'success',
 				})
 			);
 		}
 
-		onCloseModal();
+		onClose();
 	};
 
 	const title = editingRule
@@ -84,6 +145,19 @@ export default function RulesModal({editingRule, onCloseModal}) {
 			<ClayModal.Header>{title}</ClayModal.Header>
 
 			<ClayModal.Body>
+				{ruleError ? (
+					<ClayAlert
+						displayType="danger"
+						hideCloseIcon={false}
+						onClose={() => setRuleError(false)}
+						title={Liferay.Language.get('error')}
+					>
+						{Liferay.Language.get(
+							'the-rule-is-incomplete.-please-check-that-the-conditions-and-actions-are-completed-before-saving'
+						)}
+					</ClayAlert>
+				) : null}
+
 				<ClayForm.Group
 					className={classNames({'has-error': nameError})}
 				>
@@ -127,15 +201,38 @@ export default function RulesModal({editingRule, onCloseModal}) {
 					)}
 				</p>
 
-				<RuleBuilderConditionSection
-					conditions={conditions}
-					setConditions={setConditions}
-				/>
+				<ScreenReaderAnnouncerContext>
+					<div
+						aria-label={Liferay.Language.get('conditions')}
+						role="group"
+					>
+						<RuleBuilderConditionSection
+							conditionType={conditionType}
+							conditions={conditions}
+							setConditionType={setConditionType}
+							setConditions={(conditions) => {
+								setRuleError(false);
 
-				<RuleBuilderActionSection
-					actions={actions}
-					setActions={setActions}
-				/>
+								setConditions(conditions);
+							}}
+						/>
+					</div>
+
+					<div
+						aria-label={Liferay.Language.get('actions')}
+						role="group"
+					>
+						<RuleBuilderActionSection
+							actions={actions}
+							layoutDataItems={layoutDataItems}
+							setActions={(actions) => {
+								setRuleError(false);
+
+								setActions(actions);
+							}}
+						/>
+					</div>
+				</ScreenReaderAnnouncerContext>
 			</ClayModal.Body>
 
 			<ClayModal.Footer

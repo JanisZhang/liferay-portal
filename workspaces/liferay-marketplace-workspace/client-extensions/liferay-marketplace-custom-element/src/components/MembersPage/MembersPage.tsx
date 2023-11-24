@@ -6,16 +6,16 @@
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {useMemo, useState} from 'react';
-import {useParams} from 'react-router-dom';
 
 import {useMarketplaceContext} from '../../context/MarketplaceContext';
-import {DashboardPage} from '../../pages/DashBoardPage/DashboardPage';
+import {Liferay} from '../../liferay/liferay';
 import {
 	MemberProps,
 	adminRoles,
 	customerRoles,
 	publisherRoles,
 } from '../../pages/PublishedAppsDashboard/PublishedDashboardPageUtil';
+import {DashboardPage} from '../DashBoardPage/DashboardPage';
 import {DashboardMemberTableRow} from '../DashboardTable/DashboardMemberTableRow';
 import {DashboardTable, TableHeaders} from '../DashboardTable/DashboardTable';
 import {InviteMemberModal} from '../InviteMemberModal/InviteMemberModal';
@@ -68,7 +68,7 @@ export function MembersPage({
 	const [visible, setVisible] = useState<boolean>(false);
 	const [loading] = useState<boolean>(false);
 	const [selectedMember, setSelectedMember] = useState<MemberProps>();
-	const {accountId} = useParams();
+	const {accountId} = Liferay.CommerceContext.account || {};
 
 	const marketplaceContext = useMarketplaceContext();
 

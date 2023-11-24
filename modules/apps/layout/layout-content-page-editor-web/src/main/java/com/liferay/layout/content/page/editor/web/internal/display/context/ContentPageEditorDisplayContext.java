@@ -39,9 +39,9 @@ import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortlet
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.content.page.editor.web.internal.configuration.PageEditorConfiguration;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorActionKeys;
-import com.liferay.layout.content.page.editor.web.internal.util.ContentManager;
-import com.liferay.layout.content.page.editor.web.internal.util.FragmentCollectionManager;
-import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkManager;
+import com.liferay.layout.content.page.editor.web.internal.manager.ContentManager;
+import com.liferay.layout.content.page.editor.web.internal.manager.FragmentCollectionManager;
+import com.liferay.layout.content.page.editor.web.internal.manager.FragmentEntryLinkManager;
 import com.liferay.layout.content.page.editor.web.internal.util.MappingContentUtil;
 import com.liferay.layout.content.page.editor.web.internal.util.MappingTypesUtil;
 import com.liferay.layout.content.page.editor.web.internal.util.StyleBookEntryUtil;
@@ -112,10 +112,14 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
+import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.manager.SegmentsExperienceManager;
+import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.model.SegmentsExperimentRel;
+import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperimentRelLocalService;
 import com.liferay.site.navigation.item.selector.SiteNavigationMenuItemSelectorReturnType;
@@ -181,7 +185,8 @@ public class ContentPageEditorDisplayContext {
 		SegmentsExperienceManager segmentsExperienceManager,
 		SegmentsExperienceLocalService segmentsExperienceLocalService,
 		SegmentsExperimentRelLocalService segmentsExperimentRelLocalService,
-		Staging staging, StagingGroupHelper stagingGroupHelper,
+		SegmentsEntryService segmentsEntryService, Staging staging,
+		StagingGroupHelper stagingGroupHelper,
 		StyleBookEntryLocalService styleBookEntryLocalService,
 		UserLocalService userLocalService,
 		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService) {
@@ -211,6 +216,7 @@ public class ContentPageEditorDisplayContext {
 		_segmentsExperienceManager = segmentsExperienceManager;
 		this.segmentsExperienceLocalService = segmentsExperienceLocalService;
 		_segmentsExperimentRelLocalService = segmentsExperimentRelLocalService;
+		_segmentsEntryService = segmentsEntryService;
 		_staging = staging;
 		_styleBookEntryLocalService = styleBookEntryLocalService;
 		_userLocalService = userLocalService;
@@ -272,6 +278,8 @@ public class ContentPageEditorDisplayContext {
 				_pageEditorConfiguration.autoExtendSessionEnabled()
 			).put(
 				"availableLanguages", _getAvailableLanguages()
+			).put(
+				"availableSegmentsEntries", _getAvailableSegmentsEntries()
 			).put(
 				"availableViewportSizes", _getAvailableViewportSizes()
 			).put(
@@ -592,10 +600,17 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"pending",
 				() -> {
+					Layout draftLayout = themeDisplay.getLayout();
+
+					if (draftLayout.isDenied() || draftLayout.isPending()) {
+						return true;
+					}
+
 					Layout publishedLayout = _getPublishedLayout();
 
-					if (publishedLayout.isDenied() ||
-						publishedLayout.isPending()) {
+					if ((publishedLayout != null) &&
+						(publishedLayout.isDenied() ||
+						 publishedLayout.isPending())) {
 
 						return true;
 					}
@@ -874,10 +889,8 @@ public class ContentPageEditorDisplayContext {
 	}
 
 	public boolean isWorkflowEnabled() {
-		Layout publishedLayout = _getPublishedLayout();
-
 		return _workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
-			publishedLayout.getCompanyId(), publishedLayout.getGroupId(),
+			themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
 			Layout.class.getName());
 	}
 
@@ -1090,6 +1103,39 @@ public class ContentPageEditorDisplayContext {
 		return availableLanguages;
 	}
 
+	private Map<String, Object> _getAvailableSegmentsEntries() {
+		Map<String, Object> availableSegmentsEntries = new HashMap<>();
+
+		List<SegmentsEntry> segmentsEntries =
+			_segmentsEntryService.getSegmentsEntries(
+				stagingGroupHelper.getStagedPortletGroupId(
+					getGroupId(), SegmentsPortletKeys.SEGMENTS),
+				true);
+
+		for (SegmentsEntry segmentsEntry : segmentsEntries) {
+			availableSegmentsEntries.put(
+				String.valueOf(segmentsEntry.getSegmentsEntryId()),
+				HashMapBuilder.<String, Object>put(
+					"name", segmentsEntry.getName(themeDisplay.getLocale())
+				).put(
+					"segmentsEntryId",
+					String.valueOf(segmentsEntry.getSegmentsEntryId())
+				).build());
+		}
+
+		availableSegmentsEntries.put(
+			String.valueOf(SegmentsEntryConstants.ID_DEFAULT),
+			HashMapBuilder.<String, Object>put(
+				"name",
+				SegmentsEntryConstants.getDefaultSegmentsEntryName(
+					themeDisplay.getLocale())
+			).put(
+				"segmentsEntryId", SegmentsEntryConstants.ID_DEFAULT
+			).build());
+
+		return availableSegmentsEntries;
+	}
+
 	private Map<String, Map<String, Object>> _getAvailableViewportSizes() {
 		Map<String, Map<String, Object>> availableViewportSizesMap =
 			new LinkedHashMap<>();
@@ -1216,7 +1262,8 @@ public class ContentPageEditorDisplayContext {
 	private String _getDiscardDraftURL() {
 		Layout publishedLayout = _getPublishedLayout();
 
-		if (!Objects.equals(
+		if ((publishedLayout != null) &&
+			!Objects.equals(
 				publishedLayout.getType(), LayoutConstants.TYPE_PORTLET)) {
 
 			return PortletURLBuilder.create(
@@ -1244,7 +1291,16 @@ public class ContentPageEditorDisplayContext {
 					httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
 					PortletRequest.RENDER_PHASE)
 			).setParameter(
-				"selPlid", publishedLayout.getPlid()
+				"selPlid",
+				() -> {
+					if (publishedLayout != null) {
+						return publishedLayout.getPlid();
+					}
+
+					Layout draftLayout = themeDisplay.getLayout();
+
+					return draftLayout.getClassPK();
+				}
 			).buildString()
 		).setParameter(
 			"selPlid", themeDisplay.getPlid()
@@ -1543,7 +1599,7 @@ public class ContentPageEditorDisplayContext {
 				).setBackURL(
 					themeDisplay.getURLCurrent()
 				).setParameter(
-					"backURLTitle", layout.getName()
+					"backURLTitle", layout.getName(themeDisplay.getLocale())
 				).setParameter(
 					"groupId", layout.getGroupId()
 				).setParameter(
@@ -1922,10 +1978,10 @@ public class ContentPageEditorDisplayContext {
 			return false;
 		}
 
-		Layout publishedLayout = _getPublishedLayout();
+		Layout draftLayout = themeDisplay.getLayout();
 
 		int masterUsagesCount = _layoutLocalService.getMasterLayoutsCount(
-			themeDisplay.getScopeGroupId(), publishedLayout.getPlid());
+			themeDisplay.getScopeGroupId(), draftLayout.getClassPK());
 
 		if (masterUsagesCount > 0) {
 			return true;
@@ -2003,6 +2059,7 @@ public class ContentPageEditorDisplayContext {
 	private String _redirect;
 	private List<String> _restrictedItemIds;
 	private final SegmentsConfigurationProvider _segmentsConfigurationProvider;
+	private final SegmentsEntryService _segmentsEntryService;
 	private Long _segmentsExperienceId;
 	private final SegmentsExperienceManager _segmentsExperienceManager;
 	private final SegmentsExperimentRelLocalService

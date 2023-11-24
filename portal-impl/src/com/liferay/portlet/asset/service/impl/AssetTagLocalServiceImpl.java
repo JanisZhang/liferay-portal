@@ -13,6 +13,7 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.kernel.service.persistence.AssetEntryPersistence;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -56,7 +57,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.asset.service.base.AssetTagLocalServiceBaseImpl;
 import com.liferay.portlet.asset.util.comparator.AssetTagNameComparator;
-import com.liferay.social.kernel.util.SocialCounterPeriodUtil;
 
 import java.io.Serializable;
 
@@ -268,7 +268,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	@Override
 	public AssetTag fetchTag(long groupId, String name) {
 		List<AssetTag> assetTags = assetTagPersistence.findByG_LikeN(
-			groupId, _getName(name));
+			groupId, name);
 
 		if (FeatureFlagManagerUtil.isEnabled("LPS-194362")) {
 			for (AssetTag assetTag : assetTags) {
@@ -366,30 +366,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	@Override
 	public int getGroupTagsCount(long groupId) {
 		return assetTagPersistence.countByGroupId(groupId);
-	}
-
-	@Override
-	public List<AssetTag> getSocialActivityCounterOffsetTags(
-		long groupId, String socialActivityCounterName, int startOffset,
-		int endOffset) {
-
-		return getSocialActivityCounterPeriodTags(
-			groupId, socialActivityCounterName,
-			SocialCounterPeriodUtil.getStartPeriod(startOffset),
-			SocialCounterPeriodUtil.getEndPeriod(endOffset));
-	}
-
-	@Override
-	public List<AssetTag> getSocialActivityCounterPeriodTags(
-		long groupId, String socialActivityCounterName, int startPeriod,
-		int endPeriod) {
-
-		int periodLength = SocialCounterPeriodUtil.getPeriodLength(
-			SocialCounterPeriodUtil.getOffset(endPeriod));
-
-		return assetTagFinder.findByG_N_S_E(
-			groupId, socialActivityCounterName, startPeriod, endPeriod,
-			periodLength);
 	}
 
 	/**
@@ -498,15 +474,19 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	 */
 	@Override
 	public long[] getTagIds(String name) {
-		List<AssetTag> tags = assetTagPersistence.findByName(_getName(name));
+		return TransformUtil.transformToLongArray(
+			assetTagPersistence.findByName(name),
+			assetTag -> {
+				if (FeatureFlagManagerUtil.isEnabled("LPS-194362")) {
+					if (StringUtil.equals(assetTag.getName(), name)) {
+						return assetTag.getTagId();
+					}
 
-		List<Long> tagIds = new ArrayList<>(tags.size());
+					return null;
+				}
 
-		for (AssetTag tag : tags) {
-			tagIds.add(tag.getTagId());
-		}
-
-		return ArrayUtil.toArray(tagIds.toArray(new Long[0]));
+				return assetTag.getTagId();
+			});
 	}
 
 	/**
@@ -606,11 +586,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		return assetTagFinder.countByG_C_N(groupId, classNameId, name);
 	}
 
-	@Override
-	public int getTagsSize(long groupId, String name) {
-		return assetTagFinder.countByG_N(groupId, name);
-	}
-
 	/**
 	 * Returns <code>true</code> if the group contains an asset tag with the
 	 * name.
@@ -704,7 +679,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		long[] groupIds, String name, int start, int end) {
 
 		return assetTagPersistence.findByG_LikeN(
-			groupIds, _getName(name), start, end, new AssetTagNameComparator());
+			groupIds, name, start, end, new AssetTagNameComparator());
 	}
 
 	@Override

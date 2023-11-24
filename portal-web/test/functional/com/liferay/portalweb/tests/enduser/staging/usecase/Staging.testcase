@@ -7,6 +7,8 @@ definition {
 	property testray.main.component.name = "Staging";
 
 	setUp {
+		var portalURL = PropsUtil.get("portal.url");
+
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
@@ -326,6 +328,55 @@ definition {
 			AssertTextEquals(
 				locator1 = "StagingPublishToLive#SWITCH_TO_SIMPLE_PUBLICATION",
 				value1 = "Switch to Simple Publish Process");
+		}
+	}
+
+	@description = "This is a use case for LPS-190015, TC3. Canceling the multi publishing of several webcontents, stops them process properly and no webcontnts are published."
+	@priority = 3
+	test CanceledMultiPublisDoesNotPublishAnyWebContent {
+		property custom.properties = "feature.flag.LPS-165481=true";
+
+		task ("Activate local live staging") {
+			JSONStaging.enableLocalStaging(groupName = "Site Name");
+		}
+
+		task ("Add web contents") {
+			for (var i : list "1,2,3,4,5") {
+				JSONWebcontent.addWebContent(
+					content = "WC Content ${i}",
+					groupName = "Site Name (Staging)",
+					site = "false",
+					title = "WC Title ${i}");
+			}
+		}
+
+		task ("Cancele publication of all web contents") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
+
+			PortletEntry.selectAll();
+
+			Click(locator1 = "ManagementBar#MORE_ACTIONS_ELLIPSIS");
+
+			MenuItem.click(menuItem = "Publish Selected Elements");
+
+			AssertTextEquals(
+				index = 1,
+				locator1 = "Modal#BODY_MESSAGE",
+				value1 = "Are you sure you want to publish the selected entities?");
+
+			Click(
+				buttonName = "Cancel",
+				locator1 = "Modal#SECONDARY_BUTTON");
+		}
+
+		task ("Assert webcontents are not published") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
+
+			for (var i : list "1,2,3,4,5") {
+				AssertElementNotPresent(
+					key_webContentTitle = "WC Title ${i}",
+					locator1 = "WC#ENTRY_LIST_TITLE_NAME");
+			}
 		}
 	}
 
@@ -1660,6 +1711,92 @@ definition {
 			searchAssetType = "Web Content");
 	}
 
+	@description = "This is a use case for LPS-190015, TC2. Publishing several webcontents from the first page of wcs by multi publish option."
+	@priority = 3
+	test PublishMoreWebContentWithMultiPublishOption {
+		property custom.properties = "feature.flag.LPS-165481=true";
+
+		task ("Activate local live staging") {
+			JSONStaging.enableLocalStaging(groupName = "Site Name");
+		}
+
+		task ("Add web contents") {
+			for (var i : list "1,2,3,4,5") {
+				JSONWebcontent.addWebContent(
+					content = "WC Content ${i}",
+					groupName = "Site Name (Staging)",
+					site = "false",
+					title = "WC Title ${i}");
+			}
+		}
+
+		task ("Publish all web contents from first page") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
+
+			Pagination.changePagination(itemsPerPage = 4);
+
+			PortletEntry.selectAll();
+
+			Staging.publishWithMultiPublishOption();
+		}
+
+		task ("Assert all selected webcontents are published") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
+
+			for (var i : list "2,3,4,5") {
+				AssertElementPresent(
+					key_webContentTitle = "WC Title ${i}",
+					locator1 = "WC#ENTRY_LIST_TITLE_NAME");
+			}
+
+			AssertElementNotPresent(
+				key_webContentTitle = "WC Title 1",
+				locator1 = "WC#ENTRY_LIST_TITLE_NAME");
+		}
+	}
+
+	@description = "This is a use case for LPS-190015, TC1. Publishing a single webcontent by multi publish option."
+	@priority = 3
+	test PublishOneWebContentWithMultiPublishOption {
+		property custom.properties = "feature.flag.LPS-165481=true";
+
+		task ("Activate local live staging") {
+			JSONStaging.enableLocalStaging(groupName = "Site Name");
+		}
+
+		task ("Add web contents") {
+			for (var i : list "1,2") {
+				JSONWebcontent.addWebContent(
+					content = "WC Content ${i}",
+					groupName = "Site Name (Staging)",
+					site = "false",
+					title = "WC Title ${i}");
+			}
+		}
+
+		task ("Publish one web content with multi publish option") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
+
+			Click(
+				content_title = "WC Title 1",
+				locator1 = "Checkbox#ENTRY_BY_TITLE");
+
+			Staging.publishWithMultiPublishOption();
+		}
+
+		task ("Assert web content is published") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
+
+			AssertElementPresent(
+				key_webContentTitle = "WC Title 1",
+				locator1 = "WC#ENTRY_LIST_TITLE_NAME");
+
+			AssertElementNotPresent(
+				key_webContentTitle = "WC Title 2",
+				locator1 = "WC#ENTRY_LIST_TITLE_NAME");
+		}
+	}
+
 	@description = "This is a use case for LPS-91959."
 	@priority = 3
 	test PublishPageDeletions {
@@ -1883,6 +2020,8 @@ definition {
 
 			Portlet.addPG(portletName = "Web Content Display");
 
+			Portlet.viewPG(portletName = "Web Content Display");
+
 			Navigator.gotoStagedSitePage(
 				pageName = "Staging Test Page ${pageCount}",
 				siteName = "Site Name");
@@ -1938,6 +2077,8 @@ definition {
 				siteName = "Site Name");
 
 			Portlet.addPG(portletName = "Asset Publisher");
+
+			Portlet.viewPG(portletName = "Asset Publisher");
 
 			Navigator.gotoStagedSitePage(
 				pageName = "Staging Test Page ${pageCount}",

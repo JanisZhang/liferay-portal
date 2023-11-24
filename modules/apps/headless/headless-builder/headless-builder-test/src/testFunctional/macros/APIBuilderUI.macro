@@ -82,11 +82,7 @@ definition {
 		}
 
 		if (IsElementPresent(locator1 = "APIBuilder#VIEW_RELATED_OBJECTS")) {
-			Click(locator1 = "APIBuilder#VIEW_RELATED_OBJECTS");
-
-			Click(
-				key_componentName = ${relatedObjectName},
-				locator1 = "Panel#PANEL_TITLE");
+			APIBuilderUI.gotoRelatedObjectsProperties(relatedObjectName = ${relatedObjectName});
 
 			Click(
 				key_text = ${relatedFieldName},
@@ -231,11 +227,23 @@ definition {
 	macro createAPISchema(objectDefinitionName = null, name = null) {
 		Variables.assertDefined(parameterList = "${name},${objectDefinitionName}");
 
-		Click(locator1 = "APIBuilder#ADD_NEW_SCHEMA");
+		if (isSet(addByPlus)) {
+			Click(locator1 = "Button#PLUS");
+		}
+		else {
+			Click(locator1 = "APIBuilder#ADD_NEW_SCHEMA");
+		}
 
 		Type(
 			locator1 = "TextInput#NAME",
 			value1 = ${name});
+
+		if (isSet(fieldDescription)) {
+			Type(
+				key_value = "schema",
+				locator1 = "APIBuilder#DESCRIPTION",
+				value1 = ${fieldDescription});
+		}
 
 		Click(locator1 = "APIBuilder#SELECT_AN_OBJECT_DEFINITION");
 
@@ -396,6 +404,17 @@ definition {
 	}
 
 	@summary = "Default summary"
+	macro gotoRelatedObjectsProperties(relatedObjectName = null) {
+		Variables.assertDefined(parameterList = ${relatedObjectName});
+
+		Click(locator1 = "APIBuilder#VIEW_RELATED_OBJECTS");
+
+		Click(
+			key_componentName = ${relatedObjectName},
+			locator1 = "Panel#PANEL_TITLE");
+	}
+
+	@summary = "Default summary"
 	macro publishApplication(key_title = null) {
 		APIBuilderUI.goToEditAPIApplicationPage(key_title = ${key_title});
 
@@ -427,7 +446,9 @@ definition {
 
 		ObjectPortlet.selectCustomObject(label = ${objectDefinition});
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
 		CreateObject.saveObject();
 	}

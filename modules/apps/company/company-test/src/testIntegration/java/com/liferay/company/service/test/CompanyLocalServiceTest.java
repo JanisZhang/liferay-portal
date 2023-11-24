@@ -26,6 +26,7 @@ import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.exception.CompanyMxException;
 import com.liferay.portal.kernel.exception.CompanyNameException;
 import com.liferay.portal.kernel.exception.CompanyVirtualHostException;
@@ -777,6 +778,43 @@ public class CompanyLocalServiceTest {
 	}
 
 	@Test
+	public void testExtractCompany() {
+		if (DBPartition.isPartitionEnabled()) {
+			return;
+		}
+
+		try {
+			_companyLocalService.extractCompany(1L);
+
+			Assert.fail();
+		}
+		catch (Exception exception) {
+			Assert.assertTrue(
+				exception instanceof UnsupportedOperationException);
+		}
+	}
+
+	@Test
+	public void testExtractDefaultCompany() {
+		try {
+			_companyLocalService.extractCompany(
+				PortalInstances.getDefaultCompanyId());
+
+			Assert.fail();
+		}
+		catch (Exception exception) {
+			if (DBPartition.isPartitionEnabled()) {
+				Assert.assertTrue(
+					exception instanceof RequiredCompanyException);
+			}
+			else {
+				Assert.assertTrue(
+					exception instanceof UnsupportedOperationException);
+			}
+		}
+	}
+
+	@Test
 	public void testGetCompanyByVirtualHost() throws Exception {
 		String virtualHostName = "::1";
 
@@ -799,7 +837,6 @@ public class CompanyLocalServiceTest {
 	@Test
 	public void testUpdateCompanyLocales() throws Exception {
 		Company company = addCompany();
-
 		String languageId = "ca_ES";
 
 		try {
@@ -1032,8 +1069,8 @@ public class CompanyLocalServiceTest {
 		deleteClassName(StagedAssetLink.class.getName());
 		deleteClassName(StagedExpandoColumn.class.getName());
 		deleteClassName(StagedExpandoTable.class.getName());
-		deleteClassName(StagedLayoutSet.class.getName());
 		deleteClassName(StagedGroup.class.getName());
+		deleteClassName(StagedLayoutSet.class.getName());
 		deleteClassName(StagedTheme.class.getName());
 	}
 

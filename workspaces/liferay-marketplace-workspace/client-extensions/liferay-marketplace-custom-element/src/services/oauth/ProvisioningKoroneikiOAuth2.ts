@@ -22,13 +22,13 @@ type LicenseTypePayload = {
 		ipAddresses: string;
 		macAddresses: string;
 		orderId: string;
+		productPurchaseKey: string;
 	};
-	productPurchaseKey: string;
 	skuId: number;
 	type: string;
 };
 
-type LicenseKey = {
+export type LicenseKey = {
 	active: boolean;
 	complimentary: boolean;
 	createDate: string;
@@ -38,6 +38,7 @@ type LicenseKey = {
 	id: number;
 	ipAddresses: string;
 	key: string;
+	keyType: string;
 	licenseType: string;
 	macAddresses: string;
 	modifiedDate: string;
@@ -65,6 +66,15 @@ class ProvisioningKoroneikiOAuth2 extends OAuth2Client {
 		);
 
 		return response.json();
+	}
+
+	async deactivateLicenseKey(licenseKey: number) {
+		await this.oAuth2Client.fetch(
+			`/provisioning/license-keys/${licenseKey}/deactivate`,
+			{
+				method: 'POST',
+			}
+		);
 	}
 
 	async getOrderLicenseKeys(

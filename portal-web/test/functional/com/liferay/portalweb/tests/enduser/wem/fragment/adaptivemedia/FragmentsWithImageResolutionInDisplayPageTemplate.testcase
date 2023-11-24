@@ -18,33 +18,6 @@ definition {
 		}
 	}
 
-	tearDown {
-		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
-
-		if (${testLiferayVirtualInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
-
-			Navigator.openSiteURL(siteName = "Guest");
-
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Adaptive Media");
-
-			if (IsElementPresent(key_imageName = "Image Resolution", locator1 = "AdaptiveMediaTable#NAME")) {
-				AdaptiveMedia.disableImageResolution(
-					imageName = "Image Resolution",
-					imageState = "Disabled",
-					percentAdapted = 0);
-
-				AdaptiveMedia.deleteImageResolution(imageName = "Image Resolution");
-			}
-		}
-	}
-
 	@description = "This is a test for LPS-125191. The image resolution is applied to directly selected image in fragment with background image editable field in display page template."
 	@priority = 5
 	@uitest
@@ -52,6 +25,13 @@ definition {
 		property portal.acceptance = "true";
 
 		task ("Add a display page template with Web Content Article and Basic Web Content") {
+			var groupId = JSONGroupSetter.setGroupId(groupName = "Test Site Name");
+
+			DocumentAPI.addDocumentWithFileInSite(
+				dmDocumentTitle = "high_resolution_photo.jpg",
+				siteId = ${groupId},
+				sourceFileName = "high_resolution_photo.jpg");
+
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
@@ -76,17 +56,17 @@ definition {
 			PageEditor.editLayoutContainer(
 				backgroundImage = "Direct",
 				enableLazyLoading = "true",
-				panel = "Styles",
-				uploadFileName = "high_resolution_photo.jpg");
+				entryTitle = "high_resolution_photo.jpg",
+				panel = "Styles");
 
 			PageEditor.viewContainerStyle(backgroundImage = "high_resolution_photo-jpg");
+
+			WaitForElementPresent(
+				key_resolutionLabel = "File Size",
+				locator1 = "PageEditor#IMAGE_RESOLUTION_LABEL");
 		}
 
 		task ("Take down the Width and File Size of image resolution in Desktop viewport") {
-			for (var navTab : list "Advanced,Styles,General,Styles") {
-				Navigator.gotoNavTab(navTab = ${navTab});
-			}
-
 			var fileSizeDesktop = PageEditor.getFileSizeOfSelectedImageResolution();
 			var width = PageEditor.getWidthOfSelectedImageResolution();
 		}
@@ -217,6 +197,13 @@ definition {
 		property portal.acceptance = "true";
 
 		task ("Add a display page template with Web Content Article and Basic Web Content") {
+			var groupId = JSONGroupSetter.setGroupId(groupName = "Test Site Name");
+
+			DocumentAPI.addDocumentWithFileInSite(
+				dmDocumentTitle = "high_resolution_photo.jpg",
+				siteId = ${groupId},
+				sourceFileName = "high_resolution_photo.jpg");
+
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
@@ -240,22 +227,22 @@ definition {
 			PageEditor.editLayoutContainer(
 				backgroundImage = "Direct",
 				enableLazyLoading = "true",
+				entryTitle = "high_resolution_photo.jpg",
 				paddingBottom = 3,
 				paddingTop = 3,
-				panel = "Styles",
-				uploadFileName = "high_resolution_photo.jpg");
+				panel = "Styles");
 
 			PageEditor.viewContainerStyle(
 				backgroundImage = "high_resolution_photo-jpg",
 				paddingBottom = 3,
 				paddingTop = 3);
+
+			WaitForElementPresent(
+				key_resolutionLabel = "File Size",
+				locator1 = "PageEditor#IMAGE_RESOLUTION_LABEL");
 		}
 
 		task ("Take down the Width and File Size of image resolution in Desktop viewport") {
-			for (var navTab : list "Advanced,Styles,General,Styles") {
-				Navigator.gotoNavTab(navTab = ${navTab});
-			}
-
 			var fileSizeDesktop = PageEditor.getFileSizeOfSelectedImageResolution();
 			var width = PageEditor.getWidthOfSelectedImageResolution();
 		}
@@ -394,6 +381,13 @@ definition {
 		property portal.acceptance = "true";
 
 		task ("Add a display page template with Web Content Article and Basic Web Content") {
+			var groupId = JSONGroupSetter.setGroupId(groupName = "Test Site Name");
+
+			DocumentAPI.addDocumentWithFileInSite(
+				dmDocumentTitle = "high_resolution_photo.jpg",
+				siteId = ${groupId},
+				sourceFileName = "high_resolution_photo.jpg");
+
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
@@ -416,21 +410,21 @@ definition {
 
 			PageEditor.editFragmentImage(
 				enableLazyLoading = "true",
-				fileName = "high_resolution_photo.jpg",
 				fragmentName = "Card",
-				id = "01-img");
+				id = "01-img",
+				imageFileName = "high_resolution_photo.jpg");
 
 			PageEditor.viewFragmentEditableImage(
 				id = "01-img",
 				imageDescription = "",
 				imageFileName = "high_resolution_photo-jpg");
+
+			WaitForElementPresent(
+				key_resolutionLabel = "File Size",
+				locator1 = "PageEditor#IMAGE_RESOLUTION_LABEL");
 		}
 
 		task ("Take down the Width and File Size of image resolution in Desktop viewport") {
-			for (var navTab : list "Link,Image Source") {
-				Navigator.gotoNavTab(navTab = ${navTab});
-			}
-
 			var fileSizeDesktop = PageEditor.getFileSizeOfSelectedImageResolution();
 			var width = PageEditor.getWidthOfSelectedImageResolution();
 		}

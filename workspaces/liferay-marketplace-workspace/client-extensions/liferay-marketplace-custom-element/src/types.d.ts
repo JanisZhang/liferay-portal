@@ -108,6 +108,7 @@ type Cart = {
 	cartItems: CartItem[];
 	currencyCode: string;
 	id: number;
+	orderStatusInfo: {[key: string]: string};
 	orderTypeExternalReferenceCode: string;
 	orderTypeId: number;
 	paymentMethod: string;
@@ -174,6 +175,10 @@ type Channel = {
 	name: string;
 	siteGroupId: number;
 	type: string;
+};
+
+type DefaultProperties = {
+	cloudBaseURL: string;
 };
 
 interface CommerceAccount extends Omit<Account, 'description'> {
@@ -257,7 +262,12 @@ interface PlacedOrder {
 interface PlacedOrderItems {
 	id: number;
 	name: string;
+	price: {
+		priceFormatted: string;
+	};
 	productId: number;
+	quantity: number;
+	sku: string;
 	skuId: number;
 	subscription: boolean;
 	thumbnail: string;
@@ -470,6 +480,12 @@ type UserForm = {
 	industry: string;
 	phone: PhonesFlags;
 	phoneNumber: string;
+};
+
+type OfferingType = {
+	description: string;
+	disabled?: boolean;
+	label: string;
 };
 
 type OrderInfo = {

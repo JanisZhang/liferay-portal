@@ -49,8 +49,6 @@ definition {
 
 			DMFolder.tearDownCP();
 
-			DMDocumentType.tearDownCP();
-
 			PagesAdmin.tearDownCP();
 		}
 	}
@@ -59,7 +57,6 @@ definition {
 	@priority = 5
 	test AddExcelSheet {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -106,7 +103,6 @@ definition {
 	@priority = 4
 	test AddOneDriveEntryWithDuplicateFileName {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -179,7 +175,6 @@ definition {
 	@priority = 4
 	test AddOneDriveEntryWithDuplicateTitle {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -252,7 +247,6 @@ definition {
 	@priority = 5
 	test AddPowerPointPresentation {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -298,9 +292,7 @@ definition {
 	@description = "This test ensures that a Word document can be added via the OneDrive editor. "
 	@priority = 5
 	test AddWordDocument {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -347,7 +339,6 @@ definition {
 	@priority = 4
 	test AutoTagWordDocument {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -383,7 +374,6 @@ definition {
 	@priority = 4
 	test CancelCheckoutOnExcelSheet {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -414,7 +404,6 @@ definition {
 	@priority = 4
 	test CancelCheckoutOnWordDocument {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -444,9 +433,7 @@ definition {
 	@description = "This test ensures that a One Drive doc in a depot can be copied from depot to site."
 	@priority = 5
 	test CanCopyWordDocumentFromDepotToSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -493,9 +480,7 @@ definition {
 	@description = "This test ensures that a One Drive doc in a depot can be copied to the another folder."
 	@priority = 5
 	test CanCopyWordDocumentToOtherFolderInDepot {
-		property custom.properties = "feature.flag.LPS-182512=true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -542,9 +527,7 @@ definition {
 	@description = "This test ensures that a One Drive doc in a site can be copied to the other site folder."
 	@priority = 5
 	test CanCopyWordDocumentToOtherSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -584,7 +567,6 @@ definition {
 	@priority = 4
 	test CanEditEntryThroughOneDriveAfterCheckinFromDocumentEditor {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -617,7 +599,6 @@ definition {
 	@priority = 5
 	test DeleteExcelSheet {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -646,7 +627,6 @@ definition {
 	@priority = 5
 	test DeletePowerPointPresentation {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -674,9 +654,7 @@ definition {
 	@description = "This test ensures that a Word document can be deleted."
 	@priority = 5
 	test DeleteWordDocument {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -706,7 +684,6 @@ definition {
 	test DocumentCheckoutIsCanceledAfterLockExpiration {
 		property custom.properties = "lock.expiration.time.com.liferay.document.library.kernel.model.DLFileEntry=90000";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -746,7 +723,6 @@ definition {
 	@priority = 4
 	test EditExcelSheet {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -791,7 +767,6 @@ definition {
 	@priority = 4
 	test EditPowerPointPresentation {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -836,7 +811,6 @@ definition {
 	@priority = 4
 	test EditWordDocument {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 
@@ -886,7 +860,6 @@ definition {
 	@priority = 4
 	test TitleAndFileNameCanBeDisplayedCorrectlyWithJapanese {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
 
 		var num = MathUtil.randomNumber(10);
 

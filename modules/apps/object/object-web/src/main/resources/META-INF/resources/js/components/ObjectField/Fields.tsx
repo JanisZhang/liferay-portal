@@ -16,6 +16,7 @@ import {
 	formatActionURL,
 } from '../../utils/fds';
 import FDSSourceDataRenderer from '../FDSPropsTransformer/FDSSourceDataRenderer';
+import LabelRenderer from '../LabelRenderer';
 import ModalObjectFieldDeletionNotAllowed from '../ModalObjectFieldDeletionNotAllowed';
 import {ModalAddObjectField} from './ModalAddObjectField';
 import {ModalDeleteObjectField} from './ModalDeleteObjectField';
@@ -86,18 +87,15 @@ export default function Fields({
 		openSidePanel,
 		value,
 	}: fdsItem<ItemData>) {
-		const handleEditField = () => {
-			openSidePanel({
-				url: formatActionURL(url, itemData.id),
-			});
-		};
-
 		return (
-			<div className="table-list-title">
-				<a href="#" onClick={handleEditField}>
-					{value}
-				</a>
-			</div>
+			<LabelRenderer
+				onClick={() => {
+					openSidePanel({
+						url: formatActionURL(url, itemData.id),
+					});
+				}}
+				value={value}
+			/>
 		);
 	}
 
@@ -268,7 +266,7 @@ export default function Fields({
 								<Text>
 									{sub(
 										Liferay.Language.get(
-											'x-is-the-only-field-of-the-published-object-definition-and-cannot-be-deleted'
+											'the-object-field-x-cannot-be-deleted-because-it-is-the-only-custom-object-field-of-the-published-object-definition'
 										),
 										`${getLocalizableLabel(
 											creationLanguageId as Liferay.Language.Locale,
@@ -279,8 +277,15 @@ export default function Fields({
 								</Text>
 							) : (
 								<Text>
-									{Liferay.Language.get(
-										'this-field-cannot-be-deleted-because-it-is-used-in-a-unique-composite-key-validation'
+									{sub(
+										Liferay.Language.get(
+											'the-object-field-x-cannot-be-deleted-because-it-is-used-in-a-unique-composite-key-validation'
+										),
+										`${getLocalizableLabel(
+											creationLanguageId as Liferay.Language.Locale,
+											deletedObjectField.label,
+											deletedObjectField.name
+										)}`
 									)}
 								</Text>
 							)

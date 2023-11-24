@@ -18,6 +18,17 @@ interface AddObjectEntryDefinitions {
 	system?: boolean;
 }
 
+interface ObjectActionTriggerExecutorItem {
+	checked?: boolean;
+	description?: string;
+	disabled?: boolean;
+	label: string;
+	name?: string;
+	popover?: {body: string; header: string};
+	type?: string;
+	value?: string;
+}
+
 type DefinitionAction = {
 	href: string;
 	method: string;
@@ -66,9 +77,9 @@ interface LabelNameObject {
 	name: string;
 }
 
-interface LabelValueObject {
+interface LabelValueObject<T = string> {
 	label: string;
-	value: string;
+	value: T;
 }
 
 interface ListTypeDefinition {

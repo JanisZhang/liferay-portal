@@ -1679,7 +1679,7 @@ definition {
 		if (isSet(opacity)) {
 			Type(
 				ariaLabel = "Opacity",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 				value1 = ${opacity});
 
 			Click(
@@ -1752,6 +1752,13 @@ definition {
 				key_fieldLabel = "Success Interaction",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
 				value1 = ${successInteraction});
+
+			if (isSet(displayPage)) {
+				Select(
+					key_fieldLabel = "Display Page",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = ${displayPage});
+			}
 
 			if (isSet(successText)) {
 				Type(
@@ -3653,7 +3660,7 @@ definition {
 			if (isSet(opacity)) {
 				Type(
 					ariaLabel = "Opacity",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 					value1 = ${opacity});
 
 				Click(
@@ -3664,7 +3671,7 @@ definition {
 
 				AssertTextEquals(
 					ariaLabel = "Opacity",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 					value1 = ${opacity});
 			}
 		}
@@ -4007,7 +4014,7 @@ definition {
 			if (isSet(opacity)) {
 				Type(
 					ariaLabel = "Opacity",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 					value1 = ${opacity});
 
 				Click(
@@ -4018,7 +4025,7 @@ definition {
 
 				AssertTextEquals(
 					ariaLabel = "Opacity",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 					value1 = ${opacity});
 			}
 		}
@@ -4839,11 +4846,38 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 
 		Modal.gotoNavTab(navTab = ${navTab});
 
-		Click.waitForMenuToggleJSClick(
+		KeyPress(
 			key_card = ${setName},
-			locator1 = "Card#CARD_ELLIPSIS");
+			locator1 = "Card#CARD_DRAG_ICON",
+			value1 = "\ENTER");
 
-		DropdownMenuItem.click(menuItem = ${action});
+		if (${action} == "Move Up") {
+			KeyPress(
+				key_card = ${setName},
+				locator1 = "Card#CARD_DRAG_ICON",
+				value1 = "\UP");
+
+			KeyPress(
+				key_card = ${setName},
+				locator1 = "Card#CARD_DRAG_ICON",
+				value1 = "\ENTER");
+		}
+		else if (${action} == "Move Down") {
+			KeyPress(
+				key_card = ${setName},
+				locator1 = "Card#CARD_DRAG_ICON",
+				value1 = "\DOWN");
+
+			KeyPress(
+				key_card = ${setName},
+				locator1 = "Card#CARD_DRAG_ICON",
+				value1 = "\DOWN");
+
+			KeyPress(
+				key_card = ${setName},
+				locator1 = "Card#CARD_DRAG_ICON",
+				value1 = "\ENTER");
+		}
 
 		Button.click(button = "Save");
 	}

@@ -13,12 +13,10 @@ import com.liferay.oauth2.provider.rest.spi.bearer.token.provider.BearerTokenPro
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
 import com.liferay.oauth2.provider.util.OAuth2SecureRandomGenerator;
 import com.liferay.osgi.util.configuration.ConfigurationFactoryUtil;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -30,7 +28,7 @@ import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.scim.rest.internal.provider.ScimClientBearerTokenProvider;
-import com.liferay.scim.rest.internal.util.ScimClientUtil;
+import com.liferay.scim.rest.util.ScimClientUtil;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -86,21 +84,6 @@ public class ScimClientOAuth2ApplicationConfigurationFactory {
 					).put(
 						"companyId", companyId.toString()
 					).build());
-
-				JSONObject jsonObject = _jsonFactory.createJSONObject(
-					_localOAuthClient.requestTokens(
-						_oAuth2Application,
-						_userLocalService.getGuestUser(
-							companyId
-						).getUserId()));
-
-				if (_log.isInfoEnabled()) {
-					_log.info(
-						StringBundler.concat(
-							"New access token for SCIM OAuth 2 application ",
-							_oAuth2Application.getName(), " generated: ",
-							jsonObject.getString("access_token")));
-				}
 			});
 	}
 
@@ -139,7 +122,7 @@ public class ScimClientOAuth2ApplicationConfigurationFactory {
 			companyId, PropsValues.DEFAULT_ADMIN_SCREEN_NAME);
 
 		String clientId = ScimClientUtil.generateScimClientId(
-			scimClientOAuth2ApplicationConfiguration.applicationName());
+			scimClientOAuth2ApplicationConfiguration.oAuth2ApplicationName());
 
 		OAuth2Application oAuth2Application =
 			_oAuth2ApplicationLocalService.fetchOAuth2Application(
@@ -154,7 +137,8 @@ public class ScimClientOAuth2ApplicationConfigurationFactory {
 					clientId, ClientProfile.HEADLESS_SERVER.id(),
 					OAuth2SecureRandomGenerator.generateClientSecret(), null,
 					Collections.emptyList(), null, 0, null,
-					scimClientOAuth2ApplicationConfiguration.applicationName(),
+					scimClientOAuth2ApplicationConfiguration.
+						oAuth2ApplicationName(),
 					null, Collections.emptyList(), false, true, null,
 					new ServiceContext());
 

@@ -8,18 +8,27 @@ import {useModal} from '@clayui/modal';
 
 export enum Containers {
 	AcquisitionsCard = 'acquisitionsCardRoot',
+	ActiveIndividualsCard = 'activeIndividualsCardRoot',
 	AssetAppearsOnCard = 'assetAppearsOnCardRoot',
 	AudienceCard = 'audienceCardRoot',
 	CohortAnalysisCard = 'cohortAnalysisCardRoot',
+	CurrentTotalsCard = 'currentTotalsCardRoot',
+	DistributionBreakdownCard = 'distributionBreakdownCardRoot',
 	DownloadsByLocationCard = 'downloadsByLocationCardRoot',
 	DownloadsByTechnologyCard = 'downloadsByTechnologyCardRoot',
+	EnrichedProfilesCard = 'enrichedProfilesCardRoot',
 	InterestsCard = 'interestsCardRoot',
 	SearchTermsCard = 'searchTermsCardRoot',
-	SessionsByLocationCard = 'SessionsByLocationCardRoot',
-	SessionTechnologyCard = 'SessionTechnologyCardRoot',
-	SiteActivityCard = 'SiteActivityCardRoot',
-	SubmissionsByLocationCard = 'SubmissionsByLocationCardRoot',
-	SubmissionsByTechnologyCard = 'SubmissionsByTechnologyCard',
+	SegmentCompositionCard = 'segmentCompositionCardRoot',
+	SegmentCriteriaCard = 'segmentCriteriaCardRoot',
+	SegmentMembershipCard = 'segmentMembershipCardRoot',
+	SessionsByLocationCard = 'sessionsByLocationCardRoot',
+	SessionTechnologyCard = 'sessionTechnologyCardRoot',
+	SiteActivityCard = 'siteActivityCardRoot',
+	SubmissionsByLocationCard = 'submissionsByLocationCardRoot',
+	SubmissionsByTechnologyCard = 'submissionsByTechnologyCardRoot',
+	TopInterestsAsOfYesterdayCard = 'topInterestsAsOfYesterdayCardRoot',
+	TopInterestsCard = 'topInterestsCardRoot',
 	TopPagesCard = 'topPagesCardRoot',
 	ViewsByLocationCard = 'viewsByLocationCardRoot',
 	ViewsByTechnologyCard = 'viewsByTechnologyCardRoot',
@@ -31,6 +40,10 @@ export const CONTAINERS: {[key in Containers]: TContainer} = {
 	[Containers.AcquisitionsCard]: {
 		label: Liferay.Language.get('acquisitions'),
 		layout: 2
+	},
+	[Containers.ActiveIndividualsCard]: {
+		label: Liferay.Language.get('active-individuals'),
+		layout: 1
 	},
 	[Containers.AssetAppearsOnCard]: {
 		label: Liferay.Language.get('asset-appears-on'),
@@ -44,12 +57,24 @@ export const CONTAINERS: {[key in Containers]: TContainer} = {
 		label: Liferay.Language.get('cohort-analysis'),
 		layout: 1
 	},
+	[Containers.CurrentTotalsCard]: {
+		label: Liferay.Language.get('current-totals'),
+		layout: 1
+	},
+	[Containers.DistributionBreakdownCard]: {
+		label: Liferay.Language.get('distribution-breakdown'),
+		layout: 1
+	},
 	[Containers.DownloadsByLocationCard]: {
 		label: Liferay.Language.get('downloads-by-location'),
 		layout: 2
 	},
 	[Containers.DownloadsByTechnologyCard]: {
 		label: Liferay.Language.get('downloads-by-technology'),
+		layout: 2
+	},
+	[Containers.EnrichedProfilesCard]: {
+		label: Liferay.Language.get('enriched-profiles'),
 		layout: 2
 	},
 	[Containers.InterestsCard]: {
@@ -59,6 +84,18 @@ export const CONTAINERS: {[key in Containers]: TContainer} = {
 	[Containers.SearchTermsCard]: {
 		label: Liferay.Language.get('search-terms'),
 		layout: 3
+	},
+	[Containers.SegmentCompositionCard]: {
+		label: Liferay.Language.get('segment-composition'),
+		layout: 2
+	},
+	[Containers.SegmentCriteriaCard]: {
+		label: Liferay.Language.get('segment-criteria'),
+		layout: 2
+	},
+	[Containers.SegmentMembershipCard]: {
+		label: Liferay.Language.get('segment-membership'),
+		layout: 1
 	},
 	[Containers.SessionsByLocationCard]: {
 		label: Liferay.Language.get('sessions-by-location'),
@@ -70,7 +107,7 @@ export const CONTAINERS: {[key in Containers]: TContainer} = {
 	},
 	[Containers.SiteActivityCard]: {
 		label: Liferay.Language.get('site-activity'),
-		layout: 2
+		layout: 1
 	},
 	[Containers.SubmissionsByLocationCard]: {
 		label: Liferay.Language.get('submissions-by-location'),
@@ -79,6 +116,14 @@ export const CONTAINERS: {[key in Containers]: TContainer} = {
 	[Containers.SubmissionsByTechnologyCard]: {
 		label: Liferay.Language.get('submissions-by-technology'),
 		layout: 2
+	},
+	[Containers.TopInterestsCard]: {
+		label: Liferay.Language.get('top-interests'),
+		layout: 2
+	},
+	[Containers.TopInterestsAsOfYesterdayCard]: {
+		label: Liferay.Language.get('top-interests-as-of-yesterday'),
+		layout: 1
 	},
 	[Containers.TopPagesCard]: {
 		label: Liferay.Language.get('top-pages'),
@@ -94,7 +139,7 @@ export const CONTAINERS: {[key in Containers]: TContainer} = {
 	},
 	[Containers.VisitorsBehaviorCard]: {
 		label: Liferay.Language.get('visitors-behavior'),
-		layout: 2
+		layout: 1
 	},
 	[Containers.VisitorsByTimeCard]: {
 		label: Liferay.Language.get('visitors-by-day-and-time'),
@@ -111,6 +156,7 @@ export type TransformedContainer = TContainer & {
 export interface IDownloadReport {
 	disabled: boolean;
 	containers: Containers[];
+	showDateRange?: boolean;
 	subtitle: string;
 	title: string;
 	url?: string;
@@ -120,7 +166,7 @@ type ContainerList = {
 	[key in Containers]: TransformedContainer;
 };
 
-const transformContainers = (containers: Containers[]): ContainerList =>
+export const formatContainers = (containers: Containers[]): ContainerList =>
 	containers.reduce((acc, id) => {
 		acc[id] = {
 			...CONTAINERS[id],
@@ -134,14 +180,15 @@ const transformContainers = (containers: Containers[]): ContainerList =>
 const DownloadPDFReport: React.FC<IDownloadReport> = ({
 	containers: initialContainers,
 	disabled,
+	showDateRange,
 	subtitle,
 	title,
 	url
 }) => {
-	const [loadingReport, setLoadingReport] = useState(false);
+	const [loading, setLoading] = useState(false);
 	const {observer, onOpenChange, open} = useModal();
 	const [containers, setContainers] = useState<ContainerList>(() =>
-		transformContainers(initialContainers)
+		formatContainers(initialContainers)
 	);
 
 	const filteredContainers = useMemo(
@@ -153,7 +200,7 @@ const DownloadPDFReport: React.FC<IDownloadReport> = ({
 		<div className='download-report'>
 			<DownloadReportButton
 				disabled={disabled}
-				loading={loadingReport}
+				loading={loading}
 				onClick={() => onOpenChange(true)}
 			/>
 
@@ -177,20 +224,28 @@ const DownloadPDFReport: React.FC<IDownloadReport> = ({
 					observer={observer}
 					onClose={() => onOpenChange(false)}
 					onSubmit={() => {
-						setLoadingReport(true);
+						setLoading(true);
 
-						generateReport({
-							containers: filteredContainers,
-							subtitle,
-							title,
-							url
-						}).then(() => {
-							setContainers(
-								transformContainers(initialContainers)
-							);
-							setLoadingReport(false);
-						});
+						/**
+						 * It is necessary to have timeout of 1000ms to wait chart
+						 * animation be loaded before generate the report
+						 */
+
+						setTimeout(() => {
+							generateReport({
+								containers: filteredContainers,
+								subtitle,
+								title,
+								url
+							}).then(() => {
+								setContainers(
+									formatContainers(initialContainers)
+								);
+								setLoading(false);
+							});
+						}, 1000);
 					}}
+					showDateRange={showDateRange}
 				>
 					<ClayForm.Group>
 						<label>{Liferay.Language.get('select-reports')}</label>

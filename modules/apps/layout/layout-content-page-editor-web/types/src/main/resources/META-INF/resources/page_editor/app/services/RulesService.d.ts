@@ -5,6 +5,7 @@
 
 import {Action} from '../../plugins/page_rules/components/Action';
 import {Condition} from '../../plugins/page_rules/components/Condition';
+import {ConditionType} from '../../plugins/page_rules/components/RuleBuilderSection';
 import {LayoutData} from '../../types/layout_data/LayoutData';
 import updateNetwork from '../actions/updateNetwork';
 
@@ -13,6 +14,7 @@ import updateNetwork from '../actions/updateNetwork';
  */
 declare type AddRuleProps = {
 	actions: Action[];
+	conditionType: ConditionType;
 	conditions: Condition[];
 	name: string;
 	onNetworkStatus: (action: ReturnType<typeof updateNetwork>) => void;
@@ -20,6 +22,7 @@ declare type AddRuleProps = {
 };
 declare function addRule({
 	actions,
+	conditionType,
 	conditions,
 	name,
 	onNetworkStatus,
@@ -46,6 +49,16 @@ declare function deleteRule({
 }>;
 
 /**
+ * Get roles
+ */
+declare function getRoles(): Promise<
+	Array<{
+		name: string;
+		roleId: string;
+	}>
+>;
+
+/**
  * Get users
  */
 declare function getUsers(): Promise<
@@ -60,6 +73,7 @@ declare function getUsers(): Promise<
  */
 declare type UpdateRuleProps = {
 	actions: Action[];
+	conditionType: ConditionType;
 	conditions: Condition[];
 	name: string;
 	onNetworkStatus: (action: ReturnType<typeof updateNetwork>) => void;
@@ -68,6 +82,7 @@ declare type UpdateRuleProps = {
 };
 declare function updateRule({
 	actions,
+	conditionType,
 	conditions,
 	name,
 	onNetworkStatus,
@@ -79,6 +94,7 @@ declare function updateRule({
 declare const _default: {
 	addRule: typeof addRule;
 	deleteRule: typeof deleteRule;
+	getRoles: typeof getRoles;
 	getUsers: typeof getUsers;
 	updateRule: typeof updateRule;
 };

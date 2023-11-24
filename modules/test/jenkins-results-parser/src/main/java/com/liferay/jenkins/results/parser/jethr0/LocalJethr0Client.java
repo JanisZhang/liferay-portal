@@ -18,6 +18,8 @@ public class LocalJethr0Client extends BaseJethr0Client {
 		super(jenkinsMaster);
 
 		_jmsBrokerURL = getBuildPropertyString("jethr0.jms.broker.url");
+		_jmsGitHubToJethr0QueueName = getBuildPropertyString(
+			"jethr0.jms.github.jethr0.queue.name");
 		_jmsJethr0ToJRPQueueName = getBuildPropertyString(
 			"jethr0.jms.jethr0.jrp.queue.name");
 		_jmsJRPToJethr0QueueName = getBuildPropertyString(
@@ -37,6 +39,11 @@ public class LocalJethr0Client extends BaseJethr0Client {
 	@Override
 	protected String getJMSBrokerURL() {
 		return _jmsBrokerURL;
+	}
+
+	@Override
+	protected String getJMSGitHubToJethr0QueueName() {
+		return _jmsGitHubToJethr0QueueName;
 	}
 
 	@Override
@@ -80,6 +87,7 @@ public class LocalJethr0Client extends BaseJethr0Client {
 	}
 
 	private final String _jmsBrokerURL;
+	private final String _jmsGitHubToJethr0QueueName;
 	private final String _jmsJethr0ToJRPQueueName;
 	private final String _jmsJRPToJethr0QueueName;
 	private final String _jmsUserName;

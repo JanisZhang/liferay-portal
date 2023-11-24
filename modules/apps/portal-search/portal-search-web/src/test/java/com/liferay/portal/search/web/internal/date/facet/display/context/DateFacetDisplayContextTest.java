@@ -27,6 +27,7 @@ import com.liferay.portal.search.web.internal.BaseFacetDisplayContextTestCase;
 import com.liferay.portal.search.web.internal.date.facet.configuration.DateFacetPortletInstanceConfiguration;
 import com.liferay.portal.search.web.internal.date.facet.display.context.builder.DateFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.facet.display.context.BucketDisplayContext;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.List;
@@ -42,6 +43,7 @@ import org.mockito.Mockito;
 /**
  * @author Petteri Karttunen
  */
+@FeatureFlags("LPS-153839")
 public class DateFacetDisplayContextTest
 	extends BaseFacetDisplayContextTestCase {
 

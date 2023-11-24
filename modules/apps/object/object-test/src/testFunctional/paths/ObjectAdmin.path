@@ -122,7 +122,7 @@
 	</tr>
 	<tr>
 		<td>ENTRY_CHOOSE_OPTION</td>
-		<td>//div[contains(text(),'Choose an Option') or contains(text(),'Escolha uma Opção')]</td>
+		<td>//button[contains(text(),'Choose an Option') or contains(text(),'Escolha uma Opção')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -291,8 +291,8 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>RELATIONSHIPS_TYPE_DESCRIPTION</td>
-		<td>//div[text() = '${key_type}']/..//span[@class = 'text-small']</td>
+		<td>FIELD_DESCRIPTION</td>
+		<td>//span[contains(.,'${key_fieldLabel}')]//following-sibling::span[contains(.,'${key_descriptionLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -627,7 +627,7 @@
 	</tr>
 	<tr>
 		<td>CLAY_GENERIC_BUTTON</td>
-		<td>//div[contains(@class,'form-group') and contains(label,'${key_labelName}')]//..//div[contains(button,'${key_currentOption}') or contains(span,'${key_currentOption}')]</td>
+		<td>//div[contains(@class,'form-group')][.//label[normalize-space(text())='${key_labelName}']]//button[@role='combobox']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -641,14 +641,19 @@
 		<td></td>
 	</tr>
 	<tr>
-	<td>SELECT_MOVE_FOLDER</td>
+		<td>SELECT_MOVE_FOLDER</td>
 		<td>//span[contains(@class,'move-object-definition-list-item-label') and contains(text(),'${key_folderLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>GO_TO_FOLDER</td>
 		<td>//div[contains(@class, 'autofit-col-expand') and contains(., 'key_folderName')]//*[contains(@title, 'Go to Folder')]</td>
-	<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CLAY_MULTI_SELECT_INPUT</td>
+		<td>//label[contains(.,'${key_labelName}')]//..//div[contains(@class,'input-group-item')]//input</td>
+		<td></td>
 	</tr>
 </tbody>
 </table>

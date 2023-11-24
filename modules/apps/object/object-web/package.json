@@ -2,6 +2,7 @@
 	"dependencies": {
 		"@clayui/alert": "3.106.1",
 		"@clayui/button": "3.106.1",
+		"@clayui/card": "3.106.1",
 		"@clayui/core": "3.106.1",
 		"@clayui/drop-down": "3.106.1",
 		"@clayui/empty-state": "3.106.1",
@@ -31,7 +32,7 @@
 			"<rootDir>/jest-setup.config.js"
 		],
 		"testMatch": [
-			"<rootDir>/src/main/resources/META-INF/resources/js/tests/*.tsx"
+			"<rootDir>/src/main/resources/META-INF/resources/js/tests/**/*.spec.tsx"
 		]
 	},
 	"main": "index.js",
@@ -43,5 +44,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "1.0.188"
+	"version": "1.0.190"
 }

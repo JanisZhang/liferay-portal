@@ -669,10 +669,9 @@ public class Main {
 		HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
 
 		try (CloseableHttpClient closeableHttpClient =
-				httpClientBuilder.build()) {
-
+				httpClientBuilder.build();
 			CloseableHttpResponse closeableHttpResponse =
-				closeableHttpClient.execute(httpPost);
+				closeableHttpClient.execute(httpPost)) {
 
 			StatusLine statusLine = closeableHttpResponse.getStatusLine();
 
@@ -1070,8 +1069,7 @@ public class Main {
 		_dataDefinitionResource = dataDefinitionResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 
 		SiteResource.Builder siteResourceBuilder = SiteResource.builder();
@@ -1079,8 +1077,7 @@ public class Main {
 		_siteResource = siteResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 
 		StructuredContentFolderResource.Builder
@@ -1091,8 +1088,7 @@ public class Main {
 			structuredContentFolderResourceBuilder.header(
 				"Authorization", authorization
 			).endpoint(
-				_liferayURL.getHost(), _liferayURL.getPort(),
-				_liferayURL.getProtocol()
+				_liferayURL
 			).build();
 
 		StructuredContentResource.Builder structuredContentResourceBuilder =
@@ -1101,8 +1097,7 @@ public class Main {
 		_structuredContentResource = structuredContentResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 
 		TaxonomyCategoryResource.Builder taxonomyCategoryResourceBuilder =
@@ -1111,8 +1106,7 @@ public class Main {
 		_taxonomyCategoryResource = taxonomyCategoryResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 
 		TaxonomyVocabularyResource.Builder taxonomyVocabularyResourceBuilder =
@@ -1121,8 +1115,7 @@ public class Main {
 		_taxonomyVocabularyResource = taxonomyVocabularyResourceBuilder.header(
 			"Authorization", authorization
 		).endpoint(
-			_liferayURL.getHost(), _liferayURL.getPort(),
-			_liferayURL.getProtocol()
+			_liferayURL
 		).build();
 	}
 

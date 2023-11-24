@@ -642,7 +642,7 @@ definition {
 		task ("Open Content Performance panel") {
 			PageAudit.openPageAuditSidebar();
 
-			AssertVisible(locator1 = "PageAudit#SIDEBAR");
+			AssertElementPresent(locator1 = "PageAudit#SIDEBAR");
 		}
 
 		task ("Logout and login") {
@@ -652,7 +652,7 @@ definition {
 		}
 
 		task ("Check if panel is closed") {
-			AssertNotVisible(locator1 = "PageAudit#SIDEBAR");
+			AssertElementNotPresent(locator1 = "PageAudit#SIDEBAR");
 		}
 	}
 
@@ -1294,6 +1294,46 @@ definition {
 				failingCheckCategory = "SEO",
 				failingCheckName = "Missing <title> Element",
 				locator1 = "PageAudit#FAILING_CHECK_CATEGORY_NAME");
+		}
+	}
+
+	@description = "This is a test for LPS-198257. View the Experience Selector on the Page Audit is on the Performance Tab."
+	@priority = 3
+	test SwitchExperienceOnPageAudit {
+		property custom.properties = "feature.flag.LPS-187284=true${line.separator}feature.flag.LPS-187285=true";
+
+		task ("Given a content page with an experience") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page",
+				siteName = "Test Site Name");
+
+			PageEditor.addExperience(
+				experienceName = "Experience",
+				segmentName = "Anyone");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditor.publish();
+		}
+
+		task ("When accessing the page audit performance tab") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page",
+				siteName = "Test Site Name");
+
+			PageEditor.viewFragmentNotPresent(fragmentName = "Button");
+
+			PageAudit.openPageAuditSidebar();
+		}
+
+		task ("Then it is possible to select the experience through the performance tab") {
+			Click(locator1 = "PageAudit#PAGE_AUDIT_EXPERIENCE_SELECTOR");
+
+			MenuItem.click(menuItem = "Experience");
+
+			PageEditor.viewFragmentNotPresent(fragmentName = "Button");
 		}
 	}
 

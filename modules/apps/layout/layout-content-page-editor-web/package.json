@@ -25,6 +25,7 @@
 		"@clayui/tabs": "3.106.1",
 		"@clayui/toolbar": "3.106.1",
 		"@clayui/tooltip": "3.106.1",
+		"@liferay/cookies-banner-web": "*",
 		"@liferay/frontend-icons-web": "*",
 		"@liferay/frontend-js-react-web": "*",
 		"@liferay/layout-js-components-web": "*",
@@ -56,5 +57,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "3.0.185"
+	"version": "3.0.186"
 }

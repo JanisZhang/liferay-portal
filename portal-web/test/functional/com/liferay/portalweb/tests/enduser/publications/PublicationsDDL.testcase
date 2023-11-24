@@ -125,7 +125,7 @@ definition {
 			changeTitle = "New Data Definition for List: List Name",
 			changeType = "Deleted",
 			changeUser = "Test Test",
-			showAllItems = "true");
+			showSystemChanges = "true");
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Dynamic Data Lists Record",
@@ -604,12 +604,11 @@ definition {
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Asset",
-			changeOrder = 6,
 			changeSite = "Site Name",
 			changeTitle = "New Data Definition for List: List Name",
 			changeType = "Added",
 			changeUser = "Test Test",
-			showAllItems = "true");
+			showSystemChanges = "true");
 
 		var changeTitle = JSONDDL.getRecordId(
 			ddlListName = "List Name",

@@ -160,9 +160,9 @@ definition {
 
 			ObjectPortlet.viewEntryDetails(entry = "Entry Test");
 
-			ObjectAdmin.changePicklistFieldEntry(
-				entrySelected = "Choose an Option",
-				newPicklistOption = "Open");
+			ObjectAdmin.selectDropdownItem(
+				labelName = "Custom Picklist Field",
+				optionName = "Open");
 
 			PortletEntry.save();
 		}
@@ -172,9 +172,9 @@ definition {
 
 			ObjectPortlet.viewEntryDetails(entry = "Open");
 
-			ObjectAdmin.changePicklistFieldEntry(
-				entrySelected = "Open",
-				newPicklistOption = "In Progress");
+			ObjectAdmin.selectDropdownItem(
+				labelName = "Custom Picklist Field",
+				optionName = "In Progress");
 
 			PortletEntry.save();
 		}
@@ -887,7 +887,9 @@ definition {
 		task ("When an entry is created") {
 			ObjectAdmin.goToCustomObject(objectName = "CustomObject175196");
 
-			ObjectAdmin.addObjectPicklistFieldEntryViaUI(picklistOption = "Open");
+			ObjectAdmin.addObjectPicklistFieldEntryViaUI(
+				labelName = "Custom Picklist Field",
+				picklistOption = "Open");
 		}
 
 		task ("Then the validation condition is met and the entry can be updated") {
@@ -895,9 +897,9 @@ definition {
 
 			ObjectPortlet.viewEntryDetails(entry = "Open");
 
-			ObjectAdmin.changePicklistFieldEntry(
-				entrySelected = "Open",
-				newPicklistOption = "In Progress");
+			ObjectAdmin.selectDropdownItem(
+				labelName = "Custom Picklist Field",
+				optionName = "In Progress");
 
 			PortletEntry.save();
 

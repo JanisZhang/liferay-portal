@@ -1,17 +1,17 @@
 import * as breadcrumbs from 'shared/util/breadcrumbs';
 import BasePage from 'shared/components/base-page';
 import BundleRouter from 'route-middleware/BundleRouter';
+import DownloadCSVReport from 'shared/components/download-report/DownloadCSVReport';
 import DownloadPDFReport, {
 	Containers
 } from 'shared/components/download-report/DownloadPDFReport';
 import DropdownRangeKey from 'shared/hoc/DropdownRangeKey';
-import Filter from '../hocs/Filter';
+import FilterBySegment from '../components/FilterBySegment';
 import getCN from 'classnames';
 import Loading from 'shared/components/Loading';
 import React, {lazy, Suspense, useEffect, useState} from 'react';
 import RouteNotFound from 'shared/components/RouteNotFound';
 import TextTruncate from 'shared/components/TextTruncate';
-import {ENABLE_GLOBAL_FILTER} from 'shared/util/constants';
 import {getMatchedRoute, Routes} from 'shared/util/router';
 import {getRangeSelectorsFromQuery} from 'shared/util/util';
 import {pickBy} from 'lodash';
@@ -31,7 +31,7 @@ const TouchpointOverviewPage = lazy(() =>
 	)
 );
 const TouchpointPathPage = lazy(() =>
-	import(/* webpackChunkName: "TouchpointPathPage" */ './TouchpointPathPage')
+	import(/* webpackChunkName: "TouchpointPathPage" */ './PagePath')
 );
 
 const NAV_ITEMS = [
@@ -56,7 +56,6 @@ function TouchpointRoutes({className, router}) {
 	const dataSourceStates = useDataSource();
 	const rangeSelectors = getRangeSelectorsFromQuery(router.query);
 	const {channelId, groupId, title, touchpoint} = router.params;
-	const [filters, setFilters] = useState({});
 	const [pathRangeSelectors, setPathRangeSelectors] = useState(
 		rangeSelectors
 	);
@@ -64,6 +63,7 @@ function TouchpointRoutes({className, router}) {
 	const matchedRoute = getMatchedRoute(NAV_ITEMS);
 	const decodedTitle = decodeURIComponent(title);
 	const decodedTouchpoint = decodeURIComponent(touchpoint);
+	const [selectedSegment, setSelectedSegment] = useState({});
 
 	useEffect(() => {
 		setPathRangeSelectors(rangeSelectors);
@@ -131,17 +131,28 @@ function TouchpointRoutes({className, router}) {
 				</BasePage.SubHeader>
 			)}
 
+			{matchedRoute === Routes.SITES_TOUCHPOINTS_KNOWN_INDIVIDUALS && (
+				<BasePage.SubHeader>
+					<div className='d-flex justify-content-end w-100'>
+						<DownloadCSVReport
+							assetId={decodedTouchpoint}
+							assetType='page'
+							disabled={dataSourceStates.empty}
+							type='individual'
+						/>
+					</div>
+				</BasePage.SubHeader>
+			)}
+
 			<BasePage.Context.Provider
 				value={{
-					filters,
+					filters: {},
 					router
 				}}
 			>
 				{matchedRoute === Routes.SITES_TOUCHPOINTS_PATH && (
 					<BasePage.SubHeader>
-						{ENABLE_GLOBAL_FILTER && (
-							<Filter onChange={setFilters} router={router} />
-						)}
+						<FilterBySegment onFilterChange={setSelectedSegment} />
 
 						<DropdownRangeKey
 							legacy={false}
@@ -172,7 +183,8 @@ function TouchpointRoutes({className, router}) {
 
 							<BundleRouter
 								componentProps={{
-									pathRangeSelectors
+									rangeSelectors: pathRangeSelectors,
+									selectedSegment
 								}}
 								data={TouchpointPathPage}
 								destructured={false}

@@ -5,28 +5,17 @@
 
 package com.liferay.analytics.machine.learning.internal.dispatch.executor;
 
-import com.liferay.analytics.batch.exportimport.manager.AnalyticsBatchExportImportManager;
 import com.liferay.analytics.dxp.entity.rest.dto.v1_0.AnalyticsUserContentRecommendation;
-import com.liferay.dispatch.executor.BaseDispatchTaskExecutor;
 import com.liferay.dispatch.executor.DispatchTaskExecutor;
 import com.liferay.dispatch.executor.DispatchTaskExecutorOutput;
 import com.liferay.dispatch.executor.DispatchTaskStatus;
 import com.liferay.dispatch.model.DispatchLog;
 import com.liferay.dispatch.model.DispatchTrigger;
-import com.liferay.dispatch.service.DispatchLogLocalService;
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 import java.util.Date;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Riccardo Ferrari
@@ -39,7 +28,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = DispatchTaskExecutor.class
 )
 public class AnalyticsDownloadUserContentRecommendationDispatchTaskExecutor
-	extends BaseDispatchTaskExecutor {
+	extends BaseRecommendationDispatchTaskExecutor {
 
 	public static final String KEY =
 		"analytics-download-user-content-recommendation";
@@ -51,14 +40,14 @@ public class AnalyticsDownloadUserContentRecommendationDispatchTaskExecutor
 		throws Exception {
 
 		DispatchLog dispatchLog =
-			_dispatchLogLocalService.fetchLatestDispatchLog(
+			dispatchLogLocalService.fetchLatestDispatchLog(
 				dispatchTrigger.getDispatchTriggerId(),
 				DispatchTaskStatus.IN_PROGRESS);
 
-		Date resourceLastModifiedDate = _getLatestSuccessfulDispatchLogEndDate(
+		Date resourceLastModifiedDate = getLatestSuccessfulDispatchLogEndDate(
 			dispatchTrigger.getDispatchTriggerId());
 
-		_analyticsBatchExportImportManager.importFromAnalyticsCloud(
+		analyticsBatchExportImportManager.importFromAnalyticsCloud(
 			null, dispatchLog.getCompanyId(),
 			HashMapBuilder.put(
 				"assetCategoryIds", "assetCategoryIds"
@@ -73,7 +62,7 @@ public class AnalyticsDownloadUserContentRecommendationDispatchTaskExecutor
 			).put(
 				"score", "score"
 			).build(),
-			message -> _updateDispatchLog(
+			message -> updateDispatchLog(
 				dispatchLog.getDispatchLogId(), dispatchTaskExecutorOutput,
 				message),
 			resourceLastModifiedDate,
@@ -85,59 +74,5 @@ public class AnalyticsDownloadUserContentRecommendationDispatchTaskExecutor
 	public String getName() {
 		return KEY;
 	}
-
-	@Override
-	public boolean isHiddenInUI() {
-		return !FeatureFlagManagerUtil.isEnabled("LRAC-14771");
-	}
-
-	private Date _getLatestSuccessfulDispatchLogEndDate(
-		long dispatchTriggerId) {
-
-		DispatchLog dispatchLog =
-			_dispatchLogLocalService.fetchLatestDispatchLog(
-				dispatchTriggerId, DispatchTaskStatus.SUCCESSFUL);
-
-		if (dispatchLog != null) {
-			return dispatchLog.getEndDate();
-		}
-
-		return null;
-	}
-
-	private void _updateDispatchLog(
-			long dispatchLogId,
-			DispatchTaskExecutorOutput dispatchTaskExecutorOutput,
-			String message)
-		throws PortalException {
-
-		StringBundler sb = new StringBundler(5);
-
-		if (dispatchTaskExecutorOutput.getOutput() != null) {
-			sb.append(dispatchTaskExecutorOutput.getOutput());
-		}
-
-		sb.append(_dateFormat.format(new Date()));
-		sb.append(StringPool.SPACE);
-		sb.append(message);
-		sb.append(StringPool.NEW_LINE);
-
-		dispatchTaskExecutorOutput.setOutput(sb.toString());
-
-		_dispatchLogLocalService.updateDispatchLog(
-			dispatchLogId, new Date(), dispatchTaskExecutorOutput.getError(),
-			dispatchTaskExecutorOutput.getOutput(),
-			DispatchTaskStatus.IN_PROGRESS);
-	}
-
-	private static final DateFormat _dateFormat = new SimpleDateFormat(
-		"yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-
-	@Reference
-	private AnalyticsBatchExportImportManager
-		_analyticsBatchExportImportManager;
-
-	@Reference
-	private DispatchLogLocalService _dispatchLogLocalService;
 
 }

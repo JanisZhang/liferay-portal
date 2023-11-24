@@ -85,7 +85,7 @@ export declare type TAction =
 				objectFolders: ObjectFolder[];
 				rightSidebarType?: RightSidebarType;
 				selectedObjectFolder: ObjectFolder;
-				selectedObjectRelationshipEdgeId?: number;
+				selectedObjectRelationshipId?: number;
 			};
 			type: TYPES.UPDATE_MODEL_BUILDER_STRUCTURE;
 	  }
@@ -126,6 +126,7 @@ export declare type TAction =
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
 				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
 				updatedObjectDefinitionNodeId: number;
+				updatedObjectFolder: ObjectFolder;
 			};
 			type: TYPES.SET_SELECTED_OBJECT_DEFINITION_NODE_POSITION;
 	  }
@@ -141,8 +142,6 @@ export declare type TAction =
 	  }
 	| {
 			payload: {
-				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges?: Edge<ObjectRelationshipEdgeData>[];
 				selectedObjectRelationshipId: number;
 			};
 			type: TYPES.SET_SELECTED_OBJECT_RELATIONSHIP_EDGE;
@@ -204,7 +203,7 @@ export declare type TState = {
 	selectedObjectRelationship?: Edge<ObjectRelationshipEdgeData>;
 	showChangesSaved: boolean;
 	showSidebars: boolean;
-	workflowStatusJSONArray: LabelValueObject[];
+	workflowStatuses: LabelValueObject[];
 };
 export interface LeftSidebarItem {
 	hiddenObjectFolderObjectDefinitionNodes: boolean;

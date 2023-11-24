@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ClayButtonWithIcon} from '@clayui/button';
 import ClayTable from '@clayui/table';
 import {ReactNode} from 'react';
 
 import './Table.scss';
 
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
+import classNames from 'classnames';
 
 type TableProps<T = any> = {
+	Actions?: React.FC<{row: T}>;
 	className?: string;
 	columns: TableColumn<T>[];
 	hasKebabButton?: boolean;
@@ -48,11 +49,12 @@ type PaginationProps = {
 };
 
 const Table: React.FC<TableProps> = ({
+	Actions,
 	className,
 	columns,
 	hasKebabButton,
 	hasPagination,
-	onClickRow = () => {},
+	onClickRow,
 	paginationProps,
 	rows,
 }) => {
@@ -79,7 +81,13 @@ const Table: React.FC<TableProps> = ({
 
 				<ClayTable.Body className="table-body">
 					{rows.map((row, rowIndex) => (
-						<ClayTable.Row key={row.id || rowIndex}>
+						<ClayTable.Row
+							className={classNames({
+								'cursor-pointer':
+									typeof onClickRow === 'function',
+							})}
+							key={row.id || rowIndex}
+						>
 							{columns.map((column, columnIndex) => {
 								const data = row[column.key];
 
@@ -101,7 +109,9 @@ const Table: React.FC<TableProps> = ({
 										key={`${rowIndex}-${columnIndex}`}
 										noWrap={column.noWrap}
 										onClick={() => {
-											onClickRow(row);
+											if (onClickRow) {
+												onClickRow(row);
+											}
 										}}
 										truncate={column.truncate}
 									>
@@ -115,12 +125,7 @@ const Table: React.FC<TableProps> = ({
 									className="border-0"
 									columnTextAlignment="center"
 								>
-									<ClayButtonWithIcon
-										aria-label="Menu"
-										displayType={null}
-										symbol="ellipsis-v"
-										title="Menu"
-									/>
+									{Actions && <Actions row={row} />}
 								</ClayTable.Cell>
 							)}
 						</ClayTable.Row>

@@ -1,25 +1,33 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {DownloadReportButton} from './DownloadReportButton';
-import {DownloadReportModal} from './DownloadReportModal';
+import {DownloadReportModal, ReportType} from './DownloadReportModal';
 import {sub} from 'shared/util/lang';
 import {toLocale} from 'shared/util/numbers';
+import {useDownloadCSV} from './utils';
 import {useModal} from '@clayui/modal';
 
 export interface IDownloadReport {
+	assetId?: string;
+	assetType?: string;
 	disabled: boolean;
-	subtitle: string;
-	title: string;
+	infoMessage: string;
+	type: string;
 }
 
-const DownloadCSVReport: React.FC<IDownloadReport> = ({disabled}) => {
+const DownloadCSVReport: React.FC<IDownloadReport> = ({
+	assetId,
+	assetType,
+	disabled,
+	infoMessage,
+	type
+}) => {
+	const {onClick} = useDownloadCSV({assetId, assetType, type});
 	const {observer, onOpenChange, open} = useModal();
-	const [loading, setLoading] = useState(false);
 
 	return (
 		<div className='download-report'>
 			<DownloadReportButton
 				disabled={disabled}
-				loading={loading}
 				onClick={() => onOpenChange(true)}
 			/>
 
@@ -41,20 +49,12 @@ const DownloadCSVReport: React.FC<IDownloadReport> = ({disabled}) => {
 							[toLocale(10000)]
 						) as string
 					}
-					infoMessage={Liferay.Language.get(
-						'the-individuals-list-will-be-downloaded-respecting-the-current-ordering,-filter,-and-search-results.-please-verify-if-the-desired-changes-are-applied'
-					)}
+					infoMessage={infoMessage}
 					observer={observer}
 					onClose={() => onOpenChange(false)}
-					onSubmit={() => {
-						setLoading(true);
-
-						// TEMP - Implement CSV request
-
-						setTimeout(() => {
-							setLoading(false);
-						}, 1000);
-					}}
+					onSubmit={onClick}
+					requiredDateRange
+					type={ReportType.CSV}
 				/>
 			)}
 		</div>

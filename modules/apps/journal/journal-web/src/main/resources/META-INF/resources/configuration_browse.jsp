@@ -23,12 +23,20 @@ portletDisplay.setURLBack(journalConfigurationDisplayContext.getBackURL());
 		<clay:col
 			lg="3"
 		>
-			<p class="small text-uppercase">
+			<p class="c-mb-1 sheet-tertiary-title text-2 text-secondary">
+				<liferay-ui:message key="settings" />
+			</p>
+
+			<clay:vertical-nav
+				verticalNavItems="<%= journalConfigurationDisplayContext.getSettingsVerticalNavItemList() %>"
+			/>
+
+			<p class="c-mb-1 sheet-tertiary-title text-2 text-secondary">
 				<liferay-ui:message key="notifications" />
 			</p>
 
 			<clay:vertical-nav
-				verticalNavItems="<%= journalConfigurationDisplayContext.getVerticalNavItemList() %>"
+				verticalNavItems="<%= journalConfigurationDisplayContext.getNotificationsVerticalNavItemList() %>"
 			/>
 		</clay:col>
 
@@ -55,7 +63,7 @@ portletDisplay.setURLBack(journalConfigurationDisplayContext.getBackURL());
 							verticalAlign="center"
 						>
 							<clay:content-col>
-								<liferay-ui:message key="email" />
+								<%= journalConfigurationDisplayContext.getSubtitle() %>
 							</clay:content-col>
 						</clay:content-row>
 					</h2>
@@ -83,6 +91,24 @@ portletDisplay.setURLBack(journalConfigurationDisplayContext.getBackURL());
 					<liferay-ui:error embed="<%= false %>" key="emailArticleUpdatedSubject" message="please-enter-a-valid-subject" />
 
 					<c:choose>
+						<c:when test='<%= Objects.equals(journalConfigurationDisplayContext.getNavigation(), "structures") %>'>
+							<div>
+								<div class="inline-item my-5 p-5 w-100">
+									<span aria-hidden="true" class="loading-animation"></span>
+								</div>
+
+								<react:component
+									module="js/configuration_browse/HighlightedDDMStructuresConfiguration"
+									props='<%=
+										HashMapBuilder.<String, Object>put(
+											"ddmStructures", journalDisplayContext.getHighlightedDDMStructuresJSONArray()
+										).put(
+											"selectDDMStructureURL", journalConfigurationDisplayContext.getSelectDDMStructureURL()
+										).build()
+									%>'
+								/>
+							</div>
+						</c:when>
 						<c:when test='<%= Objects.equals(journalConfigurationDisplayContext.getNavigation(), "web-content-added") %>'>
 							<div class="c-px-1">
 								<liferay-frontend:email-notification-settings
