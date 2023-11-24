@@ -184,8 +184,16 @@ public class PortletBagImpl implements PortletBag {
 
 	@Override
 	public ResourceBundle getResourceBundle(Locale locale) {
+		Snapshot<ResourceBundleLoader> resourceBundleLoaderSnapshot =
+			new Snapshot<>(
+				PortletBagImpl.class, ResourceBundleLoader.class,
+				StringBundler.concat(
+					"(resource.bundle.base.name=", getResourceBundleBaseName(),
+					")(servlet.context.name=",
+					_servletContext.getServletContextName(), ")"));
+
 		ResourceBundleLoader resourceBundleLoader =
-			_resourceBundleLoaderSnapshot.get();
+			resourceBundleLoaderSnapshot.get();
 
 		if (resourceBundleLoader == null) {
 			resourceBundleLoader =
@@ -305,13 +313,6 @@ public class PortletBagImpl implements PortletBag {
 	private Portlet _portletInstance;
 	private String _portletName;
 	private final String _resourceBundleBaseName;
-	private final Snapshot<ResourceBundleLoader> _resourceBundleLoaderSnapshot =
-		new Snapshot<>(
-			PortletBagImpl.class, ResourceBundleLoader.class,
-			StringBundler.concat(
-				"(resource.bundle.base.name=", getResourceBundleBaseName(),
-				")(servlet.context.name=",
-				getServletContext().getServletContextName(), ")"));
 	private final List<ServiceRegistration<?>> _serviceRegistrations;
 	private final Map<Class<?>, ServiceTrackerList<Class<?>>>
 		_serviceTrackerListMap = new ConcurrentHashMap<>();
