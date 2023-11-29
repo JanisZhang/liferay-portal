@@ -141,3 +141,16 @@ The self bootstraping style *SearchRegistrar has been changed to service collect
 Rewrite *SearchRegistrar to become an osgi service of type ModelSearchConfigurator. Move all previous ModelSearchConfigurator setter call parameter as corresponding ModelSearchConfigurator getter return value.
 ----
 ```
+----
+
+# f46f1e49076f31484ad6cceede099bb16c9ef911
+Incorrect format on multiple file breaking change
+
+Correct message should be:
+```
+# breaking
+## What portal-kernel/src/com/liferay/portal/kernel/dao/orm/IndexableActionableDynamicQuery.java
+setIndexWriterHelper() method is being removed.
+## Why
+This setter was added for the class UserIndexer (see 73427a8). UserIndexer has been deprecated and removed from the portal though.
+```
