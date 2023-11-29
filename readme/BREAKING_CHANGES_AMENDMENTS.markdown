@@ -195,3 +195,16 @@ AuditMessageFactoryUtil and AuditMessageFactoryImpl logic are merged into AuditM
 This interface/impl/util separation does not have any value. Merge it into single class to avoid the unnecessary module.
 ----
 ```
+----
+
+# f46f1e49076f31484ad6cceede099bb16c9ef911
+Incorrect format on breaking change
+
+Correct message should be:
+```
+# breaking
+## What portal-kernel/src/com/liferay/portal/kernel/dao/orm/IndexableActionableDynamicQuery.java
+setIndexWriterHelper() method is being removed.
+## Why
+This setter was added for the class UserIndexer (see 73427a8). UserIndexer has been deprecated and removed from the portal though.
+```
