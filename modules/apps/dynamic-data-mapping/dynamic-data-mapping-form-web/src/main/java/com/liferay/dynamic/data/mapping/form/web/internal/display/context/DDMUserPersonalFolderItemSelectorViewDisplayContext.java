@@ -6,13 +6,13 @@
 package com.liferay.dynamic.data.mapping.form.web.internal.display.context;
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.form.item.selector.criterion.DDMUserPersonalFolderItemSelectorCriterion;
 import com.liferay.dynamic.data.mapping.form.web.internal.item.selector.DDMUserPersonalFolderItemSelectorView;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolver;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolverHandler;
 import com.liferay.item.selector.taglib.servlet.taglib.util.RepositoryEntryBrowserTagUtil;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.dao.search.SearchPaginationUtil;
 import com.liferay.portal.kernel.exception.PortalException;

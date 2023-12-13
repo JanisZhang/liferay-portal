@@ -6,7 +6,7 @@
 package com.liferay.document.library.web.internal.display.context.helper;
 
 import com.liferay.document.library.kernel.model.DLFileVersion;
-import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 
 /**

@@ -20,7 +20,6 @@ import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.test.util.DLAppTestUtil;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
@@ -32,6 +31,7 @@ import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;

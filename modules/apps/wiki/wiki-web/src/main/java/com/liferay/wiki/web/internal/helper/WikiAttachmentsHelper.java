@@ -5,7 +5,7 @@
 
 package com.liferay.wiki.web.internal.helper;
 
-import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.TrashedModel;

@@ -7,8 +7,8 @@ package com.liferay.document.library.web.internal.display.context.helper;
 
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.web.internal.settings.DLPortletInstanceSettings;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;

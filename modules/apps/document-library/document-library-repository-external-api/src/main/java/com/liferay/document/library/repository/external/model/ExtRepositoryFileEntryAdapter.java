@@ -7,11 +7,11 @@ package com.liferay.document.library.repository.external.model;
 
 import com.liferay.document.library.kernel.exception.NoSuchFileVersionException;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.repository.external.ExtRepositoryAdapter;
 import com.liferay.document.library.repository.external.ExtRepositoryFileEntry;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.lock.Lock;

@@ -6,7 +6,6 @@
 package com.liferay.journal.web.internal.util;
 
 import com.liferay.document.library.kernel.document.conversion.DocumentConversionUtil;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleDisplay;
 import com.liferay.journal.service.JournalArticleLocalService;
@@ -14,6 +13,7 @@ import com.liferay.journal.util.ExportArticleHelper;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.PortletRequestModel;

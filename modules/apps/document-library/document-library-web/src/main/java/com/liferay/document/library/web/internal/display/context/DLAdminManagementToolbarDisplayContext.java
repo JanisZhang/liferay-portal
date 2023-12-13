@@ -21,7 +21,6 @@ import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
 import com.liferay.document.library.web.internal.display.context.helper.DLPortletInstanceSettingsHelper;
 import com.liferay.document.library.web.internal.display.context.helper.DLRequestHelper;
@@ -44,6 +43,7 @@ import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelect
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;

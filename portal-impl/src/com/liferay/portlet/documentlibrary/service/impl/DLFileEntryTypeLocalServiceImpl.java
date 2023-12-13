@@ -24,11 +24,11 @@ import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUt
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.service.persistence.DLFileEntryPersistence;
 import com.liferay.document.library.kernel.service.persistence.DLFolderPersistence;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureLink;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureLinkManagerUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManagerUtil;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;

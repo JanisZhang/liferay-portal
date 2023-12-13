@@ -21,7 +21,6 @@ import com.liferay.document.library.kernel.service.DLFileShortcutLocalServiceUti
 import com.liferay.document.library.kernel.service.DLFileVersionLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileVersionServiceUtil;
 import com.liferay.document.library.kernel.service.DLFolderLocalServiceUtil;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.StorageEngineManagerUtil;
@@ -29,6 +28,7 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.lock.LockManagerUtil;

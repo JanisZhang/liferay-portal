@@ -14,7 +14,6 @@ import com.liferay.document.library.kernel.exception.DuplicateFileEntryException
 import com.liferay.document.library.kernel.exception.FileExtensionException;
 import com.liferay.document.library.kernel.exception.FileNameException;
 import com.liferay.document.library.kernel.exception.FileSizeException;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.message.boards.constants.MBCategoryConstants;
 import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.message.boards.constants.MBPortletKeys;
@@ -38,6 +37,7 @@ import com.liferay.message.boards.web.internal.util.MBRequestUtil;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.captcha.CaptchaConfigurationException;
 import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.exception.PortalException;

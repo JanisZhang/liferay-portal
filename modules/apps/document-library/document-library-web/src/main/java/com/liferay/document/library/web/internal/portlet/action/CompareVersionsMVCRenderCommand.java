@@ -12,8 +12,8 @@ import com.liferay.document.library.kernel.document.conversion.DocumentConversio
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLAppService;
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;

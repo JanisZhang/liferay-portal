@@ -6,7 +6,7 @@
 package com.liferay.portal.store.file.system.safe.file.name;
 
 import com.liferay.document.library.kernel.store.Store;
-import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.FileUtil;
 
