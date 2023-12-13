@@ -12,7 +12,6 @@ import com.liferay.document.library.kernel.store.DLStore;
 import com.liferay.document.library.kernel.store.DLStoreRequest;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.document.library.kernel.store.StoreArea;
-import com.liferay.document.library.kernel.store.StoreAreaAwareStoreWrapper;
 import com.liferay.document.library.kernel.store.StoreAreaProcessor;
 import com.liferay.document.library.kernel.util.DLValidatorUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
@@ -30,6 +29,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
+import com.liferay.portal.store.StoreAreaAwareStoreWrapper;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
