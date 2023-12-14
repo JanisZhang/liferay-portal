@@ -30,7 +30,6 @@ import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalServi
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.service.DLTrashService;
-import com.liferay.document.library.kernel.util.DL;
 import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
@@ -40,6 +39,7 @@ import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.lock.DuplicateLockException;
 import com.liferay.portal.kernel.lock.InvalidLockException;
@@ -467,7 +467,7 @@ public class DLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 					DLFileEntry.class.getName(), webDAVRequest);
 
 				serviceContext.setAttribute(
-					DL.MANUAL_CHECK_IN_REQUIRED,
+					DLUtil.MANUAL_CHECK_IN_REQUIRED,
 					webDAVRequest.isManualCheckInRequired());
 
 				_populateServiceContext(serviceContext, fileEntry);
@@ -902,7 +902,7 @@ public class DLWebDAVStorageImpl extends BaseWebDAVStorageImpl {
 					DLFileEntry.class.getName(), webDAVRequest);
 
 				serviceContext.setAttribute(
-					DL.WEBDAV_CHECK_IN_MODE, Boolean.TRUE);
+					DLUtil.WEBDAV_CHECK_IN_MODE, Boolean.TRUE);
 
 				_dlAppService.checkInFileEntry(
 					fileEntry.getFileEntryId(), token, serviceContext);

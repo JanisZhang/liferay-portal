@@ -11,7 +11,6 @@ import com.liferay.document.library.kernel.processor.ImageProcessorUtil;
 import com.liferay.document.library.kernel.processor.PDFProcessorUtil;
 import com.liferay.document.library.kernel.processor.VideoProcessorUtil;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.document.library.kernel.util.DL;
 import com.liferay.document.library.service.DLFileVersionPreviewLocalService;
 import com.liferay.document.library.url.provider.DLFileVersionURLProvider;
 import com.liferay.document.library.util.DLURLHelper;
@@ -21,6 +20,7 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -326,7 +326,7 @@ public class DLURLHelperImpl implements DLURLHelper {
 		webDavURLSB.append("/webdav");
 
 		if (manualCheckInRequired) {
-			webDavURLSB.append(DL.MANUAL_CHECK_IN_REQUIRED_PATH);
+			webDavURLSB.append(DLUtil.MANUAL_CHECK_IN_REQUIRED_PATH);
 		}
 
 		Group group = null;
