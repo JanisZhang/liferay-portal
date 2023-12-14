@@ -7,7 +7,6 @@ package com.liferay.document.library.kernel.util;
 
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileVersion;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
@@ -29,19 +28,6 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface DL {
-
-	public static final String MANUAL_CHECK_IN_REQUIRED =
-		"manualCheckInRequired";
-
-	public static final String MANUAL_CHECK_IN_REQUIRED_PATH =
-		StringPool.SLASH + MANUAL_CHECK_IN_REQUIRED;
-
-	public static final String OFFICE_EXTENSION = "officeExtension";
-
-	public static final String OFFICE_EXTENSION_PATH =
-		StringPool.SLASH + OFFICE_EXTENSION;
-
-	public static final String WEBDAV_CHECK_IN_MODE = "webDAVCheckInMode";
 
 	public int compareVersions(String version1, String version2);
 
