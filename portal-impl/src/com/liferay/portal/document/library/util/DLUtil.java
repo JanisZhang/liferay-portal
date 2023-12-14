@@ -15,7 +15,6 @@ import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFolderLocalServiceUtil;
-import com.liferay.document.library.kernel.util.DL;
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelCreateDateComparator;
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelModifiedDateComparator;
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelReadCountComparator;
@@ -775,10 +774,6 @@ public class DLUtil {
 			workflowContext);
 	}
 
-	public void setDL(DL dl) {
-		_dl = dl;
-	}
-
 	protected static boolean existsFileEntryByFileName(
 		long groupId, String extension, long folderId, String title) {
 
@@ -951,7 +946,6 @@ public class DLUtil {
 				add(ContentTypes.IMAGE_SVG_XML);
 			}
 		};
-	private static DL _dl;
 
 	private static final Set<String> _fileIcons = new HashSet<String>() {
 		{
