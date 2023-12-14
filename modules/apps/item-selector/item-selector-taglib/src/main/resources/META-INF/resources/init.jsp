@@ -29,7 +29,6 @@ page import="com.liferay.item.selector.taglib.internal.servlet.ServletContextUti
 page import="com.liferay.item.selector.taglib.internal.servlet.item.selector.GroupNavigationCard" %><%@
 page import="com.liferay.item.selector.taglib.internal.util.ItemSelectorRepositoryEntryBrowserUtil" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
-page import="com.liferay.portal.document.library.util.DLUtil" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.json.JSONObject" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
@@ -46,6 +45,7 @@ page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
+page import="com.liferay.portlet.documentlibrary.util.DLUtil" %><%@
 page import="com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntriesUtil" %>
 
 <%@ page import="java.util.List" %><%@
