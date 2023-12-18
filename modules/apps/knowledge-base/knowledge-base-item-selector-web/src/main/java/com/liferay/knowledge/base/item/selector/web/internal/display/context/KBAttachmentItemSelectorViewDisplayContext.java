@@ -5,7 +5,6 @@
 
 package com.liferay.knowledge.base.item.selector.web.internal.display.context;
 
-import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolver;
 import com.liferay.item.selector.ItemSelectorReturnTypeResolverHandler;
 import com.liferay.item.selector.taglib.servlet.taglib.util.RepositoryEntryBrowserTagUtil;
@@ -14,6 +13,7 @@ import com.liferay.knowledge.base.item.selector.criterion.KBAttachmentItemSelect
 import com.liferay.knowledge.base.item.selector.web.internal.KBAttachmentItemSelectorView;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleLocalServiceUtil;
+import com.liferay.portal.document.library.util.DLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
