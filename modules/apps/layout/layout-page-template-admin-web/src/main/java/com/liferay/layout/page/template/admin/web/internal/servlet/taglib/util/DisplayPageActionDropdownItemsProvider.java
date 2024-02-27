@@ -25,7 +25,6 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -113,7 +112,6 @@ public class DisplayPageActionDropdownItemsProvider {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
 						() ->
-							FeatureFlagManagerUtil.isEnabled("LPS-195263") &&
 							(_allowedMappedContentType ||
 							 !_existsMappedContentType) &&
 							hasUpdatePermission,
@@ -149,9 +147,7 @@ public class DisplayPageActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.addContext(
-						() ->
-							FeatureFlagManagerUtil.isEnabled("LPS-195263") &&
-							hasUpdatePermission,
+						() -> hasUpdatePermission,
 						_getCopyDisplayPageWithPermissionsActionUnsafeConsumer()
 					).add(
 						() ->
@@ -165,9 +161,7 @@ public class DisplayPageActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() ->
-							FeatureFlagManagerUtil.isEnabled("LPS-195263") &&
-							hasUpdatePermission,
+						() -> hasUpdatePermission,
 						_getConfigureDisplayPageActionUnsafeConsumer()
 					).add(
 						() -> LayoutPageTemplateEntryPermission.contains(
@@ -351,6 +345,8 @@ public class DisplayPageActionDropdownItemsProvider {
 						"/delete_layout_page_template_entry"
 				).setRedirect(
 					_themeDisplay.getURLCurrent()
+				).setTabs1(
+					"display-page-templates"
 				).setParameter(
 					"layoutPageTemplateEntryId",
 					_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
@@ -689,18 +685,14 @@ public class DisplayPageActionDropdownItemsProvider {
 		).setRedirect(
 			_themeDisplay.getURLCurrent()
 		).setParameter(
-			"classNameId",
-			String.valueOf(_layoutPageTemplateEntry.getClassNameId())
+			"classNameId", _layoutPageTemplateEntry.getClassNameId()
 		).setParameter(
-			"classTypeId",
-			String.valueOf(_layoutPageTemplateEntry.getClassTypeId())
+			"classTypeId", _layoutPageTemplateEntry.getClassTypeId()
 		).setParameter(
 			"layoutPageTemplateEntryId",
-			String.valueOf(
-				_layoutPageTemplateEntry.getLayoutPageTemplateEntryId())
+			_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
 		).setParameter(
-			"defaultTemplate",
-			String.valueOf(_layoutPageTemplateEntry.isDefaultTemplate())
+			"defaultTemplate", _layoutPageTemplateEntry.isDefaultTemplate()
 		).buildString();
 
 		return _viewUsagesURL;

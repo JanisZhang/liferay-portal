@@ -44,9 +44,7 @@ String viewCategoryHREF = ConfigurationCategoryUtil.getHREF(configurationCategor
 
 PortalUtil.addPortletBreadcrumbEntry(request, categoryDisplayName, viewCategoryHREF);
 
-ResourceBundleLoaderProvider resourceBundleLoaderProvider = (ResourceBundleLoaderProvider)request.getAttribute(ConfigurationAdminWebKeys.RESOURCE_BUNDLE_LOADER_PROVIDER);
-
-ResourceBundleLoader resourceBundleLoader = resourceBundleLoaderProvider.getResourceBundleLoader(configurationModel.getBundleSymbolicName());
+ResourceBundleLoader resourceBundleLoader = ResourceBundleLoaderProviderUtil.getResourceBundleLoader(configurationModel.getBundleSymbolicName());
 
 ResourceBundle componentResourceBundle = resourceBundleLoader.loadResourceBundle(PortalUtil.getLocale(request));
 
@@ -234,10 +232,10 @@ renderResponse.setTitle(categoryDisplayName);
 							<aui:button-row>
 								<c:choose>
 									<c:when test="<%= configurationModel.hasScopeConfiguration(configurationScopeDisplayContext.getScope()) %>">
-										<aui:button name="update" type="submit" value="update" />
+										<aui:button data-qa-id="submitConfiguration" name="update" type="submit" value="update" />
 									</c:when>
 									<c:otherwise>
-										<aui:button name="save" type="submit" value="save" />
+										<aui:button data-qa-id="submitConfiguration" name="save" type="submit" value="save" />
 									</c:otherwise>
 								</c:choose>
 

@@ -21,18 +21,23 @@
 
 </aui:select>
 
-<aui:script require="users-admin-web/js/UserNameFields.es as UserNameFields">
-	var component = Liferay.component(
-		'<portlet:namespace />UserNameFields',
-		new UserNameFields.default({
-			baseURL: '<%= HtmlUtil.escapeJS(themeDisplay.getURLCurrent()) %>',
-			formNode: <portlet:namespace />fm,
-			languageIdSelectNode: '#<portlet:namespace />languageId',
-			portletNamespace: '<portlet:namespace />',
-			userNameFieldsNode: <portlet:namespace />userNameFields,
-		})
-	);
-</aui:script>
+<liferay-frontend:component
+	componentId="UserNameFields"
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"baseURL", HtmlUtil.escapeJS(themeDisplay.getURLCurrent())
+		).put(
+			"formNode", liferayPortletResponse.getNamespace() + "fm"
+		).put(
+			"languageIdSelectNode", "#" + liferayPortletResponse.getNamespace() + "languageId"
+		).put(
+			"portletNamespace", liferayPortletResponse.getNamespace()
+		).put(
+			"userNameFieldsNode", liferayPortletResponse.getNamespace() + "userNameFields"
+		).build()
+	%>'
+	module="{UserNameFields} from users-admin-web"
+/>
 
 <%
 FullNameDefinition fullNameDefinition = FullNameDefinitionFactory.getInstance(userLocale);

@@ -436,14 +436,14 @@ public class DLServiceVerifyProcessTest extends BaseVerifyProcessTestCase {
 			RandomTestUtil.randomString(), null, null,
 			dlFileEntryType.getFileEntryTypeId(), ddmFormValuesMap, null,
 			byteArrayInputStream, byteArrayInputStream.available(), null, null,
-			serviceContext);
+			null, serviceContext);
 	}
 
 	protected FileEntry addFileEntry(long folderId) throws Exception {
 		return DLAppLocalServiceUtil.addFileEntry(
 			null, TestPropsValues.getUserId(), _group.getGroupId(), folderId,
 			RandomTestUtil.randomString() + ".txt", ContentTypes.TEXT_PLAIN,
-			TestDataConstants.TEST_BYTE_ARRAY, null, null,
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, null,
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId()));
 	}

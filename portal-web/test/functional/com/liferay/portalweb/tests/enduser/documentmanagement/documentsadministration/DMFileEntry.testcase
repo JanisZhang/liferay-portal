@@ -319,69 +319,6 @@ definition {
 	@description = "This test covers LPS-94657. It ensures that auto complete for edit categories."
 	@priority = 4
 	@refactordone
-	test CanAutocompleteCategory {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		JSONCategory.addVocabulary(
-			groupName = "Guest",
-			title = "Topic");
-
-		JSONCategory.addCategory(
-			groupName = "Guest",
-			title = "category",
-			vocabularyName = "Topic");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest",
-			mimeType = "text/plain",
-			sourceFileName = "Document_1.txt");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
-		DMDocument.selectDocuments(dmDocumentTitle = "DM Document Title");
-
-		Click(locator1 = "Icon#EDIT_CATEGORIES");
-
-		SelectFrame(value1 = "relative=top");
-
-		AssertTextEquals(
-			locator1 = "Modal#HEADER",
-			value1 = "Edit Categories");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Modal#BODY",
-			value1 = "You are editing the categories for the selected item.");
-
-		Type.sendKeys(
-			locator1 = "AssetCategorization#TAGS_FIELD",
-			value1 = "cat");
-
-		AssertClick(
-			locator1 = "AssetCategorization#TAG_AUTOCOMPLETE_CONTAINER",
-			value1 = "category");
-
-		Button.clickSave();
-
-		SelectFrame(value1 = "relative=top");
-
-		Alert.viewSuccessMessageText(successMessage = "Changes Saved");
-
-		DMNavigator.openToEditEntryInSite(
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest",
-			siteURLKey = "guest");
-
-		DMDocument.viewCategories(categoryNameList = "category");
-	}
-
-	@description = "This test covers LPS-94657. It ensures that auto complete for edit categories."
-	@priority = 4
-	@refactordone
 	test CanAutoCompleteCategory {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -408,7 +345,9 @@ definition {
 
 		DMDocument.selectDocuments(dmDocumentTitle = "DM Document Title");
 
-		Click(locator1 = "Icon#EDIT_CATEGORIES");
+		Click(
+			key_text = "Edit Categories",
+			locator1 = "Button#ANY");
 
 		SelectFrame(value1 = "relative=top");
 
@@ -683,9 +622,7 @@ definition {
 
 		PortletEntry.selectAll();
 
-		Click(
-			key_text = "ellipsis",
-			locator1 = "ManagementBar#ANY_ICON");
+		Click(locator1 = "ManagementBar#ELLIPSIS");
 
 		MenuItem.click(menuItem = "Checkout");
 
@@ -1115,7 +1052,9 @@ definition {
 
 		PortletEntry.selectAll();
 
-		Click(locator1 = "Icon#DELETE");
+		Click(
+			key_text = "trash",
+			locator1 = "ManagementBar#ANY_ICON");
 
 		Alert.viewSuccessMessage();
 
@@ -1654,7 +1593,7 @@ definition {
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 		task ("Assert user can choose one of the categories to filter documents") {
-			ManagementBar.setFilterAndOrder(filterBy = "Categories...");
+			ManagementBar.setFilterAndOrder(filterBy = "Categories");
 
 			DMDocument.viewFilterByDetails(
 				category = "DXP Site Vocabulary (${siteName}),Global Site Vocabulary (Global)",
@@ -1680,7 +1619,7 @@ definition {
 		task ("Assert user can choose multiple categories to filter documents in Home folder") {
 			ManagementBar.setFilterAndOrder(
 				active = "true",
-				filterBy = "Categories...");
+				filterBy = "Categories");
 
 			DMDocument.selectFilterItems(
 				categories = "Category1,GlobalCategory",
@@ -1728,7 +1667,7 @@ definition {
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Categories...");
+		ManagementBar.setFilterAndOrder(filterBy = "Categories");
 
 		DMDocument.selectFilterItems(categories = "Category1~!@#$*");
 
@@ -1781,7 +1720,7 @@ definition {
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 		task ("Assert user can choose one of the extensions to filter documents") {
-			ManagementBar.setFilterAndOrder(filterBy = "Extension...");
+			ManagementBar.setFilterAndOrder(filterBy = "Extension");
 
 			DMDocument.viewFilterByDetails(
 				category = "Image (1 Item),Spreadsheet (1 Item),Text (1 Item)",
@@ -1807,7 +1746,7 @@ definition {
 		task ("Assert user can choose multiple extensions to filter documents in Home folder") {
 			ManagementBar.setFilterAndOrder(
 				active = "true",
-				filterBy = "Extension...");
+				filterBy = "Extension");
 
 			DMDocument.viewFilterByDetails(
 				category = "Image (1 Item),Spreadsheet (1 Item),Text (1 Item)",
@@ -1847,7 +1786,7 @@ definition {
 
 			DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
 
-			ManagementBar.setFilterAndOrder(filterBy = "Extension...");
+			ManagementBar.setFilterAndOrder(filterBy = "Extension");
 
 			DMDocument.viewFilterByDetails(
 				category = "Image (1 Item),Spreadsheet (1 Item),Text (1 Item)",
@@ -2006,7 +1945,7 @@ definition {
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 		task ("Assert user can choose one subcategory to filter documents") {
-			ManagementBar.setFilterAndOrder(filterBy = "Extension...");
+			ManagementBar.setFilterAndOrder(filterBy = "Extension");
 
 			DMDocument.viewFilterByDetails(
 				category = "Image (3 Items),Spreadsheet (2 Items),Text (2 Items),Vectorial (1 Item)",
@@ -2027,7 +1966,7 @@ definition {
 		task ("Assert user can choose multiple subcategories to filter documents") {
 			ManagementBar.setFilterAndOrder(
 				active = "true",
-				filterBy = "Extension...");
+				filterBy = "Extension");
 
 			DMDocument.viewFilterByDetails(
 				category = "Image (3 Items),Spreadsheet (2 Items),Text (2 Items),Vectorial (1 Item)",
@@ -2055,7 +1994,7 @@ definition {
 		task ("Assert user can choose multiple subcategories from different extensions to filter documents") {
 			ManagementBar.setFilterAndOrder(
 				active = "true",
-				filterBy = "Extension...");
+				filterBy = "Extension");
 
 			DMDocument.viewFilterByDetails(
 				category = "Image (3 Items),Spreadsheet (2 Items),Text (2 Items),Vectorial (1 Item)",
@@ -2083,7 +2022,7 @@ definition {
 		task ("Assert user can choose one category and one subcategory of extensions to filter documents") {
 			ManagementBar.setFilterAndOrder(
 				active = "true",
-				filterBy = "Extension...");
+				filterBy = "Extension");
 
 			DMDocument.viewFilterByDetails(
 				category = "Image (3 Items),Spreadsheet (2 Items),Text (2 Items),Vectorial (1 Item)",
@@ -3060,6 +2999,66 @@ definition {
 		DMDocument.viewCardTitle(dmDocumentTitle = "DM Document Title");
 	}
 
+	@description = "This case covers LPS-177597. It ensures that the expired document can be restored."
+	@priority = 3
+	test CanRestoreExpiredDocument {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		DMDocument.updateCheckInterval(fieldValue = 1);
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_1.txt",
+			groupName = "Guest",
+			mimeType = "text/plain",
+			sourceFileName = "Document_1.txt");
+
+		DMNavigator.openToEditEntryInSite(
+			dmDocumentTitle = "Document_1.txt",
+			groupName = "Guest",
+			siteURLKey = "guest");
+
+		DMDocument.setExpirationDate(
+			enableExpirationDate = "true",
+			increaseMinutes = 1);
+
+		// We need to wait for the system time to pass by 1 minute in order to verify the document is expired. There is currently no easy way to manipulate the system time in CI for automation. 2 minutes is the shortest value we can set while ensuring the stability of the test. See LPS-192588.
+
+		Pause(value1 = 60000);
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.viewStatus(
+			dmDocumentStatus = "Expired",
+			dmDocumentTitle = "Document_1.txt");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.deleteCP(dmDocumentTitle = "Document_1.txt");
+
+		// We need to wait for the system time to pass by 1 minute in order to verify the document is not restored automatically. There is currently no easy way to manipulate the system time in CI for automation. 2 minutes is the shortest value we can set while ensuring the stability of the test. See LPS-192588.
+
+		Pause(value1 = 60000);
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		LexiconEntry.viewNoEntry(rowEntry = "Document_1.txt");
+
+		RecycleBin.openRecycleBinAdmin(siteURLKey = "guest");
+
+		RecycleBin.restoreCP(
+			assetName = "Document_1.txt",
+			assetType = "Document");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.viewStatus(
+			dmDocumentStatus = "Expired",
+			dmDocumentTitle = "Document_1.txt");
+	}
+
 	@description = "This test checks if file uploads can be restricted to .doc format."
 	@priority = 4
 	@refactordone
@@ -4024,7 +4023,7 @@ definition {
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Tags...");
+		ManagementBar.setFilterAndOrder(filterBy = "Tags");
 
 		DMDocument.selectTags(tagNameList = "tag1,tag2");
 
@@ -4034,11 +4033,9 @@ definition {
 			key_dmDocumentTitle = "DM Document Title 2",
 			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Tags...");
+		ManagementBar.setFilterAndOrder(filterBy = "Tags");
 
-		DMDocument.ViewSelectedTags(tagNameList = "tag1,tag2");
-
-		DMDocument.selectTags(tagName = "tag3");
+		DMDocument.selectTags(tagName = "tag1,tag2,tag3");
 
 		DMDocument.viewDefault();
 	}
@@ -4093,7 +4090,7 @@ definition {
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
 		task ("Assert only documents in the folder return when a user chooses one category to filter documents in a folder") {
-			ManagementBar.setFilterAndOrder(filterBy = "Categories...");
+			ManagementBar.setFilterAndOrder(filterBy = "Categories");
 
 			DMDocument.selectFilterItems(categories = "Category2");
 
@@ -4118,7 +4115,7 @@ definition {
 		task ("Assert only documents in the folder return when a user chooses multiple categories to filter documents in a folder") {
 			ManagementBar.setFilterAndOrder(
 				active = "true",
-				filterBy = "Categories...");
+				filterBy = "Categories");
 
 			DMDocument.selectFilterItems(categories = "Category1");
 
@@ -4168,7 +4165,7 @@ definition {
 
 		DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Tags...");
+		ManagementBar.setFilterAndOrder(filterBy = "Tags");
 
 		DMDocument.selectTags(tagName = "tag1");
 
@@ -4336,7 +4333,7 @@ definition {
 	@description = "This test covers LPS-144687. It validates that a temp zip is not created if NoSuchFileException occurs during a download."
 	@priority = 4
 	test NoZipFileIsCreatedIfDownloadResultsInError {
-		DMDocument.deleteTempFolder(appServer = "tomcat-9.0.82");
+		DMDocument.deleteTempFolder(appServer = "tomcat-9.0.83");
 
 		for (var num : list "1,2,3") {
 			JSONDocument.addFileWithUploadedFile(
@@ -4356,7 +4353,7 @@ definition {
 		AssertConsoleTextPresent(value1 = "com.liferay.document.library.kernel.exception.NoSuchFileException");
 
 		DMDocument.assertNoZipFileFromTempFolder(
-			appServer = "tomcat-9.0.82",
+			appServer = "tomcat-9.0.83",
 			fileNamePattern = "*.zip");
 	}
 

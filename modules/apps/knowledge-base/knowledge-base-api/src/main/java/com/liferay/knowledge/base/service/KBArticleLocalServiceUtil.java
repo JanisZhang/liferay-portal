@@ -189,11 +189,27 @@ public class KBArticleLocalServiceUtil {
 		return getService().deleteKBArticle(kbArticleId);
 	}
 
+	public static KBArticle deleteKBArticle(
+			long userId, long resourcePrimKey, int version)
+		throws PortalException {
+
+		return getService().deleteKBArticle(userId, resourcePrimKey, version);
+	}
+
 	public static void deleteKBArticles(
 			long groupId, long parentResourcePrimKey)
 		throws PortalException {
 
 		getService().deleteKBArticles(groupId, parentResourcePrimKey);
+	}
+
+	public static void deleteKBArticles(
+			long groupId, long parentResourcePrimKey,
+			boolean includeTrashedEntries)
+		throws PortalException {
+
+		getService().deleteKBArticles(
+			groupId, parentResourcePrimKey, includeTrashedEntries);
 	}
 
 	public static void deleteKBArticles(long[] resourcePrimKeys)
@@ -601,6 +617,12 @@ public class KBArticleLocalServiceUtil {
 			groupId, kbFolderId, status);
 	}
 
+	public static KBArticle getLatestKBArticle(long resourcePrimKey)
+		throws PortalException {
+
+		return getService().getLatestKBArticle(resourcePrimKey);
+	}
+
 	public static KBArticle getLatestKBArticle(long resourcePrimKey, int status)
 		throws PortalException {
 
@@ -677,6 +699,10 @@ public class KBArticleLocalServiceUtil {
 			groupId, userId, tempFolderName);
 	}
 
+	public static boolean hasKBArticleLock(long userId, long resourcePrimKey) {
+		return getService().hasKBArticleLock(userId, resourcePrimKey);
+	}
+
 	public static void incrementViewCount(
 			long userId, long resourcePrimKey, int increment)
 		throws PortalException {
@@ -684,12 +710,19 @@ public class KBArticleLocalServiceUtil {
 		getService().incrementViewCount(userId, resourcePrimKey, increment);
 	}
 
+	public static com.liferay.portal.kernel.lock.Lock lockKBArticle(
+			long userId, long resourcePrimKey)
+		throws PortalException {
+
+		return getService().lockKBArticle(userId, resourcePrimKey);
+	}
+
 	public static void moveDependentKBArticlesToTrash(
-			KBArticle parentKBArticle, long trashEntryId)
+			long parentResourcePrimKey, long trashEntryId)
 		throws PortalException {
 
 		getService().moveDependentKBArticlesToTrash(
-			parentKBArticle, trashEntryId);
+			parentResourcePrimKey, trashEntryId);
 	}
 
 	public static void moveDependentKBArticleToTrash(
@@ -710,19 +743,20 @@ public class KBArticleLocalServiceUtil {
 	}
 
 	public static void moveKBArticleFromTrash(
-			long userId, long kbArticleId, long parentResourceClassNameId,
+			long userId, long resourcePrimKey, long parentResourceClassNameId,
 			long parentResourcePrimKey)
 		throws PortalException {
 
 		getService().moveKBArticleFromTrash(
-			userId, kbArticleId, parentResourceClassNameId,
+			userId, resourcePrimKey, parentResourceClassNameId,
 			parentResourcePrimKey);
 	}
 
-	public static KBArticle moveKBArticleToTrash(long userId, long kbArticleId)
+	public static KBArticle moveKBArticleToTrash(
+			long userId, long resourcePrimKey)
 		throws PortalException {
 
-		return getService().moveKBArticleToTrash(userId, kbArticleId);
+		return getService().moveKBArticleToTrash(userId, resourcePrimKey);
 	}
 
 	public static void restoreDependentKBArticleFromTrash(KBArticle kbArticle)
@@ -732,16 +766,17 @@ public class KBArticleLocalServiceUtil {
 	}
 
 	public static void restoreDependentKBArticlesFromTrash(
-			KBArticle parentKBArticle)
+			long parentResourcePrimKey)
 		throws PortalException {
 
-		getService().restoreDependentKBArticlesFromTrash(parentKBArticle);
+		getService().restoreDependentKBArticlesFromTrash(parentResourcePrimKey);
 	}
 
-	public static void restoreKBArticleFromTrash(long userId, long kbArticleId)
+	public static void restoreKBArticleFromTrash(
+			long userId, long resourcePrimKey)
 		throws PortalException {
 
-		getService().restoreKBArticleFromTrash(userId, kbArticleId);
+		getService().restoreKBArticleFromTrash(userId, resourcePrimKey);
 	}
 
 	public static KBArticle revertKBArticle(
@@ -776,6 +811,10 @@ public class KBArticleLocalServiceUtil {
 		getService().subscribeKBArticle(userId, groupId, resourcePrimKey);
 	}
 
+	public static void unlockKBArticle(long resourcePrimKey) {
+		getService().unlockKBArticle(resourcePrimKey);
+	}
+
 	public static void unsubscribeGroupKBArticles(long userId, long groupId)
 		throws PortalException {
 
@@ -786,6 +825,21 @@ public class KBArticleLocalServiceUtil {
 		throws PortalException {
 
 		getService().unsubscribeKBArticle(userId, resourcePrimKey);
+	}
+
+	public static KBArticle updateAndUnlockKBArticle(
+			long userId, long resourcePrimKey, String title, String content,
+			String description, String[] sections, String sourceURL,
+			java.util.Date displayDate, java.util.Date expirationDate,
+			java.util.Date reviewDate, String[] selectedFileNames,
+			long[] removeFileEntryIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateAndUnlockKBArticle(
+			userId, resourcePrimKey, title, content, description, sections,
+			sourceURL, displayDate, expirationDate, reviewDate,
+			selectedFileNames, removeFileEntryIds, serviceContext);
 	}
 
 	/**

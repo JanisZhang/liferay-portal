@@ -145,7 +145,7 @@ definition {
 
 	@summary = "Default summary"
 	macro addSelection(menuItem = null, collectionName = null, selectedAsset = null) {
-		Click(locator1 = "Button#NEW");
+		Click(locator1 = "Button#PLUS");
 
 		MenuItem.click(menuItem = ${menuItem});
 
@@ -338,7 +338,7 @@ definition {
 				locator1 = "Configuration#SCOPE_SELECT",
 				value1 = "Select");
 
-			MenuItem.click(menuItem = "Other Site or Asset Library...");
+			MenuItem.click(menuItem = "Other Site or Asset Library");
 
 			SelectFrame(value1 = "relative=top");
 

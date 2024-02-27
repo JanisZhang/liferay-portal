@@ -29,12 +29,14 @@ import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -70,6 +72,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -137,7 +140,16 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, ActionRequest.ACTION_NAME);
 
 		long groupId = ParamUtil.getLong(uploadPortletRequest, "groupId");
+
 		long folderId = ParamUtil.getLong(uploadPortletRequest, "folderId");
+
+		long newFolderId = ParamUtil.getLong(
+			uploadPortletRequest, "newFolderId");
+
+		if (newFolderId > 0) {
+			folderId = newFolderId;
+		}
+
 		String articleId = ParamUtil.getString(
 			uploadPortletRequest, "articleId");
 
@@ -441,6 +453,56 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 				MultiSessionMessages.add(
 					actionRequest, portletResource + "requestProcessed");
 			}
+
+			if (FeatureFlagManagerUtil.isEnabled("LPD-15596")) {
+				if (article.isPending()) {
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)actionRequest.getAttribute(
+							WebKeys.THEME_DISPLAY);
+
+					User user = themeDisplay.getUser();
+
+					Date displayDate = _portal.getDate(
+						displayDateMonth, displayDateDay, displayDateYear,
+						displayDateHour, displayDateMinute, user.getTimeZone(),
+						null);
+
+					if (displayDate != null) {
+						MultiSessionMessages.add(
+							actionRequest, "articlePendingScheduled",
+							article.getId());
+					}
+					else {
+						MultiSessionMessages.add(
+							actionRequest, "articlePending", article.getId());
+					}
+				}
+				else if (article.isScheduled()) {
+					MultiSessionMessages.add(
+						actionRequest, "articleScheduled", article.getId());
+				}
+				else {
+					if (actionName.equals("/journal/add_article")) {
+						MultiSessionMessages.add(
+							actionRequest, "articleCreated", article.getId());
+					}
+					else {
+						MultiSessionMessages.add(
+							actionRequest, "articleUpdated", article.getId());
+					}
+				}
+			}
+		}
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-15596")) {
+			if (actionName.equals("/journal/add_article")) {
+				MultiSessionMessages.add(
+					actionRequest, "articleCreated", article.getId());
+			}
+			else {
+				MultiSessionMessages.add(
+					actionRequest, "articleUpdated", article.getId());
+			}
 		}
 
 		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
@@ -471,6 +533,8 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 				_portal.getPortletId(actionRequest) +
 					SessionMessages.KEY_SUFFIX_HIDE_DEFAULT_SUCCESS_MESSAGE);
 		}
+
+		hideDefaultSuccessMessage(actionRequest);
 	}
 
 	private Map<String, String> _getFriendlyURLWarningMessages(
@@ -659,8 +723,8 @@ public class UpdateArticleMVCActionCommand extends BaseMVCActionCommand {
 			PortletURLFactoryUtil.create(
 				actionRequest, JournalPortletKeys.JOURNAL,
 				PortletRequest.RENDER_PHASE)
-		).setMVCPath(
-			"/edit_article.jsp"
+		).setMVCRenderCommandName(
+			"/journal/edit_article"
 		).setRedirect(
 			redirect
 		).setPortletResource(

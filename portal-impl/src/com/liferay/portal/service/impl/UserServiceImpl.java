@@ -39,7 +39,6 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicyUtil;
-import com.liferay.portal.kernel.security.membershippolicy.UserGroupMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -73,6 +72,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.security.membershippolicy.RoleMembershipPolicyUtil;
 import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
+import com.liferay.portal.security.membershippolicy.UserGroupMembershipPolicyUtil;
 import com.liferay.portal.service.base.UserServiceBaseImpl;
 import com.liferay.portal.service.permission.PasswordPolicyPermissionUtil;
 import com.liferay.portal.service.permission.UserGroupPermissionUtil;
@@ -170,6 +170,8 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 		if (userIds.length == 0) {
 			return;
 		}
+
+		validateUserIds(userIds);
 
 		OrganizationPermissionUtil.check(
 			getPermissionChecker(), organizationId, ActionKeys.ASSIGN_MEMBERS);
@@ -2132,6 +2134,18 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 			userId, password, emailAddress1, emailAddress2, serviceContext);
 	}
 
+	@Override
+	public User updateExternalReferenceCode(
+			long userId, String externalReferenceCode)
+		throws PortalException {
+
+		UserPermissionUtil.check(
+			getPermissionChecker(), userId, ActionKeys.UPDATE);
+
+		return userLocalService.updateExternalReferenceCode(
+			userId, externalReferenceCode);
+	}
+
 	/**
 	 * Updates a user account that was automatically created when a guest user
 	 * participated in an action (e.g. posting a comment) and only provided his
@@ -2281,6 +2295,16 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
 			birthdayMonth, birthdayDay, birthdayYear, jobTitle,
 			updateUserInformation, sendEmail, serviceContext);
+	}
+
+	@Override
+	public User updateLanguageId(long userId, String languageId)
+		throws PortalException {
+
+		UserPermissionUtil.check(
+			getPermissionChecker(), userId, ActionKeys.UPDATE);
+
+		return userLocalService.updateLanguageId(userId, languageId);
 	}
 
 	/**
@@ -3900,6 +3924,12 @@ public class UserServiceImpl extends UserServiceBaseImpl {
 
 		if (userFieldException.hasFields()) {
 			throw userFieldException;
+		}
+	}
+
+	protected void validateUserIds(long[] userIds) throws PortalException {
+		for (long userId : userIds) {
+			getUserById(userId);
 		}
 	}
 

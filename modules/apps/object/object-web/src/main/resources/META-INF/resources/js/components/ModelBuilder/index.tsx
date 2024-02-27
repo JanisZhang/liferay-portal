@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ILearnResourceContext} from 'frontend-js-components-web';
 import React from 'react';
 import {ReactFlowProvider} from 'react-flow-renderer';
 
@@ -18,10 +19,10 @@ interface CustomObjectFolderWrapperProps {
 	forbiddenChars: string[];
 	forbiddenLastChars: string[];
 	forbiddenNames: string[];
+	learnResourceContext: ILearnResourceContext;
 	objectDefinitionPermissionsURL: string;
 	objectDefinitionsStorageTypes: LabelValueObject[];
 	objectRelationshipDeletionTypes: LabelValueObject[];
-	objectWebLearnResources: ObjectWebLearnResources;
 	sites: Scope[];
 	workflowStatuses: LabelValueObject[];
 }
@@ -34,10 +35,10 @@ export default function CustomObjectFolderWrapper({
 	forbiddenChars,
 	forbiddenLastChars,
 	forbiddenNames,
+	learnResourceContext,
 	objectDefinitionPermissionsURL,
 	objectDefinitionsStorageTypes,
 	objectRelationshipDeletionTypes,
-	objectWebLearnResources,
 	sites,
 	workflowStatuses,
 }: CustomObjectFolderWrapperProps) {
@@ -51,9 +52,9 @@ export default function CustomObjectFolderWrapper({
 					forbiddenChars,
 					forbiddenLastChars,
 					forbiddenNames,
+					learnResourceContext,
 					objectDefinitionPermissionsURL,
 					objectDefinitionsStorageTypes,
-					objectWebLearnResources,
 					workflowStatuses,
 				}}
 			>

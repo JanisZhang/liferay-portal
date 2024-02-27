@@ -12,7 +12,6 @@ import com.liferay.portal.kernel.configuration.ConfigurationFactory;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
-import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.portlet.PortletClassLoaderUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -33,12 +32,9 @@ import com.liferay.saml.constants.SamlProviderConfigurationKeys;
 import com.liferay.saml.opensaml.integration.internal.binding.SamlBindingProvider;
 import com.liferay.saml.opensaml.integration.internal.credential.FileSystemKeyStoreManagerImpl;
 import com.liferay.saml.opensaml.integration.internal.credential.KeyStoreCredentialResolver;
-import com.liferay.saml.opensaml.integration.internal.identifier.SamlIdentifierGeneratorStrategyFactory;
+import com.liferay.saml.opensaml.integration.internal.identifier.IdentifierGeneratorStrategyFactory;
 import com.liferay.saml.opensaml.integration.internal.metadata.KeyStoreLocalEntityManager;
 import com.liferay.saml.opensaml.integration.internal.metadata.MetadataGeneratorUtil;
-import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManagerImpl;
-import com.liferay.saml.opensaml.integration.internal.provider.CachingChainingMetadataResolver;
-import com.liferay.saml.opensaml.integration.internal.servlet.profile.IdentifierGenerationStrategyFactory;
 import com.liferay.saml.opensaml.integration.internal.transport.HttpClientFactory;
 import com.liferay.saml.opensaml.integration.internal.util.ConfigurationServiceBootstrapUtil;
 import com.liferay.saml.persistence.model.SamlPeerBinding;
@@ -86,8 +82,6 @@ import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.saml.saml2.metadata.SingleLogoutService;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import org.opensaml.security.credential.Credential;
-
-import org.osgi.framework.BundleContext;
 
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -317,11 +311,9 @@ public abstract class BaseSamlTestCase {
 	protected FileSystemKeyStoreManagerImpl fileSystemKeyStoreManagerImpl;
 	protected GroupLocalService groupLocalService;
 	protected HttpClient httpClient;
-	protected IdentifierGenerationStrategyFactory
-		identifierGenerationStrategyFactory;
+	protected IdentifierGenerationStrategy identifierGenerationStrategy;
 	protected List<String> identifiers = new ArrayList<>();
 	protected KeyStoreLocalEntityManager keyStoreLocalEntityManager;
-	protected MetadataManagerImpl metadataManagerImpl;
 	protected ParserPool parserPool;
 	protected Portal portal;
 	protected SamlBindingProvider samlBindingProvider;
@@ -555,24 +547,10 @@ public abstract class BaseSamlTestCase {
 	}
 
 	private void _setupIdentifiers() {
-		SamlIdentifierGeneratorStrategyFactory
-			samlIdentifierGeneratorStrategyFactory =
-				new SamlIdentifierGeneratorStrategyFactory();
+		samlIdentifierGenerator = IdentifierGeneratorStrategyFactory.create(16);
 
-		samlIdentifierGenerator = samlIdentifierGeneratorStrategyFactory.create(
-			16);
-
-		IdentifierGenerationStrategy identifierGenerationStrategy =
-			Mockito.mock(IdentifierGenerationStrategy.class);
-
-		identifierGenerationStrategyFactory = Mockito.mock(
-			IdentifierGenerationStrategyFactory.class);
-
-		Mockito.when(
-			identifierGenerationStrategyFactory.create(Mockito.anyInt())
-		).thenReturn(
-			identifierGenerationStrategy
-		);
+		identifierGenerationStrategy = Mockito.mock(
+			IdentifierGenerationStrategy.class);
 
 		Mockito.when(
 			identifierGenerationStrategy.generateIdentifier()
@@ -642,37 +620,6 @@ public abstract class BaseSamlTestCase {
 			getMockPortletService(
 				SamlSpIdpConnectionLocalServiceUtil.class,
 				SamlSpIdpConnectionLocalService.class));
-
-		metadataManagerImpl = new MetadataManagerImpl();
-
-		ReflectionTestUtil.setFieldValue(
-			metadataManagerImpl, "_credentialResolver", credentialResolver);
-
-		ReflectionTestUtil.setFieldValue(
-			metadataManagerImpl, "_localEntityManager",
-			keyStoreLocalEntityManager);
-
-		ReflectionTestUtil.setFieldValue(
-			metadataManagerImpl, "_portal", portal);
-		ReflectionTestUtil.setFieldValue(
-			metadataManagerImpl, "_samlProviderConfigurationHelper",
-			samlProviderConfigurationHelper);
-
-		ReflectionTestUtil.invoke(
-			metadataManagerImpl, "activate",
-			new Class<?>[] {BundleContext.class},
-			SystemBundleUtil.getBundleContext());
-
-		ReflectionTestUtil.invoke(
-			metadataManagerImpl.getMetadataResolver(), "doDestroy",
-			new Class<?>[0]);
-
-		CachingChainingMetadataResolver cachingChainingMetadataResolver =
-			(CachingChainingMetadataResolver)
-				metadataManagerImpl.getMetadataResolver();
-
-		cachingChainingMetadataResolver.addMetadataResolver(
-			new MockMetadataResolver());
 	}
 
 	private void _setupParserPool() {

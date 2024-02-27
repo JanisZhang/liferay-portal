@@ -22,9 +22,15 @@ ViewObjectDefinitionsDisplayContext viewObjectDefinitionsDisplayContext = (ViewO
 			).put(
 				"editObjectDefinitionURL", viewObjectDefinitionsDisplayContext.getEditObjectDefinitionURL()
 			).put(
+				"importObjectDefinitionURL", viewObjectDefinitionsDisplayContext.getImportObjectDefinitionURL()
+			).put(
+				"importObjectFolderURL", viewObjectDefinitionsDisplayContext.getImportObjectFolderURL()
+			).put(
+				"learnResourceContext", LearnMessageUtil.getReactDataJSONObject("frontend-js-components-web")
+			).put(
 				"modelBuilderURL", viewObjectDefinitionsDisplayContext.getModelBuilderURL()
 			).put(
-				"objectDefinitionsAPIURL", viewObjectDefinitionsDisplayContext.getAPIURL()
+				"nameMaxLength", ModelHintsConstants.TEXT_MAX_LENGTH
 			).put(
 				"objectDefinitionsCreationMenu", viewObjectDefinitionsDisplayContext.getCreationMenu()
 			).put(
@@ -35,6 +41,8 @@ ViewObjectDefinitionsDisplayContext viewObjectDefinitionsDisplayContext = (ViewO
 				"objectDefinitionsStorageTypes", viewObjectDefinitionsDisplayContext.getStorageTypesJSONArray()
 			).put(
 				"objectFolderPermissionsURL", viewObjectDefinitionsDisplayContext.getPermissionsURL(ObjectFolder.class.getName())
+			).put(
+				"portletNamespace", liferayPortletResponse.getNamespace()
 			).build()
 		%>'
 	/>

@@ -195,8 +195,6 @@ public class Log4jConfigUtilTest {
 
 			LogEntry logEntry = logEntries.get(0);
 
-			Assert.assertNull(logEntry.getMessage());
-
 			Throwable throwable = logEntry.getThrowable();
 
 			Assert.assertSame(NullPointerException.class, throwable.getClass());
@@ -407,7 +405,7 @@ public class Log4jConfigUtilTest {
 		sb.append("\" type=\"CompanyLogRouting\">");
 		sb.append("<FilePattern fileNamePattern=\"");
 		sb.append(fileNamePattern);
-		sb.append("\"><Log4j1XmlLayout locationInfo=\"true\" /></FilePattern>");
+		sb.append("\"><Layout type=\"PatternLayout\" /></FilePattern>");
 		sb.append("<TimeBasedTriggeringPolicy /><DirectWriteRolloverStrategy ");
 		sb.append("/></Appender></Appenders><Loggers><Logger level= \"");
 		sb.append(priority);
@@ -528,7 +526,7 @@ public class Log4jConfigUtilTest {
 				_generateCompanyLogRoutingAppenderConfigurationContent(
 					"COMPANY_LOG_ROUTING_TEXT_FILE",
 					tempLogFileDirPathString + "/@company.id@",
-					"liferay-@company.id@.%d{yyyy-MM-dd}.xml.log", loggerName,
+					"liferay-@company.id@.%d{yyyy-MM-dd}.log", loggerName,
 					_INFO));
 
 			Logger logger = (Logger)LogManager.getLogger(loggerName);

@@ -5,6 +5,8 @@
 
 import {API} from '@liferay/object-js-components-web';
 import classNames from 'classnames';
+import {LearnMessage, LearnResourcesContext} from 'frontend-js-components-web';
+import {openToast} from 'frontend-js-web';
 import React, {useCallback, useState} from 'react';
 import ReactFlow, {
 	Background,
@@ -15,8 +17,8 @@ import ReactFlow, {
 	Edge,
 	MiniMap,
 	Node,
+	isEdge,
 	isNode,
-	useStore,
 } from 'react-flow-renderer';
 
 import {ModalAddObjectRelationship} from '../../ObjectRelationship/ModalAddObjectRelationship';
@@ -26,6 +28,8 @@ import SelfObjectRelationshipEdge from '../Edges/SelfObjectRelationshipEdge';
 import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext';
 import {TYPES} from '../ModelBuilderContext/typesEnum';
 import {ObjectDefinitionNode} from '../ObjectDefinitionNode/ObjectDefinitionNode';
+import {ObjectRelationshipEdgeData} from '../types';
+import {getUnsupportedObjectRelationshipErrorMessage} from '../utils';
 
 import './Diagram.scss';
 
@@ -44,6 +48,7 @@ function DiagramBuilder() {
 			baseResourceURL,
 			elements,
 			isLoadingObjectFolder,
+			learnResourceContext,
 			selectedObjectFolder,
 			showChangesSaved,
 			showSidebars,
@@ -68,10 +73,25 @@ function DiagramBuilder() {
 		};
 	}>();
 
-	const store = useStore();
+	const edges: Edge<ObjectRelationshipEdgeData[]>[] = [];
+
+	const nodes: Node<ObjectDefinitionNodeData>[] = [];
+
+	elements.forEach((element) => {
+		if (isEdge(element)) {
+			edges.push(element as Edge<ObjectRelationshipEdgeData[]>);
+		}
+		else {
+			nodes.push(element as Node<ObjectDefinitionNodeData>);
+		}
+	});
 
 	const onConnect = useCallback(
 		(connection: Connection | Edge) => {
+			if (connection.targetHandle === connection.sourceHandle) {
+				return;
+			}
+
 			const sourceNode = elements.find(
 				(node) => isNode(node) && node.id === connection.source
 			) as Node<ObjectDefinitionNodeData>;
@@ -80,30 +100,48 @@ function DiagramBuilder() {
 				(node) => isNode(node) && node.id === connection.target
 			) as Node<ObjectDefinitionNodeData>;
 
-			if (
-				connection.targetHandle === connection.sourceHandle ||
-				(sourceNode.data?.modifiable === false &&
-					targetNode.data?.modifiable === false) ||
-				(sourceNode.data?.system && targetNode.data?.system) ||
-				sourceNode.data?.storageType === 'salesforce' ||
-				targetNode.data?.storageType === 'salesforce' ||
-				targetNode.data?.name === 'Address' ||
-				sourceNode.data?.linkedObjectDefinition
-			) {
-				return;
-			}
+			const unsupportedObjectRelationship = getUnsupportedObjectRelationshipErrorMessage(
+				nodes,
+				sourceNode,
+				targetNode
+			);
 
-			setShowAddObjectRelationshipModal(true);
-			setNewObjectRelationshipSourceNodeProps({
-				parameterRequired: sourceNode?.data?.parameterRequired!,
-				sourceNode: {
-					erc: sourceNode?.data?.externalReferenceCode!,
-				},
-				targetNode: {
-					erc: targetNode?.data?.externalReferenceCode!,
-				},
-			});
+			if (unsupportedObjectRelationship?.errorMessage) {
+				openToast({
+					message: unsupportedObjectRelationship?.errorMessage,
+					toastProps: unsupportedObjectRelationship.learnMessage && {
+						actions: (
+							<LearnResourcesContext.Provider
+								value={learnResourceContext}
+							>
+								<LearnMessage
+									className="alert-link"
+									resource="object-web"
+									resourceKey={
+										unsupportedObjectRelationship.learnMessage
+									}
+								/>
+							</LearnResourcesContext.Provider>
+						),
+					},
+					type: 'warning',
+				});
+			}
+			else {
+				setShowAddObjectRelationshipModal(true);
+				setNewObjectRelationshipSourceNodeProps({
+					parameterRequired: sourceNode?.data?.parameterRequired!,
+					sourceNode: {
+						erc: sourceNode?.data?.externalReferenceCode!,
+					},
+					targetNode: {
+						erc: targetNode?.data?.externalReferenceCode!,
+					},
+				});
+			}
 		},
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[elements]
 	);
 
@@ -130,9 +168,13 @@ function DiagramBuilder() {
 			objectFolderItems: updatedObjectFolderItems,
 		};
 
-		await API.putObjectFolderByExternalReferenceCode(updatedObjectFolder);
-
-		const {edges, nodes} = store.getState();
+		await API.putObjectFolderByExternalReferenceCode({
+			externalReferenceCode: updatedObjectFolder.externalReferenceCode,
+			id: updatedObjectFolder.id,
+			label: updatedObjectFolder.label,
+			name: updatedObjectFolder.name,
+			objectFolderItems: updatedObjectFolder.objectFolderItems,
+		});
 
 		dispatch({
 			payload: {
@@ -156,20 +198,38 @@ function DiagramBuilder() {
 		}
 	};
 
+	const setNodeHandleConnection = (nodeHandleConnectable: boolean) => {
+		dispatch({
+			payload: {
+				nodeHandleConnectable,
+			},
+			type: TYPES.SET_NODE_HANDLE_CONNECTION,
+		});
+	};
+
 	const updateModelBuilderStructure = async (
 		newObjectRelationshipId: number
 	) => {
 		const payload = await getUpdatedModelBuilderStructurePayload(
+			baseResourceURL,
 			selectedObjectFolder.name
 		);
 
 		dispatch({
 			payload: {
 				...payload,
+				dispatch,
 				rightSidebarType: 'objectRelationshipDetails',
 				selectedObjectRelationshipId: newObjectRelationshipId,
 			},
 			type: TYPES.UPDATE_MODEL_BUILDER_STRUCTURE,
+		});
+
+		dispatch({
+			payload: {
+				selectedObjectRelationshipId: newObjectRelationshipId,
+			},
+			type: TYPES.SET_SELECTED_OBJECT_RELATIONSHIP_EDGE,
 		});
 	};
 
@@ -191,8 +251,8 @@ function DiagramBuilder() {
 					objectRelationshipParameterRequired={
 						newObjectRelationshipSourceNodeProps?.parameterRequired!
 					}
-					onAfterSubmit={(newObjectRelationshipId: number) =>
-						updateModelBuilderStructure(newObjectRelationshipId)
+					onAfterAddObjectRelationship={(newObjectRelationship) =>
+						updateModelBuilderStructure(newObjectRelationship.id)
 					}
 					reload={false}
 				/>
@@ -207,21 +267,29 @@ function DiagramBuilder() {
 				minZoom={0.1}
 				nodeTypes={NODE_TYPES}
 				onConnect={onConnect}
+				onConnectStart={() => setNodeHandleConnection(true)}
+				onConnectStop={() => setNodeHandleConnection(false)}
 				onNodeDragStop={(_, node) => onNodeDragStop(node)}
 			>
 				<Background color="#C0C1C3" gap={18} size={1} />
 
 				{!isLoadingObjectFolder ? (
-					<>
+					<div
+						className={classNames(
+							'lfr__object-model-builder-control-container',
+							{
+								'sidebars-closed': !showSidebars,
+								'sidebars-open': showSidebars,
+							}
+						)}
+					>
 						<Controls
-							className={classNames({
-								'lfr__object-model-builder-controls-sidebars-hidden': !showSidebars,
-								'lfr__object-model-builder-controls-sidebars-not-hidden': showSidebars,
-							})}
+							className="lfr__object-model-builder-controls"
 							showInteractive={false}
 						/>
 
 						<MiniMap
+							className="lfr__object-model-builder-minimap"
 							maskColor="none"
 							nodeBorderRadius={8}
 							nodeColor="#F7F8F9"
@@ -233,7 +301,7 @@ function DiagramBuilder() {
 								borderRadius: '8px',
 							}}
 						/>
-					</>
+					</div>
 				) : (
 					<div className="lfr-objects__model-builder-diagram-area-loading">
 						<span

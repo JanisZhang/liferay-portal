@@ -8,10 +8,11 @@ import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
+import {ScreenReaderAnnouncerContextProvider} from '@liferay/layout-js-components-web';
 import classNames from 'classnames';
 import {useId} from 'frontend-js-components-web';
 import {openToast} from 'frontend-js-web';
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {v4 as uuidv4} from 'uuid';
 
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
@@ -23,7 +24,6 @@ import {
 	RuleBuilderActionSection,
 	RuleBuilderConditionSection,
 } from './RuleBuilderSection';
-import ScreenReaderAnnouncerContext from './ScreenReaderContext';
 
 export default function RulesModal({editingRule, onCloseModal}) {
 	const {observer, onClose} = useModal({
@@ -145,18 +145,7 @@ export default function RulesModal({editingRule, onCloseModal}) {
 			<ClayModal.Header>{title}</ClayModal.Header>
 
 			<ClayModal.Body>
-				{ruleError ? (
-					<ClayAlert
-						displayType="danger"
-						hideCloseIcon={false}
-						onClose={() => setRuleError(false)}
-						title={Liferay.Language.get('error')}
-					>
-						{Liferay.Language.get(
-							'the-rule-is-incomplete.-please-check-that-the-conditions-and-actions-are-completed-before-saving'
-						)}
-					</ClayAlert>
-				) : null}
+				<ErrorAlert setVisible={setRuleError} visible={ruleError} />
 
 				<ClayForm.Group
 					className={classNames({'has-error': nameError})}
@@ -201,7 +190,7 @@ export default function RulesModal({editingRule, onCloseModal}) {
 					)}
 				</p>
 
-				<ScreenReaderAnnouncerContext>
+				<ScreenReaderAnnouncerContextProvider>
 					<div
 						aria-label={Liferay.Language.get('conditions')}
 						role="group"
@@ -232,7 +221,7 @@ export default function RulesModal({editingRule, onCloseModal}) {
 							}}
 						/>
 					</div>
-				</ScreenReaderAnnouncerContext>
+				</ScreenReaderAnnouncerContextProvider>
 			</ClayModal.Body>
 
 			<ClayModal.Footer
@@ -266,4 +255,36 @@ function getDefaultName(rules) {
 	}
 
 	return name;
+}
+
+function ErrorAlert({setVisible, visible}) {
+	const alertRef = useRef();
+
+	useEffect(() => {
+		if (visible) {
+			alertRef.current?.scrollIntoView?.({
+				behavior: 'smooth',
+				block: 'center',
+			});
+		}
+	}, [visible]);
+
+	if (!visible) {
+		return null;
+	}
+
+	return (
+		<div ref={alertRef}>
+			<ClayAlert
+				displayType="danger"
+				hideCloseIcon={false}
+				onClose={() => setVisible(false)}
+				title={Liferay.Language.get('error')}
+			>
+				{Liferay.Language.get(
+					'the-rule-is-incomplete.-please-check-that-the-conditions-and-actions-are-completed-before-saving'
+				)}
+			</ClayAlert>
+		</div>
+	);
 }

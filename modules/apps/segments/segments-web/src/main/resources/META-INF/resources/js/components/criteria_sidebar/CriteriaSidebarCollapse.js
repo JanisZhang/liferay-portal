@@ -87,8 +87,6 @@ const PanelWrapper = ({
 		: properties;
 
 	const {isTarget, setElement} = useKeyboardNavigation({
-		handleOpen: onCollapseClick,
-		key,
 		type: LIST_ITEM_TYPES.header,
 	});
 
@@ -115,18 +113,16 @@ const PanelWrapper = ({
 		<ClayPanel
 			collapsable={true}
 			displayTitle={
-				<div className="c-inner" tabIndex="-1">
-					<ClayPanel.Title className="d-flex justify-content-between text-uppercase">
-						{propertyGroup.name}
+				<ClayPanel.Title className="d-flex justify-content-between text-uppercase">
+					{propertyGroup.name}
 
-						{searchValue && (
-							<ClayBadge
-								displayType="secondary"
-								label={filteredProperties.length}
-							/>
-						)}
-					</ClayPanel.Title>
-				</div>
+					{searchValue && (
+						<ClayBadge
+							displayType="secondary"
+							label={filteredProperties.length}
+						/>
+					)}
+				</ClayPanel.Title>
 			}
 			displayType="unstyled"
 			expanded={active}
@@ -140,7 +136,7 @@ const PanelWrapper = ({
 					)}
 				</p>
 
-				<ul className="c-pl-0">
+				<ul className="c-pl-0" role="menu">
 					{!filteredProperties.length && (
 						<li className="align-items-center d-flex empty-message h-100 justify-content-center position-relative">
 							{Liferay.Language.get('no-results-were-found')}

@@ -10,37 +10,40 @@ import {ManagementToolbar} from 'frontend-js-components-web';
 import {navigate, sub} from 'frontend-js-web';
 import React, {useEffect, useRef} from 'react';
 
+/**
+ * @see {ManagementToolbarTag._getResultsLanguageKey} It should have the exact
+ * 	same logic than the corresponding Java method.
+ */
 function getResultText(searchValue, itemTotal, filterTotal) {
-	if (searchValue) {
+	if (!searchValue) {
+		if (filterTotal) {
+			if (itemTotal === 1) {
+				return Liferay.Language.get('x-result-found-with-filters');
+			}
+
+			return Liferay.Language.get('x-results-found-with-filters');
+		}
+
 		if (itemTotal === 1) {
-			if (Liferay.FeatureFlags['LPS-198573'] && filterTotal) {
-				return Liferay.Language.get('x-result-for-x-with-filters');
-			}
-
-			return Liferay.Language.get('x-result-for-x');
+			return Liferay.Language.get('x-result-found');
 		}
-		else {
-			if (Liferay.FeatureFlags['LPS-198573'] && filterTotal) {
-				return Liferay.Language.get('x-results-for-x-with-filters');
-			}
 
-			return Liferay.Language.get('x-results-for-x');
+		return Liferay.Language.get('x-results-found');
+	}
+
+	if (filterTotal) {
+		if (itemTotal === 1) {
+			return Liferay.Language.get('x-result-found-for-x-with-filters');
 		}
+
+		return Liferay.Language.get('x-results-found-for-x-with-filters');
 	}
 
 	if (itemTotal === 1) {
-		if (Liferay.FeatureFlags['LPS-198573'] && filterTotal) {
-			return Liferay.Language.get('x-result-with-filters');
-		}
-
-		return Liferay.Language.get('x-result');
+		return Liferay.Language.get('x-result-found-for-x');
 	}
 
-	if (Liferay.FeatureFlags['LPS-198573'] && filterTotal) {
-		return Liferay.Language.get('x-results-with-filters');
-	}
-
-	return Liferay.Language.get('x-results');
+	return Liferay.Language.get('x-results-found-for-x');
 }
 
 const ResultsBar = ({
@@ -83,6 +86,7 @@ const ResultsBar = ({
 							`"${searchValue}"`
 						)}
 						className="component-text text-truncate-inline"
+						data-qa-id="searchResultText"
 						ref={resultsBarRef}
 						tabIndex={-1}
 					>
@@ -147,13 +151,23 @@ const ResultsBar = ({
 
 							navigate(clearResultsURL);
 						}}
+						onKeyPress={(event) => {
+							if (event.key === 'Enter') {
+								event.preventDefault();
+
+								searchContainerRef.current?.fire('clearFilter');
+
+								navigate(clearResultsURL);
+							}
+						}}
+						tabIndex={0}
 					>
 						{Liferay.Language.get('clear')}
 					</ClayLink>
 				</ManagementToolbar.ResultsBarItem>
 			</ManagementToolbar.ResultsBar>
 
-			{Liferay.FeatureFlags['LPS-198573'] && Boolean(title) && (
+			{Boolean(title) && (
 				<ClayLayout.ContainerFluid className="c-mt-4" size="xl">
 					<h3>{title}</h3>
 				</ClayLayout.ContainerFluid>

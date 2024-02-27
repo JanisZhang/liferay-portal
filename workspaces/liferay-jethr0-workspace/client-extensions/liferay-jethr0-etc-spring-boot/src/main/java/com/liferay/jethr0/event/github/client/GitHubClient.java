@@ -5,14 +5,20 @@
 
 package com.liferay.jethr0.event.github.client;
 
-import com.liferay.jethr0.event.github.comment.GitHubComment;
-import com.liferay.jethr0.event.github.issue.GitHubIssue;
-import com.liferay.jethr0.event.github.ref.GitHubRef;
 import com.liferay.jethr0.util.BaseRetryable;
 import com.liferay.jethr0.util.Retryable;
 import com.liferay.jethr0.util.StringUtil;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import java.net.URL;
+import java.net.URLConnection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONObject;
 
@@ -28,36 +34,46 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class GitHubClient {
 
-	public GitHubComment createGitHubComment(
-		GitHubIssue gitHubIssue, String body) {
-
-		JSONObject requestJSONObject = new JSONObject();
-
-		requestJSONObject.put("body", body);
-
-		return new GitHubComment(
-			new JSONObject(
-				_requestPost(gitHubIssue.getCommentsURL(), requestJSONObject)));
-	}
-
-	public GitHubRef getGitHubRef(URL gitHubRefURL) {
-		URL gitHubRefApiURL = StringUtil.toURL(
-			StringUtil.combine(
-				"https://api.github.com/repos/",
-				GitHubRef.getUserName(gitHubRefURL), "/",
-				GitHubRef.getRepositoryName(gitHubRefURL), "/branches/",
-				GitHubRef.getRefName(gitHubRefURL)));
-
-		return new GitHubRef(
-			gitHubRefURL, new JSONObject(_requestGet(gitHubRefApiURL)));
-	}
-
-	private String _getAuthorization() {
-		return StringUtil.combine("token ", _gitHubToken);
-	}
-
-	private String _requestGet(URL url) {
+	public String requestGet(URL url) {
 		String urlString = url.toString();
+
+		if (urlString.startsWith("https://raw.githubusercontent.com")) {
+			try {
+				StringBuilder sb = new StringBuilder();
+
+				String line = null;
+
+				URLConnection urlConnection = url.openConnection();
+
+				urlConnection.setRequestProperty(
+					"Accept", MediaType.APPLICATION_JSON_VALUE);
+				urlConnection.setRequestProperty(
+					"Authorization", _getAuthorization());
+
+				InputStream inputStream = urlConnection.getInputStream();
+
+				BufferedReader bufferedReader = new BufferedReader(
+					new InputStreamReader(inputStream));
+
+				while ((line = bufferedReader.readLine()) != null) {
+					sb.append(line);
+					sb.append("\n");
+				}
+
+				try {
+					return sb.toString();
+				}
+				finally {
+					bufferedReader.close();
+					inputStream.close();
+				}
+			}
+			catch (IOException ioException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(ioException);
+				}
+			}
+		}
 
 		String gitHubURL = urlString.replaceAll(
 			"https://api\\.github\\.com", _gitHubProxyURL);
@@ -73,6 +89,51 @@ public class GitHubClient {
 					MediaType.APPLICATION_JSON
 				).header(
 					"Authorization", _getAuthorization()
+				).retrieve(
+				).bodyToMono(
+					String.class
+				).block();
+
+				if (response == null) {
+					throw new RuntimeException("Unable to get authorization");
+				}
+
+				return response;
+			}
+
+			@Override
+			protected String getRetryMessage(int retryCount) {
+				return StringUtil.combine(
+					"Unable to post to ", url, ". Retry attempt ", retryCount,
+					" of ", maxRetries);
+			}
+
+		};
+
+		return retryable.executeWithRetries();
+	}
+
+	public String requestPatch(URL url, JSONObject requestJSONObject) {
+		String urlString = url.toString();
+
+		String gitHubURL = urlString.replaceAll(
+			"https://api\\.github\\.com", _gitHubProxyURL);
+
+		Retryable<String> retryable = new BaseRetryable<String>() {
+
+			@Override
+			public String execute() {
+				String response = WebClient.create(
+					gitHubURL
+				).patch(
+				).accept(
+					MediaType.APPLICATION_JSON
+				).contentType(
+					MediaType.APPLICATION_JSON
+				).header(
+					"Authorization", _getAuthorization()
+				).body(
+					BodyInserters.fromValue(requestJSONObject.toString())
 				).retrieve(
 				).bodyToMono(
 					String.class
@@ -97,7 +158,7 @@ public class GitHubClient {
 		return retryable.executeWithRetries();
 	}
 
-	private String _requestPost(URL url, JSONObject requestJSONObject) {
+	public String requestPost(URL url, JSONObject requestJSONObject) {
 		String urlString = url.toString();
 
 		String gitHubURL = urlString.replaceAll(
@@ -141,6 +202,57 @@ public class GitHubClient {
 
 		return retryable.executeWithRetries();
 	}
+
+	public String requestPut(URL url, JSONObject requestJSONObject) {
+		String urlString = url.toString();
+
+		String gitHubURL = urlString.replaceAll(
+			"https://api\\.github\\.com", _gitHubProxyURL);
+
+		Retryable<String> retryable = new BaseRetryable<String>() {
+
+			@Override
+			public String execute() {
+				String response = WebClient.create(
+					gitHubURL
+				).put(
+				).accept(
+					MediaType.APPLICATION_JSON
+				).contentType(
+					MediaType.APPLICATION_JSON
+				).header(
+					"Authorization", _getAuthorization()
+				).body(
+					BodyInserters.fromValue(requestJSONObject.toString())
+				).retrieve(
+				).bodyToMono(
+					String.class
+				).block();
+
+				if (response == null) {
+					throw new RuntimeException("No response");
+				}
+
+				return response;
+			}
+
+			@Override
+			protected String getRetryMessage(int retryCount) {
+				return StringUtil.combine(
+					"Unable to post to ", url, ". Retry attempt ", retryCount,
+					" of ", maxRetries);
+			}
+
+		};
+
+		return retryable.executeWithRetries();
+	}
+
+	private String _getAuthorization() {
+		return StringUtil.combine("token ", _gitHubToken);
+	}
+
+	private static final Log _log = LogFactory.getLog(GitHubClient.class);
 
 	@Value("${JETHR0_GITHUB_PROXY_URL:https://api.github.com}")
 	private String _gitHubProxyURL;

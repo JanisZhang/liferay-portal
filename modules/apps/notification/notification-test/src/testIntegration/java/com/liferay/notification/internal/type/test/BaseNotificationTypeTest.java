@@ -20,6 +20,7 @@ import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.definition.notification.term.util.ObjectDefinitionNotificationTermUtil;
+import com.liferay.object.field.builder.AttachmentObjectFieldBuilder;
 import com.liferay.object.field.builder.BooleanObjectFieldBuilder;
 import com.liferay.object.field.builder.DateObjectFieldBuilder;
 import com.liferay.object.field.builder.DateTimeObjectFieldBuilder;
@@ -37,6 +38,7 @@ import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Contact;
@@ -182,11 +184,39 @@ public class BaseNotificationTypeTest {
 			_objectDefinitionLocalService.addCustomObjectDefinition(
 				user1.getUserId(), 0, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"A" + RandomTestUtil.randomString(), null, null,
+				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
 				Arrays.asList(
+					new AttachmentObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"attachmentObjectField"
+					).objectFieldSettings(
+						Arrays.asList(
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.
+									NAME_ACCEPTED_FILE_EXTENSIONS
+							).value(
+								"txt"
+							).build(),
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.NAME_FILE_SOURCE
+							).value(
+								ObjectFieldSettingConstants.VALUE_USER_COMPUTER
+							).build(),
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.NAME_MAX_FILE_SIZE
+							).value(
+								"100"
+							).build())
+					).build(),
 					new BooleanObjectFieldBuilder(
 					).labelMap(
 						LocalizedMapUtil.getLocalizedMap(
@@ -257,7 +287,7 @@ public class BaseNotificationTypeTest {
 			_objectDefinitionLocalService.addCustomObjectDefinition(
 				user1.getUserId(), 0, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"A" + RandomTestUtil.randomString(), null, null,
+				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				false, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
@@ -296,7 +326,7 @@ public class BaseNotificationTypeTest {
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_childAuthorTermValues = HashMapBuilder.<String, Object>put(
 			getTermName("AUTHOR_EMAIL_ADDRESS"), user2.getEmailAddress()
@@ -413,7 +443,7 @@ public class BaseNotificationTypeTest {
 	protected String getObjectRelationshipObjectField2Name()
 		throws PortalException {
 
-		ObjectField objectField = _objectFieldLocalService.getObjectField(
+		ObjectField objectField = objectFieldLocalService.getObjectField(
 			objectRelationship.getObjectFieldId2());
 
 		return objectField.getName();
@@ -467,6 +497,9 @@ public class BaseNotificationTypeTest {
 
 	protected static LinkedHashMap<String, Object> childObjectEntryValues;
 	protected static DTOConverterContext dtoConverterContext;
+
+	@Inject
+	protected static ObjectFieldLocalService objectFieldLocalService;
 
 	@DeleteAfterTestRun
 	protected static ObjectRelationship objectRelationship;
@@ -537,9 +570,6 @@ public class BaseNotificationTypeTest {
 
 	@Inject
 	private static ObjectDefinitionLocalService _objectDefinitionLocalService;
-
-	@Inject
-	private static ObjectFieldLocalService _objectFieldLocalService;
 
 	@Inject
 	private static ObjectRelationshipLocalService

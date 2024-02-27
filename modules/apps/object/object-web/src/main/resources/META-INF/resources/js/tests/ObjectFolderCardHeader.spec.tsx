@@ -11,17 +11,49 @@ import React from 'react';
 import ObjectFolderCardHeader from '../components/ViewObjectDefinitions/ObjectFolderCardHeader';
 import {getObjectFolderActions} from '../components/ViewObjectDefinitions/objectDefinitionUtil';
 
+const defaultFolderHTTPMethods = {
+	objectDefinitionActions: {
+		create: {href: '', method: 'POST'},
+	},
+	objectFolderActions: {
+		get: {href: '', method: 'GET'},
+		permissions: {href: '', method: 'PATCH'},
+	},
+};
+
+const ticketFolderHTTPMethods = {
+	objectDefinitionActions: {
+		create: {href: '', method: 'POST'},
+	},
+	objectFolderActions: {
+		delete: {href: '', method: 'DELETE'},
+		get: {href: '', method: 'GET'},
+		permissions: {href: '', method: 'PATCH'},
+		update: {href: '', method: 'PUT'},
+	},
+};
+
 describe('The ObjectFolderCardHeader component should', () => {
 	it('render all object folder actions', () => {
 		render(
 			<ObjectFolderCardHeader
 				externalReferenceCode="ticket"
 				items={
-					getObjectFolderActions(1, '', () => {}, {
-						delete: {href: '', method: 'DELETE'},
-						get: {href: 'GET', method: ''},
-						permissions: {href: 'PATCH', method: ''},
-						update: {href: '', method: 'PUT'},
+					getObjectFolderActions({
+						actions: {
+							objectDefinitionActions:
+								ticketFolderHTTPMethods.objectDefinitionActions,
+							objectFolderActions:
+								ticketFolderHTTPMethods.objectFolderActions,
+						},
+						baseResourceURL: '',
+						importObjectDefinitionURL: '',
+						objectFolderExternalReferenceCode: '',
+						objectFolderId: 1,
+						objectFolderPermissionsURL: '',
+						portletNamespace: '',
+						setModalImportProperties: () => {},
+						setShowModal: () => {},
 					}) as IItem[]
 				}
 				label={{en_US: 'Ticket'}}
@@ -29,36 +61,64 @@ describe('The ObjectFolderCardHeader component should', () => {
 			></ObjectFolderCardHeader>
 		);
 
-		userEvent.click(screen.getByRole('button', {name: 'folder-actions'}));
+		userEvent.click(
+			screen.getByRole('button', {name: 'object-folder-actions'})
+		);
 
-		expect(screen.getAllByRole('menuitem')).toHaveLength(3);
+		const menuItem = screen.getAllByRole('menuitem');
 
-		expect(screen.getByText('delete-folder')).toBeInTheDocument();
+		expect(menuItem).toHaveLength(5);
 
-		expect(screen.getByText('edit-label-and-erc')).toBeInTheDocument();
+		expect(menuItem[0]).toHaveAttribute('value', 'editObjectFolder');
 
-		expect(screen.getByText('folder-permissions')).toBeInTheDocument();
+		expect(menuItem[1]).toHaveAttribute('value', 'exportObjectFolder');
+
+		expect(menuItem[2]).toHaveAttribute('value', 'importObjectDefinition');
+
+		expect(menuItem[3]).toHaveAttribute('value', 'objectFolderPermissions');
+
+		expect(menuItem[4]).toHaveAttribute('value', 'deleteObjectFolder');
 	});
 
-	it('not render delete and edit object folder actions on uncategorized object folder', () => {
+	it('not render delete and edit object folder actions on default object folder', () => {
 		render(
 			<ObjectFolderCardHeader
-				externalReferenceCode="uncategorized"
+				externalReferenceCode="default"
 				items={
-					getObjectFolderActions(2, '', () => {}, {
-						get: {href: 'GET', method: ''},
-						permissions: {href: 'PATCH', method: ''},
+					getObjectFolderActions({
+						actions: {
+							objectDefinitionActions:
+								defaultFolderHTTPMethods.objectDefinitionActions,
+							objectFolderActions:
+								defaultFolderHTTPMethods.objectFolderActions,
+						},
+						baseResourceURL: '',
+						importObjectDefinitionURL: '',
+						objectFolderExternalReferenceCode: '',
+						objectFolderId: 2,
+						objectFolderPermissionsURL: '',
+						portletNamespace: '',
+						setModalImportProperties: () => {},
+						setShowModal: () => {},
 					}) as IItem[]
 				}
-				label={{en_US: 'Uncategorized'}}
+				label={{en_US: 'Default'}}
 				modelBuilderURL=""
 			></ObjectFolderCardHeader>
 		);
 
-		userEvent.click(screen.getByRole('button', {name: 'folder-actions'}));
+		userEvent.click(
+			screen.getByRole('button', {name: 'object-folder-actions'})
+		);
 
-		expect(screen.getAllByRole('menuitem')).toHaveLength(1);
+		const menuItem = screen.getAllByRole('menuitem');
 
-		expect(screen.getByText('folder-permissions')).toBeInTheDocument();
+		expect(menuItem).toHaveLength(3);
+
+		expect(menuItem[0]).toHaveAttribute('value', 'exportObjectFolder');
+
+		expect(menuItem[1]).toHaveAttribute('value', 'importObjectDefinition');
+
+		expect(menuItem[2]).toHaveAttribute('value', 'objectFolderPermissions');
 	});
 });

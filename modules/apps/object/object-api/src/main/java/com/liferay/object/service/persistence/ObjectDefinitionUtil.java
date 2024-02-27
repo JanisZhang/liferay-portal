@@ -1126,6 +1126,274 @@ public class ObjectDefinitionUtil {
 	}
 
 	/**
+	 * Returns all the object definitions where accountEntryRestricted = &#63;.
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @return the matching object definitions
+	 */
+	public static List<ObjectDefinition> findByAccountEntryRestricted(
+		boolean accountEntryRestricted) {
+
+		return getPersistence().findByAccountEntryRestricted(
+			accountEntryRestricted);
+	}
+
+	/**
+	 * Returns a range of all the object definitions where accountEntryRestricted = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectDefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param start the lower bound of the range of object definitions
+	 * @param end the upper bound of the range of object definitions (not inclusive)
+	 * @return the range of matching object definitions
+	 */
+	public static List<ObjectDefinition> findByAccountEntryRestricted(
+		boolean accountEntryRestricted, int start, int end) {
+
+		return getPersistence().findByAccountEntryRestricted(
+			accountEntryRestricted, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the object definitions where accountEntryRestricted = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectDefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param start the lower bound of the range of object definitions
+	 * @param end the upper bound of the range of object definitions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching object definitions
+	 */
+	public static List<ObjectDefinition> findByAccountEntryRestricted(
+		boolean accountEntryRestricted, int start, int end,
+		OrderByComparator<ObjectDefinition> orderByComparator) {
+
+		return getPersistence().findByAccountEntryRestricted(
+			accountEntryRestricted, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the object definitions where accountEntryRestricted = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectDefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param start the lower bound of the range of object definitions
+	 * @param end the upper bound of the range of object definitions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching object definitions
+	 */
+	public static List<ObjectDefinition> findByAccountEntryRestricted(
+		boolean accountEntryRestricted, int start, int end,
+		OrderByComparator<ObjectDefinition> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByAccountEntryRestricted(
+			accountEntryRestricted, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first object definition in the ordered set where accountEntryRestricted = &#63;.
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object definition
+	 * @throws NoSuchObjectDefinitionException if a matching object definition could not be found
+	 */
+	public static ObjectDefinition findByAccountEntryRestricted_First(
+			boolean accountEntryRestricted,
+			OrderByComparator<ObjectDefinition> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectDefinitionException {
+
+		return getPersistence().findByAccountEntryRestricted_First(
+			accountEntryRestricted, orderByComparator);
+	}
+
+	/**
+	 * Returns the first object definition in the ordered set where accountEntryRestricted = &#63;.
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object definition, or <code>null</code> if a matching object definition could not be found
+	 */
+	public static ObjectDefinition fetchByAccountEntryRestricted_First(
+		boolean accountEntryRestricted,
+		OrderByComparator<ObjectDefinition> orderByComparator) {
+
+		return getPersistence().fetchByAccountEntryRestricted_First(
+			accountEntryRestricted, orderByComparator);
+	}
+
+	/**
+	 * Returns the last object definition in the ordered set where accountEntryRestricted = &#63;.
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object definition
+	 * @throws NoSuchObjectDefinitionException if a matching object definition could not be found
+	 */
+	public static ObjectDefinition findByAccountEntryRestricted_Last(
+			boolean accountEntryRestricted,
+			OrderByComparator<ObjectDefinition> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectDefinitionException {
+
+		return getPersistence().findByAccountEntryRestricted_Last(
+			accountEntryRestricted, orderByComparator);
+	}
+
+	/**
+	 * Returns the last object definition in the ordered set where accountEntryRestricted = &#63;.
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object definition, or <code>null</code> if a matching object definition could not be found
+	 */
+	public static ObjectDefinition fetchByAccountEntryRestricted_Last(
+		boolean accountEntryRestricted,
+		OrderByComparator<ObjectDefinition> orderByComparator) {
+
+		return getPersistence().fetchByAccountEntryRestricted_Last(
+			accountEntryRestricted, orderByComparator);
+	}
+
+	/**
+	 * Returns the object definitions before and after the current object definition in the ordered set where accountEntryRestricted = &#63;.
+	 *
+	 * @param objectDefinitionId the primary key of the current object definition
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next object definition
+	 * @throws NoSuchObjectDefinitionException if a object definition with the primary key could not be found
+	 */
+	public static ObjectDefinition[] findByAccountEntryRestricted_PrevAndNext(
+			long objectDefinitionId, boolean accountEntryRestricted,
+			OrderByComparator<ObjectDefinition> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectDefinitionException {
+
+		return getPersistence().findByAccountEntryRestricted_PrevAndNext(
+			objectDefinitionId, accountEntryRestricted, orderByComparator);
+	}
+
+	/**
+	 * Returns all the object definitions that the user has permission to view where accountEntryRestricted = &#63;.
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @return the matching object definitions that the user has permission to view
+	 */
+	public static List<ObjectDefinition> filterFindByAccountEntryRestricted(
+		boolean accountEntryRestricted) {
+
+		return getPersistence().filterFindByAccountEntryRestricted(
+			accountEntryRestricted);
+	}
+
+	/**
+	 * Returns a range of all the object definitions that the user has permission to view where accountEntryRestricted = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectDefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param start the lower bound of the range of object definitions
+	 * @param end the upper bound of the range of object definitions (not inclusive)
+	 * @return the range of matching object definitions that the user has permission to view
+	 */
+	public static List<ObjectDefinition> filterFindByAccountEntryRestricted(
+		boolean accountEntryRestricted, int start, int end) {
+
+		return getPersistence().filterFindByAccountEntryRestricted(
+			accountEntryRestricted, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the object definitions that the user has permissions to view where accountEntryRestricted = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectDefinitionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param start the lower bound of the range of object definitions
+	 * @param end the upper bound of the range of object definitions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching object definitions that the user has permission to view
+	 */
+	public static List<ObjectDefinition> filterFindByAccountEntryRestricted(
+		boolean accountEntryRestricted, int start, int end,
+		OrderByComparator<ObjectDefinition> orderByComparator) {
+
+		return getPersistence().filterFindByAccountEntryRestricted(
+			accountEntryRestricted, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns the object definitions before and after the current object definition in the ordered set of object definitions that the user has permission to view where accountEntryRestricted = &#63;.
+	 *
+	 * @param objectDefinitionId the primary key of the current object definition
+	 * @param accountEntryRestricted the account entry restricted
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next object definition
+	 * @throws NoSuchObjectDefinitionException if a object definition with the primary key could not be found
+	 */
+	public static ObjectDefinition[]
+			filterFindByAccountEntryRestricted_PrevAndNext(
+				long objectDefinitionId, boolean accountEntryRestricted,
+				OrderByComparator<ObjectDefinition> orderByComparator)
+		throws com.liferay.object.exception.NoSuchObjectDefinitionException {
+
+		return getPersistence().filterFindByAccountEntryRestricted_PrevAndNext(
+			objectDefinitionId, accountEntryRestricted, orderByComparator);
+	}
+
+	/**
+	 * Removes all the object definitions where accountEntryRestricted = &#63; from the database.
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 */
+	public static void removeByAccountEntryRestricted(
+		boolean accountEntryRestricted) {
+
+		getPersistence().removeByAccountEntryRestricted(accountEntryRestricted);
+	}
+
+	/**
+	 * Returns the number of object definitions where accountEntryRestricted = &#63;.
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @return the number of matching object definitions
+	 */
+	public static int countByAccountEntryRestricted(
+		boolean accountEntryRestricted) {
+
+		return getPersistence().countByAccountEntryRestricted(
+			accountEntryRestricted);
+	}
+
+	/**
+	 * Returns the number of object definitions that the user has permission to view where accountEntryRestricted = &#63;.
+	 *
+	 * @param accountEntryRestricted the account entry restricted
+	 * @return the number of matching object definitions that the user has permission to view
+	 */
+	public static int filterCountByAccountEntryRestricted(
+		boolean accountEntryRestricted) {
+
+		return getPersistence().filterCountByAccountEntryRestricted(
+			accountEntryRestricted);
+	}
+
+	/**
 	 * Returns all the object definitions where system = &#63;.
 	 *
 	 * @param system the system

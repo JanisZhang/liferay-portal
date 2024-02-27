@@ -85,8 +85,8 @@ public interface FragmentEntryLocalService
 			long userId, long groupId, long fragmentCollectionId,
 			String fragmentEntryKey, String name, String css, String html,
 			String js, boolean cacheable, String configuration, String icon,
-			long previewFileEntryId, int type, String typeOptions, int status,
-			ServiceContext serviceContext)
+			long previewFileEntryId, boolean readOnly, int type,
+			String typeOptions, int status, ServiceContext serviceContext)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -460,14 +460,7 @@ public interface FragmentEntryLocalService
 			long userId, long fragmentEntryId, long fragmentCollectionId,
 			String name, String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			int status)
-		throws PortalException;
-
-	public FragmentEntry updateFragmentEntry(
-			long userId, long fragmentEntryId, long fragmentCollectionId,
-			String name, String css, String html, String js, boolean cacheable,
-			String configuration, String icon, long previewFileEntryId,
-			String typeOptions, int status)
+			boolean readOnly, String typeOptions, int status)
 		throws PortalException;
 
 	public FragmentEntry updateFragmentEntry(long fragmentEntryId, String name)

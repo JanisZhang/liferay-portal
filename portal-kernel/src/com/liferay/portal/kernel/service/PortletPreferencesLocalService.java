@@ -321,6 +321,10 @@ public interface PortletPreferencesLocalService
 	public List<PortletPreferences> getPortletPreferencesByPlid(long plid);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<PortletPreferences> getPortletPreferencesByPortletId(
+		String portletId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long getPortletPreferencesCount(
 		int ownerType, long plid, String portletId);
 

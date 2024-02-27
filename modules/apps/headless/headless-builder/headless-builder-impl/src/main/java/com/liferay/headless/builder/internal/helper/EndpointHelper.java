@@ -124,6 +124,31 @@ public class EndpointHelper {
 			responseEntityMaps, pagination, objectEntriesPage.getTotalCount());
 	}
 
+	public Map<String, Object> postObjectEntry(
+			long companyId, Map<String, Object> properties,
+			APIApplication.Schema requestSchema,
+			APIApplication.Schema responseSchema, String scopeKey)
+		throws Exception {
+
+		ObjectEntry objectEntry = new ObjectEntry();
+
+		Map<String, Object> objectEntryProperties = new HashMap<>();
+
+		for (APIApplication.Property property : requestSchema.getProperties()) {
+			_populateObjectEntryProperties(
+				objectEntryProperties, properties, property);
+		}
+
+		objectEntry.setProperties(objectEntryProperties);
+
+		return _getResponseEntityMap(
+			_objectEntryHelper.addObjectEntry(
+				companyId,
+				requestSchema.getMainObjectDefinitionExternalReferenceCode(),
+				objectEntry, scopeKey),
+			responseSchema);
+	}
+
 	private Map<String, Object> _getObjectEntryProperties(
 		ObjectEntry objectEntry) {
 
@@ -140,6 +165,37 @@ public class EndpointHelper {
 		).put(
 			"modifiedDate", objectEntry.getDateModified()
 		).build();
+	}
+
+	private Object _getPropertyValue(
+		ObjectEntry objectEntry, APIApplication.Property property) {
+
+		if (property.getType() == APIApplication.Property.Type.RECORD) {
+			Map<String, Object> properties = new HashMap<>();
+
+			for (APIApplication.Property childProperty :
+					property.getProperties()) {
+
+				properties.put(
+					childProperty.getName(),
+					_getPropertyValue(objectEntry, childProperty));
+			}
+
+			return properties;
+		}
+
+		Map<String, Object> objectEntryProperties = _getObjectEntryProperties(
+			objectEntry);
+
+		List<String> objectRelationshipNames =
+			property.getObjectRelationshipNames();
+
+		if (objectRelationshipNames.isEmpty()) {
+			return objectEntryProperties.get(property.getSourceFieldName());
+		}
+
+		return _getRelatedObjectValue(
+			objectEntry, property, objectRelationshipNames);
 	}
 
 	private Object _getRelatedObjectValue(
@@ -189,33 +245,43 @@ public class EndpointHelper {
 	}
 
 	private Map<String, Object> _getResponseEntityMap(
-			ObjectEntry objectEntry, APIApplication.Schema schema)
-		throws Exception {
+		ObjectEntry objectEntry, APIApplication.Schema schema) {
+
+		if (schema == null) {
+			return null;
+		}
 
 		Map<String, Object> responseEntityMap = new HashMap<>();
 
-		Map<String, Object> objectEntryProperties = _getObjectEntryProperties(
-			objectEntry);
-
 		for (APIApplication.Property property : schema.getProperties()) {
-			List<String> objectRelationshipNames =
-				property.getObjectRelationshipNames();
-
-			if (objectRelationshipNames.isEmpty()) {
-				responseEntityMap.put(
-					property.getName(),
-					objectEntryProperties.get(property.getSourceFieldName()));
-
-				continue;
-			}
-
 			responseEntityMap.put(
-				property.getName(),
-				_getRelatedObjectValue(
-					objectEntry, property, objectRelationshipNames));
+				property.getName(), _getPropertyValue(objectEntry, property));
 		}
 
 		return responseEntityMap;
+	}
+
+	private void _populateObjectEntryProperties(
+		Map<String, Object> objectEntryProperties,
+		Map<String, Object> properties, APIApplication.Property property) {
+
+		if (property.getType() == APIApplication.Property.Type.RECORD) {
+			for (APIApplication.Property childProperty :
+					property.getProperties()) {
+
+				_populateObjectEntryProperties(
+					objectEntryProperties,
+					(Map<String, Object>)properties.get(property.getName()),
+					childProperty);
+			}
+		}
+		else {
+			Object value = properties.get(property.getName());
+
+			if (value != null) {
+				objectEntryProperties.put(property.getSourceFieldName(), value);
+			}
+		}
 	}
 
 	@Reference

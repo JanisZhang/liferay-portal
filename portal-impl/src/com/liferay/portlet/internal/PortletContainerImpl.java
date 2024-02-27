@@ -56,6 +56,7 @@ import com.liferay.portal.kernel.servlet.TransferHeadersHelperUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -259,12 +260,6 @@ public class PortletContainerImpl implements PortletContainer {
 
 				return null;
 			});
-	}
-
-	public void setPortletConfigurationIconMenu(
-		PortletConfigurationIconMenu portletConfigurationIconMenu) {
-
-		_portletConfigurationIconMenu = portletConfigurationIconMenu;
 	}
 
 	protected long getScopeGroupId(
@@ -528,8 +523,15 @@ public class PortletContainerImpl implements PortletContainer {
 				liferayActionResponse.getRedirectLocation();
 
 			if (Validator.isNotNull(redirectLocation)) {
-				return new ActionResult(
-					events, PortalUtil.escapeRedirect(redirectLocation));
+				if (!GetterUtil.getBoolean(
+						liferayActionResponse.getProperty(
+							LiferayActionResponse.SKIP_ESCAPE_REDIRECT))) {
+
+					redirectLocation = PortalUtil.escapeRedirect(
+						redirectLocation);
+				}
+
+				return new ActionResult(events, redirectLocation);
 			}
 
 			if (!portlet.isActionURLRedirect()) {
@@ -818,11 +820,8 @@ public class PortletContainerImpl implements PortletContainer {
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
-		_portletConfigurationIconMenu.setComparator(
+		PortletConfigurationIconMenu.INSTANCE.setComparator(
 			PortletConfigurationIconComparator.INSTANCE);
-
-		portletDisplay.setPortletConfigurationIconMenu(
-			_portletConfigurationIconMenu);
 
 		PortletDisplay portletDisplayClone = PortletDisplayFactory.create();
 
@@ -1135,7 +1134,5 @@ public class PortletContainerImpl implements PortletContainer {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PortletContainerImpl.class);
-
-	private PortletConfigurationIconMenu _portletConfigurationIconMenu;
 
 }

@@ -15,7 +15,6 @@ import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
-import com.liferay.object.exception.ObjectDefinitionEnableLocalizationException;
 import com.liferay.object.exception.ObjectFieldBusinessTypeException;
 import com.liferay.object.exception.ObjectFieldDBTypeException;
 import com.liferay.object.exception.ObjectFieldLabelException;
@@ -139,19 +138,92 @@ public class ObjectFieldLocalServiceTest {
 	@Test
 	public void testAddCustomObjectField() throws Exception {
 		AssertUtils.assertFailure(
-			ObjectDefinitionEnableLocalizationException.class, null,
+			ObjectFieldBusinessTypeException.class,
+			ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION +
+				" business type is not indexable",
 			() -> ObjectDefinitionTestUtil.addCustomObjectDefinition(
 				false, _objectDefinitionLocalService,
 				Arrays.asList(
-					new TextObjectFieldBuilder(
+					new AggregationObjectFieldBuilder(
+					).indexed(
+						true
 					).labelMap(
 						LocalizedMapUtil.getLocalizedMap(
 							RandomTestUtil.randomString())
 					).name(
 						"a" + RandomTestUtil.randomString()
-					).localized(
-						true
+					).objectFieldSettings(
+						Arrays.asList(
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.NAME_FUNCTION
+							).value(
+								ObjectFieldSettingConstants.VALUE_MAX
+							).build(),
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.
+									NAME_OBJECT_FIELD_NAME
+							).value(
+								"integer"
+							).build(),
+							new ObjectFieldSettingBuilder(
+							).name(
+								ObjectFieldSettingConstants.
+									NAME_OBJECT_RELATIONSHIP_NAME
+							).value(
+								"oneToManyRelationshipName"
+							).build())
 					).build())));
+		AssertUtils.assertFailure(
+			ObjectFieldBusinessTypeException.class,
+			ObjectFieldConstants.BUSINESS_TYPE_ENCRYPTED +
+				" business type is not indexable",
+			() -> ObjectFieldTestUtil.withEncryptedObjectFieldProperties(
+				"AES", true, ObjectFieldTestUtil.generateKey("AES"),
+				() -> ObjectDefinitionTestUtil.addCustomObjectDefinition(
+					false, _objectDefinitionLocalService,
+					Arrays.asList(
+						new EncryptedObjectFieldBuilder(
+						).indexed(
+							true
+						).labelMap(
+							LocalizedMapUtil.getLocalizedMap(
+								RandomTestUtil.randomString())
+						).name(
+							"a" + RandomTestUtil.randomString()
+						).build()))));
+		AssertUtils.assertFailure(
+			ObjectFieldBusinessTypeException.class,
+			ObjectFieldConstants.BUSINESS_TYPE_FORMULA +
+				" business type is not indexable",
+			() -> ObjectDefinitionTestUtil.addCustomObjectDefinition(
+				false, _objectDefinitionLocalService,
+				Arrays.asList(
+					new FormulaObjectFieldBuilder(
+					).indexed(
+						true
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"a" + RandomTestUtil.randomString()
+					).objectFieldSettings(
+						Arrays.asList(
+							new ObjectFieldSettingBuilder(
+							).name(
+								"script"
+							).value(
+								"weight + 10"
+							).build(),
+							new ObjectFieldSettingBuilder(
+							).name(
+								"output"
+							).value(
+								ObjectFieldConstants.BUSINESS_TYPE_DECIMAL
+							).build())
+					).build())));
+
 		AssertUtils.assertFailure(
 			ObjectFieldBusinessTypeException.class,
 			"Business type encrypted can only be used in object definitions " +
@@ -183,7 +255,7 @@ public class ObjectFieldLocalServiceTest {
 			() -> _objectDefinitionLocalService.addCustomObjectDefinition(
 				TestPropsValues.getUserId(), 0, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"A" + RandomTestUtil.randomString(), null, null,
+				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_SALESFORCE,
@@ -198,19 +270,21 @@ public class ObjectFieldLocalServiceTest {
 						Arrays.asList(
 							new ObjectFieldSettingBuilder(
 							).name(
-								"function"
+								ObjectFieldSettingConstants.NAME_FUNCTION
 							).value(
 								"MAX"
 							).build(),
 							new ObjectFieldSettingBuilder(
 							).name(
-								"objectFieldName"
+								ObjectFieldSettingConstants.
+									NAME_OBJECT_FIELD_NAME
 							).value(
 								"integer"
 							).build(),
 							new ObjectFieldSettingBuilder(
 							).name(
-								"objectRelationshipName"
+								ObjectFieldSettingConstants.
+									NAME_OBJECT_RELATIONSHIP_NAME
 							).value(
 								"oneToManyRelationshipName"
 							).build())
@@ -222,7 +296,7 @@ public class ObjectFieldLocalServiceTest {
 			() -> _objectDefinitionLocalService.addCustomObjectDefinition(
 				TestPropsValues.getUserId(), 0, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"A" + RandomTestUtil.randomString(), null, null,
+				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_SALESFORCE,
@@ -300,7 +374,7 @@ public class ObjectFieldLocalServiceTest {
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				objectRelationshipName, false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		AssertUtils.assertFailure(
 			ObjectFieldNameException.MustNotBeEqualToObjectRelationshipName.
@@ -350,7 +424,7 @@ public class ObjectFieldLocalServiceTest {
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				objectRelationshipName, false,
-				ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY, null);
 
 		AssertUtils.assertFailure(
 			ObjectFieldNameException.MustNotBeEqualToObjectRelationshipName.
@@ -750,6 +824,31 @@ public class ObjectFieldLocalServiceTest {
 		Assert.assertEquals("baker", objectField1.getName());
 		Assert.assertTrue(objectField1.isRequired());
 
+		// Object field indexed language id
+
+		objectField1 = _addCustomObjectField(
+			new TextObjectFieldBuilder(
+			).indexed(
+				false
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).name(
+				"a" + RandomTestUtil.randomString()
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).build());
+
+		Assert.assertEquals(
+			StringPool.BLANK, objectField1.getIndexedLanguageId());
+
+		objectField1.setIndexed(true);
+
+		objectField1 = _addOrUpdateCustomObjectField(objectField1);
+
+		Assert.assertEquals(
+			LanguageUtil.getLanguageId(LocaleUtil.getDefault()),
+			objectField1.getIndexedLanguageId());
+
 		// Object field label needs to be replicated when there is an update
 		// with another default language
 
@@ -780,13 +879,13 @@ public class ObjectFieldLocalServiceTest {
 			_getReadOnlyTextObjectField(
 				objectDefinition.getObjectDefinitionId(), null, null));
 
-		ObjectField finalObjectField = objectField1;
+		ObjectField finalObjectField1 = objectField1;
 
 		AssertUtils.assertFailure(
 			ObjectFieldReadOnlyConditionExpressionException.class,
 			"Read only condition expression is required",
 			() -> _updateReadOnlyObjectField(
-				finalObjectField, ObjectFieldConstants.READ_ONLY_CONDITIONAL,
+				finalObjectField1, ObjectFieldConstants.READ_ONLY_CONDITIONAL,
 				null));
 
 		String invalidDDMScript = RandomTestUtil.randomString() + "()";
@@ -795,7 +894,7 @@ public class ObjectFieldLocalServiceTest {
 			ObjectFieldReadOnlyConditionExpressionException.class,
 			"Syntax error in: " + invalidDDMScript,
 			() -> _updateReadOnlyObjectField(
-				finalObjectField, ObjectFieldConstants.READ_ONLY_CONDITIONAL,
+				finalObjectField1, ObjectFieldConstants.READ_ONLY_CONDITIONAL,
 				invalidDDMScript));
 
 		String invalidReadOnly = RandomTestUtil.randomString();
@@ -804,7 +903,7 @@ public class ObjectFieldLocalServiceTest {
 			ObjectFieldReadOnlyException.class,
 			"Unknown read only: " + invalidReadOnly,
 			() -> _updateReadOnlyObjectField(
-				finalObjectField, invalidReadOnly, null));
+				finalObjectField1, invalidReadOnly, null));
 
 		ObjectDefinition relatedObjectDefinition =
 			ObjectDefinitionTestUtil.addCustomObjectDefinition(
@@ -819,7 +918,7 @@ public class ObjectFieldLocalServiceTest {
 			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			"oneToManyRelationshipName", false,
-			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_assertReadOnly(
 			invalidDDMScript, invalidReadOnly,
@@ -844,7 +943,7 @@ public class ObjectFieldLocalServiceTest {
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"relationship", false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		ObjectField relationshipObjectField =
 			_objectFieldLocalService.fetchObjectField(
@@ -918,6 +1017,43 @@ public class ObjectFieldLocalServiceTest {
 		TreeTestUtil.deleteObjectDefinitionHierarchy(
 			_objectDefinitionLocalService, new String[] {"C_A", "C_AA"},
 			_objectEntryLocalService);
+
+		// Object field required
+
+		objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
+			_objectDefinitionLocalService);
+
+		ObjectField objectField3 = _addCustomObjectField(
+			new TextObjectFieldBuilder(
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString())
+			).name(
+				"a" + RandomTestUtil.randomString()
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).required(
+				true
+			).build());
+
+		Assert.assertTrue(objectField3.isRequired());
+
+		_objectDefinitionLocalService.publishCustomObjectDefinition(
+			TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId());
+
+		objectField3.setRequired(false);
+
+		objectField3 = _addOrUpdateCustomObjectField(objectField3);
+
+		Assert.assertFalse(objectField3.isRequired());
+
+		objectField3.setRequired(true);
+
+		ObjectField finalObjectField2 = objectField3;
+
+		AssertUtils.assertFailure(
+			ObjectFieldRequiredException.class, null,
+			() -> _addOrUpdateCustomObjectField(finalObjectField2));
 	}
 
 	@Test
@@ -1110,7 +1246,7 @@ public class ObjectFieldLocalServiceTest {
 					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 					ObjectFieldConstants.DB_TYPE_STRING, "Able", "")));
 
-		String objectDefinitionName = "A" + RandomTestUtil.randomString();
+		String objectDefinitionName = ObjectDefinitionTestUtil.getRandomName();
 
 		String pkObjectFieldName = TextFormatter.format(
 			objectDefinitionName + "Id", TextFormatter.I);
@@ -1858,7 +1994,7 @@ public class ObjectFieldLocalServiceTest {
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		ObjectField objectField = _objectFieldLocalService.updateRequired(
 			objectRelationship.getObjectFieldId2(), true);
@@ -1872,7 +2008,7 @@ public class ObjectFieldLocalServiceTest {
 			objectRelationship.getObjectRelationshipId(),
 			objectRelationship.getParameterObjectFieldId(),
 			ObjectRelationshipConstants.DELETION_TYPE_DISASSOCIATE, false,
-			objectRelationship.getLabelMap());
+			objectRelationship.getLabelMap(), null);
 
 		objectField = _objectFieldLocalService.fetchObjectField(
 			objectRelationship.getObjectFieldId2());
@@ -1893,7 +2029,7 @@ public class ObjectFieldLocalServiceTest {
 			objectRelationship.getObjectRelationshipId(),
 			objectRelationship.getParameterObjectFieldId(),
 			ObjectRelationshipConstants.DELETION_TYPE_PREVENT, false,
-			objectRelationship.getLabelMap());
+			objectRelationship.getLabelMap(), null);
 
 		objectField = _objectFieldLocalService.updateRequired(
 			objectRelationship.getObjectFieldId2(), true);
@@ -1928,7 +2064,7 @@ public class ObjectFieldLocalServiceTest {
 			() -> _objectDefinitionLocalService.addCustomObjectDefinition(
 				TestPropsValues.getUserId(), 0, false, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"A" + RandomTestUtil.randomString(), null, null,
+				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY, storageType,
 				Arrays.asList(
@@ -2126,19 +2262,20 @@ public class ObjectFieldLocalServiceTest {
 				Arrays.asList(
 					new ObjectFieldSettingBuilder(
 					).name(
-						"function"
+						ObjectFieldSettingConstants.NAME_FUNCTION
 					).value(
 						"MAX"
 					).build(),
 					new ObjectFieldSettingBuilder(
 					).name(
-						"objectFieldName"
+						ObjectFieldSettingConstants.NAME_OBJECT_FIELD_NAME
 					).value(
 						"integer"
 					).build(),
 					new ObjectFieldSettingBuilder(
 					).name(
-						"objectRelationshipName"
+						ObjectFieldSettingConstants.
+							NAME_OBJECT_RELATIONSHIP_NAME
 					).value(
 						"oneToManyRelationshipName"
 					).build())
@@ -2202,7 +2339,7 @@ public class ObjectFieldLocalServiceTest {
 		throws Exception {
 
 		return _addUnmodifiableSystemObjectDefinition(
-			"A" + RandomTestUtil.randomString(), objectFields);
+			ObjectDefinitionTestUtil.getRandomName(), objectFields);
 	}
 
 	private ObjectDefinition _addUnmodifiableSystemObjectDefinition(
@@ -2543,7 +2680,7 @@ public class ObjectFieldLocalServiceTest {
 			ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			"oneToManyRelationshipName", false,
-			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_assertReadOnlyTrue(
 			_addReadOnlyAggregationObjectField(

@@ -99,6 +99,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -386,7 +387,7 @@ public class DDMFormAdminDisplayContext {
 			ddmFormRenderingContext.setContainerId("settings");
 			ddmFormRenderingContext.setGroupId(getScopeGroupId());
 			ddmFormRenderingContext.setLocale(
-				LocaleUtil.fromLanguageId(getDefaultLanguageId()));
+				LocaleThreadLocal.getThemeDisplayLocale());
 			ddmFormRenderingContext.setPortletNamespace(
 				renderResponse.getNamespace());
 
@@ -659,27 +660,6 @@ public class DDMFormAdminDisplayContext {
 			_getDDMFormBuilderSettingsResponse();
 
 		return ddmFormBuilderSettingsResponse.getFieldSets();
-	}
-
-	public List<DropdownItem> getFilterItemsDropdownItems() {
-		HttpServletRequest httpServletRequest =
-			ddmFormAdminRequestHelper.getRequest();
-
-		return DropdownItemListBuilder.addGroup(
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(
-					getFilterNavigationDropdownItems());
-				dropdownGroupItem.setLabel(
-					LanguageUtil.get(
-						httpServletRequest, "filter-by-navigation"));
-			}
-		).addGroup(
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
-				dropdownGroupItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "order-by"));
-			}
-		).build();
 	}
 
 	public JSONObject getFormBuilderContextJSONObject() throws PortalException {
@@ -975,6 +955,14 @@ public class DDMFormAdminDisplayContext {
 			"desc");
 
 		return _orderByType;
+	}
+
+	public List<DropdownItem> getOrderItemsDropdownItems() {
+		return DropdownItemListBuilder.add(
+			getOrderByDropdownItem("modified-date")
+		).add(
+			getOrderByDropdownItem("name")
+		).build();
 	}
 
 	public PermissionChecker getPermissionChecker() {
@@ -1436,7 +1424,7 @@ public class DDMFormAdminDisplayContext {
 		if (Validator.isNull(displayStyle)) {
 			displayStyle = portalPreferences.getValue(
 				DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN, "display-style",
-				ddmFormWebConfiguration.defaultDisplayView());
+				"list");
 		}
 		else if (ArrayUtil.contains(displayViews, displayStyle)) {
 			portalPreferences.setValue(
@@ -1449,18 +1437,6 @@ public class DDMFormAdminDisplayContext {
 		}
 
 		return displayStyle;
-	}
-
-	protected List<DropdownItem> getFilterNavigationDropdownItems() {
-		return DropdownItemListBuilder.add(
-			dropdownItem -> {
-				dropdownItem.setActive(true);
-				dropdownItem.setHref(getPortletURL(), "navigation", "all");
-				dropdownItem.setLabel(
-					LanguageUtil.get(
-						ddmFormAdminRequestHelper.getRequest(), "all"));
-			}
-		).build();
 	}
 
 	protected String getJSONObjectLocalizedPropertyFromRequest(
@@ -1512,14 +1488,6 @@ public class DDMFormAdminDisplayContext {
 				LanguageUtil.get(
 					ddmFormAdminRequestHelper.getRequest(), orderByCol));
 		};
-	}
-
-	protected List<DropdownItem> getOrderByDropdownItems() {
-		return DropdownItemListBuilder.add(
-			getOrderByDropdownItem("modified-date")
-		).add(
-			getOrderByDropdownItem("name")
-		).build();
 	}
 
 	protected boolean isSearch() {

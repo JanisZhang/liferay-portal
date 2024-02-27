@@ -14,6 +14,8 @@ import com.liferay.osb.faro.provisioning.client.model.OSBAccountEntry;
 import com.liferay.osb.faro.provisioning.client.model.OSBOfferingEntry;
 import com.liferay.osb.faro.web.internal.constants.FaroSubscriptionConstants;
 import com.liferay.osb.faro.web.internal.subscription.FaroSubscriptionPlan;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -98,14 +100,6 @@ public class FaroSubscriptionDisplay {
 		}
 	}
 
-	public Date geLastAnniversaryDate() {
-		if (_lastAnniversaryDate == null) {
-			return null;
-		}
-
-		return new Date(_lastAnniversaryDate.getTime());
-	}
-
 	public long getIndividualsCount() {
 		return _individualsCount;
 	}
@@ -116,6 +110,14 @@ public class FaroSubscriptionDisplay {
 
 	public long getIndividualsLimit() {
 		return _individualsLimit;
+	}
+
+	public Date getLastAnniversaryDate() {
+		if (_lastAnniversaryDate == null) {
+			return null;
+		}
+
+		return new Date(_lastAnniversaryDate.getTime());
 	}
 
 	public String getName() {
@@ -142,6 +144,10 @@ public class FaroSubscriptionDisplay {
 		return new Date(_startDate.getTime());
 	}
 
+	public long getUsersCount() {
+		return _usersCount;
+	}
+
 	public boolean isActive() {
 		return _active;
 	}
@@ -158,28 +164,44 @@ public class FaroSubscriptionDisplay {
 			return;
 		}
 
-		_individualsCount = contactsEngineClient.getIndividualsCount(
-			faroProject, false);
+		Date subscriptionModifiedDate = new Date(
+			faroProject.getSubscriptionModifiedTime());
 
-		if (_startDate != null) {
-			_lastAnniversaryDate = getLastAnniversaryDate(_startDate);
+		_individualsCount =
+			contactsEngineClient.getIndividualsCreatedSinceCount(
+				faroProject, subscriptionModifiedDate);
+
+		if (_startDate == null) {
+			_startDate = new Date(faroProject.getCreateTime());
 		}
+
+		_lastAnniversaryDate = getLastAnniversaryDate(_startDate);
 
 		_individualsCountSinceLastAnniversary =
 			contactsEngineClient.getIndividualsCreatedSinceCount(
 				faroProject, _lastAnniversaryDate);
 
-		_individualsStatus = getStatus(_individualsCount, _individualsLimit);
-
 		_pageViewsCount = GetterUtil.getInteger(
 			cerebroEngineClient.getPageViews(
-				faroProject, _startDate, new Date()));
+				faroProject, subscriptionModifiedDate, new Date()));
 
 		_pageViewsCountSinceLastAnniversary = GetterUtil.getInteger(
 			cerebroEngineClient.getPageViews(
 				faroProject, _lastAnniversaryDate, new Date()));
 
-		_pageViewsStatus = getStatus(_pageViewsCount, _pageViewsLimit);
+		if (_isBasicSubscription(faroProject.getSubscription())) {
+			_individualsStatus = getStatus(
+				_individualsCount, _individualsLimit);
+			_pageViewsStatus = getStatus(_pageViewsCount, _pageViewsLimit);
+		}
+		else {
+			_individualsStatus = getStatus(
+				_individualsCountSinceLastAnniversary, _individualsLimit);
+			_pageViewsStatus = getStatus(
+				_pageViewsCountSinceLastAnniversary, _pageViewsLimit);
+		}
+
+		_usersCount = contactsEngineClient.getUsersCount(faroProject);
 	}
 
 	public static class AddOn {
@@ -287,6 +309,23 @@ public class FaroSubscriptionDisplay {
 		return false;
 	}
 
+	private boolean _isBasicSubscription(String subscription) throws Exception {
+		JSONObject oldSubscriptionJSONObject = JSONFactoryUtil.createJSONObject(
+			subscription);
+
+		if (StringUtil.equals(
+				oldSubscriptionJSONObject.getString("name"),
+				ProductConstants.BASIC_PRODUCT_NAME) ||
+			StringUtil.equals(
+				oldSubscriptionJSONObject.getString("name"),
+				ProductConstants.LXC_PRO_PRODUCT_NAME)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _active;
 	private final List<AddOn> _addOns = new ArrayList<>();
 	private Date _endDate;
@@ -301,5 +340,6 @@ public class FaroSubscriptionDisplay {
 	private long _pageViewsLimit;
 	private int _pageViewsStatus;
 	private Date _startDate;
+	private long _usersCount;
 
 }

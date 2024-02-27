@@ -9,6 +9,7 @@ import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleService;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.lock.DuplicateLockException;
 import com.liferay.portal.kernel.model.TrashedModel;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -21,7 +22,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Objects;
 
@@ -58,23 +58,28 @@ public class DeleteKBArticleMVCActionCommand extends BaseMVCActionCommand {
 		long resourcePrimKey = ParamUtil.getLong(
 			actionRequest, "resourcePrimKey");
 
-		KBArticle kbArticle = _kbArticleService.getLatestKBArticle(
-			resourcePrimKey, WorkflowConstants.STATUS_ANY);
+		try {
+			if (cmd.equals(Constants.MOVE_TO_TRASH) &&
+				FeatureFlagManagerUtil.isEnabled("LPS-188058")) {
 
-		if (cmd.equals(Constants.MOVE_TO_TRASH) &&
-			FeatureFlagManagerUtil.isEnabled("LPS-188058")) {
-
-			addDeleteSuccessData(
-				actionRequest,
-				HashMapBuilder.<String, Object>put(
-					"trashedModels",
-					ListUtil.toList(
-						(TrashedModel)_kbArticleService.moveKBArticleToTrash(
-							kbArticle.getKbArticleId()))
-				).build());
+				addDeleteSuccessData(
+					actionRequest,
+					HashMapBuilder.<String, Object>put(
+						"trashedModels",
+						ListUtil.toList(
+							(TrashedModel)
+								_kbArticleService.moveKBArticleToTrash(
+									resourcePrimKey))
+					).build());
+			}
+			else {
+				_kbArticleService.deleteKBArticle(resourcePrimKey);
+			}
 		}
-		else {
-			_kbArticleService.deleteKBArticle(resourcePrimKey);
+		catch (DuplicateLockException duplicateLockException) {
+			hideDefaultErrorMessage(actionRequest);
+
+			throw duplicateLockException;
 		}
 
 		if (Objects.equals(
@@ -83,6 +88,9 @@ public class DeleteKBArticleMVCActionCommand extends BaseMVCActionCommand {
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			KBArticle kbArticle = _kbArticleService.getLatestKBArticle(
+				resourcePrimKey);
 
 			LiferayPortletURL liferayPortletURL = PortletURLFactoryUtil.create(
 				actionRequest, _portal.getPortletId(actionRequest),

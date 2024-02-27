@@ -14,6 +14,11 @@
 		height: 3rem;
 	}
 
+	.adt-apps-search-results .card-image-title-container .title-container {
+		word-break: break-word;
+		word-wrap: break-word;
+	}
+
 	.adt-apps-search-results .cards-container .app-search-results-card .card-image-title-container .image-container .app-search-image {
 		height: 3rem;
 		min-width: 3rem;
@@ -72,7 +77,8 @@
 					<#assign
 						portalURL = portalUtil.getLayoutURL(themeDisplay)
 						productId = entry.getClassPK() + 1
-						product = restClient.get("/headless-commerce-delivery-catalog/v1.0/channels/"+ channelId +"/products/"+ productId +"?accountId=-1&nestedFields=productSpecifications,categories")
+						product = restClient.get("/headless-commerce-delivery-catalog/v1.0/channels/"+ channelId +"/products/"+ productId +"?accountId=-1&images.accountId=-1&nestedFields=productSpecifications,categories,images")
+						productImage = (product.images![])?filter(item -> item.tags?seq_contains("app icon"))![]
 						productSpecifications = product.productSpecifications![]
 					/>
 
@@ -94,15 +100,26 @@
 						<#assign productURL = "" />
 					</#if>
 
-					<#if product.urlImage?has_content>
-						<#assign productThumbnail = product.urlImage?split("/o") />
+					<#if productImage?has_content>
+						<#assign productThumbnail = productImage[0].src?split("/o") />
+
 						<#if productThumbnail?has_content && productThumbnail?size gte 2>
 							<#assign productThumbnail1 = "/o/${productThumbnail[1]}"!"" />
 						<#else>
 							<#assign productThumbnail1 = "/o/commerce-media/default/?groupId=${scopeGroupId}" />
 						</#if>
 					<#else>
-						<#assign productThumbnail1 = "/o/commerce-media/default/?groupId=${scopeGroupId}" />
+						<#if product.urlImage?has_content>
+							<#assign productThumbnail = product.urlImage?split("/o") />
+
+							<#if productThumbnail?has_content && productThumbnail?size gte 2>
+								<#assign productThumbnail1 = "/o/${productThumbnail[1]}"!"" />
+							<#else>
+								<#assign productThumbnail1 = "/o/commerce-media/default/?groupId=${scopeGroupId}" />
+							</#if>
+						<#else>
+							<#assign productThumbnail1 = "/o/commerce-media/default/?groupId=${scopeGroupId}" />
+						</#if>
 					</#if>
 
 					<a class="app-search-results-card bg-white border-radius-medium d-flex flex-column mb-0 p-3 text-dark text-decoration-none" href=${productURL}>
@@ -116,9 +133,10 @@
 							</div>
 
 							<div class="pl-2">
-								<div class="font-weight-semi-bold h2 mt-1">
+								<div class="font-weight-semi-bold h2 mt-1 title-container">
 									${productName}
 								</div>
+
 								<#if productSpecifications?has_content>
 									<#assign productDeveloperName = productSpecifications?filter(item -> item.specificationKey == "developer-name") />
 
@@ -137,9 +155,10 @@
 						</div>
 
 						<div class="d-flex flex-column font-size-paragraph-small h-100 justify-content-between">
-							<div class="font-weight-normal mb-2">
+							<div class="font-weight-normal mb-2 text-break">
 								${productDescription}
 							</div>
+
 							<#if productSpecifications?has_content>
 								<#assign productPriceModels = productSpecifications?filter(item -> item.specificationKey == "price-model") />
 
@@ -149,6 +168,7 @@
 									<#else>
 										<#assign priceModel = "" />
 									</#if>
+
 									<div class="font-weight-semi-bold mt-1">
 										${priceModel}
 									</div>

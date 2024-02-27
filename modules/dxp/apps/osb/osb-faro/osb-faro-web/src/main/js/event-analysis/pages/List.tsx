@@ -6,7 +6,7 @@ import React from 'react';
 import StatesRenderer from 'shared/components/states-renderer/StatesRenderer';
 import URLConstants from 'shared/util/url-constants';
 import {Routes, toRoute} from 'shared/util/router';
-import {useDataSource} from 'shared/hooks/useDataSource';
+import {useDataSource} from 'shared/hooks';
 import {useParams} from 'react-router-dom';
 import {User} from 'shared/util/records';
 import {withCurrentUser} from 'shared/hoc';
@@ -68,7 +68,7 @@ const List: React.FC<IListProps> = ({currentUser}) => {
 									'connect-a-data-source-to-get-started'
 								)}
 
-								<a
+								<ClayLink
 									className='d-block mb-3'
 									href={URLConstants.DataSourceConnection}
 									key='DOCUMENTATION'
@@ -77,7 +77,7 @@ const List: React.FC<IListProps> = ({currentUser}) => {
 									{Liferay.Language.get(
 										'access-our-documentation-to-learn-more'
 									)}
-								</a>
+								</ClayLink>
 
 								{authorized && (
 									<ClayLink

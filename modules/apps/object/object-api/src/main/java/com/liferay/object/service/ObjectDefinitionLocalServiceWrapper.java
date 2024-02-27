@@ -480,6 +480,14 @@ public class ObjectDefinitionLocalServiceWrapper
 			getObjectDefinitionByUuidAndCompanyId(uuid, companyId);
 	}
 
+	@Override
+	public java.util.List<com.liferay.object.model.ObjectDefinition>
+		getObjectDefinitions(boolean accountEntryRestricted) {
+
+		return _objectDefinitionLocalService.getObjectDefinitions(
+			accountEntryRestricted);
+	}
+
 	/**
 	 * Returns a range of all the object definitions.
 	 *
@@ -647,7 +655,7 @@ public class ObjectDefinitionLocalServiceWrapper
 				java.util.Map<java.util.Locale, String> labelMap, String name,
 				String panelAppOrder, String panelCategoryKey, boolean portlet,
 				java.util.Map<java.util.Locale, String> pluralLabelMap,
-				String scope)
+				String scope, int status)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectDefinitionLocalService.updateCustomObjectDefinition(
@@ -656,7 +664,8 @@ public class ObjectDefinitionLocalServiceWrapper
 			objectFolderId, titleObjectFieldId, accountEntryRestricted, active,
 			enableCategorization, enableComments, enableLocalization,
 			enableObjectEntryDraft, enableObjectEntryHistory, labelMap, name,
-			panelAppOrder, panelCategoryKey, portlet, pluralLabelMap, scope);
+			panelAppOrder, panelCategoryKey, portlet, pluralLabelMap, scope,
+			status);
 	}
 
 	@Override

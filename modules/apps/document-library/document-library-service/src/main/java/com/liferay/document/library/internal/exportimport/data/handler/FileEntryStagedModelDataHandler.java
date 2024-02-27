@@ -15,6 +15,7 @@ import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
+import com.liferay.document.library.kernel.processor.DLProcessorThreadLocal;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
@@ -22,7 +23,6 @@ import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.kernel.service.DLFileVersionLocalService;
 import com.liferay.document.library.kernel.service.DLTrashService;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
-import com.liferay.document.library.kernel.util.DLProcessorThreadLocal;
 import com.liferay.document.library.util.DLFileEntryTypeUtil;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializerDeserializeRequest;
@@ -492,6 +492,7 @@ public class FileEntryStagedModelDataHandler
 						fileEntry.getMimeType(), fileEntryTitle,
 						StringPool.BLANK, fileEntry.getDescription(), null,
 						inputStream, fileEntry.getSize(),
+						fileEntry.getDisplayDate(),
 						fileEntry.getExpirationDate(),
 						fileEntry.getReviewDate(), serviceContext);
 
@@ -570,6 +571,7 @@ public class FileEntryStagedModelDataHandler
 									fileEntry.getDescription(), null,
 									DLVersionNumberIncrease.MINOR, inputStream,
 									fileEntry.getSize(),
+									fileEntry.getDisplayDate(),
 									fileEntry.getExpirationDate(),
 									fileEntry.getReviewDate(), serviceContext);
 						}
@@ -640,8 +642,9 @@ public class FileEntryStagedModelDataHandler
 					folderId, fileEntry.getFileName(), fileEntry.getMimeType(),
 					fileEntryTitle, StringPool.BLANK,
 					fileEntry.getDescription(), null, inputStream,
-					fileEntry.getSize(), fileEntry.getExpirationDate(),
-					fileEntry.getReviewDate(), serviceContext);
+					fileEntry.getSize(), fileEntry.getDisplayDate(),
+					fileEntry.getExpirationDate(), fileEntry.getReviewDate(),
+					serviceContext);
 			}
 
 			for (DLPluggableContentDataHandler<?>

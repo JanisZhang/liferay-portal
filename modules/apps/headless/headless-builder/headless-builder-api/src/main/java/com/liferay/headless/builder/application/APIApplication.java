@@ -119,6 +119,8 @@ public interface APIApplication {
 
 		public List<String> getObjectRelationshipNames();
 
+		public List<Property> getProperties();
+
 		public String getSourceFieldName();
 
 		public Type getType();
@@ -127,7 +129,7 @@ public interface APIApplication {
 
 			AGGREGATION, ATTACHMENT, BOOLEAN, DATE, DATE_TIME, DECIMAL, INTEGER,
 			LONG_INTEGER, LONG_TEXT, MULTISELECT_PICKLIST, PICKLIST,
-			PRECISION_DECIMAL, RICH_TEXT, TEXT
+			PRECISION_DECIMAL, RECORD, RICH_TEXT, TEXT
 
 		}
 

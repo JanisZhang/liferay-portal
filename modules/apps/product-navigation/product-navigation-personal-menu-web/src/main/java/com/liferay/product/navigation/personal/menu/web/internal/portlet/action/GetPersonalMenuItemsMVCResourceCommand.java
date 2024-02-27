@@ -43,6 +43,7 @@ import javax.portlet.PortletRequest;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.framework.BundleContext;
@@ -223,8 +224,11 @@ public class GetPersonalMenuItemsMVCResourceCommand
 					ParamUtil.getString(portletRequest, "portletId")));
 
 			try {
+				HttpServletRequest httpServletRequest =
+					_portal.getHttpServletRequest(portletRequest);
+
 				String href = personalMenuEntry.getPortletURL(
-					_portal.getHttpServletRequest(portletRequest));
+					httpServletRequest);
 
 				if (href != null) {
 					jsonObject.put("href", href);
@@ -233,10 +237,10 @@ public class GetPersonalMenuItemsMVCResourceCommand
 					jsonObject.put(
 						"jsOnClickConfig",
 						personalMenuEntry.getJSOnClickConfigJSONObject(
-							_portal.getHttpServletRequest(portletRequest))
+							httpServletRequest)
 					).put(
-						"onClickJSModuleURL",
-						personalMenuEntry.getOnClickJSModuleURL()
+						"onClickESModule",
+						personalMenuEntry.getOnClickESModule(httpServletRequest)
 					);
 				}
 			}
@@ -291,25 +295,32 @@ public class GetPersonalMenuItemsMVCResourceCommand
 		for (String personalMenuGroup :
 				new TreeSet<>(_serviceTrackerMap.keySet())) {
 
-			JSONArray personalMenuEntriesJSONArray =
-				_getPersonalMenuEntriesJSONArray(
-					portletRequest,
-					_serviceTrackerMap.getService(personalMenuGroup));
+			try {
+				JSONArray personalMenuEntriesJSONArray =
+					_getPersonalMenuEntriesJSONArray(
+						portletRequest,
+						_serviceTrackerMap.getService(personalMenuGroup));
 
-			if (personalMenuEntriesJSONArray.length() == 0) {
-				continue;
+				if (personalMenuEntriesJSONArray.length() == 0) {
+					continue;
+				}
+
+				if (jsonArray.length() > 0) {
+					jsonArray.put(dividerJSONObject);
+				}
+
+				jsonArray.put(
+					JSONUtil.put(
+						"items", personalMenuEntriesJSONArray
+					).put(
+						"type", "group"
+					));
 			}
-
-			if (jsonArray.length() > 0) {
-				jsonArray.put(dividerJSONObject);
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
-
-			jsonArray.put(
-				JSONUtil.put(
-					"items", personalMenuEntriesJSONArray
-				).put(
-					"type", "group"
-				));
 		}
 
 		if ((jsonArray.length() > 0) && !themeDisplay.isImpersonated()) {

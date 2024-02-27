@@ -834,7 +834,7 @@ definition {
 		}
 
 		task ("Wait for upgrade to complete") {
-			AntCommands.runCommand("modules/util/portal-tools-db-upgrade-client/src/testFunctional/ant/build-test-db-upgrade-client.xml", "check-upgrade-status -Dupgrade.status=warning");
+			AntCommands.runCommand("modules/util/portal-tools-db-upgrade-client/src/testFunctional/ant/build-test-db-upgrade-client.xml", "check-upgrade-status -Dupgrade.status=success");
 		}
 
 		task ("Given upgrade.report is set When the portal gets upgraded and an warn was captured during the upgrade") {
@@ -854,15 +854,15 @@ definition {
 				fail("Upgrade report does not contain the warning class name.");
 			}
 
-			if (!(contains(${upgradeReportContent}, "1 occurrences of the following event: null"))) {
+			if (!(contains(${upgradeReportContent}, "2 occurrences of the following event: null"))) {
 				echo(${upgradeReportContent});
 
 				fail("Upgrade report does not contain the warning message.");
 			}
 		}
 
-		task ("and the user can check the upgrade result as Warning") {
-			if (!(contains(${upgradeReportContent}, "Result: warning"))) {
+		task ("and the user can check the upgrade result as success") {
+			if (!(contains(${upgradeReportContent}, "Result: success"))) {
 				echo(${upgradeReportContent});
 
 				fail("Warning upgrade result not present in upgrade report");

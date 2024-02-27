@@ -4138,6 +4138,10 @@ public class JenkinsResultsParserUtil {
 
 		synchronized (_redactTokens) {
 			for (String redactToken : _redactTokens) {
+				if (_forbiddenRedactTokens.contains(redactToken)) {
+					continue;
+				}
+
 				string = string.replace(redactToken, "[REDACTED]");
 			}
 		}
@@ -5467,6 +5471,20 @@ public class JenkinsResultsParserUtil {
 		}
 	}
 
+	public static void updateBuildDescription(
+		String buildDescription, URL buildURL) {
+
+		Matcher matcher = _buildURLPattern.matcher(String.valueOf(buildURL));
+
+		if (!matcher.find()) {
+			throw new RuntimeException("Invalid Build URL");
+		}
+
+		updateBuildDescription(
+			buildDescription, Integer.valueOf(matcher.group("buildNumber")),
+			matcher.group("jobName"), matcher.group("masterHostname"));
+	}
+
 	public static void updateBuildResult(
 		int buildNumber, String buildResult, String jobName,
 		String masterHostname) {
@@ -6148,11 +6166,9 @@ public class JenkinsResultsParserUtil {
 				gitDirectoriesJSONArray.getJSONObject(i);
 
 			if ((gitDirectoryJSONObject == JSONObject.NULL) ||
-				!Objects.equals(
-					repositoryName,
+				!repositoryName.matches(
 					gitDirectoryJSONObject.getString("repository")) ||
-				!Objects.equals(
-					upstreamBranchName,
+				!upstreamBranchName.matches(
 					gitDirectoryJSONObject.getString("branch"))) {
 
 				continue;
@@ -6486,28 +6502,21 @@ public class JenkinsResultsParserUtil {
 
 			String redactToken = getProperty(properties, key);
 
-			if (redactToken != null) {
-				if ((redactToken.length() < 5) && redactToken.matches("\\d+")) {
-					System.out.println(
-						combine(
-							"Ignoring ", key,
-							" because the value is numeric and ",
-							"less than 5 characters long."));
-				}
-				else {
-					if (!redactToken.isEmpty()) {
-						_redactTokens.add(redactToken);
+			if (isNullOrEmpty(redactToken) ||
+				_forbiddenRedactTokens.contains(redactToken) ||
+				redactToken.matches("^\\s*\\d{5}\\s*$")) {
 
-						if (redactToken.contains("\\")) {
-							_redactTokens.add(
-								redactToken.replace("\\", "\\\\"));
-						}
-					}
+				continue;
+			}
+
+			if (!redactToken.isEmpty()) {
+				_redactTokens.add(redactToken);
+
+				if (redactToken.contains("\\")) {
+					_redactTokens.add(redactToken.replace("\\", "\\\\"));
 				}
 			}
 		}
-
-		_redactTokens.remove("test");
 	}
 
 	private static boolean _isJSONExpectedAndActualEqual(
@@ -6595,7 +6604,7 @@ public class JenkinsResultsParserUtil {
 	private static final Pattern _dockerFilePattern = Pattern.compile(
 		".*FROM (?<dockerImageName>[^\\s]+)( AS builder)?\\n[\\s\\S]*");
 	private static final List<String> _forbiddenRedactTokens = Arrays.asList(
-		"test");
+		"liferay", "test");
 	private static JSONArray _gitDirectoriesJSONArray;
 	private static final Pattern _gitHubAPIURLPattern = Pattern.compile(
 		"https\\:\\/\\/api\\.github\\.com(.*)");

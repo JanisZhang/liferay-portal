@@ -5,6 +5,7 @@
 
 import {
 	addParams,
+	createPortletURL,
 	navigate,
 	openCategorySelectionModal,
 	openConfirmModal,
@@ -26,6 +27,7 @@ export default function propsTransformer({
 		editEntryURL,
 		folderConfiguration,
 		openViewMoreFileEntryTypesURL,
+		redirect,
 		selectAssetCategoriesURL,
 		selectAssetTagsURL,
 		selectExtensionURL,
@@ -266,7 +268,7 @@ export default function propsTransformer({
 			height: '480px',
 			id: `${portletNamespace}selectFolder`,
 			onSelect(selectedItem) {
-				const newFolderId = selectedItem.folderid;
+				const newFolderId = selectedItem.resourceid;
 
 				const form = document.getElementById(`${portletNamespace}fm2`);
 
@@ -294,15 +296,15 @@ export default function propsTransformer({
 
 				submitForm(form, editEntryURL, false);
 			},
-			selectEventName: `${portletNamespace}selectFolder`,
+			selectEventName: `${portletNamespace}folderSelected`,
 			size: 'lg',
 			title: sub(dialogTitle, [selectedItems]),
 			url: selectFolderURL,
 		});
 	};
 
-	const openCreateAIImage = (aiCreatorDALLEEnabled, aiImageCreatorURL) => {
-		if (!aiCreatorDALLEEnabled) {
+	const openCreateAIImage = (aiImageCreatorURL, isAICreatorOpenAIAPIKey) => {
+		if (!isAICreatorOpenAIAPIKey) {
 			Liferay.componentReady(`${portletNamespace}ConfigueAIModal`).then(
 				(configureAIModal) => {
 					configureAIModal.open();
@@ -311,9 +313,29 @@ export default function propsTransformer({
 		}
 		else {
 			openSelectionModal({
+				height: '70vh',
+				onSelect: ({selectedItems}) => {
+					if (selectedItems) {
+						openToast({
+							message: sub(
+								Liferay.Language.get(
+									'x-files-were-successfully-added'
+								),
+								[`<strong>${selectedItems.length}</strong>`]
+							),
+							title: Liferay.Language.get('success'),
+							type: 'success',
+						});
+
+						navigate(redirect);
+					}
+				},
+				selectEventName: `${portletNamespace}selectAIImages`,
 				size: 'lg',
 				title: Liferay.Language.get('create-ai-image'),
-				url: aiImageCreatorURL,
+				url: createPortletURL(aiImageCreatorURL, {
+					selectEventName: `${portletNamespace}selectAIImages`,
+				}).toString(),
 			});
 		}
 	};
@@ -407,8 +429,8 @@ export default function propsTransformer({
 		onCreationMenuItemClick: (event, {item}) => {
 			if (item?.data?.action === 'openAICreateImage') {
 				openCreateAIImage(
-					item?.data?.aiCreatorDALLEEnabled,
-					item?.data?.aiCreatorURL
+					item?.data?.aiCreatorURL,
+					item?.data?.isAICreatorOpenAIAPIKey
 				);
 			}
 		},

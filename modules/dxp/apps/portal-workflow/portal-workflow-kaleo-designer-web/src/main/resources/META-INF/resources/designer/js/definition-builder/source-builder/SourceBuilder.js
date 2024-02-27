@@ -18,6 +18,8 @@ import {editorConfig} from '../constants';
 import {xmlNamespace} from './constants';
 import {serializeDefinition} from './serializeUtil';
 
+const REGEX_ALERT = /alert\((.*?)\)/;
+
 export default function SourceBuilder() {
 	const {
 		currentEditor,
@@ -37,35 +39,61 @@ export default function SourceBuilder() {
 	);
 
 	useEffect(() => {
-		if (currentEditor?.mode === 'source' && elements) {
-			const metadata = {
-				description: definitionDescription,
-				name: definitionName,
-				version,
-			};
+		function loadXmlContent() {
+			if (currentEditor?.mode === 'source' && elements) {
+				const metadata = {
+					description: definitionDescription,
+					name: definitionName,
+					version,
+				};
 
-			const xmlContent = serializeDefinition(
-				xmlNamespace,
-				metadata,
-				elements.filter(isNode),
-				elements.filter(isEdge)
-			);
+				const xmlContent = serializeDefinition(
+					xmlNamespace,
+					metadata,
+					elements.filter(isNode),
+					elements.filter(isEdge)
+				);
 
-			if (xmlContent) {
-				currentEditor.setData(xmlContent);
+				if (xmlContent) {
+					const codeEditor = document.querySelector(
+						'div.cke_contents'
+					);
 
-				setLoading(false);
+					codeEditor.addEventListener('keyup', () => {
+						if (currentEditor.getData() !== xmlContent) {
+							const newXmlContent = currentEditor.getData();
+							const sanitizedXmlContent = newXmlContent.replace(
+								REGEX_ALERT,
+								''
+							);
+
+							currentEditor.setData(sanitizedXmlContent);
+						}
+					});
+
+					currentEditor.setData(xmlContent);
+
+					setLoading(false);
+				}
 			}
 		}
 
+		const interval = setInterval(() => {
+			if (currentEditor) {
+				if (currentEditor.mode !== 'source') {
+					setTimeout(() => {
+						currentEditor.setMode('source');
+					}, 1000);
+				}
+				else {
+					clearInterval(interval);
+					loadXmlContent();
+				}
+			}
+		}, 1000);
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentEditor, definitionName, elements, version]);
-
-	useEffect(() => {
-		if (currentEditor && currentEditor.mode !== 'source') {
-			currentEditor.setMode('source');
-		}
-	}, [currentEditor]);
 
 	useEffect(() => {
 		if (showInvalidContentMessage) {
@@ -99,7 +127,12 @@ export default function SourceBuilder() {
 
 			reader.onloadend = (event) => {
 				if (event.target.readyState === FileReader.DONE) {
-					currentEditor.setData(event.target.result);
+					const sanitizedData = event.target.result.replace(
+						REGEX_ALERT,
+						''
+					);
+
+					currentEditor.setData(sanitizedData);
 
 					const fileInput = document.querySelector('#fileInput');
 

@@ -5,22 +5,20 @@
 
 import useSWR from 'swr';
 
+import {Liferay} from '../../liferay/liferay';
+import HeadlessCommerceDeliveryCatalogImpl from '../../services/rest/HeadlessCommerceDeliveryCatalog';
 import {
 	getAccountInfoFromCommerce,
 	getCart,
 	getCartItems,
-	getProductById,
 } from '../../utils/api';
 
 const useNextSteps = (orderId: string) => {
-	const {data = [], isLoading: cartLoading} = useSWR(
-		`/next-steps/cart/${orderId}`,
-		() => {
-			return Promise.all([
-				getCart(Number(orderId)),
-				getCartItems(Number(orderId)),
-			]);
-		}
+	const {
+		data = [],
+		isLoading: cartLoading,
+	} = useSWR(`/next-steps/cart/${orderId}`, () =>
+		Promise.all([getCart(orderId), getCartItems(orderId)])
 	);
 
 	const [cart, cartItems] = data ?? [];
@@ -30,20 +28,29 @@ const useNextSteps = (orderId: string) => {
 	const {productId} = firstCartItem ?? {};
 
 	const {data: product, isLoading: productLoading} = useSWR(
-		productId ? `/next-steps/product/${productId}` : null,
-		() => {
-			return getProductById({
-				nestedFields: 'attachments,productSpecifications',
+		productId
+			? `/next-steps/product/${productId}/${firstCartItem.id}`
+			: null,
+		() =>
+			HeadlessCommerceDeliveryCatalogImpl.getProduct(
+				Liferay.CommerceContext.commerceChannelId,
 				productId,
-			});
-		}
+				new URLSearchParams({
+					'accountId': '-1',
+					'attachments.accountId': '-1',
+					'images.accountId': '-1',
+					'nestedFields': 'attachments,images,productSpecifications',
+					'skus.accountId': '-1',
+				})
+			)
 	);
 
-	const {data: accountCommerce, isLoading: accountCommerceLoading} = useSWR(
+	const {
+		data: accountCommerce,
+		isLoading: accountCommerceLoading,
+	} = useSWR(
 		accountId ? `/next-steps/account-commerce/${accountId}` : null,
-		() => {
-			return getAccountInfoFromCommerce(accountId);
-		}
+		() => getAccountInfoFromCommerce(accountId)
 	);
 
 	return {

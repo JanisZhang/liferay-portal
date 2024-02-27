@@ -6,7 +6,6 @@
 package com.liferay.layout.page.template.service.impl;
 
 import com.liferay.asset.kernel.NoSuchClassTypeException;
-import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceRegistry;
@@ -26,7 +25,6 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.LockedLayoutException;
 import com.liferay.portal.kernel.exception.NoSuchClassNameException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -665,10 +663,6 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 			long layoutPageTemplateEntryId, long classNameId, long classTypeId)
 		throws PortalException {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-195263")) {
-			throw new UnsupportedOperationException();
-		}
-
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			layoutPageTemplateEntryPersistence.findByPrimaryKey(
 				layoutPageTemplateEntryId);
@@ -1110,9 +1104,6 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 	@Reference
 	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
-
-	@Reference
-	private DLFileEntryLocalService _dlFileEntryLocalService;
 
 	@Reference
 	private File _file;

@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.GitUtil;
 import com.liferay.portal.tools.ToolsUtil;
+import com.liferay.source.formatter.BNDSettings;
 import com.liferay.source.formatter.SourceFormatterArgs;
 import com.liferay.source.formatter.check.util.BNDSourceUtil;
 import com.liferay.source.formatter.check.util.JavaSourceUtil;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -72,8 +74,7 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			fileName, absolutePath, javaClass, annotation);
 		annotation = _formatEnabledAttribute(absolutePath, annotation);
 		annotation = _formatServiceAttribute(
-			fileName, absolutePath, javaClass.getName(), annotation,
-			javaClass.getImplementedClassNames());
+			fileName, absolutePath, javaClass, annotation);
 
 		List<String> extendedClassNames = javaClass.getExtendedClassNames(
 			false);
@@ -240,6 +241,86 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			immediateAttributeValue.equals("true")) {
 
 			addMessage(fileName, "Do not use 'immediate = true' in @Component");
+		}
+	}
+
+	private void _checkUsesInternalService(
+			String fileName, String absolutePath, JavaClass javaClass,
+			String serviceAttributeValue)
+		throws Exception {
+
+		if ((!absolutePath.contains("/modules/apps/") &&
+			 !absolutePath.contains("/modules/dxp/apps/")) ||
+			absolutePath.contains("/modules/apps/archived/")) {
+
+			return;
+		}
+
+		List<String> allowedUsesInternalServiceClassNames = getAttributeValues(
+			_ALLOWED_USES_INTERNAL_SERVICE_CLASS_NAMES_KEY, absolutePath);
+
+		for (String allowedUsesInternalServiceClassName :
+				allowedUsesInternalServiceClassNames) {
+
+			if (absolutePath.contains(allowedUsesInternalServiceClassName)) {
+				return;
+			}
+		}
+
+		String className = serviceAttributeValue.substring(
+			0, serviceAttributeValue.indexOf(CharPool.PERIOD));
+
+		if (className.equals(javaClass.getName())) {
+			return;
+		}
+
+		String packageName = JavaSourceUtil.getPackageName(
+			className, javaClass.getPackageName(), javaClass.getImportNames());
+
+		if (!packageName.startsWith("com.liferay.")) {
+			return;
+		}
+
+		String fullyQualifiedName = StringBundler.concat(
+			packageName, StringPool.PERIOD, className);
+
+		if (packageName.contains(".internal.")) {
+			addMessage(
+				fileName,
+				StringBundler.concat(
+					"The 'service' attribute points to '", fullyQualifiedName,
+					"', which is an internal class or interface"));
+
+			return;
+		}
+
+		File javaFile = JavaSourceUtil.getJavaFile(
+			fullyQualifiedName, _getRootDirName(absolutePath),
+			_getBundleSymbolicNamesMap(absolutePath));
+
+		if (javaFile == null) {
+			return;
+		}
+
+		BNDSettings currentBNDSettings = getBNDSettings(absolutePath);
+		BNDSettings serviceBNDSettings = getBNDSettings(
+			SourceUtil.getAbsolutePath(javaFile));
+
+		if (!Objects.equals(
+				currentBNDSettings.getFileName(),
+				serviceBNDSettings.getFileName())) {
+
+			return;
+		}
+
+		if (_isInternalPackageName(
+				packageName, serviceBNDSettings.getExportPackageNames())) {
+
+			addMessage(
+				fileName,
+				StringBundler.concat(
+					"The 'service' attribute points to '", fullyQualifiedName,
+					"', which is an internal class or interface"));
 		}
 	}
 
@@ -599,12 +680,13 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 	}
 
 	private String _formatServiceAttribute(
-			String fileName, String absolutePath, String className,
-			String annotation, List<String> implementedClassNames)
+			String fileName, String absolutePath, JavaClass javaClass,
+			String annotation)
 		throws Exception {
 
 		String expectedServiceAttributeValue =
-			_getExpectedServiceAttributeValue(implementedClassNames);
+			_getExpectedServiceAttributeValue(
+				javaClass.getImplementedClassNames());
 
 		String serviceAttributeValue = getAnnotationAttributeValue(
 			annotation, "service");
@@ -620,12 +702,16 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 			_CHECK_SELF_REGISTRATION_KEY, absolutePath);
 		boolean checkHasMultipleServiceTypes = isAttributeValue(
 			_CHECK_HAS_MULTIPLE_SERVICE_TYPES_KEY, absolutePath);
+		boolean checkUsesInternalService = isAttributeValue(
+			_CHECK_USES_INTERNAL_SERVICE_KEY, absolutePath);
 
 		if (checkMismatchedServiceAttribute &&
 			!serviceAttributeValue.equals(expectedServiceAttributeValue)) {
 
 			addMessage(fileName, "Mismatched @Component 'service' attribute");
 		}
+
+		String className = javaClass.getName();
 
 		if (checkSelfRegistration &&
 			serviceAttributeValue.matches(".*\\b" + className + "\\.class.*")) {
@@ -655,6 +741,13 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 
 		if (checkHasMultipleServiceTypes) {
 			_checkHasMultipleServiceTypes(fileName, absolutePath);
+		}
+
+		if (checkUsesInternalService &&
+			serviceAttributeValue.endsWith(".class")) {
+
+			_checkUsesInternalService(
+				fileName, absolutePath, javaClass, serviceAttributeValue);
 		}
 
 		return annotation;
@@ -766,6 +859,42 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 		return _rootDirName;
 	}
 
+	private boolean _isInternalPackageName(
+		String packageName, List<String> exportPackageNames) {
+
+		for (String exportPackageName : exportPackageNames) {
+			if (packageName.equals(exportPackageName)) {
+				return false;
+			}
+
+			boolean negation = false;
+
+			if (exportPackageName.startsWith(StringPool.EXCLAMATION)) {
+				negation = true;
+				exportPackageName = exportPackageName.substring(1);
+			}
+
+			if (negation && packageName.equals(exportPackageName)) {
+				break;
+			}
+
+			if (exportPackageName.endsWith(StringPool.STAR)) {
+				exportPackageName = exportPackageName.substring(
+					0, exportPackageName.length() - 1);
+
+				if (packageName.startsWith(exportPackageName)) {
+					if (negation) {
+						break;
+					}
+
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
 	private String _removePropertyAttribute(String annotation) {
 		if (!annotation.contains("(")) {
 			return annotation;
@@ -807,6 +936,9 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 	private static final String _ALLOWED_SELF_REGISTRATION_CLASS_NAMES_KEY =
 		"allowedSelfRegistrationClassNames";
 
+	private static final String _ALLOWED_USES_INTERNAL_SERVICE_CLASS_NAMES_KEY =
+		"allowedUsesInternalServiceClassNames";
+
 	private static final String _CHECK_CONFIGURATION_PID_ATTRIBUTE_KEY =
 		"checkConfigurationPidAttribute";
 
@@ -832,6 +964,9 @@ public class JavaComponentAnnotationsCheck extends JavaAnnotationsCheck {
 
 	private static final String _CHECK_SELF_REGISTRATION_KEY =
 		"checkSelfRegistration";
+
+	private static final String _CHECK_USES_INTERNAL_SERVICE_KEY =
+		"checkUsesInternalService";
 
 	private static final String _ENTERPRISE_APP_MODULE_PATH_NAMES_KEY =
 		"enterpriseAppModulePathNames";

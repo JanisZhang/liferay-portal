@@ -26,8 +26,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -305,47 +303,92 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			testGetChannelProductProductSpecificationsPage_addProductSpecification(
 				channelId, productId, randomProductSpecification());
 
-		Page<ProductSpecification> page1 =
-			productSpecificationResource.
-				getChannelProductProductSpecificationsPage(
-					channelId, productId, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ProductSpecification> productSpecifications1 =
-			(List<ProductSpecification>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			productSpecifications1.toString(), totalCount + 2,
-			productSpecifications1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductSpecification> page1 =
+				productSpecificationResource.
+					getChannelProductProductSpecificationsPage(
+						channelId, productId,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<ProductSpecification> page2 =
-			productSpecificationResource.
-				getChannelProductProductSpecificationsPage(
-					channelId, productId, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				productSpecification1,
+				(List<ProductSpecification>)page1.getItems());
 
-		List<ProductSpecification> productSpecifications2 =
-			(List<ProductSpecification>)page2.getItems();
+			Page<ProductSpecification> page2 =
+				productSpecificationResource.
+					getChannelProductProductSpecificationsPage(
+						channelId, productId,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			productSpecifications2.toString(), 1,
-			productSpecifications2.size());
+			assertContains(
+				productSpecification2,
+				(List<ProductSpecification>)page2.getItems());
 
-		Page<ProductSpecification> page3 =
-			productSpecificationResource.
-				getChannelProductProductSpecificationsPage(
-					channelId, productId,
-					Pagination.of(1, (int)totalCount + 3));
+			Page<ProductSpecification> page3 =
+				productSpecificationResource.
+					getChannelProductProductSpecificationsPage(
+						channelId, productId,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertContains(
-			productSpecification1,
-			(List<ProductSpecification>)page3.getItems());
-		assertContains(
-			productSpecification2,
-			(List<ProductSpecification>)page3.getItems());
-		assertContains(
-			productSpecification3,
-			(List<ProductSpecification>)page3.getItems());
+			assertContains(
+				productSpecification3,
+				(List<ProductSpecification>)page3.getItems());
+		}
+		else {
+			Page<ProductSpecification> page1 =
+				productSpecificationResource.
+					getChannelProductProductSpecificationsPage(
+						channelId, productId, Pagination.of(1, totalCount + 2));
+
+			List<ProductSpecification> productSpecifications1 =
+				(List<ProductSpecification>)page1.getItems();
+
+			Assert.assertEquals(
+				productSpecifications1.toString(), totalCount + 2,
+				productSpecifications1.size());
+
+			Page<ProductSpecification> page2 =
+				productSpecificationResource.
+					getChannelProductProductSpecificationsPage(
+						channelId, productId, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductSpecification> productSpecifications2 =
+				(List<ProductSpecification>)page2.getItems();
+
+			Assert.assertEquals(
+				productSpecifications2.toString(), 1,
+				productSpecifications2.size());
+
+			Page<ProductSpecification> page3 =
+				productSpecificationResource.
+					getChannelProductProductSpecificationsPage(
+						channelId, productId,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				productSpecification1,
+				(List<ProductSpecification>)page3.getItems());
+			assertContains(
+				productSpecification2,
+				(List<ProductSpecification>)page3.getItems());
+			assertContains(
+				productSpecification3,
+				(List<ProductSpecification>)page3.getItems());
+		}
 	}
 
 	protected ProductSpecification
@@ -840,6 +883,10 @@ public abstract class BaseProductSpecificationResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1243,9 +1290,9 @@ public abstract class BaseProductSpecificationResourceTestCase {
 	}
 
 	protected ProductSpecificationResource productSpecificationResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

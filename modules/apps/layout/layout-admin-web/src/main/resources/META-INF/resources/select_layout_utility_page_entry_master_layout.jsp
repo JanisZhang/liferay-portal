@@ -47,7 +47,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-master-page"));
 								).setRedirect(
 									themeDisplay.getURLCurrent()
 								).setParameter(
-									"masterLayoutPlid", selectLayoutPageTemplateEntryDisplayContext.getMasterLayoutPlid()
+									"masterLayoutPlid", masterLayoutPageTemplateEntry.getPlid()
 								).setParameter(
 									"type", selectLayoutPageTemplateEntryDisplayContext.getType()
 								).buildString()
@@ -61,7 +61,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-master-page"));
 								"mainFieldPlaceholder", LanguageUtil.get(request, "name")
 							).build()
 						%>'
-						propsTransformer="js/SelectLayoutUtilityPageEntryMasterLayoutVerticalCardPropsTransformer"
+						propsTransformer="{SelectLayoutUtilityPageEntryMasterLayoutVerticalCardPropsTransformer} from layout-admin-web"
 						verticalCard="<%= new SelectLayoutMasterLayoutVerticalCard(masterLayoutPageTemplateEntry, renderRequest, renderResponse) %>"
 					/>
 				</li>

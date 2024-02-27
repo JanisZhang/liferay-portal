@@ -21,9 +21,8 @@ import com.liferay.commerce.pricing.constants.CommercePricingPortletKeys;
 import com.liferay.commerce.product.constants.CPActionKeys;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.util.CommerceAccountRoleHelper;
-import com.liferay.portal.db.partition.DBPartitionUtil;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -70,17 +69,11 @@ public class CommerceAccountRoleHelperImpl
 		_checkAccountRole(
 			AccountRoleConstants.ROLE_NAME_ACCOUNT_ORDER_MANAGER,
 			serviceContext);
-
-		if (FeatureFlagManagerUtil.isEnabled(
-				serviceContext.getCompanyId(), "COMMERCE-10890")) {
-
-			_checkAccountRole(
-				AccountRoleConstants.ROLE_NAME_ACCOUNT_SUPPLIER,
-				serviceContext);
-			_checkRole(
-				AccountRoleConstants.ROLE_NAME_SUPPLIER,
-				RoleConstants.TYPE_REGULAR, serviceContext);
-		}
+		_checkAccountRole(
+			AccountRoleConstants.ROLE_NAME_ACCOUNT_SUPPLIER, serviceContext);
+		_checkRole(
+			AccountRoleConstants.ROLE_NAME_SUPPLIER, RoleConstants.TYPE_REGULAR,
+			serviceContext);
 	}
 
 	private void _checkAccountRole(String name, ServiceContext serviceContext)
@@ -328,6 +321,15 @@ public class CommerceAccountRoleHelperImpl
 					CPActionKeys.VIEW_COMMERCE_PRODUCT_IMAGES
 				});
 			companyResourceActionIds.put(
+				"com.liferay.commerce.product.model.CPOption",
+				new String[] {ActionKeys.VIEW});
+			companyResourceActionIds.put(
+				"com.liferay.commerce.product.model.CPOptionCategory",
+				new String[] {ActionKeys.VIEW});
+			companyResourceActionIds.put(
+				"com.liferay.commerce.product.model.CPSpecificationOption",
+				new String[] {ActionKeys.VIEW});
+			companyResourceActionIds.put(
 				"com.liferay.commerce.shipment",
 				new String[] {CommerceActionKeys.MANAGE_COMMERCE_SHIPMENTS});
 			companyResourceActionIds.put(
@@ -335,6 +337,12 @@ public class CommerceAccountRoleHelperImpl
 				new String[] {
 					CPActionKeys.VIEW_COMMERCE_PRODUCT_TAX_CATEGORIES
 				});
+			companyResourceActionIds.put(
+				"com.liferay.document.library",
+				new String[] {ActionKeys.ADD_DOCUMENT});
+			companyResourceActionIds.put(
+				"com.liferay.expando.kernel.model.ExpandoColumn",
+				new String[] {ActionKeys.VIEW});
 		}
 
 		_setRolePermissions(

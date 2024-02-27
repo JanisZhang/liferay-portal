@@ -205,6 +205,10 @@ components:
                             type: integer
                         name:
                             type: string
+                        name_i18n:
+                            additionalProperties:
+                                type: string
+                            type: object
                     type: object
                 parentTaxonomyVocabulary:
                     description:
@@ -215,6 +219,10 @@ components:
                             type: integer
                         name:
                             type: string
+                        name_i18n:
+                            additionalProperties:
+                                type: string
+                            type: object
                     readOnly: true
                     type: object
                 siteId:
@@ -359,7 +367,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.taxonomy.client', and version '4.0.26'."
+        'com.liferay.headless.admin.taxonomy.client', and version '4.0.30'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -388,10 +396,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
@@ -403,6 +407,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -520,10 +528,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
@@ -535,6 +539,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -735,15 +743,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: siteId
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -752,9 +751,18 @@ paths:
                   schema:
                       type: integer
                 - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
                   name: search
                   schema:
                       type: string
+                - in: query
+                  name: siteId
+                  schema:
+                      format: int64
+                      type: integer
             responses:
                 200:
                     content:
@@ -901,10 +909,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
@@ -916,6 +920,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -1037,10 +1045,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
@@ -1052,6 +1056,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -1254,6 +1262,14 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
                   name: restrictFields
                   schema:
                       type: string
@@ -1261,14 +1277,6 @@ paths:
                   name: siteId
                   schema:
                       format: int64
-                      type: integer
-                - in: query
-                  name: page
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  schema:
                       type: integer
             responses:
                 200:
@@ -1307,10 +1315,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
@@ -1322,6 +1326,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -1695,17 +1703,13 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: flatten
-                  schema:
-                      type: boolean
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
+                - in: query
+                  name: flatten
+                  schema:
+                      type: boolean
                 - in: query
                   name: page
                   schema:
@@ -1714,6 +1718,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:

@@ -191,15 +191,13 @@ public class AssetListAssetEntryProviderImpl
 
 			assetEntryQuery.setClassNameIds(classNameIds);
 
-			for (long classNameId : classNameIds) {
-				classTypeIds = ArrayUtil.append(
-					classTypeIds,
-					_getClassTypeIds(
-						assetListEntry, unicodeProperties,
-						_portal.getClassName(classNameId)));
-			}
+			if (classNameIds.length == 1) {
+				classTypeIds = _getClassTypeIds(
+					assetListEntry, unicodeProperties,
+					_portal.getClassName(classNameIds[0]));
 
-			assetEntryQuery.setClassTypeIds(classTypeIds);
+				assetEntryQuery.setClassTypeIds(classTypeIds);
+			}
 		}
 		else {
 			assetEntryQuery.setClassNameIds(availableClassNameIds);
@@ -652,6 +650,31 @@ public class AssetListAssetEntryProviderImpl
 		return availableClassTypeIds;
 	}
 
+	private BooleanClause[] _getClassTypeIdsBooleanClauses(
+		long[] classTypeIds) {
+
+		if (ArrayUtil.isEmpty(classTypeIds)) {
+			return new BooleanClause[0];
+		}
+
+		BooleanQueryImpl booleanQueryImpl = new BooleanQueryImpl();
+
+		BooleanFilter booleanFilter = new BooleanFilter();
+
+		TermsFilter termsFilter = new TermsFilter(Field.CLASS_TYPE_ID);
+
+		termsFilter.addValues(ArrayUtil.toStringArray(classTypeIds));
+
+		booleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
+
+		booleanQueryImpl.setPreBooleanFilter(booleanFilter);
+
+		return new BooleanClause[] {
+			BooleanClauseFactoryUtil.create(
+				booleanQueryImpl, BooleanClauseOccur.MUST.getName())
+		};
+	}
+
 	private long[] _getCombinedSegmentsEntryIds(
 		AssetListEntry assetListEntry, long[] segmentEntryIds) {
 
@@ -750,7 +773,9 @@ public class AssetListAssetEntryProviderImpl
 		searchContext.setBooleanClauses(
 			ArrayUtil.append(
 				_getAssetCategoryIdsBooleanClauses(assetCategoryIds),
-				_getAssetTagNamesBooleanClauses(assetTagNames)));
+				_getAssetTagNamesBooleanClauses(assetTagNames),
+				_getClassTypeIdsBooleanClauses(
+					assetEntryQuery.getClassTypeIds())));
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(assetEntryQuery.getEnd());
 		searchContext.setKeywords(keywords);

@@ -234,34 +234,28 @@ exports[`SidebarPanelInfoView renders 1`] = `
             >
               <div
                 class="panel c-mb-1 panel-unstyled"
-                role="tablist"
               >
                 <button
+                  aria-controls="clay-id-2"
                   aria-expanded="true"
                   class="panel-header panel-header-link collapse-icon collapse-icon-middle show btn btn-unstyled"
-                  role="tab"
                   type="button"
                 >
-                  <span
-                    class="c-inner"
-                    tabindex="-1"
-                  >
-                    <div>
+                  <div>
+                    <div
+                      class="autofit-row"
+                    >
                       <div
-                        class="autofit-row"
+                        class="align-self-center panel-title autofit-col autofit-col-expand"
                       >
-                        <div
-                          class="align-self-center panel-title autofit-col autofit-col-expand"
+                        <span
+                          aria-label="view properties"
                         >
-                          <span
-                            aria-label="view properties"
-                          >
-                            properties
-                          </span>
-                        </div>
+                          properties
+                        </span>
                       </div>
                     </div>
-                  </span>
+                  </div>
                   <span
                     class="collapse-icon-closed"
                   >
@@ -288,8 +282,10 @@ exports[`SidebarPanelInfoView renders 1`] = `
                   </span>
                 </button>
                 <div
+                  aria-labelledby="clay-id-2"
                   class="panel-collapse"
-                  role="tabpanel"
+                  id="clay-id-2"
+                  role="region"
                 >
                   <div
                     class="panel-body"

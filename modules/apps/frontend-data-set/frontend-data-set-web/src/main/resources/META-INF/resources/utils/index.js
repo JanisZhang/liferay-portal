@@ -5,6 +5,7 @@
 
 import {fetch} from 'frontend-js-web';
 
+import getValueFromItem from './getValueFromItem';
 import createOdataFilter from './odata';
 
 export function getData(apiURL, query) {
@@ -51,29 +52,6 @@ export function isValuesArrayChanged(prevValue = [], newValue = []) {
 	return changed;
 }
 
-export function getValueFromItem(item, fieldName) {
-	if (!fieldName) {
-		return null;
-	}
-	if (Array.isArray(fieldName)) {
-		return fieldName.reduce((acc, key) => {
-			if (key === 'LANG') {
-				return (
-					acc[Liferay.ThemeDisplay.getLanguageId()] ||
-					acc[
-						Liferay.ThemeDisplay.getDefaultLanguageId() ||
-							acc[Liferay.ThemeDisplay.getBCP47LanguageId()]
-					]
-				);
-			}
-
-			return acc[key];
-		}, item);
-	}
-
-	return item[fieldName];
-}
-
 export function formatItemChanges(itemChanges) {
 	const formattedChanges = Object.values(itemChanges).reduce(
 		(changes, {value, valuePath}) => {
@@ -90,26 +68,6 @@ export function formatItemChanges(itemChanges) {
 	);
 
 	return formattedChanges;
-}
-
-export function formatActionURL(url, item) {
-	if (!url) {
-		return '';
-	}
-
-	const replacedURL = url.replace(new RegExp('{(.*?)}', 'mg'), (matched) =>
-		getValueFromItem(
-			item,
-			matched.substring(1, matched.length - 1).split('.')
-		)
-	);
-
-	return replacedURL.replace(new RegExp('(%7B.*?%7D)', 'mg'), (matched) =>
-		getValueFromItem(
-			item,
-			matched.substring(3, matched.length - 3).split('.')
-		)
-	);
 }
 
 export function getRandomId() {

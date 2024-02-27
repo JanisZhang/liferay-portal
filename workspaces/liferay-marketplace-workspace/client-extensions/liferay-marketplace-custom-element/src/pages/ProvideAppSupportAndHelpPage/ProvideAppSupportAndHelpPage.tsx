@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {useState} from 'react';
+
 import {Header} from '../../components/Header/Header';
 import {Input} from '../../components/Input/Input';
 import {NewAppPageFooterButtons} from '../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
@@ -22,6 +24,7 @@ export function ProvideAppSupportAndHelpPage({
 	onClickBack,
 	onClickContinue,
 }: ProvideAppSupportAndHelpPageProps) {
+	const [processing, setProcessing] = useState(false);
 	const [
 		{
 			appDocumentationURL,
@@ -61,7 +64,6 @@ export function ProvideAppSupportAndHelpPage({
 						})
 					}
 					placeholder="http:// Enter app name"
-					required
 					value={supportURL?.value}
 				/>
 
@@ -128,9 +130,11 @@ export function ProvideAppSupportAndHelpPage({
 			</Section>
 
 			<NewAppPageFooterButtons
-				disableContinueButton={!supportURL?.value}
+				disableContinueButton={processing}
+				isLoading={processing}
 				onClickBack={() => onClickBack()}
 				onClickContinue={async () => {
+					setProcessing(true);
 					const supportURLSpecificationId = await saveSpecification(
 						appId,
 						appProductId,
@@ -277,6 +281,8 @@ export function ProvideAppSupportAndHelpPage({
 							});
 						}
 					}
+					setProcessing(false);
+
 					onClickContinue();
 				}}
 				showBackButton={true}

@@ -30,14 +30,14 @@ definition {
 	@priority = 5
 	test CanCreatePartitionedVirtualInstanceViaConfig {
 		property app.server.types = "tomcat";
-		property database.types = "mysql";
+		property database.types = "mysql, postgresql";
 		property liferay.online.properties = "true";
 		property osgi.module.configuration.file.names = "com.liferay.portal.instances.internal.configuration.PortalInstancesConfiguration~www.able.com.config";
 		property osgi.module.configurations = "mx=\"www.able.com\"${line.separator}virtualHostname=\"www.able.com\"";
+		property portal.acceptance = "true";
 		property test.assert.warning.exceptions = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.main.component.name = "Database Partitioning";
 
 		PortalInstances.openVirtualInstancesAdmin();
 
@@ -225,6 +225,7 @@ definition {
 	@description = "Verify an existing factory config can be modified."
 	@priority = 3
 	test ModifyFactoryConfig {
+		property ci.retries.disabled = "false";
 		property database.types = "mysql";
 		property osgi.module.configuration.file.names = "com.liferay.portal.security.auth.verifier.internal.tunnel.configuration.TunnelAuthVerifierConfiguration~test1.config";
 		property osgi.module.configurations = "urlsIncludes=\"/api/liferay/original\"";
@@ -257,7 +258,7 @@ definition {
 	test OSGIConfigFileUpdatesExistingConfigInDatabase {
 		property database.types = "mysql";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		task ("Given no osgi config file exists for a specific config") {
 			var configName = "com.liferay.commerce.product.definitions.web.internal.configuration.CPInstanceConfiguration";
@@ -329,7 +330,7 @@ definition {
 	test RecreateDefaultFactoryConfig {
 		property database.types = "mysql";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		task ("Given the default factory config created by the OSGI configurator is deleted") {
 			SystemSettings.openSystemSettingsAdmin();

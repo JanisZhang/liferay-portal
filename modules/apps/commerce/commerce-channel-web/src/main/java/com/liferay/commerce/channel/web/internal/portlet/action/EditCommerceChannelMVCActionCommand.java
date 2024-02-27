@@ -48,7 +48,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.upload.UploadHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -426,7 +425,8 @@ public class EditCommerceChannelMVCActionCommand
 					newFileEntry.getFileName(), newFileEntry.getMimeType(),
 					formattedFileName, StringPool.BLANK, StringPool.BLANK,
 					StringPool.BLANK, newFileEntry.getContentStream(),
-					newFileEntry.getSize(), null, null, new ServiceContext());
+					newFileEntry.getSize(), null, null, null,
+					new ServiceContext());
 			}
 			finally {
 				_dlAppLocalService.deleteFileEntry(fileEntryId);
@@ -439,7 +439,7 @@ public class EditCommerceChannelMVCActionCommand
 				existingFileEntry.getTitle(), StringPool.BLANK,
 				existingFileEntry.getDescription(), StringPool.BLANK,
 				DLVersionNumberIncrease.NONE, newFileEntry.getContentStream(),
-				newFileEntry.getSize(), null, null, new ServiceContext());
+				newFileEntry.getSize(), null, null, null, new ServiceContext());
 		}
 	}
 
@@ -463,9 +463,6 @@ public class EditCommerceChannelMVCActionCommand
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private UploadHandler _uploadHandler;
 
 	@Reference
 	private WorkflowDefinitionLinkLocalService

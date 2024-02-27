@@ -133,6 +133,8 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 			fragmentEntryLink.setCss(fragmentEntry.getCss());
 			fragmentEntryLink.setHtml(fragmentEntry.getHtml());
 			fragmentEntryLink.setJs(fragmentEntry.getJs());
+			fragmentEntryLink.setConfiguration(
+				fragmentEntry.getConfiguration());
 			fragmentEntryLink.setType(fragmentEntry.getType());
 		}
 
@@ -294,11 +296,11 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 		}
 
 		if (Validator.isNotNull(fragmentEntryLink.getJs())) {
-			sb.append("<script");
+			sb.append("<script type=\"module\"");
 			sb.append(
 				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
 					httpServletRequest));
-			sb.append(">(function() {const configuration = ");
+			sb.append(">const configuration = ");
 			sb.append(configuration);
 			sb.append("; const fragmentElement = document.querySelector('#");
 			sb.append(fragmentRendererContext.getFragmentElementId());
@@ -326,7 +328,7 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 						"p_l_mode", Constants.VIEW)));
 			sb.append("';");
 			sb.append(fragmentEntryLink.getJs());
-			sb.append(";}());</script>");
+			sb.append(";</script>");
 		}
 
 		return sb.toString();

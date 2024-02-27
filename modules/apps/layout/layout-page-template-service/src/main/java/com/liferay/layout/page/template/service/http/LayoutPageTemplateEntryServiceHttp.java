@@ -496,7 +496,8 @@ public class LayoutPageTemplateEntryServiceHttp {
 		getLayoutPageCollectionsAndLayoutPageTemplateEntries(
 			HttpPrincipal httpPrincipal, long groupId,
 			long layoutPageTemplateCollectionId, long classNameId,
-			long classTypeId, int type, int status, int start, int end,
+			long classTypeId, String name, int type, int status, int start,
+			int end,
 			com.liferay.portal.kernel.util.OrderByComparator<Object>
 				orderByComparator) {
 
@@ -508,7 +509,7 @@ public class LayoutPageTemplateEntryServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, layoutPageTemplateCollectionId, classNameId,
-				classTypeId, type, status, start, end, orderByComparator);
+				classTypeId, name, type, status, start, end, orderByComparator);
 
 			Object returnObj = null;
 
@@ -568,7 +569,7 @@ public class LayoutPageTemplateEntryServiceHttp {
 	public static int getLayoutPageCollectionsAndLayoutPageTemplateEntriesCount(
 		HttpPrincipal httpPrincipal, long groupId,
 		long layoutPageTemplateCollectionId, long classNameId, long classTypeId,
-		int type, int status) {
+		String name, int type, int status) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -578,7 +579,7 @@ public class LayoutPageTemplateEntryServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, layoutPageTemplateCollectionId, classNameId,
-				classTypeId, type, status);
+				classTypeId, name, type, status);
 
 			Object returnObj = null;
 
@@ -2488,8 +2489,8 @@ public class LayoutPageTemplateEntryServiceHttp {
 	private static final Class<?>[]
 		_getLayoutPageCollectionsAndLayoutPageTemplateEntriesParameterTypes11 =
 			new Class[] {
-				long.class, long.class, long.class, long.class, int.class,
-				int.class, int.class, int.class,
+				long.class, long.class, long.class, long.class, String.class,
+				int.class, int.class, int.class, int.class,
 				com.liferay.portal.kernel.util.OrderByComparator.class
 			};
 	private static final Class<?>[]
@@ -2498,8 +2499,8 @@ public class LayoutPageTemplateEntryServiceHttp {
 	private static final Class<?>[]
 		_getLayoutPageCollectionsAndLayoutPageTemplateEntriesCountParameterTypes13 =
 			new Class[] {
-				long.class, long.class, long.class, long.class, int.class,
-				int.class
+				long.class, long.class, long.class, long.class, String.class,
+				int.class, int.class
 			};
 	private static final Class<?>[]
 		_getLayoutPageTemplateEntriesParameterTypes14 = new Class[] {

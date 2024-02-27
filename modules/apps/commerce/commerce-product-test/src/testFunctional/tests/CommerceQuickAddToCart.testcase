@@ -219,9 +219,7 @@ definition {
 		var product = "Transmission Cooler Line Assembly";
 
 		task ("Given a maximum quantity is configured for a product (e.g. maximum quantity 8 for MIN55860)") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchAndGoToProductEntry(entryProductName = ${product});
 
@@ -324,9 +322,7 @@ definition {
 		var product = "Transmission Cooler Line Assembly";
 
 		task ("Given a minimum quantity is configured for a product (e.g. minimum quantity 3 for MIN55860)") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchAndGoToProductEntry(entryProductName = ${product});
 
@@ -898,7 +894,7 @@ definition {
 
 			AssertElementPresent(
 				key_title = "Replacement Product for MIN55861.",
-				locator1 = "StagingPublishToLive#PAGES_TO_PUBLISH_PAGE_NAME_SPAN_TITLE");
+				locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_INFO_ICON_TITLE");
 		}
 	}
 
@@ -1014,7 +1010,7 @@ definition {
 
 			AssertElementPresent(
 				key_title = "Replacement Product for MIN55861.",
-				locator1 = "StagingPublishToLive#PAGES_TO_PUBLISH_PAGE_NAME_SPAN_TITLE");
+				locator1 = "CommerceAccelerators#QUICK_ADD_TO_CART_INFO_ICON_TITLE");
 		}
 	}
 
@@ -1864,7 +1860,7 @@ definition {
 	@description = "This is a test for COMMERCE-12036. Discontinued SKU is replaced successfully when the replacement SKU is price on application."
 	@priority = 3
 	test CanPriceOnApplicationBeAppliedCorrectlyOnReplacementSKU {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11028=true${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "false";
 
 		task ("Given an account with a buyer user is created") {
@@ -1917,6 +1913,12 @@ definition {
 			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
 			CommerceNavigator.gotoTableListEntry(entryName = "MIN93015");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 		}
 
 		task ("And the admin marks the sku as 'Price on Application'") {
@@ -2603,7 +2605,8 @@ definition {
 
 			CommerceSKUs.addSKU(
 				noOption = "true",
-				optionValuesList = "BLACK:10.0");
+				optionValuesList = "BLACK:10.0",
+				priceList = "Minium Base Price List");
 
 			Click(
 				key_value = "BLACKSKU",

@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -245,32 +243,75 @@ public abstract class BaseCTCollectionResourceTestCase {
 		CTCollection ctCollection3 = testGetCTCollectionsPage_addCTCollection(
 			randomCTCollection());
 
-		Page<CTCollection> page1 = ctCollectionResource.getCTCollectionsPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<CTCollection> ctCollections1 =
-			(List<CTCollection>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			ctCollections1.toString(), totalCount + 2, ctCollections1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<CTCollection> page1 =
+				ctCollectionResource.getCTCollectionsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<CTCollection> page2 = ctCollectionResource.getCTCollectionsPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(ctCollection1, (List<CTCollection>)page1.getItems());
 
-		List<CTCollection> ctCollections2 =
-			(List<CTCollection>)page2.getItems();
+			Page<CTCollection> page2 =
+				ctCollectionResource.getCTCollectionsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			ctCollections2.toString(), 1, ctCollections2.size());
+			assertContains(ctCollection2, (List<CTCollection>)page2.getItems());
 
-		Page<CTCollection> page3 = ctCollectionResource.getCTCollectionsPage(
-			null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<CTCollection> page3 =
+				ctCollectionResource.getCTCollectionsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(ctCollection1, (List<CTCollection>)page3.getItems());
-		assertContains(ctCollection2, (List<CTCollection>)page3.getItems());
-		assertContains(ctCollection3, (List<CTCollection>)page3.getItems());
+			assertContains(ctCollection3, (List<CTCollection>)page3.getItems());
+		}
+		else {
+			Page<CTCollection> page1 =
+				ctCollectionResource.getCTCollectionsPage(
+					null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<CTCollection> ctCollections1 =
+				(List<CTCollection>)page1.getItems();
+
+			Assert.assertEquals(
+				ctCollections1.toString(), totalCount + 2,
+				ctCollections1.size());
+
+			Page<CTCollection> page2 =
+				ctCollectionResource.getCTCollectionsPage(
+					null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<CTCollection> ctCollections2 =
+				(List<CTCollection>)page2.getItems();
+
+			Assert.assertEquals(
+				ctCollections2.toString(), 1, ctCollections2.size());
+
+			Page<CTCollection> page3 =
+				ctCollectionResource.getCTCollectionsPage(
+					null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(ctCollection1, (List<CTCollection>)page3.getItems());
+			assertContains(ctCollection2, (List<CTCollection>)page3.getItems());
+			assertContains(ctCollection3, (List<CTCollection>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -658,6 +699,51 @@ public abstract class BaseCTCollectionResourceTestCase {
 	@Test
 	public void testGetCTCollectionShareLink() throws Exception {
 		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGetCTCollectionsHistoryPage() throws Exception {
+		Page<CTCollection> page =
+			ctCollectionResource.getCTCollectionsHistoryPage(null, null);
+
+		long totalCount = page.getTotalCount();
+
+		CTCollection ctCollection1 =
+			testGetCTCollectionsHistoryPage_addCTCollection(
+				randomCTCollection());
+
+		CTCollection ctCollection2 =
+			testGetCTCollectionsHistoryPage_addCTCollection(
+				randomCTCollection());
+
+		page = ctCollectionResource.getCTCollectionsHistoryPage(null, null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(ctCollection1, (List<CTCollection>)page.getItems());
+		assertContains(ctCollection2, (List<CTCollection>)page.getItems());
+		assertValid(page, testGetCTCollectionsHistoryPage_getExpectedActions());
+
+		ctCollectionResource.deleteCTCollection(ctCollection1.getId());
+
+		ctCollectionResource.deleteCTCollection(ctCollection2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetCTCollectionsHistoryPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected CTCollection testGetCTCollectionsHistoryPage_addCTCollection(
+			CTCollection ctCollection)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1330,6 +1416,10 @@ public abstract class BaseCTCollectionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1764,9 +1854,9 @@ public abstract class BaseCTCollectionResourceTestCase {
 	}
 
 	protected CTCollectionResource ctCollectionResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

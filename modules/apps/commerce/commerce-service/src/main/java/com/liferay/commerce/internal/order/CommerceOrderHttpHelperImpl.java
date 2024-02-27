@@ -582,6 +582,10 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		if (userCommerceOrder == null) {
 			httpSession.removeAttribute(cookieName);
 
+			commerceOrder =
+				_commerceOrderLocalService.resetCommerceOrderAddresses(
+					commerceOrder.getCommerceOrderId(), true, true);
+
 			return _commerceOrderLocalService.updateAccount(
 				commerceOrder.getCommerceOrderId(), user.getUserId(),
 				accountEntry.getAccountEntryId());
@@ -593,6 +597,8 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		_commerceOrderThreadLocal.set(userCommerceOrder);
 
 		try {
+			httpSession.setAttribute(cookieName, userCommerceOrder.getUuid());
+
 			_commerceOrderLocalService.mergeGuestCommerceOrder(
 				user.getUserId(), commerceOrder.getCommerceOrderId(),
 				userCommerceOrder.getCommerceOrderId(),

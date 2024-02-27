@@ -23,7 +23,7 @@ PortletConfigurationTemplatesDisplayContext portletConfigurationTemplatesDisplay
 		<div class="portlet-configuration-body-content">
 			<clay:management-toolbar
 				managementToolbarDisplayContext="<%= new PortletConfigurationTemplatesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, portletConfigurationTemplatesDisplayContext) %>"
-				propsTransformer="js/ManagementToolbarPropsTransformer"
+				propsTransformer="{ManagementToolbarPropsTransformer} from portlet-configuration-web"
 			/>
 
 			<clay:container-fluid>
@@ -62,9 +62,9 @@ PortletConfigurationTemplatesDisplayContext portletConfigurationTemplatesDisplay
 								<liferay-ui:search-container-column-text
 									colspan="<%= 2 %>"
 								>
-									<h6 class="text-default">
+									<div class="h6 text-default">
 										<liferay-ui:message arguments="<%= new String[] {LanguageUtil.getTimeDescription(locale, System.currentTimeMillis() - archivedSettings.getModifiedDate().getTime(), true), HtmlUtil.escape(archivedSettings.getUserName())} %>" key="x-ago-by-x" translateArguments="<%= false %>" />
-									</h6>
+									</div>
 
 									<h5>
 										<%= HtmlUtil.escape(archivedSettings.getName()) %>
@@ -75,7 +75,7 @@ PortletConfigurationTemplatesDisplayContext portletConfigurationTemplatesDisplay
 									<clay:dropdown-actions
 										aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 										dropdownItems="<%= portletConfigurationTemplatesDisplayContext.getActionDropdownItems(archivedSettings) %>"
-										propsTransformer="js/ArchivedSetuptsDropdownDefaultPropsTransformer"
+										propsTransformer="{ArchivedSetuptsDropdownDefaultPropsTransformer} from portlet-configuration-web"
 									/>
 								</liferay-ui:search-container-column-text>
 							</c:when>
@@ -110,7 +110,7 @@ PortletConfigurationTemplatesDisplayContext portletConfigurationTemplatesDisplay
 									<clay:dropdown-actions
 										aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 										dropdownItems="<%= portletConfigurationTemplatesDisplayContext.getActionDropdownItems(archivedSettings) %>"
-										propsTransformer="js/ArchivedSetuptsDropdownDefaultPropsTransformer"
+										propsTransformer="{ArchivedSetuptsDropdownDefaultPropsTransformer} from portlet-configuration-web"
 									/>
 								</liferay-ui:search-container-column-text>
 							</c:when>

@@ -23,6 +23,7 @@ import com.liferay.layout.type.controller.display.page.internal.constants.Displa
 import com.liferay.layout.type.controller.display.page.internal.display.context.DisplayPageLayoutTypeControllerDisplayContext;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -38,7 +39,6 @@ import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.TransferHeadersHelperUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -143,6 +143,10 @@ public class DisplayPageLayoutTypeController
 				WebKeys.THEME_DISPLAY);
 
 		if (layout.isDraftLayout()) {
+			if (!themeDisplay.isSignedIn()) {
+				throw new NoSuchLayoutException();
+			}
+
 			Layout curLayout = _layoutLocalService.fetchLayout(
 				layout.getClassPK());
 
@@ -173,13 +177,19 @@ public class DisplayPageLayoutTypeController
 		DisplayPageLayoutTypeControllerDisplayContext
 			displayPageLayoutTypeControllerDisplayContext =
 				new DisplayPageLayoutTypeControllerDisplayContext(
-					_assetDisplayPageFriendlyURLProvider, httpServletRequest,
-					_infoItemServiceRegistry, _infoSearchClassMapperRegistry);
+					httpServletRequest, _infoItemServiceRegistry,
+					_infoSearchClassMapperRegistry);
 
 		httpServletRequest.setAttribute(
 			DisplayPageLayoutTypeControllerWebKeys.
 				DISPLAY_PAGE_LAYOUT_TYPE_CONTROLLER_DISPLAY_CONTEXT,
 			displayPageLayoutTypeControllerDisplayContext);
+
+		if (!displayPageLayoutTypeControllerDisplayContext.hasInfoItem() &&
+			!themeDisplay.isSignedIn()) {
+
+			throw new NoSuchLayoutException();
+		}
 
 		String page = getViewPage();
 
@@ -208,9 +218,7 @@ public class DisplayPageLayoutTypeController
 				httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			}
 			else if (!hasViewPermission) {
-				redirect = HttpComponentsUtil.setParameter(
-					themeDisplay.getURLSignIn(), "redirect",
-					themeDisplay.getURLCurrent());
+				throw new NoSuchLayoutException();
 			}
 
 			if (Validator.isNotNull(redirect)) {

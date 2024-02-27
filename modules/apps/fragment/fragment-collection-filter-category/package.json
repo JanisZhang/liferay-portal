@@ -1,18 +1,18 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.106.1",
-		"@clayui/drop-down": "3.106.1",
+		"@clayui/button": "3.111.0",
+		"@clayui/drop-down": "3.111.0",
 		"@liferay/fragment-renderer-collection-filter-impl": "*",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
 		"react": "16.12.0"
 	},
-	"main": "js/MultiSelectCategory.es.js",
+	"main": "js/index.js",
 	"name": "@liferay/fragment-collection-filter-category",
 	"scripts": {
 		"build": "liferay-npm-scripts build",
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "1.0.34"
+	"version": "1.0.39"
 }

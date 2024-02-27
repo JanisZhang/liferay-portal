@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.scheduler.SchedulerEngine;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
-import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -28,7 +27,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.util.PortalInstances;
-import com.liferay.portal.util.PropsUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,10 +66,7 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 
 		_serviceRegistrations.clear();
 
-		PropsUtil.set(
-			"database.partition.enabled", _originalDatabasePartitionEnabled);
-
-		_companyLocalService.deleteCompany(_company);
+		companyLocalService.deleteCompany(_company);
 
 		PrincipalThreadLocal.setName(_originalName);
 	}
@@ -250,7 +245,7 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 
 		Set<Long> companyIds = new TreeSet<>();
 
-		_companyLocalService.forEachCompany(
+		companyLocalService.forEachCompany(
 			company -> {
 				if (company.isActive()) {
 					companyIds.add(company.getCompanyId());
@@ -258,11 +253,6 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 			});
 
 		_activeCompanyIds = companyIds.toArray(new Long[0]);
-
-		_originalDatabasePartitionEnabled = PropsUtil.get(
-			"database.partition.enabled");
-
-		PropsUtil.set("database.partition.enabled", "true");
 
 		_testDBPartitionMessageListener = new TestDBPartitionMessageListener();
 
@@ -290,10 +280,6 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 
 	private static Long[] _activeCompanyIds;
 	private static Company _company;
-
-	@Inject
-	private static CompanyLocalService _companyLocalService;
-
 	private static volatile CountDownLatch _countDownLatch;
 
 	@Inject(
@@ -307,7 +293,6 @@ public abstract class BaseDBPartitionMessageBusInterceptorTestCase
 	@Inject
 	private static MessageBus _messageBus;
 
-	private static String _originalDatabasePartitionEnabled;
 	private static String _originalName;
 	private static final List<ServiceRegistration<?>> _serviceRegistrations =
 		new ArrayList<>();

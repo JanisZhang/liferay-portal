@@ -6,6 +6,7 @@
 package com.liferay.document.library.app.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.document.library.app.service.test.util.DLAppServiceTestUtil;
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
@@ -154,7 +155,7 @@ public class DLAppServiceWhenCopyingAFileEntryTest extends BaseDLAppTestCase {
 		FileEntry fileEntry = DLAppServiceTestUtil.addFileEntry(
 			sourceGroupId, sourceFolderId);
 
-		DLAppServiceUtil.copyFileEntry(
+		dlAppService.copyFileEntry(
 			fileEntry.getFileEntryId(), targetFolderId, targetGroupId,
 			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT, null,
 			ServiceContextTestUtil.getServiceContext(

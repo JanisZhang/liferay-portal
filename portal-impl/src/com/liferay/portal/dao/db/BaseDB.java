@@ -11,10 +11,11 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
-import com.liferay.portal.db.partition.DBPartitionUtil;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBInspector;
+import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.Index;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
@@ -342,7 +343,8 @@ public abstract class BaseDB implements DB {
 	}
 
 	@Override
-	public ResultSet getIndexResultSet(Connection connection, String tableName)
+	public ResultSet getIndexResultSet(
+			Connection connection, String tableName, boolean onlyUnique)
 		throws SQLException {
 
 		DatabaseMetaData databaseMetaData = connection.getMetaData();
@@ -350,8 +352,8 @@ public abstract class BaseDB implements DB {
 		DBInspector dbInspector = new DBInspector(connection);
 
 		return databaseMetaData.getIndexInfo(
-			dbInspector.getCatalog(), dbInspector.getSchema(), tableName, false,
-			false);
+			dbInspector.getCatalog(), dbInspector.getSchema(), tableName,
+			onlyUnique, false);
 	}
 
 	@Override
@@ -418,27 +420,32 @@ public abstract class BaseDB implements DB {
 
 	@Override
 	public boolean isSupportsAlterColumnName() {
-		return _SUPPORTS_ALTER_COLUMN_NAME;
+		return true;
 	}
 
 	@Override
 	public boolean isSupportsAlterColumnType() {
-		return _SUPPORTS_ALTER_COLUMN_TYPE;
+		return true;
+	}
+
+	@Override
+	public boolean isSupportsDBPartition() {
+		return false;
 	}
 
 	@Override
 	public boolean isSupportsInlineDistinct() {
-		return _SUPPORTS_INLINE_DISTINCT;
+		return true;
 	}
 
 	@Override
 	public boolean isSupportsQueryingAfterException() {
-		return _SUPPORTS_QUERYING_AFTER_EXCEPTION;
+		return true;
 	}
 
 	@Override
 	public boolean isSupportsScrollableResults() {
-		return _SUPPORTS_SCROLLABLE_RESULTS;
+		return true;
 	}
 
 	@Override
@@ -448,7 +455,7 @@ public abstract class BaseDB implements DB {
 
 	@Override
 	public boolean isSupportsUpdateWithInnerJoin() {
-		return _SUPPORTS_UPDATE_WITH_INNER_JOIN;
+		return true;
 	}
 
 	@Override
@@ -773,17 +780,16 @@ public abstract class BaseDB implements DB {
 
 	@Override
 	public void updateIndexes(
-			Connection connection, String tablesSQL, String indexesSQL,
+			Connection connection, String tableName, String indexesSQL,
 			boolean dropIndexes)
 		throws Exception {
 
-		List<Index> indexes = getIndexes(connection);
+		List<Index> indexes = _getIndexes(connection, tableName);
 
-		Set<String> validIndexNames = null;
+		Set<String> validIndexNames;
 
 		if (dropIndexes) {
-			validIndexNames = dropIndexes(
-				connection, tablesSQL, indexesSQL, indexes);
+			validIndexNames = dropIndexes(connection, indexesSQL, indexes);
 		}
 		else {
 			validIndexNames = new HashSet<>();
@@ -1158,12 +1164,11 @@ public abstract class BaseDB implements DB {
 	}
 
 	protected Set<String> dropIndexes(
-			Connection connection, String tablesSQL, String indexesSQL,
-			List<Index> indexes)
+			Connection connection, String indexesSQL, List<Index> indexes)
 		throws IOException, SQLException {
 
-		if (_log.isInfoEnabled()) {
-			_log.info("Dropping stale indexes");
+		if (_log.isDebugEnabled()) {
+			_log.debug("Dropping stale indexes");
 		}
 
 		Set<String> validIndexNames = new HashSet<>();
@@ -1172,7 +1177,6 @@ public abstract class BaseDB implements DB {
 			return validIndexNames;
 		}
 
-		String tablesSQLLowerCase = StringUtil.toLowerCase(tablesSQL);
 		String indexesSQLLowerCase = StringUtil.toLowerCase(indexesSQL);
 
 		String[] lines = StringUtil.splitLines(indexesSQL);
@@ -1198,10 +1202,6 @@ public abstract class BaseDB implements DB {
 			String indexNameLowerCase = StringUtil.toLowerCase(
 				indexNameUpperCase);
 
-			String tableName = index.getTableName();
-
-			String tableNameLowerCase = StringUtil.toLowerCase(tableName);
-
 			validIndexNames.add(indexNameUpperCase);
 
 			if (indexNames.contains(indexNameLowerCase)) {
@@ -1221,16 +1221,12 @@ public abstract class BaseDB implements DB {
 					continue;
 				}
 			}
-			else if (!tablesSQLLowerCase.contains(
-						CREATE_TABLE + tableNameLowerCase + " (")) {
-
-				continue;
-			}
 
 			validIndexNames.remove(indexNameUpperCase);
 
 			String sql = StringBundler.concat(
-				"drop index ", indexNameUpperCase, " on ", tableName);
+				"drop index ", indexNameUpperCase, " on ",
+				index.getTableName());
 
 			if (_log.isInfoEnabled()) {
 				_log.info(sql);
@@ -1266,6 +1262,8 @@ public abstract class BaseDB implements DB {
 
 		DatabaseMetaData databaseMetaData = connection.getMetaData();
 
+		DB db = DBManagerUtil.getDB();
+
 		DBInspector dbInspector = new DBInspector(connection);
 
 		String catalog = dbInspector.getCatalog();
@@ -1292,9 +1290,8 @@ public abstract class BaseDB implements DB {
 				normalizedTableName = dbInspector.normalizeName(
 					tableResultSet.getString("TABLE_NAME"), databaseMetaData);
 
-				try (ResultSet indexResultSet = databaseMetaData.getIndexInfo(
-						catalog, schema, normalizedTableName, onlyUnique,
-						false)) {
+				try (ResultSet indexResultSet = db.getIndexResultSet(
+						connection, normalizedTableName, onlyUnique)) {
 
 					boolean unique = false;
 
@@ -1382,11 +1379,11 @@ public abstract class BaseDB implements DB {
 	protected abstract String[] getTemplate();
 
 	protected boolean isSupportsDDLRollback() {
-		return _SUPPORTS_DDL_ROLLBACK;
+		return true;
 	}
 
 	protected boolean isSupportsDuplicatedIndexName() {
-		return _SUPPORTS_DUPLICATED_INDEX_NAME;
+		return true;
 	}
 
 	protected String limitColumnLength(String column, int length) {
@@ -1474,8 +1471,8 @@ public abstract class BaseDB implements DB {
 			Set<String> validIndexNames)
 		throws Exception {
 
-		if (_log.isInfoEnabled()) {
-			_log.info("Adding indexes");
+		if (_log.isDebugEnabled()) {
+			_log.debug("Adding indexes");
 		}
 
 		try (UnsyncBufferedReader unsyncBufferedReader =
@@ -1553,6 +1550,15 @@ public abstract class BaseDB implements DB {
 		return sb.toString();
 	}
 
+	private List<Index> _getIndexes(Connection connection, String tableName)
+		throws Exception {
+
+		return TransformUtil.transform(
+			getIndexes(connection, tableName, null, false),
+			index -> new Index(
+				index.getIndexName(), index.getTableName(), index.isUnique()));
+	}
+
 	private List<PrimaryKey> _getPrimaryKeys(
 			Connection connection, String tableName)
 		throws SQLException {
@@ -1578,22 +1584,6 @@ public abstract class BaseDB implements DB {
 
 		return primaryKeys;
 	}
-
-	private static final boolean _SUPPORTS_ALTER_COLUMN_NAME = true;
-
-	private static final boolean _SUPPORTS_ALTER_COLUMN_TYPE = true;
-
-	private static final boolean _SUPPORTS_DDL_ROLLBACK = true;
-
-	private static final boolean _SUPPORTS_DUPLICATED_INDEX_NAME = true;
-
-	private static final boolean _SUPPORTS_INLINE_DISTINCT = true;
-
-	private static final boolean _SUPPORTS_QUERYING_AFTER_EXCEPTION = true;
-
-	private static final boolean _SUPPORTS_SCROLLABLE_RESULTS = true;
-
-	private static final boolean _SUPPORTS_UPDATE_WITH_INNER_JOIN = true;
 
 	private static final Log _log = LogFactoryUtil.getLog(BaseDB.class);
 

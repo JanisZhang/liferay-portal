@@ -5,6 +5,7 @@
 
 /// <reference types="react" />
 
+import {ILearnResourceContext} from 'frontend-js-components-web';
 import './EditObjectField.scss';
 export interface EditObjectFieldProps {
 	baseResourceURL: string;
@@ -13,9 +14,9 @@ export interface EditObjectFieldProps {
 	forbiddenChars: string[];
 	forbiddenLastChars: string[];
 	forbiddenNames: string[];
-	isApproved: boolean;
 	isDefaultStorageType: boolean;
-	learnResources: ObjectWebLearnResources;
+	isRootDescendantNode: boolean;
+	learnResources: ILearnResourceContext;
 	objectDefinitionExternalReferenceCode: string;
 	objectFieldId: number;
 	readOnly: boolean;
@@ -29,8 +30,8 @@ export default function EditObjectField({
 	forbiddenChars,
 	forbiddenLastChars,
 	forbiddenNames,
-	isApproved,
 	isDefaultStorageType,
+	isRootDescendantNode,
 	learnResources,
 	objectDefinitionExternalReferenceCode,
 	objectFieldId,

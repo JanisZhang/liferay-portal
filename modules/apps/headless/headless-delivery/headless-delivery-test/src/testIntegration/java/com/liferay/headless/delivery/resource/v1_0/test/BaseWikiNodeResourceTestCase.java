@@ -31,8 +31,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -367,30 +365,68 @@ public abstract class BaseWikiNodeResourceTestCase {
 		WikiNode wikiNode3 = testGetSiteWikiNodesPage_addWikiNode(
 			siteId, randomWikiNode());
 
-		Page<WikiNode> page1 = wikiNodeResource.getSiteWikiNodesPage(
-			siteId, null, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<WikiNode> wikiNodes1 = (List<WikiNode>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			wikiNodes1.toString(), totalCount + 2, wikiNodes1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<WikiNode> page1 = wikiNodeResource.getSiteWikiNodesPage(
+				siteId, null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<WikiNode> page2 = wikiNodeResource.getSiteWikiNodesPage(
-			siteId, null, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(wikiNode1, (List<WikiNode>)page1.getItems());
 
-		List<WikiNode> wikiNodes2 = (List<WikiNode>)page2.getItems();
+			Page<WikiNode> page2 = wikiNodeResource.getSiteWikiNodesPage(
+				siteId, null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(wikiNodes2.toString(), 1, wikiNodes2.size());
+			assertContains(wikiNode2, (List<WikiNode>)page2.getItems());
 
-		Page<WikiNode> page3 = wikiNodeResource.getSiteWikiNodesPage(
-			siteId, null, null, null, Pagination.of(1, (int)totalCount + 3),
-			null);
+			Page<WikiNode> page3 = wikiNodeResource.getSiteWikiNodesPage(
+				siteId, null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(wikiNode1, (List<WikiNode>)page3.getItems());
-		assertContains(wikiNode2, (List<WikiNode>)page3.getItems());
-		assertContains(wikiNode3, (List<WikiNode>)page3.getItems());
+			assertContains(wikiNode3, (List<WikiNode>)page3.getItems());
+		}
+		else {
+			Page<WikiNode> page1 = wikiNodeResource.getSiteWikiNodesPage(
+				siteId, null, null, null, Pagination.of(1, totalCount + 2),
+				null);
+
+			List<WikiNode> wikiNodes1 = (List<WikiNode>)page1.getItems();
+
+			Assert.assertEquals(
+				wikiNodes1.toString(), totalCount + 2, wikiNodes1.size());
+
+			Page<WikiNode> page2 = wikiNodeResource.getSiteWikiNodesPage(
+				siteId, null, null, null, Pagination.of(2, totalCount + 2),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<WikiNode> wikiNodes2 = (List<WikiNode>)page2.getItems();
+
+			Assert.assertEquals(wikiNodes2.toString(), 1, wikiNodes2.size());
+
+			Page<WikiNode> page3 = wikiNodeResource.getSiteWikiNodesPage(
+				siteId, null, null, null, Pagination.of(1, (int)totalCount + 3),
+				null);
+
+			assertContains(wikiNode1, (List<WikiNode>)page3.getItems());
+			assertContains(wikiNode2, (List<WikiNode>)page3.getItems());
+			assertContains(wikiNode3, (List<WikiNode>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1666,6 +1702,10 @@ public abstract class BaseWikiNodeResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -2040,9 +2080,9 @@ public abstract class BaseWikiNodeResourceTestCase {
 	}
 
 	protected WikiNodeResource wikiNodeResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

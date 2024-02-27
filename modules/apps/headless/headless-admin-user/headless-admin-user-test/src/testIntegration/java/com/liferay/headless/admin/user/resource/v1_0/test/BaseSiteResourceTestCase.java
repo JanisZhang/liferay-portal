@@ -26,8 +26,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -233,28 +231,59 @@ public abstract class BaseSiteResourceTestCase {
 
 		Site site3 = testGetMyUserAccountSitesPage_addSite(randomSite());
 
-		Page<Site> page1 = siteResource.getMyUserAccountSitesPage(
-			Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Site> sites1 = (List<Site>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(sites1.toString(), totalCount + 2, sites1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Site> page1 = siteResource.getMyUserAccountSitesPage(
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<Site> page2 = siteResource.getMyUserAccountSitesPage(
-			Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(site1, (List<Site>)page1.getItems());
 
-		List<Site> sites2 = (List<Site>)page2.getItems();
+			Page<Site> page2 = siteResource.getMyUserAccountSitesPage(
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(sites2.toString(), 1, sites2.size());
+			assertContains(site2, (List<Site>)page2.getItems());
 
-		Page<Site> page3 = siteResource.getMyUserAccountSitesPage(
-			Pagination.of(1, (int)totalCount + 3));
+			Page<Site> page3 = siteResource.getMyUserAccountSitesPage(
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertContains(site1, (List<Site>)page3.getItems());
-		assertContains(site2, (List<Site>)page3.getItems());
-		assertContains(site3, (List<Site>)page3.getItems());
+			assertContains(site3, (List<Site>)page3.getItems());
+		}
+		else {
+			Page<Site> page1 = siteResource.getMyUserAccountSitesPage(
+				Pagination.of(1, totalCount + 2));
+
+			List<Site> sites1 = (List<Site>)page1.getItems();
+
+			Assert.assertEquals(
+				sites1.toString(), totalCount + 2, sites1.size());
+
+			Page<Site> page2 = siteResource.getMyUserAccountSitesPage(
+				Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Site> sites2 = (List<Site>)page2.getItems();
+
+			Assert.assertEquals(sites2.toString(), 1, sites2.size());
+
+			Page<Site> page3 = siteResource.getMyUserAccountSitesPage(
+				Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(site1, (List<Site>)page3.getItems());
+			assertContains(site2, (List<Site>)page3.getItems());
+			assertContains(site3, (List<Site>)page3.getItems());
+		}
 	}
 
 	protected Site testGetMyUserAccountSitesPage_addSite(Site site)
@@ -867,6 +896,10 @@ public abstract class BaseSiteResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1320,9 +1353,9 @@ public abstract class BaseSiteResourceTestCase {
 	}
 
 	protected SiteResource siteResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

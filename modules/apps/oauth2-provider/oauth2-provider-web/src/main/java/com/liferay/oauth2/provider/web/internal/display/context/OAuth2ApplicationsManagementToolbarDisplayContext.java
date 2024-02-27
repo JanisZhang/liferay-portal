@@ -9,29 +9,19 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
-import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.web.internal.constants.OAuth2ProviderPortletKeys;
+import com.liferay.oauth2.provider.web.internal.constants.OAuth2ProviderWebKeys;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-
-import javax.portlet.PortletURL;
 
 /**
  * @author Tomas Polesovsky
@@ -42,16 +32,14 @@ public class OAuth2ApplicationsManagementToolbarDisplayContext
 	public OAuth2ApplicationsManagementToolbarDisplayContext(
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		PortletURL currentURLObj) {
+		SearchContainer<?> searchContainer) {
 
 		super(
 			liferayPortletRequest.getHttpServletRequest(),
-			liferayPortletRequest, liferayPortletResponse, currentURLObj);
-
-		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
-			liferayPortletRequest);
+			liferayPortletRequest, liferayPortletResponse, searchContainer);
 	}
 
+	@Override
 	public List<DropdownItem> getActionDropdownItems() {
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
@@ -64,6 +52,7 @@ public class OAuth2ApplicationsManagementToolbarDisplayContext
 		).build();
 	}
 
+	@Override
 	public Map<String, Object> getAdditionalProps() {
 		return HashMapBuilder.<String, Object>put(
 			"deleteOAuth2ApplicationsURL",
@@ -75,7 +64,16 @@ public class OAuth2ApplicationsManagementToolbarDisplayContext
 		).build();
 	}
 
+	@Override
 	public CreationMenu getCreationMenu() {
+		OAuth2AdminPortletDisplayContext oAuth2AdminPortletDisplayContext =
+			(OAuth2AdminPortletDisplayContext)httpServletRequest.getAttribute(
+				OAuth2ProviderWebKeys.OAUTH2_ADMIN_PORTLET_DISPLAY_CONTEXT);
+
+		if (!oAuth2AdminPortletDisplayContext.hasAddApplicationPermission()) {
+			return null;
+		}
+
 		return CreationMenuBuilder.addPrimaryDropdownItem(
 			dropdownItem -> {
 				dropdownItem.setHref(
@@ -90,6 +88,7 @@ public class OAuth2ApplicationsManagementToolbarDisplayContext
 		).build();
 	}
 
+	@Override
 	public String getDisplayStyle() {
 		if (Validator.isNotNull(_displayStyle)) {
 			return _displayStyle;
@@ -102,34 +101,7 @@ public class OAuth2ApplicationsManagementToolbarDisplayContext
 		return _displayStyle;
 	}
 
-	public List<DropdownItem> getFilterDropdownItems() {
-		return DropdownItemListBuilder.addGroup(
-			() -> !FeatureFlagManagerUtil.isEnabled("LPS-144527"),
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
-				dropdownGroupItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "order-by"));
-			}
-		).build();
-	}
-
-	public OrderByComparator<OAuth2Application> getOrderByComparator() {
-		String orderByCol = getOrderByCol();
-
-		String columnName = "name";
-
-		if (orderByCol.equals("createDate")) {
-			columnName = "createDate";
-		}
-		else if (orderByCol.equals("clientId")) {
-			columnName = "clientId";
-		}
-
-		return OrderByComparatorFactoryUtil.create(
-			"OAuth2Application", columnName,
-			Objects.equals(getOrderByType(), "asc"));
-	}
-
+	@Override
 	public List<DropdownItem> getOrderByDropdownItems() {
 		return getOrderByDropdownItems(
 			HashMapBuilder.put(
@@ -141,36 +113,26 @@ public class OAuth2ApplicationsManagementToolbarDisplayContext
 			).build());
 	}
 
-	public ViewTypeItemList getViewTypes() {
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
+	@Override
+	public String getSearchContainerId() {
+		return "oAuth2ApplicationsSearchContainer";
+	}
 
-		int cur = ParamUtil.getInteger(
-			httpServletRequest, SearchContainer.DEFAULT_CUR_PARAM);
+	@Override
+	public Boolean isSelectable() {
+		return true;
+	}
 
-		if (cur > 0) {
-			portletURL.setParameter("cur", String.valueOf(cur));
-		}
+	@Override
+	public Boolean isShowSearch() {
+		return false;
+	}
 
-		int delta = ParamUtil.getInteger(
-			httpServletRequest, SearchContainer.DEFAULT_DELTA_PARAM);
-
-		if (delta > 0) {
-			portletURL.setParameter("delta", String.valueOf(delta));
-		}
-
-		portletURL.setParameter("orderByCol", getOrderByCol());
-		portletURL.setParameter("orderByType", getOrderByType());
-
-		return new ViewTypeItemList(portletURL, getDisplayStyle()) {
-			{
-				addListViewTypeItem();
-
-				addTableViewTypeItem();
-			}
-		};
+	@Override
+	protected String[] getDisplayViews() {
+		return new String[] {"list", "descriptive"};
 	}
 
 	private String _displayStyle;
-	private final PortalPreferences _portalPreferences;
 
 }

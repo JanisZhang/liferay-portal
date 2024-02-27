@@ -4,8 +4,6 @@
  */
 
 import ClayAlert from '@clayui/alert';
-
-import 'codemirror/mode/groovy/groovy';
 import {
 	Card,
 	CodeEditor,
@@ -13,7 +11,11 @@ import {
 	SingleSelect,
 	getLocalizableLabel,
 } from '@liferay/object-js-components-web';
-import {LearnMessage, LearnResourcesContext} from 'frontend-js-components-web';
+import {
+	ILearnResourceContext,
+	LearnMessage,
+	LearnResourcesContext,
+} from 'frontend-js-components-web';
 import React, {useMemo} from 'react';
 
 import {NAME_OUTPUT_OBJECT_FIELD_EXTERNAL_REFERENCE_CODE} from '../../utils/constants';
@@ -23,7 +25,7 @@ import {TabProps} from './useObjectValidationForm';
 export interface ConditionsProps extends TabProps {
 	creationLanguageId: Liferay.Language.Locale;
 	customObjectFields: ObjectField[];
-	learnResources: ObjectWebLearnResources;
+	learnResources: ILearnResourceContext;
 	objectValidationRuleElements: SidebarCategory[];
 }
 
@@ -34,6 +36,7 @@ export function Conditions({
 	errors,
 	learnResources,
 	objectValidationRuleElements,
+	selectedPartialValidationField,
 	setValues,
 	values,
 }: ConditionsProps) {
@@ -69,24 +72,6 @@ export function Conditions({
 		);
 	}, [creationLanguageId, customObjectFields]);
 
-	const getSelectedPartialValidationField = () => {
-		if (values.objectValidationRuleSettings?.length) {
-			const [
-				partialValidationField,
-			] = values.objectValidationRuleSettings;
-
-			const customObjectField = customObjectFields.find(
-				(currentCustomObjectField) =>
-					currentCustomObjectField.externalReferenceCode ===
-					partialValidationField.value
-			);
-
-			return customObjectField?.externalReferenceCode;
-		}
-
-		return '';
-	};
-
 	return (
 		<>
 			<ClayAlert
@@ -100,7 +85,7 @@ export function Conditions({
 					<LearnMessage
 						className="alert-link"
 						resource="object-web"
-						resourceKey="general"
+						resourceKey="expression-builder-validations-reference"
 					/>
 				</LearnResourcesContext.Provider>
 			</ClayAlert>
@@ -143,7 +128,7 @@ export function Conditions({
 						});
 					}}
 					required
-					selectedKey={getSelectedPartialValidationField()}
+					selectedKey={selectedPartialValidationField}
 				/>
 			</ErrorMessage>
 		</>

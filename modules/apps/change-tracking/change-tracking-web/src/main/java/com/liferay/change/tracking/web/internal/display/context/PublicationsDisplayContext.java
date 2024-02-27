@@ -7,6 +7,7 @@ package com.liferay.change.tracking.web.internal.display.context;
 
 import com.liferay.change.tracking.constants.CTActionKeys;
 import com.liferay.change.tracking.constants.CTConstants;
+import com.liferay.change.tracking.constants.PublicationRoleConstants;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTPreferences;
 import com.liferay.change.tracking.model.CTRemote;
@@ -14,7 +15,6 @@ import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.change.tracking.service.CTRemoteLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
-import com.liferay.change.tracking.web.internal.constants.PublicationRoleConstants;
 import com.liferay.change.tracking.web.internal.helper.PublicationHelper;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTPermission;
@@ -441,20 +441,8 @@ public class PublicationsDisplayContext {
 				_language.get(_httpServletRequest, "permissions"), "get",
 				"permissions", "modal-permissions"),
 			new FDSActionDropdownItem(
-				_language.get(
-					_httpServletRequest,
-					"are-you-sure-you-want-to-delete-this-publication"),
-				PortletURLBuilder.createActionURL(
-					_renderResponse
-				).setActionName(
-					"/change_tracking/delete_ct_collection"
-				).setRedirect(
-					_themeDisplay.getURLCurrent()
-				).setParameter(
-					"ctCollectionId", "{id}"
-				).buildString(),
-				"times-circle", "delete",
-				_language.get(_httpServletRequest, "delete"), "get", "delete",
+				null, "times-circle", "delete",
+				_language.get(_httpServletRequest, "delete"), null, "delete",
 				null),
 			new FDSActionDropdownItem(
 				PortletURLBuilder.createRenderURL(

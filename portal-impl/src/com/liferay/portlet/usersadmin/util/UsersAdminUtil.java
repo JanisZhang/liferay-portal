@@ -308,9 +308,9 @@ public class UsersAdminUtil {
 		PortletURL portletURL = PortletURLBuilder.createRenderURL(
 			renderResponse
 		).setMVCRenderCommandName(
-			"/users_admin/view"
+			"/users_admin/organizations_view_tree"
 		).setParameter(
-			"toolbarItem", "view-all-organizations"
+			"screenNavigationCategoryKey", "organizations"
 		).setParameter(
 			"usersListView", "tree"
 		).buildPortletURL();
@@ -336,8 +336,7 @@ public class UsersAdminUtil {
 			String.valueOf(unescapedOrganization.getOrganizationId()));
 
 		PortalUtil.addPortletBreadcrumbEntry(
-			httpServletRequest, unescapedOrganization.getName(),
-			portletURL.toString());
+			httpServletRequest, unescapedOrganization.getName(), null);
 	}
 
 	public static long[] addRequiredRoles(long userId, long[] roleIds)
@@ -1399,6 +1398,8 @@ public class UsersAdminUtil {
 		for (Address address : addresses) {
 			long addressId = address.getAddressId();
 
+			String name = address.getName();
+			String description = address.getDescription();
 			String street1 = address.getStreet1();
 			String street2 = address.getStreet2();
 			String street3 = address.getStreet3();
@@ -1409,19 +1410,22 @@ public class UsersAdminUtil {
 			long listTypeId = address.getListTypeId();
 			boolean mailing = address.isMailing();
 			boolean primary = address.isPrimary();
+			String phoneNumber = address.getPhoneNumber();
 
 			if (addressId <= 0) {
 				address = AddressServiceUtil.addAddress(
-					className, classPK, street1, street2, street3, city, zip,
+					address.getExternalReferenceCode(), className, classPK,
+					name, description, street1, street2, street3, city, zip,
 					regionId, countryId, listTypeId, mailing, primary,
-					new ServiceContext());
+					phoneNumber, new ServiceContext());
 
 				addressId = address.getAddressId();
 			}
 			else {
 				AddressServiceUtil.updateAddress(
-					addressId, street1, street2, street3, city, zip, regionId,
-					countryId, listTypeId, mailing, primary);
+					addressId, name, description, street1, street2, street3,
+					city, zip, regionId, countryId, listTypeId, mailing,
+					primary, phoneNumber);
 			}
 
 			addressIds.add(addressId);

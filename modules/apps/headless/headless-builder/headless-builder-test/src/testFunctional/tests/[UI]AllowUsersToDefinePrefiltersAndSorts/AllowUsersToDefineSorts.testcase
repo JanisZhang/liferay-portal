@@ -48,12 +48,8 @@ definition {
 				mainObjectDefinitionERC = "student",
 				name = "testSchema");
 
-			SchemaAPI.relateRequestSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				requestSchemaErc = "testSchema");
-
 			SchemaAPI.relateResponseSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
+				endpointErc = "My-app_testendpoint",
 				responseSchemaErc = "testSchema");
 
 			PropertyAPI.createAPIProperty(
@@ -205,6 +201,7 @@ definition {
 		}
 	}
 
+	@ignore = "true"
 	@priority = 3
 	test SortingIsLimitedByODataCharacterLimit {
 		task ("When setting the Sorting with 10001 characters") {

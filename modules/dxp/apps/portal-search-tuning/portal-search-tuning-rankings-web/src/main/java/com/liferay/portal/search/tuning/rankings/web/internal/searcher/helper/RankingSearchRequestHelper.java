@@ -7,14 +7,15 @@ package com.liferay.portal.search.tuning.rankings.web.internal.searcher.helper;
 
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.filter.ComplexQueryPart;
 import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.query.IdsQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.query.Query;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.Ranking;
-import com.liferay.portal.search.tuning.rankings.web.internal.util.RankingUtil;
+import com.liferay.portal.search.tuning.rankings.helper.RankingHelper;
+import com.liferay.portal.search.tuning.rankings.index.Ranking;
 
 import java.util.List;
 
@@ -49,6 +50,9 @@ public class RankingSearchRequestHelper {
 	@Reference
 	protected Queries queries;
 
+	@Reference
+	protected RankingHelper rankingHelper;
+
 	private ComplexQueryPart _getHiddenDocumentIdsQueryPart(Ranking ranking) {
 		List<String> ids = ranking.getHiddenDocumentIds();
 
@@ -74,7 +78,7 @@ public class RankingSearchRequestHelper {
 		IdsQuery idsQuery = queries.ids();
 
 		idsQuery.addIds(
-			ArrayUtil.toStringArray(RankingUtil.translateDocumentIds(ids)));
+			ArrayUtil.toStringArray(rankingHelper.translateDocumentIds(ids)));
 
 		return idsQuery;
 	}
@@ -82,9 +86,13 @@ public class RankingSearchRequestHelper {
 	private IdsQuery _getIdsQuery(Ranking.Pin pin, int size) {
 		IdsQuery idsQuery = queries.ids();
 
-		idsQuery.addIds(RankingUtil.getDocumentId(pin.getDocumentId()));
+		String id = rankingHelper.getDocumentId(pin.getDocumentId());
 
-		idsQuery.setBoost((size - pin.getPosition()) * 10000F);
+		if (!Validator.isBlank(id)) {
+			idsQuery.addIds(id);
+
+			idsQuery.setBoost((size - pin.getPosition()) * 10000F);
+		}
 
 		return idsQuery;
 	}

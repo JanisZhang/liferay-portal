@@ -206,6 +206,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -3477,20 +3478,38 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 	@Override
 	public List<User> searchBySocial(
-		long companyId, long[] groupIds, String keywords, int start, int end) {
+		long companyId, long[] groupIds, long[] userGroupIds, String keywords,
+		int start, int end) {
 
-		return searchBySocial(companyId, groupIds, keywords, start, end, null);
+		return searchBySocial(
+			companyId, groupIds, userGroupIds, keywords, start, end, null);
 	}
 
 	@Override
 	public List<User> searchBySocial(
-		long companyId, long[] groupIds, String keywords, int start, int end,
-		OrderByComparator<User> orderByComparator) {
+		long companyId, long[] groupIds, long[] userGroupIds, String keywords,
+		int start, int end, OrderByComparator<User> orderByComparator) {
 
 		return userFinder.findByKeywords(
 			companyId, keywords, WorkflowConstants.STATUS_APPROVED,
 			LinkedHashMapBuilder.<String, Object>put(
-				"usersGroups", ArrayUtil.toLongArray(groupIds)
+				"usersGroups",
+				() -> {
+					if (!ArrayUtil.isEmpty(groupIds)) {
+						return ArrayUtil.toLongArray(groupIds);
+					}
+
+					return null;
+				}
+			).put(
+				"usersUserGroups",
+				() -> {
+					if (!ArrayUtil.isEmpty(userGroupIds)) {
+						return ArrayUtil.toLongArray(userGroupIds);
+					}
+
+					return null;
+				}
 			).put(
 				"wildcardMode", WildcardMode.TRAILING
 			).build(),
@@ -4451,6 +4470,33 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		return userPersistence.update(user);
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public User updateExternalReferenceCode(
+			long userId, String externalReferenceCode)
+		throws PortalException {
+
+		return updateExternalReferenceCode(
+			getUserById(userId), externalReferenceCode);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public User updateExternalReferenceCode(
+			User user, String externalReferenceCode)
+		throws PortalException {
+
+		if (Objects.equals(
+				user.getExternalReferenceCode(), externalReferenceCode)) {
+
+			return user;
+		}
+
+		user.setExternalReferenceCode(externalReferenceCode);
+
+		return updateUser(user);
+	}
+
 	/**
 	 * Updates the user's Facebook ID.
 	 *
@@ -4708,6 +4754,17 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 		_contactPersistence.update(contact);
 
 		return user;
+	}
+
+	@Override
+	public User updateLanguageId(long userId, String languageId)
+		throws PortalException {
+
+		User user = userPersistence.findByPrimaryKey(userId);
+
+		user.setLanguageId(languageId);
+
+		return userPersistence.update(user);
 	}
 
 	/**
@@ -6168,6 +6225,11 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 			if (key.equals("inherit")) {
 				if (Boolean.TRUE.equals(entry.getValue())) {
+					return true;
+				}
+			}
+			else if (key.equals("noAccountEntriesAndNoOrganizations")) {
+				if (!Boolean.TRUE.equals(entry.getValue())) {
 					return true;
 				}
 			}

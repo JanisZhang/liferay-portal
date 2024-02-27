@@ -12,7 +12,6 @@ import getCN from 'classnames';
 import React, {useRef, useState} from 'react';
 
 import {fetchResponse} from '../../utils/api.es';
-import {SCOPE_TYPES} from '../../utils/constants.es';
 import {sub} from '../../utils/language.es';
 import ScopeSelectModal from './ScopeSelectModal.es';
 
@@ -40,7 +39,7 @@ const ScopeSelect = ({
 	onBlur,
 	title,
 	touched = false,
-	type = SCOPE_TYPES.SITE,
+	type,
 }) => {
 	const [activeDropdown, setActiveDropdown] = useState(false);
 	const [displayName, setDisplayName] = useState('');
@@ -152,19 +151,12 @@ const ScopeSelect = ({
 									</div>
 
 									<div className="list-group-text">
-										{type === SCOPE_TYPES.SITE
-											? sub(
-													Liferay.Language.get(
-														'x-child-sites'
-													),
-													[item.sites?.length]
-											  )
-											: sub(
-													Liferay.Language.get(
-														'external-reference-code-x'
-													),
-													[item.externalReferenceCode]
-											  )}
+										{sub(
+											Liferay.Language.get(
+												'external-reference-code-x'
+											),
+											[item.externalReferenceCode]
+										)}
 									</div>
 								</ClayDropDown.Item>
 							)}
@@ -185,7 +177,6 @@ const ScopeSelect = ({
 								onSubmit={_handleSelect}
 								selected={selected}
 								title={title}
-								type={type}
 							>
 								<ClayButton
 									className="w-100"

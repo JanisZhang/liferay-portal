@@ -46,7 +46,7 @@ export default function getMDFClaimListColumns(
 							Liferay.Util.navigate(
 								`${siteURL}/l/${
 									row[MDFClaimColumnKey.CLAIM_ID]
-								}`
+								}?&returnurl=${Liferay.ThemeDisplay.getLayoutRelativeURL()}`
 							),
 					});
 				}
@@ -124,7 +124,11 @@ export default function getMDFClaimListColumns(
 		);
 
 		return (
-			<Dropdown closeOnClick={true} options={options || []}></Dropdown>
+			<Dropdown
+				closeOnClick={true}
+				icon="ellipsis-v"
+				options={options || []}
+			></Dropdown>
 		);
 	};
 
@@ -137,7 +141,9 @@ export default function getMDFClaimListColumns(
 					className="link"
 					onClick={() =>
 						Liferay.Util.navigate(
-							`${siteURL}/l/${row[MDFClaimColumnKey.CLAIM_ID]}`
+							`${siteURL}/l/${
+								row[MDFClaimColumnKey.CLAIM_ID]
+							}?&returnurl=${Liferay.ThemeDisplay.getLayoutRelativeURL()}`
 						)
 					}
 				>{`Claim-${data}`}</a>
@@ -151,7 +157,9 @@ export default function getMDFClaimListColumns(
 					className="link"
 					onClick={() =>
 						Liferay.Util.navigate(
-							`${siteURL}/l/${row[MDFClaimColumnKey.REQUEST_ID]}`
+							`${siteURL}/l/${
+								row[MDFClaimColumnKey.REQUEST_ID]
+							}?&returnurl=${Liferay.ThemeDisplay.getLayoutRelativeURL()}`
 						)
 					}
 				>{`Request-${data}`}</a>
@@ -177,6 +185,10 @@ export default function getMDFClaimListColumns(
 		{
 			columnKey: MDFClaimColumnKey.AMOUNT_PAID,
 			label: 'Amount Paid',
+		},
+		{
+			columnKey: MDFClaimColumnKey.PAYMENT_DATE,
+			label: 'Payment Date',
 		},
 		{
 			columnKey: MDFClaimColumnKey.DATE_SUBMITTED,

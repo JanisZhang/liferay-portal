@@ -14,12 +14,11 @@ import {z} from 'zod';
 import FooterButtons from '../../components/FooterButtons';
 import {useMarketplaceContext} from '../../context/MarketplaceContext';
 import useGetProductByOrderId from '../../hooks/useGetProductByOrderId';
+import useMarketplaceSpringBootOAuth2 from '../../hooks/useMarketplaceSpringBootOAuth2';
 import {Liferay} from '../../liferay/liferay';
 import zodSchema from '../../schema/zod';
-import ProductCard from '../GetAppPage/components/ProductCard/ProductCard';
-import StepWizard from '../GetAppPage/components/StepWizard/StepWizard';
-import useGetProductCreatorAccount from '../GetAppPage/hooks/useGetProductCreatorAccount';
-import useProvisioningKoroneikiOAuth2 from '../GetAppPage/hooks/useProvisioningKoroneikiOAuth2';
+import ProductCard from '../GetApp/components/ProductCard/ProductCard';
+import StepWizard from '../GetApp/components/StepWizard/StepWizard';
 import {formatDate} from '../PublishedAppsDashboard/PublishedDashboardPageUtil';
 import AccountEmailInfo from './AccountInfo';
 import LicenseDetails from './LicenseDetails';
@@ -51,7 +50,9 @@ const ExtendBanner: React.FC<ExtendBannerProps> = ({subscription}) => (
 			</small>
 			<small className="col-6 col-md-4 subscription-banner-text text-nowrap">
 				{formatDate(subscription?.startDate)} &ndash;{' '}
-				{subscription?.endDate ?? 'DNE'}
+				{subscription?.endDate
+					? formatDate(subscription?.endDate)
+					: 'DNE'}
 			</small>
 		</div>
 	</>
@@ -77,13 +78,13 @@ const CreateLicense = () => {
 	const [step, setStep] = useState<string>(StepCreateLicense.SUBSCRIPTION);
 	const {orderId} = useParams();
 	const {myUserAccount} = useMarketplaceContext();
-	const {data} = useGetProductByOrderId(orderId);
+	const {data} = useGetProductByOrderId(orderId as string);
 
 	const navigate = useNavigate();
 	const product = data?.product;
 
-	const productCreatorAccount = useGetProductCreatorAccount(product);
-	const provisioningKoroneikiOAuth2 = useProvisioningKoroneikiOAuth2();
+	const productCreatorAccountName: string = product?.catalogName || '';
+	const marketplaceSpringBootOAuth2 = useMarketplaceSpringBootOAuth2();
 
 	const {
 		formState: {errors},
@@ -115,7 +116,7 @@ const CreateLicense = () => {
 
 			setValue(
 				'description',
-				`${givenName} ${familyName} - ${product.name?.en_US} - ${subscription?.name}`
+				`${givenName} ${familyName} - ${product.name} - ${subscription?.name}`
 			);
 		}
 	}, [myUserAccount, product, setValue, subscription?.name]);
@@ -134,7 +135,7 @@ const CreateLicense = () => {
 			setLoading(true);
 
 			try {
-				const licenseKey = await provisioningKoroneikiOAuth2.createLicenseKey(
+				const licenseKey = await marketplaceSpringBootOAuth2.createLicenseKey(
 					{
 						licenseEntry: {
 							description: form.description,
@@ -155,9 +156,9 @@ const CreateLicense = () => {
 					type: 'success',
 				});
 
-				navigate('/');
+				navigate(`/order/${orderId}/licenses`);
 
-				provisioningKoroneikiOAuth2.downloadLicenseKey(licenseKey.id);
+				marketplaceSpringBootOAuth2.downloadLicenseKey(licenseKey.id);
 			}
 			catch {
 				Liferay.Util.openToast({
@@ -168,7 +169,7 @@ const CreateLicense = () => {
 
 			setLoading(false);
 		},
-		[navigate, orderId, provisioningKoroneikiOAuth2]
+		[navigate, orderId, marketplaceSpringBootOAuth2]
 	);
 
 	const buttonsInfo = useMemo(
@@ -219,14 +220,12 @@ const CreateLicense = () => {
 		<div className="align-items-center d-flex flex-column mb-6 mkt-create-license mt-6">
 			<div className="mt-6 product-card-content">
 				<ProductCard
-					ExtendBanner={() => (
-						<ExtendBanner subscription={subscription} />
-					)}
-					RightSideBanner={() => (
+					ExtendBanner={<ExtendBanner subscription={subscription} />}
+					RightSideBanner={
 						<AccountEmailInfo userAccount={myUserAccount} />
-					)}
-					creatorAccount={productCreatorAccount as Account}
-					product={product as Product}
+					}
+					creatorAccountName={productCreatorAccountName}
+					product={product as DeliveryProduct}
 					showExtendBanner={
 						step === StepCreateLicense.LICENSE_KEY_DETAILS
 					}

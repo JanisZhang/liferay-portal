@@ -3,18 +3,16 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Liferay} from './liferay';
+import {request} from './request';
+
+type ListTypeDefinitionEntry = {
+	key: string;
+	name: string;
+};
 
 async function fetchListTypeEntries(externalReferenceCode: string) {
-	const response = await fetch(
-		`/o/headless-admin-list-type/v1.0/list-type-definitions/by-external-reference-code/${externalReferenceCode}/list-type-entries`,
-		{
-			headers: {
-				// eslint-disable-next-line quote-props
-				'accept': 'application/json',
-				'x-csrf-token': Liferay.authToken,
-			},
-		}
+	const response = await request(
+		`/o/headless-admin-list-type/v1.0/list-type-definitions/by-external-reference-code/${externalReferenceCode}/list-type-entries`
 	);
 
 	const data = await response.json();
@@ -51,9 +49,23 @@ export async function fetchListTypeDefinitions() {
 	const listTypeDefinitions = {} as ListTypeDefinitions;
 
 	for (const listTypeDefinitionERC of listTypeDefinitionERCs) {
-		listTypeDefinitions[listTypeDefinitionERC] = await fetchListTypeEntries(
+		const entries: ListTypeDefinitionEntry[] = await fetchListTypeEntries(
 			listTypeDefinitionERC
 		);
+
+		const processedEntries: {
+			entriesArray: ListTypeDefinitionEntry[];
+			entriesMap: {[key: string]: any};
+		} = {
+			entriesArray: entries,
+			entriesMap: {},
+		};
+
+		entries.forEach((entry) => {
+			processedEntries.entriesMap[entry.name] = entry;
+		});
+
+		listTypeDefinitions[listTypeDefinitionERC] = processedEntries;
 	}
 
 	return listTypeDefinitions;

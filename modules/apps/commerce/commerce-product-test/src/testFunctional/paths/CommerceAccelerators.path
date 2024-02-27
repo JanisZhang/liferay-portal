@@ -67,7 +67,7 @@
 </tr>
 <tr>
 	<td>ACCOUNT_MANAGEMENT_REVERSE_SORT_DIRECTION_BUTTON_ICON</td>
-	<td>//nav[contains(@class,'management-bar')]//*[*[name()='svg'][contains(@class,'${key_icon}')] and contains(@title,'Reverse Sort Direction')]</td>
+	<td>//nav[contains(@class,'management-bar')]//*[*[name()='svg'][contains(@class,'${key_icon}')] and contains(@title,'Reverse Order Direction')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -580,6 +580,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>MINI_CART_ITEM_NAME_USING_SKU_2</td>
+	<td>//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]/../../../a</td>
+	<td></td>
+</tr>
+<tr>
 	<td>MINI_CART_ITEM_UOM_NAME</td>
 	<td>//div[@class='ml-2' and contains(.,'${key_uom}')]</td>
 	<td></td>
@@ -596,12 +601,12 @@
 </tr>
 <tr>
 	<td>MINI_CART_ITEM_NAME_H6</td>
-	<td>//h6[@class='item-name' and contains(.,'${key_cartItemName}')]</td>
+	<td>//div[@class='h6 item-name' and contains(.,'${key_cartItemName}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>MINI_CART_ITEM_NAME_H6_ACCORDION_SHOW</td>
-	<td>//div[contains(@class,'panel-collapse show')]//h6[@class='item-name' and contains(.,'${key_cartItemName}')]</td>
+	<td>MINI_CART_ITEM_NAME_ACCORDION_SHOW</td>
+	<td>//div[contains(@class,'panel-collapse show')]//div[@class='item-name' and contains(.,'${key_cartItemName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -616,12 +621,12 @@
 </tr>
 <tr>
 	<td>MINI_CART_ITEM_NAME_SKU</td>
-	<td>//h6[@class='item-name' and contains(.,'${key_cartItemName}')]/..//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]</td>
+	<td>//div[@class='item-name' and contains(.,'${key_cartItemName}')]/..//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>MINI_CART_ITEM_NAME_SKU_INDEX</td>
-	<td>//div[contains(@class,'mini-cart-item align-items-start')][${key_index}]//h6[@class='item-name' and contains(.,'${key_cartItemName}')]/..//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]</td>
+	<td>//div[contains(@class,'mini-cart-item align-items-start')][${key_index}]//div[@class='item-name' and contains(.,'${key_cartItemName}')]/..//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -761,7 +766,7 @@
 </tr>
 <tr>
 	<td>MINI_CART_PRODUCT_OPTIONS_SELECT</td>
-	<td>//div[contains(@class,'mini-cart-edit-item')]//div/label[text()='${key_optionName}']/..//select</td>
+	<td>//div[contains(@class,'mini-cart-edit-item')]//div/label[text()='${key_optionName}']/..//select | //div[contains(@class,'mini-cart-edit-item')]//div/label[text()='${key_optionName}']/..//button</td>
 	<td></td>
 </tr>
 <tr>
@@ -810,6 +815,11 @@
 <tr>
 	<td>QUICK_ADD_TO_CART_INFO_ICON</td>
 	<td>//span[contains(@data-tooltip-align,'left')]//*[contains(@class, 'lexicon-icon lexicon-icon-info-circle')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>QUICK_ADD_TO_CART_INFO_ICON_TITLE</td>
+	<td>//span[contains(@data-tooltip-align, 'left') and contains(@title,'${key_title}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -862,12 +872,12 @@
 </tr>
 <tr>
 	<td>ORDER_DETAILS_PRICE</td>
-	<td>//*[contains(@class,'table-list-title')]/a[text()='${key_productName}']/../../../div[8]</td>
+	<td>//*[contains(@class,'table-list-title')]/a[text()='${key_productName}']/../../../div[9]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ORDER_DETAILS_PRICE_2</td>
-	<td>//*[contains(@class,'table-list-title')]/a[text()='${key_productName}']/../../../div[9]</td>
+	<td>//*[contains(@class,'table-list-title')]/a[text()='${key_productName}']/../../../div[10]</td>
 	<td></td>
 </tr>
 <tr>

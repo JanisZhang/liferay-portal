@@ -184,7 +184,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.content.client', and version '2.0.28'."
+        'com.liferay.headless.admin.content.client', and version '2.0.34'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -214,10 +214,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -225,6 +221,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: sort
                   schema:
@@ -340,19 +340,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -363,6 +359,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:

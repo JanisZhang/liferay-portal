@@ -13,7 +13,7 @@ import {Router} from 'shared/types';
 import {sub} from 'shared/util/lang';
 import {Switch, useParams} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
-import {useDataSource} from 'shared/hooks/useDataSource';
+import {useDataSource} from 'shared/hooks';
 import {User} from 'shared/util/records';
 import {withCurrentUser} from 'shared/hoc';
 
@@ -197,7 +197,7 @@ const Assets: React.FC<IAssetsProps> = ({className, currentUser, router}) => {
 											'connect-a-data-source-with-sites-data'
 										)}
 
-										<a
+										<ClayLink
 											className='d-block mb-3'
 											href={
 												URLConstants.DataSourceConnection
@@ -208,7 +208,7 @@ const Assets: React.FC<IAssetsProps> = ({className, currentUser, router}) => {
 											{Liferay.Language.get(
 												'access-our-documentation-to-learn-more'
 											)}
-										</a>
+										</ClayLink>
 
 										{authorized && (
 											<ClayLink

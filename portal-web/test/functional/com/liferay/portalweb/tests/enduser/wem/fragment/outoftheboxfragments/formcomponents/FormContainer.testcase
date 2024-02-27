@@ -1344,7 +1344,7 @@ definition {
 			Type(
 				key_text = "Price",
 				locator1 = "TextInput#ANY",
-				value1 = 3000);
+				value1 = "3000.345");
 
 			Type.sendKeys(
 				key_text = "Purchase Date",
@@ -1421,7 +1421,7 @@ definition {
 			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
 				attribute = "address",
 				attributeValue = "Dalian",
-				expectedValue = "3000.0000000000000000",
+				expectedValue = "3000.345",
 				fieldName = "price",
 				objectName = "PurchaseOrder");
 
@@ -1467,10 +1467,6 @@ definition {
 				fieldName = "type",
 				objectName = "PurchaseOrder",
 				type = "Picklist");
-
-			var objectDefinitionId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = "Preference");
-
-			ObjectDefinitionAPI.deleteRelationship(objectDefinitionId = ${objectDefinitionId});
 		}
 	}
 

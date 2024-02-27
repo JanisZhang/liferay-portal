@@ -10,7 +10,7 @@ import URLConstants from 'shared/util/url-constants';
 import {Routes, toRoute} from 'shared/util/router';
 import {Switch, useParams} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
-import {useDataSource} from 'shared/hooks/useDataSource';
+import {useDataSource} from 'shared/hooks';
 import {User} from 'shared/util/records';
 import {withCurrentUser} from 'shared/hoc';
 
@@ -95,7 +95,7 @@ export const CommerceDashboard: React.FC<ICommerceDashboardProps> = ({
 											'connect-a-data-source-with-sites-data'
 										)}
 
-										<a
+										<ClayLink
 											className='d-block mb-3'
 											href={
 												URLConstants.DataSourceConnection
@@ -106,7 +106,7 @@ export const CommerceDashboard: React.FC<ICommerceDashboardProps> = ({
 											{Liferay.Language.get(
 												'access-our-documentation-to-learn-more'
 											)}
-										</a>
+										</ClayLink>
 
 										{authorized && (
 											<ClayLink

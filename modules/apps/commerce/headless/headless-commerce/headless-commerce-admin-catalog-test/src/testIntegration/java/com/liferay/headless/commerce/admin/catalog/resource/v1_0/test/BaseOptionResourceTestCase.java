@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -308,29 +306,65 @@ public abstract class BaseOptionResourceTestCase {
 
 		Option option3 = testGetOptionsPage_addOption(randomOption());
 
-		Page<Option> page1 = optionResource.getOptionsPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Option> options1 = (List<Option>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			options1.toString(), totalCount + 2, options1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Option> page1 = optionResource.getOptionsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<Option> page2 = optionResource.getOptionsPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(option1, (List<Option>)page1.getItems());
 
-		List<Option> options2 = (List<Option>)page2.getItems();
+			Page<Option> page2 = optionResource.getOptionsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(options2.toString(), 1, options2.size());
+			assertContains(option2, (List<Option>)page2.getItems());
 
-		Page<Option> page3 = optionResource.getOptionsPage(
-			null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Option> page3 = optionResource.getOptionsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(option1, (List<Option>)page3.getItems());
-		assertContains(option2, (List<Option>)page3.getItems());
-		assertContains(option3, (List<Option>)page3.getItems());
+			assertContains(option3, (List<Option>)page3.getItems());
+		}
+		else {
+			Page<Option> page1 = optionResource.getOptionsPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<Option> options1 = (List<Option>)page1.getItems();
+
+			Assert.assertEquals(
+				options1.toString(), totalCount + 2, options1.size());
+
+			Page<Option> page2 = optionResource.getOptionsPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Option> options2 = (List<Option>)page2.getItems();
+
+			Assert.assertEquals(options2.toString(), 1, options2.size());
+
+			Page<Option> page3 = optionResource.getOptionsPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(option1, (List<Option>)page3.getItems());
+			assertContains(option2, (List<Option>)page3.getItems());
+			assertContains(option3, (List<Option>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1226,6 +1260,10 @@ public abstract class BaseOptionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1513,9 +1551,9 @@ public abstract class BaseOptionResourceTestCase {
 	}
 
 	protected OptionResource optionResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

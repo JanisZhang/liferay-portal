@@ -68,6 +68,7 @@ import com.liferay.translation.security.permission.TranslationPermission;
 import com.liferay.translation.url.provider.TranslationURLProvider;
 import com.liferay.trash.TrashHelper;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -572,17 +573,42 @@ public class JournalArticleActionDropdownItemsProvider {
 	private UnsafeConsumer<DropdownItem, Exception>
 		_getEditArticleActionUnsafeConsumer() {
 
+		PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
+
 		return dropdownItem -> {
 			dropdownItem.setHref(
-				_liferayPortletResponse.createRenderURL(), "mvcPath",
-				"/edit_article.jsp", "redirect", _getRedirect(),
-				"referringPortletResource", _getReferringPortletResource(),
-				"groupId", _article.getGroupId(), "folderId",
-				_article.getFolderId(), "articleId", _article.getArticleId(),
-				"version", _article.getVersion());
+				PortletURLBuilder.createRenderURL(
+					_liferayPortletResponse
+				).setMVCRenderCommandName(
+					"/journal/edit_article"
+				).setRedirect(
+					_getRedirect()
+				).setParameter(
+					"articleId", _article.getArticleId()
+				).setParameter(
+					"backURLTitle", portletDisplay.getPortletDisplayName()
+				).setParameter(
+					"folderId", _article.getFolderId()
+				).setParameter(
+					"groupId", _article.getGroupId()
+				).setParameter(
+					"referringPortletResource", _getReferringPortletResource()
+				).setParameter(
+					"version", _article.getVersion()
+				).buildString());
 			dropdownItem.setIcon("pencil");
-			dropdownItem.setLabel(
-				LanguageUtil.get(_httpServletRequest, "edit"));
+
+			String label = "edit";
+
+			if (FeatureFlagManagerUtil.isEnabled("LPS-196768") &&
+				!JournalArticleLocalServiceUtil.isLatestVersion(
+					_article.getGroupId(), _article.getArticleId(),
+					_article.getVersion())) {
+
+				label = "edit-latest-version";
+			}
+
+			dropdownItem.setLabel(LanguageUtil.get(_httpServletRequest, label));
 		};
 	}
 
@@ -637,6 +663,14 @@ public class JournalArticleActionDropdownItemsProvider {
 
 						return portletDisplay.getId();
 					}
+				).setParameter(
+					"backURLTitle",
+					() -> {
+						PortletDisplay portletDisplay =
+							_themeDisplay.getPortletDisplay();
+
+						return portletDisplay.getPortletDisplayName();
+					}
 				).build());
 			dropdownItem.setIcon("upload");
 			dropdownItem.setLabel(
@@ -665,6 +699,14 @@ public class JournalArticleActionDropdownItemsProvider {
 							_themeDisplay.getPortletDisplay();
 
 						return portletDisplay.getId();
+					}
+				).setParameter(
+					"backURLTitle",
+					() -> {
+						PortletDisplay portletDisplay =
+							_themeDisplay.getPortletDisplay();
+
+						return portletDisplay.getPortletDisplayName();
 					}
 				).buildPortletURL());
 			dropdownItem.setIcon("download");
@@ -905,14 +947,32 @@ public class JournalArticleActionDropdownItemsProvider {
 			PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
 
 			dropdownItem.setHref(
-				_translationURLProvider.getTranslateURL(
-					_themeDisplay.getScopeGroupId(),
-					PortalUtil.getClassNameId(JournalArticle.class.getName()),
-					_article.getResourcePrimKey(),
-					RequestBackedPortletURLFactoryUtil.create(
-						_httpServletRequest)),
-				"redirect", _getRedirect(), "portletResource",
-				portletDisplay.getId());
+				PortletURLBuilder.create(
+					_translationURLProvider.getTranslateURL(
+						_themeDisplay.getScopeGroupId(),
+						PortalUtil.getClassNameId(
+							JournalArticle.class.getName()),
+						_article.getResourcePrimKey(),
+						RequestBackedPortletURLFactoryUtil.create(
+							_httpServletRequest))
+				).setRedirect(
+					_getRedirect()
+				).setPortletResource(
+					portletDisplay.getId()
+				).setParameter(
+					"backURLTitle", portletDisplay.getPortletDisplayName()
+				).setParameter(
+					"modifiedDateTime",
+					() -> {
+						Date modifiedDate = _article.getModifiedDate();
+
+						if (modifiedDate == null) {
+							return null;
+						}
+
+						return modifiedDate.getTime();
+					}
+				).buildString());
 
 			dropdownItem.setIcon("automatic-translate");
 			dropdownItem.setLabel(

@@ -29,8 +29,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -405,41 +403,84 @@ public abstract class BaseOrganizationResourceTestCase {
 			testGetAccountByExternalReferenceCodeOrganizationsPage_addOrganization(
 				externalReferenceCode, randomOrganization());
 
-		Page<Organization> page1 =
-			organizationResource.
-				getAccountByExternalReferenceCodeOrganizationsPage(
-					externalReferenceCode, null, null,
-					Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Organization> organizations1 =
-			(List<Organization>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			organizations1.toString(), totalCount + 2, organizations1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Organization> page1 =
+				organizationResource.
+					getAccountByExternalReferenceCodeOrganizationsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<Organization> page2 =
-			organizationResource.
-				getAccountByExternalReferenceCodeOrganizationsPage(
-					externalReferenceCode, null, null,
-					Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(organization1, (List<Organization>)page1.getItems());
 
-		List<Organization> organizations2 =
-			(List<Organization>)page2.getItems();
+			Page<Organization> page2 =
+				organizationResource.
+					getAccountByExternalReferenceCodeOrganizationsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			organizations2.toString(), 1, organizations2.size());
+			assertContains(organization2, (List<Organization>)page2.getItems());
 
-		Page<Organization> page3 =
-			organizationResource.
-				getAccountByExternalReferenceCodeOrganizationsPage(
-					externalReferenceCode, null, null,
-					Pagination.of(1, (int)totalCount + 3), null);
+			Page<Organization> page3 =
+				organizationResource.
+					getAccountByExternalReferenceCodeOrganizationsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(organization1, (List<Organization>)page3.getItems());
-		assertContains(organization2, (List<Organization>)page3.getItems());
-		assertContains(organization3, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
+		else {
+			Page<Organization> page1 =
+				organizationResource.
+					getAccountByExternalReferenceCodeOrganizationsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<Organization> organizations1 =
+				(List<Organization>)page1.getItems();
+
+			Assert.assertEquals(
+				organizations1.toString(), totalCount + 2,
+				organizations1.size());
+
+			Page<Organization> page2 =
+				organizationResource.
+					getAccountByExternalReferenceCodeOrganizationsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Organization> organizations2 =
+				(List<Organization>)page2.getItems();
+
+			Assert.assertEquals(
+				organizations2.toString(), 1, organizations2.size());
+
+			Page<Organization> page3 =
+				organizationResource.
+					getAccountByExternalReferenceCodeOrganizationsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(organization1, (List<Organization>)page3.getItems());
+			assertContains(organization2, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -998,36 +1039,78 @@ public abstract class BaseOrganizationResourceTestCase {
 			testGetAccountOrganizationsPage_addOrganization(
 				accountId, randomOrganization());
 
-		Page<Organization> page1 =
-			organizationResource.getAccountOrganizationsPage(
-				accountId, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Organization> organizations1 =
-			(List<Organization>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			organizations1.toString(), totalCount + 2, organizations1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Organization> page1 =
+				organizationResource.getAccountOrganizationsPage(
+					accountId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<Organization> page2 =
-			organizationResource.getAccountOrganizationsPage(
-				accountId, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(organization1, (List<Organization>)page1.getItems());
 
-		List<Organization> organizations2 =
-			(List<Organization>)page2.getItems();
+			Page<Organization> page2 =
+				organizationResource.getAccountOrganizationsPage(
+					accountId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			organizations2.toString(), 1, organizations2.size());
+			assertContains(organization2, (List<Organization>)page2.getItems());
 
-		Page<Organization> page3 =
-			organizationResource.getAccountOrganizationsPage(
-				accountId, null, null, Pagination.of(1, (int)totalCount + 3),
-				null);
+			Page<Organization> page3 =
+				organizationResource.getAccountOrganizationsPage(
+					accountId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(organization1, (List<Organization>)page3.getItems());
-		assertContains(organization2, (List<Organization>)page3.getItems());
-		assertContains(organization3, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
+		else {
+			Page<Organization> page1 =
+				organizationResource.getAccountOrganizationsPage(
+					accountId, null, null, Pagination.of(1, totalCount + 2),
+					null);
+
+			List<Organization> organizations1 =
+				(List<Organization>)page1.getItems();
+
+			Assert.assertEquals(
+				organizations1.toString(), totalCount + 2,
+				organizations1.size());
+
+			Page<Organization> page2 =
+				organizationResource.getAccountOrganizationsPage(
+					accountId, null, null, Pagination.of(2, totalCount + 2),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Organization> organizations2 =
+				(List<Organization>)page2.getItems();
+
+			Assert.assertEquals(
+				organizations2.toString(), 1, organizations2.size());
+
+			Page<Organization> page3 =
+				organizationResource.getAccountOrganizationsPage(
+					accountId, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(organization1, (List<Organization>)page3.getItems());
+			assertContains(organization2, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1493,32 +1576,76 @@ public abstract class BaseOrganizationResourceTestCase {
 		Organization organization3 = testGetOrganizationsPage_addOrganization(
 			randomOrganization());
 
-		Page<Organization> page1 = organizationResource.getOrganizationsPage(
-			null, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Organization> organizations1 =
-			(List<Organization>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			organizations1.toString(), totalCount + 2, organizations1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Organization> page1 =
+				organizationResource.getOrganizationsPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<Organization> page2 = organizationResource.getOrganizationsPage(
-			null, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(organization1, (List<Organization>)page1.getItems());
 
-		List<Organization> organizations2 =
-			(List<Organization>)page2.getItems();
+			Page<Organization> page2 =
+				organizationResource.getOrganizationsPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			organizations2.toString(), 1, organizations2.size());
+			assertContains(organization2, (List<Organization>)page2.getItems());
 
-		Page<Organization> page3 = organizationResource.getOrganizationsPage(
-			null, null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Organization> page3 =
+				organizationResource.getOrganizationsPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(organization1, (List<Organization>)page3.getItems());
-		assertContains(organization2, (List<Organization>)page3.getItems());
-		assertContains(organization3, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
+		else {
+			Page<Organization> page1 =
+				organizationResource.getOrganizationsPage(
+					null, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<Organization> organizations1 =
+				(List<Organization>)page1.getItems();
+
+			Assert.assertEquals(
+				organizations1.toString(), totalCount + 2,
+				organizations1.size());
+
+			Page<Organization> page2 =
+				organizationResource.getOrganizationsPage(
+					null, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Organization> organizations2 =
+				(List<Organization>)page2.getItems();
+
+			Assert.assertEquals(
+				organizations2.toString(), 1, organizations2.size());
+
+			Page<Organization> page3 =
+				organizationResource.getOrganizationsPage(
+					null, null, null, Pagination.of(1, (int)totalCount + 3),
+					null);
+
+			assertContains(organization1, (List<Organization>)page3.getItems());
+			assertContains(organization2, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -2331,38 +2458,78 @@ public abstract class BaseOrganizationResourceTestCase {
 			testGetOrganizationChildOrganizationsPage_addOrganization(
 				organizationId, randomOrganization());
 
-		Page<Organization> page1 =
-			organizationResource.getOrganizationChildOrganizationsPage(
-				organizationId, null, null, null,
-				Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Organization> organizations1 =
-			(List<Organization>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			organizations1.toString(), totalCount + 2, organizations1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Organization> page1 =
+				organizationResource.getOrganizationChildOrganizationsPage(
+					organizationId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<Organization> page2 =
-			organizationResource.getOrganizationChildOrganizationsPage(
-				organizationId, null, null, null,
-				Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(organization1, (List<Organization>)page1.getItems());
 
-		List<Organization> organizations2 =
-			(List<Organization>)page2.getItems();
+			Page<Organization> page2 =
+				organizationResource.getOrganizationChildOrganizationsPage(
+					organizationId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			organizations2.toString(), 1, organizations2.size());
+			assertContains(organization2, (List<Organization>)page2.getItems());
 
-		Page<Organization> page3 =
-			organizationResource.getOrganizationChildOrganizationsPage(
-				organizationId, null, null, null,
-				Pagination.of(1, (int)totalCount + 3), null);
+			Page<Organization> page3 =
+				organizationResource.getOrganizationChildOrganizationsPage(
+					organizationId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(organization1, (List<Organization>)page3.getItems());
-		assertContains(organization2, (List<Organization>)page3.getItems());
-		assertContains(organization3, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
+		else {
+			Page<Organization> page1 =
+				organizationResource.getOrganizationChildOrganizationsPage(
+					organizationId, null, null, null,
+					Pagination.of(1, totalCount + 2), null);
+
+			List<Organization> organizations1 =
+				(List<Organization>)page1.getItems();
+
+			Assert.assertEquals(
+				organizations1.toString(), totalCount + 2,
+				organizations1.size());
+
+			Page<Organization> page2 =
+				organizationResource.getOrganizationChildOrganizationsPage(
+					organizationId, null, null, null,
+					Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Organization> organizations2 =
+				(List<Organization>)page2.getItems();
+
+			Assert.assertEquals(
+				organizations2.toString(), 1, organizations2.size());
+
+			Page<Organization> page3 =
+				organizationResource.getOrganizationChildOrganizationsPage(
+					organizationId, null, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(organization1, (List<Organization>)page3.getItems());
+			assertContains(organization2, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -2789,38 +2956,78 @@ public abstract class BaseOrganizationResourceTestCase {
 			testGetOrganizationOrganizationsPage_addOrganization(
 				parentOrganizationId, randomOrganization());
 
-		Page<Organization> page1 =
-			organizationResource.getOrganizationOrganizationsPage(
-				parentOrganizationId, null, null, null,
-				Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Organization> organizations1 =
-			(List<Organization>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			organizations1.toString(), totalCount + 2, organizations1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Organization> page1 =
+				organizationResource.getOrganizationOrganizationsPage(
+					parentOrganizationId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<Organization> page2 =
-			organizationResource.getOrganizationOrganizationsPage(
-				parentOrganizationId, null, null, null,
-				Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(organization1, (List<Organization>)page1.getItems());
 
-		List<Organization> organizations2 =
-			(List<Organization>)page2.getItems();
+			Page<Organization> page2 =
+				organizationResource.getOrganizationOrganizationsPage(
+					parentOrganizationId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			organizations2.toString(), 1, organizations2.size());
+			assertContains(organization2, (List<Organization>)page2.getItems());
 
-		Page<Organization> page3 =
-			organizationResource.getOrganizationOrganizationsPage(
-				parentOrganizationId, null, null, null,
-				Pagination.of(1, (int)totalCount + 3), null);
+			Page<Organization> page3 =
+				organizationResource.getOrganizationOrganizationsPage(
+					parentOrganizationId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(organization1, (List<Organization>)page3.getItems());
-		assertContains(organization2, (List<Organization>)page3.getItems());
-		assertContains(organization3, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
+		else {
+			Page<Organization> page1 =
+				organizationResource.getOrganizationOrganizationsPage(
+					parentOrganizationId, null, null, null,
+					Pagination.of(1, totalCount + 2), null);
+
+			List<Organization> organizations1 =
+				(List<Organization>)page1.getItems();
+
+			Assert.assertEquals(
+				organizations1.toString(), totalCount + 2,
+				organizations1.size());
+
+			Page<Organization> page2 =
+				organizationResource.getOrganizationOrganizationsPage(
+					parentOrganizationId, null, null, null,
+					Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Organization> organizations2 =
+				(List<Organization>)page2.getItems();
+
+			Assert.assertEquals(
+				organizations2.toString(), 1, organizations2.size());
+
+			Page<Organization> page3 =
+				organizationResource.getOrganizationOrganizationsPage(
+					parentOrganizationId, null, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(organization1, (List<Organization>)page3.getItems());
+			assertContains(organization2, (List<Organization>)page3.getItems());
+			assertContains(organization3, (List<Organization>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -3153,6 +3360,14 @@ public abstract class BaseOrganizationResourceTestCase {
 
 			if (Objects.equals("image", additionalAssertFieldName)) {
 				if (organization.getImage() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("imageId", additionalAssertFieldName)) {
+				if (organization.getImageId() == null) {
 					valid = false;
 				}
 
@@ -3763,6 +3978,17 @@ public abstract class BaseOrganizationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("imageId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						organization1.getImageId(),
+						organization2.getImageId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("keywords", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						organization1.getKeywords(),
@@ -4324,6 +4550,10 @@ public abstract class BaseOrganizationResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -4655,6 +4885,11 @@ public abstract class BaseOrganizationResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("imageId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("keywords")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -4851,6 +5086,7 @@ public abstract class BaseOrganizationResourceTestCase {
 					RandomTestUtil.randomString());
 				id = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				image = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				imageId = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				numberOfAccounts = RandomTestUtil.randomInt();
 				numberOfOrganizations = RandomTestUtil.randomInt();
@@ -4902,9 +5138,9 @@ public abstract class BaseOrganizationResourceTestCase {
 	}
 
 	protected OrganizationResource organizationResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

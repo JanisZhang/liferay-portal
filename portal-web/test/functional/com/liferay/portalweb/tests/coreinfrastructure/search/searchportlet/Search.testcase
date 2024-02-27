@@ -56,9 +56,9 @@ definition {
 	@description = "This is a use case for LPS-169035."
 	@priority = 4
 	test AssertCustomSearchResultsDisplayTemplate {
-		ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
+		WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
 
-		ApplicationDisplayTemplates.addCP(
+		WidgetTemplates.addCP(
 			adtFile = "custom_search_results_template.ftl",
 			adtType = "Search Results");
 
@@ -92,16 +92,16 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
+		WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
 
-		ApplicationDisplayTemplates.addCP(
+		WidgetTemplates.addCP(
 			adtType = "Search Results",
 			fieldNameList = "Search Results Display Context");
 
 		var key_ddlTemplateName = "Search Results Test ADT";
 		var templateID = selenium.getText("DDMSelectTemplate#TEMPLATE_TABLE_ID");
 
-		var templateKey = ApplicationDisplayTemplates.getWidgetTemplateKey(templateID = ${templateID});
+		var templateKey = WidgetTemplates.getWidgetTemplateKey(templateID = ${templateID});
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -1343,9 +1343,13 @@ definition {
 
 		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
 
+		SelectFrame.selectFrameNoLoading(
+			key_fieldLabel = "Content",
+			locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
+
 		AssertTextEquals.assertPartialText(
-			locator1 = "Portlet#HEADER",
-			value1 = "WC Title");
+			locator1 = "CKEditor#BODY",
+			value1 = "WC Content");
 	}
 
 	@priority = 4
@@ -2089,8 +2093,6 @@ definition {
 			entryTitle = "Potato Blog",
 			groupName = "Test Site");
 
-		var currentDate = DateUtil.getCurrentYear();
-
 		SearchPage.openSearchPage();
 
 		SearchPage.configureEmbeddedSearchBar(searchScope = "Everything");
@@ -2098,14 +2100,12 @@ definition {
 		SearchPage.searchWidget(searchTerm = "Potato");
 
 		SearchResults.viewSearchResults(
-			entryDate = ${currentDate},
 			searchAssetSummary = "This is a blog about Potatoes",
 			searchAssetTitle = "Potato Blog",
 			searchAssetType = "Blogs Entry",
 			searchTerm = "Potato");
 
 		SearchResults.viewSearchResults(
-			entryDate = ${currentDate},
 			searchAssetTitle = "Potato Document",
 			searchAssetType = "Document",
 			searchTerm = "Potato");
@@ -2115,7 +2115,6 @@ definition {
 		SearchPage.searchWidget(searchTerm = "Potato");
 
 		SearchResults.viewSearchResults(
-			entryDate = ${currentDate},
 			searchAssetTitle = "Potato Document",
 			searchAssetType = "Document",
 			searchTerm = "Potato");
@@ -2268,10 +2267,7 @@ definition {
 	@description = "This is a use case for LPS-186456 - SearchBar Instance Setting is not updating."
 	@priority = 3
 	test SearchInstanceSettingsAreUpdatedWhenSaved {
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Instance Settings");
+		PortalSettings.openInstanceSettingsAdmin();
 
 		SystemSettings.gotoConfiguration(
 			configurationCategory = "Search",
@@ -2335,10 +2331,7 @@ definition {
 
 		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
 			siteName = ${siteName},
@@ -2429,10 +2422,7 @@ definition {
 
 		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
 			siteName = ${siteName},

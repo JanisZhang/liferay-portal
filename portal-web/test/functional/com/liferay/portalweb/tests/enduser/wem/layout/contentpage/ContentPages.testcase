@@ -1259,7 +1259,7 @@ definition {
 		}
 
 		task ("When the page creator selects the element-text of Heading fragment") {
-			PageEditor.gotoEditableFieldEdit(
+			PageEditor.clickEditableField(
 				fragmentName = "Heading",
 				id = "element-text");
 		}
@@ -1359,10 +1359,7 @@ definition {
 		}
 
 		task ("Execute Clean Up Orphaned Theme Portlet Preferences in Server Administration") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Server Administration");
+			ServerAdministration.openServerAdmin();
 
 			ServerAdministration.executeServerResourcesActions(actionsDescription = "Clean up orphaned theme portlet preferences.");
 		}

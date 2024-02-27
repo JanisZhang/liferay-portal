@@ -7,6 +7,7 @@ import {Individual} from 'shared/util/records';
 import {MockedProvider} from '@apollo/react-testing';
 import {
 	mockEventMetrics,
+	mockPreferenceReq,
 	mockSessions,
 	mockTimeRangeReq
 } from 'test/graphql-data';
@@ -19,25 +20,7 @@ jest.unmock('react-dom');
 const variables = {channelId: undefined};
 
 describe('IndividualOverview', () => {
-	const {ResizeObserver} = window;
-
-	beforeEach(() => {
-		delete window.ResizeObserver;
-
-		window.ResizeObserver = jest.fn().mockImplementation(() => ({
-			disconnect: jest.fn(),
-			observe: jest.fn(),
-			unobserve: jest.fn()
-		}));
-	});
-
-	afterEach(() => {
-		window.ResizeObserver = ResizeObserver;
-
-		jest.restoreAllMocks();
-
-		cleanup();
-	});
+	afterEach(cleanup);
 
 	it('should render', async () => {
 		const {container} = render(
@@ -45,6 +28,7 @@ describe('IndividualOverview', () => {
 				mocks={[
 					mockEventMetrics(variables),
 					mockTimeRangeReq(),
+					mockPreferenceReq(),
 					mockSessions(variables)
 				]}
 			>

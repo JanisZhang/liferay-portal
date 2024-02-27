@@ -18,11 +18,13 @@ import {getWebContents} from '../../../utils/getWebContents';
 import Commerce from '../ActivationKeys/Commerce';
 import EnterpriseSearch from '../ActivationKeys/EnterpriseSearch';
 import AnalyticsCloud from '../AnalyticsCloud';
+import Attachments from '../Attachments';
 import DXP from '../DXP';
 import DXPCloud from '../DXPCloud';
 import LiferayExperienceCloud from '../LiferayExperienceCloud';
 import Overview from '../Overview';
 import Portal from '../Portal';
+import RenewTable from '../RenewTable';
 import TeamMembers from '../TeamMembers';
 import ActivationOutlet from './Outlets/ActivationOutlet';
 import ProductOutlet from './Outlets/ProductOutlet';
@@ -31,7 +33,7 @@ const ProjectRoutes = () => {
 	const [{project, subscriptionGroups}, dispatch] = useCustomerPortal();
 	const {featureFlags} = useAppPropertiesContext();
 
-	const [hasKeyComplimentary, setHasKeyComplimentary] = useState(false);
+	const [hasComplimentaryKey, setHasComplimentaryKey] = useState(false);
 
 	useEffect(() => {
 		if (project && subscriptionGroups) {
@@ -94,8 +96,8 @@ const ProjectRoutes = () => {
 							<Route
 								element={
 									<Portal
-										hasKeyComplimentary={
-											hasKeyComplimentary
+										hasComplimentaryKey={
+											hasComplimentaryKey
 										}
 									/>
 								}
@@ -105,12 +107,12 @@ const ProjectRoutes = () => {
 							<Route
 								element={
 									<GenerateNewKey
-										hasKeyComplimentary={
-											hasKeyComplimentary
+										hasComplimentaryKey={
+											hasComplimentaryKey
 										}
 										productGroupName={PRODUCT_TYPES.portal}
-										setHasKeyComplimentary={
-											setHasKeyComplimentary
+										setHasComplimentaryKey={
+											setHasComplimentaryKey
 										}
 									/>
 								}
@@ -128,6 +130,18 @@ const ProjectRoutes = () => {
 									path="deactivate"
 								/>
 							)}
+
+							<Route
+								element={
+									<RenewTable
+										hasComplimentaryKey={
+											hasComplimentaryKey
+										}
+										isRenewTable
+									/>
+								}
+								path="portal-renew"
+							/>
 						</Route>
 
 						<Route
@@ -139,8 +153,8 @@ const ProjectRoutes = () => {
 							<Route
 								element={
 									<DXP
-										hasKeyComplimentary={
-											hasKeyComplimentary
+										hasComplimentaryKey={
+											hasComplimentaryKey
 										}
 									/>
 								}
@@ -150,12 +164,12 @@ const ProjectRoutes = () => {
 							<Route
 								element={
 									<GenerateNewKey
-										hasKeyComplimentary={
-											hasKeyComplimentary
+										hasComplimentaryKey={
+											hasComplimentaryKey
 										}
 										productGroupName={PRODUCT_TYPES.dxp}
-										setHasKeyComplimentary={
-											setHasKeyComplimentary
+										setHasComplimentaryKey={
+											setHasComplimentaryKey
 										}
 									/>
 								}
@@ -170,6 +184,19 @@ const ProjectRoutes = () => {
 									/>
 								}
 								path="deactivate"
+							/>
+
+							<Route
+								element={
+									<RenewTable
+										hasComplimentaryKey={
+											hasComplimentaryKey
+										}
+										isDXPTable
+										isRenewTable
+									/>
+								}
+								path="dxp-renew"
 							/>
 						</Route>
 
@@ -206,6 +233,10 @@ const ProjectRoutes = () => {
 							<Route element={<EnterpriseSearch />} index />
 						</Route>
 					</Route>
+
+					{featureFlags.includes('ISSD-119') && (
+						<Route element={<Attachments />} path="attachments" />
+					)}
 
 					<Route element={<TeamMembers />} path="team-members" />
 

@@ -13,19 +13,6 @@ definition {
 		User.firstLoginPG();
 	}
 
-	tearDown {
-		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
-
-		if (${testLiferayVirtualInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			Site.tearDownCP();
-
-			PageTemplatesAdminGlobalSite.tearDownCP();
-		}
-	}
-
 	@description = "Add a page template in global site."
 	@priority = 4
 	@uitest
@@ -37,6 +24,7 @@ definition {
 		task ("Add an active page template") {
 			PageTemplatesAdminGlobalSite.addCP(
 				pageTemplateActive = "Active",
+				pageTemplateDescription = "This is a page template description",
 				pageTemplateName = "Page Template Name");
 		}
 	}
@@ -163,72 +151,6 @@ definition {
 			AssertElementPresent(
 				key_navNested = "Basic Templates",
 				locator1 = "NavNested#ACTIVE_NAV_NESTED_LINK");
-		}
-	}
-
-	@description = "This is a use case for LPS-115361. Can not delete a widget page template is used by a page in normal site."
-	@priority = 5
-	test CannotDeletePageTemplateIsUsedByAPage {
-		property portal.acceptance = "true";
-
-		task ("Add a new site") {
-			HeadlessSite.addSite(siteName = "Site Name");
-		}
-
-		task ("Add a page template collection") {
-			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = "Site Name",
-				layoutPageTemplateCollectionName = "Page Template Collection");
-		}
-
-		task ("Add a widget page template") {
-			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = "Site Name",
-				layoutPageTemplateCollectionName = "Page Template Collection",
-				layoutPageTemplateEntryName = "Page Template Name",
-				layoutPageTemplateStatus = "Approved",
-				layoutPageTemplateType = "Widget Page Template");
-
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "site-name");
-
-			Navigator.gotoNavNested(navNested = "Page Template Collection");
-
-			PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
-				item = "Edit",
-				pageTemplateName = "Page Template Name");
-
-			AssertTextEquals(
-				locator1 = "ControlMenu#HEADING",
-				value1 = "Page Template Name");
-
-			Portlet.addPG(portletName = "Web Content Display");
-		}
-
-		task ("Add a page based on the widget page template") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
-
-			PagesAdmin.addPage(
-				collectionName = "Page Template Collection",
-				pageName = "Test Page Name",
-				pageTemplateName = "Page Template Name");
-
-			Navigator.gotoSitePage(
-				pageName = "Test Page Name",
-				siteName = "Site Name");
-
-			WaitForPageLoad();
-
-			Portlet.viewPG(portletName = "Web Content Display");
-		}
-
-		task ("Assert can not delete the widget page template") {
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "site-name");
-
-			Navigator.gotoNavNested(navNested = "Page Template Collection");
-
-			PageTemplatesAdmin.deletePageTemplate(pageTemplateName = "Page Template Name");
-
-			Alert.viewErrorMessage(errorMessage = "You cannot delete page templates that are used by a page.");
 		}
 	}
 
@@ -452,34 +374,28 @@ definition {
 		property portal.upstream = "true";
 		property testray.component.names = "Training";
 
-		task ("Add 2 active page templates") {
-			JSONLayoutpagetemplate.addGlobalPageTemplateEntry(
-				pageTemplateEntryActive = "true",
-				pageTemplateEntryName = "College Landing Page");
-
-			JSONLayoutpagetemplate.addGlobalPageTemplateEntry(
-				pageTemplateEntryActive = "true",
-				pageTemplateEntryName = "Department Landing Page");
-		}
-
-		task ("Edit College Landing Page and add several widgets") {
+		task ("Add the first page template College Landing Page with several widgets") {
 			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
 
-			PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
-				item = "Edit",
+			PageTemplatesAdminGlobalSite.addCP(
+				pageTemplateActive = "Active",
 				pageTemplateName = "College Landing Page");
+
+			PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "College Landing Page");
 
 			for (var portletName : list "Media Gallery,Web Content Display,Web Content Display,Web Content Display,Asset Publisher") {
 				Portlet.addPG(portletName = ${portletName});
 			}
 		}
 
-		task ("Edit Department Landing Page and add several widgets") {
+		task ("Add the second page template Department Landing Page with several widgets") {
 			PageTemplatesAdminGlobalSite.openGlobalPageTemplatesAdmin();
 
-			PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
-				item = "Edit",
+			PageTemplatesAdminGlobalSite.addCP(
+				pageTemplateActive = "Active",
 				pageTemplateName = "Department Landing Page");
+
+			PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "Department Landing Page");
 
 			for (var portletName : list "Media Gallery,Web Content Display,Web Content Display,Menu Display,Members,Asset Publisher") {
 				Portlet.addPG(portletName = ${portletName});

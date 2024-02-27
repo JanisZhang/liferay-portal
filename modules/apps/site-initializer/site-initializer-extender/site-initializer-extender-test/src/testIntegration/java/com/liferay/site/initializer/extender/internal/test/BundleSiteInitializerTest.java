@@ -42,6 +42,8 @@ import com.liferay.commerce.product.service.CPOptionLocalService;
 import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
+import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
+import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
@@ -110,6 +112,7 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -632,7 +635,7 @@ public class BundleSiteInitializerTest {
 		Assert.assertNotNull(clientExtensionEntry);
 
 		CustomElementCET customElementCET =
-			(CustomElementCET)_cetFactory.create(clientExtensionEntry);
+			(CustomElementCET)_cetFactory.create(clientExtensionEntry, true);
 
 		Assert.assertEquals(
 			"liferay-test-remote-app", customElementCET.getHTMLElementName());
@@ -1058,6 +1061,88 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			"Test Commerce Specification 1",
 			cpOptionCategory.getTitle(LocaleUtil.getSiteDefault()));
+	}
+
+	private void _assertDataDefinition1() throws Exception {
+		DataDefinitionResource.Builder dataDefinitionResourceBuilder =
+			_dataDefinitionResourceFactory.create();
+
+		DataDefinitionResource dataDefinitionResource =
+			dataDefinitionResourceBuilder.user(
+				_serviceContext.fetchUser()
+			).build();
+
+		DataDefinition dataDefinition =
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeByDataDefinitionKey(
+					_serviceContext.getScopeGroupId(), "journal",
+					"test-data-definition-1");
+
+		Map<String, Object> description = dataDefinition.getDescription();
+
+		Assert.assertEquals(
+			"Test Data Definition Description 1", description.get("en_US"));
+
+		Map<String, Object> name = dataDefinition.getName();
+
+		Assert.assertEquals("Test Data Definition Name 1", name.get("en_US"));
+
+		dataDefinition =
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeByDataDefinitionKey(
+					_serviceContext.getScopeGroupId(), "journal",
+					"test-data-definition-2");
+
+		description = dataDefinition.getDescription();
+
+		Assert.assertEquals(
+			"Test Data Definition Description 2", description.get("en_US"));
+
+		name = dataDefinition.getName();
+
+		Assert.assertEquals("Test Data Definition Name 2", name.get("en_US"));
+	}
+
+	private void _assertDataDefinition2() throws Exception {
+		DataDefinitionResource.Builder dataDefinitionResourceBuilder =
+			_dataDefinitionResourceFactory.create();
+
+		DataDefinitionResource dataDefinitionResource =
+			dataDefinitionResourceBuilder.user(
+				_serviceContext.fetchUser()
+			).build();
+
+		DataDefinition dataDefinition =
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeByDataDefinitionKey(
+					_serviceContext.getScopeGroupId(), "journal",
+					"test-data-definition-1");
+
+		Map<String, Object> description = dataDefinition.getDescription();
+
+		Assert.assertEquals(
+			"Test Data Definition Description 1", description.get("en_US"));
+
+		Map<String, Object> name = dataDefinition.getName();
+
+		Assert.assertEquals("Test Data Definition Name 1", name.get("en_US"));
+
+		dataDefinition =
+			dataDefinitionResource.
+				getSiteDataDefinitionByContentTypeByDataDefinitionKey(
+					_serviceContext.getScopeGroupId(), "journal",
+					"test-data-definition-2");
+
+		description = dataDefinition.getDescription();
+
+		Assert.assertEquals(
+			"Test Data Definition Description 2 Update",
+			description.get("en_US"));
+
+		name = dataDefinition.getName();
+
+		Assert.assertEquals(
+			"Test Data Definition Name 2 Update", name.get("en_US"));
 	}
 
 	private void _assertDDMStructure() {
@@ -3097,31 +3182,27 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			2,
 			_segmentsEntryLocalService.getSegmentsEntriesCount(
-				_group.getGroupId(), true));
+				_group.getGroupId()));
 
 		SegmentsEntry segmentsEntry1 =
 			_segmentsEntryLocalService.fetchSegmentsEntry(
-				_group.getGroupId(), "TEST-SEGMENTS-ENTRY-1", true);
+				_group.getGroupId(), "TEST-SEGMENTS-ENTRY-1");
 
 		Assert.assertNotNull(segmentsEntry1);
 		Assert.assertTrue(segmentsEntry1.isActive());
 		Assert.assertEquals(
 			"Test Segments Entry 1",
 			segmentsEntry1.getName(LocaleUtil.getSiteDefault()));
-		Assert.assertEquals(
-			"com.liferay.portal.kernel.model.User", segmentsEntry1.getType());
 
 		SegmentsEntry segmentsEntry2 =
 			_segmentsEntryLocalService.fetchSegmentsEntry(
-				_group.getGroupId(), "TEST-SEGMENTS-ENTRY-2", true);
+				_group.getGroupId(), "TEST-SEGMENTS-ENTRY-2");
 
 		Assert.assertNotNull(segmentsEntry2);
 		Assert.assertFalse(segmentsEntry2.isActive());
 		Assert.assertEquals(
 			"Test Segments Entry 2",
 			segmentsEntry2.getName(LocaleUtil.getSiteDefault()));
-		Assert.assertEquals(
-			"com.liferay.portal.kernel.model.User", segmentsEntry2.getType());
 
 		Layout layout = _layoutLocalService.fetchLayoutByFriendlyURL(
 			_group.getGroupId(), false, "/test-public-layout");
@@ -3191,20 +3272,24 @@ public class BundleSiteInitializerTest {
 		SiteNavigationMenuItem siteNavigationMenuItem2 =
 			siteNavigationMenuItems.get(1);
 
-		Assert.assertEquals("Test URL", siteNavigationMenuItem2.getName());
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.URL,
 			siteNavigationMenuItem2.getType());
+		Assert.assertTrue(
+			StringUtil.contains(
+				siteNavigationMenuItem2.getTypeSettings(), "Test URL",
+				StringPool.BLANK));
 
 		SiteNavigationMenuItem siteNavigationMenuItem3 =
 			siteNavigationMenuItems.get(2);
 
-		Assert.assertEquals("Other Links", siteNavigationMenuItem3.getName());
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.NODE,
 			siteNavigationMenuItem3.getType());
-		Assert.assertEquals(
-			"name=Other Links\n", siteNavigationMenuItem3.getTypeSettings());
+		Assert.assertTrue(
+			StringUtil.contains(
+				siteNavigationMenuItem3.getTypeSettings(), "Other Links",
+				StringPool.BLANK));
 
 		SiteNavigationMenuItem siteNavigationMenuItem4 =
 			siteNavigationMenuItems.get(3);
@@ -3258,21 +3343,24 @@ public class BundleSiteInitializerTest {
 		SiteNavigationMenuItem siteNavigationMenuItem2 =
 			siteNavigationMenuItems.get(1);
 
-		Assert.assertEquals("Test URL", siteNavigationMenuItem2.getName());
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.URL,
 			siteNavigationMenuItem2.getType());
+		Assert.assertTrue(
+			StringUtil.contains(
+				siteNavigationMenuItem2.getTypeSettings(), "Test URL",
+				StringPool.BLANK));
 
 		SiteNavigationMenuItem siteNavigationMenuItem3 =
 			siteNavigationMenuItems.get(2);
 
-		Assert.assertEquals("Other Links", siteNavigationMenuItem3.getName());
 		Assert.assertEquals(
 			SiteNavigationMenuItemTypeConstants.NODE,
 			siteNavigationMenuItem3.getType());
-		Assert.assertEquals(
-			"name=Other Links Update\n",
-			siteNavigationMenuItem3.getTypeSettings());
+		Assert.assertTrue(
+			StringUtil.contains(
+				siteNavigationMenuItem3.getTypeSettings(), "Other Links Update",
+				StringPool.BLANK));
 
 		SiteNavigationMenuItem siteNavigationMenuItem4 =
 			siteNavigationMenuItems.get(3);
@@ -3421,8 +3509,8 @@ public class BundleSiteInitializerTest {
 			).build();
 
 		UserAccount userAccount =
-			userAccountResource.getUserAccountByExternalReferenceCode(
-				"TESTUSER1");
+			userAccountResource.getUserAccountByEmailAddress(
+				"test.user1@liferay.com");
 
 		Assert.assertNotNull(userAccount);
 
@@ -3434,7 +3522,7 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			"testalternatename1", userAccount.getAlternateName());
 		Assert.assertEquals(
-			"test.user1@liferay.com", userAccount.getEmailAddress());
+			UserAccount.Status.INACTIVE, userAccount.getStatus());
 
 		OrganizationBrief[] organizationBriefs =
 			userAccount.getOrganizationBriefs();
@@ -3444,8 +3532,8 @@ public class BundleSiteInitializerTest {
 
 		_assertUserSiteGroups(userAccount.getId());
 
-		userAccount = userAccountResource.getUserAccountByExternalReferenceCode(
-			"TESTUSER2");
+		userAccount = userAccountResource.getUserAccountByEmailAddress(
+			"test.user2@liferay.com");
 
 		Assert.assertNotNull(userAccount);
 
@@ -3457,7 +3545,7 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			"testalternatename2", userAccount.getAlternateName());
 		Assert.assertEquals(
-			"test.user2@liferay.com", userAccount.getEmailAddress());
+			UserAccount.Status.INACTIVE, userAccount.getStatus());
 
 		organizationBriefs = userAccount.getOrganizationBriefs();
 
@@ -3477,8 +3565,8 @@ public class BundleSiteInitializerTest {
 			).build();
 
 		UserAccount userAccount =
-			userAccountResource.getUserAccountByExternalReferenceCode(
-				"TESTUSER1");
+			userAccountResource.getUserAccountByEmailAddress(
+				"test.user1@liferay.com");
 
 		Assert.assertNotNull(userAccount);
 
@@ -3500,8 +3588,8 @@ public class BundleSiteInitializerTest {
 
 		_assertUserSiteGroups(userAccount.getId());
 
-		userAccount = userAccountResource.getUserAccountByExternalReferenceCode(
-			"TESTUSER2");
+		userAccount = userAccountResource.getUserAccountByEmailAddress(
+			"test.user2.update@liferay.com");
 
 		Assert.assertNotNull(userAccount);
 
@@ -3513,7 +3601,7 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			"testalternatename2update", userAccount.getAlternateName());
 		Assert.assertEquals(
-			"test.user2.update@liferay.com", userAccount.getEmailAddress());
+			UserAccount.Status.INACTIVE, userAccount.getStatus());
 
 		organizationBriefs = userAccount.getOrganizationBriefs();
 
@@ -3522,8 +3610,8 @@ public class BundleSiteInitializerTest {
 
 		_assertUserSiteGroups(userAccount.getId());
 
-		userAccount = userAccountResource.getUserAccountByExternalReferenceCode(
-			"TESTUSER3");
+		userAccount = userAccountResource.getUserAccountByEmailAddress(
+			"test.user3@liferay.com");
 
 		Assert.assertNotNull(userAccount);
 
@@ -3535,7 +3623,7 @@ public class BundleSiteInitializerTest {
 		Assert.assertEquals(
 			"testalternatename3", userAccount.getAlternateName());
 		Assert.assertEquals(
-			"test.user3@liferay.com", userAccount.getEmailAddress());
+			UserAccount.Status.INACTIVE, userAccount.getStatus());
 
 		organizationBriefs = userAccount.getOrganizationBriefs();
 
@@ -3745,6 +3833,7 @@ public class BundleSiteInitializerTest {
 		_assertCPDefinition();
 		_assertCPInstanceProperties();
 		_assertCPOptionCategory();
+		_assertDataDefinition1();
 		_assertDDMStructure();
 		_assertDDMTemplate1();
 		_assertDLFileEntry();
@@ -3786,6 +3875,7 @@ public class BundleSiteInitializerTest {
 		_assertCommerceChannel2();
 		_assertCommerceOrderType2();
 		_assertCommerceSpecificationProducts2();
+		_assertDataDefinition2();
 		_assertDDMTemplate2();
 		_assertExpandoColumns2();
 		_assertExpandoValues2();
@@ -3869,6 +3959,9 @@ public class BundleSiteInitializerTest {
 	@Inject
 	private CPSpecificationOptionLocalService
 		_cpSpecificationOptionLocalService;
+
+	@Inject
+	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
 
 	@Inject
 	private DDMStructureLocalService _ddmStructureLocalService;

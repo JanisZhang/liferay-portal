@@ -81,9 +81,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = "U-Joint");
 
@@ -132,9 +130,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 
@@ -208,9 +204,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Minium",
@@ -247,9 +241,7 @@ definition {
 			key_productName = "Simple T-Shirt",
 			locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE_DISABLED");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = "Simple T-Shirt");
 
@@ -279,9 +271,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = "U-Joint");
 
@@ -328,9 +318,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceProducts.searchProduct(search = ${product});
 
@@ -403,9 +391,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 
@@ -2270,9 +2256,19 @@ definition {
 
 			CommerceNavigator.gotoEntry(entryName = "GROUPEDSKU");
 
-			CommerceSKUs.editSkuPricing(
-				basePrice = "55.00",
-				promoPrice = "50.00");
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
+
+			CommerceSKUs.editSkuPricing(basePrice = "55.00");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Promotion");
+
+			CommerceSKUs.editSkuPricing(promoPrice = "50.00");
 
 			CommerceEntry.gotoMenuTab(menuTab = "Media");
 
@@ -2466,6 +2462,12 @@ definition {
 
 			CommerceEntry.gotoMenuTab(menuTab = "Virtual");
 
+			CommerceEntry.gotoMenuTab(menuTab = "Options");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual");
+
+			Button.clickSave();
+
 			CommerceProducts.updateProductVirtualConfiguration(
 				enableSample = "true",
 				sampleFileName = ${sampleFileName},
@@ -2475,9 +2477,19 @@ definition {
 
 			CommerceNavigator.gotoEntry(entryName = "VIRTUALSKU");
 
-			CommerceSKUs.editSkuPricing(
-				basePrice = "55.00",
-				promoPrice = "50.00");
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
+
+			CommerceSKUs.editSkuPricing(basePrice = "55.00");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Promotion");
+
+			CommerceSKUs.editSkuPricing(promoPrice = "50.00");
 
 			CommerceEntry.gotoMenuTab(menuTab = "Media");
 
@@ -2776,9 +2788,7 @@ definition {
 
 		Button.clickSave();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Minium",
@@ -2881,14 +2891,13 @@ definition {
 			key_toggleSwitchLabel = "Purchasable",
 			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
-		Type(
-			key_fieldLabel = "Base Price",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10.0");
-
 		Button.click(button = "Publish");
 
-		CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
+		CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+		CommerceSKUs.addSKUPriceEntry(
+			priceList = "Minium Base Price List",
+			unitPrice = 10);
 
 		Refresh();
 
@@ -2914,14 +2923,13 @@ definition {
 			key_toggleSwitchLabel = "Purchasable",
 			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
-		Type(
-			key_fieldLabel = "Base Price",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "20.0");
-
 		Button.click(button = "Publish");
 
-		CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
+		CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+		CommerceSKUs.addSKUPriceEntry(
+			priceList = "Minium Base Price List",
+			unitPrice = 20);
 
 		Refresh();
 
@@ -2985,9 +2993,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceProducts.searchProduct(search = "Hoses");
 
@@ -2999,12 +3005,11 @@ definition {
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
-		Type(
-			key_fieldLabel = "Base Price",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "80.0");
+		CommerceEntry.gotoMenuTab(menuTab = "Price");
 
-		Button.clickPublish();
+		CommerceSKUs.addSKUPriceEntry(
+			priceList = "Minium Base Price List",
+			unitPrice = 80);
 
 		CommerceEntry.gotoMenuTab(menuTab = "Inventory");
 
@@ -3117,9 +3122,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 
@@ -3208,9 +3211,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 

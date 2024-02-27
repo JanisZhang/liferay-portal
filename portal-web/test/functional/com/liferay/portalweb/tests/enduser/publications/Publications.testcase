@@ -365,9 +365,13 @@ definition {
 			changeCategory = "Document",
 			changeTitle = "DM Document Title Edit");
 
+		// Workaround LPS-201510
+
+		PublicationsNavigator.gotoReviewChanges();
+
 		PublicationsChanges.filterChangesByItem(
 			checkboxName = "Deleted",
-			menuItem = "Types");
+			menuItem = "Changed");
 
 		PublicationsChanges.viewChanges(
 			changeCategory = "Web Content Article",
@@ -383,6 +387,10 @@ definition {
 		PublicationsChanges.viewChangesResultNotPresent(
 			changeCategory = "Document",
 			changeTitle = "DM Document Title Edit");
+
+		// Workaround LPS-201510
+
+		PublicationsNavigator.gotoReviewChanges();
 
 		PublicationsChanges.filterChangesByItem(
 			checkboxName = "Modified",
@@ -402,6 +410,10 @@ definition {
 		PublicationsChanges.viewChangesResultNotPresent(
 			changeCategory = "Web Content Article",
 			changeTitle = "WC WebContent Title 2");
+
+		// Workaround LPS-201510
+
+		PublicationsNavigator.gotoReviewChanges();
 
 		PublicationsChanges.filterChangesByItem(
 			checkboxName = "Site Name",
@@ -425,6 +437,10 @@ definition {
 			changeCategory = "Web Content Article",
 			changeTitle = "WC WebContent Title 2");
 
+		// Workaround LPS-201510
+
+		PublicationsNavigator.gotoReviewChanges();
+
 		PublicationsChanges.filterChangesByItem(
 			checkboxName = "Test Site Name",
 			menuItem = "Sites");
@@ -444,6 +460,10 @@ definition {
 			changeCategory = "Document",
 			changeTitle = "DM Document Title Edit");
 
+		// Workaround LPS-201510
+
+		PublicationsNavigator.gotoReviewChanges();
+
 		PublicationsChanges.filterChangesByItem(
 			checkboxName = "Document",
 			menuItem = "Types");
@@ -462,6 +482,10 @@ definition {
 		PublicationsChanges.viewChangesResultNotPresent(
 			changeCategory = "Web Content Article",
 			changeTitle = "WC WebContent Title 2");
+
+		// Workaround LPS-201510
+
+		PublicationsNavigator.gotoReviewChanges();
 
 		PublicationsChanges.filterChangesByItem(
 			checkboxName = "Web Content Article",
@@ -548,10 +572,7 @@ definition {
 	@priority = 3
 	test CanHideApplicationThatShouldnotBeUsedInPublication {
 		task ("Go to Publications Instance Settings") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
+			PortalSettings.openInstanceSettingsAdmin();
 
 			SystemSettings.gotoConfiguration(
 				configurationCategory = "Publications",
@@ -796,10 +817,7 @@ definition {
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.impersonateCP(
 			siteName = ${siteName},
@@ -893,10 +911,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+		ServerAdministration.openServerAdmin();
 
 		var script = TestCase.getFileContent(fileName = "AddManyDocuments.groovy");
 
@@ -1354,10 +1369,9 @@ definition {
 
 		Masterclass.goBackUsingBrowserHistory();
 
-		AssertTextEquals(
-			key_publicationName = "Publication Name",
-			locator1 = "Publications#PUBLISHED_STATUS",
-			value1 = "Published");
+		AssertElementPresent(
+			key_tab = "Ongoing",
+			locator1 = "NavTab#ACTIVE_TAB_LINK");
 	}
 
 	@priority = 4
@@ -1562,9 +1576,13 @@ definition {
 
 			MenuItem.click(menuItem = "Show System Changes");
 
+			PublicationsChanges.filterChangesByItem(
+				checkboxName = "Portlet Preference Value",
+				menuItem = "Types");
+
 			PublicationsChanges.viewChanges(
 				changeCategory = "Portlet Preference Value",
-				changeSite = "Site Name",
+				changeSite = "",
 				changeTitle = "Preferences for Web Content Display on Test Content Page",
 				changeType = "Modified",
 				changeUser = "Test Test");
@@ -1635,7 +1653,7 @@ definition {
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Portlet Preference Value",
-				changeSite = "Site Name",
+				changeSite = "",
 				changeTitle = "Preferences for Web Content Display on Test Widget Page",
 				changeType = "Modified",
 				changeUser = "Test Test");
@@ -1891,22 +1909,12 @@ definition {
 				key_publicationName = "Publication Name",
 				locator1 = "Publications#PUBLICATION_NAME_VIEW");
 
-			PublicationsChanges.filterChangesByItem(
-				checkboxName = "Page",
-				menuItem = "Types");
-
 			PublicationsChanges.viewChanges(
 				changeCategory = "Page",
 				changeSite = "Site Name",
 				changeTitle = "Test Page Name",
 				changeType = "Added",
 				changeUser = "Test Test");
-
-			PublicationsChanges.filterChangesByItem(
-				checkboxName = "Fragment Entry Link",
-				menuItem = "Types");
-
-			Pagination.changePagination(itemsPerPage = "40 Items");
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Fragment Entry Link",
@@ -2142,10 +2150,7 @@ definition {
 		}
 
 		task ("Clear database cache and excute reindex") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Server Administration");
+			ServerAdministration.openServerAdmin();
 
 			ServerAdministration.executeServerResourcesActions(actionsDescription = "Clear the database cache.");
 

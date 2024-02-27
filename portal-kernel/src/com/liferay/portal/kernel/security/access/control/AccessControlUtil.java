@@ -61,6 +61,15 @@ public class AccessControlUtil {
 
 		String remoteAddr = httpServletRequest.getRemoteAddr();
 
+		Set<String> computerAddresses = PortalUtil.getComputerAddresses();
+
+		if ((computerAddresses.contains(remoteAddr) &&
+			 hostsAllowed.contains(_SERVER_IP)) ||
+			hostsAllowed.contains(remoteAddr)) {
+
+			return true;
+		}
+
 		for (String hostAllowed : hostsAllowed) {
 			AllowedIPAddressesValidator allowedIPAddressesValidator =
 				AllowedIPAddressesValidatorFactory.create(hostAllowed);
@@ -68,14 +77,6 @@ public class AccessControlUtil {
 			if (allowedIPAddressesValidator.isAllowedIPAddress(remoteAddr)) {
 				return true;
 			}
-		}
-
-		Set<String> computerAddresses = PortalUtil.getComputerAddresses();
-
-		if (computerAddresses.contains(remoteAddr) &&
-			hostsAllowed.contains(_SERVER_IP)) {
-
-			return true;
 		}
 
 		return false;

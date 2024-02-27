@@ -11,7 +11,7 @@ import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
-import com.liferay.document.library.uad.test.DLFileEntryUADTestUtil;
+import com.liferay.document.library.uad.test.util.DLFileEntryUADTestUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -85,7 +85,7 @@ public class DLFileEntryUADExporterTest
 	public void testExportAllWithMissingBinary() throws Exception {
 		DLFileEntry dlFileEntry = addBaseModel(user.getUserId());
 
-		DLStoreUtil.deleteDirectory(
+		DLStoreUtil.deleteFile(
 			dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
 			dlFileEntry.getName());
 
@@ -103,11 +103,6 @@ public class DLFileEntryUADExporterTest
 		return DLFileEntryUADTestUtil.addDLFileEntry(
 			_dlAppLocalService, _dlFileEntryLocalService, _dlFolderLocalService,
 			userId, _group.getGroupId());
-	}
-
-	@Override
-	protected String getPrimaryKeyName() {
-		return "fileEntryId";
 	}
 
 	@Override

@@ -15,15 +15,18 @@ import com.liferay.document.library.kernel.document.conversion.DocumentConversio
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFileShortcutConstants;
+import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.versioning.VersioningStrategy;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.document.library.web.internal.display.context.helper.FileEntryDisplayContextHelper;
 import com.liferay.document.library.web.internal.display.context.helper.FileShortcutDisplayContextHelper;
 import com.liferay.document.library.web.internal.helper.DLTrashHelper;
+import com.liferay.document.library.web.internal.util.FolderItemSelectorURLProvider;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemBuilder;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -427,6 +430,19 @@ public class UIItemsBuilder {
 			(_fileShortcut != null) ?
 				String.valueOf(_fileShortcut.getFileShortcutId()) :
 					String.valueOf(_fileEntry.getFileEntryId())
+		).putData(
+			"selectFolderURL",
+			() -> {
+				FolderItemSelectorURLProvider folderItemSelectorURLProvider =
+					new FolderItemSelectorURLProvider(
+						_httpServletRequest,
+						(ItemSelector)_httpServletRequest.getAttribute(
+							ItemSelector.class.getName()));
+
+				return folderItemSelectorURLProvider.getSelectMoveToFolderURL(
+					_fileEntry.getRepositoryId(), _fileEntry.getFolderId(),
+					DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+			}
 		).setIcon(
 			"move-folder"
 		).setKey(

@@ -8,15 +8,9 @@ package com.liferay.headless.delivery.internal.dto.v1_0.mapper;
 import com.liferay.headless.delivery.dto.v1_0.PageElement;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 
-import org.osgi.service.component.annotations.Component;
-
 /**
  * @author Jürgen Kappler
  */
-@Component(
-	property = "class.name=com.liferay.layout.util.structure.RootLayoutStructureItem",
-	service = LayoutStructureItemMapper.class
-)
 public class RootLayoutStructureItemMapper
 	implements LayoutStructureItemMapper {
 
@@ -27,8 +21,8 @@ public class RootLayoutStructureItemMapper
 
 		return new PageElement() {
 			{
-				id = layoutStructureItem.getItemId();
-				type = Type.ROOT;
+				setId(layoutStructureItem::getItemId);
+				setType(() -> Type.ROOT);
 			}
 		};
 	}

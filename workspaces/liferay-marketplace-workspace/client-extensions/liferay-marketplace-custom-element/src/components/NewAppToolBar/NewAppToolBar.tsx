@@ -4,12 +4,10 @@
  */
 
 import ClayButton from '@clayui/button';
-import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayManagementToolbar from '@clayui/management-toolbar';
 
 import chevronRight from '../../assets/icons/chevron_right_icon.svg';
 import circleFill from '../../assets/icons/circle_fill_icon.svg';
-import dotsIcon from '../../assets/icons/dots_icon.svg';
 import emptyPicture from '../../assets/icons/empty_picture_icon.svg';
 import {getAccountImage} from '../../utils/util';
 
@@ -17,97 +15,66 @@ import './NewAppToolBar.scss';
 
 import {Link} from 'react-router-dom';
 
-interface NewAppToolBarProps {
+type NewAppToolBarProps = {
 	accountImage?: string;
 	accountName: string;
 	appImage?: string;
 	appName?: string;
-	enableDropdown?: boolean;
-}
-
-type Item = {
-	disabled?: boolean;
-	label?: string;
-	type?:
-		| 'checkbox'
-		| 'contextual'
-		| 'group'
-		| 'item'
-		| 'radio'
-		| 'radiogroup'
-		| 'divider';
 };
-
-const items: Item[] = [
-	{
-		disabled: true,
-		label: 'Publish app',
-	},
-	{
-		disabled: true,
-		label: 'Hide app',
-	},
-	{
-		label: 'Menu List Text',
-	},
-	{
-		type: 'divider',
-	},
-	{
-		label: 'Remove app',
-	},
-];
 
 export function NewAppToolBar({
 	accountImage,
 	accountName,
 	appImage,
 	appName,
-	enableDropdown,
 }: NewAppToolBarProps) {
 	return (
 		<div className="container new-app-tool-bar-container">
 			<ClayManagementToolbar.ItemList expand>
-				<div className="new-app-tool-bar-main-account-logo">
-					<img
-						alt="Main account logo"
-						className="new-app-tool-bar-main-account-logo-img"
-						src={getAccountImage(accountImage)}
-					/>
+				<div className="d-flex justify-content-between">
+					<div className="d-flex">
+						<div className="new-app-tool-bar-main-account-logo">
+							<img
+								alt="Main account logo"
+								className="new-app-tool-bar-main-account-logo-img"
+								src={getAccountImage(accountImage)}
+							/>
 
-					<span className="new-app-tool-bar-main-account-logo-text">
-						{accountName}
-					</span>
-				</div>
+							<span className="new-app-tool-bar-main-account-logo-text">
+								{accountName}
+							</span>
+						</div>
 
-				<img
-					alt="Arrow right"
-					className="new-app-tool-bar-arrow-right"
-					src={chevronRight}
-				/>
+						<img
+							alt="Arrow right"
+							className="new-app-tool-bar-arrow-right"
+							src={chevronRight}
+						/>
 
-				<div className="new-app-tool-bar-new-app-logo">
-					<img
-						alt="New App logo"
-						className="new-app-tool-bar-new-app-logo-img"
-						src={appImage ?? emptyPicture}
-					/>
+						<div className="new-app-tool-bar-new-app-logo">
+							<img
+								alt="New App logo"
+								className="new-app-tool-bar-new-app-logo-img"
+								src={appImage ?? emptyPicture}
+							/>
 
-					<span className="new-app-tool-bar-new-app-logo-text">
-						{appName ?? 'New App'}
-					</span>
-				</div>
-			</ClayManagementToolbar.ItemList>
+							<span className="new-app-tool-bar-new-app-logo-text">
+								{appName ?? 'New App'}
+							</span>
+						</div>
+					</div>
 
-			<ClayManagementToolbar.ItemList expand>
-				<div className="new-app-tool-bar-status-container">
-					<img
-						alt="Status"
-						className="new-app-tool-bar-status-icon"
-						src={circleFill}
-					/>
+					<div className="flex-shrink-0 new-app-tool-bar-status-container">
+						<img
+							alt="Status"
+							className="new-app-tool-bar-status-icon"
+							src={circleFill}
+						/>
 
-					<span className="new-app-tool-bar-status-text">Draft</span>
+						<span className="new-app-tool-bar-status-text">
+							Draft
+						</span>
+					</div>
 				</div>
 			</ClayManagementToolbar.ItemList>
 
@@ -123,32 +90,7 @@ export function NewAppToolBar({
 							</span>
 						</ClayButton>
 					</Link>
-
-					<button className="new-app-tool-bar-button-save-draft">
-						Save as draft
-					</button>
-
-					<button className="new-app-tool-bar-button-preview-storefront">
-						Preview Storefront
-					</button>
 				</ClayButton.Group>
-
-				{enableDropdown && (
-					<div className="new-app-tool-bar-button-dropdown">
-						<ClayDropDownWithItems
-							items={items}
-							trigger={
-								<ClayButton displayType={null}>
-									<img
-										alt="Icon"
-										className="new-app-tool-bar-button-dropdown-icon"
-										src={dotsIcon}
-									/>
-								</ClayButton>
-							}
-						/>
-					</div>
-				)}
 			</ClayManagementToolbar.ItemList>
 		</div>
 	);

@@ -4,7 +4,6 @@
  */
 
 import ClayAlert from '@clayui/alert';
-import ClayBadge from '@clayui/badge';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown, {Align, ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayEmptyState from '@clayui/empty-state';
@@ -15,6 +14,7 @@ import ClayLink from '@clayui/link';
 import ClayNavigationBar from '@clayui/navigation-bar';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
+import {FeatureIndicator} from 'frontend-js-components-web';
 import {
 	createPortletURL,
 	fetch,
@@ -748,7 +748,7 @@ export default function ChangeTrackingRenderView({
 						{Liferay.Language.get('move-changes')}
 
 						<div className="float-right">
-							<ClayBadge displayType="beta" label="beta" />
+							<FeatureIndicator type="beta" />
 						</div>
 					</>
 				),
@@ -757,11 +757,17 @@ export default function ChangeTrackingRenderView({
 			});
 		}
 
-		dropdownItems.push({
-			label: Liferay.Language.get('discard'),
-			onClick: () => navigate(discardURL),
-			symbolLeft: 'times-circle',
-		});
+		if (discardURL !== null) {
+			dropdownItems.push({
+				label: Liferay.Language.get('discard'),
+				onClick: () => navigateUtil(discardURL),
+				symbolLeft: 'times-circle',
+			});
+		}
+
+		if (!dropdownItems.length) {
+			return null;
+		}
 
 		return (
 			<div className="autofit-col">

@@ -8,10 +8,15 @@ import ClayDropDown from '@clayui/drop-down';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import getCN from 'classnames';
-import {LearnMessage, LearnResourcesContext} from 'frontend-js-components-web';
-import {navigate} from 'frontend-js-web';
-import React, {useEffect, useRef, useState} from 'react';
+import {
+	FeatureIndicator,
+	LearnMessage,
+	LearnResourcesContext,
+} from 'frontend-js-components-web';
+import {navigate, openSelectionModal} from 'frontend-js-web';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 
+import NamespaceContext from '../NamespaceContext';
 import {SCOPE_TYPES} from '../utils/constants.es';
 import {sub} from '../utils/language.es';
 import ScopeSelect from './scope/ScopeSelect.es';
@@ -26,17 +31,25 @@ const SCOPE_INFO = {
 	[SCOPE_TYPES.SITE]: {
 		description: Liferay.Language.get('result-rankings-scope-site-help'),
 		label: Liferay.Language.get('site'),
+		showBetaBadge: true,
 	},
 	[SCOPE_TYPES.SXP_BLUEPRINT]: {
 		description: Liferay.Language.get(
 			'result-rankings-scope-blueprint-help'
 		),
 		label: Liferay.Language.get('blueprint'),
+		showBetaBadge: true,
 	},
 };
 
-function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
+function ResultRankingsAdd({
+	cancelURL,
+	enterpriseSearchEnabled = true,
+	formName,
+	selectSitesURL,
+}) {
 	const [errors, setErrors] = useState({});
+	const [groupName, setGroupName] = useState('');
 	const [scopeType, setScopeType] = useState(SCOPE_TYPES.EVERYTHING);
 	const [scope, setScope] = useState('');
 	const [scopeDropdownActive, setScopeDropdownActive] = useState(false);
@@ -44,6 +57,12 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 	const [touched, setTouched] = useState({});
 
 	const alignElementRef = useRef();
+
+	const {namespace} = useContext(NamespaceContext);
+
+	const scopeItemsList = enterpriseSearchEnabled
+		? [SCOPE_TYPES.EVERYTHING, SCOPE_TYPES.SITE, SCOPE_TYPES.SXP_BLUEPRINT]
+		: [SCOPE_TYPES.EVERYTHING, SCOPE_TYPES.SITE];
 
 	const _getErrors = (searchQuery, scopeType, scope) => {
 		const errors = {};
@@ -65,21 +84,7 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 		return errors;
 	};
 
-	const _getScopeTypeOptions = () => {
-		const options = [SCOPE_TYPES.EVERYTHING];
-
-		if (Liferay.FeatureFlags['LPS-157988']) {
-			options.push(SCOPE_TYPES.SITE);
-		}
-
-		if (Liferay.FeatureFlags['LPS-159650']) {
-			options.push(SCOPE_TYPES.SXP_BLUEPRINT);
-		}
-
-		return options;
-	};
-
-	const _handleBlur = (fieldName) => () => {
+	const _handleBlur = (fieldName) => {
 		setTouched({...touched, [fieldName]: true});
 	};
 
@@ -102,6 +107,7 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 	const _handleScopeTypeChange = (value) => {
 		setScopeType(value);
 		setScope('');
+		setGroupName('');
 		setTouched({...touched, scope: false});
 
 		setScopeDropdownActive(false);
@@ -152,7 +158,7 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 				<ClayInput
 					id="searchQuery"
 					name={`${namespace}keywords`}
-					onBlur={_handleBlur('searchQuery')}
+					onBlur={() => _handleBlur('searchQuery')}
 					onChange={_handleSearchQueryChange}
 					type="text"
 					value={searchQuery}
@@ -167,8 +173,7 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 				)}
 			</ClayForm.Group>
 
-			{(Liferay.FeatureFlags['LPS-159650'] ||
-				Liferay.FeatureFlags['LPS-157988']) && (
+			{Liferay.FeatureFlags['LPD-6368'] && (
 				<ClayForm.Group>
 					<label htmlFor="searchScopeType">
 						{Liferay.Language.get('scope')}
@@ -202,7 +207,7 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 								alignElementRef.current.clientWidth + 'px',
 						}}
 					>
-						<ClayDropDown.ItemList items={_getScopeTypeOptions()}>
+						<ClayDropDown.ItemList items={scopeItemsList}>
 							{(item) => (
 								<ClayDropDown.Item
 									key={item}
@@ -211,8 +216,14 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 									}}
 								>
 									<div className="autofit-col-expand">
-										<div className="list-group-text text-dark">
+										<div className="align-items-center d-flex list-group-text text-dark">
 											{SCOPE_INFO[item].label}
+
+											{SCOPE_INFO[item].showBetaBadge && (
+												<span className="c-ml-1">
+													<FeatureIndicator type="beta" />
+												</span>
+											)}
 										</div>
 
 										<div className="c-mt-0 list-group-subtext text-2">
@@ -239,22 +250,77 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 			)}
 
 			{scopeType === SCOPE_TYPES.SITE && (
-				<>
-					<ScopeSelect
-						disabled={false}
-						error={errors.scope}
-						fetchItemsUrl={fetchSitesURL}
-						locator={{
-							id: 'externalReferenceCode',
-							label: 'descriptiveName',
-						}}
-						onBlur={_handleBlur('scope')}
-						onSelect={_handleScopeChange}
-						selected={scope}
-						title={Liferay.Language.get('select-site')}
-						touched={touched.scope}
-						type={SCOPE_TYPES.SITE}
-					/>
+				<ClayForm.Group
+					className={getCN({
+						'has-error': !!errors.scope && touched.scope,
+					})}
+				>
+					<label htmlFor="groupName">
+						{Liferay.Language.get('select-site')}
+
+						<ClayIcon
+							className="c-ml-1 reference-mark"
+							symbol="asterisk"
+						/>
+					</label>
+
+					<ClayInput.Group>
+						<ClayInput.GroupItem
+							className="d-none d-sm-block"
+							prepend
+						>
+							<ClayInput
+								disabled
+								id="groupName"
+								type="text"
+								value={groupName}
+							/>
+						</ClayInput.GroupItem>
+
+						<ClayInput.GroupItem append shrink>
+							<ClayButton
+								displayType="secondary"
+								onClick={() => {
+									openSelectionModal({
+										id: `${namespace}selectSite`,
+										onClose: () => {
+											_handleBlur('scope');
+										},
+										onSelect: (selectedItem) => {
+											_handleBlur('scope');
+
+											if (!selectedItem) {
+												return;
+											}
+
+											setGroupName(
+												selectedItem.groupdescriptivename
+											);
+											setScope(
+												selectedItem.groupexternalreferencecode
+											);
+										},
+										selectEventName: `${namespace}selectSite`,
+										title: Liferay.Language.get(
+											'select-site'
+										),
+										url: selectSitesURL,
+									});
+								}}
+								type="button"
+							>
+								{Liferay.Language.get('select')}
+							</ClayButton>
+						</ClayInput.GroupItem>
+					</ClayInput.Group>
+
+					{errors.scope && touched.scope && (
+						<ClayForm.FeedbackGroup>
+							<ClayForm.FeedbackItem>
+								{errors.scope}
+							</ClayForm.FeedbackItem>
+						</ClayForm.FeedbackGroup>
+					)}
 
 					<input
 						id={`${namespace}groupExternalReferenceCode`}
@@ -264,7 +330,7 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 						type="hidden"
 						value={scope}
 					/>
-				</>
+				</ClayForm.Group>
 			)}
 
 			{scopeType === SCOPE_TYPES.SXP_BLUEPRINT && (
@@ -279,7 +345,7 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 							id: 'externalReferenceCode',
 							label: 'title',
 						}}
-						onBlur={_handleBlur('scope')}
+						onBlur={() => _handleBlur('scope')}
 						onSelect={_handleScopeChange}
 						selected={scope}
 						title={Liferay.Language.get('select-blueprint')}
@@ -317,19 +383,22 @@ function ResultRankingsAdd({cancelURL, fetchSitesURL, formName, namespace}) {
 
 export default function ({
 	cancelURL,
-	fetchSitesURL,
+	enterpriseSearchEnabled,
 	formName,
 	learnResources,
 	namespace = '',
+	selectSitesURL,
 }) {
 	return (
 		<LearnResourcesContext.Provider value={learnResources}>
-			<ResultRankingsAdd
-				cancelURL={cancelURL}
-				fetchSitesURL={fetchSitesURL}
-				formName={formName}
-				namespace={namespace}
-			/>
+			<NamespaceContext.Provider value={{namespace}}>
+				<ResultRankingsAdd
+					cancelURL={cancelURL}
+					enterpriseSearchEnabled={enterpriseSearchEnabled}
+					formName={formName}
+					selectSitesURL={selectSitesURL}
+				/>
+			</NamespaceContext.Provider>
 		</LearnResourcesContext.Provider>
 	);
 }

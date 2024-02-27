@@ -528,6 +528,17 @@ definition {
 	}
 
 	@summary = "Default summary"
+	macro assertObjectDefinitionInResponse(expectedValue = null) {
+		var response = ObjectDefinitionAPI.getObjectDefinitions();
+
+		var actual = JSONUtil.getWithJSONPath(${response}, "$..name");
+
+		TestUtils.assertContain(
+			actual = ${actual},
+			expected = ${expectedValue});
+	}
+
+	@summary = "Default summary"
 	macro assertResponseHasCorrectObjectEntryName(responseToParse = null, expectedValue = null, objectEntryId = null) {
 		var actual = JSONUtil.getWithJSONPath(${responseToParse}, "$.items[?(@.id==${objectEntryId})].name");
 
@@ -825,6 +836,34 @@ definition {
 			dbType = "Clob",
 			name = "customLongText",
 			objectDefinitionId = ${objectDefinitionId});
+	}
+
+	@summary = "Default summary"
+	macro createObjectDefinitionWithMultipleCustomFields(picklistId = null, objectDefinitionName = null, en_US_label = null, requiredStringFieldName = null, en_US_plural_label = null) {
+		Variables.assertDefined(parameterList = "${en_US_label},${en_US_plural_label},${objectDefinitionName},${picklistId},${requiredStringFieldName}");
+
+		var objectDefinitionId = ObjectDefinitionAPI.createAndPublishObjectDefinition(
+			en_US_label = ${en_US_label},
+			en_US_plural_label = ${en_US_plural_label},
+			name = ${objectDefinitionName},
+			requiredStringFieldName = ${requiredStringFieldName});
+
+		ObjectDefinitionAPI.postObjectDefinitionObjectField(
+			businessType = "Picklist",
+			dBType = "String",
+			listTypeDefinitionId = ${picklistId},
+			name = "testPicklist",
+			objectDefinitionName = ${objectDefinitionName});
+
+		for (var typeList : list "DateTime:DateAndTime,Date:Date,Double:Decimal,Integer:Integer,Long:LongInteger,BigDecimal:PrecissionDecimal,Clob:RichText,Clob:LongText") {
+			var dbType = StringUtil.extractFirst(${typeList}, ":");
+			var name = StringUtil.extractLast(${typeList}, ":");
+
+			ObjectFieldAPI.createObjectFieldByObjectDefinitionId(
+				dbType = ${dbType},
+				name = "test${name}",
+				objectDefinitionId = ${objectDefinitionId});
+		}
 	}
 
 	@summary = "Default summary"

@@ -86,7 +86,7 @@ definition {
 
 		AssertTextEquals(
 			key_webContentTitle = "WC WebContent Title",
-			locator1 = "WC#ENTRY_LIST_WORKFLOW_TRANSLATIONE_STATUS",
+			locator1 = "WC#ENTRY_LIST_WORKFLOW_STATUS",
 			value1 = "Pending");
 	}
 
@@ -120,10 +120,7 @@ definition {
 			siteName = ${siteName},
 			userScreenName = "user1");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.assignSiteRoleCP(
 			siteRoleName = "Site Owner",
@@ -531,7 +528,7 @@ definition {
 		task ("and When the user attach an larger image on the created Web Content") {
 			WebContent.addWithStructureCP(
 				navTab = "Web Content Images",
-				webContentImage = "tree.png",
+				webContentImage = "blue-tree.png",
 				webContentTitle = "WC Title");
 
 			Button.click(button = "Submit for Workflow");
@@ -550,7 +547,7 @@ definition {
 
 			OcularAssertElementImage(
 				locator1 = "PageEditor#CONTENT_PAGE_WEB_CONTENT_CONTENT",
-				value1 = "tree.png",
+				value1 = "blue-tree.png",
 				value2 = 80);
 		}
 	}

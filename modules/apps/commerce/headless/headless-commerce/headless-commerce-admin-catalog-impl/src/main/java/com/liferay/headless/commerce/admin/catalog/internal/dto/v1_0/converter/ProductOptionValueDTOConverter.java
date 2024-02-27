@@ -35,31 +35,32 @@ public class ProductOptionValueDTOConverter
 			CPDefinitionOptionValueRel cpDefinitionOptionValueRel)
 		throws Exception {
 
-		CPInstance cpInstance = cpDefinitionOptionValueRel.fetchCPInstance();
-
 		return new ProductOptionValue() {
 			{
-				deltaPrice = cpDefinitionOptionValueRel.getPrice();
-				id =
-					cpDefinitionOptionValueRel.
-						getCPDefinitionOptionValueRelId();
-				key = cpDefinitionOptionValueRel.getKey();
-				name = LanguageUtils.getLanguageIdMap(
-					cpDefinitionOptionValueRel.getNameMap());
-				preselected = cpDefinitionOptionValueRel.isPreselected();
-				priority = cpDefinitionOptionValueRel.getPriority();
-				quantity = cpDefinitionOptionValueRel.getQuantity();
-				unitOfMeasureKey =
-					cpDefinitionOptionValueRel.getUnitOfMeasureKey();
-
+				setDeltaPrice(cpDefinitionOptionValueRel::getPrice);
+				setId(
+					cpDefinitionOptionValueRel::
+						getCPDefinitionOptionValueRelId);
+				setKey(cpDefinitionOptionValueRel::getKey);
+				setName(
+					() -> LanguageUtils.getLanguageIdMap(
+						cpDefinitionOptionValueRel.getNameMap()));
+				setPreselected(cpDefinitionOptionValueRel::isPreselected);
+				setPriority(cpDefinitionOptionValueRel::getPriority);
+				setQuantity(cpDefinitionOptionValueRel::getQuantity);
 				setSkuId(
 					() -> {
+						CPInstance cpInstance =
+							cpDefinitionOptionValueRel.fetchCPInstance();
+
 						if (cpInstance == null) {
 							return null;
 						}
 
 						return cpInstance.getCPInstanceId();
 					});
+				setUnitOfMeasureKey(
+					cpDefinitionOptionValueRel::getUnitOfMeasureKey);
 			}
 		};
 	}

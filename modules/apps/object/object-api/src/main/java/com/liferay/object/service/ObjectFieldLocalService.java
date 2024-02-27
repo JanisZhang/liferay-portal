@@ -431,4 +431,19 @@ public interface ObjectFieldLocalService
 	public ObjectField updateRequired(long objectFieldId, boolean required)
 		throws PortalException;
 
+	public void validateExternalReferenceCode(
+			String externalReferenceCode, long objectFieldId, long companyId,
+			long objectDefinitionId)
+		throws PortalException;
+
+	public void validateReadOnlyAndReadOnlyConditionExpression(
+			String businessType, String readOnly,
+			String readOnlyConditionExpression, boolean required)
+		throws PortalException;
+
+	public void validateRequired(
+			String businessType, boolean objectDefinitionApproved,
+			ObjectField oldObjectField, boolean required)
+		throws PortalException;
+
 }

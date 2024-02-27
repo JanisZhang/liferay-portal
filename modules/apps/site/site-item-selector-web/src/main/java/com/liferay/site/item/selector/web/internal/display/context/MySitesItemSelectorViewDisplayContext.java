@@ -9,16 +9,18 @@ import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCrite
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.site.provider.GroupSearchProvider;
 import com.liferay.site.search.GroupSearch;
-import com.liferay.site.util.GroupSearchProvider;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,14 +40,11 @@ public class MySitesItemSelectorViewDisplayContext
 	public MySitesItemSelectorViewDisplayContext(
 		HttpServletRequest httpServletRequest,
 		GroupItemSelectorCriterion groupItemSelectorCriterion,
-		String itemSelectedEventName, PortletURL portletURL,
-		GroupSearchProvider groupSearchProvider) {
+		String itemSelectedEventName, PortletURL portletURL) {
 
 		super(
 			httpServletRequest, groupItemSelectorCriterion,
 			itemSelectedEventName, portletURL);
-
-		_groupSearchProvider = groupSearchProvider;
 
 		_portletRequest = getPortletRequest();
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
@@ -56,6 +55,9 @@ public class MySitesItemSelectorViewDisplayContext
 
 	@Override
 	public GroupSearch getGroupSearch() throws Exception {
+		GroupItemSelectorCriterion groupItemSelectorCriterion =
+			getGroupItemSelectorCriterion();
+
 		PortletURL portletURL = getPortletURL();
 
 		Group group = _getGroup();
@@ -65,13 +67,13 @@ public class MySitesItemSelectorViewDisplayContext
 				"groupId", String.valueOf(group.getGroupId()));
 		}
 
-		GroupSearch groupSearch = _groupSearchProvider.getGroupSearch(
-			_portletRequest, portletURL);
+		GroupSearch groupSearch = new GroupSearch(_portletRequest, portletURL);
+
+		GroupSearchProvider.setResultsAndTotal(
+			_getClassNames(), groupItemSelectorCriterion.getExcludedGroupIds(),
+			groupSearch, _portletRequest);
 
 		if (groupSearch.getStart() == 0) {
-			GroupItemSelectorCriterion groupItemSelectorCriterion =
-				getGroupItemSelectorCriterion();
-
 			if (groupItemSelectorCriterion.isIncludeUserPersonalSite()) {
 				_prependGroup(
 					groupSearch,
@@ -153,6 +155,17 @@ public class MySitesItemSelectorViewDisplayContext
 			portletURL.toString());
 	}
 
+	private List<String> _getClassNames() {
+		if (groupItemSelectorCriterion.isIncludeCompany()) {
+			return Arrays.asList(
+				Company.class.getName(), Group.class.getName(),
+				Organization.class.getName());
+		}
+
+		return Arrays.asList(
+			Group.class.getName(), Organization.class.getName());
+	}
+
 	private Group _getGroup() {
 		long groupId = ParamUtil.getLong(
 			httpServletRequest, "groupId",
@@ -175,7 +188,6 @@ public class MySitesItemSelectorViewDisplayContext
 	private static final Log _log = LogFactoryUtil.getLog(
 		MySitesItemSelectorViewDisplayContext.class);
 
-	private final GroupSearchProvider _groupSearchProvider;
 	private final PortletRequest _portletRequest;
 	private final ThemeDisplay _themeDisplay;
 

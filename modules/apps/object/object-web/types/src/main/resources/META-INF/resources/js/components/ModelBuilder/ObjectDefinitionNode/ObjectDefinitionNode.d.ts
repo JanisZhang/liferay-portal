@@ -9,16 +9,19 @@ import {NodeProps} from 'react-flow-renderer';
 import './NodeContainer.scss';
 export declare function ObjectDefinitionNode({
 	data: {
+		dbTableName,
 		defaultLanguageId,
 		externalReferenceCode,
 		hasObjectDefinitionDeleteResourcePermission,
 		hasObjectDefinitionManagePermissionsResourcePermission,
+		hasObjectDefinitionUpdateResourcePermission,
 		id,
 		label,
 		linkedObjectDefinition,
 		name,
 		objectFields,
 		selected,
+		showAllObjectFields,
 		status,
 		system,
 	},

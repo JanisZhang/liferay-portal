@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -171,11 +173,24 @@ public class APIApplicationProviderImpl implements APIApplicationProvider {
 	}
 
 	private List<APIApplication.Property> _getProperties(
-		Map<String, Object> schemaProperties, long companyId) {
+		long companyId,
+		Predicate<String> parentAPIPropertyExternalReferenceCodePredicate,
+		Map<String, Object> schemaProperties) {
 
 		return TransformUtil.transformToList(
-			(ObjectEntry[])schemaProperties.get("apiSchemaToAPIProperties"),
+			ArrayUtil.filter(
+				(ObjectEntry[])schemaProperties.get("apiSchemaToAPIProperties"),
+				objectEntry ->
+					parentAPIPropertyExternalReferenceCodePredicate.test(
+						(String)objectEntry.getPropertyValue(
+							"apiPropertyToAPIPropertiesERC"))),
 			propertyObjectEntry -> {
+				List<APIApplication.Property> childProperties = _getProperties(
+					companyId,
+					Predicate.isEqual(
+						propertyObjectEntry.getExternalReferenceCode()),
+					schemaProperties);
+
 				Map<String, Object> properties =
 					propertyObjectEntry.getProperties();
 
@@ -202,7 +217,7 @@ public class APIApplicationProviderImpl implements APIApplicationProvider {
 				}
 
 				ObjectField objectField =
-					_objectFieldLocalService.getObjectField(
+					_objectFieldLocalService.fetchObjectField(
 						(String)properties.get("objectFieldERC"),
 						objectDefinition.getObjectDefinitionId());
 
@@ -234,20 +249,37 @@ public class APIApplicationProviderImpl implements APIApplicationProvider {
 					}
 
 					@Override
+					public List<APIApplication.Property> getProperties() {
+						return childProperties;
+					}
+
+					@Override
 					public String getSourceFieldName() {
+						if (objectField == null) {
+							return null;
+						}
+
 						return objectField.getName();
 					}
 
 					@Override
 					public Type getType() {
-						Type type = _propertyTypes.get(
-							objectField.getBusinessType());
+						ListEntry listEntry = (ListEntry)properties.get("type");
+
+						if (Objects.equals(listEntry.getKey(), "record")) {
+							return Type.RECORD;
+						}
+
+						Type type = null;
+
+						if (objectField != null) {
+							type = _propertyTypes.get(
+								objectField.getBusinessType());
+						}
 
 						if (type == null) {
 							throw new IllegalStateException(
-								"Object field business type " +
-									objectField.getBusinessType() +
-										" not supported");
+								"Property type is not supported");
 						}
 
 						return type;
@@ -292,7 +324,7 @@ public class APIApplicationProviderImpl implements APIApplicationProvider {
 				Map<String, Object> properties = objectEntry.getProperties();
 
 				List<APIApplication.Property> applicationProperties =
-					_getProperties(properties, companyId);
+					_getProperties(companyId, Validator::isNull, properties);
 
 				return new APIApplication.Schema() {
 

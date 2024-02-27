@@ -10,7 +10,6 @@ import {debounce, openToast, sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useMemo, useState} from 'react';
 
-import updateItemLocalConfig from '../../../../../../app/actions/updateItemLocalConfig';
 import {CheckboxField} from '../../../../../../app/components/fragment_configuration_fields/CheckboxField';
 import {SelectField} from '../../../../../../app/components/fragment_configuration_fields/SelectField';
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../../app/config/constants/editableFragmentEntryProcessor';
@@ -63,17 +62,13 @@ const ERROR_INTERACTION_OPTIONS = [
 	},
 ];
 
-let SUCCESS_INTERACTION_OPTIONS = ERROR_INTERACTION_OPTIONS;
-
-if (Liferay.FeatureFlags['LPS-195263']) {
-	SUCCESS_INTERACTION_OPTIONS = [
-		...ERROR_INTERACTION_OPTIONS,
-		{
-			label: Liferay.Language.get('go-to-entry-display-page'),
-			value: INTERACTION_DISPLAY_PAGE,
-		},
-	];
-}
+const SUCCESS_INTERACTION_OPTIONS = [
+	...ERROR_INTERACTION_OPTIONS,
+	{
+		label: Liferay.Language.get('go-to-entry-display-page'),
+		value: INTERACTION_DISPLAY_PAGE,
+	},
+];
 
 const INTERACTION_DATA = {
 	error: {
@@ -199,7 +194,6 @@ function InteractionSelector({
 
 	const collectionConfig = useCollectionConfig();
 
-	const dispatch = useDispatch();
 	const previewId = useId();
 	const textInputId = useId();
 
@@ -220,20 +214,6 @@ function InteractionSelector({
 		() => debounce((name, value) => onConfigChange(name, value), 300),
 		[onConfigChange]
 	);
-
-	const onShowPreview = (checked) => {
-		setShowPreview(checked);
-
-		dispatch(
-			updateItemLocalConfig({
-				disableUndo: true,
-				itemConfig: {
-					showPreview: checked,
-				},
-				itemId: fragmentId,
-			})
-		);
-	};
 
 	const hidePreview = () => {
 		const previewElement = document.getElementById(previewId);
@@ -320,7 +300,7 @@ function InteractionSelector({
 									id={textInputId}
 									onChange={(event) => {
 										if (showPreview) {
-											onShowPreview(false);
+											setShowPreview(false);
 											hidePreview();
 										}
 
@@ -351,14 +331,15 @@ function InteractionSelector({
 								Liferay.Language.get('preview-x-notification'),
 								label
 							)}
+							disabled={showPreview}
 							displayType="secondary"
 							onClick={() => {
-								onShowPreview(true);
+								setShowPreview(true);
 								openToast({
 									message:
 										textValue[languageId] ||
 										defaultMessage[languageId],
-									onClose: () => onShowPreview(false),
+									onClose: () => setShowPreview(false),
 									toastProps: {
 										id: previewId,
 									},

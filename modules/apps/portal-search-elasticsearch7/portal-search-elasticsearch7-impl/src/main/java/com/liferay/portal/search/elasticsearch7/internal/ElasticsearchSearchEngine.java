@@ -5,6 +5,8 @@
 
 package com.liferay.portal.search.elasticsearch7.internal;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.StartupHelperUtil;
@@ -122,6 +124,18 @@ public class ElasticsearchSearchEngine
 			this, elasticsearchConfigurationObserver);
 	}
 
+	public void createBackupRepository() {
+		if (_hasBackupRepository()) {
+			return;
+		}
+
+		CreateSnapshotRepositoryRequest createSnapshotRepositoryRequest =
+			new CreateSnapshotRepositoryRequest(
+				_BACKUP_REPOSITORY_NAME, "es_backup");
+
+		_searchEngineAdapter.execute(createSnapshotRepositoryRequest);
+	}
+
 	@Override
 	public IndexSearcher getIndexSearcher() {
 		return _indexSearcher;
@@ -154,11 +168,11 @@ public class ElasticsearchSearchEngine
 
 		_indexFactory.registerCompanyId(companyId);
 
-		_indexConfigurationDynamicUpdatesExecutor.execute(companyId);
-
 		if (created) {
 			_waitForYellowStatus();
 		}
+
+		_indexConfigurationDynamicUpdatesExecutor.execute(companyId);
 
 		CrossClusterReplicationHelper crossClusterReplicationHelper =
 			_crossClusterReplicationHelperSnapshot.get();
@@ -167,6 +181,18 @@ public class ElasticsearchSearchEngine
 			crossClusterReplicationHelper.follow(
 				_indexNameBuilder.getIndexName(companyId));
 		}
+	}
+
+	public boolean meetsMinimumVersionRequirement(
+		Version minimumVersion, String versionString) {
+
+		if (minimumVersion.compareTo(Version.parseVersion(versionString)) <=
+				0) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -247,14 +273,9 @@ public class ElasticsearchSearchEngine
 	protected void activate(Map<String, Object> properties) {
 		_elasticsearchConfigurationWrapper.register(this);
 
-		Thread currentThread = Thread.currentThread();
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				ElasticsearchSearchEngine.class.getClassLoader())) {
 
-		ClassLoader classLoader = currentThread.getContextClassLoader();
-
-		currentThread.setContextClassLoader(
-			ElasticsearchSearchEngine.class.getClassLoader());
-
-		try {
 			_checkNodeVersions();
 
 			if (StartupHelperUtil.isDBNew()) {
@@ -267,33 +288,6 @@ public class ElasticsearchSearchEngine
 
 			initialize(CompanyConstants.SYSTEM);
 		}
-		finally {
-			currentThread.setContextClassLoader(classLoader);
-		}
-	}
-
-	protected void createBackupRepository() {
-		if (_hasBackupRepository()) {
-			return;
-		}
-
-		CreateSnapshotRepositoryRequest createSnapshotRepositoryRequest =
-			new CreateSnapshotRepositoryRequest(
-				_BACKUP_REPOSITORY_NAME, "es_backup");
-
-		_searchEngineAdapter.execute(createSnapshotRepositoryRequest);
-	}
-
-	protected boolean meetsMinimumVersionRequirement(
-		Version minimumVersion, String versionString) {
-
-		if (minimumVersion.compareTo(Version.parseVersion(versionString)) <=
-				0) {
-
-			return true;
-		}
-
-		return false;
 	}
 
 	private void _checkNodeVersions() {
@@ -487,7 +481,7 @@ public class ElasticsearchSearchEngine
 			CrossClusterReplicationHelper.class, null, true);
 
 	@Reference
-	private volatile ElasticsearchConfigurationWrapper
+	private ElasticsearchConfigurationWrapper
 		_elasticsearchConfigurationWrapper;
 
 	@Reference

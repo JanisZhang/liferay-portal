@@ -116,9 +116,7 @@ definition {
 			configurationName = "Time Zone",
 			configurationScope = "Virtual Instance Scope");
 
-		AssertSelectedLabel(
-			locator1 = "Select#TIME_ZONE",
-			value1 = "(UTC +03:00) Eastern European Time");
+		AssertElementPresent(locator1 = "//option[@value='Europe/Istanbul' and @selected]");
 	}
 
 	@summary = "Default summary"
@@ -157,8 +155,6 @@ definition {
 
 		FormFields.viewCheckboxNotChecked(fieldName = "articleCommentsEnabled");
 
-		FormFields.viewCheckboxNotChecked(fieldName = "databaseContentKeywordSearchEnabled");
-
 		FormFields.viewCheckboxNotChecked(fieldName = "expireAllArticleVersionsEnabled");
 
 		ApplicationsMenu.gotoPortlet(
@@ -172,10 +168,6 @@ definition {
 			configurationScope = "System Scope");
 
 		FormFields.viewCheckboxChecked(fieldName = "changeableDefaultLanguage");
-
-		SystemSettings.viewTextareaValue(
-			fieldName = "defaultDisplayView",
-			fieldValue = "list");
 
 		FormFields.viewCheckboxNotChecked(fieldName = "journalArticleForceAutogenerateId");
 

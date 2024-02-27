@@ -15,13 +15,12 @@ taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
-<%@ page import="com.liferay.learn.LearnMessageUtil" %><%@
-page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
-page import="com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder" %><%@
+<%@ page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.servlet.SessionErrors" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
-page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
+page import="com.liferay.portal.search.tuning.rankings.constants.ResultRankingsConstants" %><%@
+page import="com.liferay.portal.search.tuning.rankings.web.internal.display.context.AddRankingDisplayContext" %><%@
 page import="com.liferay.portal.search.tuning.rankings.web.internal.exception.DuplicateQueryStringException" %>
 
 <liferay-frontend:defineObjects />
@@ -31,7 +30,7 @@ page import="com.liferay.portal.search.tuning.rankings.web.internal.exception.Du
 <portlet:defineObjects />
 
 <%
-String formName = "addResultRankingsFm";
+AddRankingDisplayContext addRankingDisplayContext = (AddRankingDisplayContext)request.getAttribute(AddRankingDisplayContext.class.getName());
 
 String redirect = ParamUtil.getString(request, "redirect");
 
@@ -40,13 +39,14 @@ String resultActionUid = ParamUtil.getString(request, "resultActionUid");
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
+portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
 renderResponse.setTitle(LanguageUtil.get(request, "new-ranking"));
 %>
 
 <c:if test="<%= !SessionErrors.isEmpty(renderRequest) %>">
 	<div class="result-rankings-alert-container">
-		<liferay-ui:error exception="<%= DuplicateQueryStringException.class %>" message="ranking-with-that-search-query-already-exists" />
+		<liferay-ui:error exception="<%= DuplicateQueryStringException.class %>" message="ranking-with-the-same-search-query-and-scope-already-exists" />
 		<liferay-ui:error exception="<%= Exception.class %>" message="an-unexpected-error-occurred" />
 
 		<liferay-ui:error-principal />
@@ -57,12 +57,13 @@ renderResponse.setTitle(LanguageUtil.get(request, "new-ranking"));
 
 <liferay-frontend:edit-form
 	action="<%= addResultsRankingEntryURL %>"
-	name="<%= formName %>"
+	name="addResultRankingsFm"
 >
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ADD %>" />
 	<aui:input name="resultActionCmd" type="hidden" value="<%= resultActionCmd %>" />
 	<aui:input name="resultActionUid" type="hidden" value="<%= resultActionUid %>" />
+	<aui:input name="status" type="hidden" value="<%= ResultRankingsConstants.STATUS_ACTIVE %>" />
 
 	<div>
 		<div class="loading-animation-container">
@@ -70,27 +71,8 @@ renderResponse.setTitle(LanguageUtil.get(request, "new-ranking"));
 		</div>
 
 		<react:component
-			module="js/components/ResultRankingsAdd.es"
-			props='<%=
-				HashMapBuilder.<String, Object>put(
-					"cancelURL", redirect
-				).put(
-					"fetchSitesURL",
-					ResourceURLBuilder.createResourceURL(
-						renderResponse
-					).setCMD(
-						"getSitesJSONObject"
-					).setResourceID(
-						"/result_rankings/get_sites"
-					).buildString()
-				).put(
-					"formName", formName
-				).put(
-					"learnResources", LearnMessageUtil.getReactDataJSONObject("portal-search-tuning-rankings-web")
-				).put(
-					"namespace", liferayPortletResponse.getNamespace()
-				).build()
-			%>'
+			module="{ResultRankingsAdd} from portal-search-tuning-rankings-web"
+			props="<%= addRankingDisplayContext.getProps() %>"
 		/>
 	</div>
 </liferay-frontend:edit-form>

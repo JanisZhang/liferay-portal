@@ -72,6 +72,22 @@ public class FragmentEntryLinkServiceImpl
 	}
 
 	@Override
+	public FragmentEntryLink updateDeleted(
+			long fragmentEntryLinkId, boolean deleted)
+		throws PortalException {
+
+		FragmentEntryLink fragmentEntryLink =
+			fragmentEntryLinkPersistence.findByPrimaryKey(fragmentEntryLinkId);
+
+		_checkPermission(
+			fragmentEntryLink.getGroupId(), fragmentEntryLink.getPlid(), true,
+			true);
+
+		return fragmentEntryLinkLocalService.updateDeleted(
+			getUserId(), fragmentEntryLinkId, deleted);
+	}
+
+	@Override
 	public FragmentEntryLink updateFragmentEntryLink(
 			long fragmentEntryLinkId, String editableValues)
 		throws PortalException {
@@ -94,7 +110,8 @@ public class FragmentEntryLinkServiceImpl
 			true);
 
 		return fragmentEntryLinkLocalService.updateFragmentEntryLink(
-			fragmentEntryLinkId, editableValues, updateClassedModel);
+			getUserId(), fragmentEntryLinkId, editableValues,
+			updateClassedModel);
 	}
 
 	private void _checkPermission(

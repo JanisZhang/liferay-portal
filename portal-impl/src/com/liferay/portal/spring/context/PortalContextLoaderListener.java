@@ -12,7 +12,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.bean.BeanLocatorImpl;
 import com.liferay.portal.dao.init.DBInitUtil;
-import com.liferay.portal.db.partition.DBPartitionUtil;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.deploy.hot.CustomJspBagRegistryUtil;
 import com.liferay.portal.deploy.hot.ServiceWrapperRegistry;
 import com.liferay.portal.events.StartupHelperUtil;
@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.servlet.ServletContextClassLoaderPool;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.ClearThreadLocalUtil;
 import com.liferay.portal.kernel.util.ClearTimerThreadUtil;
+import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ModuleFrameworkPropsValues;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
@@ -43,9 +44,12 @@ import com.liferay.portal.kernel.util.PortalLifecycleUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.log4j.Log4JUtil;
 import com.liferay.portal.module.framework.ModuleFrameworkUtil;
+import com.liferay.portal.spring.aop.AopConfigurableApplicationContextConfigurator;
 import com.liferay.portal.spring.aop.DynamicProxyCreator;
 import com.liferay.portal.spring.configurator.ConfigurableApplicationContextConfigurator;
+import com.liferay.portal.spring.hibernate.PortalHibernateConfiguration;
 import com.liferay.portal.spring.override.OverrideBeanDefinitionRegistryPostProcessor;
+import com.liferay.portal.spring.transaction.TransactionManagerFactory;
 import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.util.InitUtil;
 import com.liferay.portal.util.PortalClassPathUtil;
@@ -78,12 +82,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 import javax.sql.DataSource;
+
+import org.hibernate.SessionFactory;
 
 import org.springframework.beans.CachedIntrospectionResults;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -158,11 +165,12 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 		super.contextDestroyed(servletContextEvent);
 
+		SessionFactory sessionFactory =
+			(SessionFactory)InfrastructureUtil.getSessionFactory();
+
+		sessionFactory.close();
+
 		_cleanUpJDBCDrivers();
-
-		ModuleFrameworkUtil.unregisterContext(_arrayApplicationContext);
-
-		_arrayApplicationContext.close();
 
 		try {
 			ModuleFrameworkUtil.stopFramework(
@@ -257,9 +265,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 		ConfigurableApplicationContextConfigurator
 			configurableApplicationContextConfigurator =
-				_arrayApplicationContext.getBean(
-					"configurableApplicationContextConfigurator",
-					ConfigurableApplicationContextConfigurator.class);
+				new AopConfigurableApplicationContextConfigurator();
 
 		configurableApplicationContextConfigurator.configure(
 			configurableWebApplicationContext);
@@ -355,16 +361,47 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 			}
 		}
 
+		ModuleFrameworkUtil.createFramework();
+
+		ExecutorService executorService =
+			SystemExecutorServiceUtil.getExecutorService();
+
+		Future<?> future = executorService.submit(
+			() -> {
+				DBInitUtil.init();
+
+				DataSource dataSource = DBInitUtil.getDataSource();
+
+				InfrastructureUtil.setDataSource(dataSource);
+
+				executorService.submit(
+					() -> {
+						PortalHibernateConfiguration
+							portalHibernateConfiguration =
+								new PortalHibernateConfiguration();
+
+						portalHibernateConfiguration.setDataSource(dataSource);
+
+						portalHibernateConfiguration.afterPropertiesSet();
+
+						SessionFactory sessionFactory =
+							portalHibernateConfiguration.getObject();
+
+						InfrastructureUtil.setSessionFactory(sessionFactory);
+
+						InfrastructureUtil.setTransactionManager(
+							TransactionManagerFactory.createTransactionManager(
+								dataSource, sessionFactory));
+
+						return null;
+					});
+
+				return null;
+			});
+
 		ModuleFrameworkUtil.initFramework();
 
-		DBInitUtil.init();
-
-		_arrayApplicationContext = new ArrayApplicationContext(
-			PropsValues.SPRING_INFRASTRUCTURE_CONFIGS);
-
-		servletContext.setAttribute(
-			PortalApplicationContext.PARENT_APPLICATION_CONTEXT,
-			_arrayApplicationContext);
+		future.get();
 
 		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
 
@@ -393,15 +430,10 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 					return null;
 				});
 
-			ExecutorService executorService =
-				SystemExecutorServiceUtil.getExecutorService();
-
 			executorService.submit(
 				SystemExecutorServiceUtil.renameThread(
 					springInitTask, "Portal Spring Init Thread"));
 		}
-
-		ModuleFrameworkUtil.registerContext(_arrayApplicationContext);
 
 		ModuleFrameworkUtil.startFramework();
 
@@ -507,7 +539,6 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		}
 	}
 
-	private ArrayApplicationContext _arrayApplicationContext;
 	private ServiceWrapperRegistry _serviceWrapperRegistry;
 
 }

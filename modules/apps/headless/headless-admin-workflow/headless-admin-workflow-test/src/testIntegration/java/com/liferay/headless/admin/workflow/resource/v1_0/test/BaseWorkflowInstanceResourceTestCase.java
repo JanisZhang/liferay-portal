@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -255,39 +253,78 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 			testGetWorkflowInstancesPage_addWorkflowInstance(
 				randomWorkflowInstance());
 
-		Page<WorkflowInstance> page1 =
-			workflowInstanceResource.getWorkflowInstancesPage(
-				null, null, null, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<WorkflowInstance> workflowInstances1 =
-			(List<WorkflowInstance>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			workflowInstances1.toString(), totalCount + 2,
-			workflowInstances1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<WorkflowInstance> page1 =
+				workflowInstanceResource.getWorkflowInstancesPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<WorkflowInstance> page2 =
-			workflowInstanceResource.getWorkflowInstancesPage(
-				null, null, null, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				workflowInstance1, (List<WorkflowInstance>)page1.getItems());
 
-		List<WorkflowInstance> workflowInstances2 =
-			(List<WorkflowInstance>)page2.getItems();
+			Page<WorkflowInstance> page2 =
+				workflowInstanceResource.getWorkflowInstancesPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(
-			workflowInstances2.toString(), 1, workflowInstances2.size());
+			assertContains(
+				workflowInstance2, (List<WorkflowInstance>)page2.getItems());
 
-		Page<WorkflowInstance> page3 =
-			workflowInstanceResource.getWorkflowInstancesPage(
-				null, null, null, Pagination.of(1, (int)totalCount + 3));
+			Page<WorkflowInstance> page3 =
+				workflowInstanceResource.getWorkflowInstancesPage(
+					null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertContains(
-			workflowInstance1, (List<WorkflowInstance>)page3.getItems());
-		assertContains(
-			workflowInstance2, (List<WorkflowInstance>)page3.getItems());
-		assertContains(
-			workflowInstance3, (List<WorkflowInstance>)page3.getItems());
+			assertContains(
+				workflowInstance3, (List<WorkflowInstance>)page3.getItems());
+		}
+		else {
+			Page<WorkflowInstance> page1 =
+				workflowInstanceResource.getWorkflowInstancesPage(
+					null, null, null, Pagination.of(1, totalCount + 2));
+
+			List<WorkflowInstance> workflowInstances1 =
+				(List<WorkflowInstance>)page1.getItems();
+
+			Assert.assertEquals(
+				workflowInstances1.toString(), totalCount + 2,
+				workflowInstances1.size());
+
+			Page<WorkflowInstance> page2 =
+				workflowInstanceResource.getWorkflowInstancesPage(
+					null, null, null, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<WorkflowInstance> workflowInstances2 =
+				(List<WorkflowInstance>)page2.getItems();
+
+			Assert.assertEquals(
+				workflowInstances2.toString(), 1, workflowInstances2.size());
+
+			Page<WorkflowInstance> page3 =
+				workflowInstanceResource.getWorkflowInstancesPage(
+					null, null, null, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				workflowInstance1, (List<WorkflowInstance>)page3.getItems());
+			assertContains(
+				workflowInstance2, (List<WorkflowInstance>)page3.getItems());
+			assertContains(
+				workflowInstance3, (List<WorkflowInstance>)page3.getItems());
+		}
 	}
 
 	protected WorkflowInstance testGetWorkflowInstancesPage_addWorkflowInstance(
@@ -948,6 +985,10 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1270,9 +1311,9 @@ public abstract class BaseWorkflowInstanceResourceTestCase {
 	}
 
 	protected WorkflowInstanceResource workflowInstanceResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

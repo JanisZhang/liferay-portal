@@ -9,12 +9,16 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -25,15 +29,18 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
+import com.liferay.portal.search.experiences.SXPBlueprintTitleProvider;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.sort.Sorts;
+import com.liferay.portal.search.tuning.rankings.constants.ResultRankingsConstants;
+import com.liferay.portal.search.tuning.rankings.index.Ranking;
+import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexName;
+import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexNameBuilder;
 import com.liferay.portal.search.tuning.rankings.web.internal.constants.ResultRankingsPortletKeys;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.DocumentToRankingTranslator;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.RankingFields;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexName;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexNameBuilder;
 import com.liferay.portal.search.tuning.rankings.web.internal.request.SearchRankingRequest;
 import com.liferay.portal.search.tuning.rankings.web.internal.request.SearchRankingResponse;
 
@@ -93,6 +100,7 @@ public class RankingPortletDisplayBuilder {
 		rankingPortletDisplayContext.setDisplayStyle(getDisplayStyle());
 		rankingPortletDisplayContext.setFilterItemsDropdownItems(
 			getFilterItemsDropdownItems());
+		rankingPortletDisplayContext.setFilterLabelItems(getFilterLabelItems());
 		rankingPortletDisplayContext.setOrderByType(getOrderByType());
 		rankingPortletDisplayContext.setSearchActionURL(getSearchActionURL());
 		rankingPortletDisplayContext.setSearchContainer(searchContainer);
@@ -100,6 +108,44 @@ public class RankingPortletDisplayBuilder {
 		rankingPortletDisplayContext.setTotalItems(searchContainer.getTotal());
 
 		return rankingPortletDisplayContext;
+	}
+
+	public List<LabelItem> getFilterLabelItems() {
+		return LabelItemListBuilder.add(
+			() -> !Objects.equals(_getScope(), "all"),
+			labelItem -> {
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						_getPortletURL(getKeywords())
+					).setParameter(
+						"scope", "all"
+					).buildString());
+
+				labelItem.setCloseable(true);
+
+				labelItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "scope") + ": " +
+						LanguageUtil.get(_httpServletRequest, _getScope()));
+			}
+		).add(
+			() -> !Objects.equals(_getStatus(), "all"),
+			labelItem -> {
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						_getPortletURL(getKeywords())
+					).setParameter(
+						"status", "all"
+					).buildString());
+
+				labelItem.setCloseable(true);
+
+				labelItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "status") + ": " +
+						LanguageUtil.get(_httpServletRequest, _getStatus()));
+			}
+		).build();
 	}
 
 	protected List<DropdownItem> getActionDropdownItems() {
@@ -134,10 +180,10 @@ public class RankingPortletDisplayBuilder {
 
 	@SuppressWarnings("deprecation")
 	protected String getClearResultsURL() {
-		return PortletURLBuilder.create(
-			_getPortletURL(getKeywords())
-		).setKeywords(
-			StringPool.BLANK
+		return PortletURLBuilder.createRenderURL(
+			_renderResponse
+		).setMVCRenderCommandName(
+			"/"
 		).buildString();
 	}
 
@@ -166,13 +212,27 @@ public class RankingPortletDisplayBuilder {
 	}
 
 	protected List<DropdownItem> getFilterItemsDropdownItems() {
-		return DropdownItemListBuilder.addGroup(
+		DropdownItemListBuilder.DropdownItemListWrapper
+			dropdownItemListWrapper =
+				new DropdownItemListBuilder.DropdownItemListWrapper();
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-6368")) {
+			dropdownItemListWrapper.addGroup(
+				dropdownGroupItem -> {
+					dropdownGroupItem.setDropdownItems(
+						_getFilterScopeDropdownItems());
+					dropdownGroupItem.setLabel(
+						LanguageUtil.get(
+							_httpServletRequest, "filter-by-scope"));
+				});
+		}
+
+		return dropdownItemListWrapper.addGroup(
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
-					_getFilterNavigationDropdownItems());
+					_getFilterStatusDropdownItems());
 				dropdownGroupItem.setLabel(
-					LanguageUtil.get(
-						_httpServletRequest, "filter-by-navigation"));
+					LanguageUtil.get(_httpServletRequest, "filter-by-status"));
 			}
 		).addGroup(
 			dropdownGroupItem -> {
@@ -201,7 +261,7 @@ public class RankingPortletDisplayBuilder {
 	}
 
 	protected String getSearchActionURL() {
-		return String.valueOf(_getPortletURL(getKeywords()));
+		return String.valueOf(_getPortletURL(StringPool.BLANK));
 	}
 
 	protected SearchContainer<RankingEntryDisplayContext> getSearchContainer(
@@ -252,10 +312,32 @@ public class RankingPortletDisplayBuilder {
 	private RankingEntryDisplayContext _buildDisplayContext(
 		SearchHit searchHit) {
 
+		Ranking ranking = _documentToRankingTranslator.translate(
+			searchHit.getDocument(), searchHit.getId());
+
+		SXPBlueprintTitleProvider sxpBlueprintTitleProvider =
+			_sxpBlueprintTitleProviderSnapshot.get();
+
+		if ((sxpBlueprintTitleProvider == null) &&
+			!Validator.isBlank(
+				ranking.getSXPBlueprintExternalReferenceCode())) {
+
+			return null;
+		}
+
 		RankingEntryDisplayContextBuilder rankingEntryDisplayContextBuilder =
-			new RankingEntryDisplayContextBuilder(
-				_documentToRankingTranslator.translate(
-					searchHit.getDocument(), searchHit.getId()));
+			new RankingEntryDisplayContextBuilder(ranking);
+
+		if ((sxpBlueprintTitleProvider != null) &&
+			!Validator.isBlank(
+				ranking.getSXPBlueprintExternalReferenceCode())) {
+
+			rankingEntryDisplayContextBuilder.sxpBlueprintTitle(
+				sxpBlueprintTitleProvider.getSXPBlueprintTitle(
+					_portal.getCompanyId(_httpServletRequest),
+					_language.getLanguageId(_httpServletRequest),
+					ranking.getSXPBlueprintExternalReferenceCode()));
+		}
 
 		return rankingEntryDisplayContextBuilder.build();
 	}
@@ -265,15 +347,103 @@ public class RankingPortletDisplayBuilder {
 			_portal.getCompanyId(_httpServletRequest));
 	}
 
-	private List<DropdownItem> _getFilterNavigationDropdownItems() {
+	private List<DropdownItem> _getFilterScopeDropdownItems() {
+		String scope = _getScope();
+
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
-				dropdownItem.setActive(true);
-				dropdownItem.setHref(_renderResponse.createRenderURL());
+				dropdownItem.setActive(scope.equals("all"));
+				dropdownItem.setHref(
+					_getPortletURL(getKeywords()), "scope", "all");
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "all"));
 			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(scope.equals("site"));
+				dropdownItem.setHref(
+					_getPortletURL(getKeywords()), "scope", "site");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "site"));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(scope.equals("blueprint"));
+				dropdownItem.setHref(
+					_getPortletURL(getKeywords()), "scope", "blueprint");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "blueprint"));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(scope.equals("everything"));
+				dropdownItem.setHref(
+					_getPortletURL(getKeywords()), "scope", "everything");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "everything"));
+			}
 		).build();
+	}
+
+	private List<DropdownItem> _getFilterStatusDropdownItems() {
+		String status = _getStatus();
+
+		DropdownItemListBuilder.DropdownItemListWrapper
+			dropdownItemListWrapper =
+				new DropdownItemListBuilder.DropdownItemListWrapper();
+
+		dropdownItemListWrapper.add(
+			dropdownItem -> {
+				dropdownItem.setActive(status.equals("all"));
+				dropdownItem.setHref(
+					_getPortletURL(getKeywords()), "status", "all");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "all"));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					status.equals(ResultRankingsConstants.STATUS_ACTIVE));
+				dropdownItem.setHref(
+					_getPortletURL(getKeywords()), "status",
+					ResultRankingsConstants.STATUS_ACTIVE);
+				dropdownItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest,
+						ResultRankingsConstants.STATUS_ACTIVE));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(
+					status.equals(ResultRankingsConstants.STATUS_INACTIVE));
+				dropdownItem.setHref(
+					_getPortletURL(getKeywords()), "status",
+					ResultRankingsConstants.STATUS_INACTIVE);
+				dropdownItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest,
+						ResultRankingsConstants.STATUS_INACTIVE));
+			}
+		);
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-6368")) {
+			return dropdownItemListWrapper.add(
+				dropdownItem -> {
+					dropdownItem.setActive(
+						status.equals(
+							ResultRankingsConstants.STATUS_NOT_APPLICABLE));
+					dropdownItem.setHref(
+						_getPortletURL(getKeywords()), "status",
+						ResultRankingsConstants.STATUS_NOT_APPLICABLE);
+					dropdownItem.setLabel(
+						LanguageUtil.get(
+							_httpServletRequest,
+							ResultRankingsConstants.STATUS_NOT_APPLICABLE));
+				}
+			).build();
+		}
+
+		return dropdownItemListWrapper.build();
 	}
 
 	private String _getOrderByCol() {
@@ -294,18 +464,22 @@ public class RankingPortletDisplayBuilder {
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
 				dropdownItem.setActive(
-					Objects.equals(_getOrderByCol(), "keywords"));
-				dropdownItem.setHref(portletURL, "orderByCol", "keywords");
+					Objects.equals(
+						_getOrderByCol(), RankingFields.QUERY_STRING_KEYWORD));
+				dropdownItem.setHref(
+					portletURL, "orderByCol",
+					RankingFields.QUERY_STRING_KEYWORD);
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "search-query"));
 			}
 		).add(
 			dropdownItem -> {
 				dropdownItem.setActive(
-					Objects.equals(_getOrderByCol(), _ORDER_BY_COL));
-				dropdownItem.setHref(portletURL, "orderByCol", _ORDER_BY_COL);
+					Objects.equals(_getOrderByCol(), RankingFields.STATUS));
+				dropdownItem.setHref(
+					portletURL, "orderByCol", RankingFields.STATUS);
 				dropdownItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, _ORDER_BY_COL));
+					LanguageUtil.get(_httpServletRequest, "status"));
 			}
 		).build();
 	}
@@ -330,7 +504,19 @@ public class RankingPortletDisplayBuilder {
 			"orderByCol", _getOrderByCol()
 		).setParameter(
 			"orderByType", getOrderByType()
+		).setParameter(
+			"scope", _getScope()
+		).setParameter(
+			"status", _getStatus()
 		).buildPortletURL();
+	}
+
+	private String _getScope() {
+		return ParamUtil.getString(_httpServletRequest, "scope", "all");
+	}
+
+	private String _getStatus() {
+		return ParamUtil.getString(_httpServletRequest, "status", "all");
 	}
 
 	private boolean _hasResults(
@@ -376,6 +562,11 @@ public class RankingPortletDisplayBuilder {
 
 	private static final String _ORDER_BY_COL =
 		RankingFields.QUERY_STRING_KEYWORD;
+
+	private static final Snapshot<SXPBlueprintTitleProvider>
+		_sxpBlueprintTitleProviderSnapshot = new Snapshot<>(
+			RankingPortletDisplayBuilder.class, SXPBlueprintTitleProvider.class,
+			null, true);
 
 	private String _displayStyle;
 	private final DocumentToRankingTranslator _documentToRankingTranslator;

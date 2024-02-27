@@ -13,16 +13,18 @@ $transition-timing-function: ease;
 	top: calc(var(--control-menu-container-height) + #{$management-bar-height});
 	transform: translateX(100%);
 	transition: transform $transition-timing-function $transition-duration;
+	visibility: hidden;
 	width: $contextual-sidebar-width;
 	will-change: transform;
 
 	&.contextual-sidebar-visible {
 		pointer-events: auto;
 		transform: translateX(0);
+		visibility: visible;
 	}
 }
 
-@include media-breakpoint-up(sm) {
+@include media-breakpoint-up(md) {
 	$management-bar-height: 64px;
 
 	.contextual-sidebar {

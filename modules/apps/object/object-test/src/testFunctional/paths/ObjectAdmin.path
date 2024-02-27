@@ -127,7 +127,7 @@
 	</tr>
 	<tr>
 		<td>ENTRY_LONG_VALUE_FIELD</td>
-		<td>xpath=(//input[contains(@name,'_com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_')])[7]</td>
+		<td>//input[contains(@class,'form-control') and contains(@name,'${key_objectFieldName}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -617,7 +617,7 @@
 	</tr>
 	<tr>
 		<td>ENTRY_CHOOSE_OPTIONS_MULTIPICKLIST</td>
-		<td>//div[contains(text(),'Choose Options')]</td>
+		<td>//input[@placeholder='Choose Options']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -641,13 +641,8 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>SELECT_MOVE_FOLDER</td>
-		<td>//span[contains(@class,'move-object-definition-list-item-label') and contains(text(),'${key_folderLabel}')]</td>
-		<td></td>
-	</tr>
-	<tr>
 		<td>GO_TO_FOLDER</td>
-		<td>//div[contains(@class, 'autofit-col-expand') and contains(., 'key_folderName')]//*[contains(@title, 'Go to Folder')]</td>
+		<td>//div[contains(@class, 'autofit-col-expand') and contains(., '${key_folderLabel}')]//*[contains(@title, 'Go to Folder')]</td>
 		<td></td>
 	</tr>
 	<tr>

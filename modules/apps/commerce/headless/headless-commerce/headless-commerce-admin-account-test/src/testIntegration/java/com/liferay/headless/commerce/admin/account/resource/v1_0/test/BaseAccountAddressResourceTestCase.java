@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -628,40 +626,87 @@ public abstract class BaseAccountAddressResourceTestCase {
 			testGetAccountByExternalReferenceCodeAccountAddressesPage_addAccountAddress(
 				externalReferenceCode, randomAccountAddress());
 
-		Page<AccountAddress> page1 =
-			accountAddressResource.
-				getAccountByExternalReferenceCodeAccountAddressesPage(
-					externalReferenceCode, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<AccountAddress> accountAddresses1 =
-			(List<AccountAddress>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			accountAddresses1.toString(), totalCount + 2,
-			accountAddresses1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<AccountAddress> page1 =
+				accountAddressResource.
+					getAccountByExternalReferenceCodeAccountAddressesPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<AccountAddress> page2 =
-			accountAddressResource.
-				getAccountByExternalReferenceCodeAccountAddressesPage(
-					externalReferenceCode, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				accountAddress1, (List<AccountAddress>)page1.getItems());
 
-		List<AccountAddress> accountAddresses2 =
-			(List<AccountAddress>)page2.getItems();
+			Page<AccountAddress> page2 =
+				accountAddressResource.
+					getAccountByExternalReferenceCodeAccountAddressesPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			accountAddresses2.toString(), 1, accountAddresses2.size());
+			assertContains(
+				accountAddress2, (List<AccountAddress>)page2.getItems());
 
-		Page<AccountAddress> page3 =
-			accountAddressResource.
-				getAccountByExternalReferenceCodeAccountAddressesPage(
-					externalReferenceCode,
-					Pagination.of(1, (int)totalCount + 3));
+			Page<AccountAddress> page3 =
+				accountAddressResource.
+					getAccountByExternalReferenceCodeAccountAddressesPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertContains(accountAddress1, (List<AccountAddress>)page3.getItems());
-		assertContains(accountAddress2, (List<AccountAddress>)page3.getItems());
-		assertContains(accountAddress3, (List<AccountAddress>)page3.getItems());
+			assertContains(
+				accountAddress3, (List<AccountAddress>)page3.getItems());
+		}
+		else {
+			Page<AccountAddress> page1 =
+				accountAddressResource.
+					getAccountByExternalReferenceCodeAccountAddressesPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<AccountAddress> accountAddresses1 =
+				(List<AccountAddress>)page1.getItems();
+
+			Assert.assertEquals(
+				accountAddresses1.toString(), totalCount + 2,
+				accountAddresses1.size());
+
+			Page<AccountAddress> page2 =
+				accountAddressResource.
+					getAccountByExternalReferenceCodeAccountAddressesPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<AccountAddress> accountAddresses2 =
+				(List<AccountAddress>)page2.getItems();
+
+			Assert.assertEquals(
+				accountAddresses2.toString(), 1, accountAddresses2.size());
+
+			Page<AccountAddress> page3 =
+				accountAddressResource.
+					getAccountByExternalReferenceCodeAccountAddressesPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				accountAddress1, (List<AccountAddress>)page3.getItems());
+			assertContains(
+				accountAddress2, (List<AccountAddress>)page3.getItems());
+			assertContains(
+				accountAddress3, (List<AccountAddress>)page3.getItems());
+		}
 	}
 
 	protected AccountAddress
@@ -798,36 +843,78 @@ public abstract class BaseAccountAddressResourceTestCase {
 			testGetAccountIdAccountAddressesPage_addAccountAddress(
 				id, randomAccountAddress());
 
-		Page<AccountAddress> page1 =
-			accountAddressResource.getAccountIdAccountAddressesPage(
-				id, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<AccountAddress> accountAddresses1 =
-			(List<AccountAddress>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			accountAddresses1.toString(), totalCount + 2,
-			accountAddresses1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<AccountAddress> page1 =
+				accountAddressResource.getAccountIdAccountAddressesPage(
+					id,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<AccountAddress> page2 =
-			accountAddressResource.getAccountIdAccountAddressesPage(
-				id, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				accountAddress1, (List<AccountAddress>)page1.getItems());
 
-		List<AccountAddress> accountAddresses2 =
-			(List<AccountAddress>)page2.getItems();
+			Page<AccountAddress> page2 =
+				accountAddressResource.getAccountIdAccountAddressesPage(
+					id,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(
-			accountAddresses2.toString(), 1, accountAddresses2.size());
+			assertContains(
+				accountAddress2, (List<AccountAddress>)page2.getItems());
 
-		Page<AccountAddress> page3 =
-			accountAddressResource.getAccountIdAccountAddressesPage(
-				id, Pagination.of(1, (int)totalCount + 3));
+			Page<AccountAddress> page3 =
+				accountAddressResource.getAccountIdAccountAddressesPage(
+					id,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertContains(accountAddress1, (List<AccountAddress>)page3.getItems());
-		assertContains(accountAddress2, (List<AccountAddress>)page3.getItems());
-		assertContains(accountAddress3, (List<AccountAddress>)page3.getItems());
+			assertContains(
+				accountAddress3, (List<AccountAddress>)page3.getItems());
+		}
+		else {
+			Page<AccountAddress> page1 =
+				accountAddressResource.getAccountIdAccountAddressesPage(
+					id, Pagination.of(1, totalCount + 2));
+
+			List<AccountAddress> accountAddresses1 =
+				(List<AccountAddress>)page1.getItems();
+
+			Assert.assertEquals(
+				accountAddresses1.toString(), totalCount + 2,
+				accountAddresses1.size());
+
+			Page<AccountAddress> page2 =
+				accountAddressResource.getAccountIdAccountAddressesPage(
+					id, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<AccountAddress> accountAddresses2 =
+				(List<AccountAddress>)page2.getItems();
+
+			Assert.assertEquals(
+				accountAddresses2.toString(), 1, accountAddresses2.size());
+
+			Page<AccountAddress> page3 =
+				accountAddressResource.getAccountIdAccountAddressesPage(
+					id, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				accountAddress1, (List<AccountAddress>)page3.getItems());
+			assertContains(
+				accountAddress2, (List<AccountAddress>)page3.getItems());
+			assertContains(
+				accountAddress3, (List<AccountAddress>)page3.getItems());
+		}
 	}
 
 	protected AccountAddress
@@ -1428,6 +1515,10 @@ public abstract class BaseAccountAddressResourceTestCase {
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
+
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
 
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
@@ -2116,9 +2207,9 @@ public abstract class BaseAccountAddressResourceTestCase {
 	}
 
 	protected AccountAddressResource accountAddressResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

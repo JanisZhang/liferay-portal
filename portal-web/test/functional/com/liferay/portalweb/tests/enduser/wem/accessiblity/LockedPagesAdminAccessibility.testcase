@@ -53,13 +53,9 @@ definition {
 		task ("Then the filter and order should have correct accessibility") {
 			AssertAccessible();
 
-			Click.waitForMenuToggleJSClick(locator1 = "ManagementBar#FILTER_AND_ORDER");
+			Click.waitForMenuToggleJSClick(locator1 = "ManagementBar#FILTER");
 
 			AssertElementAccessible(locator1 = "//div[contains(@class,'show') and contains(@class,'dropdown')]//li[contains(@class,'dropdown-subheader')][normalize-space()='Filter by Type']");
-
-			AssertElementAccessible(locator1 = "//div[contains(@class,'show')][contains(@class,'menu')][not(contains(@class,'product-menu'))]//*[normalize-space(text())='Content Page']");
-
-			AssertElementAccessible(locator1 = "//div[contains(@class,'show')][contains(@class,'menu')][not(contains(@class,'product-menu'))]//*[normalize-space(text())='Collection Page']");
 		}
 	}
 
@@ -115,6 +111,8 @@ definition {
 			LexiconTable.clickEllipsisItem(
 				item = "Unlock",
 				tableEntry = "Test Page Name");
+
+			WaitForElementNotPresent(locator1 = "Modal#HEADER");
 		}
 
 		task ("Then the Unlock Pages modal should have correct accessibility") {

@@ -26,8 +26,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -174,6 +172,8 @@ public abstract class BaseAttachmentResourceTestCase {
 		Attachment attachment = randomAttachment();
 
 		attachment.setAttachment(regex);
+		attachment.setCdnURL(regex);
+		attachment.setExternalReferenceCode(regex);
 		attachment.setSrc(regex);
 		attachment.setTitle(regex);
 
@@ -184,6 +184,8 @@ public abstract class BaseAttachmentResourceTestCase {
 		attachment = AttachmentSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, attachment.getAttachment());
+		Assert.assertEquals(regex, attachment.getCdnURL());
+		Assert.assertEquals(regex, attachment.getExternalReferenceCode());
 		Assert.assertEquals(regex, attachment.getSrc());
 		Assert.assertEquals(regex, attachment.getTitle());
 	}
@@ -279,33 +281,72 @@ public abstract class BaseAttachmentResourceTestCase {
 			testGetChannelProductAttachmentsPage_addAttachment(
 				channelId, productId, randomAttachment());
 
-		Page<Attachment> page1 =
-			attachmentResource.getChannelProductAttachmentsPage(
-				channelId, productId, null, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Attachment> attachments1 = (List<Attachment>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			attachments1.toString(), totalCount + 2, attachments1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Attachment> page1 =
+				attachmentResource.getChannelProductAttachmentsPage(
+					channelId, productId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<Attachment> page2 =
-			attachmentResource.getChannelProductAttachmentsPage(
-				channelId, productId, null, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(attachment1, (List<Attachment>)page1.getItems());
 
-		List<Attachment> attachments2 = (List<Attachment>)page2.getItems();
+			Page<Attachment> page2 =
+				attachmentResource.getChannelProductAttachmentsPage(
+					channelId, productId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(attachments2.toString(), 1, attachments2.size());
+			assertContains(attachment2, (List<Attachment>)page2.getItems());
 
-		Page<Attachment> page3 =
-			attachmentResource.getChannelProductAttachmentsPage(
-				channelId, productId, null,
-				Pagination.of(1, (int)totalCount + 3));
+			Page<Attachment> page3 =
+				attachmentResource.getChannelProductAttachmentsPage(
+					channelId, productId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertContains(attachment1, (List<Attachment>)page3.getItems());
-		assertContains(attachment2, (List<Attachment>)page3.getItems());
-		assertContains(attachment3, (List<Attachment>)page3.getItems());
+			assertContains(attachment3, (List<Attachment>)page3.getItems());
+		}
+		else {
+			Page<Attachment> page1 =
+				attachmentResource.getChannelProductAttachmentsPage(
+					channelId, productId, null,
+					Pagination.of(1, totalCount + 2));
+
+			List<Attachment> attachments1 = (List<Attachment>)page1.getItems();
+
+			Assert.assertEquals(
+				attachments1.toString(), totalCount + 2, attachments1.size());
+
+			Page<Attachment> page2 =
+				attachmentResource.getChannelProductAttachmentsPage(
+					channelId, productId, null,
+					Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Attachment> attachments2 = (List<Attachment>)page2.getItems();
+
+			Assert.assertEquals(
+				attachments2.toString(), 1, attachments2.size());
+
+			Page<Attachment> page3 =
+				attachmentResource.getChannelProductAttachmentsPage(
+					channelId, productId, null,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(attachment1, (List<Attachment>)page3.getItems());
+			assertContains(attachment2, (List<Attachment>)page3.getItems());
+			assertContains(attachment3, (List<Attachment>)page3.getItems());
+		}
 	}
 
 	protected Attachment testGetChannelProductAttachmentsPage_addAttachment(
@@ -427,29 +468,72 @@ public abstract class BaseAttachmentResourceTestCase {
 		Attachment attachment3 = testGetChannelProductImagesPage_addAttachment(
 			channelId, productId, randomAttachment());
 
-		Page<Attachment> page1 = attachmentResource.getChannelProductImagesPage(
-			channelId, productId, null, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Attachment> attachments1 = (List<Attachment>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			attachments1.toString(), totalCount + 2, attachments1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Attachment> page1 =
+				attachmentResource.getChannelProductImagesPage(
+					channelId, productId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<Attachment> page2 = attachmentResource.getChannelProductImagesPage(
-			channelId, productId, null, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(attachment1, (List<Attachment>)page1.getItems());
 
-		List<Attachment> attachments2 = (List<Attachment>)page2.getItems();
+			Page<Attachment> page2 =
+				attachmentResource.getChannelProductImagesPage(
+					channelId, productId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(attachments2.toString(), 1, attachments2.size());
+			assertContains(attachment2, (List<Attachment>)page2.getItems());
 
-		Page<Attachment> page3 = attachmentResource.getChannelProductImagesPage(
-			channelId, productId, null, Pagination.of(1, (int)totalCount + 3));
+			Page<Attachment> page3 =
+				attachmentResource.getChannelProductImagesPage(
+					channelId, productId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertContains(attachment1, (List<Attachment>)page3.getItems());
-		assertContains(attachment2, (List<Attachment>)page3.getItems());
-		assertContains(attachment3, (List<Attachment>)page3.getItems());
+			assertContains(attachment3, (List<Attachment>)page3.getItems());
+		}
+		else {
+			Page<Attachment> page1 =
+				attachmentResource.getChannelProductImagesPage(
+					channelId, productId, null,
+					Pagination.of(1, totalCount + 2));
+
+			List<Attachment> attachments1 = (List<Attachment>)page1.getItems();
+
+			Assert.assertEquals(
+				attachments1.toString(), totalCount + 2, attachments1.size());
+
+			Page<Attachment> page2 =
+				attachmentResource.getChannelProductImagesPage(
+					channelId, productId, null,
+					Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Attachment> attachments2 = (List<Attachment>)page2.getItems();
+
+			Assert.assertEquals(
+				attachments2.toString(), 1, attachments2.size());
+
+			Page<Attachment> page3 =
+				attachmentResource.getChannelProductImagesPage(
+					channelId, productId, null,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(attachment1, (List<Attachment>)page3.getItems());
+			assertContains(attachment2, (List<Attachment>)page3.getItems());
+			assertContains(attachment3, (List<Attachment>)page3.getItems());
+		}
 	}
 
 	protected Attachment testGetChannelProductImagesPage_addAttachment(
@@ -578,6 +662,22 @@ public abstract class BaseAttachmentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("cdnEnabled", additionalAssertFieldName)) {
+				if (attachment.getCdnEnabled() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("cdnURL", additionalAssertFieldName)) {
+				if (attachment.getCdnURL() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("customFields", additionalAssertFieldName)) {
 				if (attachment.getCustomFields() == null) {
 					valid = false;
@@ -596,6 +696,24 @@ public abstract class BaseAttachmentResourceTestCase {
 
 			if (Objects.equals("expirationDate", additionalAssertFieldName)) {
 				if (attachment.getExpirationDate() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (attachment.getExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("fileEntryId", additionalAssertFieldName)) {
+				if (attachment.getFileEntryId() == null) {
 					valid = false;
 				}
 
@@ -794,6 +912,27 @@ public abstract class BaseAttachmentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("cdnEnabled", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						attachment1.getCdnEnabled(),
+						attachment2.getCdnEnabled())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("cdnURL", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						attachment1.getCdnURL(), attachment2.getCdnURL())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("customFields", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						attachment1.getCustomFields(),
@@ -820,6 +959,30 @@ public abstract class BaseAttachmentResourceTestCase {
 				if (!Objects.deepEquals(
 						attachment1.getExpirationDate(),
 						attachment2.getExpirationDate())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						attachment1.getExternalReferenceCode(),
+						attachment2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("fileEntryId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						attachment1.getFileEntryId(),
+						attachment2.getFileEntryId())) {
 
 					return false;
 				}
@@ -957,6 +1120,10 @@ public abstract class BaseAttachmentResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1069,6 +1236,57 @@ public abstract class BaseAttachmentResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("cdnEnabled")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("cdnURL")) {
+			Object object = attachment.getCdnURL();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("customFields")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1136,6 +1354,57 @@ public abstract class BaseAttachmentResourceTestCase {
 			}
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("externalReferenceCode")) {
+			Object object = attachment.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("fileEntryId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("galleryEnabled")) {
@@ -1313,8 +1582,13 @@ public abstract class BaseAttachmentResourceTestCase {
 			{
 				attachment = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				cdnEnabled = RandomTestUtil.randomBoolean();
+				cdnURL = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				displayDate = RandomTestUtil.nextDate();
 				expirationDate = RandomTestUtil.nextDate();
+				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				fileEntryId = RandomTestUtil.randomLong();
 				galleryEnabled = RandomTestUtil.randomBoolean();
 				id = RandomTestUtil.randomLong();
 				neverExpire = RandomTestUtil.randomBoolean();
@@ -1337,9 +1611,9 @@ public abstract class BaseAttachmentResourceTestCase {
 	}
 
 	protected AttachmentResource attachmentResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

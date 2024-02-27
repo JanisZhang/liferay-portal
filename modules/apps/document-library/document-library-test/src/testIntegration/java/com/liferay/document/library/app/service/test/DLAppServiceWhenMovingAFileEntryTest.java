@@ -6,8 +6,8 @@
 package com.liferay.document.library.app.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.document.library.app.service.test.util.DLAppServiceTestUtil;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.test.util.BaseDLAppTestCase;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -37,9 +37,9 @@ public class DLAppServiceWhenMovingAFileEntryTest extends BaseDLAppTestCase {
 		FileEntry fileEntry = DLAppServiceTestUtil.addFileEntry(
 			RandomTestUtil.randomString(), group.getGroupId(),
 			parentFolder.getFolderId(), DLAppServiceTestUtil.FILE_NAME,
-			DLAppServiceTestUtil.STRIPPED_FILE_NAME, null, null, null);
+			DLAppServiceTestUtil.STRIPPED_FILE_NAME, null, null, null, null);
 
-		FileEntry copiedFileEntry = DLAppServiceUtil.moveFileEntry(
+		FileEntry copiedFileEntry = dlAppService.moveFileEntry(
 			fileEntry.getFileEntryId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			ServiceContextTestUtil.getServiceContext(targetGroup.getGroupId()));

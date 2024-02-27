@@ -1,18 +1,18 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.106.1",
-		"@clayui/button": "3.106.1",
-		"@clayui/card": "3.106.1",
-		"@clayui/drop-down": "3.106.1",
-		"@clayui/form": "3.106.1",
-		"@clayui/icon": "3.106.1",
-		"@clayui/label": "3.106.1",
-		"@clayui/layout": "3.106.1",
-		"@clayui/link": "3.106.1",
-		"@clayui/loading-indicator": "3.106.1",
-		"@clayui/modal": "3.106.1",
-		"@clayui/popover": "3.106.1",
-		"@clayui/table": "3.106.1",
+		"@clayui/alert": "3.111.0",
+		"@clayui/button": "3.111.0",
+		"@clayui/card": "3.111.0",
+		"@clayui/drop-down": "3.111.0",
+		"@clayui/form": "3.111.0",
+		"@clayui/icon": "3.111.0",
+		"@clayui/label": "3.111.0",
+		"@clayui/layout": "3.111.0",
+		"@clayui/link": "3.111.0",
+		"@clayui/loading-indicator": "3.111.0",
+		"@clayui/modal": "3.111.0",
+		"@clayui/popover": "3.111.0",
+		"@clayui/table": "3.111.0",
 		"@liferay/frontend-icons-web": "*",
 		"@liferay/frontend-js-react-web": "*",
 		"@liferay/layout-js-components-web": "*",
@@ -22,6 +22,7 @@
 		"react-dnd": "11.1.1",
 		"react-dnd-html5-backend": "11.1.1"
 	},
+	"main": "js/index.ts",
 	"name": "layout-admin-web",
 	"scripts": {
 		"build": "liferay-npm-scripts build",
@@ -29,5 +30,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "5.0.162"
+	"version": "5.0.167"
 }

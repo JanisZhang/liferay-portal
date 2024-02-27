@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -307,47 +305,94 @@ public abstract class BasePriceModifierProductResourceTestCase {
 			testGetPriceModifierByExternalReferenceCodePriceModifierProductsPage_addPriceModifierProduct(
 				externalReferenceCode, randomPriceModifierProduct());
 
-		Page<PriceModifierProduct> page1 =
-			priceModifierProductResource.
-				getPriceModifierByExternalReferenceCodePriceModifierProductsPage(
-					externalReferenceCode, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceModifierProduct> priceModifierProducts1 =
-			(List<PriceModifierProduct>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceModifierProducts1.toString(), totalCount + 2,
-			priceModifierProducts1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceModifierProduct> page1 =
+				priceModifierProductResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<PriceModifierProduct> page2 =
-			priceModifierProductResource.
-				getPriceModifierByExternalReferenceCodePriceModifierProductsPage(
-					externalReferenceCode, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				priceModifierProduct1,
+				(List<PriceModifierProduct>)page1.getItems());
 
-		List<PriceModifierProduct> priceModifierProducts2 =
-			(List<PriceModifierProduct>)page2.getItems();
+			Page<PriceModifierProduct> page2 =
+				priceModifierProductResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			priceModifierProducts2.toString(), 1,
-			priceModifierProducts2.size());
+			assertContains(
+				priceModifierProduct2,
+				(List<PriceModifierProduct>)page2.getItems());
 
-		Page<PriceModifierProduct> page3 =
-			priceModifierProductResource.
-				getPriceModifierByExternalReferenceCodePriceModifierProductsPage(
-					externalReferenceCode,
-					Pagination.of(1, (int)totalCount + 3));
+			Page<PriceModifierProduct> page3 =
+				priceModifierProductResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertContains(
-			priceModifierProduct1,
-			(List<PriceModifierProduct>)page3.getItems());
-		assertContains(
-			priceModifierProduct2,
-			(List<PriceModifierProduct>)page3.getItems());
-		assertContains(
-			priceModifierProduct3,
-			(List<PriceModifierProduct>)page3.getItems());
+			assertContains(
+				priceModifierProduct3,
+				(List<PriceModifierProduct>)page3.getItems());
+		}
+		else {
+			Page<PriceModifierProduct> page1 =
+				priceModifierProductResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductsPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<PriceModifierProduct> priceModifierProducts1 =
+				(List<PriceModifierProduct>)page1.getItems();
+
+			Assert.assertEquals(
+				priceModifierProducts1.toString(), totalCount + 2,
+				priceModifierProducts1.size());
+
+			Page<PriceModifierProduct> page2 =
+				priceModifierProductResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductsPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceModifierProduct> priceModifierProducts2 =
+				(List<PriceModifierProduct>)page2.getItems();
+
+			Assert.assertEquals(
+				priceModifierProducts2.toString(), 1,
+				priceModifierProducts2.size());
+
+			Page<PriceModifierProduct> page3 =
+				priceModifierProductResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductsPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				priceModifierProduct1,
+				(List<PriceModifierProduct>)page3.getItems());
+			assertContains(
+				priceModifierProduct2,
+				(List<PriceModifierProduct>)page3.getItems());
+			assertContains(
+				priceModifierProduct3,
+				(List<PriceModifierProduct>)page3.getItems());
+		}
 	}
 
 	protected PriceModifierProduct
@@ -600,47 +645,95 @@ public abstract class BasePriceModifierProductResourceTestCase {
 			testGetPriceModifierIdPriceModifierProductsPage_addPriceModifierProduct(
 				id, randomPriceModifierProduct());
 
-		Page<PriceModifierProduct> page1 =
-			priceModifierProductResource.
-				getPriceModifierIdPriceModifierProductsPage(
-					id, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceModifierProduct> priceModifierProducts1 =
-			(List<PriceModifierProduct>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceModifierProducts1.toString(), totalCount + 2,
-			priceModifierProducts1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceModifierProduct> page1 =
+				priceModifierProductResource.
+					getPriceModifierIdPriceModifierProductsPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<PriceModifierProduct> page2 =
-			priceModifierProductResource.
-				getPriceModifierIdPriceModifierProductsPage(
-					id, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				priceModifierProduct1,
+				(List<PriceModifierProduct>)page1.getItems());
 
-		List<PriceModifierProduct> priceModifierProducts2 =
-			(List<PriceModifierProduct>)page2.getItems();
+			Page<PriceModifierProduct> page2 =
+				priceModifierProductResource.
+					getPriceModifierIdPriceModifierProductsPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			priceModifierProducts2.toString(), 1,
-			priceModifierProducts2.size());
+			assertContains(
+				priceModifierProduct2,
+				(List<PriceModifierProduct>)page2.getItems());
 
-		Page<PriceModifierProduct> page3 =
-			priceModifierProductResource.
-				getPriceModifierIdPriceModifierProductsPage(
-					id, null, null, Pagination.of(1, (int)totalCount + 3),
-					null);
+			Page<PriceModifierProduct> page3 =
+				priceModifierProductResource.
+					getPriceModifierIdPriceModifierProductsPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(
-			priceModifierProduct1,
-			(List<PriceModifierProduct>)page3.getItems());
-		assertContains(
-			priceModifierProduct2,
-			(List<PriceModifierProduct>)page3.getItems());
-		assertContains(
-			priceModifierProduct3,
-			(List<PriceModifierProduct>)page3.getItems());
+			assertContains(
+				priceModifierProduct3,
+				(List<PriceModifierProduct>)page3.getItems());
+		}
+		else {
+			Page<PriceModifierProduct> page1 =
+				priceModifierProductResource.
+					getPriceModifierIdPriceModifierProductsPage(
+						id, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<PriceModifierProduct> priceModifierProducts1 =
+				(List<PriceModifierProduct>)page1.getItems();
+
+			Assert.assertEquals(
+				priceModifierProducts1.toString(), totalCount + 2,
+				priceModifierProducts1.size());
+
+			Page<PriceModifierProduct> page2 =
+				priceModifierProductResource.
+					getPriceModifierIdPriceModifierProductsPage(
+						id, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceModifierProduct> priceModifierProducts2 =
+				(List<PriceModifierProduct>)page2.getItems();
+
+			Assert.assertEquals(
+				priceModifierProducts2.toString(), 1,
+				priceModifierProducts2.size());
+
+			Page<PriceModifierProduct> page3 =
+				priceModifierProductResource.
+					getPriceModifierIdPriceModifierProductsPage(
+						id, null, null, Pagination.of(1, (int)totalCount + 3),
+						null);
+
+			assertContains(
+				priceModifierProduct1,
+				(List<PriceModifierProduct>)page3.getItems());
+			assertContains(
+				priceModifierProduct2,
+				(List<PriceModifierProduct>)page3.getItems());
+			assertContains(
+				priceModifierProduct3,
+				(List<PriceModifierProduct>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1258,6 +1351,10 @@ public abstract class BasePriceModifierProductResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1517,9 +1614,9 @@ public abstract class BasePriceModifierProductResourceTestCase {
 	}
 
 	protected PriceModifierProductResource priceModifierProductResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

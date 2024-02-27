@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -453,39 +451,81 @@ public abstract class BaseDiscountRuleResourceTestCase {
 			testGetDiscountByExternalReferenceCodeDiscountRulesPage_addDiscountRule(
 				externalReferenceCode, randomDiscountRule());
 
-		Page<DiscountRule> page1 =
-			discountRuleResource.
-				getDiscountByExternalReferenceCodeDiscountRulesPage(
-					externalReferenceCode, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<DiscountRule> discountRules1 =
-			(List<DiscountRule>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			discountRules1.toString(), totalCount + 2, discountRules1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<DiscountRule> page1 =
+				discountRuleResource.
+					getDiscountByExternalReferenceCodeDiscountRulesPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<DiscountRule> page2 =
-			discountRuleResource.
-				getDiscountByExternalReferenceCodeDiscountRulesPage(
-					externalReferenceCode, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(discountRule1, (List<DiscountRule>)page1.getItems());
 
-		List<DiscountRule> discountRules2 =
-			(List<DiscountRule>)page2.getItems();
+			Page<DiscountRule> page2 =
+				discountRuleResource.
+					getDiscountByExternalReferenceCodeDiscountRulesPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			discountRules2.toString(), 1, discountRules2.size());
+			assertContains(discountRule2, (List<DiscountRule>)page2.getItems());
 
-		Page<DiscountRule> page3 =
-			discountRuleResource.
-				getDiscountByExternalReferenceCodeDiscountRulesPage(
-					externalReferenceCode,
-					Pagination.of(1, (int)totalCount + 3));
+			Page<DiscountRule> page3 =
+				discountRuleResource.
+					getDiscountByExternalReferenceCodeDiscountRulesPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertContains(discountRule1, (List<DiscountRule>)page3.getItems());
-		assertContains(discountRule2, (List<DiscountRule>)page3.getItems());
-		assertContains(discountRule3, (List<DiscountRule>)page3.getItems());
+			assertContains(discountRule3, (List<DiscountRule>)page3.getItems());
+		}
+		else {
+			Page<DiscountRule> page1 =
+				discountRuleResource.
+					getDiscountByExternalReferenceCodeDiscountRulesPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<DiscountRule> discountRules1 =
+				(List<DiscountRule>)page1.getItems();
+
+			Assert.assertEquals(
+				discountRules1.toString(), totalCount + 2,
+				discountRules1.size());
+
+			Page<DiscountRule> page2 =
+				discountRuleResource.
+					getDiscountByExternalReferenceCodeDiscountRulesPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<DiscountRule> discountRules2 =
+				(List<DiscountRule>)page2.getItems();
+
+			Assert.assertEquals(
+				discountRules2.toString(), 1, discountRules2.size());
+
+			Page<DiscountRule> page3 =
+				discountRuleResource.
+					getDiscountByExternalReferenceCodeDiscountRulesPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(discountRule1, (List<DiscountRule>)page3.getItems());
+			assertContains(discountRule2, (List<DiscountRule>)page3.getItems());
+			assertContains(discountRule3, (List<DiscountRule>)page3.getItems());
+		}
 	}
 
 	protected DiscountRule
@@ -720,35 +760,76 @@ public abstract class BaseDiscountRuleResourceTestCase {
 			testGetDiscountIdDiscountRulesPage_addDiscountRule(
 				id, randomDiscountRule());
 
-		Page<DiscountRule> page1 =
-			discountRuleResource.getDiscountIdDiscountRulesPage(
-				id, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<DiscountRule> discountRules1 =
-			(List<DiscountRule>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			discountRules1.toString(), totalCount + 2, discountRules1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<DiscountRule> page1 =
+				discountRuleResource.getDiscountIdDiscountRulesPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<DiscountRule> page2 =
-			discountRuleResource.getDiscountIdDiscountRulesPage(
-				id, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(discountRule1, (List<DiscountRule>)page1.getItems());
 
-		List<DiscountRule> discountRules2 =
-			(List<DiscountRule>)page2.getItems();
+			Page<DiscountRule> page2 =
+				discountRuleResource.getDiscountIdDiscountRulesPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			discountRules2.toString(), 1, discountRules2.size());
+			assertContains(discountRule2, (List<DiscountRule>)page2.getItems());
 
-		Page<DiscountRule> page3 =
-			discountRuleResource.getDiscountIdDiscountRulesPage(
-				id, null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<DiscountRule> page3 =
+				discountRuleResource.getDiscountIdDiscountRulesPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(discountRule1, (List<DiscountRule>)page3.getItems());
-		assertContains(discountRule2, (List<DiscountRule>)page3.getItems());
-		assertContains(discountRule3, (List<DiscountRule>)page3.getItems());
+			assertContains(discountRule3, (List<DiscountRule>)page3.getItems());
+		}
+		else {
+			Page<DiscountRule> page1 =
+				discountRuleResource.getDiscountIdDiscountRulesPage(
+					id, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<DiscountRule> discountRules1 =
+				(List<DiscountRule>)page1.getItems();
+
+			Assert.assertEquals(
+				discountRules1.toString(), totalCount + 2,
+				discountRules1.size());
+
+			Page<DiscountRule> page2 =
+				discountRuleResource.getDiscountIdDiscountRulesPage(
+					id, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<DiscountRule> discountRules2 =
+				(List<DiscountRule>)page2.getItems();
+
+			Assert.assertEquals(
+				discountRules2.toString(), 1, discountRules2.size());
+
+			Page<DiscountRule> page3 =
+				discountRuleResource.getDiscountIdDiscountRulesPage(
+					id, null, null, Pagination.of(1, (int)totalCount + 3),
+					null);
+
+			assertContains(discountRule1, (List<DiscountRule>)page3.getItems());
+			assertContains(discountRule2, (List<DiscountRule>)page3.getItems());
+			assertContains(discountRule3, (List<DiscountRule>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1287,6 +1368,10 @@ public abstract class BaseDiscountRuleResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1571,9 +1656,9 @@ public abstract class BaseDiscountRuleResourceTestCase {
 	}
 
 	protected DiscountRuleResource discountRuleResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

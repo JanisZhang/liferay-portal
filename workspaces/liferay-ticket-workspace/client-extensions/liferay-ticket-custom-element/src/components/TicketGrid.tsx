@@ -11,7 +11,7 @@ import 'react-data-grid/lib/styles.css';
 import {Liferay} from '../services/liferay';
 import {Ticket} from '../types';
 
-const TicketGrid: React.FC<{tickets: Ticket[]}> = ({tickets}) => (
+const TicketGrid = ({tickets}: {tickets: Ticket[]}) => (
 	<DataGrid
 		columns={[
 			{
@@ -30,7 +30,7 @@ const TicketGrid: React.FC<{tickets: Ticket[]}> = ({tickets}) => (
 				key: 'subject',
 				name: 'Subject',
 				resizable: true,
-				width: '45%',
+				width: '50%',
 			} as any,
 			{
 				key: 'resolution',

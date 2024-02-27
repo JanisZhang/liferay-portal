@@ -33,6 +33,8 @@ components:
                         optional field with the content of the document in Base64, can be embedded with nestedFields
                         (the format of the nested field must be `<attachment field name>.fileBase64`)
                     type: string
+                folder:
+                    $ref: "#/components/schemas/Folder"
                 id:
                     format: int64
                     type: integer
@@ -42,6 +44,13 @@ components:
                 name:
                     type: string
             type: object
+        Folder:
+            properties:
+                externalReferenceCode:
+                    type: string
+                siteId:
+                    format: int64
+                    type: integer
         Link:
             properties:
                 href:
@@ -185,19 +194,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -208,6 +213,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -733,19 +742,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -756,6 +761,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:

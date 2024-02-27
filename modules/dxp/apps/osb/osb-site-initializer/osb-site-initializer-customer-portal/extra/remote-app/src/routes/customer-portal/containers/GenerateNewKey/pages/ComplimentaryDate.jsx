@@ -22,12 +22,11 @@ const SELECTED_PURPOSE_OTHER = 'Other, please specify';
 
 const ComplimentaryDate = ({
 	accountKey,
-	deactivateKeysConfirm,
-	infoSelectedKey,
 	purposeDescription,
+	selectedKeyData,
 	sessionId,
-	setInfoSelectedKey,
 	setPurposeDescription,
+	setSelectedKeyData,
 	setStep,
 	urlPreviousPage,
 }) => {
@@ -35,7 +34,7 @@ const ComplimentaryDate = ({
 	const provisioningService = useProvisioningLicenseKeys();
 	const currentDate = now.toISOString().split('T')[0];
 	const [selectedSubscription] = useState(
-		infoSelectedKey?.selectedSubscription
+		selectedKeyData?.selectedSubscription
 	);
 	const purposeComplimentaryKeyList = useGetPurposeComplimentaryKeyList();
 	const [selectedPurpose, setSelectedPurpose] = useState('');
@@ -129,7 +128,7 @@ const ComplimentaryDate = ({
 				accountKey,
 				complimentary: 'true',
 				expirationDate: endDate,
-				productKey: infoSelectedKey.selectedSubscription.productKey,
+				productKey: selectedKeyData.selectedSubscription.productKey,
 				startDate,
 			};
 			selectedFields.forEach((field) => {
@@ -197,7 +196,7 @@ const ComplimentaryDate = ({
 		endDate,
 		hasDesiredEntry,
 		isComplimentaryKey,
-		infoSelectedKey,
+		selectedKeyData,
 		navigate,
 		provisioningServerAPI,
 		provisioningService,
@@ -206,15 +205,6 @@ const ComplimentaryDate = ({
 		startDate,
 		urlPreviousPage,
 	]);
-
-	const handleSubmit = async () => {
-		const submitResult = await submitKey();
-
-		if (submitResult) {
-			deactivateKeysConfirm();
-			setIsLoadingGenerateKey(false);
-		}
-	};
 
 	return (
 		<div>
@@ -237,7 +227,7 @@ const ComplimentaryDate = ({
 								className="btn btn-secondary mr-3"
 								displayType="secundary"
 								onClick={() => {
-									setInfoSelectedKey(() => ({
+									setSelectedKeyData(() => ({
 										selectedSubscription: {},
 									}));
 									setStep(0);
@@ -258,11 +248,11 @@ const ComplimentaryDate = ({
 								isLoading={isLoadingGenerateKey}
 								onClick={() => {
 									if (state.id === 'renew') {
-										handleSubmit();
+										submitKey();
 									} else {
-										setInfoSelectedKey(
-											(previousInfoSelectedKey) => ({
-												...previousInfoSelectedKey,
+										setSelectedKeyData(
+											(previousSelectedKeyData) => ({
+												...previousSelectedKeyData,
 												selectedSubscription: updatedSelectedSubscription,
 											})
 										);

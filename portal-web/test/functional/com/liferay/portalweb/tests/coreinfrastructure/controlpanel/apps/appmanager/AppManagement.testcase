@@ -55,30 +55,27 @@ definition {
 			panel = "Control Panel",
 			portlet = "App Manager");
 
-		ManagementBar.setFilterAndOrder(orderBy = "Title");
+		AssertTextEquals.assertPartialText(
+			key_rowEntry = "Independent",
+			locator1 = "ContentRow#ENTRY_CONTENT_PARTIAL_TEXt",
+			value1 = "Independent");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Installed");
+
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "No apps were found.");
+
+		Click.clickNoMouseOver(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Active");
 
 		AssertTextEquals.assertPartialText(
 			key_rowEntry = "Independent",
 			locator1 = "ContentRow#ENTRY_CONTENT_PARTIAL_TEXt",
 			value1 = "Independent");
 
-		ManagementBar.toggleViewOrder(order = "up");
-
-		ManagementBar.setFilterAndOrder(filterBy = "Communication");
-
-		AssertTextEquals.assertPartialText(
-			key_rowEntry = "Wiki",
-			locator1 = "ContentRow#ENTRY_CONTENT_PARTIAL_TEXt",
-			value1 = "Wiki");
-
-		ManagementBar.toggleViewOrder(order = "down");
-
-		ManagementBar.setFilterAndOrder(filterBy = "Utility");
-
-		AssertTextEquals.assertPartialText(
-			key_rowEntry = "Account",
-			locator1 = "ContentRow#ENTRY_CONTENT_PARTIAL_TEXt",
-			value1 = "Account");
+		Click.clickNoMouseOver(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
 	}
 
 	@priority = 3
@@ -119,10 +116,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		var key_appName = "Independent Modules";
 
@@ -141,10 +135,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Adaptive Media";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Adaptive Media",
@@ -175,10 +166,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Depot";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Asset Libraries",
@@ -211,10 +199,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Blogs";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Blogs",
@@ -245,10 +230,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Content Page Review";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Comment",
@@ -279,10 +261,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Document Management";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Document Library Opener",
@@ -313,10 +292,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Knowledge Base";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Knowledge Base",
@@ -347,10 +323,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Message Boards";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Message Boards",
@@ -381,10 +354,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Notifications";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Notifications",
@@ -415,10 +385,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Questions";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Questions",
@@ -449,10 +416,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Ratings";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Ratings",
@@ -483,10 +447,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Asset Sharing";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Sharing",
@@ -517,10 +478,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Translations Management";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Translation",
@@ -551,10 +509,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Wiki";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Wiki",
@@ -714,10 +669,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		var appName = "test-app-portlet";
 
@@ -736,10 +688,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		var key_appName = "title.zip";
 
@@ -820,10 +769,7 @@ definition {
 
 		var appName = "test-app-portlet";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.uploadApp(
 			appName = ${appName},

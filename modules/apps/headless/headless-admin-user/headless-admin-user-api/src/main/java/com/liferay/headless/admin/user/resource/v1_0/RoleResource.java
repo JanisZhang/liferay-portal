@@ -49,12 +49,21 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface RoleResource {
 
 	public Page<Role> getRolesPage(
-			Integer[] types, String search, Pagination pagination)
+			String search, Integer[] types, Pagination pagination)
 		throws Exception;
 
 	public Response postRolesPageExportBatch(
-			Integer[] types, String search, String callbackURL,
+			String search, Integer[] types, String callbackURL,
 			String contentType, String fieldNames)
+		throws Exception;
+
+	public Role postRole(Role role) throws Exception;
+
+	public Response postRoleBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public Role putRoleByExternalReferenceCode(
+			String externalReferenceCode, Role role)
 		throws Exception;
 
 	public Role getRole(Long roleId) throws Exception;

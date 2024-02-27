@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -1319,6 +1319,56 @@ definition {
 
 		task ("Assert the structure is deleted") {
 			LexiconTable.viewTableEntryNotPresent(tableEntry = "WC Structure Name Edit");
+		}
+	}
+
+	@description = "This is a test for LPS-177690. The tooltip of the back button should be Go to Web Content in the editor of Structures."
+	@priority = 3
+	test ViewBackButtonTooltipOfWebContentStructureEditor {
+		task ("Given a content creator adds a web content structure") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			LexiconEntry.gotoAdd();
+
+			AssertVisible(locator1 = "Sidebar#FORM_BUILDER");
+		}
+
+		task ("When the content creator hovers over the back button") {
+			MouseOver(locator1 = "Icon#BACK");
+		}
+
+		task ("Then the content creator could see the tooltip message") {
+			AssertVisible(
+				key_content = "Go to Web Content",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
+		}
+
+		task ("Given a content creator edits the copy of web content structure") {
+			WebContentStructures.addName(structureName = "WC Structure Name");
+
+			DataEngine.addField(fieldName = "Text");
+
+			WebContentStructures.saveCP();
+
+			WebContentStructures.copyCP(
+				structureCopyName = "WC Structure Name (Copy)",
+				structureName = "WC Structure Name");
+
+			WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name (Copy)");
+
+			WaitForElementPresent(locator1 = "TextInput#NAME");
+		}
+
+		task ("When the content creator hovers over the back button") {
+			MouseOver(locator1 = "Icon#BACK");
+		}
+
+		task ("Then the content creator could see the tooltip message") {
+			AssertVisible(
+				key_content = "Go to Web Content",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
 		}
 	}
 

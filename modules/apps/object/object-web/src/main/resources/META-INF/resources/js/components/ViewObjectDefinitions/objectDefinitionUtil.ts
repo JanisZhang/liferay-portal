@@ -7,50 +7,40 @@ import {API} from '@liferay/object-js-components-web';
 import {createResourceURL, openModal, sub} from 'frontend-js-web';
 import {SetStateAction} from 'react';
 
+import {exportObjectEntity} from '../../utils/exportObjectEntity';
 import {formatActionURL} from '../../utils/fds';
 import {
 	firstLetterUppercase,
 	removeAllSpecialCharacters,
 } from '../../utils/string';
-import {DropDownItems} from '../ModelBuilder/types';
-import {DeletedObjectDefinition} from './ViewObjectDefinitions';
+import {TYPES} from '../ModelBuilder/ModelBuilderContext/typesEnum';
+import {DropDownItems, TAction} from '../ModelBuilder/types';
+import {ModalImportProperties} from './ViewObjectDefinitions';
 
 type DeleteObjectDefinitionProps = {
 	baseResourceURL: string;
-	handleShowDeleteObjectDefinitionModal: () => void;
+	handleDeleteObjectDefinition?: (value: DeletedObjectDefinition) => void;
+	handleShowDeleteObjectDefinitionModal?: () => void;
 	objectDefinitionId: number;
 	objectDefinitionName: string;
-	setDeletedObjectDefinition: (value: DeletedObjectDefinition) => void;
+	onAfterDeleteObjectDefinition?: () => void;
 };
 
 type ObjectDefinitionNodeActionsProps = {
 	baseResourceURL: string;
-	handleShowDeleteObjectDefinitionModal: () => void;
-	handleShowEditObjectDefinitionExternalReferenceCodeModal: () => void;
-	handleShowRedirectObjectDefinitionModal: () => void;
+	dispatch: React.Dispatch<TAction>;
 	hasObjectDefinitionDeleteResourcePermission: boolean;
 	hasObjectDefinitionManagePermissionsResourcePermission: boolean;
+	hasObjectDefinitionUpdateResourcePermission: boolean;
 	objectDefinitionId: number;
 	objectDefinitionName: string;
 	objectDefinitionPermissionsURL: string;
-	setDeletedObjectDefinition: (value: DeletedObjectDefinition) => void;
+	objectFoldersLenght: number;
 	status: {
 		code: number;
 		label: string;
 		label_i18n: string;
 	};
-};
-
-type ObjectFolderAction = {
-	href: string;
-	method: string;
-};
-
-type ObjectFolderActions = {
-	delete?: ObjectFolderAction;
-	get?: ObjectFolderAction;
-	permissions?: ObjectFolderAction;
-	update?: ObjectFolderAction;
 };
 
 export async function deleteObjectFolder(id: number, objectFolderName: string) {
@@ -82,10 +72,11 @@ export async function deleteObjectDefinitionToast(
 
 export async function deleteObjectDefinition({
 	baseResourceURL,
+	handleDeleteObjectDefinition,
 	handleShowDeleteObjectDefinitionModal,
 	objectDefinitionId,
 	objectDefinitionName,
-	setDeletedObjectDefinition,
+	onAfterDeleteObjectDefinition,
 }: DeleteObjectDefinitionProps) {
 	const url = createResourceURL(baseResourceURL, {
 		objectDefinitionId,
@@ -108,21 +99,39 @@ export async function deleteObjectDefinition({
 			objectDefinitionId,
 			objectDefinitionName
 		);
-		setTimeout(() => window.location.reload(), 1000);
+
+		if (onAfterDeleteObjectDefinition) {
+			onAfterDeleteObjectDefinition();
+		}
+		else {
+			setTimeout(() => window.location.reload(), 1000);
+		}
 
 		return;
 	}
 
-	setDeletedObjectDefinition({
-		...{id: objectDefinitionId, name: objectDefinitionName},
+	const deletedObjectDefinition = {
 		hasObjectRelationship,
+		id: objectDefinitionId,
+		name: objectDefinitionName,
 		objectEntriesCount,
-	});
+	};
 
-	handleShowDeleteObjectDefinitionModal();
+	if (handleDeleteObjectDefinition) {
+		handleDeleteObjectDefinition(deletedObjectDefinition);
+	}
+
+	if (handleShowDeleteObjectDefinitionModal) {
+		handleShowDeleteObjectDefinitionModal();
+	}
+
+	return deletedObjectDefinition;
 }
 
-export async function deleteRelationship(id: number) {
+export async function deleteRelationship(
+	id: number,
+	reloadAfterDeletion?: boolean
+) {
 	try {
 		await API.deleteObjectRelationship(id);
 
@@ -131,50 +140,66 @@ export async function deleteRelationship(id: number) {
 				'relationship-was-deleted-successfully'
 			),
 		});
+
+		if (reloadAfterDeletion) {
+			setTimeout(() => window.location.reload(), 1500);
+		}
 	}
 	catch (error) {
-		Liferay.Util.openToast({
-			message: (error as Error).message,
-			type: 'danger',
+		const errorMessage = (error as Error).message;
+
+		openModal({
+			bodyHTML: `<p>${errorMessage}</p>`,
+			buttons: [
+				{
+					displayType: 'warning',
+					label: Liferay.Language.get('done'),
+					type: 'cancel',
+				},
+			],
+			center: true,
+			id: 'deleteRelationship',
+			size: 'md',
+			status: 'warning',
+			title: Liferay.Language.get('deletion-not-allowed'),
 		});
 	}
 }
 
+export async function getDbTableName({
+	baseResourceURL,
+	objectDefinitionId,
+}: {
+	baseResourceURL: string;
+	objectDefinitionId: number;
+}) {
+	const objectDefinitionInfoURL = createResourceURL(baseResourceURL, {
+		objectDefinitionId,
+		p_p_resource_id: '/object_definitions/get_object_definition_info',
+	}).href;
+
+	const objectDefinitionInfoResponse = await API.fetchJSON<{
+		tableName: string;
+	}>(objectDefinitionInfoURL);
+
+	return objectDefinitionInfoResponse.tableName;
+}
+
 export function getObjectDefinitionNodeActions({
 	baseResourceURL,
-	handleShowDeleteObjectDefinitionModal,
-	handleShowEditObjectDefinitionExternalReferenceCodeModal,
-	handleShowRedirectObjectDefinitionModal,
+	dispatch,
 	hasObjectDefinitionDeleteResourcePermission,
 	hasObjectDefinitionManagePermissionsResourcePermission,
+	hasObjectDefinitionUpdateResourcePermission,
 	objectDefinitionId,
 	objectDefinitionName,
 	objectDefinitionPermissionsURL,
-	setDeletedObjectDefinition,
+	objectFoldersLenght,
 }: ObjectDefinitionNodeActionsProps) {
 	const PermissionUrl = formatActionURL(
 		objectDefinitionPermissionsURL,
 		objectDefinitionId
 	);
-
-	const handleClickDeleteObjectDefinition = (event: React.MouseEvent) => {
-		event.stopPropagation();
-		deleteObjectDefinition({
-			baseResourceURL,
-			handleShowDeleteObjectDefinitionModal,
-			objectDefinitionId,
-			objectDefinitionName,
-			setDeletedObjectDefinition,
-		});
-	};
-
-	const handleClickManagePermissions = (event: React.MouseEvent) => {
-		event.stopPropagation();
-		openModal({
-			title: Liferay.Language.get('permissions'),
-			url: PermissionUrl,
-		});
-	};
 
 	const kebabOptions = [
 		{
@@ -182,9 +207,15 @@ export function getObjectDefinitionNodeActions({
 				Liferay.Language.get('edit-in-x'),
 				Liferay.Language.get('page view')
 			),
-			onClick: (event: Event) => {
-				event.stopPropagation();
-				handleShowRedirectObjectDefinitionModal();
+			onClick: () => {
+				dispatch({
+					payload: {
+						updatedModelBuilderModals: {
+							redirectToEditObjectDefinitionDetails: true,
+						},
+					},
+					type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+				});
 			},
 			symbolRight: 'shortcut',
 		},
@@ -193,14 +224,69 @@ export function getObjectDefinitionNodeActions({
 				Liferay.Language.get('edit-x'),
 				Liferay.Language.get('erc')
 			),
-			onClick: (event: Event) => {
-				event.stopPropagation();
-				handleShowEditObjectDefinitionExternalReferenceCodeModal();
+			onClick: () => {
+				dispatch({
+					payload: {
+						updatedModelBuilderModals: {
+							editObjectDefinitionExternalReferenceCode: true,
+						},
+					},
+					type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+				});
 			},
 			symbolLeft: 'info-panel-closed',
 		},
 		{type: 'divider'},
+		{
+			label: Liferay.Language.get('export-as-json'),
+			onClick: () => {
+				const exportObjectDefinitionURL = createResourceURL(
+					baseResourceURL,
+					{
+						objectDefinitionId,
+						p_p_resource_id:
+							'/object_definitions/export_object_definition',
+					}
+				).href;
+
+				exportObjectEntity({
+					exportObjectEntityURL: exportObjectDefinitionURL,
+					objectEntityId: objectDefinitionId,
+				});
+			},
+			symbolLeft: 'export',
+		},
 	] as DropDownItems[];
+
+	if (
+		objectFoldersLenght > 1 &&
+		hasObjectDefinitionUpdateResourcePermission
+	) {
+		kebabOptions.push(
+			{
+				label: Liferay.Language.get('move'),
+				onClick: () => {
+					dispatch({
+						payload: {
+							movedObjectDefinitionId: objectDefinitionId,
+						},
+						type: TYPES.SET_MOVED_OBJECT_DEFINITION,
+					});
+
+					dispatch({
+						payload: {
+							updatedModelBuilderModals: {
+								moveObjectDefinition: true,
+							},
+						},
+						type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+					});
+				},
+				symbolLeft: 'move-folder',
+			},
+			{type: 'divider'}
+		);
+	}
 
 	if (hasObjectDefinitionManagePermissionsResourcePermission) {
 		kebabOptions.push({
@@ -208,7 +294,13 @@ export function getObjectDefinitionNodeActions({
 				Liferay.Language.get('manage-x'),
 				Liferay.Language.get('permissions')
 			),
-			onClick: handleClickManagePermissions,
+			onClick: (event: React.MouseEvent) => {
+				event.stopPropagation();
+				openModal({
+					title: Liferay.Language.get('permissions'),
+					url: PermissionUrl,
+				});
+			},
 			symbolLeft: 'users',
 		});
 	}
@@ -220,7 +312,30 @@ export function getObjectDefinitionNodeActions({
 				Liferay.Language.get('delete-x'),
 				Liferay.Language.get('object')
 			),
-			onClick: handleClickDeleteObjectDefinition,
+			onClick: async () => {
+				const deletedObjectDefinition = await deleteObjectDefinition({
+					baseResourceURL,
+					objectDefinitionId,
+					objectDefinitionName,
+				});
+
+				if (deletedObjectDefinition) {
+					dispatch({
+						payload: {
+							deletedObjectDefinition,
+						},
+						type: TYPES.SET_DELETE_OBJECT_DEFINITION,
+					});
+					dispatch({
+						payload: {
+							updatedModelBuilderModals: {
+								deleteObjectDefinition: true,
+							},
+						},
+						type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+					});
+				}
+			},
 			symbolLeft: 'trash',
 		});
 	}
@@ -228,17 +343,38 @@ export function getObjectDefinitionNodeActions({
 	return kebabOptions;
 }
 
-export function getObjectFolderActions(
-	id: number,
-	objectFolderPermissionsURL: string,
-	setShowModal: (value: SetStateAction<ViewObjectDefinitionsModals>) => void,
-	actions?: ObjectFolderActions
-) {
-	const url = formatActionURL(objectFolderPermissionsURL, id);
+interface GetObjectFolderActionsProps {
+	actions?: {
+		objectDefinitionActions: Actions;
+		objectFolderActions: Actions;
+	};
+	baseResourceURL: string;
+	importObjectDefinitionURL: string;
+	objectFolderExternalReferenceCode: string;
+	objectFolderId: number;
+	objectFolderPermissionsURL: string;
+	portletNamespace: string;
+	setModalImportProperties: (
+		value: SetStateAction<ModalImportProperties>
+	) => void;
+	setShowModal: (value: SetStateAction<ViewObjectDefinitionsModals>) => void;
+}
+
+export function getObjectFolderActions({
+	actions,
+	baseResourceURL,
+	importObjectDefinitionURL,
+	objectFolderExternalReferenceCode,
+	objectFolderId,
+	objectFolderPermissionsURL,
+	portletNamespace,
+	setModalImportProperties,
+	setShowModal,
+}: GetObjectFolderActionsProps) {
+	const url = formatActionURL(objectFolderPermissionsURL, objectFolderId);
 	const kebabOptions = [];
 
-	if (actions?.update) {
-		kebabOptions.unshift({type: 'divider'});
+	if (actions?.objectFolderActions?.update) {
 		kebabOptions.unshift({
 			label: Liferay.Language.get('edit-label-and-erc'),
 			onClick: () =>
@@ -247,13 +383,59 @@ export function getObjectFolderActions(
 					editObjectFolder: true,
 				})),
 			symbolLeft: 'pencil',
-			value: 'editFolder',
+			value: 'editObjectFolder',
 		});
+
+		kebabOptions.push({type: 'divider'});
 	}
 
-	if (actions?.permissions) {
+	kebabOptions.push({
+		label: Liferay.Language.get('export-object-folder'),
+		onClick: () => {
+			const exportObjectFolderURL = createResourceURL(baseResourceURL, {
+				objectFolderId,
+				p_p_resource_id: '/object_definitions/export_object_folder',
+			}).href;
+
+			exportObjectEntity({
+				exportObjectEntityURL: exportObjectFolderURL,
+				objectEntityId: objectFolderId,
+			});
+		},
+		symbolLeft: 'export',
+		value: 'exportObjectFolder',
+	});
+
+	if (actions?.objectDefinitionActions?.create) {
 		kebabOptions.push({
-			label: Liferay.Language.get('folder-permissions'),
+			label: Liferay.Language.get('import-object-definition'),
+			onClick: () => {
+				setModalImportProperties({
+					JSONInputId: 'objectDefinitionJSON',
+					apiURL:
+						'/o/object-admin/v1.0/object-definitions/by-external-reference-code/',
+					importExtendedInfo: {
+						key: `${portletNamespace}objectFolderExternalReferenceCode`,
+						value: objectFolderExternalReferenceCode,
+					},
+					importURL: importObjectDefinitionURL,
+					modalImportKey: 'objectDefinition',
+				});
+
+				setShowModal((previousState: ViewObjectDefinitionsModals) => ({
+					...previousState,
+					importModal: true,
+				}));
+			},
+			symbolLeft: 'import',
+			value: 'importObjectDefinition',
+		});
+		kebabOptions.push({type: 'divider'});
+	}
+
+	if (actions?.objectFolderActions.permissions) {
+		kebabOptions.push({
+			label: Liferay.Language.get('object-folder-permissions'),
 			onClick: () => {
 				openModal({
 					title: Liferay.Language.get('permissions'),
@@ -261,21 +443,21 @@ export function getObjectFolderActions(
 				});
 			},
 			symbolLeft: 'password-policies',
-			value: 'folderPermissions',
+			value: 'objectFolderPermissions',
 		});
 	}
 
-	if (actions?.delete) {
+	if (actions?.objectFolderActions.delete) {
 		kebabOptions.push({type: 'divider'});
 		kebabOptions.push({
-			label: Liferay.Language.get('delete-folder'),
+			label: Liferay.Language.get('delete-object-folder'),
 			onClick: () =>
 				setShowModal((previousState: ViewObjectDefinitionsModals) => ({
 					...previousState,
 					deleteObjectFolder: true,
 				})),
 			symbolLeft: 'trash',
-			value: 'deleteFolder',
+			value: 'deleteObjectFolder',
 		});
 	}
 
@@ -283,9 +465,10 @@ export function getObjectFolderActions(
 }
 
 export async function getUpdatedModelBuilderStructurePayload(
+	baseResourceURL: string,
 	currentObjectFolderName: string
 ) {
-	const objectFolders = await API.getAllObjectFolders();
+	const {items: objectFolders} = await API.getAllObjectFolders();
 
 	const currentObjectFolder = objectFolders.find(
 		(objectFolder) => objectFolder.name === currentObjectFolderName
@@ -316,23 +499,29 @@ export async function getUpdatedModelBuilderStructurePayload(
 					})
 			);
 
-			const updateObjectFolderObjectDefinitions = ({
+			const updateObjectFolderObjectDefinitions = async ({
 				linkedObjectDefinition,
 				objectDefinitions,
 			}: {
 				linkedObjectDefinition: boolean;
 				objectDefinitions: ObjectDefinition[];
 			}) => {
-				objectDefinitions.forEach((objectDefinition) => {
+				for await (const objectDefinition of objectDefinitions) {
 					const objectFolderItem = objectFolder.objectFolderItems.find(
 						(objectFolderItem) =>
 							objectFolderItem.objectDefinitionExternalReferenceCode ===
 							objectDefinition.externalReferenceCode
 					);
 
+					const dbTableName = await getDbTableName({
+						baseResourceURL,
+						objectDefinitionId: objectDefinition.id,
+					});
+
 					if (objectFolderItem) {
 						objectFolderWithObjectDefinitions.push({
 							...objectDefinition,
+							dbTableName,
 							hasObjectDefinitionDeleteResourcePermission: !!objectDefinition
 								.actions.delete,
 							hasObjectDefinitionManagePermissionsResourcePermission: !!objectDefinition
@@ -363,17 +552,18 @@ export async function getUpdatedModelBuilderStructurePayload(
 									} as ObjectFieldNodeRow)
 							),
 							selected: false,
+							showAllObjectFields: false,
 						});
 					}
-				});
+				}
 			};
 
-			updateObjectFolderObjectDefinitions({
+			await updateObjectFolderObjectDefinitions({
 				linkedObjectDefinition: false,
 				objectDefinitions: objectDefinitionsFilteredByObjectFolder,
 			});
 
-			updateObjectFolderObjectDefinitions({
+			await updateObjectFolderObjectDefinitions({
 				linkedObjectDefinition: true,
 				objectDefinitions: linkedObjectDefinitions,
 			});
@@ -387,7 +577,7 @@ export async function getUpdatedModelBuilderStructurePayload(
 
 	return {
 		objectFolders: objectFoldersWithObjectDefinitions,
-		selectedObjectFolder: currentObjectFolder,
+		selectedObjectFolderName: currentObjectFolder.name,
 	};
 }
 

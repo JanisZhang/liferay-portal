@@ -19,7 +19,7 @@ import {NAME} from 'shared/util/pagination';
 import {Routes, toRoute} from 'shared/util/router';
 import {Sizes} from 'shared/util/constants';
 import {useChannelContext} from 'shared/context/channel';
-import {useDataSource} from 'shared/hooks/useDataSource';
+import {useDataSource} from 'shared/hooks';
 import {useParams} from 'react-router-dom';
 import {User} from 'shared/util/records';
 
@@ -168,7 +168,7 @@ const BaseListPage: React.FC<IBaseListPageProps> = ({
 												'connect-a-data-source-to-get-started'
 											)}
 
-											<a
+											<ClayLink
 												className='d-block mb-3'
 												href={
 													URLConstants.DataSourceConnection
@@ -179,7 +179,7 @@ const BaseListPage: React.FC<IBaseListPageProps> = ({
 												{Liferay.Language.get(
 													'access-our-documentation-to-learn-more'
 												)}
-											</a>
+											</ClayLink>
 
 											<ConnectDataSourceButton />
 										</>

@@ -131,13 +131,6 @@ public class TestrayImporter {
 		for (Map.Entry<Long, TestrayBuild> testrayBuildEntry :
 				testrayBuildMap.entrySet()) {
 
-			String testrayBuildTitle = "Testray Build";
-
-			if (i > 0) {
-				testrayBuildTitle = JenkinsResultsParserUtil.combine(
-					testrayBuildTitle, " (", String.valueOf(i), ")");
-			}
-
 			String testrayRoutineTitle = "Testray Routine";
 
 			if (i > 0) {
@@ -149,6 +142,13 @@ public class TestrayImporter {
 
 			TestrayRoutine testrayRoutine = testrayBuild.getTestrayRoutine();
 
+			String testrayBuildTitle = "Testray Build";
+
+			if (i > 0) {
+				testrayBuildTitle = JenkinsResultsParserUtil.combine(
+					testrayBuildTitle, " (", String.valueOf(i), ")");
+			}
+
 			Dom4JUtil.addToElement(
 				rootElement,
 				_getJenkinsBuildDescriptionElement(
@@ -156,7 +156,9 @@ public class TestrayImporter {
 					String.valueOf(testrayRoutine.getURL())),
 				_getJenkinsBuildDescriptionElement(
 					testrayBuildTitle, testrayBuild.getName(),
-					String.valueOf(testrayBuild.getURL())));
+					String.valueOf(testrayBuild.getURL())),
+				_getJenkinsBuildDescriptionElement(
+					"Testray Build ID", String.valueOf(testrayBuild.getID())));
 
 			i++;
 		}
@@ -1856,9 +1858,28 @@ public class TestrayImporter {
 			return string;
 		}
 
+		String portalUpstreamBranchName =
+			portalBranchInformation.getUpstreamBranchName();
+
 		string = string.replace(
-			"$(portal.branch.name)",
-			portalBranchInformation.getUpstreamBranchName());
+			"$(portal.branch.name)", portalUpstreamBranchName);
+
+		Matcher releaseBranchMatcher = _releaseBranchPattern.matcher(
+			portalUpstreamBranchName);
+
+		if (releaseBranchMatcher.find()) {
+			string = string.replace(
+				"$(portal.branch.display.name)",
+				JenkinsResultsParserUtil.combine(
+					releaseBranchMatcher.group("year"), " Q",
+					releaseBranchMatcher.group("quarter")));
+		}
+		else {
+			string = string.replace(
+				"$(portal.branch.display.name)",
+				portalGitWorkingDirectory.getMajorPortalVersion());
+		}
+
 		string = string.replace(
 			"$(portal.repository)",
 			portalBranchInformation.getRepositoryName());
@@ -2320,6 +2341,8 @@ public class TestrayImporter {
 		JenkinsResultsParserUtil.getNewThreadPoolExecutor(10, true);
 	private static final Pattern _releaseArtifactURLPattern = Pattern.compile(
 		"https?://.+/(?<releaseName>[^/]+)(.7z|.tar.gz|.war|.zip)");
+	private static final Pattern _releaseBranchPattern = Pattern.compile(
+		"release-(?<year>\\d{4})\\.q(?<quarter>[1-4])");
 
 	private Job _job;
 	private final Map<File, TestrayBuild> _testrayBuilds =

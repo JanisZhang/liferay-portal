@@ -8,7 +8,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-DisplayPageDisplayContext displayPageDisplayContext = new DisplayPageDisplayContext(request, renderRequest, renderResponse);
+DisplayPageDisplayContext displayPageDisplayContext = new DisplayPageDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
 %>
 
 <clay:navigation-bar
@@ -24,7 +24,7 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 
 <clay:management-toolbar
 	managementToolbarDisplayContext="<%= displayPageManagementToolbarDisplayContext %>"
-	propsTransformer="js/propsTransformers/DisplayPageManagementToolbarPropsTransformer"
+	propsTransformer="{DisplayPageManagementToolbarPropsTransformer} from layout-page-template-admin-web"
 />
 
 <c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPS-189856") %>'>
@@ -44,11 +44,13 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 	cssClass="container-view sidenav-content"
 >
 	<portlet:actionURL name="/layout_page_template_admin/delete_layout_page_template_entry" var="deleteDisplayPageURL">
+		<portlet:param name="tabs1" value="display-page-templates" />
 		<portlet:param name="redirect" value="<%= currentURL %>" />
 	</portlet:actionURL>
 
 	<aui:form action="<%= deleteDisplayPageURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
-		<liferay-ui:error key="<%= RequiredLayoutPageTemplateEntryException.class.getName() %>" message="you-cannot-delete-display-page-templates-that-are-used-by-one-or-more-items.-please-view-the-usages-and-try-to-unassign-them" />
+		<liferay-ui:error exception="<%= PortalException.class %>" message="one-or-more-entries-could-not-be-deleted" />
+		<liferay-ui:error exception="<%= RequiredLayoutPageTemplateEntryException.class %>" message="you-cannot-delete-display-page-templates-that-are-used-by-one-or-more-items.-please-view-the-usages-and-try-to-unassign-them" />
 
 		<liferay-ui:success key="displayPageContentTypeChanged" message='<%= GetterUtil.getString(SessionMessages.get(renderRequest, "displayPageContentTypeChanged")) %>' />
 		<liferay-ui:success key="displayPageTemplateDeleted" message='<%= GetterUtil.getString(MultiSessionMessages.get(renderRequest, "displayPageTemplateDeleted")) %>' />
@@ -98,7 +100,7 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 						>
 							<clay:horizontal-card
 								horizontalCard="<%= new DisplayPageTemplateCollectionHorizontalCard (curLayoutPageTemplateCollection, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
-								propsTransformer="js/propsTransformers/LayoutPageTemplateCollectionPropsTransformer"
+								propsTransformer="{LayoutPageTemplateCollectionPropsTransformer} from layout-page-template-admin-web"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>
@@ -118,7 +120,7 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 										"mappingTypes", displayPageDisplayContext.getMappingTypesJSONArray()
 									).build()
 								%>'
-								propsTransformer="js/propsTransformers/DisplayPageDropdownPropsTransformer"
+								propsTransformer="{DisplayPageDropdownPropsTransformer} from layout-page-template-admin-web"
 								verticalCard="<%= new DisplayPageVerticalCard(displayPageDisplayContext.isAllowedMappedContentType(curLayoutPageTemplateEntry), curLayoutPageTemplateEntry, displayPageDisplayContext.existsMappedContentType(curLayoutPageTemplateEntry), renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
 							/>
 						</liferay-ui:search-container-column-text>

@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.annotation.Generated;
 
@@ -52,111 +53,163 @@ public class PageRuleCondition implements Serializable {
 
 	@Schema(description = "The page rule condition's description.")
 	public String getCondition() {
+		if (_conditionSupplier != null) {
+			condition = _conditionSupplier.get();
+
+			_conditionSupplier = null;
+		}
+
 		return condition;
 	}
 
 	public void setCondition(String condition) {
 		this.condition = condition;
+
+		_conditionSupplier = null;
 	}
 
 	@JsonIgnore
 	public void setCondition(
 		UnsafeSupplier<String, Exception> conditionUnsafeSupplier) {
 
-		try {
-			condition = conditionUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		_conditionSupplier = () -> {
+			try {
+				return conditionUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
 	}
 
 	@GraphQLField(description = "The page rule condition's description.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String condition;
 
+	@JsonIgnore
+	private Supplier<String> _conditionSupplier;
+
 	@Schema(description = "The page rule condition's ID.")
 	public String getId() {
+		if (_idSupplier != null) {
+			id = _idSupplier.get();
+
+			_idSupplier = null;
+		}
+
 		return id;
 	}
 
 	public void setId(String id) {
 		this.id = id;
+
+		_idSupplier = null;
 	}
 
 	@JsonIgnore
 	public void setId(UnsafeSupplier<String, Exception> idUnsafeSupplier) {
-		try {
-			id = idUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		_idSupplier = () -> {
+			try {
+				return idUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
 	}
 
 	@GraphQLField(description = "The page rule condition's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String id;
 
+	@JsonIgnore
+	private Supplier<String> _idSupplier;
+
 	@Schema(description = "The page rule condition's type.")
 	public String getType() {
+		if (_typeSupplier != null) {
+			type = _typeSupplier.get();
+
+			_typeSupplier = null;
+		}
+
 		return type;
 	}
 
 	public void setType(String type) {
 		this.type = type;
+
+		_typeSupplier = null;
 	}
 
 	@JsonIgnore
 	public void setType(UnsafeSupplier<String, Exception> typeUnsafeSupplier) {
-		try {
-			type = typeUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		_typeSupplier = () -> {
+			try {
+				return typeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
 	}
 
 	@GraphQLField(description = "The page rule condition's type.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String type;
 
+	@JsonIgnore
+	private Supplier<String> _typeSupplier;
+
 	@Schema(description = "The page rule condition's value.")
 	public String getValue() {
+		if (_valueSupplier != null) {
+			value = _valueSupplier.get();
+
+			_valueSupplier = null;
+		}
+
 		return value;
 	}
 
 	public void setValue(String value) {
 		this.value = value;
+
+		_valueSupplier = null;
 	}
 
 	@JsonIgnore
 	public void setValue(
 		UnsafeSupplier<String, Exception> valueUnsafeSupplier) {
 
-		try {
-			value = valueUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		_valueSupplier = () -> {
+			try {
+				return valueUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
 	}
 
 	@GraphQLField(description = "The page rule condition's value.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String value;
+
+	@JsonIgnore
+	private Supplier<String> _valueSupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -185,6 +238,8 @@ public class PageRuleCondition implements Serializable {
 
 		sb.append("{");
 
+		String condition = getCondition();
+
 		if (condition != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -198,6 +253,8 @@ public class PageRuleCondition implements Serializable {
 
 			sb.append("\"");
 		}
+
+		String id = getId();
 
 		if (id != null) {
 			if (sb.length() > 1) {
@@ -213,6 +270,8 @@ public class PageRuleCondition implements Serializable {
 			sb.append("\"");
 		}
 
+		String type = getType();
+
 		if (type != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -226,6 +285,8 @@ public class PageRuleCondition implements Serializable {
 
 			sb.append("\"");
 		}
+
+		String value = getValue();
 
 		if (value != null) {
 			if (sb.length() > 1) {

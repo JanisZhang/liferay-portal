@@ -196,9 +196,7 @@ definition {
 			reportsDefinitionName = "Reports Definition Name",
 			templateFile = "reports_admin_template_source_sample_class_name.jrxml");
 
-		Click(locator1 = "Dropdown#FILTER_AND_ORDER");
-
-		MenuItem.click(menuItem = "All");
+		Click(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
 
 		ReportsAdmin.assertReportEntryPresent(reportsDefinitionName = "Reports Definition Name");
 	}
@@ -576,10 +574,7 @@ definition {
 		var portalURL = PropsUtil.get("portal.url");
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+		ServerAdministration.openServerAdmin();
 
 		ServerAdministration.configureMailServerSettings(
 			userName = PropsUtil.get("email.address.2"),
@@ -635,10 +630,7 @@ definition {
 
 		var portalURL = PropsUtil.get("portal.url");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+		ServerAdministration.openServerAdmin();
 
 		ServerAdministration.configureMailServerSettings(
 			userName = PropsUtil.get("email.address.2"),

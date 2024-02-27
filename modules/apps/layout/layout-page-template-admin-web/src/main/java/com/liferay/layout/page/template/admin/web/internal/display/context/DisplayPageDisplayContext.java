@@ -10,6 +10,7 @@ import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
+import com.liferay.info.permission.provider.InfoPermissionProvider;
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
 import com.liferay.layout.page.template.admin.web.internal.util.LayoutPageTemplatePortletUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
@@ -31,6 +32,8 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
@@ -55,8 +58,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -66,12 +67,13 @@ import javax.servlet.http.HttpServletRequest;
 public class DisplayPageDisplayContext {
 
 	public DisplayPageDisplayContext(
-		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
-		RenderResponse renderResponse) {
+		HttpServletRequest httpServletRequest,
+		LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
 
 		_httpServletRequest = httpServletRequest;
-		_renderRequest = renderRequest;
-		_renderResponse = renderResponse;
+		_liferayPortletRequest = liferayPortletRequest;
+		_liferayPortletResponse = liferayPortletResponse;
 
 		_infoItemServiceRegistry =
 			(InfoItemServiceRegistry)httpServletRequest.getAttribute(
@@ -82,10 +84,6 @@ public class DisplayPageDisplayContext {
 
 	public boolean existsMappedContentType(
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-195263")) {
-			return true;
-		}
 
 		return _isContentTypeInMap(
 			_getClassNameIdsMap(), layoutPageTemplateEntry);
@@ -99,7 +97,7 @@ public class DisplayPageDisplayContext {
 		if (!FeatureFlagManagerUtil.isEnabled("LPS-189856")) {
 			SearchContainer<LayoutPageTemplateEntry>
 				displayPagesSearchContainer = new SearchContainer<>(
-					_renderRequest, getPortletURL(), null,
+					_liferayPortletRequest, getPortletURL(), null,
 					"there-are-no-display-page-templates");
 
 			displayPagesSearchContainer.setOrderByCol(getOrderByCol());
@@ -145,7 +143,7 @@ public class DisplayPageDisplayContext {
 			}
 
 			displayPagesSearchContainer.setRowChecker(
-				new EmptyOnClickRowChecker(_renderResponse));
+				new EmptyOnClickRowChecker(_liferayPortletResponse));
 
 			_displayPagesSearchContainer = displayPagesSearchContainer;
 
@@ -153,34 +151,36 @@ public class DisplayPageDisplayContext {
 		}
 
 		if (isSearch()) {
-			SearchContainer<LayoutPageTemplateEntry>
-				displayPagesSearchContainer = new SearchContainer<>(
-					_renderRequest, getPortletURL(), null,
+			SearchContainer<Object> displayPagesSearchContainer =
+				new SearchContainer<>(
+					_liferayPortletRequest, getPortletURL(), null,
 					"there-are-no-display-page-templates");
 
 			displayPagesSearchContainer.setOrderByCol(getOrderByCol());
 			displayPagesSearchContainer.setOrderByComparator(
-				LayoutPageTemplatePortletUtil.
-					getLayoutPageTemplateEntryOrderByComparator(
-						getOrderByCol(), getOrderByType()));
+				_getOrderByComparator());
 			displayPagesSearchContainer.setOrderByType(getOrderByType());
 
 			displayPagesSearchContainer.setResultsAndTotal(
 				() ->
 					LayoutPageTemplateEntryServiceUtil.
-						getLayoutPageTemplateEntries(
-							_themeDisplay.getScopeGroupId(), getKeywords(),
+						getLayoutPageCollectionsAndLayoutPageTemplateEntries(
+							_themeDisplay.getScopeGroupId(),
+							_getLayoutPageTemplateCollectionId(), 0, 0,
+							getKeywords(),
 							LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
-							displayPagesSearchContainer.getStart(),
+							-1, displayPagesSearchContainer.getStart(),
 							displayPagesSearchContainer.getEnd(),
 							displayPagesSearchContainer.getOrderByComparator()),
 				LayoutPageTemplateEntryServiceUtil.
-					getLayoutPageTemplateEntriesCount(
-						_themeDisplay.getScopeGroupId(), getKeywords(),
-						LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE));
+					getLayoutPageCollectionsAndLayoutPageTemplateEntriesCount(
+						_themeDisplay.getScopeGroupId(),
+						_getLayoutPageTemplateCollectionId(), 0, 0,
+						getKeywords(),
+						LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, -1));
 
 			displayPagesSearchContainer.setRowChecker(
-				new EmptyOnClickRowChecker(_renderResponse));
+				new EmptyOnClickRowChecker(_liferayPortletResponse));
 
 			_displayPagesSearchContainer = displayPagesSearchContainer;
 
@@ -189,7 +189,7 @@ public class DisplayPageDisplayContext {
 
 		SearchContainer<Object> displayPagesSearchContainer =
 			new SearchContainer<>(
-				_renderRequest, getPortletURL(), null,
+				_liferayPortletRequest, getPortletURL(), null,
 				"there-are-no-display-page-templates");
 
 		displayPagesSearchContainer.setOrderByCol(getOrderByCol());
@@ -214,7 +214,7 @@ public class DisplayPageDisplayContext {
 					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE));
 
 		displayPagesSearchContainer.setRowChecker(
-			new EmptyOnClickRowChecker(_renderResponse));
+			new EmptyOnClickRowChecker(_liferayPortletResponse));
 
 		_displayPagesSearchContainer = displayPagesSearchContainer;
 
@@ -232,13 +232,18 @@ public class DisplayPageDisplayContext {
 	}
 
 	public List<BreadcrumbEntry> getLayoutPageTemplateBreadcrumbEntries() {
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
+			LayoutPageTemplateCollectionLocalServiceUtil.
+				fetchLayoutPageTemplateCollection(
+					_getLayoutPageTemplateCollectionId());
+
 		return BreadcrumbEntryListBuilder.add(
 			breadcrumbEntry -> {
 				breadcrumbEntry.setTitle(
 					LanguageUtil.get(_httpServletRequest, "home"));
 				breadcrumbEntry.setURL(
 					PortletURLBuilder.createRenderURL(
-						_renderResponse
+						_liferayPortletResponse
 					).setTabs1(
 						"display-page-templates"
 					).setParameter(
@@ -248,16 +253,8 @@ public class DisplayPageDisplayContext {
 					).buildString());
 			}
 		).addAll(
-			() ->
-				_getLayoutPageTemplateCollectionId() !=
-					LayoutPageTemplateConstants.
-						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+			() -> layoutPageTemplateCollection != null,
 			() -> {
-				LayoutPageTemplateCollection layoutPageTemplateCollection =
-					LayoutPageTemplateCollectionLocalServiceUtil.
-						fetchLayoutPageTemplateCollection(
-							_getLayoutPageTemplateCollectionId());
-
 				List<LayoutPageTemplateCollection>
 					layoutPageTemplateCollections =
 						layoutPageTemplateCollection.getAncestors();
@@ -271,7 +268,7 @@ public class DisplayPageDisplayContext {
 							curLayoutPageTemplateCollection.getName()
 						).setURL(
 							PortletURLBuilder.createRenderURL(
-								_renderResponse
+								_liferayPortletResponse
 							).setTabs1(
 								"display-page-templates"
 							).setParameter(
@@ -356,7 +353,7 @@ public class DisplayPageDisplayContext {
 
 	public PortletURL getPortletURL() {
 		return PortletURLBuilder.createRenderURL(
-			_renderResponse
+			_liferayPortletResponse
 		).setMVCPath(
 			"/view_display_pages.jsp"
 		).setRedirect(
@@ -400,10 +397,6 @@ public class DisplayPageDisplayContext {
 
 	public boolean isAllowedMappedContentType(
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-195263")) {
-			return true;
-		}
 
 		return _isContentTypeInMap(
 			_getAllowedClassNameIdsMap(), layoutPageTemplateEntry);
@@ -536,12 +529,26 @@ public class DisplayPageDisplayContext {
 			return jsonArray;
 		}
 
+		InfoPermissionProvider infoPermissionProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoPermissionProvider.class,
+				infoItemClassDetails.getClassName());
+
 		Collection<InfoItemFormVariation> infoItemFormVariations =
 			infoItemFormVariationsProvider.getInfoItemFormVariations(
 				_themeDisplay.getScopeGroupId());
 
 		for (InfoItemFormVariation infoItemFormVariation :
 				infoItemFormVariations) {
+
+			if ((infoPermissionProvider != null) &&
+				!infoPermissionProvider.hasViewPermission(
+					infoItemFormVariation.getKey(),
+					_themeDisplay.getScopeGroupId(),
+					_themeDisplay.getPermissionChecker())) {
+
+				continue;
+			}
 
 			jsonArray.put(
 				JSONUtil.put(
@@ -617,11 +624,11 @@ public class DisplayPageDisplayContext {
 	private String _keywords;
 	private Long _layoutPageTemplateCollectionId;
 	private Long _layoutPageTemplateEntryId;
+	private final LiferayPortletRequest _liferayPortletRequest;
+	private final LiferayPortletResponse _liferayPortletResponse;
 	private JSONArray _mappingTypesJSONArray;
 	private String _orderByCol;
 	private String _orderByType;
-	private final RenderRequest _renderRequest;
-	private final RenderResponse _renderResponse;
 	private final ThemeDisplay _themeDisplay;
 
 }

@@ -30,9 +30,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -56,10 +54,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
@@ -863,10 +858,7 @@ definition {
 		}
 
 		task ("Given the Admin has already configured Paypal as an active payment method and is configured into Sandbox with the Client ID and Client Secret") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -883,14 +875,12 @@ definition {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Commerce Account",
 				orderStatus = 2,
-				paymentMethod = "paypal",
+				paymentMethod = "paypal-integration",
 				paymentStatus = 2);
 
 			CommerceJSONOrdersAPI._addCommerceOrderItem(productSKU = "MIN55861");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
 
@@ -945,10 +935,7 @@ definition {
 
 			User.firstLoginPG();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1262,9 +1249,7 @@ definition {
 				password = "test",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 		}
 
 		task ("Then the admin edits Billing and Shipping Address and can see the changes on the address") {
@@ -1321,10 +1306,7 @@ definition {
 				userLastName = "User",
 				userScreenName = "buyeruser");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			CommerceLogin.editPasswordCP(
 				newPassword = "ttest",
@@ -1443,7 +1425,9 @@ definition {
 		}
 
 		task ("When the admin goes to the Orders Admin") {
-			CommerceOrders.openOrdersAdmin();
+			CommerceNavigator.gotoPortlet(
+				category = "Order Management",
+				portlet = "Orders");
 		}
 
 		task ("Then the admin can filter the order by Date Range") {
@@ -1517,10 +1501,7 @@ definition {
 		}
 
 		task ("Given the Admin has already configured Paypal as an active payment method and is configured into Sandbox with the Client ID and Client Secret") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1537,14 +1518,12 @@ definition {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Commerce Account",
 				orderStatus = 2,
-				paymentMethod = "paypal",
+				paymentMethod = "paypal-integration",
 				paymentStatus = 4);
 
 			CommerceJSONOrdersAPI._addCommerceOrderItem(productSKU = "MIN55861");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
 
@@ -1652,10 +1631,7 @@ definition {
 		}
 
 		task ("Given the Admin has already configured Paypal as an active payment method and is configured into Sandbox with the Client ID and Client Secret") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1672,14 +1648,12 @@ definition {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Commerce Account",
 				orderStatus = 2,
-				paymentMethod = "paypal",
+				paymentMethod = "paypal-integration",
 				paymentStatus = 2);
 
 			CommerceJSONOrdersAPI._addCommerceOrderItem(productSKU = "MIN55861");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
 
@@ -1750,10 +1724,7 @@ definition {
 		}
 
 		task ("Given the Admin has already configured Paypal as an active payment method and is configured into Sandbox with the Client ID and Client Secret") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1770,14 +1741,12 @@ definition {
 			CommerceJSONOrdersAPI._addCommerceOrder(
 				accountEntryName = "Commerce Account",
 				orderStatus = 2,
-				paymentMethod = "paypal",
+				paymentMethod = "paypal-integration",
 				paymentStatus = 2);
 
 			CommerceJSONOrdersAPI._addCommerceOrderItem(productSKU = "MIN55861");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Orders");
+			CommerceOrders.openOrdersAdmin();
 
 			var orderId = CommerceJSONOrdersAPI._getCommerceOrder();
 
@@ -1844,10 +1813,7 @@ definition {
 		}
 
 		task ("And a payment method is activated") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -1968,10 +1934,7 @@ definition {
 		}
 
 		task ("And a payment method is activated") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2092,10 +2055,7 @@ definition {
 		}
 
 		task ("And a payment method is activated") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2103,9 +2063,7 @@ definition {
 		}
 
 		task ("And some product names are translated") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			for (var productName : list "U-Joint:Primero,Wheel Seal - Front:Segundo,Drive Shafts:Tercero,Bushings:Cuarto") {
 				var originalName = StringUtil.extractFirst(${productName}, ":");
@@ -2243,10 +2201,7 @@ definition {
 				userLastName = "User",
 				userScreenName = "buyeruser");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			CommerceLogin.editPasswordCP(
 				newPassword = "ttest",
@@ -2342,10 +2297,7 @@ definition {
 		}
 
 		task ("And a payment method is activated") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2525,10 +2477,7 @@ definition {
 		}
 
 		task ("And a payment method is activated") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Store Management",
-				panel = "Commerce",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -2536,10 +2485,7 @@ definition {
 		}
 
 		task ("And a Commerce Order Item Custom field is created") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Custom Fields");
+			CustomFields.openCustomFieldAdmin();
 
 			CustomFields.addCP(
 				customFieldName = "test custom field",
@@ -2799,10 +2745,6 @@ definition {
 				userRole = "Buyer",
 				userScreenName = "buyeruser",
 				userSiteMembership = "Minium");
-
-			JSONRole.assignRoleToUser(
-				roleTitle = "Operations Manager",
-				userEmailAddress = "buyer@liferay.com");
 		}
 
 		task ("And a payment method is activated") {
@@ -2842,7 +2784,8 @@ definition {
 				Permissions.definePermissionViaJSONAPI(
 					resourceAction = ${notePermission},
 					resourceName = "com.liferay.commerce.order",
-					roleTitle = "Operations Manager");
+					roleTitle = "Buyer",
+					roleType = "account");
 			}
 		}
 
@@ -3004,7 +2947,7 @@ definition {
 	@description = "This is a test for COMMERCE-11815. Admin can view an order's quote label border is grey"
 	@priority = 3
 	test CanViewOrderQuoteLabelBorderIsGrey {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11028=true${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "false";
 
 		task ("Given a Minium site with a buyer user") {
@@ -3520,9 +3463,7 @@ definition {
 
 		Button.clickSave();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 
@@ -3536,9 +3477,7 @@ definition {
 
 		Button.clickPublish();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -3559,9 +3498,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -3595,9 +3532,7 @@ definition {
 			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -3605,9 +3540,7 @@ definition {
 			orderItemQuantity = 4,
 			orderItemSku = "MIN93015");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -3630,9 +3563,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -3666,9 +3597,7 @@ definition {
 			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -3676,9 +3605,7 @@ definition {
 			orderItemQuantity = 4,
 			orderItemSku = "MIN93015");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
 
@@ -3727,9 +3654,7 @@ definition {
 			siteName = "Minium2",
 			siteTemplateName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		AssertElementPresent(
 			key_entryName = "Minium Portal",
@@ -3790,9 +3715,7 @@ definition {
 			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME",
 			value1 = "Commerce Account 2");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		Click(locator1 = "CommerceEntry#FILTER_DROPDOWN_MENU");
 
@@ -3982,23 +3905,16 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
-		Click(locator1 = "Dropdown#FILTER_AND_ORDER");
-
-		MenuItem.click(menuItem = "Account Users");
+		ManagementBar.setFilterAndOrder(filterBy = "Account Users");
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
 			requirePasswordReset = "true",
 			userScreenName = "buyeruser");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -4114,23 +4030,16 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
-		Click(locator1 = "Dropdown#FILTER_AND_ORDER");
-
-		MenuItem.click(menuItem = "Account Users");
+		ManagementBar.setFilterAndOrder(filterBy = "Account Users");
 
 		CommerceLogin.editPasswordCP(
 			newPassword = "ttest",
 			requirePasswordReset = "true",
 			userScreenName = "buyeruser");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -4175,9 +4084,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "test@liferay.com");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		ClickNoError(
 			key_orderStatus = "Pending",
@@ -4343,9 +4250,7 @@ definition {
 			productName = "Mount",
 			productQuantity = 1);
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${orderId});
 
@@ -4393,9 +4298,7 @@ definition {
 			productName = "Transmission Cooler Line Assembly",
 			productQuantity = 3);
 
-		CommerceNavigator.gotoPortlet(
-			category = "Order Management",
-			portlet = "Orders");
+		CommerceOrders.openOrdersAdmin();
 
 		Button.click(button = "Order Date");
 

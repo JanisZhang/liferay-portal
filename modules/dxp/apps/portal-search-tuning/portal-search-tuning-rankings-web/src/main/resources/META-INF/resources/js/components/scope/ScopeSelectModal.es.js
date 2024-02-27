@@ -12,8 +12,7 @@ import ClayTable from '@clayui/table';
 import React, {useEffect, useState} from 'react';
 
 import {fetchResponse} from '../../utils/api.es';
-import {DELTAS, SCOPE_TYPES} from '../../utils/constants.es';
-import {sub} from '../../utils/language.es';
+import {DELTAS} from '../../utils/constants.es';
 
 /**
  * Modal that opens when user clicks on "View More" in ScopeSelect dropdown.
@@ -28,7 +27,6 @@ const ScopeSelectModal = ({
 	onSubmit,
 	selected = '',
 	title,
-	type = SCOPE_TYPES.SITE,
 }) => {
 	const [activePage, setActivePage] = useState(1);
 	const [delta, setDelta] = useState(10);
@@ -94,11 +92,9 @@ const ScopeSelectModal = ({
 								</ClayTable.Cell>
 
 								<ClayTable.Cell expanded headingCell>
-									{type === SCOPE_TYPES.SITE
-										? Liferay.Language.get('child-sites')
-										: Liferay.Language.get(
-												'external-reference-code'
-										  )}
+									{Liferay.Language.get(
+										'external-reference-code'
+									)}
 								</ClayTable.Cell>
 							</ClayTable.Row>
 						</ClayTable.Head>
@@ -111,14 +107,7 @@ const ScopeSelectModal = ({
 									</ClayTable.Cell>
 
 									<ClayTable.Cell>
-										{type === SCOPE_TYPES.SITE
-											? sub(
-													Liferay.Language.get(
-														'x-child-sites'
-													),
-													[item.sites?.length]
-											  )
-											: item.externalReferenceCode}
+										{item.externalReferenceCode}
 									</ClayTable.Cell>
 
 									<ClayTable.Cell align="right">
@@ -196,7 +185,6 @@ export default function ({
 	onSubmit,
 	selected,
 	title,
-	type,
 }) {
 	const {observer, onOpenChange, open} = useModal();
 
@@ -216,7 +204,6 @@ export default function ({
 					onSubmit={_handleSubmit}
 					selected={selected}
 					title={title}
-					type={type}
 				/>
 			)}
 

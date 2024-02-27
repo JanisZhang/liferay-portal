@@ -8,7 +8,6 @@ package com.liferay.osb.faro.web.internal.search;
 import com.liferay.osb.faro.constants.FaroProjectConstants;
 import com.liferay.osb.faro.engine.client.CerebroEngineClient;
 import com.liferay.osb.faro.engine.client.ContactsEngineClient;
-import com.liferay.osb.faro.engine.client.WorkspaceEngineClient;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.osb.faro.service.FaroProjectLocalService;
 import com.liferay.osb.faro.web.internal.model.display.main.FaroSubscriptionDisplay;
@@ -191,33 +190,13 @@ public class FaroProjectIndexer extends BaseIndexer<FaroProject> {
 
 		document.addDate(
 			"lastAnniversaryDate",
-			faroSubscriptionDisplay.geLastAnniversaryDate());
-		document.addNumber(
-			"individualsCount", faroSubscriptionDisplay.getIndividualsCount());
-		document.addNumber(
-			"individualsCountSinceLastAnniversary",
-			faroSubscriptionDisplay.getIndividualsCountSinceLastAnniversary());
+			faroSubscriptionDisplay.getLastAnniversaryDate());
 		document.addNumber(
 			"individualsLimit", faroSubscriptionDisplay.getIndividualsLimit());
-		document.addNumber(
-			"individualsUsage",
-			_getUsage(
-				faroSubscriptionDisplay.getIndividualsCount(),
-				faroSubscriptionDisplay.getIndividualsLimit()));
 		document.addDate(
 			"lastAccessDate", new Date(faroProject.getLastAccessTime()));
 		document.addNumber(
-			"pageViewsCount", faroSubscriptionDisplay.getPageViewsCount());
-		document.addNumber(
-			"pageViewsCountSinceLastAnniversary",
-			faroSubscriptionDisplay.getPageViewsCountSinceLastAnniversary());
-		document.addNumber(
 			"pageViewsLimit", faroSubscriptionDisplay.getPageViewsLimit());
-		document.addNumber(
-			"pageViewsUsage",
-			_getUsage(
-				faroSubscriptionDisplay.getPageViewsCount(),
-				faroSubscriptionDisplay.getPageViewsLimit()));
 		document.addKeyword(
 			"subscriptionName",
 			StringUtil.removeSubstring(
@@ -287,14 +266,6 @@ public class FaroProjectIndexer extends BaseIndexer<FaroProject> {
 		indexableActionableDynamicQuery.performActions();
 	}
 
-	private double _getUsage(long count, long limit) {
-		if ((count == 0) || (limit == 0)) {
-			return 0;
-		}
-
-		return 100D * count / limit;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		FaroProjectIndexer.class);
 
@@ -309,8 +280,5 @@ public class FaroProjectIndexer extends BaseIndexer<FaroProject> {
 
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;
-
-	@Reference
-	private WorkspaceEngineClient _workspaceEngineClient;
 
 }

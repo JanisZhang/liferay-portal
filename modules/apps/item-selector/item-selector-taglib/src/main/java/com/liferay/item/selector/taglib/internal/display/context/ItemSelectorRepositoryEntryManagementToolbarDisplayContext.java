@@ -212,13 +212,6 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 					LanguageUtil.get(
 						_httpServletRequest, "filter-by-location"));
 			}
-		).addGroup(
-			() -> !FeatureFlagManagerUtil.isEnabled("LPS-144527"),
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
-				dropdownGroupItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "order-by"));
-			}
 		).build();
 	}
 
@@ -360,7 +353,7 @@ public class ItemSelectorRepositoryEntryManagementToolbarDisplayContext {
 					"allowedCreationMenuUIItemKeys");
 
 		if (allowedCreationMenuUIItemKeys == null) {
-			if (FeatureFlagManagerUtil.isEnabled("LPS-196648")) {
+			if (FeatureFlagManagerUtil.isEnabled("LPD-10793")) {
 				return SetUtil.fromArray(
 					DLUIItemKeys.ADD_FOLDER, DLUIItemKeys.AI_CREATOR,
 					DLUIItemKeys.UPLOAD);

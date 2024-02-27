@@ -30,6 +30,7 @@ import com.liferay.layout.constants.LayoutWebKeys;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
+import com.liferay.layout.list.retriever.ListObjectReference;
 import com.liferay.layout.responsive.ResponsiveLayoutStructureUtil;
 import com.liferay.layout.taglib.internal.display.context.RenderCollectionLayoutStructureItemDisplayContext;
 import com.liferay.layout.taglib.internal.display.context.RenderLayoutStructureDisplayContext;
@@ -78,6 +79,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -122,7 +124,7 @@ public class LayoutStructureRenderer {
 				"infoItemActionComponent",
 				_renderLayoutStructureDisplayContext.
 					getInfoItemActionComponentContext(),
-				"render_layout_structure/js/InfoItemActionHandler");
+				"{InfoItemActionHandler} from layout-taglib");
 		}
 	}
 
@@ -215,6 +217,20 @@ public class LayoutStructureRenderer {
 			collectionStyledLayoutStructureItem.getUniqueCssClass());
 		jspWriter.write(StringPool.SPACE);
 		jspWriter.write(collectionStyledLayoutStructureItem.getCssClass());
+		jspWriter.write("\"");
+
+		ListObjectReference listObjectReference =
+			renderCollectionLayoutStructureItemDisplayContext.
+				getListObjectReference();
+
+		if (listObjectReference != null) {
+			jspWriter.write(" data-analytics-targetable-collection=\"");
+			jspWriter.write(HtmlUtil.escape(listObjectReference.toString()));
+			jspWriter.write("\"");
+		}
+
+		jspWriter.write(" id=\"analytics-targetable-collection-");
+		jspWriter.write(collectionStyledLayoutStructureItem.getNamespace());
 		jspWriter.write("\" style=\"");
 		jspWriter.write(
 			_renderLayoutStructureDisplayContext.getStyle(
@@ -442,8 +458,8 @@ public class LayoutStructureRenderer {
 					collectionStyledLayoutStructureItem.getItemId()));
 			paginationBarTag.setCssClass("pb-2 pt-3");
 			paginationBarTag.setPropsTransformer(
-				"render_layout_structure/js" +
-					"/NumericCollectionPaginationPropsTransformer");
+				"{NumericCollectionPaginationPropsTransformer} from " +
+					"layout-taglib");
 			paginationBarTag.setShowDeltasDropDown(false);
 			paginationBarTag.setTotalItems(
 				renderCollectionLayoutStructureItemDisplayContext.
@@ -514,7 +530,7 @@ public class LayoutStructureRenderer {
 					"collectionId",
 					collectionStyledLayoutStructureItem.getItemId()
 				).build(),
-				"render_layout_structure/js/SimpleCollectionPagination");
+				"{SimpleCollectionPagination} from layout-taglib");
 		}
 
 		jspWriter.write("</div>");
@@ -1001,8 +1017,8 @@ public class LayoutStructureRenderer {
 
 		JspWriter jspWriter = _pageContext.getOut();
 
-		jspWriter.write("<div class=\"font-weight-semi-bold bg-white");
-		jspWriter.write("text-secondary text-center text-3 p-5\">");
+		jspWriter.write("<div class=\"bg-white font-weight-semi-bold ");
+		jspWriter.write("p-5 text-3 text-center text-secondary\">");
 		jspWriter.write(
 			_renderLayoutStructureDisplayContext.getSuccessMessage(
 				formStyledLayoutStructureItem));
@@ -1087,9 +1103,16 @@ public class LayoutStructureRenderer {
 			List<String> childrenItemIds, InfoForm infoForm)
 		throws Exception {
 
+		Set<String> hiddenItemIds =
+			_renderLayoutStructureDisplayContext.getHiddenItemIds();
+
 		for (String childrenItemId : childrenItemIds) {
 			LayoutStructureItem layoutStructureItem =
 				_layoutStructure.getLayoutStructureItem(childrenItemId);
+
+			if (hiddenItemIds.contains(childrenItemId)) {
+				continue;
+			}
 
 			long start = System.currentTimeMillis();
 

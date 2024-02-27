@@ -25,12 +25,10 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.PortletPreferencesException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PrefsParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -57,11 +55,11 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-dynamic-data-lists-display",
-		"com.liferay.portlet.display-category=category.collaboration",
-		"com.liferay.portlet.header-portal-javascript=/o/dynamic-data-mapping-web/js/custom_fields.js",
-		"com.liferay.portlet.header-portal-javascript=/o/dynamic-data-mapping-web/js/main.js",
+		"com.liferay.portlet.display-category=category.hidden",
+		"com.liferay.portlet.header-portal-javascript=/o/dynamic-data-mapping-web/js/legacy/custom_fields.js",
+		"com.liferay.portlet.header-portal-javascript=/o/dynamic-data-mapping-web/js/legacy/main.js",
 		"com.liferay.portlet.header-portlet-css=/css/main.css",
-		"com.liferay.portlet.header-portlet-javascript=/js/main.js",
+		"com.liferay.portlet.header-portlet-javascript=/js/legacy/main.js",
 		"com.liferay.portlet.instanceable=true",
 		"com.liferay.portlet.preferences-owned-by-group=true",
 		"com.liferay.portlet.private-request-attributes=false",
@@ -230,14 +228,6 @@ public class DDLDisplayPortlet extends MVCPortlet {
 	private DDMTemplateLocalService _ddmTemplateLocalService;
 
 	@Reference
-	private Portal _portal;
-
-	@Reference
 	private PortletRegistry _portletRegistry;
-
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.dynamic.data.lists.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
-	)
-	private Release _release;
 
 }

@@ -11,6 +11,7 @@ import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
@@ -20,6 +21,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
+import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
@@ -446,6 +448,23 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		}
 
 		return layout;
+	}
+
+	public long fetchLayoutPlid(
+			String uuid, long groupId, boolean privateLayout)
+		throws PortalException {
+
+		Layout layout = layoutLocalService.fetchLayout(
+			uuid, groupId, privateLayout);
+
+		if (layout != null) {
+			LayoutPermissionUtil.check(
+				getPermissionChecker(), layout, ActionKeys.VIEW);
+
+			return layout.getPlid();
+		}
+
+		return 0;
 	}
 
 	/**
@@ -1046,12 +1065,6 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		GroupPermissionUtil.check(
 			getPermissionChecker(), targetGroupId, ActionKeys.PUBLISH_STAGING);
 
-		Trigger trigger = TriggerFactoryUtil.createTrigger(
-			PortalUUIDUtil.generate(), groupName, schedulerStartDate,
-			schedulerEndDate, cronText,
-			TimeZone.getTimeZone(
-				MapUtil.getString(parameterMap, "timeZoneId")));
-
 		User user = _userPersistence.findByPrimaryKey(getUserId());
 
 		Map<String, Serializable> publishLayoutLocalSettingsMap =
@@ -1068,10 +1081,25 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 						TYPE_SCHEDULED_PUBLISH_LAYOUT_LOCAL,
 					publishLayoutLocalSettingsMap);
 
+		long companyId = exportImportConfiguration.getCompanyId();
+
+		Trigger trigger = TriggerFactoryUtil.createTrigger(
+			StringBundler.concat(
+				PortalUUIDUtil.generate(), StringPool.AT, companyId),
+			groupName, schedulerStartDate, schedulerEndDate, cronText,
+			TimeZone.getTimeZone(
+				MapUtil.getString(parameterMap, "timeZoneId")));
+
+		Message message = new Message();
+
+		message.put("companyId", companyId);
+
+		message.setPayload(
+			exportImportConfiguration.getExportImportConfigurationId());
+
 		SchedulerEngineHelperUtil.schedule(
 			trigger, StorageType.PERSISTED, description,
-			DestinationNames.LAYOUTS_LOCAL_PUBLISHER,
-			exportImportConfiguration.getExportImportConfigurationId());
+			DestinationNames.LAYOUTS_LOCAL_PUBLISHER, message);
 	}
 
 	/**
@@ -1116,12 +1144,6 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 		GroupPermissionUtil.check(
 			getPermissionChecker(), sourceGroupId, ActionKeys.PUBLISH_STAGING);
 
-		Trigger trigger = TriggerFactoryUtil.createTrigger(
-			PortalUUIDUtil.generate(), groupName, schedulerStartDate,
-			schedulerEndDate, cronText,
-			TimeZone.getTimeZone(
-				MapUtil.getString(parameterMap, "timeZoneId")));
-
 		User user = _userPersistence.findByPrimaryKey(getUserId());
 
 		Map<String, Serializable> publishLayoutRemoteSettingsMap =
@@ -1140,10 +1162,25 @@ public class LayoutServiceImpl extends LayoutServiceBaseImpl {
 						TYPE_SCHEDULED_PUBLISH_LAYOUT_REMOTE,
 					publishLayoutRemoteSettingsMap);
 
+		long companyId = exportImportConfiguration.getCompanyId();
+
+		Trigger trigger = TriggerFactoryUtil.createTrigger(
+			StringBundler.concat(
+				PortalUUIDUtil.generate(), StringPool.AT, companyId),
+			groupName, schedulerStartDate, schedulerEndDate, cronText,
+			TimeZone.getTimeZone(
+				MapUtil.getString(parameterMap, "timeZoneId")));
+
+		Message message = new Message();
+
+		message.put("companyId", companyId);
+
+		message.setPayload(
+			exportImportConfiguration.getExportImportConfigurationId());
+
 		SchedulerEngineHelperUtil.schedule(
 			trigger, StorageType.PERSISTED, description,
-			DestinationNames.LAYOUTS_REMOTE_PUBLISHER,
-			exportImportConfiguration.getExportImportConfigurationId());
+			DestinationNames.LAYOUTS_REMOTE_PUBLISHER, message);
 	}
 
 	/**

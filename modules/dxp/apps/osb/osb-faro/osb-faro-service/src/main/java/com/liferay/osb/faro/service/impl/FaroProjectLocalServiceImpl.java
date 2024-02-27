@@ -25,6 +25,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -112,6 +114,7 @@ public class FaroProjectLocalServiceImpl
 		faroProject.setServices(services);
 		faroProject.setState(state);
 		faroProject.setSubscription(subscription);
+		faroProject.setSubscriptionModifiedTime(now);
 		faroProject.setTimeZoneId(timeZoneId);
 		faroProject.setWeDeployKey(weDeployKey);
 
@@ -322,8 +325,28 @@ public class FaroProjectLocalServiceImpl
 			return null;
 		}
 
-		faroProject.setModifiedTime(System.currentTimeMillis());
+		long currentTimeMillis = System.currentTimeMillis();
+
+		faroProject.setModifiedTime(currentTimeMillis);
+
 		faroProject.setSubscription(subscription);
+
+		try {
+			JSONObject oldSubscriptionJSONObject =
+				_jsonFactory.createJSONObject(faroProject.getSubscription());
+
+			JSONObject newSubscriptionJSONObject =
+				_jsonFactory.createJSONObject(subscription);
+
+			if (oldSubscriptionJSONObject.get("name") !=
+					newSubscriptionJSONObject.get("name")) {
+
+				faroProject.setSubscriptionModifiedTime(currentTimeMillis);
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
 
 		return faroProjectPersistence.update(faroProject);
 	}
@@ -346,6 +369,9 @@ public class FaroProjectLocalServiceImpl
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;

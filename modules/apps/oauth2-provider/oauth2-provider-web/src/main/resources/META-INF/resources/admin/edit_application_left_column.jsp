@@ -128,7 +128,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 						</div>
 
 						<c:if test="<%= grantType.isRequiresRedirectURI() %>">
-							<script>
+							<aui:script>
 								var allowedAuthorizationTypeCheckbox = document.getElementById(
 									'<portlet:namespace /><%= name %>'
 								);
@@ -138,7 +138,7 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 										<portlet:namespace />requiredRedirectURIs();
 									});
 								}
-							</script>
+							</aui:script>
 						</c:if>
 
 					<%
@@ -171,9 +171,9 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 					</c:choose>
 
 					<div class="btn-group button-holder">
-						<aui:button id="selectUserButton" value="select" />
+						<aui:button data-qa-id="selectUserButton" id="selectUserButton" value="select" />
 
-						<aui:button id="useSignedInUserButton" value="use-signed-in-user" />
+						<aui:button data-qa-id="useSignedInUserButton" id="useSignedInUserButton" value="use-signed-in-user" />
 					</div>
 				</aui:field-wrapper>
 

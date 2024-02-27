@@ -7,11 +7,13 @@ package com.liferay.batch.engine.internal.writer;
 
 import com.liferay.batch.engine.BatchEngineTaskContentType;
 import com.liferay.batch.engine.unit.BatchEngineUnitConfiguration;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 
 import java.io.OutputStream;
 import java.io.Serializable;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,12 +34,13 @@ public class BatchEngineExportTaskItemWriterBuilder {
 	}
 
 	public BatchEngineExportTaskItemWriter build() throws Exception {
-		Map<String, Field> fieldsMap = ItemClassIndexUtil.index(_itemClass);
+		Map<String, ObjectValuePair<Field, Method>> fieldNameObjectValuePairs =
+			ItemClassIndexUtil.index(_itemClass);
 
 		if (_batchEngineTaskContentType == BatchEngineTaskContentType.CSV) {
 			return new CSVBatchEngineExportTaskItemWriterImpl(
-				_csvFileColumnDelimiter, fieldsMap, _fieldNames, _outputStream,
-				_parameters);
+				_csvFileColumnDelimiter, fieldNameObjectValuePairs, _fieldNames,
+				_outputStream, _parameters);
 		}
 
 		if (_batchEngineTaskContentType == BatchEngineTaskContentType.JSON) {
@@ -54,7 +57,7 @@ public class BatchEngineExportTaskItemWriterBuilder {
 			(_batchEngineTaskContentType == BatchEngineTaskContentType.XLSX)) {
 
 			return new XLSBatchEngineExportTaskItemWriterImpl(
-				fieldsMap, _fieldNames, _outputStream);
+				fieldNameObjectValuePairs, _fieldNames, _outputStream);
 		}
 
 		if (_batchEngineTaskContentType == BatchEngineTaskContentType.JSONT) {
@@ -74,6 +77,8 @@ public class BatchEngineExportTaskItemWriterBuilder {
 			_parameters.computeIfAbsent("updateStrategy", key -> "UPDATE");
 
 			batchEngineUnitConfiguration.setParameters(_parameters);
+			batchEngineUnitConfiguration.setTaskItemDelegateName(
+				_taskItemDelegateName);
 			batchEngineUnitConfiguration.setUserId(_userId);
 			batchEngineUnitConfiguration.setVersion("v1.0");
 
@@ -132,6 +137,14 @@ public class BatchEngineExportTaskItemWriterBuilder {
 		return this;
 	}
 
+	public BatchEngineExportTaskItemWriterBuilder taskItemDelegateName(
+		String taskItemDelegateName) {
+
+		_taskItemDelegateName = taskItemDelegateName;
+
+		return this;
+	}
+
 	public BatchEngineExportTaskItemWriterBuilder userId(long userId) {
 		_userId = userId;
 
@@ -145,6 +158,7 @@ public class BatchEngineExportTaskItemWriterBuilder {
 	private Class<?> _itemClass;
 	private OutputStream _outputStream;
 	private Map<String, Serializable> _parameters;
+	private String _taskItemDelegateName;
 	private long _userId;
 
 }

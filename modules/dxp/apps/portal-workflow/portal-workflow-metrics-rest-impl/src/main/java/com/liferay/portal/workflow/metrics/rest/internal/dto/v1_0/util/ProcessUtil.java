@@ -27,20 +27,19 @@ import java.util.Map;
 public class ProcessUtil {
 
 	public static Process toProcess(Document document, Locale locale) {
-		Map<String, String> titleMap = _createTitleMap(document);
-
 		return new Process() {
 			{
-				active = document.getBoolean("active");
-				dateCreated = _parseDate(document.getDate("createDate"));
-				dateModified = _parseDate(document.getDate("modifiedDate"));
-				description = document.getString("description");
-				id = document.getLong("processId");
-				title_i18n = titleMap;
-				version = document.getString("version");
-
+				setActive(() -> document.getBoolean("active"));
+				setDateCreated(
+					() -> _parseDate(document.getDate("createDate")));
+				setDateModified(
+					() -> _parseDate(document.getDate("modifiedDate")));
+				setDescription(() -> document.getString("description"));
+				setId(() -> document.getLong("processId"));
 				setTitle(
 					() -> {
+						Map<String, String> titleMap = getTitle_i18n();
+
 						String title = titleMap.get(locale.toLanguageTag());
 
 						if (Validator.isNull(title)) {
@@ -52,6 +51,8 @@ public class ProcessUtil {
 
 						return title;
 					});
+				setTitle_i18n(() -> _createTitleMap(document));
+				setVersion(() -> document.getString("version"));
 			}
 		};
 	}

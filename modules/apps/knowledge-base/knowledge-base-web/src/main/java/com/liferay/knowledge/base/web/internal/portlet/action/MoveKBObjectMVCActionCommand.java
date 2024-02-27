@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.lock.DuplicateLockException;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -139,6 +140,18 @@ public class MoveKBObjectMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 		catch (PortalException portalException) {
+			if (portalException instanceof DuplicateLockException) {
+				JSONPortletResponseUtil.writeJSON(
+					actionRequest, actionResponse,
+					JSONUtil.put(
+						"lockException", Boolean.TRUE
+					).put(
+						"success", Boolean.FALSE
+					));
+
+				return;
+			}
+
 			if (!dragAndDrop) {
 				throw portalException;
 			}

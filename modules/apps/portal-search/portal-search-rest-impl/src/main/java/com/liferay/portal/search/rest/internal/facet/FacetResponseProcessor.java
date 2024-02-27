@@ -382,8 +382,16 @@ public class FacetResponseProcessor {
 
 		for (FacetConfiguration facetConfiguration : facetConfigurations) {
 			Facet facet = searchResponse.withFacetContextGet(
-				facetContext -> facetContext.getFacet(
-					facetConfiguration.getName()));
+				facetContext -> {
+					if (Validator.isNotNull(
+							facetConfiguration.getAggregationName())) {
+
+						return facetContext.getFacet(
+							facetConfiguration.getAggregationName());
+					}
+
+					return facetContext.getFacet(facetConfiguration.getName());
+				});
 
 			if (facet == null) {
 				continue;

@@ -6,19 +6,21 @@
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import ClayNavigationBar from '@clayui/navigation-bar';
 import classNames from 'classnames';
-import {useEffect, useMemo} from 'react';
-import {useParams} from 'react-router-dom';
+import {useEffect, useMemo, useState} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
 import useSWR from 'swr';
 
-import arrowDown from '../../../assets/icons/arrow_down_icon.svg';
 import circleFullIcon from '../../../assets/icons/circle_fill_icon.svg';
 import {useAppContext} from '../../../manage-app-state/AppManageState';
 import {TYPES} from '../../../manage-app-state/actionTypes';
 import {ReviewAndSubmitAppPage} from '../../ReviewAndSubmitAppPage/ReviewAndSubmitAppPage';
 
 import './App.scss';
+import {useMarketplaceContext} from '../../../context/MarketplaceContext';
+import useMarketplaceSpringBootOAuth2 from '../../../hooks/useMarketplaceSpringBootOAuth2';
+import i18n from '../../../i18n';
+import {Liferay} from '../../../liferay/liferay';
 import HeadlessCommerceAdminCatalogImpl from '../../../services/rest/HeadlessCommerceAdminCatalog';
 import {
 	getProductVersionFromSpecifications,
@@ -28,22 +30,31 @@ import {
 
 const App = () => {
 	const [, dispatch] = useAppContext();
-	const {appId: productId} = useParams();
+	const [loading, setLoading] = useState(false);
+	const {appId} = useParams();
+	const {myUserAccount} = useMarketplaceContext();
+	const marketplaceSpringBootOAuth2 = useMarketplaceSpringBootOAuth2();
+	const navigate = useNavigate();
 
-	const {data = []} = useSWR(`/apps/app/${productId}`, () =>
-		Promise.all([
-			HeadlessCommerceAdminCatalogImpl.getProduct(productId as string),
-			HeadlessCommerceAdminCatalogImpl.getProductSpecifications(
-				productId as string
-			),
-		])
+	const productId = Number(appId) + 1;
+
+	const {data: selectedApp, isLoading} = useSWR(
+		`/published-app/${productId}`,
+		() =>
+			HeadlessCommerceAdminCatalogImpl.getProduct(
+				productId,
+				new URLSearchParams({
+					nestedFields: 'attachments,images,productSpecifications',
+				})
+			)
 	);
 
-	const [selectedApp, productSpecifications = []] = data ?? [];
-
 	const appVersion = useMemo(
-		() => getProductVersionFromSpecifications(productSpecifications as []),
-		[productSpecifications]
+		() =>
+			getProductVersionFromSpecifications(
+				selectedApp?.productSpecifications ?? []
+			),
+		[selectedApp?.productSpecifications]
 	);
 
 	useEffect(() => {
@@ -67,7 +78,7 @@ const App = () => {
 		selectedApp?.productId,
 	]);
 
-	if (!selectedApp) {
+	if (!selectedApp || isLoading) {
 		return null;
 	}
 
@@ -76,14 +87,18 @@ const App = () => {
 		(m: string) => m.toUpperCase()
 	);
 
-	const thumbnail = getThumbnailByProductAttachment(selectedApp?.attachments);
+	const thumbnail = getThumbnailByProductAttachment(selectedApp?.images);
 
 	return (
 		<div className="app-details-page-container">
-			<button className="app-details-page-back-button">
-				<ClayIcon symbol="order-arrow-left" />
-				Back to Apps
-			</button>
+			<ClayButton
+				className="align-items-center d-flex"
+				displayType="unstyled"
+				onClick={() => navigate('..')}
+			>
+				<ClayIcon className="mr-2" symbol="order-arrow-left" />
+				<h5 className="mt-1">{i18n.translate('back-to-apps')}</h5>
+			</ClayButton>
 
 			{status === 'Draft' && (
 				<ClayAlert
@@ -100,12 +115,12 @@ const App = () => {
 				</ClayAlert>
 			)}
 
-			<div className="app-details-page-app-info-main-container">
+			<div className="app-details-page-app-info-main-container mt-4">
 				<div className="app-details-page-app-info-left-container">
 					<div>
 						<img
 							alt="App Logo"
-							className="app-details-page-app-info-logo"
+							className="app-details-page-icon"
 							src={showAppImage(thumbnail)}
 						/>
 					</div>
@@ -116,9 +131,11 @@ const App = () => {
 						</span>
 
 						<div className="app-details-page-app-info-subtitle-container">
-							<span className="app-details-page-app-info-subtitle-text">
-								{appVersion}
-							</span>
+							{appVersion && (
+								<span className="app-details-page-app-info-subtitle-text">
+									{appVersion}
+								</span>
+							)}
 
 							<img
 								alt="status icon"
@@ -126,57 +143,71 @@ const App = () => {
 									'app-details-page-app-info-subtitle-icon',
 									{
 										'app-details-page-app-info-subtitle-icon-hidden':
-											selectedApp.status === 'Draft',
+											selectedApp.workflowStatusInfo
+												.label === 'draft',
 										'app-details-page-app-info-subtitle-icon-pending':
-											selectedApp.status === 'Pending',
+											selectedApp.workflowStatusInfo
+												.label === 'pending',
 										'app-details-page-app-info-subtitle-icon-published':
-											selectedApp.status === 'Approved',
+											selectedApp.workflowStatusInfo
+												.label === 'approved',
 									}
 								)}
 								src={circleFullIcon}
 							/>
 
 							<span className="app-details-page-app-info-subtitle-text">
-								{selectedApp.status}
+								{selectedApp.workflowStatusInfo.label_i18n}
 							</span>
 						</div>
 					</div>
 				</div>
 
 				<div className="app-details-page-app-info-buttons-container">
-					<button className="app-details-page-app-info-button-preview-app-page">
-						Preview App Page
-					</button>
+					{myUserAccount.roleBriefs.some(
+						({name}) => name === 'Administrator'
+					) && (
+						<ClayButton
+							className="font-weight-bold mr-5"
+							disabled={loading}
+							displayType="unstyled"
+							onClick={() => {
+								setLoading(true);
 
-					<button className="app-details-page-app-info-button-manage">
-						Manage
-						<img
-							alt="Arrow Down"
-							className="app-details-page-app-info-button-manage-icon"
-							src={arrowDown}
-						/>
-					</button>
+								marketplaceSpringBootOAuth2
+									.syncKoroneikiProduct(productId)
+									.then(() =>
+										Liferay.Util.openToast({
+											message:
+												'Koroneiki Sync Successfully',
+											title: 'Success',
+										})
+									)
+									.catch((error) => {
+										console.error(error);
+
+										Liferay.Util.openToast({
+											message: 'Koroneiki Sync Failed',
+											title: 'Error',
+											type: 'danger',
+										});
+									})
+									.finally(() => setLoading(false));
+							}}
+						>
+							{loading ? 'Synchronizing...' : 'Sync to KR'}
+						</ClayButton>
+					)}
 				</div>
 			</div>
 
-			<div>
-				<ClayNavigationBar
-					className="app-details-page-navigation-bar"
-					triggerLabel="App Detatils"
-				>
-					<ClayNavigationBar.Item active>
-						<ClayButton>App Details</ClayButton>
-					</ClayNavigationBar.Item>
-				</ClayNavigationBar>
-
-				<ReviewAndSubmitAppPage
-					onClickBack={() => {}}
-					onClickContinue={() => {}}
-					productERC={selectedApp.externalReferenceCode}
-					productId={selectedApp.productId}
-					readonly
-				/>
-			</div>
+			<ReviewAndSubmitAppPage
+				onClickBack={() => {}}
+				onClickContinue={() => {}}
+				productERC={selectedApp.externalReferenceCode}
+				productId={selectedApp.productId}
+				readonly
+			/>
 		</div>
 	);
 };

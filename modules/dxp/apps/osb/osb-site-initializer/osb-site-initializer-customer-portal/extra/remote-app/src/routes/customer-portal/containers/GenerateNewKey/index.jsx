@@ -5,11 +5,8 @@
 
 import {useEffect, useState} from 'react';
 import {Navigate, useLocation, useOutletContext} from 'react-router-dom';
-import {useAppPropertiesContext} from '~/common/contexts/AppPropertiesContext';
 import {useGetMyUserAccount} from '~/common/services/liferay/graphql/user-accounts';
-import {putDeactivateKeys} from '~/common/services/liferay/rest/raysource/LicenseKeys';
 import {useCustomerPortal} from '../../context';
-import {ALERT_DOWNLOAD_TYPE, STATUS_CODE} from '../../utils/constants';
 import {hasAdminOrPartnerManager} from '../ActivationKeysTable/utils/hasAdminOrPartnerManager';
 import {hasAdminUserAccount} from '../ActivationKeysTable/utils/hasAdminUserAccount';
 import GenerateNewKeySkeleton from './Skeleton';
@@ -21,14 +18,14 @@ import {STEP_TYPES} from './utils/constants/stepType';
 const ACTIVATION_ROOT_ROUTER = 'activation';
 
 const GenerateNewKey = ({
-	hasKeyComplimentary,
+	hasComplimentaryKey,
 	productGroupName,
-	setHasKeyComplimentary,
+	setHasComplimentaryKey,
 }) => {
-	const {provisioningServerAPI} = useAppPropertiesContext();
+	const {state} = useLocation();
 	const {data: myAccount} = useGetMyUserAccount();
 	const [{project, sessionId, userAccount}] = useCustomerPortal();
-	const [infoSelectedKey, setInfoSelectedKey] = useState();
+	const [selectedKeyData, setSelectedKeyData] = useState();
 	const [step, setStep] = useState(STEP_TYPES.selectDescriptions);
 	const {setHasSideMenu} = useOutletContext();
 	const [status, setStatus] = useState({
@@ -37,11 +34,11 @@ const GenerateNewKey = ({
 		downloadMultiple: '',
 	});
 
-	const [isDeactivating, setIsDeactivating] = useState(false);
-	const [alreadyDeactivated, setAlreadyDeactivated] = useState(false);
-
-	const {state} = useLocation();
 	const [purposeDescription, setPurposeDescription] = useState('');
+	const [submitKeyAction, setSubmitKeyAction] = useState({});
+	const [licenseEntryTypeName, setLicenseEntryTypeName] = useState('');
+	const [expirationRenewDate, setExpirationRenewDate] = useState('');
+	const [startRenewDate, setStartRenewDate] = useState('');
 
 	useEffect(() => {
 		setHasSideMenu(false);
@@ -62,35 +59,20 @@ const GenerateNewKey = ({
 		project?.accountKey
 	}/${ACTIVATION_ROOT_ROUTER}/${productGroupName.toLowerCase()}`;
 
-	const deactivateKeysConfirm = async () => {
-		setIsDeactivating(true);
-
-		const response = await putDeactivateKeys(
-			provisioningServerAPI,
-			state.filterCheckedActivationKeys,
-			sessionId
-		);
-
-		if (response.status === STATUS_CODE.successNoContent) {
-			setIsDeactivating(false);
-			setAlreadyDeactivated(true);
-
-			return;
-		}
-
-		setIsDeactivating(false);
-		setStatus({...status, deactivate: ALERT_DOWNLOAD_TYPE.danger});
-	};
-
 	const StepLayout = {
 		[STEP_TYPES.generateKeys]: (
 			<RequiredInformation
 				accountKey={project?.accountKey}
-				hasKeyComplimentary={hasKeyComplimentary}
-				infoSelectedKey={infoSelectedKey}
+				expirationRenewDate={expirationRenewDate}
+				hasComplimentaryKey={hasComplimentaryKey}
+				licenseEntryTypeName={licenseEntryTypeName}
 				purposeDescription={purposeDescription}
+				selectedKeyData={selectedKeyData}
 				sessionId={sessionId}
 				setStep={setStep}
+				startRenewDate={startRenewDate}
+				state={state}
+				submitKeyAction={submitKeyAction}
 				urlPreviousPage={urlPreviousPage}
 			/>
 		),
@@ -98,30 +80,31 @@ const GenerateNewKey = ({
 			<SelectSubscription
 				accountKey={project?.accountKey}
 				activationKeysByStatusPaginatedChecked
-				alreadyDeactivated={alreadyDeactivated}
-				deactivateKeysConfirm={deactivateKeysConfirm}
 				filterCheckedActivationKeys
-				hasKeyComplimentary={hasKeyComplimentary}
+				hasComplimentaryKey={hasComplimentaryKey}
 				identifier
-				infoSelectedKey={infoSelectedKey}
-				isDeactivating={isDeactivating}
 				productGroupName={productGroupName}
+				selectedKeyData={selectedKeyData}
 				sessionId={sessionId}
-				setHasKeyComplimentary={setHasKeyComplimentary}
-				setInfoSelectedKey={setInfoSelectedKey}
+				setExpirationRenewDate={setExpirationRenewDate}
+				setHasComplimentaryKey={setHasComplimentaryKey}
+				setLicenseEntryTypeName={setLicenseEntryTypeName}
+				setSelectedKeyData={setSelectedKeyData}
+				setStartRenewDate={setStartRenewDate}
 				setStep={setStep}
+				setSubmitKeyAction={setSubmitKeyAction}
+				state={state}
 				urlPreviousPage={urlPreviousPage}
 			/>
 		),
-		[STEP_TYPES.selectInfoComplementaryKey]: (
+		[STEP_TYPES.selectInfoComplimentaryKey]: (
 			<ComplimentaryDate
 				accountKey={project?.accountKey}
-				deactivateKeysConfirm={deactivateKeysConfirm}
 				deactivateKeysStatus={status.deactivate}
 				filterCheckedActivationKeys
-				infoSelectedKey={infoSelectedKey}
 				productGroupName={productGroupName}
 				purposeDescription={purposeDescription}
+				selectedKeyData={selectedKeyData}
 				sessionId={sessionId}
 				setDeactivateKeysStatus={(value) =>
 					setStatus((previousStatus) => ({
@@ -129,8 +112,8 @@ const GenerateNewKey = ({
 						deactivate: value,
 					}))
 				}
-				setInfoSelectedKey={setInfoSelectedKey}
 				setPurposeDescription={setPurposeDescription}
+				setSelectedKeyData={setSelectedKeyData}
 				setStep={setStep}
 				urlPreviousPage={urlPreviousPage}
 			/>

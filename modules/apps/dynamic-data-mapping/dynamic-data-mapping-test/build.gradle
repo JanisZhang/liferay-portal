@@ -18,6 +18,7 @@ dependencies {
 	testImplementation project(":apps:journal:journal-api")
 	testImplementation project(":apps:layout:layout-test-util")
 	testImplementation project(":apps:object:object-api")
+	testImplementation project(":apps:object:object-test-util")
 	testImplementation project(":apps:portal-search:portal-search-api")
 	testImplementation project(":apps:portal-search:portal-search-test-util")
 	testImplementation project(":apps:portal-vulcan:portal-vulcan-api")
@@ -33,8 +34,8 @@ dependencies {
 	testImplementation project(":core:petra:petra-sql-dsl-api")
 	testImplementation project(":core:petra:petra-string")
 
-	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.13.4"
-	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.13.4.2"
+	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.16.1"
+	testIntegrationImplementation group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.16.1"
 	testIntegrationImplementation group: "org.osgi", name: "org.osgi.service.cm", version: "1.6.0"
 	testIntegrationImplementation project(":apps:asset:asset-link-api")
 	testIntegrationImplementation project(":apps:change-tracking:change-tracking-test-util")

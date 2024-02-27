@@ -8,6 +8,7 @@ package com.liferay.headless.builder.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.batch.engine.unit.BatchEngineUnitProcessor;
 import com.liferay.batch.engine.unit.BatchEngineUnitReader;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.util.Http;
@@ -18,8 +19,6 @@ import java.io.File;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-
-import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,13 +55,8 @@ public abstract class BaseTestCase {
 					bundle.getSymbolicName(),
 					"com.liferay.headless.builder.impl")) {
 
-				File processedFile = bundle.getDataFile(
-					".com.liferay.headless.builder.internal.batch.headless." +
-						"builder.batch.engine.data.json.0.processed");
-
-				if ((processedFile != null) && processedFile.exists()) {
-					processedFile.delete();
-				}
+				_setUpProcessedFile(bundle, "00.headless.builder.picklists");
+				_setUpProcessedFile(bundle, "01.headless.builder");
 
 				CompletableFuture<Void> completableFuture =
 					_batchEngineUnitProcessor.processBatchEngineUnits(
@@ -73,14 +67,26 @@ public abstract class BaseTestCase {
 		}
 	}
 
-	protected void assertSuccessfulHttpCode(
+	protected void assertSuccessfulJSONObject(
 			String body, String endpoint, Http.Method httpMethod)
 		throws Exception {
 
-		Assert.assertEquals(
-			Response.Status.Family.SUCCESSFUL,
-			Response.Status.Family.familyOf(
-				HTTPTestUtil.invokeToHttpCode(body, endpoint, httpMethod)));
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			body, endpoint, httpMethod);
+
+		Assert.assertNotEquals(
+			jsonObject.getString("title"), "BAD_REQUEST",
+			jsonObject.getString("status"));
+	}
+
+	private void _setUpProcessedFile(Bundle bundle, String processedFileName) {
+		File processedFile = bundle.getDataFile(
+			".com.liferay.headless.builder.internal.batch." +
+				processedFileName + ".batch.engine.data.json.0.processed");
+
+		if ((processedFile != null) && processedFile.exists()) {
+			processedFile.delete();
+		}
 	}
 
 	@Inject

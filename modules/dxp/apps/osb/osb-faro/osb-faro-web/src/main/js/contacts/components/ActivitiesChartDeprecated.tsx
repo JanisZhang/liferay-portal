@@ -1,3 +1,4 @@
+import ClayLink from '@clayui/link';
 import ComposedChartWithEmptyState from 'shared/components/ComposedChartWithEmptyState';
 import React, {useRef, useState} from 'react';
 import URLConstants from 'shared/util/url-constants';
@@ -19,7 +20,7 @@ import {
 	XAxis,
 	YAxis
 } from 'recharts';
-import {CHART_COLOR_NAMES} from 'shared/components/Chart';
+import {CHART_COLOR_NAMES} from 'shared/util/charts';
 import {createDateKeysIMap} from 'shared/util/intervals';
 import {
 	formatXAxisDate,
@@ -127,7 +128,7 @@ const ActivitiesChart: React.FC<IChartProps<IActivitiesHistory<number>>> = ({
 						)}
 					</span>
 
-					<a
+					<ClayLink
 						href={URLConstants.AccountActivitiesDocumentationLink}
 						key='DOCUMENTATION'
 						target='_blank'
@@ -135,7 +136,7 @@ const ActivitiesChart: React.FC<IChartProps<IActivitiesHistory<number>>> = ({
 						{Liferay.Language.get(
 							'learn-more-about-account-activities'
 						)}
-					</a>
+					</ClayLink>
 				</>
 			}
 			emptyTitle={Liferay.Language.get(

@@ -22,13 +22,17 @@ PortletURL portletURL = ddmFormViewFormInstanceRecordsDisplayContext.getPortletU
 	actionDropdownItems="<%= ddmFormViewFormInstanceRecordsDisplayContext.getActionItemsDropdownItems() %>"
 	additionalProps='<%=
 		HashMapBuilder.<String, Object>put(
+			"allSelectedLocalizedMessage", ddmFormViewFormInstanceRecordsDisplayContext.getLocalizedMessage(themeDisplay.getLocale(), "all-selected")
+		).put(
+			"ddmFormInstanceRecordIds", ddmFormViewFormInstanceRecordsDisplayContext.getDDMFormInstanceRecordIds()
+		).put(
 			"deleteFormInstanceRecordURL", deleteFormInstanceRecordURL.toString()
 		).build()
 	%>'
 	clearResultsURL="<%= ddmFormViewFormInstanceRecordsDisplayContext.getClearResultsURL() %>"
 	disabled="<%= ddmFormViewFormInstanceRecordsDisplayContext.isDisabledManagementBar() %>"
-	filterDropdownItems="<%= ddmFormViewFormInstanceRecordsDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= ddmFormViewFormInstanceRecordsDisplayContext.getTotalItems() %>"
+	orderDropdownItems="<%= ddmFormViewFormInstanceRecordsDisplayContext.getOrderItemsDropdownItems() %>"
 	propsTransformer="admin/js/DDMFormViewFormInstanceRecordsManagementToolbarPropsTransformer"
 	searchActionURL="<%= ddmFormViewFormInstanceRecordsDisplayContext.getSearchActionURL() %>"
 	searchContainerId="<%= ddmFormViewFormInstanceRecordsDisplayContext.getSearchContainerId() %>"

@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "feature.flag.COMMERCE-9599=true${line.separator}feature.flag.COMMERCE-11028=true${line.separator}jsonws.web.service.paths.excludes=";
+	property custom.properties = "feature.flag.COMMERCE-9599=true${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Shopping Experience";
@@ -342,6 +342,12 @@ definition {
 		task ("And the price on application is set for sku BLACK") {
 			CommerceNavigator.gotoTableListEntry(entryName = "BLACK");
 
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
+
 			CommerceSKUs.editSkuPricing(priceOnApplication = "true");
 		}
 
@@ -428,7 +434,7 @@ definition {
 			FrontStore.viewMiniCartEditProductOption(
 				cartItemOptionName = "Color",
 				cartItemOptionValue = "White",
-				cartItemPriceAsConfiguredValue = "$ 100.00",
+				cartItemPriceAsConfiguredValue = "$ 90.00",
 				cartItemPriceInactiveValue = "$ 100.00",
 				cartItemPromoPriceValue = "$ 90.00");
 
@@ -617,6 +623,12 @@ definition {
 
 				CommerceNavigator.gotoEntry(entryName = ${sku});
 
+				SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+				CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+				CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
+
 				CommerceEntry.editSkuPricingAndInventory(
 					basePrice = ${priceAndQuantity},
 					italyQuantity = ${priceAndQuantity},
@@ -744,7 +756,7 @@ definition {
 	@description = "COMMERCE-12628. As a buyer, I want to be able to assert decimal UOM prices are converted in the Edit Bundeld Product panel for the product bundles"
 	@priority = 5
 	test CanAssertDecimalUOMPricesAreConvertedInEditBundledProductPanel {
-		property custom.properties = "feature.flag.COMMERCE-9599=true${line.separator}feature.flag.COMMERCE-11287=true${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.COMMERCE-9599=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given 2 UOMs are created to MIN93015(base price: $30, incremental: 0.6 for UOM1; base price: $50, promo price: $40, incremental: 1.5 for UOM2)") {
@@ -899,7 +911,7 @@ definition {
 			FrontStore.viewMiniCartEditProductOption(
 				cartItemOptionName = "Color",
 				cartItemOptionValue = "White",
-				cartItemPriceAsConfiguredValue = "$ 33.33",
+				cartItemPriceAsConfiguredValue = "$ 26.67",
 				cartItemPriceInactiveValue = "$ 33.33",
 				cartItemPromoPriceValue = "$ 26.67");
 		}
@@ -940,7 +952,7 @@ definition {
 	@description = "COMMERCE-12611. As a buyer, I can verify product options work with the decimal quantity correctly"
 	@priority = 5
 	test CanBundledProductSkusWorkWithDecimalQuantity {
-		property custom.properties = "feature.flag.COMMERCE-9599=true${line.separator}feature.flag.COMMERCE-11287=true${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.COMMERCE-9599=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given a new bundled product with an option(two values) and Dynamic Price Type is created") {
@@ -1271,6 +1283,12 @@ definition {
 				var priceAndQuantity = StringUtil.extractLast(${value}, ":");
 
 				CommerceNavigator.gotoEntry(entryName = ${sku});
+
+				SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+				CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+				CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 
 				CommerceEntry.editSkuPricingAndInventory(
 					basePrice = ${priceAndQuantity},

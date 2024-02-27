@@ -93,7 +93,8 @@ public class DLAppServiceHttp {
 				long repositoryId, long folderId, String sourceFileName,
 				String mimeType, String title, String urlTitle,
 				String description, String changeLog, byte[] bytes,
-				java.util.Date expirationDate, java.util.Date reviewDate,
+				java.util.Date displayDate, java.util.Date expirationDate,
+				java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -105,7 +106,8 @@ public class DLAppServiceHttp {
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, externalReferenceCode, repositoryId, folderId,
 				sourceFileName, mimeType, title, urlTitle, description,
-				changeLog, bytes, expirationDate, reviewDate, serviceContext);
+				changeLog, bytes, displayDate, expirationDate, reviewDate,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -142,7 +144,8 @@ public class DLAppServiceHttp {
 				long repositoryId, long folderId, String sourceFileName,
 				String mimeType, String title, String urlTitle,
 				String description, String changeLog, java.io.File file,
-				java.util.Date expirationDate, java.util.Date reviewDate,
+				java.util.Date displayDate, java.util.Date expirationDate,
+				java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -154,7 +157,8 @@ public class DLAppServiceHttp {
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, externalReferenceCode, repositoryId, folderId,
 				sourceFileName, mimeType, title, urlTitle, description,
-				changeLog, file, expirationDate, reviewDate, serviceContext);
+				changeLog, file, displayDate, expirationDate, reviewDate,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -192,7 +196,8 @@ public class DLAppServiceHttp {
 				String mimeType, String title, String urlTitle,
 				String description, String changeLog,
 				java.io.InputStream inputStream, long size,
-				java.util.Date expirationDate, java.util.Date reviewDate,
+				java.util.Date displayDate, java.util.Date expirationDate,
+				java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -204,8 +209,8 @@ public class DLAppServiceHttp {
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, externalReferenceCode, repositoryId, folderId,
 				sourceFileName, mimeType, title, urlTitle, description,
-				changeLog, inputStream, size, expirationDate, reviewDate,
-				serviceContext);
+				changeLog, inputStream, size, displayDate, expirationDate,
+				reviewDate, serviceContext);
 
 			Object returnObj = null;
 
@@ -4263,8 +4268,8 @@ public class DLAppServiceHttp {
 				String urlTitle, String description, String changeLog,
 				com.liferay.document.library.kernel.model.
 					DLVersionNumberIncrease dlVersionNumberIncrease,
-				byte[] bytes, java.util.Date expirationDate,
-				java.util.Date reviewDate,
+				byte[] bytes, java.util.Date displayDate,
+				java.util.Date expirationDate, java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -4276,7 +4281,7 @@ public class DLAppServiceHttp {
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, fileEntryId, sourceFileName, mimeType, title,
 				urlTitle, description, changeLog, dlVersionNumberIncrease,
-				bytes, expirationDate, reviewDate, serviceContext);
+				bytes, displayDate, expirationDate, reviewDate, serviceContext);
 
 			Object returnObj = null;
 
@@ -4314,8 +4319,8 @@ public class DLAppServiceHttp {
 				String urlTitle, String description, String changeLog,
 				com.liferay.document.library.kernel.model.
 					DLVersionNumberIncrease dlVersionNumberIncrease,
-				java.io.File file, java.util.Date expirationDate,
-				java.util.Date reviewDate,
+				java.io.File file, java.util.Date displayDate,
+				java.util.Date expirationDate, java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -4327,7 +4332,7 @@ public class DLAppServiceHttp {
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, fileEntryId, sourceFileName, mimeType, title,
 				urlTitle, description, changeLog, dlVersionNumberIncrease, file,
-				expirationDate, reviewDate, serviceContext);
+				displayDate, expirationDate, reviewDate, serviceContext);
 
 			Object returnObj = null;
 
@@ -4366,7 +4371,8 @@ public class DLAppServiceHttp {
 				com.liferay.document.library.kernel.model.
 					DLVersionNumberIncrease dlVersionNumberIncrease,
 				java.io.InputStream inputStream, long size,
-				java.util.Date expirationDate, java.util.Date reviewDate,
+				java.util.Date displayDate, java.util.Date expirationDate,
+				java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -4378,7 +4384,8 @@ public class DLAppServiceHttp {
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, fileEntryId, sourceFileName, mimeType, title,
 				urlTitle, description, changeLog, dlVersionNumberIncrease,
-				inputStream, size, expirationDate, reviewDate, serviceContext);
+				inputStream, size, displayDate, expirationDate, reviewDate,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -4416,8 +4423,8 @@ public class DLAppServiceHttp {
 				String urlTitle, String description, String changeLog,
 				com.liferay.document.library.kernel.model.
 					DLVersionNumberIncrease dlVersionNumberIncrease,
-				java.io.File file, java.util.Date expirationDate,
-				java.util.Date reviewDate,
+				java.io.File file, java.util.Date displayDate,
+				java.util.Date expirationDate, java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -4429,7 +4436,7 @@ public class DLAppServiceHttp {
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, fileEntryId, sourceFileName, mimeType, title,
 				urlTitle, description, changeLog, dlVersionNumberIncrease, file,
-				expirationDate, reviewDate, serviceContext);
+				displayDate, expirationDate, reviewDate, serviceContext);
 
 			Object returnObj = null;
 
@@ -4468,7 +4475,8 @@ public class DLAppServiceHttp {
 				com.liferay.document.library.kernel.model.
 					DLVersionNumberIncrease dlVersionNumberIncrease,
 				java.io.InputStream inputStream, long size,
-				java.util.Date expirationDate, java.util.Date reviewDate,
+				java.util.Date displayDate, java.util.Date expirationDate,
+				java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -4480,7 +4488,8 @@ public class DLAppServiceHttp {
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, fileEntryId, sourceFileName, mimeType, title,
 				urlTitle, description, changeLog, dlVersionNumberIncrease,
-				inputStream, size, expirationDate, reviewDate, serviceContext);
+				inputStream, size, displayDate, expirationDate, reviewDate,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -4732,20 +4741,21 @@ public class DLAppServiceHttp {
 	private static final Class<?>[] _addFileEntryParameterTypes1 = new Class[] {
 		String.class, long.class, long.class, String.class, String.class,
 		String.class, String.class, String.class, String.class, byte[].class,
-		java.util.Date.class, java.util.Date.class,
+		java.util.Date.class, java.util.Date.class, java.util.Date.class,
 		com.liferay.portal.kernel.service.ServiceContext.class
 	};
 	private static final Class<?>[] _addFileEntryParameterTypes2 = new Class[] {
 		String.class, long.class, long.class, String.class, String.class,
 		String.class, String.class, String.class, String.class,
 		java.io.File.class, java.util.Date.class, java.util.Date.class,
+		java.util.Date.class,
 		com.liferay.portal.kernel.service.ServiceContext.class
 	};
 	private static final Class<?>[] _addFileEntryParameterTypes3 = new Class[] {
 		String.class, long.class, long.class, String.class, String.class,
 		String.class, String.class, String.class, String.class,
 		java.io.InputStream.class, long.class, java.util.Date.class,
-		java.util.Date.class,
+		java.util.Date.class, java.util.Date.class,
 		com.liferay.portal.kernel.service.ServiceContext.class
 	};
 	private static final Class<?>[] _addFileShortcutParameterTypes4 =
@@ -5074,6 +5084,7 @@ public class DLAppServiceHttp {
 			com.liferay.document.library.kernel.model.DLVersionNumberIncrease.
 				class,
 			byte[].class, java.util.Date.class, java.util.Date.class,
+			java.util.Date.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _updateFileEntryParameterTypes101 =
@@ -5083,6 +5094,7 @@ public class DLAppServiceHttp {
 			com.liferay.document.library.kernel.model.DLVersionNumberIncrease.
 				class,
 			java.io.File.class, java.util.Date.class, java.util.Date.class,
+			java.util.Date.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _updateFileEntryParameterTypes102 =
@@ -5092,7 +5104,7 @@ public class DLAppServiceHttp {
 			com.liferay.document.library.kernel.model.DLVersionNumberIncrease.
 				class,
 			java.io.InputStream.class, long.class, java.util.Date.class,
-			java.util.Date.class,
+			java.util.Date.class, java.util.Date.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[]
@@ -5102,6 +5114,7 @@ public class DLAppServiceHttp {
 			com.liferay.document.library.kernel.model.DLVersionNumberIncrease.
 				class,
 			java.io.File.class, java.util.Date.class, java.util.Date.class,
+			java.util.Date.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[]
@@ -5111,7 +5124,7 @@ public class DLAppServiceHttp {
 			com.liferay.document.library.kernel.model.DLVersionNumberIncrease.
 				class,
 			java.io.InputStream.class, long.class, java.util.Date.class,
-			java.util.Date.class,
+			java.util.Date.class, java.util.Date.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _updateFileShortcutParameterTypes105 =

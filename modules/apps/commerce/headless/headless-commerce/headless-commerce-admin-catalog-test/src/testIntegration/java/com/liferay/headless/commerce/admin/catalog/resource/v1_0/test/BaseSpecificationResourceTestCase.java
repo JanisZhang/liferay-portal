@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -329,32 +327,81 @@ public abstract class BaseSpecificationResourceTestCase {
 		Specification specification3 =
 			testGetSpecificationsPage_addSpecification(randomSpecification());
 
-		Page<Specification> page1 = specificationResource.getSpecificationsPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Specification> specifications1 =
-			(List<Specification>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			specifications1.toString(), totalCount + 2, specifications1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Specification> page1 =
+				specificationResource.getSpecificationsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<Specification> page2 = specificationResource.getSpecificationsPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				specification1, (List<Specification>)page1.getItems());
 
-		List<Specification> specifications2 =
-			(List<Specification>)page2.getItems();
+			Page<Specification> page2 =
+				specificationResource.getSpecificationsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			specifications2.toString(), 1, specifications2.size());
+			assertContains(
+				specification2, (List<Specification>)page2.getItems());
 
-		Page<Specification> page3 = specificationResource.getSpecificationsPage(
-			null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Specification> page3 =
+				specificationResource.getSpecificationsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(specification1, (List<Specification>)page3.getItems());
-		assertContains(specification2, (List<Specification>)page3.getItems());
-		assertContains(specification3, (List<Specification>)page3.getItems());
+			assertContains(
+				specification3, (List<Specification>)page3.getItems());
+		}
+		else {
+			Page<Specification> page1 =
+				specificationResource.getSpecificationsPage(
+					null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<Specification> specifications1 =
+				(List<Specification>)page1.getItems();
+
+			Assert.assertEquals(
+				specifications1.toString(), totalCount + 2,
+				specifications1.size());
+
+			Page<Specification> page2 =
+				specificationResource.getSpecificationsPage(
+					null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Specification> specifications2 =
+				(List<Specification>)page2.getItems();
+
+			Assert.assertEquals(
+				specifications2.toString(), 1, specifications2.size());
+
+			Page<Specification> page3 =
+				specificationResource.getSpecificationsPage(
+					null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				specification1, (List<Specification>)page3.getItems());
+			assertContains(
+				specification2, (List<Specification>)page3.getItems());
+			assertContains(
+				specification3, (List<Specification>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1060,6 +1107,10 @@ public abstract class BaseSpecificationResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1259,9 +1310,9 @@ public abstract class BaseSpecificationResourceTestCase {
 	}
 
 	protected SpecificationResource specificationResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

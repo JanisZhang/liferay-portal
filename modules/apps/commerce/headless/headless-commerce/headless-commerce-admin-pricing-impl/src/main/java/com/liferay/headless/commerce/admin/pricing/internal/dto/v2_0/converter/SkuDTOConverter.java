@@ -6,7 +6,7 @@
 package com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter;
 
 import com.liferay.commerce.currency.model.CommerceCurrency;
-import com.liferay.commerce.currency.service.CommerceCurrencyService;
+import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
@@ -59,16 +59,19 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 
 		return new Sku() {
 			{
-				basePrice = _getPrice(commerceBasePriceListPriceEntry);
-				basePriceFormatted = _formatPrice(
-					cpInstance.getCompanyId(), commerceBasePriceListPriceEntry,
-					locale);
-				basePromoPrice = _getPrice(commerceBasePromotionPriceEntry);
-				basePromoPriceFormatted = _formatPrice(
-					cpInstance.getCompanyId(), commerceBasePromotionPriceEntry,
-					locale);
-				id = cpInstance.getCPInstanceId();
-				name = cpInstance.getSku();
+				setBasePrice(() -> _getPrice(commerceBasePriceListPriceEntry));
+				setBasePriceFormatted(
+					() -> _formatPrice(
+						cpInstance.getCompanyId(),
+						commerceBasePriceListPriceEntry, locale));
+				setBasePromoPrice(
+					() -> _getPrice(commerceBasePromotionPriceEntry));
+				setBasePromoPriceFormatted(
+					() -> _formatPrice(
+						cpInstance.getCompanyId(),
+						commerceBasePromotionPriceEntry, locale));
+				setId(cpInstance::getCPInstanceId);
+				setName(cpInstance::getSku);
 			}
 		};
 	}
@@ -79,7 +82,7 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 
 		if (priceEntry == null) {
 			CommerceCurrency commerceCurrency =
-				_commerceCurrencyService.fetchPrimaryCommerceCurrency(
+				_commerceCurrencyLocalService.fetchPrimaryCommerceCurrency(
 					companyId);
 
 			return _commercePriceFormatter.format(
@@ -104,7 +107,7 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 	}
 
 	@Reference
-	private CommerceCurrencyService _commerceCurrencyService;
+	private CommerceCurrencyLocalService _commerceCurrencyLocalService;
 
 	@Reference
 	private CommercePriceEntryLocalService _commercePriceEntryLocalService;

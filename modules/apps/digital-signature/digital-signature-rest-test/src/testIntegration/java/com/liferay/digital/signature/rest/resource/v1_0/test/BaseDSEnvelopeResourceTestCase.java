@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -202,7 +200,9 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 			testGetSiteDSEnvelopesPage_getIrrelevantSiteId();
 
 		Page<DSEnvelope> page = dsEnvelopeResource.getSiteDSEnvelopesPage(
-			siteId, Pagination.of(1, 10));
+			siteId, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), Pagination.of(1, 10));
 
 		long totalCount = page.getTotalCount();
 
@@ -212,7 +212,8 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 					irrelevantSiteId, randomIrrelevantDSEnvelope());
 
 			page = dsEnvelopeResource.getSiteDSEnvelopesPage(
-				irrelevantSiteId, Pagination.of(1, (int)totalCount + 1));
+				irrelevantSiteId, null, null, null, null,
+				Pagination.of(1, (int)totalCount + 1));
 
 			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
@@ -231,7 +232,7 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 			siteId, randomDSEnvelope());
 
 		page = dsEnvelopeResource.getSiteDSEnvelopesPage(
-			siteId, Pagination.of(1, 10));
+			siteId, null, null, null, null, Pagination.of(1, 10));
 
 		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
@@ -264,7 +265,8 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		Long siteId = testGetSiteDSEnvelopesPage_getSiteId();
 
 		Page<DSEnvelope> dsEnvelopePage =
-			dsEnvelopeResource.getSiteDSEnvelopesPage(siteId, null);
+			dsEnvelopeResource.getSiteDSEnvelopesPage(
+				siteId, null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(dsEnvelopePage.getTotalCount());
 
@@ -277,29 +279,66 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 		DSEnvelope dsEnvelope3 = testGetSiteDSEnvelopesPage_addDSEnvelope(
 			siteId, randomDSEnvelope());
 
-		Page<DSEnvelope> page1 = dsEnvelopeResource.getSiteDSEnvelopesPage(
-			siteId, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<DSEnvelope> dsEnvelopes1 = (List<DSEnvelope>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			dsEnvelopes1.toString(), totalCount + 2, dsEnvelopes1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<DSEnvelope> page1 = dsEnvelopeResource.getSiteDSEnvelopesPage(
+				siteId, null, null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<DSEnvelope> page2 = dsEnvelopeResource.getSiteDSEnvelopesPage(
-			siteId, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(dsEnvelope1, (List<DSEnvelope>)page1.getItems());
 
-		List<DSEnvelope> dsEnvelopes2 = (List<DSEnvelope>)page2.getItems();
+			Page<DSEnvelope> page2 = dsEnvelopeResource.getSiteDSEnvelopesPage(
+				siteId, null, null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(dsEnvelopes2.toString(), 1, dsEnvelopes2.size());
+			assertContains(dsEnvelope2, (List<DSEnvelope>)page2.getItems());
 
-		Page<DSEnvelope> page3 = dsEnvelopeResource.getSiteDSEnvelopesPage(
-			siteId, Pagination.of(1, (int)totalCount + 3));
+			Page<DSEnvelope> page3 = dsEnvelopeResource.getSiteDSEnvelopesPage(
+				siteId, null, null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertContains(dsEnvelope1, (List<DSEnvelope>)page3.getItems());
-		assertContains(dsEnvelope2, (List<DSEnvelope>)page3.getItems());
-		assertContains(dsEnvelope3, (List<DSEnvelope>)page3.getItems());
+			assertContains(dsEnvelope3, (List<DSEnvelope>)page3.getItems());
+		}
+		else {
+			Page<DSEnvelope> page1 = dsEnvelopeResource.getSiteDSEnvelopesPage(
+				siteId, null, null, null, null,
+				Pagination.of(1, totalCount + 2));
+
+			List<DSEnvelope> dsEnvelopes1 = (List<DSEnvelope>)page1.getItems();
+
+			Assert.assertEquals(
+				dsEnvelopes1.toString(), totalCount + 2, dsEnvelopes1.size());
+
+			Page<DSEnvelope> page2 = dsEnvelopeResource.getSiteDSEnvelopesPage(
+				siteId, null, null, null, null,
+				Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<DSEnvelope> dsEnvelopes2 = (List<DSEnvelope>)page2.getItems();
+
+			Assert.assertEquals(
+				dsEnvelopes2.toString(), 1, dsEnvelopes2.size());
+
+			Page<DSEnvelope> page3 = dsEnvelopeResource.getSiteDSEnvelopesPage(
+				siteId, null, null, null, null,
+				Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(dsEnvelope1, (List<DSEnvelope>)page3.getItems());
+			assertContains(dsEnvelope2, (List<DSEnvelope>)page3.getItems());
+			assertContains(dsEnvelope3, (List<DSEnvelope>)page3.getItems());
+		}
 	}
 
 	protected DSEnvelope testGetSiteDSEnvelopesPage_addDSEnvelope(
@@ -957,6 +996,10 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1452,9 +1495,9 @@ public abstract class BaseDSEnvelopeResourceTestCase {
 	}
 
 	protected DSEnvelopeResource dsEnvelopeResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

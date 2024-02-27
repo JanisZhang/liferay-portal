@@ -39,7 +39,7 @@ public class ObjectRelationshipTestUtil {
 			null, userId, objectDefinition.getObjectDefinitionId(),
 			relatedObjectDefinition.getObjectDefinitionId(), 0, deletionType,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-			StringUtil.randomId(), false, type);
+			StringUtil.randomId(), false, type, null);
 	}
 
 	public static void relateObjectEntries(
@@ -56,6 +56,14 @@ public class ObjectRelationshipTestUtil {
 			addObjectRelationshipMappingTableValues(
 				userId, objectRelationship.getObjectRelationshipId(),
 				objectEntryId1, objectEntryId2, serviceContext);
+	}
+
+	public static ObjectRelationship updateObjectRelationship(
+			String deletionType, long objectRelationshipId)
+		throws Exception {
+
+		return ObjectRelationshipLocalServiceUtil.updateObjectRelationship(
+			null, objectRelationshipId, 0, deletionType, false, null, null);
 	}
 
 }

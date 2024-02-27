@@ -10,6 +10,10 @@ import React, {useCallback} from 'react';
 
 import FormMappingOptions from '../../../plugins/browser/components/page_structure/components/item_configuration_panels/FormMappingOptions';
 import {
+	useItemLocalConfig,
+	useUpdateItemLocalConfig,
+} from '../../contexts/LocalConfigContext';
+import {
 	useDispatch,
 	useSelector,
 	useSelectorCallback,
@@ -24,12 +28,12 @@ import isItemEmpty from '../../utils/isItemEmpty';
 import ContainerWithControls from './ContainerWithControls';
 
 const FormWithControls = React.forwardRef(({children, item, ...rest}, ref) => {
-	const showMessagePreview = item.config?.showMessagePreview;
+	const localConfig = useItemLocalConfig(item.itemId);
 
 	return (
 		<form
 			className={classNames('page-editor__form', {
-				'page-editor__form--success': showMessagePreview,
+				'page-editor__form--success': localConfig.showMessagePreview,
 			})}
 			onSubmit={(event) => event.preventDefault()}
 			ref={ref}
@@ -42,7 +46,9 @@ const FormWithControls = React.forwardRef(({children, item, ...rest}, ref) => {
 });
 
 function Form({children, item}) {
-	const showLoadingState = item.config?.loading;
+	const localConfig = useItemLocalConfig(item.itemId);
+
+	const showLoadingState = localConfig.loading;
 
 	const isEmpty = useSelectorCallback(
 		(state) =>
@@ -82,7 +88,7 @@ function Form({children, item}) {
 		return <FormEmptyState isMapped={isMapped} item={item} />;
 	}
 
-	const {showMessagePreview} = item.config;
+	const {showMessagePreview} = localConfig;
 
 	return (
 		<>
@@ -101,19 +107,35 @@ function Form({children, item}) {
 
 function FormEmptyState({isMapped, item}) {
 	const dispatch = useDispatch();
+	const updateItemLocalConfig = useUpdateItemLocalConfig();
 
 	const onValueSelect = useCallback(
-		(nextConfig) =>
+		(nextConfig) => {
+			const isMapping = Boolean(nextConfig.classNameId);
+
+			if (isMapping) {
+				updateItemLocalConfig(item.itemId, {
+					loading: true,
+				});
+			}
+
 			dispatch(
 				updateFormItemConfig({
 					itemConfig: nextConfig,
 					itemId: item.itemId,
 				})
-			),
-		[dispatch, item.itemId]
+			).then(() =>
+				updateItemLocalConfig(item.itemId, {
+					loading: false,
+				})
+			);
+		},
+		[dispatch, item.itemId, updateItemLocalConfig]
 	);
 
-	if (item.config.showMessagePreview) {
+	const localConfig = useItemLocalConfig(item.itemId);
+
+	if (localConfig.showMessagePreview) {
 		return <FormSuccessMessage item={item} />;
 	}
 

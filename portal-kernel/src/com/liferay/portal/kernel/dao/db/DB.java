@@ -78,7 +78,8 @@ public interface DB {
 
 	public List<Index> getIndexes(Connection connection) throws SQLException;
 
-	public ResultSet getIndexResultSet(Connection connection, String tableName)
+	public ResultSet getIndexResultSet(
+			Connection connection, String tableName, boolean onlyUnique)
 		throws SQLException;
 
 	public int getMajorVersion();
@@ -114,6 +115,8 @@ public interface DB {
 	public boolean isSupportsAlterColumnName();
 
 	public boolean isSupportsAlterColumnType();
+
+	public boolean isSupportsDBPartition();
 
 	public boolean isSupportsInlineDistinct();
 
@@ -184,7 +187,7 @@ public interface DB {
 		throws Exception;
 
 	public void updateIndexes(
-			Connection connection, String tablesSQL, String indexesSQL,
+			Connection connection, String tableName, String indexesSQL,
 			boolean dropStaleIndexes)
 		throws Exception;
 

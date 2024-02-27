@@ -3,7 +3,7 @@ definition {
 
 	property app.server.types = "tomcat";
 	property ci.retries.disabled = "true";
-	property database.types = "mysql";
+	property database.types = "mysql, postgresql";
 	property liferay.online.properties = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
@@ -235,7 +235,7 @@ definition {
 
 	@priority = 5
 	test CanAddCompanyWithPortalInstancesAdminUI {
-		property custom.properties = "database.partition.schema.name.prefix=testPartition${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+		property custom.properties = "database.partition.schema.name.prefix=ltest_${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property portal.acceptance = "true";
 		property test.assert.warning.exceptions = "true";
 		property test.liferay.virtual.instance = "false";
@@ -270,14 +270,14 @@ definition {
 		DMDocument.viewCP(dmDocumentTitle = "DM Document Title");
 
 		SQL.assertDatabaseCount(
-			databaseFilter = "testPartition%",
-			databaseSubstring = "testPartition",
+			databaseFilter = "ltest_%",
+			databaseSubstring = "ltest_",
 			expectedCount = 1);
 	}
 
 	@priority = 5
 	test CanDeleteCompany {
-		property custom.properties = "database.partition.schema.name.prefix=testPartition${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+		property custom.properties = "database.partition.schema.name.prefix=ltest_${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property portal.acceptance = "true";
 		property test.assert.warning.exceptions = "true";
 		property test.liferay.virtual.instance = "false";
@@ -307,16 +307,13 @@ definition {
 
 		User.loginPG();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
+		PortalInstances.openVirtualInstancesAdmin();
 
 		PortalInstances.deleteCP(virtualHost = "www.able.com");
 
 		SQL.assertDatabaseCount(
-			databaseFilter = "testPartition%",
-			databaseSubstring = "testPartition",
+			databaseFilter = "ltest_%",
+			databaseSubstring = "ltest_",
 			expectedCount = 0);
 	}
 
@@ -438,10 +435,7 @@ definition {
 
 		User.firstLoginPG();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+		ServerAdministration.openServerAdmin();
 
 		ServerAdministration.executeServerResourcesActions(actionsDescription = "Clear the database cache.");
 
@@ -454,7 +448,7 @@ definition {
 
 	@priority = 4
 	test ExecuteSchemaValidator {
-		property custom.properties = "database.partition.schema.name.prefix=testPartition${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com,www.baker.com";
+		property custom.properties = "database.partition.schema.name.prefix=ltest_${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com,www.baker.com";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -511,16 +505,16 @@ definition {
 		DMDocument.viewCP(dmDocumentTitle = "DM Document Title");
 
 		SQL.assertDatabaseCount(
-			databaseFilter = "testPartition%",
-			databaseSubstring = "testPartition",
+			databaseFilter = "ltest_%",
+			databaseSubstring = "ltest_",
 			expectedCount = 2);
 
-		DBPartition.validateSchemas(schemaNamePrefix = "testPartition");
+		DBPartition.validateSchemas(schemaNamePrefix = "ltest_");
 	}
 
 	@priority = 3
 	test NewCompanyStillAccessibleAfterRestart {
-		property custom.properties = "database.partition.schema.name.prefix=testPartition${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+		property custom.properties = "database.partition.schema.name.prefix=ltest_${line.separator}virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property test.assert.warning.exceptions = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -569,12 +563,13 @@ definition {
 	@priority = 3
 	test NewCompanyStillAccessibleAfterRestartWithCaseInsensitiveDatabase {
 		property database.lowercase.enabled = "true";
+		property database.types = "mysql";
 		property test.assert.warning.exceptions = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("Verify if the lower_case_table_names is enabled") {
-			var variableQueryResult = SQL.executeMySQLStatement(mysqlStatement = "show variables where Variable_name='lower_case_table_names';");
+			var variableQueryResult = SQL.executeSQLStatement(sqlStatement = "show variables where Variable_name='lower_case_table_names';");
 
 			if (!(contains(${variableQueryResult}, "lower_case_table_names,1"))) {
 				echo(${variableQueryResult});
@@ -591,10 +586,7 @@ definition {
 		}
 
 		task ("Go to Control Panel > Virtual Instances and verify that the virtual instance is present in the UI") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			PortalInstances.viewCP(virtualHost = "www.able.com");
 		}

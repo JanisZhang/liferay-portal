@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -165,7 +166,8 @@ public class CalendarUtil {
 					calendarResourceLocalService.getCalendarResource(
 						calendarBooking.getCalendarResourceId());
 
-				return calendarResource.getName(themeDisplay.getLocale());
+				return HtmlUtil.escape(
+					calendarResource.getName(themeDisplay.getLocale()));
 			}
 		).put(
 			"description",
@@ -318,7 +320,7 @@ public class CalendarUtil {
 			"calendarResourceId", calendarResource.getCalendarResourceId()
 		).put(
 			"calendarResourceName",
-			calendarResource.getName(themeDisplay.getLocale())
+			HtmlUtil.escape(calendarResource.getName(themeDisplay.getLocale()))
 		).put(
 			"classNameId", calendarResource.getClassNameId()
 		).put(
@@ -352,7 +354,7 @@ public class CalendarUtil {
 					calendar.getCalendarId(), themeDisplay.getScopeGroupId());
 			}
 		).put(
-			"name", calendar.getName(themeDisplay.getLocale())
+			"name", HtmlUtil.escape(calendar.getName(themeDisplay.getLocale()))
 		).put(
 			"permissions",
 			_getPermissionsJSONObject(

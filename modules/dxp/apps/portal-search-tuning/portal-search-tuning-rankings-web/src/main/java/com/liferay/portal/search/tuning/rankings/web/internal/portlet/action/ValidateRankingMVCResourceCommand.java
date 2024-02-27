@@ -21,17 +21,19 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.tuning.rankings.constants.ResultRankingsConstants;
+import com.liferay.portal.search.tuning.rankings.helper.RankingHelper;
+import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexName;
+import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexNameBuilder;
 import com.liferay.portal.search.tuning.rankings.web.internal.constants.ResultRankingsPortletKeys;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.DuplicateQueryStringsDetector;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexName;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexNameBuilder;
-import com.liferay.portal.search.tuning.rankings.web.internal.util.RankingUtil;
 
 import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -79,13 +81,14 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 			resourceRequest, validateRankingMVCResourceRequest);
 
 		if (ListUtil.isNotEmpty(duplicateQueryStrings) &&
-			!validateRankingMVCResourceRequest.getInactive()) {
+			Objects.equals(
+				validateRankingMVCResourceRequest.getStatus(),
+				ResultRankingsConstants.STATUS_ACTIVE)) {
 
 			jsonArray.put(
 				_language.format(
 					portal.getHttpServletRequest(resourceRequest),
-					"active-search-queries-and-aliases-must-be-unique-across-" +
-						"all-rankings.-the-following-ones-already-exist-x",
+					"active-rankings-must-be-unique-x",
 					StringUtil.merge(
 						duplicateQueryStrings, StringPool.COMMA_AND_SPACE),
 					false));
@@ -150,7 +153,7 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 				validateRankingMVCResourceRequest.
 					getGroupExternalReferenceCode()
 			).queryStrings(
-				RankingUtil.getQueryStrings(
+				_rankingHelper.getQueryStrings(
 					validateRankingMVCResourceRequest.getQueryString(),
 					_getAliases(validateRankingMVCResourceRequest))
 			).rankingIndexName(
@@ -189,6 +192,9 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 	@Reference
 	private Language _language;
 
+	@Reference
+	private RankingHelper _rankingHelper;
+
 	private class ValidateRankingMVCResourceRequest {
 
 		public ValidateRankingMVCResourceRequest(
@@ -198,10 +204,10 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 				ParamUtil.getStringValues(resourceRequest, "aliases"));
 			_groupExternalReferenceCode = ParamUtil.getString(
 				resourceRequest, "groupExternalReferenceCode");
-			_inactive = ParamUtil.getBoolean(resourceRequest, "inactive");
 			_queryString = ParamUtil.getString(resourceRequest, "keywords");
 			_resultsRankingUid = ParamUtil.getString(
 				resourceRequest, "resultsRankingUid");
+			_status = ParamUtil.getString(resourceRequest, "status");
 			_sxpBlueprintExternalReferenceCode = ParamUtil.getString(
 				resourceRequest, "sxpBlueprintExternalReferenceCode");
 		}
@@ -214,10 +220,6 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 			return _groupExternalReferenceCode;
 		}
 
-		public boolean getInactive() {
-			return _inactive;
-		}
-
 		public String getQueryString() {
 			return _queryString;
 		}
@@ -226,15 +228,19 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 			return _resultsRankingUid;
 		}
 
+		public String getStatus() {
+			return _status;
+		}
+
 		public String getSXPBlueprintExternalReferenceCode() {
 			return _sxpBlueprintExternalReferenceCode;
 		}
 
 		private final List<String> _aliases;
 		private final String _groupExternalReferenceCode;
-		private final boolean _inactive;
 		private final String _queryString;
 		private final String _resultsRankingUid;
+		private final String _status;
 		private final String _sxpBlueprintExternalReferenceCode;
 
 	}

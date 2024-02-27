@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -240,32 +238,72 @@ public abstract class BaseObjectFolderResourceTestCase {
 		ObjectFolder objectFolder3 = testGetObjectFoldersPage_addObjectFolder(
 			randomObjectFolder());
 
-		Page<ObjectFolder> page1 = objectFolderResource.getObjectFoldersPage(
-			null, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ObjectFolder> objectFolders1 =
-			(List<ObjectFolder>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			objectFolders1.toString(), totalCount + 2, objectFolders1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ObjectFolder> page1 =
+				objectFolderResource.getObjectFoldersPage(
+					null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<ObjectFolder> page2 = objectFolderResource.getObjectFoldersPage(
-			null, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(objectFolder1, (List<ObjectFolder>)page1.getItems());
 
-		List<ObjectFolder> objectFolders2 =
-			(List<ObjectFolder>)page2.getItems();
+			Page<ObjectFolder> page2 =
+				objectFolderResource.getObjectFoldersPage(
+					null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(
-			objectFolders2.toString(), 1, objectFolders2.size());
+			assertContains(objectFolder2, (List<ObjectFolder>)page2.getItems());
 
-		Page<ObjectFolder> page3 = objectFolderResource.getObjectFoldersPage(
-			null, Pagination.of(1, (int)totalCount + 3));
+			Page<ObjectFolder> page3 =
+				objectFolderResource.getObjectFoldersPage(
+					null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertContains(objectFolder1, (List<ObjectFolder>)page3.getItems());
-		assertContains(objectFolder2, (List<ObjectFolder>)page3.getItems());
-		assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
+			assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
+		}
+		else {
+			Page<ObjectFolder> page1 =
+				objectFolderResource.getObjectFoldersPage(
+					null, Pagination.of(1, totalCount + 2));
+
+			List<ObjectFolder> objectFolders1 =
+				(List<ObjectFolder>)page1.getItems();
+
+			Assert.assertEquals(
+				objectFolders1.toString(), totalCount + 2,
+				objectFolders1.size());
+
+			Page<ObjectFolder> page2 =
+				objectFolderResource.getObjectFoldersPage(
+					null, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ObjectFolder> objectFolders2 =
+				(List<ObjectFolder>)page2.getItems();
+
+			Assert.assertEquals(
+				objectFolders2.toString(), 1, objectFolders2.size());
+
+			Page<ObjectFolder> page3 =
+				objectFolderResource.getObjectFoldersPage(
+					null, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(objectFolder1, (List<ObjectFolder>)page3.getItems());
+			assertContains(objectFolder2, (List<ObjectFolder>)page3.getItems());
+			assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
+		}
 	}
 
 	protected ObjectFolder testGetObjectFoldersPage_addObjectFolder(
@@ -1054,6 +1092,10 @@ public abstract class BaseObjectFolderResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1363,9 +1405,9 @@ public abstract class BaseObjectFolderResourceTestCase {
 	}
 
 	protected ObjectFolderResource objectFolderResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

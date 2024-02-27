@@ -358,6 +358,24 @@ public class PortalUpgradeProcessRegistryImpl
 
 		upgradeVersionTreeMap.put(
 			new Version(29, 1, 2), new UpgradeListTypeType());
+
+		upgradeVersionTreeMap.put(
+			new Version(29, 2, 0),
+			UpgradeProcessFactory.addColumns(
+				"DLFileEntry", "displayDate DATE null"),
+			UpgradeProcessFactory.addColumns(
+				"DLFileVersion", "displayDate DATE null"));
+
+		upgradeVersionTreeMap.put(
+			new Version(29, 2, 1),
+			UpgradeModulesFactory.create(
+				new String[] {"com.liferay.portal.search.tuning.rankings.web"},
+				null));
+
+		upgradeVersionTreeMap.put(
+			new Version(29, 2, 2),
+			UpgradeModulesFactory.create(
+				new String[] {"com.liferay.headless.builder.impl"}, null));
 	}
 
 }

@@ -16,14 +16,13 @@ import {openInitialSuccessToast} from '../utils/toasts';
 import EditSXPBlueprintForm from './EditSXPBlueprintForm';
 
 export default function ({
-	contextPath,
 	defaultLocale,
-	featureFlagLps153813,
 	isCompanyAdmin,
 	learnMessages,
 	locale,
 	namespace,
 	redirectURL,
+	selectSitesURL,
 	sxpBlueprintId,
 }) {
 	const [resource, setResource] = useState(null);
@@ -49,14 +48,13 @@ export default function ({
 		<ThemeContext.Provider
 			value={{
 				availableLanguages: Liferay.Language.available,
-				contextPath,
 				defaultLocale,
-				featureFlagLps153813,
 				isCompanyAdmin,
 				learnMessages,
 				locale,
 				namespace,
 				redirectURL,
+				selectSitesURL,
 				sxpType: 'sxpBlueprint',
 			}}
 		>

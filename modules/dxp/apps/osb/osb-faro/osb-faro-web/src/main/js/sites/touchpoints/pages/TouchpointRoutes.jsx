@@ -1,24 +1,25 @@
 import * as breadcrumbs from 'shared/util/breadcrumbs';
 import BasePage from 'shared/components/base-page';
 import BundleRouter from 'route-middleware/BundleRouter';
+import ClayLink from '@clayui/link';
 import DownloadCSVReport from 'shared/components/download-report/DownloadCSVReport';
 import DownloadPDFReport, {
 	Containers
 } from 'shared/components/download-report/DownloadPDFReport';
-import DropdownRangeKey from 'shared/hoc/DropdownRangeKey';
 import FilterBySegment from '../components/FilterBySegment';
 import getCN from 'classnames';
 import Loading from 'shared/components/Loading';
 import React, {lazy, Suspense, useEffect, useState} from 'react';
 import RouteNotFound from 'shared/components/RouteNotFound';
 import TextTruncate from 'shared/components/TextTruncate';
+import {DropdownRangeKey} from 'shared/components/dropdown-range-key/DropdownRangeKey';
 import {getMatchedRoute, Routes} from 'shared/util/router';
 import {getRangeSelectorsFromQuery} from 'shared/util/util';
 import {pickBy} from 'lodash';
 import {PropTypes} from 'prop-types';
 import {Switch} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
-import {useDataSource} from 'shared/hooks/useDataSource';
+import {useDataSource} from 'shared/hooks';
 
 const KnownIndividuals = lazy(() =>
 	import(
@@ -90,9 +91,9 @@ function TouchpointRoutes({className, router}) {
 				<BasePage.Header.TitleSection
 					subtitle={
 						<TextTruncate title={decodedTouchpoint}>
-							<a href={decodedTouchpoint} target='_blank'>
+							<ClayLink href={decodedTouchpoint} target='_blank'>
 								{decodedTouchpoint}
-							</a>
+							</ClayLink>
 						</TextTruncate>
 					}
 					title={decodedTitle}
@@ -156,7 +157,7 @@ function TouchpointRoutes({className, router}) {
 
 						<DropdownRangeKey
 							legacy={false}
-							onChange={setPathRangeSelectors}
+							onRangeSelectorChange={setPathRangeSelectors}
 							rangeSelectors={pathRangeSelectors}
 						/>
 					</BasePage.SubHeader>

@@ -7,6 +7,7 @@ import ClayButton from '@clayui/button';
 import {Option, Picker} from '@clayui/core';
 import ClayIcon from '@clayui/icon';
 import ClayPanel from '@clayui/panel';
+import {ScreenReaderAnnouncerContext} from '@liferay/layout-js-components-web';
 import React, {Dispatch, SetStateAction, useContext, useMemo} from 'react';
 import {flushSync} from 'react-dom';
 
@@ -16,7 +17,6 @@ import {v4 as uuidv4} from 'uuid';
 
 import ActionComponent, {Action} from './Action';
 import ConditionComponent, {Condition} from './Condition';
-import {ScreenReaderAnnouncerContext} from './ScreenReaderContext';
 
 const TriggerLabel = React.forwardRef<HTMLButtonElement, any>(
 	({children, className: _className, onClick, ...otherProps}, ref) => (
@@ -93,10 +93,8 @@ export function RuleBuilderActionSection({
 	return (
 		<ClayPanel
 			className="page-editor__rule-builder-section"
-			collapsable
-			defaultExpanded
 			displayTitle={
-				<ClayPanel.Title className="py-2">
+				<ClayPanel.Title className="align-items-center d-flex p-3 page-editor__rule-builder-section-title text-3">
 					<div className="align-items-center d-flex">
 						<ClayIcon
 							className="mr-3 text-purple"
@@ -112,33 +110,38 @@ export function RuleBuilderActionSection({
 				</ClayPanel.Title>
 			}
 			displayType="secondary"
-			showCollapseIcon
 		>
-			<ClayPanel.Body role="menu">
-				{actions.map((action, index) => (
-					<ActionComponent
-						action={action}
-						key={action.id}
-						layoutDataItems={layoutDataItems}
-						onActionChange={(action) =>
-							setActions((previousActions) => {
-								const newActions = [...previousActions];
+			<ClayPanel.Body className="px-3">
+				<div role="menu">
+					{actions.map((action, index) => (
+						<ActionComponent
+							action={action}
+							key={action.id}
+							layoutDataItems={layoutDataItems}
+							onActionChange={(action) =>
+								setActions((previousActions) => {
+									const newActions = [...previousActions];
 
-								newActions[index] = action;
+									newActions[index] = action;
 
-								return newActions;
-							})
-						}
-						onDeleteAction={() => {
-							onDeleteAction(action, index);
-						}}
-						showDeleteButton={actions.length > 1 || !!action.type}
-						wrapperRef={(element) => setActionRef(action, element)}
-					/>
-				))}
+									return newActions;
+								})
+							}
+							onDeleteAction={() => {
+								onDeleteAction(action, index);
+							}}
+							showDeleteButton={
+								actions.length > 1 || !!action.type
+							}
+							wrapperRef={(element) =>
+								setActionRef(action, element)
+							}
+						/>
+					))}
+				</div>
 
 				<ClayButton
-					className="mt-4"
+					className="mt-2"
 					displayType="secondary"
 					onClick={onAddAction}
 					size="sm"
@@ -238,8 +241,13 @@ export function RuleBuilderConditionSection({
 							{Liferay.Language.get('if')}
 						</span>
 
-						<div>
+						<div className="align-items-center d-flex">
 							<Picker
+								aria-label={
+									conditionType === 'all'
+										? Liferay.Language.get('all')
+										: Liferay.Language.get('any')
+								}
 								as={TriggerLabel}
 								items={[
 									{
@@ -275,34 +283,38 @@ export function RuleBuilderConditionSection({
 			displayType="secondary"
 			showCollapseIcon
 		>
-			<ClayPanel.Body role="menu">
-				{conditions.map((condition, index, conditions) => (
-					<ConditionComponent
-						condition={condition}
-						key={condition.id}
-						onConditionChange={(condition) =>
-							setConditions((previousConditions) => {
-								const newConditions = [...previousConditions];
+			<ClayPanel.Body className="px-3">
+				<div role="menu">
+					{conditions.map((condition, index, conditions) => (
+						<ConditionComponent
+							condition={condition}
+							key={condition.id}
+							onConditionChange={(condition) =>
+								setConditions((previousConditions) => {
+									const newConditions = [
+										...previousConditions,
+									];
 
-								newConditions[index] = condition;
+									newConditions[index] = condition;
 
-								return newConditions;
-							})
-						}
-						onDeleteCondition={() =>
-							onDeleteCondition(condition, index)
-						}
-						showDeleteButton={
-							conditions.length > 1 || !!condition.type
-						}
-						wrapperRef={(element) =>
-							setConditionRef(condition, element)
-						}
-					/>
-				))}
+									return newConditions;
+								})
+							}
+							onDeleteCondition={() =>
+								onDeleteCondition(condition, index)
+							}
+							showDeleteButton={
+								conditions.length > 1 || !!condition.type
+							}
+							wrapperRef={(element) =>
+								setConditionRef(condition, element)
+							}
+						/>
+					))}
+				</div>
 
 				<ClayButton
-					className="mt-4"
+					className="mt-2"
 					displayType="secondary"
 					onClick={onAddCondition}
 					size="sm"

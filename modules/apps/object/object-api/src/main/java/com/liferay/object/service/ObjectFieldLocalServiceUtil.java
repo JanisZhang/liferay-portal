@@ -549,6 +549,34 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().updateRequired(objectFieldId, required);
 	}
 
+	public static void validateExternalReferenceCode(
+			String externalReferenceCode, long objectFieldId, long companyId,
+			long objectDefinitionId)
+		throws PortalException {
+
+		getService().validateExternalReferenceCode(
+			externalReferenceCode, objectFieldId, companyId,
+			objectDefinitionId);
+	}
+
+	public static void validateReadOnlyAndReadOnlyConditionExpression(
+			String businessType, String readOnly,
+			String readOnlyConditionExpression, boolean required)
+		throws PortalException {
+
+		getService().validateReadOnlyAndReadOnlyConditionExpression(
+			businessType, readOnly, readOnlyConditionExpression, required);
+	}
+
+	public static void validateRequired(
+			String businessType, boolean objectDefinitionApproved,
+			ObjectField oldObjectField, boolean required)
+		throws PortalException {
+
+		getService().validateRequired(
+			businessType, objectDefinitionApproved, oldObjectField, required);
+	}
+
 	public static ObjectFieldLocalService getService() {
 		return _service;
 	}

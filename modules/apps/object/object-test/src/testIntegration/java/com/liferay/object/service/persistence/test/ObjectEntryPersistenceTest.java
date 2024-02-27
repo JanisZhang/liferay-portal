@@ -287,6 +287,15 @@ public class ObjectEntryPersistenceTest {
 	}
 
 	@Test
+	public void testCountByU_GtCD_ODI() throws Exception {
+		_persistence.countByU_GtCD_ODI(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextDate(),
+			RandomTestUtil.nextLong());
+
+		_persistence.countByU_GtCD_ODI(0L, RandomTestUtil.nextDate(), 0L);
+	}
+
+	@Test
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		ObjectEntry newObjectEntry = addObjectEntry();
 

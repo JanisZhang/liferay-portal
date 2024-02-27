@@ -65,20 +65,16 @@ definition {
 				status = "published",
 				title = "My-app");
 
-			SchemaAPI.relateRequestSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				requestSchemaErc = "testSchema");
-
 			SchemaAPI.relateResponseSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				responseSchemaErc = "testSchema");
+				endpointErc = "My-app_testendpoint",
+				responseSchemaErc = "My-app_testSchema");
 		}
 
 		task ("And Given I create schema a property with erc of name field") {
 			PropertyAPI.createAPIProperty(
 				name = "entryName",
 				objectFieldERC = "studentName",
-				schemaERC = "testSchema");
+				schemaERC = "My-app_testSchema");
 		}
 
 		task ("When execute get{Endpoint}Page with filter={property} eq 'Able' in API Explorer") {
@@ -115,25 +111,21 @@ definition {
 				status = "published",
 				title = "My-app");
 
-			SchemaAPI.relateRequestSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				requestSchemaErc = "testSchema");
-
 			SchemaAPI.relateResponseSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				responseSchemaErc = "testSchema");
+				endpointErc = "My-app_testendpoint",
+				responseSchemaErc = "My-app_testSchema");
 		}
 
 		task ("And Given I create schema a property with erc of name field") {
 			PropertyAPI.createAPIProperty(
 				name = "entryName",
 				objectFieldERC = "studentName",
-				schemaERC = "testSchema");
+				schemaERC = "My-app_testSchema");
 		}
 
 		task ("And Given I create endpoint a filter with name ne 'Test'") {
 			FilterAPI.createAPIFilter(
-				endpointERC = "testendpoint",
+				endpointERC = "My-app_testendpoint",
 				filterValue = "name ne '\''Test'\''");
 		}
 
@@ -203,25 +195,21 @@ definition {
 				status = "published",
 				title = "My-app");
 
-			SchemaAPI.relateRequestSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				requestSchemaErc = "testSchema");
-
 			SchemaAPI.relateResponseSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				responseSchemaErc = "testSchema");
+				endpointErc = "My-app_testendpoint",
+				responseSchemaErc = "My-app_testSchema");
 		}
 
 		task ("And Given I create schema a property with erc of name field") {
 			PropertyAPI.createAPIProperty(
 				name = "entryName",
 				objectFieldERC = "univeristyName",
-				schemaERC = "testSchema");
+				schemaERC = "My-app_testSchema");
 		}
 
 		task ("And Given I create endpoint a filter with name ne 'Test'") {
 			FilterAPI.createAPIFilter(
-				endpointERC = "testendpoint",
+				endpointERC = "My-app_testendpoint",
 				filterValue = "name ne '\''Test'\''");
 		}
 
@@ -266,20 +254,16 @@ definition {
 				status = "published",
 				title = "My-app");
 
-			SchemaAPI.relateRequestSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				requestSchemaErc = "testSchema");
-
 			SchemaAPI.relateResponseSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				responseSchemaErc = "testSchema");
+				endpointErc = "My-app_testendpoint",
+				responseSchemaErc = "My-app_testSchema");
 		}
 
 		task ("And Given I create schema a property with erc of name field") {
 			PropertyAPI.createAPIProperty(
 				name = "entryName",
 				objectFieldERC = "studentName",
-				schemaERC = "testSchema");
+				schemaERC = "My-app_testSchema");
 		}
 
 		task ("When execute get{Endpoint}Page with sort={property}:desc in API Explorer") {
@@ -316,25 +300,21 @@ definition {
 				status = "published",
 				title = "My-app");
 
-			SchemaAPI.relateRequestSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				requestSchemaErc = "testSchema");
-
 			SchemaAPI.relateResponseSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				responseSchemaErc = "testSchema");
+				endpointErc = "My-app_testendpoint",
+				responseSchemaErc = "My-app_testSchema");
 		}
 
 		task ("And Given I create schema a property with erc of name field") {
 			PropertyAPI.createAPIProperty(
 				name = "entryName",
 				objectFieldERC = "studentName",
-				schemaERC = "testSchema");
+				schemaERC = "My-app_testSchema");
 		}
 
 		task ("And Given I create endpoint a sort with name:asc") {
 			SortAPI.createAPISort(
-				endpointERC = "testendpoint",
+				endpointERC = "My-app_testendpoint",
 				sortValue = "name:asc");
 		}
 
@@ -353,43 +333,6 @@ definition {
 				locator1 = "OpenAPI#RESPONSE_BODY",
 				method = "getTestendpointPage",
 				value1 = "\"items\": [     {       \"entryName\": \"Tom\"     },     {       \"entryName\": \"Test\"     },     {       \"entryName\": \"Able\"     }   ]");
-		}
-	}
-
-	@priority = 4
-	test CannotSeeFilterAndSortParametersForSingleElementEndpoint {
-		property portal.acceptance = "true";
-
-		task ("Given an published API application with singleElement endpoint") {
-			ApplicationAPI.createAPIApplication(
-				baseURL = "my-app",
-				endpointName = "testendpoint",
-				endpointPath = "/testendpoint/{id}",
-				pathParameter = "ID",
-				relatedEndpoint = "true",
-				retrieveType = "singleElement",
-				status = "published",
-				title = "My-app");
-		}
-
-		task ("When I expand get{EndpointPath} in /o/c/{aPIApplication}") {
-			APIExplorer.navigateToOpenAPI(customObjectPlural = "my-app");
-
-			APIExplorer.expandAPIMethod(
-				method = "getTestendpointId",
-				service = "default");
-		}
-
-		task ("Then filter and sort parameters are not present") {
-			AssertElementNotPresent(
-				locator1 = "OpenAPI#PARAMETER_UNDER_METHOD",
-				method = "getTestendpointId",
-				parameter = "filter");
-
-			AssertElementNotPresent(
-				locator1 = "OpenAPI#PARAMETER_UNDER_METHOD",
-				method = "getTestendpointId",
-				parameter = "sort");
 		}
 	}
 

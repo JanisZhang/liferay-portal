@@ -145,6 +145,8 @@ public class MessageBoardMessageResourceImpl
 				Pagination pagination, Sort[] sorts)
 		throws Exception {
 
+		flatten = GetterUtil.getBoolean(flatten);
+
 		MBMessage mbMessage = _mbMessageService.getMessage(
 			parentMessageBoardMessageId);
 
@@ -165,9 +167,7 @@ public class MessageBoardMessageResourceImpl
 					mbMessage.getGroupId())
 			).build();
 
-		if ((search == null) && (filter == null)) {
-			flatten = GetterUtil.getBoolean(flatten);
-
+		if ((search == null) && (filter == null) && !flatten) {
 			int status = WorkflowConstants.STATUS_APPROVED;
 
 			PermissionChecker permissionChecker =
@@ -419,6 +419,13 @@ public class MessageBoardMessageResourceImpl
 	}
 
 	@Override
+	public void putMessageBoardMessageMarkAsAnswer(Long messageBoardMessageId)
+		throws Exception {
+
+		_mbMessageService.updateAnswer(messageBoardMessageId, true, false);
+	}
+
+	@Override
 	public Rating putMessageBoardMessageMyRating(
 			Long messageBoardMessageId, Rating rating)
 		throws Exception {
@@ -434,6 +441,13 @@ public class MessageBoardMessageResourceImpl
 		throws Exception {
 
 		_mbMessageService.subscribeMessage(messageBoardMessageId);
+	}
+
+	@Override
+	public void putMessageBoardMessageUnmarkAsAnswer(Long messageBoardMessageId)
+		throws Exception {
+
+		_mbMessageService.updateAnswer(messageBoardMessageId, false, false);
 	}
 
 	@Override

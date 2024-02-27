@@ -318,7 +318,7 @@ definition {
 		}
 
 		task ("And: Manually trigger the LDAP import flow") {
-			Groovy.runScriptViaUI(scriptFile = "groovy-script-invoke-ldap-user-import-on-master.groovy");
+			Groovy.runScriptViaGogoShell(scriptFile = "groovy-script-invoke-ldap-user-import-on-master.groovy");
 		}
 
 		task ("Then: The status of the new user remain unchanged after a new LDAP import") {
@@ -680,10 +680,7 @@ definition {
 		task ("Given: The main instance and a virtual instance is connected to the same LDAP Server") {
 			var enableSettingList = "enabled,required";
 
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			PortalInstances.addCP(
 				mailDomain = "www.able.com",

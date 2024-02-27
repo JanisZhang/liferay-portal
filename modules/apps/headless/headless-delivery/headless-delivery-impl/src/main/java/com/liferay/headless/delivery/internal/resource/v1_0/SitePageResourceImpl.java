@@ -371,6 +371,21 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 							siteMapInclude);
 					}
 
+					Boolean includeChildSitePages =
+						siteMapSettings.getIncludeChildSitePages();
+
+					if (includeChildSitePages != null) {
+						String siteMapIncludeChildLayouts = "false";
+
+						if (includeChildSitePages) {
+							siteMapIncludeChildLayouts = "true";
+						}
+
+						typeSettingsUnicodeProperties.setProperty(
+							"sitemap-include-child-layouts",
+							siteMapIncludeChildLayouts);
+					}
+
 					Double pagePriority = siteMapSettings.getPagePriority();
 
 					if (pagePriority != null) {
@@ -704,7 +719,7 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 		long[] segmentsEntryIds = _segmentsEntryRetriever.getSegmentsEntryIds(
 			layout.getGroupId(), contextUser.getUserId(),
-			_requestContextMapper.map(contextHttpServletRequest));
+			_requestContextMapper.map(contextHttpServletRequest), new long[0]);
 
 		long[] segmentsExperienceIds =
 			_segmentsExperienceRequestProcessorRegistry.

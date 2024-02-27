@@ -14,6 +14,12 @@ export {
 	default as ColorPicker,
 	DEFAULT_TOKEN_LABEL,
 } from './components/color_picker/ColorPicker';
+export {default as ScreenReaderAnnouncer} from './components/screen_reader_announcer/ScreenReaderAnnouncer';
+export {
+	ScreenReaderAnnouncerContext,
+	ScreenReaderAnnouncerContextProvider,
+	ScreenReaderAnnouncerContextType,
+} from './contexts/ScreenReaderContext';
 export {default as SearchForm} from './components/search_form/SearchForm';
 export {default as SearchResultsMessage} from './components/search_results_message/SearchResultsMessage';
 export {
@@ -21,6 +27,7 @@ export {
 	useHasStyleErrors,
 } from './contexts/StyleErrorsContext';
 export {default as useControlledState} from './hooks/useControlledState';
+export {default as openCreationModal} from './components/modals/openCreationModal';
 export {default as SegmentExperience} from './types/SegmentExperience';
 export {default as convertRGBtoHex} from './utils/convertRGBtoHex';
 export {default as isNullOrUndefined} from './utils/isNullOrUndefined';

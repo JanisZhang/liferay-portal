@@ -48,15 +48,11 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testUpgradeCatchAllCheck() throws Exception {
-		UpgradeCatchAllCheck.setTestMode(true);
-
-		test("upgrade/UpgradeCatchAllCheck.testftl");
-		test(
-			"upgrade/UpgradeCatchAllCheck.testjava",
-			UpgradeCatchAllCheck.getExpectedMessages());
-		test("upgrade/UpgradeCatchAllCheck.testjsp");
-		test("upgrade/UpgradeCatchAllCheck.testjspf");
-		test("upgrade/UpgradeCatchAllCheck.testscss");
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testftl");
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjava");
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjsp");
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjspf");
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testscss");
 	}
 
 	@Test
@@ -99,8 +95,10 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeJavaCookieKeysCheck() throws Exception {
-		test("upgrade/UpgradeJavaCookieKeysCheck.testjava");
+	public void testUpgradeJavaDDMFormValuesSerializerTrackerCheck()
+		throws Exception {
+
+		test("upgrade/UpgradeJavaDDMFormValuesSerializerTrackerCheck.testjava");
 	}
 
 	@Test
@@ -183,15 +181,15 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeJavaScreenContributorClassCheck() throws Exception {
+		test("upgrade/UpgradeJavaScreenContributorClassCheck.testjava");
+	}
+
+	@Test
 	public void testUpgradeJavaServiceReferenceAnnotationCheck()
 		throws Exception {
 
 		test("upgrade/UpgradeJavaServiceReferenceAnnotationCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaServiceTrackerListCheck() throws Exception {
-		test("upgrade/UpgradeJavaServiceTrackerListCheck.testjava");
 	}
 
 	@Test
@@ -202,12 +200,6 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testUpgradeJSPFieldSetGroupCheck() throws Exception {
 		test("upgrade/UpgradeJSPFieldSetGroupCheck.testjsp");
-	}
-
-	@Test
-	public void testUpgradePortletDisplayCheck() throws Exception {
-		test("upgrade/UpgradeJavaPortletDisplayCheck.testjava");
-		test("upgrade/UpgradeJSPPortletDisplayCheck.testjsp");
 	}
 
 	@Test
@@ -282,6 +274,17 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 			sourceFormatterProperties);
 
 		return sourceFormatterArgs;
+	}
+
+	private void _testUpgradeCatchAllCheck(String fileName) throws Exception {
+		UpgradeCatchAllCheck.setTestMode(true);
+
+		if (fileName.endsWith(".testjava")) {
+			test(fileName, UpgradeCatchAllCheck.getExpectedMessages());
+		}
+		else {
+			test(fileName);
+		}
 	}
 
 	private static final String _UPGRADE_TO_VERSION = "7.4.13.u27";

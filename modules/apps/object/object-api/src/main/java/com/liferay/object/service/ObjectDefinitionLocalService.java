@@ -329,6 +329,10 @@ public interface ObjectDefinitionLocalService
 			String uuid, long companyId)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectDefinition> getObjectDefinitions(
+		boolean accountEntryRestricted);
+
 	/**
 	 * Returns a range of all the object definitions.
 	 *
@@ -399,10 +403,12 @@ public interface ObjectDefinitionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public boolean hasObjectRelationship(long objectDefinitionId);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public ObjectDefinition publishCustomObjectDefinition(
 			long userId, long objectDefinitionId)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
 	public ObjectDefinition publishSystemObjectDefinition(
 			long userId, long objectDefinitionId)
 		throws PortalException;
@@ -423,7 +429,7 @@ public interface ObjectDefinitionLocalService
 			boolean enableObjectEntryDraft, boolean enableObjectEntryHistory,
 			Map<Locale, String> labelMap, String name, String panelAppOrder,
 			String panelCategoryKey, boolean portlet,
-			Map<Locale, String> pluralLabelMap, String scope)
+			Map<Locale, String> pluralLabelMap, String scope, int status)
 		throws PortalException;
 
 	public ObjectDefinition updateExternalReferenceCode(

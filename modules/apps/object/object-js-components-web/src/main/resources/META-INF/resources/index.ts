@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-export {BetaButton} from './components/BetaButton';
 export {BuilderScreen} from './components/BuilderScreen/BuilderScreen';
 export {Card} from './components/Card';
 export {
@@ -19,7 +18,7 @@ export * from './components/ExpressionBuilder';
 export {Input} from './components/Input';
 export {ManagementToolbar} from './components/ManagementToolbar/index';
 export {ManagementToolbarSearch} from './components/ManagementToolbar/ManagementToolbarSearch';
-export {ModalEditExternalReferenceCode} from './components/ManagementToolbar/ModalEditExternalReferenceCode';
+export {ModalEditObjectDefinitionExternalReferenceCode} from './components/ManagementToolbar/ModalEditObjectDefinitionExternalReferenceCode';
 export {CustomVerticalBar} from './components/VerticalBar/CustomVerticalBar';
 export {ListTypeEntryBaseField} from './components/BaseEntryFields/ListTypeEntryBaseField';
 export {RadioField} from './components/RadioField/RadioField';

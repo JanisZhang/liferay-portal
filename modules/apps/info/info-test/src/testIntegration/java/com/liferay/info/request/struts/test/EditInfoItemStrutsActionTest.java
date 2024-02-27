@@ -40,6 +40,7 @@ import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.memory.DeleteFileFinalizeAction;
 import com.liferay.petra.memory.FinalizeManager;
@@ -280,7 +281,7 @@ public class EditInfoItemStrutsActionTest {
 			null, null);
 	}
 
-	@FeatureFlags({"LPS-187754", "LPS-181663"})
+	@FeatureFlags("LPS-187754")
 	@Test
 	public void testAddInfoItemWithDraftStatus() throws Exception {
 		_testAddInfoItem(
@@ -422,6 +423,8 @@ public class EditInfoItemStrutsActionTest {
 
 		mockMultipartHttpServletRequest.addHeader(
 			HttpHeaders.REFERER, "https://example.com/error");
+		mockMultipartHttpServletRequest.setContentType(
+			"multipart/form-data;boundary=" + System.currentTimeMillis());
 
 		Map<String, List<String>> regularParameters =
 			HashMapBuilder.<String, List<String>>put(
@@ -706,7 +709,7 @@ public class EditInfoItemStrutsActionTest {
 			_objectDefinitionLocalService.addCustomObjectDefinition(
 				_user.getUserId(), 0, false, false, true,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"A" + RandomTestUtil.randomString(), null,
+				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,

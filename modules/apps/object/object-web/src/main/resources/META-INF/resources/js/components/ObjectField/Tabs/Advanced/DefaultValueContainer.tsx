@@ -14,7 +14,11 @@ import {
 	Toggle,
 } from '@liferay/object-js-components-web';
 import classNames from 'classnames';
-import {LearnMessage, LearnResourcesContext} from 'frontend-js-components-web';
+import {
+	ILearnResourceContext,
+	LearnMessage,
+	LearnResourcesContext,
+} from 'frontend-js-components-web';
 import React, {useEffect, useState} from 'react';
 
 import {
@@ -28,7 +32,7 @@ import {ObjectFieldErrors} from '../../ObjectFieldFormBase';
 interface DefaultValueContainerProps {
 	creationLanguageId: Liferay.Language.Locale;
 	errors: ObjectFieldErrors;
-	learnResources: ObjectWebLearnResources;
+	learnResources: ILearnResourceContext;
 	modelBuilder?: boolean;
 	onSubmit?: (values?: Partial<ObjectField>) => void;
 	setValues: (value: Partial<ObjectField>) => void;
@@ -49,7 +53,9 @@ export interface InputAsValueFieldComponentProps {
 }
 
 type InputAsValueFieldComponents = {
-	[key in ObjectFieldBusinessType]: React.FC<InputAsValueFieldComponentProps>;
+	[key in ObjectFieldBusinessTypeName]: React.FC<
+		InputAsValueFieldComponentProps
+	>;
 };
 
 const InputAsValueFieldComponents: Partial<InputAsValueFieldComponents> = {
@@ -139,7 +145,7 @@ export function DefaultValueContainer({
 						<LearnMessage
 							className="alert-link"
 							resource="object-web"
-							resourceKey="general"
+							resourceKey="expression-builder-validations-reference"
 						/>
 					</LearnResourcesContext.Provider>
 				</ClayAlert>

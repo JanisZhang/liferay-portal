@@ -13,7 +13,14 @@ type Specification = {
 	value: string;
 };
 
-export interface InitialStateProps {
+type LicenceTiersPrices = {
+	developer: LicensePrice[];
+	standard: LicensePrice[];
+};
+
+export type LicensePrice = {key: number; value: number};
+
+export type InitialStateProps = {
 	appBuild: string;
 	appCategories: Categories[];
 	appDescription: string;
@@ -22,7 +29,7 @@ export interface InitialStateProps {
 	appId: string;
 	appInstallationGuideURL: Specification;
 	appLicense: Specification;
-	appLicensePrice: string;
+	appLicensePrice: LicenceTiersPrices;
 	appLogo: UploadedFile;
 	appName: string;
 	appNotes: string;
@@ -33,7 +40,7 @@ export interface InitialStateProps {
 	appUsageTermsURL: Specification;
 	appVersion: string;
 	appWorkflowStatusInfo: string;
-	buildZIPFiles: UploadedFile[];
+	buildAppPackages: {[key: string]: UploadedFile[]};
 	catalogId: number;
 	dayTrial: string;
 	gravatarAPI: string;
@@ -42,18 +49,41 @@ export interface InitialStateProps {
 	priceModel: Specification;
 	productOptionId: number;
 	publisherWebsiteURL: Specification;
+	resourceRequirements: {
+		cpu: number | string;
+		ram: number | string;
+	};
 	skuTrialId: number;
 	skuVersionId: number;
 	supportURL: Specification;
-}
+	versionName?: string;
+};
 
-const initialState = {
+export type Sku = {id: number; sku: string};
+
+export type PriceEntry = {priceEntryId: number; sku: {name: string}};
+
+const initialState = ({
 	appBuild: 'upload',
+	appCategories: [],
 	appLicense: {value: 'Perpetual'},
-	appType: {value: 'cloud'},
+	appLicensePrice: {
+		developer: [],
+		standard: [{key: 1, value: 0}],
+	},
+	appTags: [],
+	appType: {value: ''},
+	appVersion: '1.0',
+	buildAppPackages: {},
 	dayTrial: 'no',
-	priceModel: {value: 'Paid'},
-} as InitialStateProps;
+	optionValuesId: {},
+	priceModel: {value: 'Free'},
+	resourceRequirements: {
+		cpu: '',
+		ram: '',
+	},
+	supportURL: '',
+} as unknown) as InitialStateProps;
 
 interface AppContextProps extends Array<InitialStateProps | Function> {
 	0: typeof initialState;

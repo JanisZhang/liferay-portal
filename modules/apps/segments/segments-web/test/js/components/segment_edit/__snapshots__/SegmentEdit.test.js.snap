@@ -427,11 +427,11 @@ exports[`SegmentEdit renders with given values 1`] = `
         class="contributor-builder-root h-100 editing"
       >
         <div
-          class="criteria-builder-section-sidebar overflow-hidden position-fixed criteria-builder-section-sidebar--with-warning"
+          class="criteria-builder-section-sidebar overflow-hidden criteria-builder-section-sidebar--with-warning"
         >
           <div
             aria-label="segments-contributors-panel"
-            class="criteria-sidebar-root d-flex flex-column position-absolute"
+            class="criteria-sidebar-root d-flex flex-column"
             role="tabpanel"
             tabindex="-1"
           >
@@ -481,34 +481,26 @@ exports[`SegmentEdit renders with given values 1`] = `
               </div>
             </div>
             <div
-              class="c-p-4 overflow-y-auto position-relative sidebar-collapse"
+              class="c-p-4 position-relative sidebar-collapse"
             >
               <div
-                aria-orientation="vertical"
                 class="panel-group"
-                role="tablist"
               >
                 <div
                   class="panel panel-unstyled"
                   id="first-test-values-group"
-                  role="tablist"
                 >
                   <button
+                    aria-controls="clay-id-5"
                     aria-expanded="true"
                     class="panel-header panel-header-link collapse-icon collapse-icon-middle show btn btn-unstyled"
-                    role="tab"
                     tabindex="0"
                     type="button"
                   >
                     <div
-                      class="c-inner"
-                      tabindex="-1"
+                      class="d-flex justify-content-between text-uppercase"
                     >
-                      <div
-                        class="d-flex justify-content-between text-uppercase"
-                      >
-                        First Test Values Group
-                      </div>
+                      First Test Values Group
                     </div>
                     <span
                       class="collapse-icon-closed"
@@ -536,8 +528,10 @@ exports[`SegmentEdit renders with given values 1`] = `
                     </span>
                   </button>
                   <div
+                    aria-labelledby="clay-id-5"
                     class="panel-collapse"
-                    role="tabpanel"
+                    id="clay-id-5"
+                    role="region"
                   >
                     <div
                       class="panel-body c-px-0"
@@ -549,31 +543,28 @@ exports[`SegmentEdit renders with given values 1`] = `
                       </p>
                       <ul
                         class="c-pl-0"
+                        role="menu"
                       >
                         <li
-                          class="align-items-center criteria-sidebar-item-root c-py-2 c-pr-3 c-pl-1 c-my-1 d-flex  color--first-test-values-group"
-                          draggable="true"
+                          aria-label="drag-x"
+                          class="align-items-center criteria-sidebar-item-root c-gap-2 c-my-2 c-p-2 d-flex color--first-test-values-group"
                           role="menuitem"
                           tabindex="-1"
                         >
-                          <span
-                            class="c-p-2 inline-item"
-                            tabindex="-1"
+                          <div
+                            class="h-100 w-100"
+                            draggable="true"
                           >
                             <svg
-                              class="lexicon-icon lexicon-icon-drag"
+                              class="lexicon-icon lexicon-icon-drag mt-0"
                               role="presentation"
                             >
                               <use
                                 href="#drag"
                               />
                             </svg>
-                          </span>
-                          <span
-                            class="c-mx-2 c-my-0 criteria-sidebar-item-type sticker sticker-dark"
-                          >
                             <span
-                              class="inline-item"
+                              class="sticker"
                             >
                               <svg
                                 class="lexicon-icon lexicon-icon-text"
@@ -584,8 +575,8 @@ exports[`SegmentEdit renders with given values 1`] = `
                                 />
                               </svg>
                             </span>
-                          </span>
-                          Value
+                            Value
+                          </div>
                         </li>
                       </ul>
                     </div>
@@ -597,9 +588,10 @@ exports[`SegmentEdit renders with given values 1`] = `
         </div>
         <div
           class="c-pr-0 criteria-builder-section-main d-flex h-100 w-100"
+          role="application"
         >
           <div
-            class="contributor-container h-100 overflow-auto position-absolute w-100"
+            class="contributor-container h-100 position-absolute w-100"
           >
             <div
               class="container-fluid container-fluid-max-xl"
@@ -625,7 +617,7 @@ exports[`SegmentEdit renders with given values 1`] = `
                         class="btn-group"
                       >
                         <div
-                          class="btn-group-item inline-item"
+                          class="btn-group-item d-flex flex-wrap inline-item"
                         >
                           <span
                             class="c-mr-4"
@@ -656,27 +648,28 @@ exports[`SegmentEdit renders with given values 1`] = `
                       x-with-property-x
                     </h3>
                     <div
-                      class="criteria-group-root w-100 color--first-test-values-group criteria-group-item-root"
+                      class="criteria-group-root my-2 p-2 w-100 color--first-test-values-group criteria-group-item-root"
                     >
                       <div
-                        class="drop-zone-root position-relative"
+                        class="drop-zone-root position-relative drop-zone-first-test-values-group-group_01-0-top"
                       >
                         <div
-                          class="drop-zone-target drop-zone-target-before"
+                          class="drop-zone-target"
                         />
                       </div>
                       <div
                         class="criterion position-relative"
                       >
                         <div
-                          class="criterion-row-root"
+                          class="criterion-row-root drop-zone-first-test-values-group-group_01-0-middle"
                         >
                           <div
                             class="edit-container"
                           >
-                            <div
-                              class="drag-icon"
+                            <button
+                              class="drag-icon text-secondary btn btn-monospaced btn-outline-borderless btn-sm btn-outline-unstyled"
                               draggable="true"
+                              type="button"
                             >
                               <svg
                                 class="lexicon-icon lexicon-icon-drag"
@@ -686,7 +679,7 @@ exports[`SegmentEdit renders with given values 1`] = `
                                   href="#drag"
                                 />
                               </svg>
-                            </div>
+                            </button>
                             <span
                               class="c-ml-2 criterion-string"
                             >
@@ -761,7 +754,7 @@ exports[`SegmentEdit renders with given values 1`] = `
                           </div>
                         </div>
                         <div
-                          class="drop-zone-root position-relative"
+                          class="drop-zone-root position-relative drop-zone-first-test-values-group-group_01-0-bottom"
                         >
                           <div
                             class="drop-zone-target"

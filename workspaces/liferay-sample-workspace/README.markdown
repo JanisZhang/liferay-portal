@@ -34,6 +34,14 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 
 	...
 
+- *liferay-sample-commerce-payment-integration*
+
+	TODO
+
+- *liferay-sample-commerce-shipping-engine*
+
+	Use Spring Boot to provide a new commerce shipping engine.
+
 - *liferay-sample-custom-element-1*
 
 	A custom element can be self contained (i.e. does not depend on any external packages).
@@ -53,6 +61,10 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 - *liferay-sample-custom-element-5*
 
 	Build a custom element that uses `@clayui/badge`, `react`, and `react-dom` packages that Liferay makes publicly available through import maps.
+
+- *liferay-sample-editor-config-contributor*
+
+	Build a JavaScript function to configure WYSIWYG editors.
 
 - *liferay-sample-etc-cron*
 
@@ -81,6 +93,10 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 - *liferay-sample-etc-frontend-3*
 
 	Share code through an import map client extension.
+
+- *liferay-sample-etc-node*
+
+	TODO
 
 - *liferay-sample-etc-spring-boot*
 
@@ -113,6 +129,10 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 - *liferay-sample-instance-settings*
 
 	Customize instance settings with YAML by overridding OSGi configurations.
+
+- *liferay-sample-site-initializer*
+
+	TODO
 
 - *liferay-sample-static-content*
 

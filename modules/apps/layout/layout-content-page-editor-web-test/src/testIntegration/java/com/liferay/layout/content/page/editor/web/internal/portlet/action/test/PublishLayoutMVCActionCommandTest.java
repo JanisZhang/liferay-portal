@@ -6,8 +6,24 @@
 package com.liferay.layout.content.page.editor.web.internal.portlet.action.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
+import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
+import com.liferay.fragment.constants.FragmentConstants;
+import com.liferay.fragment.model.FragmentCollection;
+import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.service.FragmentCollectionLocalService;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
+import com.liferay.fragment.service.FragmentEntryLocalService;
+import com.liferay.journal.constants.JournalContentPortletKeys;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.journal.util.JournalConverter;
 import com.liferay.layout.content.page.editor.web.internal.portlet.constants.LayoutContentPageEditorWebPortletKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
@@ -17,17 +33,19 @@ import com.liferay.layout.util.BulkLayoutConverter;
 import com.liferay.layout.util.structure.DeletedLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
-import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
+import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
@@ -41,8 +59,12 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.test.util.IndexerFixture;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -50,6 +72,9 @@ import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+
+import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -74,8 +99,6 @@ public class PublishLayoutMVCActionCommandTest {
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
-
-		_company = _companyLocalService.getCompany(_group.getCompanyId());
 	}
 
 	@Test
@@ -189,6 +212,57 @@ public class PublishLayoutMVCActionCommandTest {
 	}
 
 	@Test
+	public void testLayoutContentIsIndexedAfterPublishing() throws Exception {
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Assert.assertFalse(layout.isPublished());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		Assert.assertNotNull(draftLayout);
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid());
+
+		FragmentEntryLink fragmentEntryLink =
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				"{}", draftLayout, segmentsExperienceId);
+
+		String keywords = fragmentEntryLink.getHtml();
+
+		Assert.assertTrue(keywords, Validator.isNotNull(keywords));
+
+		IndexerFixture<Layout> layoutIndexerFixture = new IndexerFixture<>(
+			Layout.class);
+
+		layoutIndexerFixture.searchNoOne(keywords);
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		layout = _layoutLocalService.getLayout(layout.getPlid());
+
+		Assert.assertTrue(layout.isPublished());
+
+		Locale locale = LocaleUtil.getSiteDefault();
+
+		Document document = layoutIndexerFixture.searchOnlyOne(
+			keywords, locale);
+
+		Assert.assertNotNull(document);
+
+		String content = document.get(
+			Field.getLocalizedName(locale, Field.CONTENT));
+
+		Assert.assertTrue(
+			content, StringUtil.contains(content, keywords, StringPool.BLANK));
+
+		Assert.assertEquals(
+			document.get(Field.ENTRY_CLASS_PK),
+			String.valueOf(layout.getPlid()));
+	}
+
+	@Test
 	public void testPublishConversionDraftCreatedByDeletedUser()
 		throws Exception {
 
@@ -255,6 +329,134 @@ public class PublishLayoutMVCActionCommandTest {
 		}
 	}
 
+	@Test
+	public void testPublishedLayoutFragmentEntryLinkWithFreemarketEmbeddedPortlet()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		try {
+			ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+			String html = StringBundler.concat(
+				"<div class=\"fragment_1\">[@liferay_portlet[\"runtime\"]",
+				"portletName=\"com_liferay_journal_content_web_portlet_",
+				"JournalContentPortlet\" instanceId=\"myInstanceId\" ",
+				"persistSettings=false /]</div>");
+
+			Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+			Layout draftLayout = layout.fetchDraftLayout();
+
+			Assert.assertNotNull(draftLayout);
+
+			_addFragmentEntryLinkToLayout(html, draftLayout, serviceContext);
+
+			JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
+				_dataDefinitionResourceFactory, _createDDMFormField(),
+				_ddmFormValuesToFieldsConverter, RandomTestUtil.randomString(),
+				_group.getGroupId(), _journalConverter);
+
+			AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+				JournalArticle.class.getName(),
+				journalArticle.getResourcePrimKey());
+
+			String portletId = PortletIdCodec.encode(
+				JournalContentPortletKeys.JOURNAL_CONTENT, "myInstanceId");
+
+			_setUpPortletPreferences(
+				assetEntry, journalArticle, draftLayout, portletId);
+
+			ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+			_assertPortletPreferences(
+				assetEntry, journalArticle, layout, portletId);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+	}
+
+	@Test
+	public void testPublishedLayoutFragmentEntryLinkWithFreemarketEmbeddedPortletAndDynamicInstanceId()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		try {
+			ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+			String html = StringBundler.concat(
+				"<div class=\"fragment_1\">[@liferay_portlet[\"runtime\"]",
+				"portletName=\"com_liferay_journal_content_web_portlet_",
+				"JournalContentPortlet\" instanceId=\"",
+				"fragmentEntryLinkNamespace\" persistSettings=false /]</div>");
+
+			Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+			Layout draftLayout = layout.fetchDraftLayout();
+
+			Assert.assertNotNull(draftLayout);
+
+			JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
+				_dataDefinitionResourceFactory, _createDDMFormField(),
+				_ddmFormValuesToFieldsConverter, RandomTestUtil.randomString(),
+				_group.getGroupId(), _journalConverter);
+
+			AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+				JournalArticle.class.getName(),
+				journalArticle.getResourcePrimKey());
+
+			FragmentEntryLink fragmentEntryLink = _addFragmentEntryLinkToLayout(
+				html, draftLayout, serviceContext);
+
+			String portletId = PortletIdCodec.encode(
+				JournalContentPortletKeys.JOURNAL_CONTENT,
+				fragmentEntryLink.getNamespace());
+
+			_setUpPortletPreferences(
+				assetEntry, journalArticle, draftLayout, portletId);
+
+			ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+			_assertPortletPreferences(
+				assetEntry, journalArticle, layout, portletId);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+	}
+
+	private FragmentEntryLink _addFragmentEntryLinkToLayout(
+			String html, Layout layout, ServiceContext serviceContext)
+		throws Exception {
+
+		FragmentCollection fragmentCollection =
+			_fragmentCollectionLocalService.addFragmentCollection(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(), null, serviceContext);
+
+		FragmentEntry fragmentEntry =
+			_fragmentEntryLocalService.addFragmentEntry(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				fragmentCollection.getFragmentCollectionId(), null,
+				RandomTestUtil.randomString(), null, html, null, false, null,
+				null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+				WorkflowConstants.STATUS_APPROVED, serviceContext);
+
+		return ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+			"{}", fragmentEntry.getCss(), fragmentEntry.getConfiguration(),
+			fragmentEntry.getFragmentEntryId(), fragmentEntry.getHtml(),
+			fragmentEntry.getJs(), layout, fragmentEntry.getFragmentEntryKey(),
+			fragmentEntry.getType(), null, 0,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				layout.getPlid()));
+	}
+
 	private FragmentEntryLink _addPortletToLayout(Layout layout)
 		throws Exception {
 
@@ -311,6 +513,43 @@ public class PublishLayoutMVCActionCommandTest {
 				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, plid, encodePortletId));
 	}
 
+	private void _assertPortletPreferences(
+		AssetEntry assetEntry, JournalArticle journalArticle, Layout layout,
+		String portletId) {
+
+		PortletPreferences portletPreferences =
+			_portletPreferencesFactory.getPortletSetup(layout, portletId, null);
+
+		Assert.assertEquals(
+			String.valueOf(journalArticle.getArticleId()),
+			portletPreferences.getValue("articleId", null));
+		Assert.assertEquals(
+			String.valueOf(assetEntry.getEntryId()),
+			portletPreferences.getValue("assetEntryId", null));
+		Assert.assertEquals(
+			String.valueOf(journalArticle.getGroupId()),
+			portletPreferences.getValue("groupId", null));
+	}
+
+	private DDMFormField _createDDMFormField() {
+		DDMFormField ddmFormField = new DDMFormField(
+			"name", DDMFormFieldTypeConstants.TEXT);
+
+		ddmFormField.setDataType("text");
+		ddmFormField.setIndexType("text");
+
+		LocalizedValue localizedValue = new LocalizedValue(LocaleUtil.US);
+
+		localizedValue.addString(
+			LocaleUtil.US, RandomTestUtil.randomString(10));
+
+		ddmFormField.setLabel(localizedValue);
+
+		ddmFormField.setLocalizable(true);
+
+		return ddmFormField;
+	}
+
 	private void _deleteUser(User user, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -335,19 +574,56 @@ public class PublishLayoutMVCActionCommandTest {
 			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
 	}
 
+	private void _setUpPortletPreferences(
+			AssetEntry assetEntry, JournalArticle journalArticle, Layout layout,
+			String portletId)
+		throws Exception {
+
+		PortletPreferences portletPreferences =
+			_portletPreferencesFactory.getPortletSetup(layout, portletId, null);
+
+		portletPreferences.setValue(
+			"articleId", String.valueOf(journalArticle.getArticleId()));
+		portletPreferences.setValue(
+			"assetEntryId", String.valueOf(assetEntry.getEntryId()));
+		portletPreferences.setValue(
+			"groupId", String.valueOf(journalArticle.getGroupId()));
+
+		portletPreferences.store();
+
+		_assertPortletPreferences(
+			assetEntry, journalArticle, layout, portletId);
+	}
+
+	@Inject
+	private AssetEntryLocalService _assetEntryLocalService;
+
 	@Inject
 	private BulkLayoutConverter _bulkLayoutConverter;
-
-	private Company _company;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
 
 	@Inject
+	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
+
+	@Inject
+	private DDMFormValuesToFieldsConverter _ddmFormValuesToFieldsConverter;
+
+	@Inject
+	private FragmentCollectionLocalService _fragmentCollectionLocalService;
+
+	@Inject
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Inject
+	private FragmentEntryLocalService _fragmentEntryLocalService;
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private JournalConverter _journalConverter;
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
@@ -357,7 +633,7 @@ public class PublishLayoutMVCActionCommandTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject
-	private PermissionCheckerFactory _permissionCheckerFactory;
+	private PortletPreferencesFactory _portletPreferencesFactory;
 
 	@Inject
 	private PortletPreferencesLocalService _portletPreferencesLocalService;

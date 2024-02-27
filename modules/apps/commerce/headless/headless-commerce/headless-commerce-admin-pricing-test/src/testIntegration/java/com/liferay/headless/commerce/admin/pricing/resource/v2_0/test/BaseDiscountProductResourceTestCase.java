@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -302,43 +300,87 @@ public abstract class BaseDiscountProductResourceTestCase {
 			testGetDiscountByExternalReferenceCodeDiscountProductsPage_addDiscountProduct(
 				externalReferenceCode, randomDiscountProduct());
 
-		Page<DiscountProduct> page1 =
-			discountProductResource.
-				getDiscountByExternalReferenceCodeDiscountProductsPage(
-					externalReferenceCode, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<DiscountProduct> discountProducts1 =
-			(List<DiscountProduct>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			discountProducts1.toString(), totalCount + 2,
-			discountProducts1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<DiscountProduct> page1 =
+				discountProductResource.
+					getDiscountByExternalReferenceCodeDiscountProductsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<DiscountProduct> page2 =
-			discountProductResource.
-				getDiscountByExternalReferenceCodeDiscountProductsPage(
-					externalReferenceCode, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				discountProduct1, (List<DiscountProduct>)page1.getItems());
 
-		List<DiscountProduct> discountProducts2 =
-			(List<DiscountProduct>)page2.getItems();
+			Page<DiscountProduct> page2 =
+				discountProductResource.
+					getDiscountByExternalReferenceCodeDiscountProductsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			discountProducts2.toString(), 1, discountProducts2.size());
+			assertContains(
+				discountProduct2, (List<DiscountProduct>)page2.getItems());
 
-		Page<DiscountProduct> page3 =
-			discountProductResource.
-				getDiscountByExternalReferenceCodeDiscountProductsPage(
-					externalReferenceCode,
-					Pagination.of(1, (int)totalCount + 3));
+			Page<DiscountProduct> page3 =
+				discountProductResource.
+					getDiscountByExternalReferenceCodeDiscountProductsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertContains(
-			discountProduct1, (List<DiscountProduct>)page3.getItems());
-		assertContains(
-			discountProduct2, (List<DiscountProduct>)page3.getItems());
-		assertContains(
-			discountProduct3, (List<DiscountProduct>)page3.getItems());
+			assertContains(
+				discountProduct3, (List<DiscountProduct>)page3.getItems());
+		}
+		else {
+			Page<DiscountProduct> page1 =
+				discountProductResource.
+					getDiscountByExternalReferenceCodeDiscountProductsPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<DiscountProduct> discountProducts1 =
+				(List<DiscountProduct>)page1.getItems();
+
+			Assert.assertEquals(
+				discountProducts1.toString(), totalCount + 2,
+				discountProducts1.size());
+
+			Page<DiscountProduct> page2 =
+				discountProductResource.
+					getDiscountByExternalReferenceCodeDiscountProductsPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<DiscountProduct> discountProducts2 =
+				(List<DiscountProduct>)page2.getItems();
+
+			Assert.assertEquals(
+				discountProducts2.toString(), 1, discountProducts2.size());
+
+			Page<DiscountProduct> page3 =
+				discountProductResource.
+					getDiscountByExternalReferenceCodeDiscountProductsPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				discountProduct1, (List<DiscountProduct>)page3.getItems());
+			assertContains(
+				discountProduct2, (List<DiscountProduct>)page3.getItems());
+			assertContains(
+				discountProduct3, (List<DiscountProduct>)page3.getItems());
+		}
 	}
 
 	protected DiscountProduct
@@ -573,39 +615,82 @@ public abstract class BaseDiscountProductResourceTestCase {
 			testGetDiscountIdDiscountProductsPage_addDiscountProduct(
 				id, randomDiscountProduct());
 
-		Page<DiscountProduct> page1 =
-			discountProductResource.getDiscountIdDiscountProductsPage(
-				id, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<DiscountProduct> discountProducts1 =
-			(List<DiscountProduct>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			discountProducts1.toString(), totalCount + 2,
-			discountProducts1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<DiscountProduct> page1 =
+				discountProductResource.getDiscountIdDiscountProductsPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<DiscountProduct> page2 =
-			discountProductResource.getDiscountIdDiscountProductsPage(
-				id, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				discountProduct1, (List<DiscountProduct>)page1.getItems());
 
-		List<DiscountProduct> discountProducts2 =
-			(List<DiscountProduct>)page2.getItems();
+			Page<DiscountProduct> page2 =
+				discountProductResource.getDiscountIdDiscountProductsPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			discountProducts2.toString(), 1, discountProducts2.size());
+			assertContains(
+				discountProduct2, (List<DiscountProduct>)page2.getItems());
 
-		Page<DiscountProduct> page3 =
-			discountProductResource.getDiscountIdDiscountProductsPage(
-				id, null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<DiscountProduct> page3 =
+				discountProductResource.getDiscountIdDiscountProductsPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(
-			discountProduct1, (List<DiscountProduct>)page3.getItems());
-		assertContains(
-			discountProduct2, (List<DiscountProduct>)page3.getItems());
-		assertContains(
-			discountProduct3, (List<DiscountProduct>)page3.getItems());
+			assertContains(
+				discountProduct3, (List<DiscountProduct>)page3.getItems());
+		}
+		else {
+			Page<DiscountProduct> page1 =
+				discountProductResource.getDiscountIdDiscountProductsPage(
+					id, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<DiscountProduct> discountProducts1 =
+				(List<DiscountProduct>)page1.getItems();
+
+			Assert.assertEquals(
+				discountProducts1.toString(), totalCount + 2,
+				discountProducts1.size());
+
+			Page<DiscountProduct> page2 =
+				discountProductResource.getDiscountIdDiscountProductsPage(
+					id, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<DiscountProduct> discountProducts2 =
+				(List<DiscountProduct>)page2.getItems();
+
+			Assert.assertEquals(
+				discountProducts2.toString(), 1, discountProducts2.size());
+
+			Page<DiscountProduct> page3 =
+				discountProductResource.getDiscountIdDiscountProductsPage(
+					id, null, null, Pagination.of(1, (int)totalCount + 3),
+					null);
+
+			assertContains(
+				discountProduct1, (List<DiscountProduct>)page3.getItems());
+			assertContains(
+				discountProduct2, (List<DiscountProduct>)page3.getItems());
+			assertContains(
+				discountProduct3, (List<DiscountProduct>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1196,6 +1281,10 @@ public abstract class BaseDiscountProductResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1449,9 +1538,9 @@ public abstract class BaseDiscountProductResourceTestCase {
 	}
 
 	protected DiscountProductResource discountProductResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

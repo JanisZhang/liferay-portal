@@ -1,24 +1,83 @@
-<#include "${templatesPath}/SVG">
+<style>
+	.card-container {
+		height: 150px;
+		min-width: auto !important;
+	}
 
-<div class="col-12 m-0 product-cards row">
+	.home-card {
+		background-color: var(--color-brand-primary-lighten-6, #FBFCFE) !important;
+		border-color: var(--color-brand-primary-lighten-5, #E7EFFF) !important;
+		border-radius: 10px !important;
+		border-width:1px !important;
+		min-width: 100%;
+	}
+
+	.home-card:hover {
+		background-color: var(--color-action-primary-hover-10, #EDF3FE) !important;
+		border-color: var(--color-brand-primary-darken-1, #0053F0) !important;
+		box-shadow: none !important;
+		transform: none !important;
+	}
+
+	.product-cards {
+		min-width: 100%;
+	}
+
+	.product-icon{
+		height: 50px !important;
+		width: 50px !important;
+	}
+
+	.product-name {
+		font-size: 1rem;
+	}
+
+	.responsive-text {
+		display: -webkit-box;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+	}
+
+	.subtitle {
+		color: var(--color-neutral-8, #54555F);
+		font-size: small;
+	}
+
+	.title {
+		color: var(--color-neutral-10, #282934);
+	}
+</style>
+
+<div class="d-flex justify-content-center m-0 product-cards row">
 	<#if entries?has_content>
 		<#list entries as navigationEntry>
 			<#assign
 				customFields = navigationEntry.getExpandoAttributes()!{}
-				navItemIconId = customFields["Svg Sprite Map Id"]!""
+				navItemDescription = customFields["Description"]!""
+				navItemIcon = customFields["Icon URL"]!""
 			/>
 
-			<div class="card-container col-12 col-sm-6 col-xl-4 d-flex justify-content-center my-1 p-3 p-xl-4">
-				<a class="align-items-center d-flex home-card" href="${navigationEntry.getURL()}">
-					<#if navItemIconId?has_content>
-						<svg class="icon mr-3">
-							<use xlink:href="#${navItemIconId}"></use>
-						</svg>
+			<div class="card-container col-12 col-md-4 col-sm-6 d-flex justify-content-center p-2">
+				<a class="d-flex home-card p-3" href="${portalUtil.getGroupFriendlyURL(themeDisplay.getLayoutSet(), themeDisplay, true, false)}${navigationEntry.getRegularURL()}">
+					<#if navItemIcon?has_content>
+						<img
+							alt="${navigationEntry.getName()} icon"
+							class="icon mr-3 product-icon"
+							src="${navItemIcon}"
+						/>
 					</#if>
 
-					<h5 class="title">
-						${navigationEntry.getName()}
-					</h5>
+					<div>
+						<h6 class="product-name responsive-text title">
+							${navigationEntry.getName()}
+						</h6>
+
+						<p class="pt-2 responsive-text subtitle">
+							${navItemDescription}
+						</p>
+					</div>
 				</a>
 			</div>
 		</#list>

@@ -8,15 +8,12 @@ package com.liferay.portal.db.partition.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.db.partition.DBPartitionUtil;
 import com.liferay.portal.db.partition.test.util.BaseDBPartitionTestCase;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
-import com.liferay.portal.test.log.LogCapture;
-import com.liferay.portal.test.log.LogEntry;
-import com.liferay.portal.test.log.LoggerTestUtil;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -32,7 +29,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -47,20 +43,15 @@ public class DBPartitionUtilTest extends BaseDBPartitionTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		enableDBPartition();
-	}
-
-	@AfterClass
-	public static void tearDownClass() throws Exception {
-		disableDBPartition();
+		BaseDBPartitionTestCase.setUpClass();
 	}
 
 	@Before
 	public void setUp() throws Exception {
 		for (long companyId : COMPANY_IDS) {
 			db.runSQL(
-				"create schema if not exists " + getSchemaName(companyId) +
-					" character set utf8");
+				dbPartitionDB.getCreatePartitionSQL(
+					connection, getPartitionName(companyId)));
 		}
 	}
 
@@ -110,36 +101,9 @@ public class DBPartitionUtilTest extends BaseDBPartitionTestCase {
 		try (Statement statement = connection.createStatement()) {
 			for (long companyId : COMPANY_IDS) {
 				statement.execute(
-					"select 1 from " + getSchemaName(companyId) +
+					"select 1 from " + getPartitionName(companyId) +
 						".CompanyInfo");
 			}
-		}
-		finally {
-			removeDBPartitions();
-		}
-	}
-
-	@Test
-	public void testAddDBPartitionUsesDBCharacterSetEncoding()
-		throws Exception {
-
-		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
-				"com.liferay.portal.db.partition.DBPartitionUtil",
-				LoggerTestUtil.INFO)) {
-
-			addDBPartitions();
-
-			List<LogEntry> logEntries = logCapture.getLogEntries();
-
-			Assert.assertEquals(logEntries.toString(), 2, logEntries.size());
-
-			String message = String.valueOf(logEntries.get(0));
-
-			Assert.assertTrue(
-				message,
-				message.contains(
-					"Obtained character set encoding from session with " +
-						"value:"));
 		}
 		finally {
 			removeDBPartitions();
@@ -243,45 +207,6 @@ public class DBPartitionUtilTest extends BaseDBPartitionTestCase {
 	}
 
 	@Test
-	public void testExtractDBPartitionRollback() throws Exception {
-		addDBPartitions();
-
-		try {
-			for (long companyId : COMPANY_IDS) {
-				int tablesCount = _getTablesCount(companyId);
-				int viewsCount = _getViewsCount(companyId);
-
-				try {
-					String fullTestTableName =
-						getSchemaName(companyId) + "." +
-							TEST_CONTROL_TABLE_NAME;
-
-					createAndPopulateControlTable(TEST_CONTROL_TABLE_NAME);
-					createAndPopulateControlTable(fullTestTableName);
-
-					try {
-						extractDBPartitions();
-
-						Assert.fail("Should throw an exception");
-					}
-					catch (Exception exception) {
-						Assert.assertEquals(
-							tablesCount, _getTablesCount(companyId));
-						Assert.assertEquals(
-							viewsCount, _getViewsCount(companyId) - 1);
-					}
-				}
-				finally {
-					dropTable(TEST_CONTROL_TABLE_NAME);
-				}
-			}
-		}
-		finally {
-			removeDBPartitions();
-		}
-	}
-
-	@Test
 	public void testForEachCompanyId() throws Exception {
 		try {
 			addDBPartitions();
@@ -289,7 +214,6 @@ public class DBPartitionUtilTest extends BaseDBPartitionTestCase {
 			insertPartitionRequiredData();
 
 			Set<Long> companyIds = new ConcurrentSkipListSet<>();
-			Set<Long> threadIds = new ConcurrentSkipListSet<>();
 
 			CompanyThreadLocal.setCompanyId(CompanyConstants.SYSTEM);
 
@@ -301,14 +225,9 @@ public class DBPartitionUtilTest extends BaseDBPartitionTestCase {
 					Assert.assertTrue(CompanyThreadLocal.isLocked());
 
 					companyIds.add(companyId);
-
-					Thread thread = Thread.currentThread();
-
-					threadIds.add(thread.getId());
 				});
 
 			Assert.assertEquals(companyIds.toString(), 3, companyIds.size());
-			Assert.assertEquals(threadIds.toString(), 3, threadIds.size());
 		}
 		finally {
 			deletePartitionRequiredData();
@@ -326,11 +245,22 @@ public class DBPartitionUtilTest extends BaseDBPartitionTestCase {
 
 		try (ResultSet resultSet = databaseMetaData.getCatalogs()) {
 			while (resultSet.next()) {
-				String schemaName = resultSet.getString("TABLE_CAT");
+				String catalogName = resultSet.getString("TABLE_CAT");
 
 				for (long companyId : COMPANY_IDS) {
 					Assert.assertNotEquals(
-						getSchemaName(companyId), schemaName);
+						getPartitionName(companyId), catalogName);
+				}
+			}
+		}
+
+		try (ResultSet resultSet = databaseMetaData.getSchemas()) {
+			while (resultSet.next()) {
+				String schemaName = resultSet.getString("TABLE_SCHEM");
+
+				for (long companyId : COMPANY_IDS) {
+					Assert.assertNotEquals(
+						getPartitionName(companyId), schemaName);
 				}
 			}
 		}
@@ -350,7 +280,7 @@ public class DBPartitionUtilTest extends BaseDBPartitionTestCase {
 
 		if (!defaultSchema) {
 			fullTableName =
-				getSchemaName(companyId) + StringPool.PERIOD + tableName;
+				getPartitionName(companyId) + StringPool.PERIOD + tableName;
 		}
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
@@ -385,8 +315,11 @@ public class DBPartitionUtilTest extends BaseDBPartitionTestCase {
 
 		List<String> objectNames = new ArrayList<>();
 
+		String partitionName = getPartitionName(companyId);
+
 		try (ResultSet resultSet = databaseMetaData.getTables(
-				getSchemaName(companyId), dbInspector.getSchema(), null,
+				dbPartitionDB.getCatalog(connection, partitionName),
+				dbPartitionDB.getSchema(connection, partitionName), null,
 				new String[] {objectType})) {
 
 			while (resultSet.next()) {

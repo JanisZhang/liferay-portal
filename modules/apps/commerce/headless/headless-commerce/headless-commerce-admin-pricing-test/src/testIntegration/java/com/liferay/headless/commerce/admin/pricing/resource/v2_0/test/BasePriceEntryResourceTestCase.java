@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -458,38 +456,81 @@ public abstract class BasePriceEntryResourceTestCase {
 			testGetPriceListByExternalReferenceCodePriceEntriesPage_addPriceEntry(
 				externalReferenceCode, randomPriceEntry());
 
-		Page<PriceEntry> page1 =
-			priceEntryResource.
-				getPriceListByExternalReferenceCodePriceEntriesPage(
-					externalReferenceCode, null, null,
-					Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceEntry> priceEntries1 = (List<PriceEntry>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceEntries1.toString(), totalCount + 2, priceEntries1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceEntry> page1 =
+				priceEntryResource.
+					getPriceListByExternalReferenceCodePriceEntriesPage(
+						externalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<PriceEntry> page2 =
-			priceEntryResource.
-				getPriceListByExternalReferenceCodePriceEntriesPage(
-					externalReferenceCode, null, null,
-					Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(priceEntry1, (List<PriceEntry>)page1.getItems());
 
-		List<PriceEntry> priceEntries2 = (List<PriceEntry>)page2.getItems();
+			Page<PriceEntry> page2 =
+				priceEntryResource.
+					getPriceListByExternalReferenceCodePriceEntriesPage(
+						externalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(priceEntries2.toString(), 1, priceEntries2.size());
+			assertContains(priceEntry2, (List<PriceEntry>)page2.getItems());
 
-		Page<PriceEntry> page3 =
-			priceEntryResource.
-				getPriceListByExternalReferenceCodePriceEntriesPage(
-					externalReferenceCode, null, null,
-					Pagination.of(1, (int)totalCount + 3), null);
+			Page<PriceEntry> page3 =
+				priceEntryResource.
+					getPriceListByExternalReferenceCodePriceEntriesPage(
+						externalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(priceEntry1, (List<PriceEntry>)page3.getItems());
-		assertContains(priceEntry2, (List<PriceEntry>)page3.getItems());
-		assertContains(priceEntry3, (List<PriceEntry>)page3.getItems());
+			assertContains(priceEntry3, (List<PriceEntry>)page3.getItems());
+		}
+		else {
+			Page<PriceEntry> page1 =
+				priceEntryResource.
+					getPriceListByExternalReferenceCodePriceEntriesPage(
+						externalReferenceCode, null, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<PriceEntry> priceEntries1 = (List<PriceEntry>)page1.getItems();
+
+			Assert.assertEquals(
+				priceEntries1.toString(), totalCount + 2, priceEntries1.size());
+
+			Page<PriceEntry> page2 =
+				priceEntryResource.
+					getPriceListByExternalReferenceCodePriceEntriesPage(
+						externalReferenceCode, null, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceEntry> priceEntries2 = (List<PriceEntry>)page2.getItems();
+
+			Assert.assertEquals(
+				priceEntries2.toString(), 1, priceEntries2.size());
+
+			Page<PriceEntry> page3 =
+				priceEntryResource.
+					getPriceListByExternalReferenceCodePriceEntriesPage(
+						externalReferenceCode, null, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(priceEntry1, (List<PriceEntry>)page3.getItems());
+			assertContains(priceEntry2, (List<PriceEntry>)page3.getItems());
+			assertContains(priceEntry3, (List<PriceEntry>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -871,32 +912,73 @@ public abstract class BasePriceEntryResourceTestCase {
 			testGetPriceListIdPriceEntriesPage_addPriceEntry(
 				id, randomPriceEntry());
 
-		Page<PriceEntry> page1 =
-			priceEntryResource.getPriceListIdPriceEntriesPage(
-				id, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceEntry> priceEntries1 = (List<PriceEntry>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceEntries1.toString(), totalCount + 2, priceEntries1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceEntry> page1 =
+				priceEntryResource.getPriceListIdPriceEntriesPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<PriceEntry> page2 =
-			priceEntryResource.getPriceListIdPriceEntriesPage(
-				id, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(priceEntry1, (List<PriceEntry>)page1.getItems());
 
-		List<PriceEntry> priceEntries2 = (List<PriceEntry>)page2.getItems();
+			Page<PriceEntry> page2 =
+				priceEntryResource.getPriceListIdPriceEntriesPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(priceEntries2.toString(), 1, priceEntries2.size());
+			assertContains(priceEntry2, (List<PriceEntry>)page2.getItems());
 
-		Page<PriceEntry> page3 =
-			priceEntryResource.getPriceListIdPriceEntriesPage(
-				id, null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<PriceEntry> page3 =
+				priceEntryResource.getPriceListIdPriceEntriesPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(priceEntry1, (List<PriceEntry>)page3.getItems());
-		assertContains(priceEntry2, (List<PriceEntry>)page3.getItems());
-		assertContains(priceEntry3, (List<PriceEntry>)page3.getItems());
+			assertContains(priceEntry3, (List<PriceEntry>)page3.getItems());
+		}
+		else {
+			Page<PriceEntry> page1 =
+				priceEntryResource.getPriceListIdPriceEntriesPage(
+					id, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<PriceEntry> priceEntries1 = (List<PriceEntry>)page1.getItems();
+
+			Assert.assertEquals(
+				priceEntries1.toString(), totalCount + 2, priceEntries1.size());
+
+			Page<PriceEntry> page2 =
+				priceEntryResource.getPriceListIdPriceEntriesPage(
+					id, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceEntry> priceEntries2 = (List<PriceEntry>)page2.getItems();
+
+			Assert.assertEquals(
+				priceEntries2.toString(), 1, priceEntries2.size());
+
+			Page<PriceEntry> page3 =
+				priceEntryResource.getPriceListIdPriceEntriesPage(
+					id, null, null, Pagination.of(1, (int)totalCount + 3),
+					null);
+
+			assertContains(priceEntry1, (List<PriceEntry>)page3.getItems());
+			assertContains(priceEntry2, (List<PriceEntry>)page3.getItems());
+			assertContains(priceEntry3, (List<PriceEntry>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1863,6 +1945,10 @@ public abstract class BasePriceEntryResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -2453,9 +2539,9 @@ public abstract class BasePriceEntryResourceTestCase {
 	}
 
 	protected PriceEntryResource priceEntryResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

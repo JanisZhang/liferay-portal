@@ -51,6 +51,7 @@ import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.definition.security.permission.resource.ObjectDefinitionPortletResourcePermissionRegistryUtil;
 import com.liferay.object.deployer.ObjectDefinitionDeployer;
 import com.liferay.object.field.attachment.AttachmentManager;
+import com.liferay.object.field.filter.parser.ObjectFieldFilterContributorRegistry;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -69,6 +70,7 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectViewLocalService;
 import com.liferay.object.web.internal.asset.model.ObjectEntryAssetRendererFactory;
 import com.liferay.object.web.internal.info.collection.provider.ObjectEntrySingleFormVariationInfoCollectionProvider;
+import com.liferay.object.web.internal.info.field.converter.ObjectFieldInfoFieldConverter;
 import com.liferay.object.web.internal.info.item.action.ObjectEntryInfoItemActionExecutor;
 import com.liferay.object.web.internal.info.item.creator.ObjectEntryInfoItemCreator;
 import com.liferay.object.web.internal.info.item.provider.ObjectEntryInfoItemActionDetailsProvider;
@@ -113,6 +115,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -168,13 +171,20 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			return Collections.emptyList();
 		}
 
+		ObjectFieldInfoFieldConverter objectFieldInfoFieldConverter =
+			new ObjectFieldInfoFieldConverter(
+				_listTypeEntryLocalService, _objectDefinitionLocalService,
+				_objectFieldLocalService, _objectFieldSettingLocalService,
+				_objectRelationshipLocalService, _objectScopeProviderRegistry,
+				_portal, _restContextPathResolverRegistry, _userLocalService);
+
 		InfoItemFormProvider<ObjectEntry> infoItemFormProvider =
 			new ObjectEntryInfoItemFormProvider(
 				_displayPageInfoItemFieldSetProvider, objectDefinition,
 				_infoItemFieldReaderFieldSetProvider,
 				_listTypeEntryLocalService, _objectActionLocalService,
-				_objectDefinitionLocalService, _objectFieldLocalService,
-				_objectFieldSettingLocalService,
+				_objectDefinitionLocalService, objectFieldInfoFieldConverter,
+				_objectFieldLocalService, _objectFieldSettingLocalService,
 				_objectRelationshipLocalService, _objectScopeProviderRegistry,
 				_restContextPathResolverRegistry,
 				_templateInfoItemFieldSetProvider, _userLocalService);
@@ -300,11 +310,12 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			_bundleContext.registerService(
 				InfoItemFieldValuesProvider.class,
 				new ObjectEntryInfoItemFieldValuesProvider(
-					_assetDisplayPageFriendlyURLProvider,
-					_displayPageInfoItemFieldSetProvider, _dlAppLocalService,
-					_dlURLHelper, _infoItemFieldReaderFieldSetProvider,
-					_jsonFactory, _objectActionLocalService, objectDefinition,
-					_objectDefinitionLocalService, _objectEntryLocalService,
+					_companyLocalService, _displayPageInfoItemFieldSetProvider,
+					_dlAppLocalService, _dlURLHelper,
+					_infoItemFieldReaderFieldSetProvider, _jsonFactory,
+					_objectActionLocalService, objectDefinition,
+					_objectDefinitionLocalService,
+					objectFieldInfoFieldConverter, _objectEntryLocalService,
 					_objectEntryManagerRegistry, _objectFieldLocalService,
 					_objectRelationshipLocalService,
 					_objectScopeProviderRegistry,
@@ -554,6 +565,11 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
+
+		_objectFieldFDSFilterFactoryRegistry =
+			new ObjectFieldFDSFilterFactoryRegistry(
+				_language, _objectFieldFilterContributorRegistry,
+				_objectFieldLocalService);
 	}
 
 	private PortletResourcePermission _getPortletResourcePermission(
@@ -606,6 +622,9 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 		_attachmentUploadResponseHandler =
 			new AttachmentUploadResponseHandler();
 	private BundleContext _bundleContext;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference(target = "(upload.response.handler.system.default=true)")
 	private UploadResponseHandler _defaultUploadResponseHandler;
@@ -677,9 +696,12 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	@Reference
 	private ObjectEntryService _objectEntryService;
 
-	@Reference
 	private ObjectFieldFDSFilterFactoryRegistry
 		_objectFieldFDSFilterFactoryRegistry;
+
+	@Reference
+	private ObjectFieldFilterContributorRegistry
+		_objectFieldFilterContributorRegistry;
 
 	@Reference
 	private ObjectFieldLocalService _objectFieldLocalService;

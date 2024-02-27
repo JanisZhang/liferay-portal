@@ -5,10 +5,13 @@
 
 import {
 	addParams,
+	createPortletURL,
 	navigate,
 	openCategorySelectionModal,
+	openModal,
 	openSelectionModal,
 	openTagSelectionModal,
+	sub,
 } from 'frontend-js-web';
 
 import openDeleteArticleModal from './modals/openDeleteArticleModal';
@@ -17,6 +20,7 @@ import openPublishArticlesModal from './modals/openPublishArticlesModal';
 export default function propsTransformer({
 	additionalProps: {
 		addArticleURL,
+		changePermissionsURL,
 		exportTranslationURL,
 		moveArticlesAndFoldersURL,
 		openViewMoreStructuresURL,
@@ -29,6 +33,51 @@ export default function propsTransformer({
 	portletNamespace,
 	...otherProps
 }) {
+	const changePermissions = (item) => {
+		const articleIds = rowsValues('rowIdsJournalArticle');
+
+		if (articleIds.length > item?.data?.maxItemsToShowInfoMessage) {
+			openModal({
+				bodyHTML: `<p class="text-secondary">
+					${sub(
+						Liferay.Language.get(
+							'you-have-selected-more-than-x-x-info-message'
+						),
+						item?.data?.maxItemsToShowInfoMessage,
+						Liferay.Language.get('web-content')
+					)}
+				</p>`,
+				buttons: [
+					{
+						displayType: 'secondary',
+						label: Liferay.Language.get('cancel'),
+						type: 'cancel',
+					},
+					{
+						displayType: 'info',
+						label: Liferay.Language.get('continue'),
+						onClick: ({processClose}) => {
+							processClose();
+							openChangePermissionsSelectionModal(
+								articleIds,
+								changePermissionsURL
+							);
+						},
+						type: 'button',
+					},
+				],
+				status: 'info',
+				title: Liferay.Language.get('bulk-action-performance'),
+			});
+		}
+		else {
+			openChangePermissionsSelectionModal(
+				articleIds,
+				changePermissionsURL
+			);
+		}
+	};
+
 	const deleteEntries = () => {
 		if (trashEnabled) {
 			Liferay.fire(`${portletNamespace}editEntry`, {
@@ -84,32 +133,45 @@ export default function propsTransformer({
 		);
 	};
 
-	const moveEntries = () => {
-		let entrySelectorNodes = document.querySelectorAll(
+	const rowsValues = (selector) => {
+		const selectorNodes = document.querySelectorAll(
 			'input[type="checkbox"][name="' +
-				`${portletNamespace}rowIdsJournalArticle` +
+				`${portletNamespace}${selector}` +
 				'"]'
 		);
 
-		if (!entrySelectorNodes.length) {
-			entrySelectorNodes = document.querySelectorAll(
-				'.card-page-item input[type="checkbox"]'
-			);
-		}
+		return Array.from(selectorNodes)
+			.filter(
+				(node) =>
+					node.checked &&
+					node.name === `${portletNamespace}${selector}`
+			)
+			.map((node) => node.value);
+	};
 
-		const articleIds = Array.from(entrySelectorNodes)
-			.filter((node) => node.checked)
-			.map((node) => node.value)
-			.join(',');
-
+	const moveEntries = () => {
 		const url = new URL(moveArticlesAndFoldersURL);
 
-		url.searchParams.set(
-			`${portletNamespace}rowIdsJournalArticle`,
-			articleIds
-		);
+		['rowIdsJournalArticle', 'rowIdsJournalFolder'].forEach((id) => {
+			url.searchParams.set(
+				`${portletNamespace}${id}`,
+				rowsValues(id).join(',')
+			);
+		});
 
 		navigate(url);
+	};
+
+	const openChangePermissionsSelectionModal = (
+		articleIds,
+		changePermissionsURL
+	) => {
+		openSelectionModal({
+			title: Liferay.Language.get('permissions'),
+			url: createPortletURL(changePermissionsURL, {
+				articleIds: articleIds.join(','),
+			}),
+		});
 	};
 
 	return {
@@ -117,7 +179,10 @@ export default function propsTransformer({
 		onActionButtonClick(event, {item}) {
 			const action = item?.data?.action;
 
-			if (action === 'deleteEntries') {
+			if (action === 'changePermissions') {
+				changePermissions(item);
+			}
+			else if (action === 'deleteEntries') {
 				deleteEntries();
 			}
 			else if (action === 'expireEntries') {

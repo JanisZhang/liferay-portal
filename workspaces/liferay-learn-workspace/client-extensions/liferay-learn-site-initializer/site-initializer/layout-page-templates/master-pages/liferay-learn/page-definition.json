@@ -9,7 +9,7 @@
 					},
 					"fragmentConfig": {
 						"darkNav": true,
-						"navigationDDMTemplateKey": "NAVIGATION_BASIC",
+						"navigationDDMTemplateKey": "NAVIGATION_PRIMARY",
 						"searchBlueprintId": "[$SXP_BLUEPRINT_ID:blueprint$]",
 						"showAccountMenu": true,
 						"showCta": false,
@@ -81,9 +81,9 @@
 										"siteKey": "Guest"
 									},
 									"fragmentConfig": {
-										"iconBackgroundColor": "var(--color-action-primary-default)",
-										"iconColor": "var(--color-neutral-0)",
-										"menuItemUrl": ""
+										"iconBackgroundColor": "var(--color-action-primary-default, #0B5FFF)",
+										"iconColor": "var(--color-neutral-0, #FFFFFF)",
+										"menuItemUrl": "https://www.liferay.com/"
 									},
 									"fragmentFields": [
 										{
@@ -110,9 +110,9 @@
 										"siteKey": "Guest"
 									},
 									"fragmentConfig": {
-										"iconBackgroundColor": "var(--color-state-success-darken-1)",
-										"iconColor": "var(--color-neutral-0)",
-										"menuItemUrl": ""
+										"iconBackgroundColor": "var(--color-accent-4, #19AB4F)",
+										"iconColor": "var(--color-neutral-0, #FFFFFF)",
+										"menuItemUrl": "https://help.liferay.com/hc/"
 									},
 									"fragmentFields": [
 										{
@@ -139,9 +139,9 @@
 										"siteKey": "Guest"
 									},
 									"fragmentConfig": {
-										"iconBackgroundColor": "var(--color-brand-primary-lighten-1)",
-										"iconColor": "var(--color-neutral-0)",
-										"menuItemUrl": ""
+										"iconBackgroundColor": "var(--color-accent-5, #503690)",
+										"iconColor": "var(--color-neutral-0, #FFFFFF)",
+										"menuItemUrl": "https://liferay.dev/"
 									},
 									"fragmentFields": [
 										{
@@ -168,9 +168,9 @@
 										"siteKey": "Guest"
 									},
 									"fragmentConfig": {
-										"iconBackgroundColor": "var(--color-state-info-lighten-2)",
-										"iconColor": "var(--color-neutral-0)",
-										"menuItemUrl": ""
+										"iconBackgroundColor": "var(--color-accent-1, #1AA0E8)",
+										"iconColor": "var(--color-neutral-0, #FFFFFF)",
+										"menuItemUrl": "https://marketplace.liferay.com/"
 									},
 									"fragmentFields": [
 										{
@@ -210,9 +210,23 @@
 	},
 	"settings": {
 		"colorSchemeName": "01",
+		"globalJSClientExtensions": [
+			{
+				"clientExtensionConfig": {
+					"loadType": "default",
+					"scriptLocation": "head"
+				},
+				"externalReferenceCode": "LXC:liferay-learn-global-js",
+				"name": "Liferay Learn Global JS"
+			}
+		],
 		"styleBook": {
 			"key": "learn",
 			"name": "Learn"
+		},
+		"themeCSSClientExtension": {
+			"externalReferenceCode": "LXC:liferay-learn-theme-css",
+			"name": "Liferay Learn Theme CSS"
 		},
 		"themeName": "Dialect",
 		"themeSettings": {

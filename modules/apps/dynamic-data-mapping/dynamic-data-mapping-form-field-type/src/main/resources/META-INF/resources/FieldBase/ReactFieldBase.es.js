@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton from '@clayui/button';
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
@@ -19,7 +19,7 @@ import {
 } from 'data-engine-js-components-web';
 import {sub} from 'frontend-js-web';
 import moment from 'moment/min/moment-with-locales';
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
 import './FieldBase.scss';
 
@@ -109,9 +109,17 @@ const RequiredProperty = () => {
 	);
 };
 
-const TooltipProperty = ({showPopover, tooltip}) => {
+const TooltipProperty = ({showPopover = false, tooltip}) => {
 	return showPopover ? (
 		<Popover tooltip={tooltip} />
+	) : Liferay.FeatureFlags['LPS-114700'] ? (
+		<span
+			className="c-ml-2 text-4 text-secondary"
+			tabIndex={0}
+			title={tooltip}
+		>
+			<ClayIcon symbol="question-circle-full" />
+		</span>
 	) : (
 		<span className="ddm-tooltip" title={tooltip}>
 			<ClayIcon symbol="question-circle-full" />
@@ -120,7 +128,7 @@ const TooltipProperty = ({showPopover, tooltip}) => {
 };
 
 const Popover = ({tooltip}) => {
-	const [isPopoverVisible, setPopoverVisible] = useState(false);
+	const [isPopoverVisible, setIsPopoverVisible] = useState(false);
 
 	const POPOVER_IMAGE_HEIGHT = 170;
 	const POPOVER_IMAGE_WIDTH = 232;
@@ -129,20 +137,32 @@ const Popover = ({tooltip}) => {
 	return (
 		<ClayPopover
 			alignPosition="right-bottom"
+			closeOnClickOutside
 			data-testid="clayPopover"
 			disableScroll
 			header={Liferay.Language.get('input-mask-format')}
-			onShowChange={setPopoverVisible}
+			onShowChange={setIsPopoverVisible}
 			show={isPopoverVisible}
 			style={{maxWidth: POPOVER_MAX_WIDTH}}
 			trigger={
-				<span
-					className="ddm-tooltip"
-					onMouseOut={() => setPopoverVisible(false)}
-					onMouseOver={() => setPopoverVisible(true)}
-				>
-					<ClayIcon symbol="question-circle-full" />
-				</span>
+				Liferay.FeatureFlags['LPS-114700'] ? (
+					<ClayButtonWithIcon
+						aria-label={Liferay.Language.get('more-information')}
+						className="c-ml-2 text-secondary"
+						displayType="unstyled"
+						monospaced={false}
+						size="sm"
+						symbol="question-circle-full"
+					/>
+				) : (
+					<span
+						className="ddm-tooltip"
+						onMouseOut={() => setIsPopoverVisible(false)}
+						onMouseOver={() => setIsPopoverVisible(true)}
+					>
+						<ClayIcon symbol="question-circle-full" />
+					</span>
+				)
 			}
 		>
 			<p>{tooltip}</p>
@@ -157,16 +177,21 @@ const Popover = ({tooltip}) => {
 	);
 };
 
+const FIELDSET_REGEX = /Fieldset\d+/g;
+const FIELDSET_REPEAT_INDEX_REGEX = /\$(\d+)(?:#|\$|$)/g;
+
 export function FieldBase({
 	accessible = true,
 	children,
 	displayErrors,
+	editOnlyInDefaultLanguage,
 	errorMessage,
 	fieldName,
 	fieldReference,
 	hideField,
 	hideEditedFlag,
 	id,
+	instanceId,
 	itemPath,
 	label,
 	localizedValue = {},
@@ -174,7 +199,6 @@ export function FieldBase({
 	nestedFields,
 	onClick,
 	overMaximumRepetitionsLimit,
-	parentInstanceId,
 	readOnly,
 	repeatable,
 	required,
@@ -189,6 +213,9 @@ export function FieldBase({
 	warningMessage,
 }) {
 	const {editingLanguageId, pages} = useFormState();
+	const [disabledRepeatableButton, setDisabledRepeatableButton] = useState(
+		false
+	);
 	const dispatch = useForm();
 
 	const hasError = displayErrors && errorMessage && !valid;
@@ -204,6 +231,7 @@ export function FieldBase({
 	});
 
 	const fieldDetailsId = `${id ?? name}_fieldDetails`;
+	const fieldLabelId = `${id ?? name}_fieldLabel`;
 
 	const hiddenTranslations = useMemo(() => {
 		if (!localizedValue) {
@@ -211,12 +239,17 @@ export function FieldBase({
 		}
 
 		return Object.entries(localizedValue).map(([locale, value]) => {
-			if (locale === editingLanguageId) {
+			if (
+				!Liferay.FeatureFlags['LPS-114700'] &&
+				locale === editingLanguageId
+			) {
 				return null;
 			}
 
 			return (
 				<input
+					data-field-name={`${fieldName}${instanceId}`}
+					data-languageid={locale}
 					key={locale}
 					name={name.replace(editingLanguageId, locale)}
 					type="hidden"
@@ -224,11 +257,16 @@ export function FieldBase({
 				/>
 			);
 		});
-	}, [localizedValue, editingLanguageId, name, type]);
+	}, [localizedValue, editingLanguageId, fieldName, instanceId, name, type]);
 
 	const renderLabel =
 		(label && showLabel) || hideField || repeatable || required || tooltip;
-	const showLegend =
+	const showDisabledFieldIcon =
+		Liferay.FeatureFlags['LPS-114700'] &&
+		editOnlyInDefaultLanguage &&
+		showLabel &&
+		readOnly;
+	const showGroup =
 		type === 'checkbox_multiple' ||
 		type === 'grid' ||
 		type === 'paragraph' ||
@@ -241,10 +279,10 @@ export function FieldBase({
 		type === 'numeric' ||
 		type === 'image' ||
 		type === 'rich_text' ||
-		type === 'search_location' ||
-		type === 'select';
+		type === 'search_location';
 	const readFieldDetails = !showFor;
-	const hasFieldDetails = accessible && fieldDetails && readFieldDetails;
+	const hasFieldDetails =
+		accessible && fieldDetails && readFieldDetails && type !== 'select';
 
 	const accessiblePropsGroup = {
 		...(!renderLabel && {'aria-labelledby': fieldDetailsId}),
@@ -261,28 +299,76 @@ export function FieldBase({
 		columns: [{fields: [field], size: 12}],
 	}));
 
-	const checkRepetitions = () => {
-		let repetitionsCounter = 0;
+	const checkRepetitions = useMemo(() => {
+		if (repeatable && name) {
+			const currentFieldFieldsets = name.match(FIELDSET_REGEX);
+			const currentFieldsetRepeatIndexes = name.match(
+				FIELDSET_REPEAT_INDEX_REGEX
+			);
 
-		const visitor = new PagesVisitor(pages);
+			if (currentFieldsetRepeatIndexes) {
+				currentFieldsetRepeatIndexes.pop();
+			}
 
-		const newParentInstanceId = parentInstanceId;
+			const visitor = new PagesVisitor(pages);
 
-		visitor.mapFields(
-			(field) => {
-				if (
-					fieldReference === field.fieldReference &&
-					newParentInstanceId === field.parentInstanceId
-				) {
-					repetitionsCounter++;
+			const repeatableFields = [];
+
+			visitor.visitFields((field) => {
+				const fieldFieldsets = field.name.match(FIELDSET_REGEX);
+				const fieldsetRepeatIndexes = field.name.match(
+					FIELDSET_REPEAT_INDEX_REGEX
+				);
+
+				if (fieldsetRepeatIndexes) {
+					fieldsetRepeatIndexes.pop();
 				}
-			},
-			true,
-			true
-		);
 
-		return repetitionsCounter;
+				const isSameFieldset =
+					currentFieldFieldsets &&
+					fieldFieldsets &&
+					currentFieldsetRepeatIndexes &&
+					fieldsetRepeatIndexes &&
+					currentFieldFieldsets.every(
+						(fieldFieldset, index) =>
+							fieldFieldset === fieldFieldsets[index]
+					) &&
+					currentFieldsetRepeatIndexes.every(
+						(fieldFieldset, index) =>
+							fieldFieldset === fieldsetRepeatIndexes[index]
+					);
+
+				if (fieldReference === field.fieldReference && isSameFieldset) {
+					repeatableFields.push(field);
+				}
+
+				if (
+					!currentFieldFieldsets &&
+					fieldReference === field.fieldReference
+				) {
+					repeatableFields.push(field);
+				}
+			});
+
+			return repeatableFields.length;
+		}
+	}, [fieldReference, name, pages, repeatable]);
+
+	const disableRepeatableButton = () => {
+		setDisabledRepeatableButton(true);
+
+		setTimeout(() => {
+			setDisabledRepeatableButton(false);
+		}, 1000);
 	};
+
+	useEffect(() => {
+		Liferay.on('disableRepeatableButton', disableRepeatableButton);
+
+		return () => {
+			Liferay.detach('disableRepeatableButton', disableRepeatableButton);
+		};
+	}, []);
 
 	return (
 		<ClayForm.Group
@@ -299,14 +385,19 @@ export function FieldBase({
 		>
 			{repeatable && (
 				<div className="lfr-ddm-form-field-repeatable-toolbar">
-					{checkRepetitions() > 1 && (
+					{checkRepetitions > 1 && (
 						<ClayButton
 							aria-label={sub(
 								Liferay.Language.get('remove-duplicate-field'),
 								label ? label : type
 							)}
-							className="ddm-form-field-repeatable-delete-button p-0"
-							disabled={readOnly}
+							className={classNames(
+								'ddm-form-field-repeatable-delete-button p-0',
+								{
+									'ddm-form-field-repeatable-button-disabled': disabledRepeatableButton,
+								}
+							)}
+							disabled={readOnly || disabledRepeatableButton}
 							onClick={() =>
 								dispatch({
 									payload: name,
@@ -329,17 +420,16 @@ export function FieldBase({
 						className={classNames(
 							'ddm-form-field-repeatable-add-button p-0',
 							{
-								hide: overMaximumRepetitionsLimit,
+								'ddm-form-field-repeatable-button-disabled': disabledRepeatableButton,
+								'hide': overMaximumRepetitionsLimit,
 							}
 						)}
-						disabled={readOnly}
+						disabled={readOnly || disabledRepeatableButton}
 						onClick={() =>
-							setTimeout(() => {
-								dispatch({
-									payload: name,
-									type: CORE_EVENT_TYPES.FIELD.REPEATED,
-								});
-							}, 200)
+							dispatch({
+								payload: name,
+								type: CORE_EVENT_TYPES.FIELD.REPEATED,
+							})
 						}
 						small
 						title={Liferay.Language.get('duplicate')}
@@ -352,26 +442,37 @@ export function FieldBase({
 
 			{renderLabel && (
 				<>
-					{showLegend ? (
-						<fieldset>
-							<legend
+					{showGroup ? (
+						<div aria-labelledby={fieldLabelId} role="group">
+							<label
 								{...accessiblePropsFields}
-								className="lfr-ddm-legend"
+								className={classNames('lfr-ddm-legend', {
+									'text-muted': showDisabledFieldIcon,
+								})}
+								id={fieldLabelId}
 							>
 								{showLabel && label}
 
 								{required && <RequiredProperty />}
+							</label>
 
-								{tooltip && (
-									<TooltipProperty
-										showPopover={showPopover}
-										tooltip={tooltip}
-									/>
-								)}
-							</legend>
+							{tooltip && (
+								<TooltipProperty
+									showPopover={showPopover}
+									tooltip={tooltip}
+								/>
+							)}
+
+							{showDisabledFieldIcon && (
+								<TooltipProperty
+									tooltip={Liferay.Language.get(
+										'this-field-cannot-be-localized'
+									)}
+								/>
+							)}
 
 							{children}
-						</fieldset>
+						</div>
 					) : (
 						<>
 							<label
@@ -380,7 +481,9 @@ export function FieldBase({
 									'ddm-empty': !showLabel && !required,
 									'ddm-label': showLabel || required,
 									'ddm-repeatable': repeatable,
+									'text-muted': showDisabledFieldIcon,
 								})}
+								{...(type === 'select' && {id: id ?? name})}
 							>
 								{showLabel && label && (
 									<LabelProperty
@@ -392,14 +495,22 @@ export function FieldBase({
 								{required && <RequiredProperty />}
 
 								{hideField && <HideFieldProperty />}
-
-								{showLabel && tooltip && (
-									<TooltipProperty
-										showPopover={showPopover}
-										tooltip={tooltip}
-									/>
-								)}
 							</label>
+
+							{showLabel && tooltip && (
+								<TooltipProperty
+									showPopover={showPopover}
+									tooltip={tooltip}
+								/>
+							)}
+
+							{showDisabledFieldIcon && (
+								<TooltipProperty
+									tooltip={Liferay.Language.get(
+										'this-field-cannot-be-localized'
+									)}
+								/>
+							)}
 
 							{children}
 

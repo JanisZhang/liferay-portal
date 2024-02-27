@@ -1,4 +1,4 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -63,9 +63,9 @@ definition {
 
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
-		ManagementBar.setFilterAndOrder(menuItem = "Display Date");
+		ManagementBar.setFilterAndOrder(orderBy = "Display Date");
 
-		Click(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
+		ManagementBar.sortAssets(sortDirection = "Descending");
 
 		Blogs.viewEntryTitle(
 			entryTitle = "Test Title",

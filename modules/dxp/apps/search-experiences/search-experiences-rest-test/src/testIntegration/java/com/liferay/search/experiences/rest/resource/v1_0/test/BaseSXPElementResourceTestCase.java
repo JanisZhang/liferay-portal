@@ -22,8 +22,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -336,29 +334,66 @@ public abstract class BaseSXPElementResourceTestCase {
 		SXPElement sxpElement3 = testGetSXPElementsPage_addSXPElement(
 			randomSXPElement());
 
-		Page<SXPElement> page1 = sxpElementResource.getSXPElementsPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<SXPElement> sxpElements1 = (List<SXPElement>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			sxpElements1.toString(), totalCount + 2, sxpElements1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<SXPElement> page1 = sxpElementResource.getSXPElementsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<SXPElement> page2 = sxpElementResource.getSXPElementsPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(sxpElement1, (List<SXPElement>)page1.getItems());
 
-		List<SXPElement> sxpElements2 = (List<SXPElement>)page2.getItems();
+			Page<SXPElement> page2 = sxpElementResource.getSXPElementsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(sxpElements2.toString(), 1, sxpElements2.size());
+			assertContains(sxpElement2, (List<SXPElement>)page2.getItems());
 
-		Page<SXPElement> page3 = sxpElementResource.getSXPElementsPage(
-			null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<SXPElement> page3 = sxpElementResource.getSXPElementsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(sxpElement1, (List<SXPElement>)page3.getItems());
-		assertContains(sxpElement2, (List<SXPElement>)page3.getItems());
-		assertContains(sxpElement3, (List<SXPElement>)page3.getItems());
+			assertContains(sxpElement3, (List<SXPElement>)page3.getItems());
+		}
+		else {
+			Page<SXPElement> page1 = sxpElementResource.getSXPElementsPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<SXPElement> sxpElements1 = (List<SXPElement>)page1.getItems();
+
+			Assert.assertEquals(
+				sxpElements1.toString(), totalCount + 2, sxpElements1.size());
+
+			Page<SXPElement> page2 = sxpElementResource.getSXPElementsPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<SXPElement> sxpElements2 = (List<SXPElement>)page2.getItems();
+
+			Assert.assertEquals(
+				sxpElements2.toString(), 1, sxpElements2.size());
+
+			Page<SXPElement> page3 = sxpElementResource.getSXPElementsPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(sxpElement1, (List<SXPElement>)page3.getItems());
+			assertContains(sxpElement2, (List<SXPElement>)page3.getItems());
+			assertContains(sxpElement3, (List<SXPElement>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1467,6 +1502,10 @@ public abstract class BaseSXPElementResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -2084,9 +2123,9 @@ public abstract class BaseSXPElementResourceTestCase {
 	}
 
 	protected SXPElementResource sxpElementResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

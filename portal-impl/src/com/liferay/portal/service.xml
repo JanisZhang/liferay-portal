@@ -811,6 +811,10 @@
 		<finder name="Plid" return-type="Collection">
 			<finder-column name="plid" />
 		</finder>
+		<finder name="C_F" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="friendlyURL" />
+		</finder>
 		<finder name="P_F" return-type="Collection">
 			<finder-column name="plid" />
 			<finder-column name="friendlyURL" />
@@ -2843,6 +2847,12 @@
 			<finder-column name="userId" />
 			<finder-column name="actionRequired" />
 			<finder-column name="archived" />
+		</finder>
+		<finder name="U_T_GteT_D" return-type="Collection">
+			<finder-column name="userId" />
+			<finder-column name="type" />
+			<finder-column comparator="&gt;=" name="timestamp" />
+			<finder-column name="delivered" />
 		</finder>
 		<finder name="U_T_DT_D" return-type="Collection">
 			<finder-column name="userId" />

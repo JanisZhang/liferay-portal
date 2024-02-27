@@ -326,6 +326,11 @@ components:
                         type: string
                     readOnly: true
                     type: array
+                virtualItems:
+                    items:
+                        $ref: "#/components/schemas/VirtualItem"
+                    readOnly: true
+                    type: array
             type: object
         PlacedOrderItemShipment:
             properties:
@@ -617,10 +622,25 @@ components:
                     readOnly: true
                     type: string
             type: object
+        VirtualItem:
+            properties:
+                url:
+                    example: http://www.liferay.com
+                    readOnly: true
+                    type: string
+                usages:
+                    format: int32
+                    readOnly: true
+                    type: integer
+                version:
+                    example: v1.0.0
+                    readOnly: true
+                    type: string
+            type: object
 info:
     description:
         "Headless Delivery Commerce Order API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.delivery.order.client', and version '1.0.14'."
+        artifact ID 'com.liferay.headless.commerce.delivery.order.client', and version '1.0.18'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -1103,12 +1123,6 @@ paths:
                       type: integer
                   style: simple
                 - in: query
-                  name: skuId
-                  required: false
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
                   name: page
                   required: false
                   schema:
@@ -1117,6 +1131,12 @@ paths:
                   name: pageSize
                   required: false
                   schema:
+                      type: integer
+                - in: query
+                  name: skuId
+                  required: false
+                  schema:
+                      format: int64
                       type: integer
             responses:
                 200:

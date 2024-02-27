@@ -85,6 +85,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
+import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.service.persistence.GroupPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutFriendlyURLPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutPrototypePersistence;
@@ -104,6 +105,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -131,6 +133,8 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Provides the local service for accessing, adding, deleting, exporting,
@@ -707,10 +711,18 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
+
+		UnicodeProperties typeSettingsUnicodeProperties =
+			PropertiesParamUtil.getProperties(
+				httpServletRequest, "TypeSettingsProperties--");
+
 		Layout sourceLayout = layoutLocalService.getLayout(sourcePlid);
 
 		UnicodeProperties sourceUnicodeProperties =
 			sourceLayout.getTypeSettingsProperties();
+
+		sourceUnicodeProperties.putAll(typeSettingsUnicodeProperties);
 
 		Layout targetLayout = layoutLocalService.addLayout(
 			userId, groupId, privateLayout, sourceLayout.getParentLayoutId(),
@@ -889,6 +901,12 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 			systemEventHierarchyEntry.setExtraDataValue(
 				"privateLayout", String.valueOf(layout.isPrivateLayout()));
 		}
+
+		// Workflow
+
+		_workflowInstanceLinkLocalService.deleteWorkflowInstanceLink(
+			layout.getCompanyId(), layout.getGroupId(), Layout.class.getName(),
+			layout.getPlid());
 
 		// Indexer
 
@@ -4198,5 +4216,8 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 	@BeanReference(type = WorkflowDefinitionLinkLocalService.class)
 	private WorkflowDefinitionLinkLocalService
 		_workflowDefinitionLinkLocalService;
+
+	@BeanReference(type = WorkflowInstanceLinkLocalService.class)
+	private WorkflowInstanceLinkLocalService _workflowInstanceLinkLocalService;
 
 }

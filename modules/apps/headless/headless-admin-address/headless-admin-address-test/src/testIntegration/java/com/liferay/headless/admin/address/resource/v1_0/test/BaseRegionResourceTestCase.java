@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -273,29 +271,66 @@ public abstract class BaseRegionResourceTestCase {
 		Region region3 = testGetCountryRegionsPage_addRegion(
 			countryId, randomRegion());
 
-		Page<Region> page1 = regionResource.getCountryRegionsPage(
-			countryId, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Region> regions1 = (List<Region>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			regions1.toString(), totalCount + 2, regions1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Region> page1 = regionResource.getCountryRegionsPage(
+				countryId, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<Region> page2 = regionResource.getCountryRegionsPage(
-			countryId, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(region1, (List<Region>)page1.getItems());
 
-		List<Region> regions2 = (List<Region>)page2.getItems();
+			Page<Region> page2 = regionResource.getCountryRegionsPage(
+				countryId, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(regions2.toString(), 1, regions2.size());
+			assertContains(region2, (List<Region>)page2.getItems());
 
-		Page<Region> page3 = regionResource.getCountryRegionsPage(
-			countryId, null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Region> page3 = regionResource.getCountryRegionsPage(
+				countryId, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(region1, (List<Region>)page3.getItems());
-		assertContains(region2, (List<Region>)page3.getItems());
-		assertContains(region3, (List<Region>)page3.getItems());
+			assertContains(region3, (List<Region>)page3.getItems());
+		}
+		else {
+			Page<Region> page1 = regionResource.getCountryRegionsPage(
+				countryId, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<Region> regions1 = (List<Region>)page1.getItems();
+
+			Assert.assertEquals(
+				regions1.toString(), totalCount + 2, regions1.size());
+
+			Page<Region> page2 = regionResource.getCountryRegionsPage(
+				countryId, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Region> regions2 = (List<Region>)page2.getItems();
+
+			Assert.assertEquals(regions2.toString(), 1, regions2.size());
+
+			Page<Region> page3 = regionResource.getCountryRegionsPage(
+				countryId, null, null, Pagination.of(1, (int)totalCount + 3),
+				null);
+
+			assertContains(region1, (List<Region>)page3.getItems());
+			assertContains(region2, (List<Region>)page3.getItems());
+			assertContains(region3, (List<Region>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -602,29 +637,65 @@ public abstract class BaseRegionResourceTestCase {
 
 		Region region3 = testGetRegionsPage_addRegion(randomRegion());
 
-		Page<Region> page1 = regionResource.getRegionsPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Region> regions1 = (List<Region>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			regions1.toString(), totalCount + 2, regions1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Region> page1 = regionResource.getRegionsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<Region> page2 = regionResource.getRegionsPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(region1, (List<Region>)page1.getItems());
 
-		List<Region> regions2 = (List<Region>)page2.getItems();
+			Page<Region> page2 = regionResource.getRegionsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(regions2.toString(), 1, regions2.size());
+			assertContains(region2, (List<Region>)page2.getItems());
 
-		Page<Region> page3 = regionResource.getRegionsPage(
-			null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Region> page3 = regionResource.getRegionsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(region1, (List<Region>)page3.getItems());
-		assertContains(region2, (List<Region>)page3.getItems());
-		assertContains(region3, (List<Region>)page3.getItems());
+			assertContains(region3, (List<Region>)page3.getItems());
+		}
+		else {
+			Page<Region> page1 = regionResource.getRegionsPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<Region> regions1 = (List<Region>)page1.getItems();
+
+			Assert.assertEquals(
+				regions1.toString(), totalCount + 2, regions1.size());
+
+			Page<Region> page2 = regionResource.getRegionsPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Region> regions2 = (List<Region>)page2.getItems();
+
+			Assert.assertEquals(regions2.toString(), 1, regions2.size());
+
+			Page<Region> page3 = regionResource.getRegionsPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(region1, (List<Region>)page3.getItems());
+			assertContains(region2, (List<Region>)page3.getItems());
+			assertContains(region3, (List<Region>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1305,6 +1376,10 @@ public abstract class BaseRegionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1555,9 +1630,9 @@ public abstract class BaseRegionResourceTestCase {
 	}
 
 	protected RegionResource regionResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

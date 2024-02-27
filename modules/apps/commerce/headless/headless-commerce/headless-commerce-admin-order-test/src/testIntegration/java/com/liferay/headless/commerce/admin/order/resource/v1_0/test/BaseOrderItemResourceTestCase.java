@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -337,29 +335,65 @@ public abstract class BaseOrderItemResourceTestCase {
 		OrderItem orderItem3 = testGetOrderItemsPage_addOrderItem(
 			randomOrderItem());
 
-		Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			orderItems1.toString(), totalCount + 2, orderItems1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
 
-		List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+			Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
 
-		Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
-			null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(orderItem1, (List<OrderItem>)page3.getItems());
-		assertContains(orderItem2, (List<OrderItem>)page3.getItems());
-		assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+		else {
+			Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+			Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+			Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -960,32 +994,69 @@ public abstract class BaseOrderItemResourceTestCase {
 			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
 				externalReferenceCode, randomOrderItem());
 
-		Page<OrderItem> page1 =
-			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-				externalReferenceCode, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			orderItems1.toString(), totalCount + 2, orderItems1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderItem> page1 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<OrderItem> page2 =
-			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-				externalReferenceCode, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
 
-		List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+			Page<OrderItem> page2 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
 
-		Page<OrderItem> page3 =
-			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-				externalReferenceCode, Pagination.of(1, (int)totalCount + 3));
+			Page<OrderItem> page3 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertContains(orderItem1, (List<OrderItem>)page3.getItems());
-		assertContains(orderItem2, (List<OrderItem>)page3.getItems());
-		assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+		else {
+			Page<OrderItem> page1 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
+
+			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+			Page<OrderItem> page2 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+			Page<OrderItem> page3 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
 	}
 
 	protected OrderItem
@@ -1109,29 +1180,62 @@ public abstract class BaseOrderItemResourceTestCase {
 		OrderItem orderItem3 = testGetOrderIdOrderItemsPage_addOrderItem(
 			id, randomOrderItem());
 
-		Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
-			id, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			orderItems1.toString(), totalCount + 2, orderItems1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
-			id, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
 
-		List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+			Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
 
-		Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
-			id, Pagination.of(1, (int)totalCount + 3));
+			Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertContains(orderItem1, (List<OrderItem>)page3.getItems());
-		assertContains(orderItem2, (List<OrderItem>)page3.getItems());
-		assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+		else {
+			Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
+				id, Pagination.of(1, totalCount + 2));
+
+			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+			Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
+				id, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+			Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
+				id, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
 	}
 
 	protected OrderItem testGetOrderIdOrderItemsPage_addOrderItem(
@@ -1645,6 +1749,14 @@ public abstract class BaseOrderItemResourceTestCase {
 
 			if (Objects.equals("virtualItemURLs", additionalAssertFieldName)) {
 				if (orderItem.getVirtualItemURLs() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("virtualItems", additionalAssertFieldName)) {
+				if (orderItem.getVirtualItems() == null) {
 					valid = false;
 				}
 
@@ -2292,6 +2404,17 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("virtualItems", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						orderItem1.getVirtualItems(),
+						orderItem2.getVirtualItems())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -2328,6 +2451,10 @@ public abstract class BaseOrderItemResourceTestCase {
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
+
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
 
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
@@ -3095,6 +3222,11 @@ public abstract class BaseOrderItemResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("virtualItems")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -3184,9 +3316,9 @@ public abstract class BaseOrderItemResourceTestCase {
 	}
 
 	protected OrderItemResource orderItemResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

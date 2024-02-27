@@ -32,7 +32,6 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -83,8 +82,8 @@ public class FragmentEntryLocalServiceImpl
 			long userId, long groupId, long fragmentCollectionId,
 			String fragmentEntryKey, String name, String css, String html,
 			String js, boolean cacheable, String configuration, String icon,
-			long previewFileEntryId, int type, String typeOptions, int status,
-			ServiceContext serviceContext)
+			long previewFileEntryId, boolean readOnly, int type,
+			String typeOptions, int status, ServiceContext serviceContext)
 		throws PortalException {
 
 		// Fragment entry
@@ -136,6 +135,7 @@ public class FragmentEntryLocalServiceImpl
 		draftFragmentEntry.setConfiguration(configuration);
 		draftFragmentEntry.setIcon(icon);
 		draftFragmentEntry.setPreviewFileEntryId(previewFileEntryId);
+		draftFragmentEntry.setReadOnly(readOnly);
 		draftFragmentEntry.setType(type);
 		draftFragmentEntry.setTypeOptions(typeOptions);
 		draftFragmentEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
@@ -198,6 +198,7 @@ public class FragmentEntryLocalServiceImpl
 				publishedFragmentEntry.isCacheable(),
 				publishedFragmentEntry.getConfiguration(),
 				publishedFragmentEntry.getIcon(), 0,
+				publishedFragmentEntry.isReadOnly(),
 				publishedFragmentEntry.getType(),
 				publishedFragmentEntry.getTypeOptions(),
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
@@ -221,7 +222,8 @@ public class FragmentEntryLocalServiceImpl
 				draftFragmentEntry.getCss(), draftFragmentEntry.getHtml(),
 				draftFragmentEntry.getJs(), draftFragmentEntry.isCacheable(),
 				draftFragmentEntry.getConfiguration(),
-				draftFragmentEntry.getIcon(), 0, draftFragmentEntry.getType(),
+				draftFragmentEntry.getIcon(), 0,
+				draftFragmentEntry.isReadOnly(), draftFragmentEntry.getType(),
 				draftFragmentEntry.getTypeOptions(),
 				WorkflowConstants.STATUS_DRAFT, serviceContext);
 
@@ -570,42 +572,13 @@ public class FragmentEntryLocalServiceImpl
 			draftFragmentEntry.getHeadId());
 
 		if (publishedFragmentEntry != null) {
-			draftFragmentEntry.setName(publishedFragmentEntry.getName());
 			draftFragmentEntry.setCacheable(
 				publishedFragmentEntry.isCacheable());
 			draftFragmentEntry.setPreviewFileEntryId(
 				publishedFragmentEntry.getPreviewFileEntryId());
 		}
-		else {
-			_validate(draftFragmentEntry.getName());
-		}
 
-		_fragmentEntryValidator.validateConfiguration(
-			draftFragmentEntry.getConfiguration());
-		_fragmentEntryValidator.validateTypeOptions(
-			draftFragmentEntry.getType(), draftFragmentEntry.getTypeOptions());
-		_validateContent(
-			draftFragmentEntry.getHtml(),
-			draftFragmentEntry.getConfiguration());
-
-		draftFragmentEntry.setStatus(WorkflowConstants.STATUS_APPROVED);
-
-		FragmentEntry updatedPublishedFragmentEntry = super.publishDraft(
-			draftFragmentEntry);
-
-		FragmentServiceConfiguration fragmentServiceConfiguration =
-			_configurationProvider.getCompanyConfiguration(
-				FragmentServiceConfiguration.class,
-				draftFragmentEntry.getCompanyId());
-
-		if (fragmentServiceConfiguration.propagateChanges() &&
-			!ExportImportThreadLocal.isStagingInProcess()) {
-
-			_propagateChanges(
-				updatedPublishedFragmentEntry.getFragmentEntryId());
-		}
-
-		return updatedPublishedFragmentEntry;
+		return _publishDraft(draftFragmentEntry);
 	}
 
 	@Override
@@ -667,24 +640,7 @@ public class FragmentEntryLocalServiceImpl
 			long userId, long fragmentEntryId, long fragmentCollectionId,
 			String name, String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			int status)
-		throws PortalException {
-
-		FragmentEntry fragmentEntry = fragmentEntryPersistence.findByPrimaryKey(
-			fragmentEntryId);
-
-		return fragmentEntryLocalService.updateFragmentEntry(
-			userId, fragmentEntryId, fragmentCollectionId, name, css, html, js,
-			cacheable, configuration, icon, previewFileEntryId,
-			fragmentEntry.getTypeOptions(), status);
-	}
-
-	@Override
-	public FragmentEntry updateFragmentEntry(
-			long userId, long fragmentEntryId, long fragmentCollectionId,
-			String name, String css, String html, String js, boolean cacheable,
-			String configuration, String icon, long previewFileEntryId,
-			String typeOptions, int status)
+			boolean readOnly, String typeOptions, int status)
 		throws PortalException {
 
 		FragmentEntry fragmentEntry = fragmentEntryPersistence.findByPrimaryKey(
@@ -712,6 +668,7 @@ public class FragmentEntryLocalServiceImpl
 		fragmentEntry.setConfiguration(configuration);
 		fragmentEntry.setIcon(icon);
 		fragmentEntry.setPreviewFileEntryId(previewFileEntryId);
+		fragmentEntry.setReadOnly(readOnly);
 		fragmentEntry.setTypeOptions(typeOptions);
 		fragmentEntry.setStatus(status);
 		fragmentEntry.setStatusByUserId(userId);
@@ -720,24 +677,15 @@ public class FragmentEntryLocalServiceImpl
 
 		fragmentEntry = getDraft(fragmentEntry);
 
+		if (!Objects.equals(name, fragmentEntry.getName())) {
+			fragmentEntry.setName(name);
+		}
+
 		if (status != WorkflowConstants.STATUS_APPROVED) {
 			return fragmentEntry;
 		}
 
-		fragmentEntry = publishDraft(fragmentEntry);
-
-		FragmentServiceConfiguration fragmentServiceConfiguration =
-			_configurationProvider.getCompanyConfiguration(
-				FragmentServiceConfiguration.class,
-				fragmentEntry.getCompanyId());
-
-		if (fragmentServiceConfiguration.propagateChanges() &&
-			!ExportImportThreadLocal.isStagingInProcess()) {
-
-			_propagateChanges(fragmentEntryId);
-		}
-
-		return fragmentEntry;
+		return _publishDraft(fragmentEntry);
 	}
 
 	@Override
@@ -756,35 +704,6 @@ public class FragmentEntryLocalServiceImpl
 		fragmentEntry.setName(name);
 
 		return fragmentEntryPersistence.update(fragmentEntry);
-	}
-
-	private void _addFragmentCollectionResources(
-			FragmentEntry fragmentEntry, ServiceContext serviceContext,
-			Map<String, FileEntry> fileEntries,
-			FragmentCollection targetFragmentCollection)
-		throws PortalException {
-
-		for (Map.Entry<String, FileEntry> entry : fileEntries.entrySet()) {
-			FileEntry fileEntry = entry.getValue();
-
-			FileEntry existingFileEntry =
-				PortletFileRepositoryUtil.fetchPortletFileEntry(
-					fragmentEntry.getGroupId(),
-					targetFragmentCollection.getResourcesFolderId(),
-					fileEntry.getFileName());
-
-			if (existingFileEntry == null) {
-				PortletFileRepositoryUtil.addPortletFileEntry(
-					null, serviceContext.getScopeGroupId(),
-					serviceContext.getUserId(),
-					FragmentCollection.class.getName(),
-					targetFragmentCollection.getFragmentCollectionId(),
-					FragmentPortletKeys.FRAGMENT,
-					targetFragmentCollection.getResourcesFolderId(),
-					fileEntry.getContentStream(), fileEntry.getFileName(),
-					fileEntry.getMimeType(), false);
-			}
-		}
 	}
 
 	private void _addFragmentCollectionResourcesWithFolders(
@@ -899,16 +818,9 @@ public class FragmentEntryLocalServiceImpl
 				targetFragmentCollectionId);
 
 		try {
-			if (FeatureFlagManagerUtil.isEnabled("LPS-158675")) {
-				_addFragmentCollectionResourcesWithFolders(
-					fragmentEntry, serviceContext, fileEntries,
-					targetFragmentCollection);
-			}
-			else {
-				_addFragmentCollectionResources(
-					fragmentEntry, serviceContext, fileEntries,
-					targetFragmentCollection);
-			}
+			_addFragmentCollectionResourcesWithFolders(
+				fragmentEntry, serviceContext, fileEntries,
+				targetFragmentCollection);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -1042,6 +954,48 @@ public class FragmentEntryLocalServiceImpl
 					fragmentEntryLink.getFragmentEntryLinkId()));
 
 		actionableDynamicQuery.performActions();
+	}
+
+	private FragmentEntry _publishDraft(FragmentEntry draftFragmentEntry)
+		throws PortalException {
+
+		FragmentEntry publishedFragmentEntry = fetchFragmentEntry(
+			draftFragmentEntry.getHeadId());
+
+		if ((publishedFragmentEntry == null) ||
+			!Objects.equals(
+				publishedFragmentEntry.getName(),
+				draftFragmentEntry.getName())) {
+
+			_validate(draftFragmentEntry.getName());
+		}
+
+		_fragmentEntryValidator.validateConfiguration(
+			draftFragmentEntry.getConfiguration());
+		_fragmentEntryValidator.validateTypeOptions(
+			draftFragmentEntry.getType(), draftFragmentEntry.getTypeOptions());
+		_validateContent(
+			draftFragmentEntry.getHtml(),
+			draftFragmentEntry.getConfiguration());
+
+		draftFragmentEntry.setStatus(WorkflowConstants.STATUS_APPROVED);
+
+		FragmentEntry updatedPublishedFragmentEntry = super.publishDraft(
+			draftFragmentEntry);
+
+		FragmentServiceConfiguration fragmentServiceConfiguration =
+			_configurationProvider.getCompanyConfiguration(
+				FragmentServiceConfiguration.class,
+				draftFragmentEntry.getCompanyId());
+
+		if (fragmentServiceConfiguration.propagateChanges() &&
+			!ExportImportThreadLocal.isStagingInProcess()) {
+
+			_propagateChanges(
+				updatedPublishedFragmentEntry.getFragmentEntryId());
+		}
+
+		return updatedPublishedFragmentEntry;
 	}
 
 	private void _validate(String name) throws PortalException {

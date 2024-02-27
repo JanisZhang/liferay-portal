@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ScreenReaderAnnouncerContext} from '@liferay/layout-js-components-web';
 import {sub} from 'frontend-js-web';
-import React, {ComponentProps, FC, useContext} from 'react';
+import React, {ComponentProps, FC, useContext, useRef} from 'react';
 
 import {config} from '../../../app/config/index';
 import RulesService from '../../../app/services/RulesService';
@@ -13,7 +14,6 @@ import useCache from '../../../app/utils/useCache';
 import useConditionValues from '../../../app/utils/useConditionValues';
 import RuleBuilderItem from './RuleBuilderItem';
 import RuleSelect from './RuleSelect';
-import {ScreenReaderAnnouncerContext} from './ScreenReaderContext';
 
 export interface Condition {
 	condition?: 'user' | 'role' | 'segment';
@@ -89,10 +89,22 @@ export default function Condition({
 
 	const [{description}] = useConditionValues({conditions: [condition]});
 
+	const selectRef = useRef<HTMLButtonElement | undefined>();
+
+	const completeConditon = !!condition.value;
+
 	return (
 		<RuleBuilderItem
+			aria-label={
+				completeConditon
+					? description
+					: Liferay.Language.get('incomplete-condition')
+			}
 			description={description}
 			onDeleteButtonClick={onDeleteCondition}
+			onItemSelected={() => {
+				selectRef.current?.focus();
+			}}
 			showDeleteButton={showDeleteButton}
 			type="condition"
 			wrapperRef={wrapperRef}
@@ -106,6 +118,7 @@ export default function Condition({
 					onConditionChange({...condition, type})
 				}
 				selectedKey={condition.type}
+				triggerRef={selectRef}
 			/>
 
 			{condition.type && CONDITION_ITEMS[condition.type] ? (

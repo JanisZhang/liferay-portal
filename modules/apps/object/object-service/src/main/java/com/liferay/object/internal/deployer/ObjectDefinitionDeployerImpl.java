@@ -214,15 +214,10 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			_bundleContext.registerService(
 				ModelDocumentContributor.class,
 				new ObjectEntryModelDocumentContributor(
+					_accountEntryOrganizationRelLocalService,
 					objectDefinition.getClassName(),
 					_objectDefinitionLocalService, _objectEntryLocalService,
 					_objectFieldLocalService),
-				HashMapDictionaryBuilder.<String, Object>put(
-					"indexer.class.name", objectDefinition.getClassName()
-				).build()),
-			_bundleContext.registerService(
-				ModelIndexerWriterContributor.class,
-				objectEntryModelIndexerWriterContributor,
 				HashMapDictionaryBuilder.<String, Object>put(
 					"indexer.class.name", objectDefinition.getClassName()
 				).build()),
@@ -305,6 +300,11 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					@Override
 					public String getClassName() {
 						return objectDefinition.getClassName();
+					}
+
+					@Override
+					public long getCompanyId() {
+						return objectDefinition.getCompanyId();
 					}
 
 					@Override

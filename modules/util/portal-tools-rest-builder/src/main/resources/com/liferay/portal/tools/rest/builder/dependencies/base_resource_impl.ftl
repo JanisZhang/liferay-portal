@@ -22,7 +22,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.Resource;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -604,7 +603,7 @@ public abstract class Base${schemaName}ResourceImpl
 				if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
 					String updateStrategy = (String)parameters.getOrDefault("updateStrategy", "UPDATE");
 
-					<#if updateStrategies?seq_contains("UPDATE") && putByERCBatchJavaMethodSignature??>
+					<#if putByERCBatchJavaMethodSignature??>
 						if(StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
 							<#if stringUtil.equals(javaDataType, putByERCBatchJavaMethodSignature.returnType)>
 								${schemaVarName}UnsafeFunction = ${schemaVarName} -> ${putByERCBatchJavaMethodSignature.methodName}(
@@ -642,7 +641,7 @@ public abstract class Base${schemaName}ResourceImpl
 						}
 					</#if>
 
-					<#if updateStrategies?seq_contains("PARTIAL_UPDATE") && getByERCBatchJavaMethodSignature?? && createStrategies?seq_contains("INSERT")>
+					<#if getByERCBatchJavaMethodSignature?? && patchBatchJavaMethodSignature?? && (postAssetLibraryBatchJavaMethodSignature?? || postBatchJavaMethodSignature?? || postParentBatchJavaMethodSignatures?has_content || postParentByERCBatchJavaMethodSignatures?has_content || postSiteBatchJavaMethodSignature??)>
 						if(StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
 							${schemaVarName}UnsafeFunction = ${schemaVarName} -> {
 								${schemaName} persisted${schemaName} = null;
@@ -1332,7 +1331,7 @@ public abstract class Base${schemaName}ResourceImpl
 		}
 	</#if>
 
-	protected Map<String, String> addAction(String actionName, GroupedModel groupedModel, String methodName) {
+	protected Map<String, String> addAction(String actionName, com.liferay.portal.kernel.model.GroupedModel groupedModel, String methodName) {
 		return ActionUtil.addAction(actionName, getClass(), groupedModel, methodName, contextScopeChecker, contextUriInfo);
 	}
 
@@ -1357,11 +1356,11 @@ public abstract class Base${schemaName}ResourceImpl
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
 
-	protected <T, R, E extends Throwable> R[] transform(T[] array, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) {
+	protected <T, R, E extends Throwable> R[] transform(T[] array, UnsafeFunction<T, R, E> unsafeFunction, Class<? extends R> clazz) {
 		return TransformUtil.transform(array, unsafeFunction, clazz);
 	}
 
-	protected <T, R, E extends Throwable> R[] transformToArray(Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) {
+	protected <T, R, E extends Throwable> R[] transformToArray(Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction, Class<? extends R> clazz) {
 		return TransformUtil.transformToArray(collection, unsafeFunction, clazz);
 	}
 
@@ -1386,11 +1385,11 @@ public abstract class Base${schemaName}ResourceImpl
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
 	}
 
-	protected <T, R, E extends Throwable> R[] unsafeTransform(T[] array, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) throws E {
+	protected <T, R, E extends Throwable> R[] unsafeTransform(T[] array, UnsafeFunction<T, R, E> unsafeFunction, Class<? extends R> clazz) throws E {
 		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
 	}
 
-	protected <T, R, E extends Throwable> R[] unsafeTransformToArray(Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) throws E {
+	protected <T, R, E extends Throwable> R[] unsafeTransformToArray(Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction, Class<? extends R> clazz) throws E {
 		return TransformUtil.unsafeTransformToArray(collection, unsafeFunction, clazz);
 	}
 

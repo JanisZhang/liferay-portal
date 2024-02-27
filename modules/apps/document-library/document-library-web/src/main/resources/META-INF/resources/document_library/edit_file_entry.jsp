@@ -288,62 +288,25 @@ renderResponse.setTitle(headerTitle);
 					}
 					%>
 
-					<div class="form-group">
-						<c:if test="<%= dlEditFileEntryDisplayContext.isFolderSelectionVisible() %>">
-							<aui:input label="folder" name="folderName" type="resource" value="<%= folderName %>" />
+					<c:if test="<%= dlEditFileEntryDisplayContext.isFolderSelectionVisible() %>">
 
-							<aui:button name="selectFolderButton" value="select" />
+						<%
+						ItemSelector itemSelector = (ItemSelector)request.getAttribute(ItemSelector.class.getName());
 
-							<%
-							String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('folderId', 'folderName', this, '" + liferayPortletResponse.getNamespace() + "');";
-							%>
+						FolderItemSelectorURLProvider folderItemSelectorURLProvider = new FolderItemSelectorURLProvider(request, itemSelector);
+						%>
 
-							<aui:button disabled="<%= folderId <= 0 %>" name="removeFolderButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
-
-							<script>
-								var selectFolderButton = document.getElementById(
-									'<portlet:namespace />selectFolderButton'
-								);
-
-								if (selectFolderButton) {
-									selectFolderButton.addEventListener('click', (event) => {
-										Liferay.Util.openSelectionModal({
-											eventName: '<portlet:namespace />folderSelected',
-											multiple: false,
-											onSelect: function (selectedItem) {
-												if (!selectedItem) {
-													return;
-												}
-
-												var folderData = {
-													idString: 'folderId',
-													idValue: selectedItem.folderid,
-													nameString: 'folderName',
-													nameValue: selectedItem.foldername,
-												};
-
-												Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
-											},
-											title: '<liferay-ui:message arguments="folder" key="select-x" />',
-
-											<%
-											ItemSelector itemSelector = (ItemSelector)request.getAttribute(ItemSelector.class.getName());
-
-											FolderItemSelectorCriterion folderItemSelectorCriterion = new FolderItemSelectorCriterion();
-
-											folderItemSelectorCriterion.setDesiredItemSelectorReturnTypes(new FolderItemSelectorReturnType());
-											folderItemSelectorCriterion.setFolderId(folderId);
-
-											PortletURL selectFolderURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(request), portletDisplay.getNamespace() + "folderSelected", folderItemSelectorCriterion);
-											%>
-
-											url: '<%= HtmlUtil.escapeJS(selectFolderURL.toString()) %>',
-										});
-									});
-								}
-							</script>
-						</c:if>
-					</div>
+						<liferay-frontend:resource-selector
+							inputLabel='<%= LanguageUtil.get(request, "folder") %>'
+							inputName="newFolderId"
+							modalTitle='<%= LanguageUtil.get(request, "select-folder") %>'
+							resourceName="<%= folderName %>"
+							resourceValue="<%= String.valueOf(folderId) %>"
+							selectEventName="folderSelected"
+							selectResourceURL="<%= folderItemSelectorURLProvider.getSelectAddFileEntryFolderURL(folderId) %>"
+							showRemoveButton="<%= true %>"
+						/>
+					</c:if>
 
 					<%@ include file="/document_library/edit_file_entry_picker.jspf" %>
 
@@ -547,12 +510,14 @@ renderResponse.setTitle(headerTitle);
 								className="<%= DLFileEntry.class.getName() %>"
 								classPK="<%= assetClassPK %>"
 								classTypePK="<%= (fileEntryTypeId < 0) ? DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT : fileEntryTypeId %>"
+								groupIds="<%= SiteConnectedGroupGroupProviderUtil.getCurrentAndAncestorSiteAndDepotGroupIds(dlAdminDisplayContext.getRepositoryGroupId(scopeGroupId, repositoryId)) %>"
 								visibilityTypes="<%= AssetVocabularyConstants.VISIBILITY_TYPES %>"
 							/>
 
 							<liferay-asset:asset-tags-selector
 								className="<%= DLFileEntry.class.getName() %>"
 								classPK="<%= assetClassPK %>"
+								groupIds="<%= SiteConnectedGroupGroupProviderUtil.getCurrentAndAncestorSiteAndDepotGroupIds(dlAdminDisplayContext.getRepositoryGroupId(scopeGroupId, repositoryId)) %>"
 							/>
 
 							<c:if test="<%= (fileEntry != null) && dlAdminDisplayContext.isAutoTaggingEnabled() %>">
@@ -573,9 +538,18 @@ renderResponse.setTitle(headerTitle);
 					</c:if>
 
 					<c:if test="<%= !RepositoryUtil.isExternalRepository(repositoryId) %>">
-						<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="expiration-date">
+						<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label='<%= FeatureFlagManagerUtil.isEnabled("LPD-10701") ? "schedule" : "expiration-date" %>'>
+							<liferay-ui:error exception="<%= FileEntryDisplayDateException.class %>" message="please-enter-a-valid-publish-date" />
 							<liferay-ui:error exception="<%= FileEntryExpirationDateException.class %>" message="please-enter-a-valid-expiration-date" />
 							<liferay-ui:error exception="<%= FileEntryReviewDateException.class %>" message="please-enter-a-valid-review-date" />
+
+							<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-10701") %>'>
+								<p class="text-secondary">
+									<liferay-ui:message key="set-the-publication-date-and-time-for-your-document-to-be-published-automatically" />
+								</p>
+
+								<aui:input label="publish-date" name="displayDate" wrapperCssClass="display-date" />
+							</c:if>
 
 							<p class="text-secondary">
 								<liferay-ui:message key="including-an-expiration-date-will-allow-your-documents-or-media-to-expire-automatically-and-become-unpublished" />
@@ -623,7 +597,7 @@ renderResponse.setTitle(headerTitle);
 						</div>
 					</c:if>
 
-					<div class="sheet-footer">
+					<div class="sheet-footer" data-qa-id="addFileEntryFooter">
 						<c:if test="<%= dlEditFileEntryDisplayContext.isSaveButtonVisible() %>">
 							<aui:button disabled="<%= dlEditFileEntryDisplayContext.isSaveButtonDisabled() %>" name="saveButton" onClick='<%= liferayPortletResponse.getNamespace() + "saveFileEntry(true);" %>' value="<%= dlEditFileEntryDisplayContext.getSaveButtonLabel() %>" />
 						</c:if>
@@ -666,7 +640,7 @@ renderResponse.setTitle(headerTitle);
 	<liferay-util:include page="/document_library/version_details.jsp" servletContext="<%= application %>" />
 </c:if>
 
-<script>
+<aui:script>
 	var form = document.<portlet:namespace />fm;
 
 	function <portlet:namespace />changeFileEntryType() {
@@ -801,7 +775,7 @@ renderResponse.setTitle(headerTitle);
 
 		formComponent.formValidator.validateField('<portlet:namespace />title');
 	}
-</script>
+</aui:script>
 
 <c:if test="<%= (fileEntry != null) && !checkedOut && dlAdminDisplayContext.isVersioningStrategyOverridable() %>">
 	<aui:script>

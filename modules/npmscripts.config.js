@@ -58,6 +58,10 @@ module.exports = {
 						'/': '*',
 					},
 
+					'@liferay/frontend-js-codemirror-web': {
+						'/': '*',
+					},
+
 					'@liferay/frontend-js-dependencies-web': {
 						'/': '*',
 						'axe-core': '*',
@@ -365,8 +369,19 @@ module.exports = {
 		imports: {
 			'@liferay/accessibility-menu-web': [],
 			'@liferay/accessibility-settings-state-web': [],
+			'@liferay/address-web': [],
+			'@liferay/content-dashboard-web': [],
 			'@liferay/cookies-banner-web': [],
+			'@liferay/document-library-preview-css': [],
+			'@liferay/flags-taglib': [],
+			'@liferay/fragment-renderer-collection-filter-impl': [],
 			'@liferay/frontend-data-set-web': [],
+			'@liferay/frontend-icons-web': [],
+			'@liferay/frontend-js-codemirror-web': [
+				'codemirror/addon/fold/foldgutter.css',
+				'codemirror/addon/hint/show-hint.css',
+				'codemirror/lib/codemirror.css',
+			],
 			'@liferay/frontend-js-dependencies-web': [
 				'html-to-image',
 				'jspdf',
@@ -412,6 +427,20 @@ module.exports = {
 				'graphiql',
 				'graphiql/graphiql.css',
 			],
+			'@liferay/frontend-js-node-shims': [
+				'assert',
+				'buffer',
+				'domain',
+				'domain-browser',
+				'events',
+				'os',
+				'path',
+				'process',
+				'string_decoder',
+				'timers',
+				'url',
+				'util',
+			],
 			'@liferay/frontend-js-react-web': [
 				'classnames',
 				'formik',
@@ -422,6 +451,15 @@ module.exports = {
 				'react-dom',
 			],
 			'@liferay/frontend-js-state-web': [],
+			'@liferay/frontend-js-walkthrough-web': [],
+			'@liferay/layout-js-components-web': [],
+			'@liferay/map-common': [],
+			'@liferay/map-google-maps': [],
+			'@liferay/map-openstreetmap': [],
+			'@liferay/portal-workflow-instance-tracker-web': [],
+			'@liferay/template-web': [],
+			'asset-taglib': [],
+			'data-engine-js-components-web': [],
 			'frontend-js-components-web': [],
 			'frontend-js-web': [],
 			'frontend-taglib-clay': [
@@ -468,6 +506,9 @@ module.exports = {
 				'@clayui/tooltip',
 				'@clayui/upper-toolbar',
 			],
+			'item-selector-taglib': [],
+			'item-selector-web': [],
+			'social-bookmarks-taglib': [],
 		},
 	},
 	check: CHECK_AND_FIX_GLOBS,
@@ -687,7 +728,7 @@ module.exports = {
 			'portlet-configuration-css-web',
 			'portlet-configuration-web',
 			'poshi-language-support',
-			'product-navigation-applications-menu',
+			'product-navigation-applications-menu-web',
 			'product-navigation-control-menu',
 			'product-navigation-control-menu-web',
 			'product-navigation-simulation-device',
@@ -731,6 +772,7 @@ module.exports = {
 			'youtube-web',
 		],
 		'allowed-non-global-dependencies': [
+			'codemirror',
 			'd3',
 			'history',
 			'jest-fetch-mock',
@@ -761,7 +803,6 @@ module.exports = {
 
 			// Doesn't support ESM
 
-			'codemirror',
 			'leaflet',
 
 			// Node Shims

@@ -8,7 +8,6 @@ package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLAppService;
-import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.util.DLValidator;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
@@ -91,9 +90,6 @@ public class UploadDDMUserPersonalFolderMVCActionCommand
 
 	@Reference
 	private DLAppService _dlAppService;
-
-	@Reference
-	private DLFileEntryLocalService _dlFileEntryLocalService;
 
 	@Reference
 	private DLURLHelper _dlURLHelper;
@@ -230,7 +226,7 @@ public class UploadDDMUserPersonalFolderMVCActionCommand
 				null, repositoryId, folderId, uniqueFileName,
 				uploadPortletRequest.getContentType(parameterName),
 				uniqueFileName, uniqueFileName, description, StringPool.BLANK,
-				inputStream, size, null, null, serviceContext);
+				inputStream, size, null, null, null, serviceContext);
 		}
 
 		private boolean _exists(

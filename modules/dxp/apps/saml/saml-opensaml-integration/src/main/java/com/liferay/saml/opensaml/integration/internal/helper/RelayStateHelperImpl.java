@@ -8,6 +8,7 @@ package com.liferay.saml.opensaml.integration.internal.helper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.saml.helper.RelayStateHelper;
 
@@ -25,7 +26,13 @@ import org.osgi.service.component.annotations.Component;
 public class RelayStateHelperImpl implements RelayStateHelper {
 
 	public String getRedirectFromRelayStateToken(String relayStateToken) {
-		return _relayStateTokensToRedirects.get(relayStateToken);
+		if (Validator.isNotNull(relayStateToken) &&
+			relayStateToken.startsWith("RDR_")) {
+
+			return _relayStateTokensToRedirects.get(relayStateToken);
+		}
+
+		return relayStateToken;
 	}
 
 	public String getRelayStateTokenFromRedirect(String redirect) {
@@ -43,7 +50,7 @@ public class RelayStateHelperImpl implements RelayStateHelper {
 			_relayStateTokensToRedirects.remove(relayStateToken);
 		}
 
-		relayStateToken = PortalUUIDUtil.generate();
+		relayStateToken = "RDR_" + PortalUUIDUtil.generate();
 
 		_redirectsToRelayStateTokens.put(redirect, relayStateToken);
 

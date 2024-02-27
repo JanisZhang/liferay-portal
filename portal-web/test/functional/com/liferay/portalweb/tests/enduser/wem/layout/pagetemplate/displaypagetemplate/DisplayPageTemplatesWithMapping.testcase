@@ -137,10 +137,7 @@ definition {
 	@priority = 4
 	test MapCustomFieldToTextFragment {
 		task ("Add a custom field for Document") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Custom Fields");
+			CustomFields.openCustomFieldAdmin();
 
 			CustomFields.addCP(
 				customFieldName = "Short Description",
@@ -760,10 +757,6 @@ definition {
 		}
 
 		task ("Then the page designer should see the mapped image shown on associated display page template") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Page Name",
-				siteName = ${randomSiteName});
-
 			Button.click(button = "Go Somewhere");
 
 			ControlMenu.viewHeaderTitle(headerTitle = ${objectEntryId});
@@ -1808,7 +1801,7 @@ definition {
 		}
 
 		task ("Reverse Sort Direction in Documents and Media") {
-			Click(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
+			ManagementBar.sortAssets(sortDirection = "Ascending");
 		}
 
 		task ("Assert the order of documents in Documents and Media") {

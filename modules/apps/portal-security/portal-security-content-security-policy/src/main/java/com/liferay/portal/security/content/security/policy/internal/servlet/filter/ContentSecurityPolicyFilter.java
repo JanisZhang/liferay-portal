@@ -5,8 +5,9 @@
 
 package com.liferay.portal.security.content.security.policy.internal.servlet.filter;
 
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -19,6 +20,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -49,16 +53,20 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-134060")) {
+		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration =
+			ContentSecurityPolicyConfigurationUtil.
+				setContentSecurityPolicyConfiguration(
+					_configurationProvider, httpServletRequest, _portal);
+
+		if (!contentSecurityPolicyConfiguration.enabled() ||
+			Validator.isNull(contentSecurityPolicyConfiguration.policy()) ||
+			_isExcludedURIPath(
+				contentSecurityPolicyConfiguration, httpServletRequest)) {
+
 			return false;
 		}
 
-		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration =
-			ContentSecurityPolicyConfigurationUtil.
-				getContentSecurityPolicyConfiguration(
-					_configurationProvider, httpServletRequest, _portal);
-
-		return contentSecurityPolicyConfiguration.enabled();
+		return true;
 	}
 
 	@Override
@@ -67,34 +75,23 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		if (_isExcludedURIPath(httpServletRequest)) {
-			filterChain.doFilter(httpServletRequest, httpServletResponse);
-
-			return;
-		}
-
-		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration =
-			ContentSecurityPolicyConfigurationUtil.
-				getContentSecurityPolicyConfiguration(
-					_configurationProvider, httpServletRequest, _portal);
-
-		String policy = contentSecurityPolicyConfiguration.policy();
-
-		if (Validator.isNull(policy)) {
-			filterChain.doFilter(httpServletRequest, httpServletResponse);
-
-			return;
-		}
-
-		String nonce = _contentSecurityPolicyNonceManager.ensureNonce(
+		String nonce = _contentSecurityPolicyNonceManager.setNonce(
 			httpServletRequest);
 
-		policy = StringUtil.replace(policy, "[$NONCE$]", "nonce-" + nonce);
-
-		httpServletResponse.setHeader("Content-Security-Policy", policy);
-
 		try {
-			_contentSecurityPolicyNonceManager.setTLSNonce(nonce);
+			httpServletResponse.setContentType("text/html; charset=UTF-8");
+
+			ContentSecurityPolicyConfiguration
+				contentSecurityPolicyConfiguration =
+					ContentSecurityPolicyConfigurationUtil.
+						getContentSecurityPolicyConfiguration(
+							httpServletRequest);
+
+			String policy = contentSecurityPolicyConfiguration.policy();
+
+			policy = StringUtil.replace(policy, "[$NONCE$]", "nonce-" + nonce);
+
+			httpServletResponse.setHeader("Content-Security-Policy", policy);
 
 			PrintWriter printWriter = httpServletResponse.getWriter();
 
@@ -106,21 +103,8 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 			filterChain.doFilter(
 				httpServletRequest, contentSecurityPolicyHttpServletResponse);
 
-			String content =
-				contentSecurityPolicyHttpServletResponse.getContent();
-
-			content = content.replaceAll(
-				"<(?i)link ", "<link nonce=\"" + nonce + "\" ");
-			content = content.replaceAll(
-				"<(?i)link>", "<link nonce=\"" + nonce + "\">");
-			content = content.replaceAll(
-				"<(?i)script ", "<script nonce=\"" + nonce + "\" ");
-			content = content.replaceAll(
-				"<(?i)script>", "<script nonce=\"" + nonce + "\">");
-			content = content.replaceAll(
-				"<(?i)style ", "<style nonce=\"" + nonce + "\" ");
-			content = content.replaceAll(
-				"<(?i)style>", "<style nonce=\"" + nonce + "\">");
+			String content = _updateContent(
+				contentSecurityPolicyHttpServletResponse.getContent(), nonce);
 
 			printWriter.write(content);
 
@@ -129,11 +113,14 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 			httpServletResponse.setContentLength(content.length());
 		}
 		finally {
-			_contentSecurityPolicyNonceManager.removeTLSNonce();
+			_contentSecurityPolicyNonceManager.cleanUpNonce(httpServletRequest);
 		}
 	}
 
-	private boolean _isExcludedURIPath(HttpServletRequest httpServletRequest) {
+	private boolean _isExcludedURIPath(
+		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration,
+		HttpServletRequest httpServletRequest) {
+
 		String requestURI = httpServletRequest.getRequestURI();
 
 		if (Validator.isNull(requestURI)) {
@@ -151,11 +138,6 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 
 		requestURI = StringUtil.toLowerCase(requestURI);
 
-		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration =
-			ContentSecurityPolicyConfigurationUtil.
-				getContentSecurityPolicyConfiguration(
-					_configurationProvider, httpServletRequest, _portal);
-
 		for (String excludedPath :
 				contentSecurityPolicyConfiguration.excludedPaths()) {
 
@@ -167,6 +149,64 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 		}
 
 		return false;
+	}
+
+	private String _updateContent(String content, String nonce) {
+		String nonceAttribute = "nonce=\"" + nonce + "\"";
+		String escapedNonceAttribute = "nonce=\\\"" + nonce + "\\\"";
+
+		content = content.replaceAll(
+			"<(?i)link ", "<link " + nonceAttribute + " ");
+		content = content.replaceAll(
+			"<(?i)link>", "<link " + nonceAttribute + "");
+		content = content.replaceAll(
+			"<(?i)style ", "<style " + nonceAttribute + " ");
+		content = content.replaceAll(
+			"<(?i)style>", "<style " + nonceAttribute + ">");
+
+		Pattern pattern = Pattern.compile(
+			"\\{.*nonce=\".{" + nonce.length() + "}\".*\\}");
+
+		Matcher matcher = pattern.matcher(content);
+
+		while (matcher.find()) {
+			String matcherGroup = matcher.group();
+
+			String[] matcherArray = StringUtil.split(
+				matcherGroup, nonceAttribute);
+
+			StringBundler sb = new StringBundler((matcherArray.length * 2) - 1);
+
+			int open = 0;
+			boolean overwrite = false;
+
+			for (int i = 0; i < (matcherArray.length - 1); i++) {
+				open += StringUtil.count(
+					matcherArray[i], CharPool.OPEN_CURLY_BRACE);
+				open -= StringUtil.count(
+					matcherArray[i], CharPool.CLOSE_CURLY_BRACE);
+
+				sb.append(matcherArray[i]);
+
+				if (open > 0) {
+					overwrite = true;
+
+					sb.append(escapedNonceAttribute);
+				}
+				else {
+					sb.append(nonceAttribute);
+				}
+			}
+
+			if (overwrite) {
+				sb.append(matcherArray[matcherArray.length - 1]);
+
+				content = StringUtil.replace(
+					content, matcherGroup, sb.toString());
+			}
+		}
+
+		return content;
 	}
 
 	private static final String[] _INTERNALLY_EXCLUDED_PATHS = {

@@ -80,6 +80,52 @@ public class FeatureFlagApplication extends Application {
 		return Collections.singleton(this);
 	}
 
+	@Path("/is-enabled")
+	@POST
+	public Response isEnabled(
+		@Context HttpServletRequest httpServletRequest,
+		@Context HttpServletResponse httpServletResponse,
+		@FormParam("companyId") long companyId, @FormParam("key") String key) {
+
+		try {
+			FeatureFlagsBag featureFlagsBag =
+				_featureFlagsBagProvider.getOrCreateFeatureFlagsBag(companyId);
+
+			FeatureFlag featureFlag = featureFlagsBag.getFeatureFlag(key);
+
+			if (featureFlag == null) {
+				return Response.ok(
+					HashMapBuilder.<String, Object>put(
+						"error", "Feature flag \"" + key + "\" is not available"
+					).build(),
+					MediaType.APPLICATION_JSON
+				).build();
+			}
+
+			return Response.ok(
+				HashMapBuilder.<String, Object>put(
+					"dependentFeatureFlags",
+					TransformUtil.transform(
+						_getDependentFeatureFlags(featureFlagsBag, key),
+						dependentFeatureFlag -> _toMap(
+							companyId, dependentFeatureFlag, featureFlagsBag))
+				).put(
+					"featureFlag",
+					_toMap(companyId, featureFlag, featureFlagsBag)
+				).build(),
+				MediaType.APPLICATION_JSON
+			).build();
+		}
+		catch (Exception exception) {
+			return Response.ok(
+				HashMapBuilder.<String, Object>put(
+					"error", exception.toString()
+				).build(),
+				MediaType.APPLICATION_JSON
+			).build();
+		}
+	}
+
 	private List<FeatureFlag> _getDependencyFeatureFlags(
 		long companyId, FeatureFlagsBag featureFlagsBag, String key) {
 

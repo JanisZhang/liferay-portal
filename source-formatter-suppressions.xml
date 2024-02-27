@@ -11,10 +11,11 @@
 		<suppress checks="CamelCaseNameCheck" files="portal-kernel/src/com/liferay/portal/kernel/util/PackagingUtil\.java" />
 		<suppress checks="CamelCaseNameCheck" files="portal-kernel/src/com/liferay/portal/kernel/util/PropsKeys\.java" />
 		<suppress checks="CamelCaseNameCheck" files="portal-kernel/test/unit/com/liferay/portal/kernel/util/ListUtilTest\.java" />
-		<suppress checks="CompanyIterationCheck" files="portal-impl/src/com/liferay/portal/db/partition/DBPartitionUtil\.java" />
+		<suppress checks="ChainingCheck" files="portal-impl/src/com/liferay/portal/tools/ConfigurationEnvBuilder\.java" />
+		<suppress checks="CompanyIterationCheck" files="portal-impl/src/com/liferay/portal/db/partition/util/DBPartitionUtil\.java" />
 		<suppress checks="CompanyIterationCheck" files="portal-impl/src/com/liferay/portal/service/impl/CompanyLocalServiceImpl\.java" />
-		<suppress checks="CompanyIterationCheck" files="portal-impl/src/com/liferay/portal/util/PortalInstances\.java" />
 		<suppress checks="CompanyIterationCheck" files="portal-kernel/src/com/liferay/portal/kernel/dao/db/DBInspector\.java" />
+		<suppress checks="CompanyIterationCheck" files="portal-kernel/src/com/liferay/portal/kernel/instance/PortalInstancePool\.java" />
 		<suppress checks="CompanyIterationCheck" files="portal-kernel/src/com/liferay/portal/kernel/upgrade/BaseCompanyIdUpgradeProcess\.java" />
 		<suppress checks="ConcatCheck" files="portal-kernel/test/unit/com/liferay/portal/kernel/util/StringBundlerTest\.java" />
 		<suppress checks="ConstantNameCheck" files="portal-test/src/com/liferay/portal/kernel/test/rule/CodeCoverageAssertor\.java" />
@@ -46,14 +47,16 @@
 		<suppress checks="MissingDeprecatedCheck" files="portal-kernel/src/com/liferay/portal/kernel/util/StringUtil\.java" />
 		<suppress checks="MissingModifierCheck" files="portal-impl/src/com/liferay/portal/spring/transaction/TransactionStatusAdapter\.java" />
 		<suppress checks="MissingModifierCheck" files="portal-impl/test/unit/com/liferay/portal/kernel/spring/osgi/OSGiBeanPropertiesTest\.java" />
-		<suppress checks="ServiceProxyFactoryCheck" files="portal-impl/src/com/liferay/portlet/internal/PortletBagImpl\.java" />
 		<suppress checks="StaticVariableNameCheck" files="portal-impl/src/com/liferay/portal/language/LanguageResources\.java" />
 		<suppress checks="StaticVariableNameCheck" files="portal-impl/src/com/liferay/portal/security/auth/AuthVerifierPipeline\.java" />
 		<suppress checks="StaticVariableNameCheck" files="portal-impl/src/com/liferay/portal/util/PropsValues\.java" />
 		<suppress checks="StaticVariableNameCheck" files="portal-kernel/src/com/liferay/portal/kernel/backgroundtask/BackgroundTaskResult\.java" />
 		<suppress checks="StaticVariableNameCheck" files="util-slf4j/src/org/slf4j/impl/StaticLoggerBinder\.java" />
+		<suppress checks="TryWithResourcesCheck" files="portal-impl/src/com/liferay/portal/db/index/IndexUpdaterUtil\.java" />
 		<suppress checks="UnprocessedExceptionCheck" files="portal-impl/src/com/liferay/portal/log/Log4jLogFactoryImpl\.java" />
 		<suppress checks="UnprocessedExceptionCheck" files="portal-kernel/src/com/liferay/portal/kernel/module/service/Snapshot\.java" />
+		<suppress checks="URLInputStreamCheck" files="portal-kernel/src/com/liferay/portal/kernel/util/PropertiesUtil.java" />
+		<suppress checks="URLInputStreamCheck" files="portal-kernel/src/com/liferay/portal/kernel/util/URLUtil.java" />
 		<suppress checks="VariableNameCheck" files="portal-kernel/src/com/liferay/portal/kernel/display/context/BaseDisplayContext\.java" />
 	</checkstyle>
 	<source-check>

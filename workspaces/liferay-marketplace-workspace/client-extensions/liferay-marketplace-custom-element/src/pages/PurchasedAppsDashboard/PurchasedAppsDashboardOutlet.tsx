@@ -3,28 +3,16 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {Outlet} from 'react-router-dom';
 
 import {DashboardNavigation} from '../../components/DashboardNavigation/DashboardNavigation';
-import {
-	getAccountInfoFromCommerce,
-	getAccounts,
-	getProductAttachments,
-} from '../../utils/api';
-import {
-	getAccountImage,
-	getThumbnailByProductAttachment,
-} from '../../utils/util';
+import {getAccountImage} from '../../utils/util';
 import {initialDashboardNavigationItems as dashboardNavigationItems} from './PurchasedDashboardPageUtil';
 
 import './PurchasedAppsDashboard.scss';
-
-import useSWR from 'swr';
-
-import {useMarketplaceContext} from '../../context/MarketplaceContext';
+import useAccounts, {useAccount} from '../../hooks/data/useAccounts';
 import {Liferay} from '../../liferay/liferay';
-import {useAccountCached} from '../PublishedAppsDashboard/PublishedAppsDashboardOutlet';
 import {usePurchasedOrders} from './usePurchasedOrders';
 
 export type PurchasedAppProps = {
@@ -44,92 +32,29 @@ export type PurchasedAppProps = {
 };
 
 const PurchasedAppsDashboardOutlet = () => {
-	const {accountId} = Liferay.CommerceContext.account || {};
-	const [commerceAccount, setCommerceAccount] = useState<CommerceAccount>();
+	const channelId = Number(Liferay.CommerceContext.commerceChannelId);
 
 	const [page, setPage] = useState(1);
-	const {channel} = useMarketplaceContext();
-
-	const {data: accounts = []} = useSWR('/purchased/accounts', async () => {
-		const accounts = await getAccounts();
-
-		return accounts.items ?? [];
-	});
-
-	const selectedAccount = useAccountCached(
-		accounts ?? [],
-		accountId as string
-	);
-
-	useEffect(() => {
-		const getAccountCommerce = async () => {
-			const commerceAccountResponse = await getAccountInfoFromCommerce(
-				selectedAccount.id
-			);
-
-			setCommerceAccount(commerceAccountResponse);
-		};
-
-		getAccountCommerce();
-	}, [selectedAccount?.id]);
+	const accountsSearch = useAccounts();
+	const {data: selectedAccount} = useAccount();
 
 	const {
 		data: placedOrders = {items: [], totalCount: 0},
-		key,
 	} = usePurchasedOrders({
-		accountId: selectedAccount?.id,
-		channelId: channel?.id,
+		accountId: selectedAccount?.id as number,
+		channelId,
 		orderTypeExternalReferenceCodes: ['CLOUDAPP', 'DXPAPP'],
 		page,
 		pageSize: 10,
 	});
 
-	const {
-		data: placedOrdersWithAttachements = {items: [], totalCount: 0},
-	} = useSWR(
-		`/${key}/with-attachments/${placedOrders.totalCount}`,
-		async () => {
-			if (!selectedAccount?.id && channel?.id) {
-				return {items: [], totalCount: 0};
-			}
-
-			const orders = await Promise.all(
-				placedOrders.items.map(async (order) => {
-					const [placeOrderItem] = order.placedOrderItems;
-
-					const attachments = await getProductAttachments(
-						selectedAccount.id,
-						channel.id as number,
-						placeOrderItem.productId
-					);
-
-					return {
-						...order,
-						name: placeOrderItem.name,
-						productId: order.placedOrderItems[0].productId,
-						thumbnail: getThumbnailByProductAttachment(attachments),
-						type: placeOrderItem.subscription
-							? 'Subscription'
-							: 'Perpetual',
-						virtualURL: placeOrderItem?.virtualItemURLs,
-					};
-				})
-			);
-
-			return {
-				items: orders,
-				totalCount: placedOrders.totalCount,
-			};
-		}
-	);
-
 	return (
 		<div className="purchased-apps-dashboard-page-container">
 			<DashboardNavigation
-				accountAppsNumber={placedOrdersWithAttachements.items.length}
-				accountIcon={getAccountImage(commerceAccount?.logoURL)}
-				accounts={accounts as Account[]}
-				currentAccount={selectedAccount}
+				accountAppsNumber={placedOrders.totalCount}
+				accountIcon={getAccountImage(selectedAccount?.logoURL)}
+				accountsSearch={accountsSearch}
+				currentAccount={selectedAccount as any}
 				dashboardNavigationItems={dashboardNavigationItems}
 			/>
 
@@ -137,7 +62,23 @@ const PurchasedAppsDashboardOutlet = () => {
 				context={{
 					dashboardNavigationItems,
 					page,
-					purchasedAppTable: placedOrdersWithAttachements,
+					purchasedAppTable: {
+						...placedOrders,
+						items: placedOrders.items.map((order) => {
+							const [placeOrderItem] = order.placedOrderItems;
+
+							return {
+								...order,
+								name: placeOrderItem.name,
+								productId: order.placedOrderItems[0].productId,
+								thumbnail: placeOrderItem.thumbnail,
+								type: placeOrderItem.subscription
+									? 'Subscription'
+									: 'Perpetual',
+								virtualURL: placeOrderItem?.virtualItemURLs,
+							};
+						}),
+					},
 					selectedAccount,
 					setPage,
 				}}

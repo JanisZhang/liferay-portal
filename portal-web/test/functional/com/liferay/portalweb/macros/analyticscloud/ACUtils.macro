@@ -184,11 +184,15 @@ definition {
 	macro assertAudienceCard(index = null, percentageList = null) {
 		var key_index = ${index};
 
+		ACUtils.waitForLoading();
+
 		for (var percentage : list ${percentageList}) {
 			var key_percentage = ${percentage};
 
 			while ((IsElementNotPresent(locator1 = "ACUtils#METRIC_VALUE_PERCENTAGE")) && (maxIterations = "50")) {
 				TestUtils.hardRefresh();
+
+				ACUtils.waitForLoading();
 			}
 
 			AssertTextEquals(
@@ -483,7 +487,7 @@ definition {
 			ACUtils.waitForChartLoad();
 		}
 
-		Click(
+		Click.clickNoMouseOver(
 			index = ${index},
 			locator1 = "ACIndividualsDashboard#INDIVIDUALS_ACTIVITIES_CHART_RECHARTS_BAR");
 	}
@@ -663,7 +667,7 @@ definition {
 
 		MouseOver(locator1 = "ACUtils#NAME_LIST");
 
-		Click(locator1 = "ACUtils#DELETE_BUTTON");
+		Click.clickNoMouseOver(locator1 = "ACUtils#DELETE_BUTTON");
 
 		ACUtils.clickAnyButton(button = ${key_actionButton});
 
@@ -808,6 +812,16 @@ definition {
 			}
 		}
 
+		WaitForPageLoad();
+
+		ACUtils.waitForLoading();
+
+		if (IsElementNotPresent(locator1 = "ACWorkspace#FARO_DEMO_WORKSPACE")) {
+			ACLogin.loginAs(
+				emailAddress = ${emailAddress},
+				password = "test1");
+		}
+
 		if (!(isSet(workspaceName))) {
 			ACWorkspace.openWorkspace();
 		}
@@ -835,6 +849,21 @@ definition {
 
 		if (IsElementNotPresent(locator1 = "ApplicationsMenu#APPLICATIONS_MENU")) {
 			User.firstLoginPG(userEmailAddress = ${userEmailAddress});
+		}
+	}
+
+	@summary = "Default summary"
+	macro launchDXPUI() {
+		Navigator.openURL();
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		if (IsElementNotPresent(locator1 = "ApplicationsMenu#APPLICATIONS_MENU")) {
+			User.firstLoginUI(
+				password = "test",
+				userEmailAddress = ${userEmailAddress});
 		}
 	}
 
@@ -1031,9 +1060,7 @@ definition {
 	macro tearDownABTest() {
 		ACUtils.launchDXP();
 
-		ACUtils.navigateToSitePage(
-			pageName = "AC Page",
-			siteName = "Site Name");
+		Navigator.openSiteURL(siteName = "Site Name");
 
 		ABTest.openABTestPanel();
 

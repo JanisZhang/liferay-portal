@@ -5,20 +5,24 @@
 
 import '@testing-library/jest-dom/extend-expect';
 import {render, screen} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import ObjectFoldersSideBar from '../components/ViewObjectDefinitions/ObjectFoldersSidebar';
-const emptyAction = {href: '', method: ''};
 
-const objectFolderActions = {
-	delete: emptyAction,
-	get: emptyAction,
-	permissions: emptyAction,
-	update: emptyAction,
+const defaultObjectFolder = {
+	actions: {get: {href: '', method: 'GET'}},
+	dateCreated: '2023-08-07T14:42:21Z',
+	dateModified: '2023-08-07T14:42:21Z',
+	externalReferenceCode: 'default',
+	id: 2,
+	label: {en_US: 'Default'},
+	name: 'Default',
+	objectFolderItems: [],
 };
 
 const ticketObjectFolder = {
-	actions: objectFolderActions,
+	actions: {get: {href: '', method: 'GET'}},
 	dateCreated: '2023-08-07T14:45:00Z',
 	dateModified: '2023-08-07T14:45:00Z',
 	externalReferenceCode: 'ticket',
@@ -28,32 +32,43 @@ const ticketObjectFolder = {
 	objectFolderItems: [],
 };
 
-const uncategorizedObjectFolder = {
-	actions: objectFolderActions,
-	dateCreated: '2023-08-07T14:42:21Z',
-	dateModified: '2023-08-07T14:42:21Z',
-	externalReferenceCode: 'uncategorized',
-	id: 2,
-	label: {en_US: 'Uncategorized'},
-	name: 'Uncategorized',
-	objectFolderItems: [],
+const objectFoldersRequestInfo = {
+	actions: {create: {href: '', method: 'POST'}},
+	items: [defaultObjectFolder, ticketObjectFolder],
 };
 
 describe('The ObjectFoldersSidebar component should', () => {
 	it('render all created object folders', () => {
 		render(
 			<ObjectFoldersSideBar
-				objectFolders={[ticketObjectFolder, uncategorizedObjectFolder]}
-				selectedObjectFolder={uncategorizedObjectFolder}
+				baseResourceURL=""
+				importObjectFolderURL=""
+				objectDefinitionsActions={{create: {href: '', method: 'POST'}}}
+				objectFoldersRequestInfo={objectFoldersRequestInfo}
+				portletNamespace=""
+				selectedObjectFolder={defaultObjectFolder}
+				setModalImportProperties={() => {}}
 				setSelectedObjectFolder={() => {}}
 				setShowModal={() => {}}
-			></ObjectFoldersSideBar>
+			/>
 		);
 
 		expect(screen.getAllByRole('listitem')).toHaveLength(2);
 
 		expect(screen.getByText('Ticket')).toBeInTheDocument();
 
-		expect(screen.getByText('Uncategorized')).toBeInTheDocument();
+		expect(screen.getByText('Default')).toBeInTheDocument();
+
+		userEvent.click(
+			screen.getByRole('button', {name: 'object-folder-actions'})
+		);
+
+		const menuItem = screen.getAllByRole('menuitem');
+
+		expect(menuItem).toHaveLength(2);
+
+		expect(menuItem[0]).toHaveAttribute('value', 'exportObjectFolder');
+
+		expect(menuItem[1]).toHaveAttribute('value', 'importObjectFolder');
 	});
 });

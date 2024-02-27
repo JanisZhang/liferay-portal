@@ -1,31 +1,42 @@
 {
 	"dependencies": {
-		"@clayui/autocomplete": "3.106.1",
-		"@clayui/button": "3.106.1",
-		"@clayui/card": "3.106.1",
-		"@clayui/core": "3.106.1",
-		"@clayui/drop-down": "3.106.1",
-		"@clayui/empty-state": "3.106.1",
-		"@clayui/form": "3.106.1",
-		"@clayui/icon": "3.106.1",
-		"@clayui/label": "3.106.1",
-		"@clayui/layout": "3.106.1",
-		"@clayui/link": "3.106.1",
-		"@clayui/list": "3.106.1",
-		"@clayui/loading-indicator": "3.106.1",
-		"@clayui/modal": "3.106.1",
-		"@clayui/pagination-bar": "3.106.1",
-		"@clayui/shared": "3.106.1",
-		"@clayui/sticker": "3.106.1",
-		"@clayui/table": "3.106.1",
-		"@clayui/tooltip": "3.106.1",
+		"@clayui/autocomplete": "3.111.0",
+		"@clayui/button": "3.111.0",
+		"@clayui/card": "3.111.0",
+		"@clayui/core": "3.111.0",
+		"@clayui/drop-down": "3.111.0",
+		"@clayui/empty-state": "3.111.0",
+		"@clayui/form": "3.111.0",
+		"@clayui/icon": "3.111.0",
+		"@clayui/label": "3.111.0",
+		"@clayui/layout": "3.111.0",
+		"@clayui/link": "3.111.0",
+		"@clayui/list": "3.111.0",
+		"@clayui/loading-indicator": "3.111.0",
+		"@clayui/modal": "3.111.0",
+		"@clayui/pagination-bar": "3.111.1",
+		"@clayui/shared": "3.111.0",
+		"@clayui/sticker": "3.111.0",
+		"@clayui/table": "3.111.0",
+		"@clayui/tooltip": "3.111.0",
 		"@liferay/frontend-js-react-web": "*",
-		"@liferay/js-api": "0.5.1-pre.0",
+		"@liferay/js-api": "0.6.0-pre.0",
 		"classnames": "2.3.1",
 		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
 		"react": "16.12.0"
+	},
+	"jest": {
+		"setupFiles": [
+			"<rootDir>/jest-setup.config.js"
+		],
+		"testMatch": [
+			"<rootDir>/tests/**/*.{ts,tsx}"
+		],
+		"testPathIgnorePatterns": [
+			"<rootDir>/jest-setup.config.js"
+		]
 	},
 	"main": "index.js",
 	"name": "@liferay/frontend-data-set-web",
@@ -33,7 +44,8 @@
 	"scripts": {
 		"build": "liferay-npm-scripts build",
 		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"format": "liferay-npm-scripts fix",
+		"test": "liferay-npm-scripts test"
 	},
-	"version": "1.0.84"
+	"version": "1.0.89"
 }

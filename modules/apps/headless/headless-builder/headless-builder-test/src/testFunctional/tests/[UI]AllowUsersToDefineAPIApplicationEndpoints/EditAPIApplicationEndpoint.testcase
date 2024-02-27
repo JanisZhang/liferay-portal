@@ -35,22 +35,70 @@ definition {
 		}
 	}
 
-	@priority = 4
-	test CannotModifyMethodOfCretaedEndpoint {
-		property portal.acceptance = "true";
+	@priority = 3
+	test CanChangeSchemaOfEndpoint {
+		task ("And Given two API Schema in API Application") {
+			SchemaAPI.createAPISchema(
+				apiApplicationERC = "My-app",
+				mainObjectDefinitionERC = "L_API_APPLICATION",
+				name = "schema1");
 
-		task ("When when going to Edit endpoint") {
-			APIBuilderUI.goToEditRelatedEntryInEditApplication(
+			SchemaAPI.createAPISchema(
+				apiApplicationERC = "My-app",
+				mainObjectDefinitionERC = "L_API_APPLICATION",
+				name = "schema2");
+		}
+
+		task ("And Given setting API Schema schema1 in Response Body Schema") {
+			APIBuilderUI.addAndPublishEndpointConfiguration(
 				entity = "Endpoints",
 				name = "testendpoint",
-				tabEntity = "Info",
+				schemaName = "schema1",
+				title = "My-app");
+
+			AssertElementPresent(
+				key_optionName = "schema1",
+				locator1 = "ObjectAdmin#LAYOUT_ADD_FIELD_OPTION");
+		}
+
+		task ("When modifying endpoint again with API Schema schema2") {
+			APIBuilderUI.addAndPublishEndpointConfiguration(
+				currentSchema = "schema1",
+				entity = "Endpoints",
+				name = "testendpoint",
+				schemaName = "schema2",
 				title = "My-app");
 		}
 
-		task ("Then method cannot be modified") {
+		task ("Then changes are saved correctly") {
+			Alert.viewSuccessMessage();
+
+			AssertElementPresent(
+				key_value = "schema2",
+				locator1 = "APIBuilder#DROPDOWN_TOGGLE");
+		}
+	}
+
+	@priority = 3
+	test CanCreateEndpointInPublishedAPIApplication {
+		task ("When editing API Application") {
+			APIBuilderUI.switchToRelatedEntryInEditApplication(
+				entity = "Endpoints",
+				title = "My-app");
+
+			APIBuilderUI.createAPIEndpoint(
+				addByPlus = "true",
+				method = "GET",
+				path = "testendpoint2",
+				retrieveType = "Collection",
+				scope = "Company");
+		}
+
+		task ("Then API Endpoint can be created") {
 			AssertTextEquals(
-				locator1 = "Button#DISABLED_BUTTON",
-				value1 = "GET");
+				key_fieldLabel = "Path",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "testendpoint2");
 		}
 	}
 

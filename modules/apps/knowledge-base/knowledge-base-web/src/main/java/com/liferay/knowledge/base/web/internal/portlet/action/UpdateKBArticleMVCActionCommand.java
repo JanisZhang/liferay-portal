@@ -16,6 +16,7 @@ import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.lock.DuplicateLockException;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
@@ -80,129 +81,32 @@ public class UpdateKBArticleMVCActionCommand
 		long resourcePrimKey = ParamUtil.getLong(
 			actionRequest, "resourcePrimKey");
 
-		KBArticle kbArticle = null;
-
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			KBArticle.class.getName(), actionRequest);
 
-		if (cmd.equals(Constants.REVERT)) {
+		if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
+			_updateKBArticle(actionRequest, actionResponse, serviceContext);
+		}
+		else if (cmd.equals(Constants.CANCEL)) {
+			_kbArticleService.unlockKBArticle(resourcePrimKey);
+
+			hideDefaultSuccessMessage(actionRequest);
+			sendRedirect(actionRequest, actionResponse);
+		}
+		else if (cmd.equals(Constants.REVERT)) {
 			int version = ParamUtil.getInteger(
 				actionRequest, "version", KBArticleConstants.DEFAULT_VERSION);
 
-			kbArticle = _kbArticleService.revertKBArticle(
-				resourcePrimKey, version, serviceContext);
-		}
-
-		if (!cmd.equals(Constants.ADD) && !cmd.equals(Constants.UPDATE)) {
-			return;
-		}
-
-		String title = ParamUtil.getString(actionRequest, "title");
-		String content = ParamUtil.getString(actionRequest, "content");
-		String description = ParamUtil.getString(actionRequest, "description");
-		String sourceURL = ParamUtil.getString(actionRequest, "sourceURL");
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		User user = _userLocalService.getUser(themeDisplay.getUserId());
-
-		Date displayDate = _getDisplayDate(actionRequest, user.getTimeZone());
-		Date expirationDate = _getExpirationDate(
-			actionRequest, true, user.getTimeZone());
-		Date reviewDate = _getReviewDate(
-			actionRequest, true, user.getTimeZone());
-
-		String[] sections = actionRequest.getParameterValues("sections");
-		String[] selectedFileNames = ParamUtil.getParameterValues(
-			actionRequest, "selectedFileName");
-
-		if (cmd.equals(Constants.ADD)) {
-			long parentResourceClassNameId = ParamUtil.getLong(
-				actionRequest, "parentResourceClassNameId",
-				_portal.getClassNameId(KBFolderConstants.getClassName()));
-			long parentResourcePrimKey = ParamUtil.getLong(
-				actionRequest, "parentResourcePrimKey",
-				KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
-			String urlTitle = ParamUtil.getString(actionRequest, "urlTitle");
-
-			kbArticle = _kbArticleService.addKBArticle(
-				null, _portal.getPortletId(actionRequest),
-				parentResourceClassNameId, parentResourcePrimKey, title,
-				urlTitle, content, description, sections, sourceURL,
-				displayDate, expirationDate, reviewDate, selectedFileNames,
-				serviceContext);
-		}
-		else if (cmd.equals(Constants.UPDATE)) {
-			long[] removeFileEntryIds = ParamUtil.getLongValues(
-				actionRequest, "removeFileEntryIds");
-
-			kbArticle = _kbArticleService.updateKBArticle(
-				resourcePrimKey, title, content, description, sections,
-				sourceURL, displayDate, expirationDate, reviewDate,
-				selectedFileNames, removeFileEntryIds, serviceContext);
-		}
-
-		_assetDisplayPageEntryFormProcessor.process(
-			KBArticle.class.getName(), kbArticle.getResourcePrimKey(),
-			actionRequest);
-
-		int workflowAction = ParamUtil.getInteger(
-			actionRequest, "workflowAction");
-
-		String successMessage = StringPool.BLANK;
-
-		if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
-			String editURL = _buildEditURL(
-				actionRequest, actionResponse, kbArticle);
-
-			actionRequest.setAttribute(WebKeys.REDIRECT, editURL);
-
-			successMessage = _language.format(
-				_portal.getHttpServletRequest(actionRequest),
-				"x-was-successfully-saved-as-draft",
-				new Object[] {
-					"<strong>" + HtmlUtil.escape(title) + "</strong>"
-				});
-		}
-		else {
-			String redirect = _portal.escapeRedirect(
-				ParamUtil.getString(actionRequest, "redirect"));
-
-			if (cmd.equals(Constants.ADD) && Validator.isNotNull(redirect)) {
-				actionRequest.setAttribute(
-					WebKeys.REDIRECT,
-					_getContentRedirect(
-						KBArticle.class, kbArticle.getResourcePrimKey(),
-						redirect));
+			try {
+				_kbArticleService.revertKBArticle(
+					resourcePrimKey, version, serviceContext);
 			}
+			catch (DuplicateLockException duplicateLockException) {
+				hideDefaultErrorMessage(actionRequest);
 
-			if (kbArticle.isScheduled()) {
-				Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
-					themeDisplay.getLocale(), user.getTimeZone());
-
-				successMessage = _language.format(
-					_portal.getHttpServletRequest(actionRequest),
-					"x-will-be-published-on-x",
-					new Object[] {
-						"<strong>" + HtmlUtil.escape(title) + "</strong>",
-						dateTimeFormat.format(displayDate)
-					});
-			}
-			else {
-				successMessage = _language.format(
-					_portal.getHttpServletRequest(actionRequest),
-					"x-was-successfully-published",
-					new Object[] {
-						"<strong>" + HtmlUtil.escape(title) + "</strong>"
-					});
+				throw duplicateLockException;
 			}
 		}
-
-		MultiSessionMessages.add(
-			actionRequest, "kbArticleSuccessMessage", successMessage);
-
-		hideDefaultSuccessMessage(actionRequest);
 	}
 
 	private String _buildEditURL(
@@ -218,8 +122,8 @@ public class UpdateKBArticleMVCActionCommand
 				PortletURLFactoryUtil.create(
 					actionRequest, KBPortletKeys.KNOWLEDGE_BASE_ADMIN,
 					PortletRequest.RENDER_PHASE)
-			).setMVCPath(
-				"/admin/common/edit_kb_article.jsp"
+			).setMVCRenderCommandName(
+				"/knowledge_base/edit_kb_article"
 			).setRedirect(
 				_getRedirect(actionRequest)
 			).setParameter(
@@ -239,8 +143,8 @@ public class UpdateKBArticleMVCActionCommand
 		editURL = HttpComponentsUtil.setParameter(
 			editURL, "p_p_id", portletDisplay.getId());
 		editURL = HttpComponentsUtil.setParameter(
-			editURL, actionResponse.getNamespace() + "mvcPath",
-			"/admin/common/edit_kb_article.jsp");
+			editURL, actionResponse.getNamespace() + "mvcRenderCommandName",
+			"/knowledge_base/edit_kb_article");
 		editURL = HttpComponentsUtil.setParameter(
 			editURL, actionResponse.getNamespace() + "redirect",
 			_getRedirect(actionRequest));
@@ -382,6 +286,136 @@ public class UpdateKBArticleMVCActionCommand
 		return _portal.getDate(
 			reviewDateMonth, reviewDateDay, reviewDateYear, reviewDateHour,
 			reviewDateMinute, timeZone, KBArticleReviewDateException.class);
+	}
+
+	private void _updateKBArticle(
+			ActionRequest actionRequest, ActionResponse actionResponse,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		KBArticle kbArticle = null;
+
+		String title = ParamUtil.getString(actionRequest, "title");
+		String content = ParamUtil.getString(actionRequest, "content");
+		String description = ParamUtil.getString(actionRequest, "description");
+		String sourceURL = ParamUtil.getString(actionRequest, "sourceURL");
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		User user = _userLocalService.getUser(themeDisplay.getUserId());
+
+		Date displayDate = _getDisplayDate(actionRequest, user.getTimeZone());
+		Date expirationDate = _getExpirationDate(
+			actionRequest, true, user.getTimeZone());
+		Date reviewDate = _getReviewDate(
+			actionRequest, true, user.getTimeZone());
+
+		String[] sections = actionRequest.getParameterValues("sections");
+		String[] selectedFileNames = ParamUtil.getParameterValues(
+			actionRequest, "selectedFileName");
+
+		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
+
+		int workflowAction = ParamUtil.getInteger(
+			actionRequest, "workflowAction");
+
+		if (cmd.equals(Constants.ADD)) {
+			long parentResourceClassNameId = ParamUtil.getLong(
+				actionRequest, "parentResourceClassNameId",
+				_portal.getClassNameId(KBFolderConstants.getClassName()));
+			long parentResourcePrimKey = ParamUtil.getLong(
+				actionRequest, "parentResourcePrimKey",
+				KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+			String urlTitle = ParamUtil.getString(actionRequest, "urlTitle");
+
+			kbArticle = _kbArticleService.addKBArticle(
+				null, _portal.getPortletId(actionRequest),
+				parentResourceClassNameId, parentResourcePrimKey, title,
+				urlTitle, content, description, sections, sourceURL,
+				displayDate, expirationDate, reviewDate, selectedFileNames,
+				serviceContext);
+		}
+		else if (cmd.equals(Constants.UPDATE)) {
+			long resourcePrimKey = ParamUtil.getLong(
+				actionRequest, "resourcePrimKey");
+
+			long[] removeFileEntryIds = ParamUtil.getLongValues(
+				actionRequest, "removeFileEntryIds");
+
+			if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
+				kbArticle = _kbArticleService.updateKBArticle(
+					resourcePrimKey, title, content, description, sections,
+					sourceURL, displayDate, expirationDate, reviewDate,
+					selectedFileNames, removeFileEntryIds, serviceContext);
+			}
+			else {
+				kbArticle = _kbArticleService.updateAndUnlockKBArticle(
+					resourcePrimKey, title, content, description, sections,
+					sourceURL, displayDate, expirationDate, reviewDate,
+					selectedFileNames, removeFileEntryIds, serviceContext);
+			}
+		}
+
+		_assetDisplayPageEntryFormProcessor.process(
+			KBArticle.class.getName(), kbArticle.getResourcePrimKey(),
+			actionRequest);
+
+		String successMessage = StringPool.BLANK;
+
+		if (workflowAction == WorkflowConstants.ACTION_SAVE_DRAFT) {
+			String editURL = _buildEditURL(
+				actionRequest, actionResponse, kbArticle);
+
+			actionRequest.setAttribute(WebKeys.REDIRECT, editURL);
+
+			successMessage = _language.format(
+				_portal.getHttpServletRequest(actionRequest),
+				"x-was-successfully-saved-as-draft",
+				new Object[] {
+					"<strong>" + HtmlUtil.escape(title) + "</strong>"
+				});
+		}
+		else {
+			String redirect = _portal.escapeRedirect(
+				ParamUtil.getString(actionRequest, "redirect"));
+
+			if (cmd.equals(Constants.ADD) && Validator.isNotNull(redirect)) {
+				actionRequest.setAttribute(
+					WebKeys.REDIRECT,
+					_getContentRedirect(
+						KBArticle.class, kbArticle.getResourcePrimKey(),
+						redirect));
+			}
+
+			if (kbArticle.isScheduled()) {
+				Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
+					themeDisplay.getLocale(), themeDisplay.getTimeZone());
+
+				successMessage = _language.format(
+					_portal.getHttpServletRequest(actionRequest),
+					"x-will-be-published-on-x",
+					new Object[] {
+						"<strong>" + HtmlUtil.escape(kbArticle.getTitle()) +
+							"</strong>",
+						dateTimeFormat.format(kbArticle.getDisplayDate())
+					});
+			}
+			else {
+				successMessage = _language.format(
+					_portal.getHttpServletRequest(actionRequest),
+					"x-was-successfully-published",
+					new Object[] {
+						"<strong>" + HtmlUtil.escape(kbArticle.getTitle()) +
+							"</strong>"
+					});
+			}
+		}
+
+		MultiSessionMessages.add(
+			actionRequest, "kbArticleSuccessMessage", successMessage);
+
+		hideDefaultSuccessMessage(actionRequest);
 	}
 
 	@Reference

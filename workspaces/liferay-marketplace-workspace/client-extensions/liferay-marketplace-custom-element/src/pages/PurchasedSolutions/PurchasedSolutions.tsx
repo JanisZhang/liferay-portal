@@ -21,7 +21,7 @@ import ClaySticker from '@clayui/sticker';
 import emptyPictureIcon from '../../assets/icons/avatar.svg';
 import {useMarketplaceContext} from '../../context/MarketplaceContext';
 import {Liferay} from '../../liferay/liferay';
-import StepWizard from '../GetAppPage/components/StepWizard/StepWizard';
+import StepWizard from '../GetApp/components/StepWizard/StepWizard';
 import AccountForm from './AccountForm';
 import CreatedProjectCard from './CreatedProjectCard';
 import PurchasedSolutionsAccountSelection from './PurchasedSolutionsAccountSelection';
@@ -186,7 +186,6 @@ const PurchasedSolutions: React.FC = () => {
 			],
 			orderStatus: 1,
 			orderTypeExternalReferenceCode: orderType?.externalReferenceCode,
-			orderTypeId: Number(orderType?.id),
 			shippingAmount: 0,
 			shippingWithTaxAmount: 0,
 		});

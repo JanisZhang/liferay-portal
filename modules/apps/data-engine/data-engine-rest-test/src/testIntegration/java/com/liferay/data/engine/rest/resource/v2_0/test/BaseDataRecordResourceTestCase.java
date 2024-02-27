@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -285,35 +283,75 @@ public abstract class BaseDataRecordResourceTestCase {
 			testGetDataDefinitionDataRecordsPage_addDataRecord(
 				dataDefinitionId, randomDataRecord());
 
-		Page<DataRecord> page1 =
-			dataRecordResource.getDataDefinitionDataRecordsPage(
-				dataDefinitionId, null, null, Pagination.of(1, totalCount + 2),
-				null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<DataRecord> dataRecords1 = (List<DataRecord>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			dataRecords1.toString(), totalCount + 2, dataRecords1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<DataRecord> page1 =
+				dataRecordResource.getDataDefinitionDataRecordsPage(
+					dataDefinitionId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<DataRecord> page2 =
-			dataRecordResource.getDataDefinitionDataRecordsPage(
-				dataDefinitionId, null, null, Pagination.of(2, totalCount + 2),
-				null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(dataRecord1, (List<DataRecord>)page1.getItems());
 
-		List<DataRecord> dataRecords2 = (List<DataRecord>)page2.getItems();
+			Page<DataRecord> page2 =
+				dataRecordResource.getDataDefinitionDataRecordsPage(
+					dataDefinitionId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(dataRecords2.toString(), 1, dataRecords2.size());
+			assertContains(dataRecord2, (List<DataRecord>)page2.getItems());
 
-		Page<DataRecord> page3 =
-			dataRecordResource.getDataDefinitionDataRecordsPage(
-				dataDefinitionId, null, null,
-				Pagination.of(1, (int)totalCount + 3), null);
+			Page<DataRecord> page3 =
+				dataRecordResource.getDataDefinitionDataRecordsPage(
+					dataDefinitionId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(dataRecord1, (List<DataRecord>)page3.getItems());
-		assertContains(dataRecord2, (List<DataRecord>)page3.getItems());
-		assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
+			assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
+		}
+		else {
+			Page<DataRecord> page1 =
+				dataRecordResource.getDataDefinitionDataRecordsPage(
+					dataDefinitionId, null, null,
+					Pagination.of(1, totalCount + 2), null);
+
+			List<DataRecord> dataRecords1 = (List<DataRecord>)page1.getItems();
+
+			Assert.assertEquals(
+				dataRecords1.toString(), totalCount + 2, dataRecords1.size());
+
+			Page<DataRecord> page2 =
+				dataRecordResource.getDataDefinitionDataRecordsPage(
+					dataDefinitionId, null, null,
+					Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<DataRecord> dataRecords2 = (List<DataRecord>)page2.getItems();
+
+			Assert.assertEquals(
+				dataRecords2.toString(), 1, dataRecords2.size());
+
+			Page<DataRecord> page3 =
+				dataRecordResource.getDataDefinitionDataRecordsPage(
+					dataDefinitionId, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(dataRecord1, (List<DataRecord>)page3.getItems());
+			assertContains(dataRecord2, (List<DataRecord>)page3.getItems());
+			assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -608,35 +646,75 @@ public abstract class BaseDataRecordResourceTestCase {
 			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
 				dataRecordCollectionId, randomDataRecord());
 
-		Page<DataRecord> page1 =
-			dataRecordResource.getDataRecordCollectionDataRecordsPage(
-				dataRecordCollectionId, null, null,
-				Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<DataRecord> dataRecords1 = (List<DataRecord>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			dataRecords1.toString(), totalCount + 2, dataRecords1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<DataRecord> page1 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<DataRecord> page2 =
-			dataRecordResource.getDataRecordCollectionDataRecordsPage(
-				dataRecordCollectionId, null, null,
-				Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(dataRecord1, (List<DataRecord>)page1.getItems());
 
-		List<DataRecord> dataRecords2 = (List<DataRecord>)page2.getItems();
+			Page<DataRecord> page2 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(dataRecords2.toString(), 1, dataRecords2.size());
+			assertContains(dataRecord2, (List<DataRecord>)page2.getItems());
 
-		Page<DataRecord> page3 =
-			dataRecordResource.getDataRecordCollectionDataRecordsPage(
-				dataRecordCollectionId, null, null,
-				Pagination.of(1, (int)totalCount + 3), null);
+			Page<DataRecord> page3 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(dataRecord1, (List<DataRecord>)page3.getItems());
-		assertContains(dataRecord2, (List<DataRecord>)page3.getItems());
-		assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
+			assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
+		}
+		else {
+			Page<DataRecord> page1 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(1, totalCount + 2), null);
+
+			List<DataRecord> dataRecords1 = (List<DataRecord>)page1.getItems();
+
+			Assert.assertEquals(
+				dataRecords1.toString(), totalCount + 2, dataRecords1.size());
+
+			Page<DataRecord> page2 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<DataRecord> dataRecords2 = (List<DataRecord>)page2.getItems();
+
+			Assert.assertEquals(
+				dataRecords2.toString(), 1, dataRecords2.size());
+
+			Page<DataRecord> page3 =
+				dataRecordResource.getDataRecordCollectionDataRecordsPage(
+					dataRecordCollectionId, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(dataRecord1, (List<DataRecord>)page3.getItems());
+			assertContains(dataRecord2, (List<DataRecord>)page3.getItems());
+			assertContains(dataRecord3, (List<DataRecord>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1314,6 +1392,10 @@ public abstract class BaseDataRecordResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1463,9 +1545,9 @@ public abstract class BaseDataRecordResourceTestCase {
 	}
 
 	protected DataRecordResource dataRecordResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

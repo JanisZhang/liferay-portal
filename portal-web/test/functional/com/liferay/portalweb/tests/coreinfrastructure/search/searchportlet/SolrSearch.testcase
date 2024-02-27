@@ -242,9 +242,13 @@ definition {
 
 		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
 
+		SelectFrame.selectFrameNoLoading(
+			key_fieldLabel = "Content",
+			locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
+
 		AssertTextEquals.assertPartialText(
-			locator1 = "Portlet#HEADER",
-			value1 = "WC Title");
+			locator1 = "CKEditor#BODY",
+			value1 = "WC Content");
 	}
 
 	@priority = 4
@@ -844,8 +848,6 @@ definition {
 			entryTitle = "Potato Blog",
 			groupName = "Test Site");
 
-		var currentDate = DateUtil.getCurrentYear();
-
 		SearchPage.openSearchPage();
 
 		SearchPage.configureEmbeddedSearchBar(searchScope = "Everything");
@@ -853,14 +855,12 @@ definition {
 		SearchPage.searchWidget(searchTerm = "Potato");
 
 		SearchResults.viewSearchResults(
-			entryDate = ${currentDate},
 			searchAssetSummary = "This is a blog about Potatoes",
 			searchAssetTitle = "Potato Blog",
 			searchAssetType = "Blogs Entry",
 			searchTerm = "Potato");
 
 		SearchResults.viewSearchResults(
-			entryDate = ${currentDate},
 			searchAssetTitle = "Potato Document",
 			searchAssetType = "Document",
 			searchTerm = "Potato");
@@ -870,7 +870,6 @@ definition {
 		SearchPage.searchWidget(searchTerm = "Potato");
 
 		SearchResults.viewSearchResults(
-			entryDate = ${currentDate},
 			searchAssetTitle = "Potato Document",
 			searchAssetType = "Document",
 			searchTerm = "Potato");
@@ -1026,10 +1025,7 @@ definition {
 
 		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
 			siteName = ${siteName},
@@ -1104,10 +1100,7 @@ definition {
 
 		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
 			siteName = ${siteName},

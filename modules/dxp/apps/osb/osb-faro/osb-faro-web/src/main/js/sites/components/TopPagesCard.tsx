@@ -185,7 +185,11 @@ const TopPagesCardWithData: React.FC<ITopPageCardWithData> = ({
 						className='button-root'
 						displayType='secondary'
 						href={setUriQueryValues(
-							pickBy({...rangeSelectors}),
+							pickBy({
+								...rangeSelectors,
+								field: activeTabId,
+								sortOrder: OrderByDirections.Descending
+							}),
 							footer.href
 						)}
 						small
@@ -227,13 +231,13 @@ const TopPagesCardWithStatesRenderer: React.FC<ITopPagesCardWithStatesRendererPr
 						)}
 					</span>
 
-					<a
+					<ClayLink
 						href={URLConstants.SitesDashboardTopPages}
 						key='DOCUMENTATION'
 						target='_blank'
 					>
 						{Liferay.Language.get('learn-more-about-pages')}
-					</a>
+					</ClayLink>
 				</>
 			}
 			showIcon={false}

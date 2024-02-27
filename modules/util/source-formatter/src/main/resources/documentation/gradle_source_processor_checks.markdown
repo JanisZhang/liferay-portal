@@ -4,6 +4,7 @@ Check | Category | Description
 ----- | -------- | -----------
 GradleBlockOrderCheck | [Styling](styling_checks.markdown#styling-checks) | Sorts logic in gradle build files. |
 GradleBodyCheck | [Styling](styling_checks.markdown#styling-checks) | Applies rules to enforce consistency in the body of gradle build files. |
+GradleCommerceDependenciesCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks the modules that are outside of Commerce are not allowed to depend on Commerce modules. |
 [GradleDependenciesCheck](check/gradle_dependencies_check.markdown#gradledependenciescheck) | [Performance](performance_checks.markdown#performance-checks) | Checks that modules are not depending on other modules. |
 [GradleDependencyArtifactsCheck](check/gradle_dependency_artifacts_check.markdown#gradledependencyartifactscheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that value `default` is not used for attribute `version`. |
 GradleDependencyConfigurationCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Validates the scope of dependencies in build gradle files. |
@@ -16,6 +17,7 @@ GradleMissingJarManifestTaskCheck | [Bug Prevention](bug_prevention_checks.markd
 GradlePropertiesCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Validates property values in gradle build files. |
 GradleProvidedDependenciesCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Validates the scope of dependencies in build gradle files. |
 [GradleRequiredDependenciesCheck](check/gradle_required_dependencies_check.markdown#gradlerequireddependenciescheck) | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Validates the dependencies in `/required-dependencies/required-dependencies/build.gradle`. |
+GradleRestClientDependenciesCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Validates the project dependencies `.*-rest-client` can only be used for `testIntegrationImplementation`. |
 GradleStylingCheck | [Styling](styling_checks.markdown#styling-checks) | Applies rules to enforce consistency in code style. |
 [GradleTaskCreationCheck](check/gradle_task_creation_check.markdown#gradletaskcreationcheck) | [Styling](styling_checks.markdown#styling-checks) | Checks that a task is declared on a separate line before the closure. |
 GradleTestDependencyVersionCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks the version for dependencies in gradle build files. |

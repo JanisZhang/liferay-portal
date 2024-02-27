@@ -323,7 +323,7 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro assertPlanDetails(individualsLimit = null, individualsAddOnsPrice = null, pageViewsAddOnsLimit = null, pageViewsLimit = null, individualsAddOnsLimit = null, planName = null, usersLimit = null, pageViewsAddOnsPrice = null) {
+	macro assertPlanDetails(individualsLimit = null, pageViewsLimit = null, planName = null, usersLimit = null) {
 		AssertElementPresent(
 			key_planName = ${planName},
 			locator1 = "ACUsage#PLAN_NAME");
@@ -351,28 +351,14 @@ definition {
 				key_planName = ${planName},
 				locator1 = "ACUsage#USAGE_PLAN_LIMITS_TABLE");
 		}
-
-		if (isSet(individualsAddOnsLimit)) {
-			AssertElementPresent(
-				key_planItem = "Individuals for ${individualsAddOnsPrice}",
-				key_planLimit = ${individualsAddOnsLimit},
-				key_planName = ${planName},
-				locator1 = "ACUsage#USAGE_PLAN_LIMITS_TABLE");
-		}
-
-		if (isSet(pageViewsAddOnsLimit)) {
-			AssertElementPresent(
-				key_planItem = "Page Views for ${pageViewsAddOnsPrice}",
-				key_planLimit = ${pageViewsAddOnsLimit},
-				key_planName = ${planName},
-				locator1 = "ACUsage#USAGE_PLAN_LIMITS_TABLE");
-		}
 	}
 
 	@summary = "Default summary"
-	macro assertRequestLog(jobType = null) {
-		if (${jobType} == "Delete") {
+	macro assertRequestLog(key_jobType = null) {
+		if (${key_jobType} == "Delete") {
 			AssertElementPresent(locator1 = "ACDataControlAndPrivacy#REQUEST_LOG_TABLE");
+
+			var key_jobType = "Suppress";
 
 			AssertElementPresent(locator1 = "ACDataControlAndPrivacy#REQUEST_LOG_TABLE");
 		}

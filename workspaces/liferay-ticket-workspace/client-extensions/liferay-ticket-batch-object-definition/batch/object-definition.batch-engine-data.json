@@ -5,9 +5,9 @@
 			"containsHeaders": "true",
 			"createStrategy": "UPSERT",
 			"onErrorFail": "false",
-			"taskItemDelegateName": "DEFAULT",
 			"updateStrategy": "UPDATE"
-		}
+		},
+		"taskItemDelegateName": "DEFAULT"
 	},
 	"items": [
 		{
@@ -531,6 +531,16 @@
 			"objectLayouts": [
 			],
 			"objectRelationships": [
+				{
+					"deletionType": "prevent",
+					"label": {
+						"en_US": "J3Y7 Ticket to J3Y7 Tickets"
+					},
+					"name": "j3y7TicketToJ3Y7Tickets",
+					"objectDefinitionExternalReferenceCode1": "J3Y7_TICKET",
+					"objectDefinitionExternalReferenceCode2": "J3Y7_TICKET",
+					"type": "oneToMany"
+				}
 			],
 			"objectValidationRules": [
 			],
@@ -550,7 +560,7 @@
 				"label_i18n": "Approved"
 			},
 			"system": false,
-			"titleObjectFieldName": "id"
+			"titleObjectFieldName": "subject"
 		}
 	]
 }

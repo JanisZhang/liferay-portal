@@ -1,0 +1,152 @@
+{
+	"configuration": {
+		"className": "com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition",
+		"multiCompany": true,
+		"parameters": {
+			"containsHeaders": "true",
+			"createStrategy": "UPSERT",
+			"featureFlag": "LPD-9361",
+			"importStrategy": "ON_ERROR_FAIL",
+			"updateStrategy": "UPDATE"
+		},
+		"taskItemDelegateName": "DEFAULT",
+		"userId": 0,
+		"version": "v1.0"
+	},
+	"items": [
+		{
+			"enableCategorization": true,
+			"externalReferenceCode": "L_COMMERCE_RETURN_ITEM",
+			"label": {
+				"en_US": "Commerce Return Item"
+			},
+			"modifiable": true,
+			"name": "CommerceReturnItem",
+			"objectFields": [
+				{
+					"DBType": "Long",
+					"businessType": "LongInteger",
+					"externalReferenceCode": "COMMERCE_ORDER_ITEM_ID",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Commerce Order Item ID"
+					},
+					"name": "commerceOrderItemId",
+					"required": true,
+					"state": false,
+					"system": false,
+					"type": "Long"
+				},
+				{
+					"DBType": "BigDecimal",
+					"businessType": "PrecisionDecimal",
+					"externalReferenceCode": "QUANTITY",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Quantity"
+					},
+					"name": "quantity",
+					"required": true,
+					"state": false,
+					"system": false,
+					"type": "BigDecimal"
+				}
+			],
+			"panelCategoryKey": "",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "Commerce Return Items"
+			},
+			"portlet": false,
+			"scope": "company",
+			"status": {
+				"code": 0
+			},
+			"system": true
+		},
+		{
+			"enableCategorization": true,
+			"externalReferenceCode": "L_COMMERCE_RETURN",
+			"label": {
+				"en_US": "Commerce Return"
+			},
+			"modifiable": true,
+			"name": "CommerceReturn",
+			"objectFields": [
+				{
+					"DBType": "String",
+					"businessType": "Picklist",
+					"defaultValue": "draft",
+					"externalReferenceCode": "RETURN_STATUS",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Return Status"
+					},
+					"listTypeDefinitionExternalReferenceCode": "L_COMMERCE_RETURN_STATUSES",
+					"name": "returnStatus",
+					"required": true,
+					"state": true,
+					"system": false,
+					"type": "String"
+				}
+			],
+			"objectRelationships": [
+				{
+					"deletionType": "cascade",
+					"externalReferenceCode": "L_COMMERCE_RETURN_TO_L_COMMERCE_RETURN_ITEMS",
+					"label": {
+						"en_US": "Commerce Return to Commerce Return Items"
+					},
+					"name": "commerceReturnToCommerceReturnItems",
+					"objectDefinitionExternalReferenceCode1": "L_COMMERCE_RETURN",
+					"objectDefinitionExternalReferenceCode2": "L_COMMERCE_RETURN_ITEM",
+					"objectDefinitionName2": "CommerceReturnItem",
+					"parameterObjectFieldId": 0,
+					"parameterObjectFieldName": "",
+					"reverse": false,
+					"system": false,
+					"type": "oneToMany"
+				}
+			],
+			"panelCategoryKey": "",
+			"parameterRequired": false,
+			"pluralLabel": {
+				"en_US": "Commerce Returns"
+			},
+			"portlet": false,
+			"scope": "company",
+			"status": {
+				"code": 0
+			},
+			"system": true
+		},
+		{
+			"accountEntryRestricted": false,
+			"enableCategorization": true,
+			"enableLocalization": false,
+			"externalReferenceCode": "L_COMMERCE_ORDER",
+			"objectFolderExternalReferenceCode": "default",
+			"objectRelationships": [
+				{
+					"deletionType": "prevent",
+					"externalReferenceCode": "L_COMMERCE_ORDER_TO_L_COMMERCE_RETURNS",
+					"label": {
+						"en_US": "Commerce Order to Commerce Returns"
+					},
+					"name": "commerceOrderToCommerceReturns",
+					"objectDefinitionExternalReferenceCode1": "L_COMMERCE_ORDER",
+					"objectDefinitionExternalReferenceCode2": "L_COMMERCE_RETURN",
+					"objectDefinitionName2": "CommerceReturn",
+					"parameterObjectFieldId": 0,
+					"parameterObjectFieldName": "",
+					"reverse": false,
+					"system": false,
+					"type": "oneToMany"
+				}
+			]
+		}
+	]
+}

@@ -46,7 +46,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -342,17 +341,7 @@ public class DLAdminManagementToolbarDisplayContext
 				dropdownGroupItem.setDropdownItems(
 					_getFilterNavigationDropdownItems());
 				dropdownGroupItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "filter-by") +
-						StringPool.TRIPLE_PERIOD);
-			}
-		).addGroup(
-			() ->
-				!FeatureFlagManagerUtil.isEnabled("LPS-144527") &&
-				!_dlAdminDisplayContext.isNavigationRecent(),
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
-				dropdownGroupItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "order-by"));
+					LanguageUtil.get(_httpServletRequest, "filter-by"));
 			}
 		).build();
 	}
@@ -373,10 +362,6 @@ public class DLAdminManagementToolbarDisplayContext
 
 	@Override
 	public List<DropdownItem> getOrderDropdownItems() {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-144527")) {
-			return null;
-		}
-
 		return _getOrderByDropdownItems();
 	}
 
@@ -854,8 +839,7 @@ public class DLAdminManagementToolbarDisplayContext
 					"categoriesFilterURL", _getAssetCategorySelectorURL());
 				dropdownItem.setActive(!assetCategoryIdsIsEmpty);
 				dropdownItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "categories") +
-						StringPool.TRIPLE_PERIOD);
+					LanguageUtil.get(_httpServletRequest, "categories"));
 			}
 		).add(
 			dropdownItem -> {
@@ -863,9 +847,7 @@ public class DLAdminManagementToolbarDisplayContext
 
 				dropdownItem.putData("action", "openDocumentTypesSelector");
 
-				String label =
-					LanguageUtil.get(_httpServletRequest, "type") +
-						StringPool.TRIPLE_PERIOD;
+				String label = LanguageUtil.get(_httpServletRequest, "type");
 
 				if (fileEntryTypeId != -1) {
 					String fileEntryTypeName = LanguageUtil.get(
@@ -895,8 +877,7 @@ public class DLAdminManagementToolbarDisplayContext
 					"extensionsFilterURL", _getExtensionsItemSelectorURL());
 				dropdownItem.setActive(!extensionsIsEmpty);
 				dropdownItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "extension") +
-						StringPool.TRIPLE_PERIOD);
+					LanguageUtil.get(_httpServletRequest, "extension"));
 			}
 		).add(
 			dropdownItem -> {
@@ -905,8 +886,7 @@ public class DLAdminManagementToolbarDisplayContext
 					"tagsFilterURL", _getAssetTagSelectorURL());
 				dropdownItem.setActive(!assetTagIdsIsEmpty);
 				dropdownItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "tags") +
-						StringPool.TRIPLE_PERIOD);
+					LanguageUtil.get(_httpServletRequest, "tags"));
 			}
 		).build();
 	}
@@ -928,7 +908,9 @@ public class DLAdminManagementToolbarDisplayContext
 			_groupIds =
 				_siteConnectedGroupGroupProvider.
 					getCurrentAndAncestorSiteAndDepotGroupIds(
-						_themeDisplay.getScopeGroupId());
+						_dlAdminDisplayContext.getRepositoryGroupId(
+							_themeDisplay.getScopeGroupId(),
+							_dlAdminDisplayContext.getRepositoryId()));
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {

@@ -30,12 +30,17 @@ export const Tooltip: React.FC<any> = ({payload}) => {
 			style={{minWidth: 240}}
 		>
 			<div className='popover-header'>{description}</div>
-			<div className='popover-body d-flex justify-content-between'>
-				<div className='mr-2' style={{maxWidth: 'calc(100% - 50px)'}}>
-					{name}
-				</div>
+			<div className='popover-body'>
+				<div className='d-flex justify-content-between'>
+					<div
+						className='mr-2'
+						style={{maxWidth: 'calc(100% - 50px)'}}
+					>
+						{name}
+					</div>
 
-				<div>{toLocale(payload[0].value)}</div>
+					<div>{toLocale(payload[0].value)}</div>
+				</div>
 			</div>
 		</div>
 	);

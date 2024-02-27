@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Pavel Savinov
  */
 @Component(property = "type=image", service = EditableElementParser.class)
-public class ImageEditableElementParser implements EditableElementParser {
+public class ImageEditableElementParser extends BaseEditableElementParser {
 
 	@Override
 	public JSONObject getFieldTemplateConfigJSONObject(
@@ -188,10 +188,10 @@ public class ImageEditableElementParser implements EditableElementParser {
 		value = value.trim();
 
 		if (fileEntryId > 0) {
-			String previewURL = _getPreviewURL(fileEntryId);
+			String imagePreviewURL = _getImagePreviewURL(fileEntryId);
 
-			if (Validator.isNotNull(previewURL)) {
-				value = previewURL;
+			if (Validator.isNotNull(imagePreviewURL)) {
+				value = imagePreviewURL;
 			}
 
 			replaceableElement.attr(
@@ -276,9 +276,11 @@ public class ImageEditableElementParser implements EditableElementParser {
 					"each-editable-image-element-must-contain-an-img-tag",
 					new Object[] {"<em>", "</em>"}, false));
 		}
+
+		super.validate(element);
 	}
 
-	private String _getPreviewURL(long fileEntryId) {
+	private String _getImagePreviewURL(long fileEntryId) {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -295,7 +297,7 @@ public class ImageEditableElementParser implements EditableElementParser {
 		try {
 			FileEntry fileEntry = _dlAppLocalService.getFileEntry(fileEntryId);
 
-			return _dlURLHelper.getPreviewURL(
+			return _dlURLHelper.getImagePreviewURL(
 				fileEntry, fileEntry.getFileVersion(), themeDisplay,
 				StringPool.BLANK, false, false);
 		}

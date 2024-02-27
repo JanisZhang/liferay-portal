@@ -14,16 +14,17 @@ interface EditObjectDetailsProps {
 	backURL: string;
 	companies: Scope[];
 	dbTableName: string;
-	externalReferenceCode: string;
 	hasPublishObjectPermission: boolean;
 	hasUpdateObjectDefinitionPermission: boolean;
 	isApproved: boolean;
 	isRootDescendantNode: boolean;
 	label: LocalizedValue<string>;
+	learnResourceContext: any;
 	nonRelationshipObjectFieldsInfo: {
 		label: LocalizedValue<string>;
 		name: string;
 	}[];
+	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	pluralLabel: LocalizedValue<string>;
 	portletNamespace: string;
@@ -35,13 +36,14 @@ export default function EditObjectDetails({
 	backURL,
 	companies,
 	dbTableName,
-	externalReferenceCode,
 	hasPublishObjectPermission,
 	hasUpdateObjectDefinitionPermission,
 	isApproved,
 	isRootDescendantNode,
 	label,
+	learnResourceContext,
 	nonRelationshipObjectFieldsInfo,
+	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	pluralLabel,
 	portletNamespace,

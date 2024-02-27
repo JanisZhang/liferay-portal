@@ -11,12 +11,13 @@ import {useNavigate} from 'react-router-dom';
 
 import appsIcon from '../../../../assets/icons/apps_fill_icon.svg';
 import {DashboardEmptyTable} from '../../../../components/DashboardTable/DashboardEmptyTable';
-import OrderStatus, {OrderStatuses} from '../../../../components/OrderStatus';
+import OrderStatus, {
+	Statuses as OrderStatuses,
+} from '../../../../components/OrderStatus';
 import Table from '../../../../components/Table/Table';
 import {useMarketplaceContext} from '../../../../context/MarketplaceContext';
 import {OrderType} from '../../../../enums/OrderType';
 import i18n from '../../../../i18n';
-import {showAppImage} from '../../../../utils/util';
 
 type AppsTableProps = {
 	items: Order[];
@@ -43,14 +44,14 @@ const AppsTable: React.FC<AppsTableProps> = ({items}) => {
 				{
 					key: 'name',
 					render: (name, {thumbnail}) => (
-						<div className="dashboard-table-row-name-container">
+						<div style={{width: 200}}>
 							<img
 								alt="App Image"
-								className="dashboard-table-row-name-logo"
-								src={showAppImage(thumbnail)}
+								className="order-details-publisher-table-icon"
+								src={thumbnail}
 							/>
 
-							<span className="dashboard-table-row-name-text">
+							<span className="font-weight-semi-bold ml-2">
 								{name}
 							</span>
 						</div>
@@ -124,11 +125,16 @@ const AppsTable: React.FC<AppsTableProps> = ({items}) => {
 							id,
 							orderStatusInfo,
 							orderTypeExternalReferenceCode,
+							placedOrderItems,
 							virtualURL,
 						}
 					) => {
 						const orderStatusIsNotCompleted =
 							orderStatusInfo?.label !== OrderStatuses.COMPLETED;
+
+						const isFreeApp =
+							placedOrderItems?.[0]?.price?.price === 0 &&
+							placedOrderItems?.[0]?.sku !== 'TRIAL';
 
 						return (
 							<div onClick={(event) => event.stopPropagation()}>
@@ -142,44 +148,48 @@ const AppsTable: React.FC<AppsTableProps> = ({items}) => {
 								>
 									<DropDown.ItemList>
 										{orderTypeExternalReferenceCode ===
-											OrderType.DXP && (
-											<>
-												<ClayTooltipProvider>
+											OrderType.DXP &&
+											!isFreeApp && (
+												<>
+													<ClayTooltipProvider>
+														<DropDown.Item
+															data-tooltip-align="left"
+															disabled={
+																orderStatusIsNotCompleted
+															}
+															onClick={() =>
+																navigate(
+																	`order/${id}/create-license`
+																)
+															}
+															title={
+																orderStatusIsNotCompleted
+																	? i18n.translate(
+																			'the-order-must-be-completed-before-licensing-this-app.'
+																	  )
+																	: undefined
+															}
+														>
+															{i18n.translate(
+																'create-license-key'
+															)}
+														</DropDown.Item>
+													</ClayTooltipProvider>
+
 													<DropDown.Item
-														data-tooltip-align="left"
-														disabled={
-															orderStatusIsNotCompleted
-														}
-														onClick={() =>
+														disabled={isFreeApp}
+														onClick={() => {
 															navigate(
-																`order/${id}/create-license`
-															)
-														}
-														title={
-															orderStatusIsNotCompleted
-																? i18n.translate(
-																		'the-order-must-be-completed-before-licensing-this-app.'
-																  )
-																: undefined
-														}
+																`order/${id}/licenses`
+															);
+														}}
 													>
 														{i18n.translate(
-															'create-license-key'
+															'manage-license-keys'
 														)}
 													</DropDown.Item>
-												</ClayTooltipProvider>
-
-												<DropDown.Item
-													onClick={() => {
-														navigate(
-															`order/${id}/licenses`
-														);
-													}}
-												>
-													Manage License Key(s)
-												</DropDown.Item>
-											</>
-										)}
+												</>
+											)}
 
 										{orderTypeExternalReferenceCode ===
 											OrderType.CLOUD && (

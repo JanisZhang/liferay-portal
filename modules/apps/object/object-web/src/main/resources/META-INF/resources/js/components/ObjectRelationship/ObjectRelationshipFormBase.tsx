@@ -22,6 +22,7 @@ import SelectObjectDefinition from './SelectObjectDefinition';
 
 interface ObjectRelationshipFormBaseProps {
 	baseResourceURL: string;
+	className?: string;
 	errors: FormError<ObjectRelationship>;
 	handleChange: React.ChangeEventHandler<HTMLInputElement>;
 	hasDefinedObjectDefinitionTarget?: boolean;
@@ -150,6 +151,7 @@ export function useObjectRelationshipForm({
 
 export function ObjectRelationshipFormBase({
 	baseResourceURL,
+	className,
 	errors,
 	handleChange,
 	hasDefinedObjectDefinitionTarget,
@@ -287,7 +289,7 @@ export function ObjectRelationshipFormBase({
 
 	useEffect(() => {
 		const fetchObjectDefinitions = async () => {
-			const items = await API.getAllObjectDefinitions();
+			const {items} = await API.getAllObjectDefinitions();
 
 			const objectDefinition = items.find(
 				({externalReferenceCode}) =>
@@ -341,6 +343,7 @@ export function ObjectRelationshipFormBase({
 			/>
 
 			<SingleSelect
+				className={className}
 				disabled={readonly}
 				error={errors.type}
 				items={objectRelationshipTypes}

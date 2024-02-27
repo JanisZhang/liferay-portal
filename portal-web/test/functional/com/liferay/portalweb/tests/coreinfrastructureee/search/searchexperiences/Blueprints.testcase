@@ -376,10 +376,7 @@ definition {
 			groupName = "Guest",
 			title = "Employee eyes only");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Custom Fields");
+		CustomFields.openCustomFieldAdmin();
 
 		CustomFields.addCP(
 			customFieldName = "Employee",
@@ -392,10 +389,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		UserNavigator.gotoUser(userScreenName = "usersn");
 
@@ -5043,12 +5037,6 @@ definition {
 			PortletEntry.save();
 		}
 
-		// Workaround for LPS-201346
-
-		Portlet.shutdownServer();
-
-		Portlet.startServer(deleteLiferayHome = "false");
-
 		task ("Create a test content page with a collection display fragment") {
 			JSONLayout.addPublicLayout(
 				groupName = "Guest",
@@ -5088,9 +5076,7 @@ definition {
 
 			NavItem.click(navItem = "Collection Providers");
 
-			Click(locator1 = "Dropdown#FILTER_AND_ORDER");
-
-			MenuItem.click(menuItem = "Web Content Article");
+			ManagementBar.setFilterAndOrder(filterBy = "Web Content Article");
 
 			LexiconCard.clickCard(card = "Test Blueprint");
 
@@ -5191,7 +5177,7 @@ definition {
 
 			Blueprints.addElement(element = "Limit Search to PDF files");
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_element = "Limit Search to PDF files",
 				locator1 = "Blueprints#BLUEPRINTS_ADD_ELEMENTS_SIDEBAR_ELEMENT_DESCRIPTION",
 				value1 = "limit-search-to-pdf-files-description");
@@ -5310,7 +5296,7 @@ definition {
 			key_fieldLabel = "Asset Category Name (IDs)",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD_CLEAR_ALL_BUTTON");
 
-		AssertTextNotEquals.assertNotPartialText(
+		AssertTextNotEquals.assertNotPartialMatch(
 			key_element = "Boost Contents in a Category",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT",
 			value1 = "Test Category");
@@ -5558,7 +5544,7 @@ definition {
 				{
 					"fields": [
 						{
-							"defaultValue": [
+							"fieldMappings": [
 								{
 									"field": "localized_title",
 									"locale": "hu_HU"
@@ -5646,7 +5632,7 @@ definition {
 				{
 					"fields": [
 						{
-							"defaultValue": [
+							"fieldMappings": [
 								{
 									"field": "localized_title",
 									"locale": "hu_HU"
@@ -5978,7 +5964,7 @@ definition {
 
 		Blueprints.gotoElement(element = "Test Element");
 
-		AssertTextNotEquals.assertNotPartialText(
+		AssertTextNotEquals.assertNotPartialMatch(
 			locator1 = "Blueprints#CODE_MIRROR_EDITOR",
 			value1 = "Unsaved Element");
 
@@ -6010,7 +5996,7 @@ definition {
 
 		Blueprints.gotoElement(element = "Test Element");
 
-		AssertTextNotEquals.assertNotPartialText(
+		AssertTextNotEquals.assertNotPartialMatch(
 			locator1 = "Blueprints#CODE_MIRROR_EDITOR",
 			value1 = "Unsaved Element");
 	}

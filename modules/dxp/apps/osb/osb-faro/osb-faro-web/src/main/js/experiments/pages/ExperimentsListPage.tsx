@@ -18,7 +18,7 @@ import {IBasePageContext, Router} from 'shared/types';
 import {RootState} from 'shared/store';
 import {Routes, toRoute} from 'shared/util/router';
 import {useChannelContext} from 'shared/context/channel';
-import {useDataSource} from 'shared/hooks/useDataSource';
+import {useDataSource} from 'shared/hooks';
 import {useParams} from 'react-router-dom';
 import {useQuery} from '@apollo/react-hooks';
 import {useQueryPagination} from 'shared/hooks';
@@ -118,7 +118,7 @@ const ExperimentsListPage: React.FC<IExperimentsListPage> = ({
 										'connect-a-data-source-with-sites-data'
 									)}
 
-									<a
+									<ClayLink
 										className='d-block mb-3'
 										href={URLConstants.DataSourceConnection}
 										key='DOCUMENTATION'
@@ -127,7 +127,7 @@ const ExperimentsListPage: React.FC<IExperimentsListPage> = ({
 										{Liferay.Language.get(
 											'access-our-documentation-to-learn-more'
 										)}
-									</a>
+									</ClayLink>
 
 									{authorized && (
 										<ClayLink

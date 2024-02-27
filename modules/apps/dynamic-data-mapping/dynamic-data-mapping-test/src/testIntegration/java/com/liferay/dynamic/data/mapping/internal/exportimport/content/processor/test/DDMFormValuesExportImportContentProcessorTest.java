@@ -410,7 +410,8 @@ public class DDMFormValuesExportImportContentProcessorTest {
 			null, TestPropsValues.getUserId(), _stagingGroup.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString() + ".txt", ContentTypes.TEXT_PLAIN,
-			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, null,
+			serviceContext);
 
 		ThumbnailCapability thumbnailCapability =
 			_fileEntry.getRepositoryCapability(ThumbnailCapability.class);
@@ -509,7 +510,7 @@ public class DDMFormValuesExportImportContentProcessorTest {
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), StringPool.BLANK,
 			dlFileEntryType.getFileEntryTypeId(), ddmFormValuesMap, file,
-			inputStream, size, null, null, serviceContext);
+			inputStream, size, null, null, null, serviceContext);
 
 		_fileEntry = _dlAppLocalService.getFileEntry(
 			dlFileEntry.getFileEntryId());

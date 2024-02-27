@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
@@ -349,7 +350,36 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 			while (resultSet.next()) {
 				conflictInfos.add(
-					new ModificationDeletionConflictInfo(resultSet.getLong(1)));
+					new ModificationDeletionConflictInfo(
+						resultSet.getLong(1), false));
+			}
+		}
+		catch (SQLException sqlException) {
+			throw new ORMException(sqlException);
+		}
+
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				StringBundler.concat(
+					"select distinct ctEntry1.modelClassPK from CTEntry ",
+					"ctEntry1 inner join CTCollection on ",
+					"ctEntry1.ctCollectionId = CTCollection.ctCollectionId ",
+					"and CTCollection.status = ",
+					WorkflowConstants.STATUS_DRAFT, " inner join CTEntry ",
+					"ctEntry2 on ctEntry1.modelClassNameId = ",
+					"ctEntry2.modelClassNameId and ctEntry1.modelClassPK = ",
+					"ctEntry2.modelClassPK where ctEntry1.modelClassNameId = ",
+					_modelClassNameId, " and ctEntry1.changeType = ",
+					CTConstants.CT_CHANGE_TYPE_DELETION,
+					" and ctEntry1.ctCollectionId = ", _sourceCTCollectionId,
+					" and ctEntry2.changeType = ",
+					CTConstants.CT_CHANGE_TYPE_MODIFICATION,
+					" and ctEntry2.ctCollectionId != ", _sourceCTCollectionId));
+			ResultSet resultSet = preparedStatement.executeQuery()) {
+
+			while (resultSet.next()) {
+				conflictInfos.add(
+					new ModificationDeletionConflictInfo(
+						resultSet.getLong(1), true));
 			}
 		}
 		catch (SQLException sqlException) {
@@ -901,6 +931,8 @@ public class CTConflictChecker<T extends CTModel<T>> {
 
 		try {
 			CTRowUtil.copyCTRows(ctPersistence, connection, sb.toString());
+
+			ctPersistence.clearCache(new HashSet<>(resolvedPrimaryKeys));
 		}
 		catch (SQLException sqlException) {
 			throw new ORMException(sqlException);
@@ -964,12 +996,21 @@ public class CTConflictChecker<T extends CTModel<T>> {
 				CTEntry ctEntry = _modificationCTEntries.get(pk);
 
 				if (ctEntry != null) {
+					_ctEntries.remove(ctEntry);
+
+					ctEntry = _ctEntryLocalService.fetchCTEntry(
+						ctEntry.getCtEntryId());
+
 					long mvccVersion = resultSet.getLong(2);
 
 					ctEntry.setModifiedDate(ctEntry.getModifiedDate());
 					ctEntry.setModelMvccVersion(mvccVersion);
 
-					_ctEntryLocalService.updateCTEntry(ctEntry);
+					ctEntry = _ctEntryLocalService.updateCTEntry(ctEntry);
+
+					_modificationCTEntries.put(pk, ctEntry);
+
+					_ctEntries.add(ctEntry);
 				}
 			}
 		}

@@ -8,10 +8,13 @@ package com.liferay.portal.kernel.test;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import java.util.Arrays;
 
@@ -28,12 +31,12 @@ public class ReflectionTestUtil {
 		try {
 			T t = (T)field.get(null);
 
-			field.set(null, newValue);
+			setFieldValue(field, (Object)null, newValue);
 
 			return t;
 		}
-		catch (Exception exception) {
-			return ReflectionUtil.throwException(exception);
+		catch (Throwable throwable) {
+			return ReflectionUtil.throwException(throwable);
 		}
 	}
 
@@ -45,12 +48,12 @@ public class ReflectionTestUtil {
 		try {
 			T t = (T)field.get(instance);
 
-			field.set(instance, newValue);
+			setFieldValue(field, instance, newValue);
 
 			return t;
 		}
-		catch (Exception exception) {
-			return ReflectionUtil.throwException(exception);
+		catch (Throwable throwable) {
+			return ReflectionUtil.throwException(throwable);
 		}
 	}
 
@@ -93,8 +96,6 @@ public class ReflectionTestUtil {
 
 			field.setAccessible(true);
 
-			ReflectionUtil.unfinalField(field);
-
 			return field;
 		}
 		catch (NoSuchFieldException noSuchFieldException) {
@@ -108,8 +109,6 @@ public class ReflectionTestUtil {
 				Field field = clazz.getDeclaredField(fieldName);
 
 				field.setAccessible(true);
-
-				ReflectionUtil.unfinalField(field);
 
 				return field;
 			}
@@ -321,26 +320,87 @@ public class ReflectionTestUtil {
 	public static void setFieldValue(
 		Class<?> clazz, String fieldName, Object value) {
 
-		Field field = getField(clazz, fieldName);
+		setFieldValue(getField(clazz, fieldName), (Object)null, value);
+	}
+
+	public static void setFieldValue(
+		Field field, Object instance, Object value) {
 
 		try {
-			field.set(null, value);
+			int modifiers = field.getModifiers();
+
+			if (!Modifier.isFinal(modifiers)) {
+				field.set(instance, value);
+
+				return;
+			}
+
+			Object memberName = _memberNameConstructor.newInstance(field, true);
+
+			_memberNameFlagsField.setInt(
+				memberName,
+				_memberNameFlagsField.getInt(memberName) - Modifier.FINAL);
+
+			byte getReferenceKind =
+				(byte)_memberNameGetReferenceKindMethod.invoke(memberName);
+
+			Class<?> declaringClass = field.getDeclaringClass();
+
+			MethodHandle methodHandle =
+				(MethodHandle)_lookupGetDirectFieldCommonMethod.invoke(
+					_lookupConstructor.newInstance(declaringClass),
+					getReferenceKind, declaringClass, memberName, false);
+
+			if (Modifier.isStatic(modifiers)) {
+				methodHandle.invoke(value);
+			}
+			else {
+				methodHandle.invoke(instance, value);
+			}
 		}
-		catch (Exception exception) {
-			ReflectionUtil.throwException(exception);
+		catch (Throwable throwable) {
+			ReflectionUtil.throwException(throwable);
 		}
 	}
 
 	public static void setFieldValue(
 		Object instance, String fieldName, Object value) {
 
+		setFieldValue(
+			getField(instance.getClass(), fieldName), instance, value);
+	}
+
+	public static AutoCloseable setFieldValueWithAutoCloseable(
+		Class<?> clazz, String fieldName, Object newValue) {
+
+		Field field = getField(clazz, fieldName);
+
+		try {
+			Object value = field.get(null);
+
+			setFieldValue(field, (Object)null, newValue);
+
+			return () -> setFieldValue(field, (Object)null, value);
+		}
+		catch (Throwable throwable) {
+			return ReflectionUtil.throwException(throwable);
+		}
+	}
+
+	public static AutoCloseable setFieldValueWithAutoCloseable(
+		Object instance, String fieldName, Object newValue) {
+
 		Field field = getField(instance.getClass(), fieldName);
 
 		try {
-			field.set(instance, value);
+			Object value = field.get(instance);
+
+			setFieldValue(field, instance, newValue);
+
+			return () -> setFieldValue(field, instance, value);
 		}
-		catch (Exception exception) {
-			ReflectionUtil.throwException(exception);
+		catch (Throwable throwable) {
+			return ReflectionUtil.throwException(throwable);
 		}
 	}
 
@@ -377,6 +437,50 @@ public class ReflectionTestUtil {
 		}
 
 		return null;
+	}
+
+	private static final Class<?> _MEMBER_NAME_CLASS;
+
+	private static final Constructor<?> _lookupConstructor;
+	private static final Method _lookupGetDirectFieldCommonMethod;
+	private static final Constructor<?> _memberNameConstructor;
+	private static final Field _memberNameFlagsField;
+	private static final Method _memberNameGetReferenceKindMethod;
+
+	static {
+		try {
+			_MEMBER_NAME_CLASS = Class.forName("java.lang.invoke.MemberName");
+
+			_memberNameConstructor = _MEMBER_NAME_CLASS.getDeclaredConstructor(
+				Field.class, boolean.class);
+
+			_memberNameConstructor.setAccessible(true);
+
+			_memberNameFlagsField = _MEMBER_NAME_CLASS.getDeclaredField(
+				"flags");
+
+			_memberNameFlagsField.setAccessible(true);
+
+			_memberNameGetReferenceKindMethod =
+				_MEMBER_NAME_CLASS.getDeclaredMethod("getReferenceKind");
+
+			_memberNameGetReferenceKindMethod.setAccessible(true);
+
+			_lookupConstructor =
+				MethodHandles.Lookup.class.getDeclaredConstructor(Class.class);
+
+			_lookupConstructor.setAccessible(true);
+
+			_lookupGetDirectFieldCommonMethod =
+				MethodHandles.Lookup.class.getDeclaredMethod(
+					"getDirectFieldCommon", byte.class, Class.class,
+					_MEMBER_NAME_CLASS, boolean.class);
+
+			_lookupGetDirectFieldCommonMethod.setAccessible(true);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
+		}
 	}
 
 }

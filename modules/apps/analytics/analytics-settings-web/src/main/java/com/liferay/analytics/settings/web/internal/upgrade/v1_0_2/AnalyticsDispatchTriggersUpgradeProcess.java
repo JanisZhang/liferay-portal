@@ -12,6 +12,10 @@ import com.liferay.dispatch.executor.DispatchTaskStatus;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchLogLocalService;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.db.partition.DBPartition;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -45,8 +49,20 @@ public class AnalyticsDispatchTriggersUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		Configuration[] configurations = _configurationAdmin.listConfigurations(
-			"(service.pid=" + AnalyticsConfiguration.class.getName() + "*)");
+		Configuration[] configurations;
+
+		if (DBPartition.isPartitionEnabled()) {
+			configurations = _configurationAdmin.listConfigurations(
+				StringBundler.concat(
+					"(&(companyId=", CompanyThreadLocal.getCompanyId(),
+					")(service.pid=", AnalyticsConfiguration.class.getName(),
+					"*))"));
+		}
+		else {
+			configurations = _configurationAdmin.listConfigurations(
+				"(service.pid=" + AnalyticsConfiguration.class.getName() +
+					"*)");
+		}
 
 		if (ArrayUtil.isEmpty(configurations)) {
 			return;
@@ -70,12 +86,16 @@ public class AnalyticsDispatchTriggersUpgradeProcess extends UpgradeProcess {
 				continue;
 			}
 
-			long userId = _userLocalService.getUserIdByScreenName(
+			User user = _userLocalService.fetchUserByScreenName(
 				companyId,
 				AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN);
 
+			if (user == null) {
+				continue;
+			}
+
 			dispatchTrigger = _dispatchTriggerLocalService.addDispatchTrigger(
-				null, userId, "export-analytics-dxp-entities", null,
+				null, user.getUserId(), "export-analytics-dxp-entities", null,
 				"export-analytics-dxp-entities", false);
 
 			LocalDateTime localDateTime = LocalDateTime.now();
@@ -92,10 +112,15 @@ public class AnalyticsDispatchTriggersUpgradeProcess extends UpgradeProcess {
 			calendar.setTime(new Date());
 			calendar.add(Calendar.HOUR, -2);
 
+			Date endDate = calendar.getTime();
+
+			calendar.add(Calendar.MINUTE, -5);
+
+			Date startDate = calendar.getTime();
+
 			_dispatchLogLocalService.addDispatchLog(
-				userId, dispatchTrigger.getDispatchTriggerId(),
-				calendar.getTime(), null, null, null,
-				DispatchTaskStatus.SUCCESSFUL);
+				user.getUserId(), dispatchTrigger.getDispatchTriggerId(),
+				endDate, null, null, startDate, DispatchTaskStatus.SUCCESSFUL);
 		}
 	}
 

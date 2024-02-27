@@ -14,7 +14,7 @@ import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
-import com.liferay.fragment.util.FragmentTestUtil;
+import com.liferay.fragment.test.util.FragmentTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -176,8 +176,8 @@ public class FragmentEntryFragmentRendererTest {
 			fragmentEntry.getFragmentCollectionId(), fragmentEntry.getName(),
 			fragmentEntry.getCss(), "Updated Fragment Entry HTML",
 			fragmentEntry.getJs(), fragmentEntry.isCacheable(),
-			fragmentEntry.getConfiguration(), fragmentEntry.getIcon(),
-			fragmentEntry.getStatus(), WorkflowConstants.STATUS_APPROVED);
+			fragmentEntry.getConfiguration(), fragmentEntry.getIcon(), 0, false,
+			fragmentEntry.getTypeOptions(), WorkflowConstants.STATUS_APPROVED);
 
 		_fragmentEntryLinkLocalService.updateLatestChanges(
 			fragmentEntryLink.getFragmentEntryLinkId());
@@ -212,7 +212,7 @@ public class FragmentEntryFragmentRendererTest {
 			fragmentCollection.getFragmentCollectionId(), null,
 			RandomTestUtil.randomString(), StringPool.BLANK,
 			"Fragment Entry HTML", StringPool.BLANK, cacheable, null, null, 0,
-			FragmentConstants.TYPE_COMPONENT, null,
+			false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
 

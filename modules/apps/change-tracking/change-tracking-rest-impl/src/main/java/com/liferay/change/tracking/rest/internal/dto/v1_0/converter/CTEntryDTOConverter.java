@@ -15,7 +15,6 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -79,28 +78,23 @@ public class CTEntryDTOConverter
 
 		return new CTEntry() {
 			{
-				actions = dtoConverterContext.getActions();
-				changeType = _language.get(
-					dtoConverterContext.getLocale(),
-					CTConstants.getCTChangeTypeLabel(
-						GetterUtil.getInteger(document.get("changeType"))));
-				ctCollectionId = ctEntry.getCtCollectionId();
-				dateCreated = ctEntry.getCreateDate();
-				dateModified = ctEntry.getModifiedDate();
-				hideable = GetterUtil.getBoolean(document.get("hideable"));
-				id = ctEntry.getCtEntryId();
-				modelClassNameId = ctEntry.getModelClassNameId();
-				modelClassPK = ctEntry.getModelClassPK();
-				ownerId = ctEntry.getUserId();
-				ownerName = ctEntry.getUserName();
-				status = _toStatus(dtoConverterContext.getLocale(), document);
-				title = _getLocalizedValue(
-					document.getField("title"),
-					dtoConverterContext.getLocale());
-				typeName = _getLocalizedValue(
-					document.getField("typeName"),
-					dtoConverterContext.getLocale());
-
+				setActions(dtoConverterContext::getActions);
+				setChangeType(
+					() -> _language.get(
+						dtoConverterContext.getLocale(),
+						CTConstants.getCTChangeTypeLabel(
+							GetterUtil.getInteger(
+								document.get("changeType")))));
+				setCtCollectionId(ctEntry::getCtCollectionId);
+				setDateCreated(ctEntry::getCreateDate);
+				setDateModified(ctEntry::getModifiedDate);
+				setHideable(
+					() -> GetterUtil.getBoolean(document.get("hideable")));
+				setId(ctEntry::getCtEntryId);
+				setModelClassNameId(ctEntry::getModelClassNameId);
+				setModelClassPK(ctEntry::getModelClassPK);
+				setOwnerId(ctEntry::getUserId);
+				setOwnerName(ctEntry::getUserName);
 				setSiteId(
 					() -> {
 						if (document.hasField(Field.GROUP_ID)) {
@@ -120,6 +114,16 @@ public class CTEntryDTOConverter
 
 						return null;
 					});
+				setStatus(
+					() -> _toStatus(dtoConverterContext.getLocale(), document));
+				setTitle(
+					() -> _getLocalizedValue(
+						document.getField("title"),
+						dtoConverterContext.getLocale()));
+				setTypeName(
+					() -> _getLocalizedValue(
+						document.getField("typeName"),
+						dtoConverterContext.getLocale()));
 			}
 		};
 	}
@@ -137,15 +141,12 @@ public class CTEntryDTOConverter
 
 		return new Status() {
 			{
-				code = status;
-				label = statusLabel;
-				label_i18n = _language.get(locale, statusLabel);
+				setCode(() -> status);
+				setLabel(() -> statusLabel);
+				setLabel_i18n(() -> _language.get(locale, statusLabel));
 			}
 		};
 	}
-
-	@Reference
-	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private IndexerRegistry _indexerRegistry;

@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.notifications.BaseUserNotificationHandler;
 import com.liferay.portal.kernel.notifications.UserNotificationHandler;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -76,7 +75,9 @@ public class ExportImportUserNotificationHandler
 		BackgroundTask backgroundTask =
 			_backgroundTaskLocalService.fetchBackgroundTask(backgroundTaskId);
 
-		if (backgroundTask == null) {
+		if ((backgroundTask == null) ||
+			(serviceContext.getThemeDisplay() == null)) {
+
 			return StringPool.BLANK;
 		}
 
@@ -182,8 +183,5 @@ public class ExportImportUserNotificationHandler
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private PortletLocalService _portletLocalService;
 
 }

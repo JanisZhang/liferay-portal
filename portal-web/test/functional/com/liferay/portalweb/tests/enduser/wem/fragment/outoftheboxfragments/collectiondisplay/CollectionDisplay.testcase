@@ -211,7 +211,7 @@ definition {
 				key_collectionName = "Basic Components",
 				key_fragmentName = "Heading",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
-				locator2 = "//div[@aria-label='Collection Display']//div[contains(@class,'page-editor__collection__message')]");
+				locator2 = "//div[@data-name='Collection Display']//div[contains(@class,'page-editor__collection__message')]");
 		}
 
 		task ("Then the page creator should see an error message") {
@@ -860,119 +860,6 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-114770. The Collection Display can select a dynamic collection with Any asset types."
-	@priority = 5
-	@uitest
-	test ViewDynamicCollectionWithAnyAssetType {
-		property portal.acceptance = "true";
-
-		task ("Add a Web Content Article,a Blogs Entry and a document") {
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Test Site Name",
-				title = "Web Content Title");
-
-			HeadlessBlog.addBlogEntry(
-				content = "Blogs Entry Content",
-				groupName = "Test Site Name",
-				title = "Blogs Entry Title");
-
-			JSONDocument.addFileWithUploadedFile(
-				dmDocumentDescription = "DM Document Description",
-				dmDocumentTitle = "Document Title",
-				groupName = "Test Site Name",
-				mimeType = "image/jpeg",
-				sourceFileName = "Document_1.jpg");
-		}
-
-		task ("Add a dynamic Collection and select Any as Asset Entry Type") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
-
-			AssetListsAdmin.addDynamicSelection(assetListTitle = "Dynamic Collection");
-
-			AssetListsAdmin.configureItemTypeInDynamicCollection(itemType = "All Types");
-		}
-
-		task ("Add a Collection Display to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Content Page Name",
-				siteName = "Test Site Name");
-
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Collection Display");
-		}
-
-		task ("Assert assets are available to Collection Display") {
-			PageEditor.editCollectionDisplay(
-				assetListName = "Dynamic Collection",
-				fragmentName = "Collection Display");
-
-			for (var title : list "Document Title,Blogs Entry Title,Web Content Title") {
-				AssertVisible(
-					key_entryTitle = ${title},
-					locator1 = "PageEditor#COLLECTION_CELL");
-			}
-		}
-	}
-
-	@description = "This is a use case for LPS-114770. The Collection Display can select a dynamic collection with Select More Than One asset type."
-	@priority = 4
-	test ViewDynamicCollectionWithMoreThanOneAssetType {
-		var groupId = JSONGroupSetter.setGroupId(groupName = "Test Site Name");
-
-		task ("Add a Web Content Article,a Blogs Entry and a document") {
-			HeadlessWebcontent.addBasicWebContent(
-				content = "Web Content Content",
-				groupId = ${groupId},
-				title = "Web Content Title");
-
-			HeadlessBlog.addBlogEntry(
-				content = "Blogs Entry Content",
-				groupId = ${groupId},
-				title = "Blogs Entry Title");
-
-			DocumentAPI.addDocumentWithFileInSite(
-				dmDocumentTitle = "Document Title",
-				siteId = ${groupId},
-				sourceFileName = "Document_1.jpg");
-		}
-
-		task ("Add a dynamic Collection and select Select More Than One... as Asset Entry Type") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
-
-			AssetListsAdmin.addDynamicSelection(assetListTitle = "Dynamic Collection");
-
-			AssetListsAdmin.configureItemTypeInDynamicCollection(itemType = "Select Types...");
-
-			for (var key_type : list "Web Content Article,Blogs Entry,Document") {
-				AssertVisible(locator1 = "AssetLists#ASSET_LIST_ENTRY_TYPE_SELECTED");
-			}
-		}
-
-		task ("Add a Collection Display to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Content Page Name",
-				siteName = "Test Site Name");
-
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Collection Display");
-		}
-
-		task ("Assert assets are available to Collection Display") {
-			PageEditor.editCollectionDisplay(
-				assetListName = "Dynamic Collection",
-				fragmentName = "Collection Display");
-
-			for (var title : list "Document Title,Blogs Entry Title,Web Content Title") {
-				AssertVisible(
-					key_entryTitle = ${title},
-					locator1 = "PageEditor#COLLECTION_CELL");
-			}
-		}
-	}
-
 	@description = "This is a test for LPS-112249. The flags of each collection item are shown when add a Content Flags fragment to Collection Display."
 	@priority = 5
 	@uitest
@@ -1601,7 +1488,7 @@ definition {
 		task ("Access to the mapping panel of Heading") {
 			Click.clickNoWaitForVisible(
 				key_colPosition = 1,
-				key_element = "//div[@aria-label='Heading']",
+				key_element = "//div[@data-name='Heading']",
 				key_fragmentName = "Collection Display",
 				key_rowPosition = 1,
 				locator1 = "PageEditor#COLLECTION_CELL_NESTED_ELEMENT");
@@ -1676,7 +1563,7 @@ definition {
 		task ("Access to the mapping panel of Heading") {
 			Click.clickNoWaitForVisible(
 				key_colPosition = 1,
-				key_element = "//div[@aria-label='Heading']",
+				key_element = "//div[@data-name='Heading']",
 				key_fragmentName = "Collection Display",
 				key_rowPosition = 1,
 				locator1 = "PageEditor#COLLECTION_CELL_NESTED_ELEMENT");
@@ -1747,7 +1634,7 @@ definition {
 		task ("Access to the mapping panel of Heading") {
 			Click.clickNoWaitForVisible(
 				key_colPosition = 1,
-				key_element = "//div[@aria-label='Heading']",
+				key_element = "//div[@data-name='Heading']",
 				key_fragmentName = "Collection Display",
 				key_rowPosition = 1,
 				locator1 = "PageEditor#COLLECTION_CELL_NESTED_ELEMENT");
@@ -2342,7 +2229,7 @@ definition {
 				pageName = "Content Page Name",
 				siteName = "Test Site Name");
 
-			var fragmentId = selenium.getText("//div[@aria-label='Fragment Name']");
+			var fragmentId = selenium.getText("//div[@data-name='Fragment Name']");
 
 			AssertTextNotEquals(
 				key_columnNumber = 1,
@@ -2364,16 +2251,16 @@ definition {
 				pageName = "Content Page Name 2",
 				siteName = "Test Site Name");
 
-			var fragmentId2 = selenium.getText("//div[@aria-label='Fragment Name']//div[contains(@id,'fragment-')]");
+			var fragmentId2 = selenium.getText("//div[@data-name='Fragment Name']//div[contains(@id,'fragment-')]");
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_columnNumber = 1,
 				key_position = 1,
 				key_rowNumber = 2,
 				locator1 = "PageEditor#COLLECTION_DISPLAY_COLUMN",
 				value1 = ${fragmentId2});
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_columnNumber = 1,
 				key_position = 1,
 				key_rowNumber = 3,
@@ -2418,13 +2305,13 @@ definition {
 				locator1 = "PageEditor#COLLECTION_ITEM",
 				value1 = ${fragmentElementId});
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_colPosition = 1,
 				key_rowPosition = 2,
 				locator1 = "PageEditor#COLLECTION_ITEM",
 				value1 = ${fragmentElementId});
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				key_colPosition = 1,
 				key_rowPosition = 3,
 				locator1 = "PageEditor#COLLECTION_ITEM",

@@ -49,7 +49,6 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -72,7 +71,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Luca Pellizzon
  */
-@FeatureFlags("COMMERCE-11287")
 @RunWith(Arquillian.class)
 public class CommerceOrderDiscountV2Test {
 
@@ -212,18 +210,17 @@ public class CommerceOrderDiscountV2Test {
 		BigDecimal expectedValue = commercePriceEntryPrice.subtract(
 			commerceDiscountLevel1);
 
-		Assert.assertEquals(
-			expectedValue,
-			commerceOrderItem.getFinalPrice(
-			).stripTrailingZeros());
-		Assert.assertEquals(
-			expectedValue,
-			subtotalCommerceMoney.getPrice(
-			).stripTrailingZeros());
-		Assert.assertEquals(
-			expectedValue,
-			totalCommerceMoney.getPrice(
-			).stripTrailingZeros());
+		BigDecimal finalPrice = commerceOrderItem.getFinalPrice();
+
+		Assert.assertEquals(expectedValue, finalPrice.stripTrailingZeros());
+
+		BigDecimal price = subtotalCommerceMoney.getPrice();
+
+		Assert.assertEquals(expectedValue, price.stripTrailingZeros());
+
+		price = totalCommerceMoney.getPrice();
+
+		Assert.assertEquals(expectedValue, price.stripTrailingZeros());
 	}
 
 	@Test

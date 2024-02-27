@@ -16,7 +16,7 @@ import {
 } from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-const TPL_ERROR_MESSAGES = `<span>{title}</span><ul class="mb-0 mt-2 pl-3">{messages}</ul>`;
+const TPL_ERROR_MESSAGES = `<span>{0}</span><ul class="mb-0 mt-2 pl-3">{1}</ul>`;
 
 const DLFolderSelector = ({
 	copyActionURL,
@@ -71,8 +71,8 @@ const DLFolderSelector = ({
 					return;
 				}
 
-				setDestinationParentFolderName(selectedItem.foldername);
-				setDestinationParentFolderId(selectedItem.folderid);
+				setDestinationParentFolderName(selectedItem.resourcename);
+				setDestinationParentFolderId(selectedItem.resourceid);
 				setDestinationRepositoryId(selectedItem.repositoryid);
 				setDestinationRepositoryName(selectedItem.repositoryname);
 				setCopyButtonDisabled(false);
@@ -90,19 +90,18 @@ const DLFolderSelector = ({
 			})
 			.join('');
 
-		return sub(TPL_ERROR_MESSAGES, {
-			messages: errors,
-			title:
-				failedItems > 1
-					? sub(
-							Liferay.Language.get('x-items-could-not-be-copied'),
-							failedItems
-					  )
-					: sub(
-							Liferay.Language.get('x-item-could-not-be-copied'),
-							failedItems
-					  ),
-		});
+		return sub(TPL_ERROR_MESSAGES, [
+			failedItems > 1
+				? sub(
+						Liferay.Language.get('x-items-could-not-be-copied'),
+						failedItems
+				  )
+				: sub(
+						Liferay.Language.get('x-item-could-not-be-copied'),
+						failedItems
+				  ),
+			errors,
+		]);
 	};
 
 	const showErrorMessage = (message) => {
@@ -188,6 +187,7 @@ const DLFolderSelector = ({
 					disabled
 					id={`${portletNamespace}copyFromInput`}
 					placeholder={dlObjectName}
+					readOnly
 					type="text"
 				/>
 

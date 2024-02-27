@@ -15,8 +15,6 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLoca
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollectionLayoutPageTemplateEntryCreateDateComparator;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollectionLayoutPageTemplateEntryNameComparator;
-import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateEntryCreateDateComparator;
-import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateEntryNameComparator;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -49,13 +47,12 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 	public AssetDisplayPagesItemSelectorCustomViewDisplayContext(
 		HttpServletRequest httpServletRequest, String itemSelectedEventName,
 		AssetDisplayPageSelectorCriterion assetDisplayPageSelectorCriterion,
-		PortletURL portletURL, boolean search) {
+		PortletURL portletURL) {
 
 		_httpServletRequest = httpServletRequest;
 		_itemSelectedEventName = itemSelectedEventName;
 		_assetDisplayPageSelectorCriterion = assetDisplayPageSelectorCriterion;
 		_portletURL = portletURL;
-		_search = search;
 
 		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_REQUEST);
@@ -65,45 +62,6 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 
 	public SearchContainer<?> getAssetDisplayPageSearchContainer() {
 		if (_assetDisplayPageSearchContainer != null) {
-			return _assetDisplayPageSearchContainer;
-		}
-
-		if (_search) {
-			SearchContainer<LayoutPageTemplateEntry>
-				assetDisplayPageSearchContainer = new SearchContainer<>(
-					_portletRequest, _portletURL, null,
-					"there-are-no-display-page-templates");
-
-			assetDisplayPageSearchContainer.setOrderByCol(_getOrderByCol());
-			assetDisplayPageSearchContainer.setOrderByComparator(
-				_getLayoutPageTemplateEntryOrderByComparatorWithKeywords(
-					_getOrderByCol(), getOrderByType()));
-			assetDisplayPageSearchContainer.setOrderByType(getOrderByType());
-			assetDisplayPageSearchContainer.setResultsAndTotal(
-				() ->
-					LayoutPageTemplateEntryServiceUtil.
-						getLayoutPageTemplateEntries(
-							_getGroupId(),
-							_assetDisplayPageSelectorCriterion.getClassNameId(),
-							_assetDisplayPageSelectorCriterion.getClassTypeId(),
-							_getKeywords(),
-							LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
-							WorkflowConstants.STATUS_APPROVED,
-							assetDisplayPageSearchContainer.getStart(),
-							assetDisplayPageSearchContainer.getEnd(),
-							assetDisplayPageSearchContainer.
-								getOrderByComparator()),
-				LayoutPageTemplateEntryServiceUtil.
-					getLayoutPageTemplateEntriesCount(
-						_getGroupId(),
-						_assetDisplayPageSelectorCriterion.getClassNameId(),
-						_assetDisplayPageSelectorCriterion.getClassTypeId(),
-						_getKeywords(),
-						LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
-						WorkflowConstants.STATUS_APPROVED));
-
-			_assetDisplayPageSearchContainer = assetDisplayPageSearchContainer;
-
 			return _assetDisplayPageSearchContainer;
 		}
 
@@ -117,19 +75,14 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 			_getLayoutPageTemplateEntryOrderByComparator(
 				_getOrderByCol(), getOrderByType()));
 		assetDisplayPageSearchContainer.setOrderByType(getOrderByType());
-
 		assetDisplayPageSearchContainer.setResultsAndTotal(
 			() ->
 				LayoutPageTemplateEntryServiceUtil.
 					getLayoutPageCollectionsAndLayoutPageTemplateEntries(
-						_getGroupId(),
-						ParamUtil.getLong(
-							_httpServletRequest,
-							"layoutPageTemplateCollectionId",
-							LayoutPageTemplateConstants.
-								PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT),
+						_getGroupId(), _getLayoutPageTemplateCollectionId(),
 						_assetDisplayPageSelectorCriterion.getClassNameId(),
 						_assetDisplayPageSelectorCriterion.getClassTypeId(),
+						_getKeywords(),
 						LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 						WorkflowConstants.STATUS_APPROVED,
 						assetDisplayPageSearchContainer.getStart(),
@@ -137,13 +90,10 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 						assetDisplayPageSearchContainer.getOrderByComparator()),
 			LayoutPageTemplateEntryServiceUtil.
 				getLayoutPageCollectionsAndLayoutPageTemplateEntriesCount(
-					_getGroupId(),
-					ParamUtil.getLong(
-						_httpServletRequest, "layoutPageTemplateCollectionId",
-						LayoutPageTemplateConstants.
-							PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT),
+					_getGroupId(), _getLayoutPageTemplateCollectionId(),
 					_assetDisplayPageSelectorCriterion.getClassNameId(),
 					_assetDisplayPageSelectorCriterion.getClassTypeId(),
+					_getKeywords(),
 					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 					WorkflowConstants.STATUS_APPROVED));
 
@@ -222,6 +172,8 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 			"plid", layoutPageTemplateEntry.getPlid()
 		).put(
 			"type", "asset-display-page"
+		).put(
+			"uuid", layoutPageTemplateEntry.getUuid()
 		).toString();
 	}
 
@@ -293,30 +245,6 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return orderByComparator;
 	}
 
-	private OrderByComparator<LayoutPageTemplateEntry>
-		_getLayoutPageTemplateEntryOrderByComparatorWithKeywords(
-			String orderByCol, String orderByType) {
-
-		boolean orderByAsc = false;
-
-		if (orderByType.equals("asc")) {
-			orderByAsc = true;
-		}
-
-		OrderByComparator<LayoutPageTemplateEntry> orderByComparator = null;
-
-		if (orderByCol.equals("create-date")) {
-			orderByComparator = new LayoutPageTemplateEntryCreateDateComparator(
-				orderByAsc);
-		}
-		else if (orderByCol.equals("name")) {
-			orderByComparator = new LayoutPageTemplateEntryNameComparator(
-				orderByAsc);
-		}
-
-		return orderByComparator;
-	}
-
 	private String _getOrderByCol() {
 		if (Validator.isNotNull(_orderByCol)) {
 			return _orderByCol;
@@ -340,7 +268,6 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 	private String _orderByType;
 	private final PortletRequest _portletRequest;
 	private final PortletURL _portletURL;
-	private final boolean _search;
 	private final ThemeDisplay _themeDisplay;
 
 }

@@ -13,7 +13,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 
 <liferay-ui:search-container
 	cssClass='<%= journalDisplayContext.isSearch() ? "pt-0" : StringPool.BLANK %>'
-	emptyResultsMessage="no-web-content-was-found"
+	emptyResultsMessage="<%= journalDisplayContext.getVersionsEmptyResultsMessage() %>"
 	searchContainer="<%= journalDisplayContext.getSearchContainer() %>"
 >
 	<liferay-ui:search-container-row
@@ -43,21 +43,38 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 					String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
 					%>
 
-					<h6 class="text-default">
+					<div class="h6 text-default">
 						<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(articleVersion.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
-					</h6>
+					</div>
 
 					<h5>
 						<%= HtmlUtil.escape(articleVersion.getTitle(locale)) %>
 					</h5>
 
-					<h6 class="text-default">
-						<liferay-portal-workflow:status
-							showStatusLabel="<%= false %>"
-							status="<%= articleVersion.getStatus() %>"
-							version="<%= String.valueOf(articleVersion.getVersion()) %>"
-						/>
-					</h6>
+					<c:choose>
+						<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-196768") %>'>
+							<div>
+								<clay:label
+									displayType="secondary"
+									label='<%= LanguageUtil.format(request, "version-x", String.valueOf(articleVersion.getVersion()), false) %>'
+								/>
+							</div>
+
+							<liferay-portal-workflow:status
+								showStatusLabel="<%= false %>"
+								status="<%= articleVersion.getStatus() %>"
+							/>
+						</c:when>
+						<c:otherwise>
+							<div class="h6 text-default">
+								<liferay-portal-workflow:status
+									showStatusLabel="<%= false %>"
+									status="<%= articleVersion.getStatus() %>"
+									version="<%= String.valueOf(articleVersion.getVersion()) %>"
+								/>
+							</div>
+						</c:otherwise>
+					</c:choose>
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text>
@@ -87,15 +104,31 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 				/>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-expand"
+					cssClass="font-weight-semi-bold table-cell-expand"
 					name="title"
 					value="<%= HtmlUtil.escape(articleVersion.getTitle(locale)) %>"
 				/>
 
-				<liferay-ui:search-container-column-text
-					name="version"
-					orderable="<%= true %>"
-				/>
+				<c:choose>
+					<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-196768") %>'>
+						<liferay-ui:search-container-column-text
+							cssClass="table-cell-minw-150"
+							name="version"
+							orderable="<%= true %>"
+						>
+							<clay:label
+								displayType="secondary"
+								label='<%= LanguageUtil.format(request, "version-x", String.valueOf(articleVersion.getVersion()), false) %>'
+							/>
+						</liferay-ui:search-container-column-text>
+					</c:when>
+					<c:otherwise>
+						<liferay-ui:search-container-column-text
+							name="version"
+							orderable="<%= true %>"
+						/>
+					</c:otherwise>
+				</c:choose>
 
 				<liferay-ui:search-container-column-status
 					name="status"
@@ -139,6 +172,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 	<liferay-ui:search-iterator
 		displayStyle="<%= journalDisplayContext.getDisplayStyle() %>"
 		markupView="lexicon"
+		resultRowSplitter="<%= journalDisplayContext.getResultRowSplitter() %>"
 		searchContainer="<%= searchContainer %>"
 	/>
 </liferay-ui:search-container>

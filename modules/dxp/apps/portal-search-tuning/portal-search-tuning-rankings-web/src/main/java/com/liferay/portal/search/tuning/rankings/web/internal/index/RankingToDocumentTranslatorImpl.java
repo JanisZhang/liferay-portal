@@ -10,6 +10,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
+import com.liferay.portal.search.tuning.rankings.index.Ranking;
 
 import java.util.Collection;
 import java.util.List;
@@ -35,8 +36,6 @@ public class RankingToDocumentTranslatorImpl
 		).setString(
 			RankingFields.GROUP_EXTERNAL_REFERENCE_CODE,
 			ranking.getGroupExternalReferenceCode()
-		).setBoolean(
-			RankingFields.INACTIVE, ranking.isInactive()
 		).setString(
 			RankingFields.INDEX, ranking.getIndexName()
 		).setString(
@@ -48,6 +47,8 @@ public class RankingToDocumentTranslatorImpl
 		).setStrings(
 			RankingFields.QUERY_STRINGS,
 			ArrayUtil.toStringArray(ranking.getQueryStrings())
+		).setString(
+			RankingFields.STATUS, ranking.getStatus()
 		).setString(
 			RankingFields.SXP_BLUEPRINT_EXTERNAL_REFERENCE_CODE,
 			ranking.getSXPBlueprintExternalReferenceCode()

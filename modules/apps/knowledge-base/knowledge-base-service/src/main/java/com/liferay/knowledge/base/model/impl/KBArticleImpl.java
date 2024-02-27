@@ -167,7 +167,7 @@ public class KBArticleImpl extends KBArticleBaseImpl {
 
 	@Override
 	public long getClassPK() {
-		if (isApproved()) {
+		if (isApproved() || isExpired()) {
 			return getResourcePrimKey();
 		}
 
@@ -203,6 +203,11 @@ public class KBArticleImpl extends KBArticleBaseImpl {
 			getParentResourcePrimKey());
 
 		return kbFolder.getName();
+	}
+
+	@Override
+	public long getTrashEntryClassPK() {
+		return getResourcePrimKey();
 	}
 
 	@Override

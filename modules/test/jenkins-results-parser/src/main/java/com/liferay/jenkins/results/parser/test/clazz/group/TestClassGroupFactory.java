@@ -46,8 +46,7 @@ public class TestClassGroupFactory {
 		}
 
 		if (batchTestClassGroup instanceof PlaywrightBatchTestClassGroup) {
-			return new PlaywrightAxisTestClassGroup(
-				(PlaywrightBatchTestClassGroup)batchTestClassGroup);
+			return new PlaywrightAxisTestClassGroup(batchTestClassGroup);
 		}
 
 		if (batchTestClassGroup instanceof PluginsGulpBatchTestClassGroup) {
@@ -179,6 +178,14 @@ public class TestClassGroupFactory {
 			}
 
 			return new ModulesSegmentTestClassGroup(batchTestClassGroup);
+		}
+		else if (batchTestClassGroup instanceof PlaywrightBatchTestClassGroup) {
+			if (jsonObject != null) {
+				return new PlaywrightSegmentTestClassGroup(
+					batchTestClassGroup, jsonObject);
+			}
+
+			return new PlaywrightSegmentTestClassGroup(batchTestClassGroup);
 		}
 		else if (batchTestClassGroup instanceof PluginsBatchTestClassGroup) {
 			if (jsonObject != null) {

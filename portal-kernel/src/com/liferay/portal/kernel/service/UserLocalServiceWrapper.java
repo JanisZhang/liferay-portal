@@ -2454,20 +2454,23 @@ public class UserLocalServiceWrapper
 
 	@Override
 	public java.util.List<User> searchBySocial(
-		long companyId, long[] groupIds, String keywords, int start, int end) {
+		long companyId, long[] groupIds, long[] userGroupIds, String keywords,
+		int start, int end) {
 
 		return _userLocalService.searchBySocial(
-			companyId, groupIds, keywords, start, end);
+			companyId, groupIds, userGroupIds, keywords, start, end);
 	}
 
 	@Override
 	public java.util.List<User> searchBySocial(
-		long companyId, long[] groupIds, String keywords, int start, int end,
+		long companyId, long[] groupIds, long[] userGroupIds, String keywords,
+		int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<User>
 			orderByComparator) {
 
 		return _userLocalService.searchBySocial(
-			companyId, groupIds, keywords, start, end, orderByComparator);
+			companyId, groupIds, userGroupIds, keywords, start, end,
+			orderByComparator);
 	}
 
 	@Override
@@ -2971,6 +2974,24 @@ public class UserLocalServiceWrapper
 			userId, emailAddressVerified);
 	}
 
+	@Override
+	public User updateExternalReferenceCode(
+			long userId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.updateExternalReferenceCode(
+			userId, externalReferenceCode);
+	}
+
+	@Override
+	public User updateExternalReferenceCode(
+			User user, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.updateExternalReferenceCode(
+			user, externalReferenceCode);
+	}
+
 	/**
 	 * Updates the user's Facebook ID.
 	 *
@@ -3084,6 +3105,13 @@ public class UserLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _userLocalService.updateJobTitle(userId, jobTitle);
+	}
+
+	@Override
+	public User updateLanguageId(long userId, String languageId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.updateLanguageId(userId, languageId);
 	}
 
 	/**

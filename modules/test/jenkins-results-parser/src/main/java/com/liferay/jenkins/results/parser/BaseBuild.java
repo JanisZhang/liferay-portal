@@ -249,6 +249,15 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public String getBranchName() {
+		if (_branchName.equals("release")) {
+			String upstreamBranchName = getParameterValue(
+				"GITHUB_UPSTREAM_BRANCH_NAME");
+
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(upstreamBranchName)) {
+				_branchName = upstreamBranchName;
+			}
+		}
+
 		return _branchName;
 	}
 
@@ -581,6 +590,10 @@ public abstract class BaseBuild implements Build {
 	}
 
 	public Element getGitHubMessageElement(boolean showCommonFailuresCount) {
+		if (_gitHubMessageElement != null) {
+			return _gitHubMessageElement;
+		}
+
 		if (!Objects.equals(getStatus(), "completed") &&
 			(getParentBuild() != null)) {
 
@@ -625,7 +638,9 @@ public abstract class BaseBuild implements Build {
 			messageElement.add(failureMessageElement);
 		}
 
-		return messageElement;
+		_gitHubMessageElement = messageElement;
+
+		return _gitHubMessageElement;
 	}
 
 	@Override
@@ -1248,7 +1263,7 @@ public abstract class BaseBuild implements Build {
 		try {
 			return JenkinsResultsParserUtil.toJSONObject(
 				JenkinsResultsParserUtil.getLocalURL(getBuildURL() + urlSuffix),
-				checkCache);
+				checkCache, 5000);
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(
@@ -3449,6 +3464,7 @@ public abstract class BaseBuild implements Build {
 	private final BuildUpdater _buildUpdater;
 	private String _buildURL;
 	private Long _duration;
+	private Element _gitHubMessageElement;
 	private final List<Invocation> _invocations = new ArrayList<>();
 	private int _invokedBatchSize;
 	private JenkinsCohort _jenkinsCohort;

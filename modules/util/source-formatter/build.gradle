@@ -37,10 +37,11 @@ dependencies {
 	api group: "xerces", name: "xercesImpl", version: "2.12.2"
 
 	compileInclude group: "com.liferay", name: "com.liferay.petra.function", version: "5.5.0"
+	compileInclude group: "com.liferay", name: "com.liferay.petra.io", version: "5.0.6"
 	compileInclude group: "com.liferay", name: "com.liferay.petra.lang", version: "1.0.0"
 	compileInclude group: "com.liferay", name: "com.liferay.petra.nio", version: "1.0.0"
 	compileInclude group: "com.liferay", name: "com.liferay.petra.string", version: "5.3.0"
-	compileInclude group: "com.liferay", name: "com.liferay.poshi.core", version: "1.0.152"
+	compileInclude group: "com.liferay", name: "com.liferay.poshi.core", version: "1.0.156"
 	compileInclude group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
 	compileInclude group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.14'
 	compileInclude group: "org.codehaus.groovy", name: "groovy", version: "2.4.21"
@@ -50,7 +51,7 @@ dependencies {
 	compileOnly group: "com.liferay", name: "com.liferay.petra.memory", version: "1.0.0"
 	compileOnly group: "com.liferay", name: "com.liferay.petra.reflect", version: "1.1.0"
 	compileOnly group: "com.liferay", name: "com.liferay.petra.xml", version: "1.0.0"
-	compileOnly group: "com.liferay", name: "com.liferay.portal.tools.java.parser", version: "1.0.47"
+	compileOnly group: "com.liferay", name: "com.liferay.portal.tools.java.parser", version: "1.0.48"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.util.java", version: "2.5.0"

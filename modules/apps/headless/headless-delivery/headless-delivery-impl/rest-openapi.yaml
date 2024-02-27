@@ -4698,6 +4698,11 @@ components:
                             description:
                                 Whether search engines should crawl and index the page.
                             type: boolean
+                        includeChildSitePages:
+                            # @review
+                            description:
+                                Whether search engines should crawl and index the child pages.
+                            type: boolean
                         pagePriority:
                             description:
                                 How the page should be prioritized relative to other pages.
@@ -4782,6 +4787,11 @@ components:
                     description:
                         The page's theme settings.
                     type: object
+                themeSpritemapClientExtension:
+                    $ref: "#/components/schemas/ClientExtension"
+                    # @review
+                    description:
+                        The Client Extension for the theme spritemap of a page
             type: object
         SitePage:
             # @review
@@ -5762,7 +5772,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.delivery.client', and version '4.0.68'."
+        'com.liferay.headless.delivery.client', and version '4.0.73'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -5791,10 +5801,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
@@ -5806,6 +5812,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -5848,10 +5858,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -5859,6 +5865,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -5893,10 +5903,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -5904,6 +5910,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -5939,15 +5949,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -5958,6 +5964,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -6052,15 +6062,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -6071,6 +6077,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -6114,19 +6124,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -6137,6 +6143,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -6292,19 +6302,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -6315,6 +6321,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -6612,19 +6622,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -6635,6 +6641,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -6855,19 +6865,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -6878,6 +6884,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -7267,15 +7277,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -7286,6 +7292,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -7633,15 +7643,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -7652,6 +7658,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -7726,10 +7736,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -7737,6 +7743,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -7860,15 +7870,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -7879,6 +7885,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -8038,19 +8048,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -8061,6 +8067,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -8329,19 +8339,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -8352,6 +8358,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -8545,15 +8555,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -8564,6 +8570,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -9203,19 +9213,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -9226,6 +9232,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -9463,19 +9473,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -9486,6 +9492,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -9609,10 +9619,6 @@ paths:
                   schema:
                       type: integer
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -9620,6 +9626,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -9823,6 +9833,22 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/MessageBoardMessage"
+            tags: ["MessageBoardMessage"]
+    "/message-board-messages/{messageBoardMessageId}/mark-as-answer":
+        put:
+            operationId: putMessageBoardMessageMarkAsAnswer
+            parameters:
+                - in: path
+                  name: messageBoardMessageId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
             tags: ["MessageBoardMessage"]
     "/message-board-messages/{messageBoardMessageId}/message-board-attachments":
         get:
@@ -10069,6 +10095,22 @@ paths:
                         application/json: {}
                         application/xml: {}
             tags: ["MessageBoardMessage"]
+    "/message-board-messages/{messageBoardMessageId}/unmark-as-answer":
+        put:
+            operationId: putMessageBoardMessageUnmarkAsAnswer
+            parameters:
+                - in: path
+                  name: messageBoardMessageId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["MessageBoardMessage"]
     "/message-board-messages/{messageBoardMessageId}/unsubscribe":
         put:
             operationId: putMessageBoardMessageUnsubscribe
@@ -10109,19 +10151,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -10132,6 +10170,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -10316,15 +10358,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -10335,6 +10373,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -10493,15 +10535,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -10512,6 +10550,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -10591,10 +10633,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -10602,6 +10640,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: sort
                   schema:
@@ -10825,15 +10867,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -10844,6 +10882,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -11239,15 +11281,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -11258,6 +11296,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -11336,15 +11378,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -11355,6 +11393,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -11836,10 +11878,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
@@ -11851,6 +11889,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -11895,10 +11937,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -11906,6 +11944,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -11942,10 +11984,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -11953,6 +11991,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -11990,15 +12032,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -12009,6 +12047,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -12103,19 +12145,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -12126,6 +12160,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -12209,19 +12247,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -12232,6 +12266,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -12392,19 +12430,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -12415,6 +12449,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -12884,19 +12922,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -12907,6 +12941,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -13235,10 +13273,6 @@ paths:
                   schema:
                       type: integer
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -13246,6 +13280,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -13498,19 +13536,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -13521,6 +13555,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -13858,19 +13896,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -13881,6 +13915,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -14007,19 +14045,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -14030,6 +14064,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -14192,10 +14230,6 @@ paths:
                   schema:
                       type: integer
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -14203,6 +14237,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -14322,15 +14360,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -14341,6 +14375,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -14637,19 +14675,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -14660,6 +14694,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -14875,19 +14913,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -14898,6 +14932,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -15332,15 +15370,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -15351,6 +15385,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -15832,15 +15870,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -15851,6 +15885,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -16035,19 +16073,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -16058,6 +16092,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -16294,15 +16332,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -16313,6 +16347,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -16815,15 +16853,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -16834,6 +16868,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:

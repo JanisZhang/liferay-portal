@@ -1,16 +1,16 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.106.1",
-		"@clayui/button": "3.106.1",
-		"@clayui/drop-down": "3.106.1",
-		"@clayui/empty-state": "3.106.1",
-		"@clayui/form": "3.106.1",
-		"@clayui/icon": "3.106.1",
-		"@clayui/label": "3.106.1",
-		"@clayui/loading-indicator": "3.106.1",
-		"@clayui/slider": "3.106.1",
-		"@clayui/sticker": "3.106.1",
-		"@clayui/table": "3.106.1",
+		"@clayui/alert": "3.111.0",
+		"@clayui/button": "3.111.0",
+		"@clayui/drop-down": "3.111.0",
+		"@clayui/empty-state": "3.111.0",
+		"@clayui/form": "3.111.0",
+		"@clayui/icon": "3.111.0",
+		"@clayui/label": "3.111.0",
+		"@clayui/loading-indicator": "3.111.0",
+		"@clayui/slider": "3.111.0",
+		"@clayui/sticker": "3.111.0",
+		"@clayui/table": "3.111.0",
 		"@liferay/frontend-data-set-web": "*",
 		"@liferay/frontend-js-react-web": "*",
 		"@liferay/frontend-js-state-web": "*",
@@ -39,5 +39,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test --passWithNoTests"
 	},
-	"version": "1.0.80"
+	"version": "1.0.84"
 }

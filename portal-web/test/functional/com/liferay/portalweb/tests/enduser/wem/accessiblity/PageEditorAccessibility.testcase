@@ -210,7 +210,7 @@ definition {
 
 		task ("Then the focus goes to the Product Menu") {
 			KeyPress(
-				locator1 = "//div[@aria-label='Product Menu']",
+				locator1 = "//nav[@aria-label='Product Menu']",
 				value1 = "\TAB");
 
 			AssertElementFocused(locator1 = "//button[contains(@aria-label,'Go to Other Site')]");
@@ -445,6 +445,51 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-191827. Check the accessibility when warning message displays in a Collection Display with configuration can cause performance issues in page edit mode."
+	@priority = 3
+	test ViewAccessibilityOfCollectionDisplayPagePerformanceWarningMessageInPageEditor {
+		property custom.properties = "feature.flag.LPS-187284=true${line.separator}feature.flag.LPS-187285=true";
+
+		task ("Given a user has a Collection Display with None pagination on a content page") {
+			AssetListsAdmin.openAssetListsAdmin(siteURLKey = ${siteURLKey});
+
+			AssetListsAdmin.addDynamicSelection(assetListTitle = "Dynamic Collection");
+
+			AssetListsAdmin.configureItemTypeInDynamicCollection(itemType = "All Types");
+
+			JSONLayout.addPublicLayout(
+				groupName = ${randomSiteName},
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = ${randomSiteName});
+
+			PageEditor.addFragment(
+				collectionName = "Content Display",
+				fragmentName = "Collection Display");
+
+			PageEditor.editCollectionDisplay(
+				assetListName = "Dynamic Collection",
+				fragmentName = "Collection Display",
+				pagination = "None");
+		}
+
+		task ("When the user enables the Display All Collection Items") {
+			PageEditor.editCollectionDisplay(
+				displayAllCollectionItems = "true",
+				fragmentName = "Collection Display",
+				selectedName = "Dynamic Collection");
+		}
+
+		task ("Then the warning message should have correct accessibility") {
+			AssertElementAccessible(
+				fieldLabel = "Display All Collection Items",
+				locator1 = "Message#WARNING_WITH_LABEL");
+		}
+	}
+
 	@description = "This is a test for LPS-165288. The Comments panel should have correct accessibility."
 	@priority = 3
 	test ViewAccessibilityOfCommentsPanel {
@@ -646,12 +691,14 @@ definition {
 			PageEditor.gotoTab(tabName = "Page Content");
 
 			Click(locator1 = "PageEditor#PAGE_CONTENTS_CONTENT_FILTER_TOGGLE");
-		}
 
-		task ("Then the dropdown menu should have correct accessibility") {
 			AssertElementAccessible(locator1 = "//div[contains(@class,'dropdown-menu-select')][contains(@class,'show')]//li");
 
+			Click(locator1 = "PageEditor#PAGE_CONTENTS_CONTENT_FILTER_TOGGLE");
+
 			AssertElementAccessible(locator1 = "xpath=(//div[contains(@class,'dropdown-menu-select')][contains(@class,'show')]//li)[2]");
+
+			Click(locator1 = "PageEditor#PAGE_CONTENTS_CONTENT_FILTER_TOGGLE");
 
 			AssertElementAccessible(locator1 = "xpath=(//div[contains(@class,'dropdown-menu-select')][contains(@class,'show')]//li)[3]");
 		}
@@ -679,16 +726,22 @@ definition {
 			AssertElementPresent(locator1 = "//button[contains(@type,'button')][@aria-label='Select a language, current language: en-US.']");
 		}
 
-		task ("When the page creator opens the dropdown menu of the language selector") {
-			Click(
+		task ("Then the dropdown menu should have correct accessibility") {
+			Click.clickNoMouseOver(
 				key_currentLocale = StringUtil.lowerCase("en-US"),
 				locator1 = "Button#TRANSLATIONS_LOCALIZATION");
-		}
 
-		task ("Then the dropdown menu should have correct accessibility") {
 			AssertElementAccessible(locator1 = "//div[contains(@class,'dropdown-menu-select')][contains(@class,'show')]//li");
 
+			Click.clickNoMouseOver(
+				key_currentLocale = StringUtil.lowerCase("en-US"),
+				locator1 = "Button#TRANSLATIONS_LOCALIZATION");
+
 			AssertElementAccessible(locator1 = "xpath=(//div[contains(@class,'dropdown-menu-select')][contains(@class,'show')]//li)[2]");
+
+			Click.clickNoMouseOver(
+				key_currentLocale = StringUtil.lowerCase("en-US"),
+				locator1 = "Button#TRANSLATIONS_LOCALIZATION");
 
 			AssertElementAccessible(locator1 = "xpath=(//div[contains(@class,'dropdown-menu-select')][contains(@class,'show')]//li)[3]");
 		}
@@ -754,6 +807,33 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-196462. The New Rule Modal complies with WCAG 2.1 AA standard."
+	@priority = 2
+	test ViewAccessibilityOfNewRuleModal {
+		property custom.properties = "feature.flag.LPS-169837=true";
+
+		task ("Given a page designer has a Button fragment on a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = ${randomSiteName},
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = ${randomSiteName});
+		}
+
+		task ("When the page designer opens the New Rule modal") {
+			PageEditor.gotoTab(tabName = "Page Rules");
+
+			Button.click(button = "New Rule");
+		}
+
+		task ("Then the New Rule modal should have correct accessibility") {
+			AssertElementAccessible(locator1 = "Modal#MODAL_CONTENT");
+		}
+	}
+
 	@description = "This is a test for LPS-165288. The Page Design Options panel should have correct accessibility."
 	@priority = 3
 	test ViewAccessibilityOfPageDesignOptionsPanel {
@@ -792,16 +872,16 @@ definition {
 				type = "content");
 		}
 
-		task ("When the page creator opens the dropdown menu of page edition mode") {
+		task ("Then the dropdown menu should have correct accessibility") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
 				siteName = ${randomSiteName});
 
 			Click(locator1 = "PageEditor#EDIT_MODE_SELECTOR");
-		}
 
-		task ("Then the dropdown menu should have correct accessibility") {
 			AssertElementAccessible(locator1 = "//div[contains(@class,'dropdown-menu-select')][contains(@class,'show')]//li");
+
+			Click(locator1 = "PageEditor#EDIT_MODE_SELECTOR");
 
 			AssertElementAccessible(locator1 = "xpath=(//div[contains(@class,'dropdown-menu-select')][contains(@class,'show')]//li)[2]");
 		}
@@ -874,19 +954,37 @@ definition {
 	test ViewAccessibilityOfPageRulesPanel {
 		property custom.properties = "feature.flag.LPS-169837=true";
 
-		task ("Given a page designer has a content page") {
+		task ("Given a page designer has a Button fragment on a content page") {
 			JSONLayout.addPublicLayout(
 				groupName = ${randomSiteName},
 				layoutName = "Test Page Name",
 				type = "content");
-		}
 
-		task ("When the page designer opens the Page Rules panel") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
 				siteName = ${randomSiteName});
 
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+		}
+
+		task ("When the page designer opens the Page Rules panel") {
 			PageEditor.gotoTab(tabName = "Page Rules");
+		}
+
+		task ("Then the Page Rules panel should have correct accessibility") {
+			AssertElementAccessible(locator1 = "//div[@aria-label='Page Rules Panel']");
+		}
+
+		task ("When the page designer adds a page rule") {
+			PageEditor.addPageRule(
+				selectAction = "Hide",
+				selectActionValue = "Button",
+				selectCondition = "Is the User",
+				selectConditionValue = "test",
+				selectItemForTheAction = "Fragment",
+				selectItemForTheCondition = "User");
 		}
 
 		task ("Then the Page Rules panel should have correct accessibility") {

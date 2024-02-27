@@ -17,7 +17,7 @@ import {
 } from '@liferay/object-js-components-web';
 import {ManagementToolbar} from 'frontend-js-components-web';
 import {openToast, sub} from 'frontend-js-web';
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
 import {defaultLanguageId} from '../../utils/constants';
 
@@ -25,24 +25,30 @@ import './ModalMoveObjectDefinition.scss';
 
 interface ModalMoveObjectDefinitionProps {
 	handleOnClose: () => void;
-	objectDefinition: ObjectDefinition;
+	objectDefinitionId: number;
 	objectFolders: ObjectFolder[];
-	selectedObjectFolder: Partial<ObjectFolder>;
+	onAfterMoveObjectDefinition: () => void;
 	setMoveObjectDefinition: (value: ObjectDefinition | null) => void;
 }
 
 export function ModalMoveObjectDefinition({
 	handleOnClose,
-	objectDefinition,
+	objectDefinitionId,
 	objectFolders,
-	selectedObjectFolder,
+	onAfterMoveObjectDefinition,
 	setMoveObjectDefinition,
 }: ModalMoveObjectDefinitionProps) {
+	const [objectDefinition, setObjectDefinition] = useState<
+		ObjectDefinition
+	>();
 	const [query, setQuery] = useState('');
 	const [
 		selectedObjectFolderExternalReferenceCode,
 		setSelectedObjectFolderExternalReferenceCode,
 	] = useState<string>('');
+	const [selectedObjectFolder, setSelectedObjectFolder] = useState<
+		ObjectFolder
+	>();
 	const [error, setError] = useState<string>('');
 
 	const {observer, onClose} = useModal({
@@ -55,7 +61,7 @@ export function ModalMoveObjectDefinition({
 	const filteredObjectFolders = objectFolders.filter(
 		(item) =>
 			item.externalReferenceCode !==
-			selectedObjectFolder.externalReferenceCode
+			selectedObjectFolder?.externalReferenceCode
 	);
 
 	const modalObjectFolderItems = useMemo(() => {
@@ -70,7 +76,7 @@ export function ModalMoveObjectDefinition({
 
 	const handleMoveObject = async () => {
 		const movedObjectDefinition: ObjectDefinition = {
-			...objectDefinition,
+			...(objectDefinition as ObjectDefinition),
 			objectFolderExternalReferenceCode: selectedObjectFolderExternalReferenceCode,
 		};
 
@@ -78,7 +84,7 @@ export function ModalMoveObjectDefinition({
 			await API.save({
 				item: movedObjectDefinition,
 				method: 'PATCH',
-				url: `/o/object-admin/v1.0/object-definitions/${objectDefinition.id}`,
+				url: `/o/object-admin/v1.0/object-definitions/${objectDefinitionId}`,
 			});
 
 			onClose();
@@ -89,24 +95,43 @@ export function ModalMoveObjectDefinition({
 					`<strong>${Liferay.Util.escapeHTML(
 						getLocalizableLabel(
 							defaultLanguageId,
-							movedObjectDefinition.label,
-							movedObjectDefinition.name
+							movedObjectDefinition?.label,
+							movedObjectDefinition?.name
 						)
 					)}</strong>`
 				),
 				type: 'success',
 			});
 
-			setTimeout(() => window.location.reload(), 1000);
+			onAfterMoveObjectDefinition();
 		}
 		catch (error) {
 			setError((error as Error).message);
 		}
 	};
 
+	useEffect(() => {
+		const makeFetch = async () => {
+			if (objectDefinitionId) {
+				const objectDefinitionResponse = await API.getObjectDefinitionById(
+					objectDefinitionId
+				);
+
+				const objectFolderResponse = await API.getObjectFolderByExternalReferenceCode(
+					objectDefinitionResponse.objectFolderExternalReferenceCode
+				);
+
+				setSelectedObjectFolder(objectFolderResponse);
+				setObjectDefinition(objectDefinitionResponse);
+			}
+		};
+
+		makeFetch();
+	}, [objectDefinitionId]);
+
 	return (
 		<ClayModalProvider>
-			<ClayModal observer={observer}>
+			<ClayModal center observer={observer}>
 				<ClayModal.Header>
 					{`${Liferay.Language.get('move')} "${getLocalizableLabel(
 						defaultLanguageId,

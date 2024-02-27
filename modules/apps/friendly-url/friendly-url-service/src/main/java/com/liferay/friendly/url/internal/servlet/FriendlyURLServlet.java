@@ -54,9 +54,12 @@ import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -322,7 +325,7 @@ public class FriendlyURLServlet extends HttpServlet {
 							group.getDefaultLanguageId());
 					}
 
-					String redirect = portal.getLocalizedFriendlyURL(
+					String redirect = _getLocalizedFriendlyURL(
 						httpServletRequest, layout, locale, originalLocale);
 
 					HttpServletRequest originalHttpServletRequest =
@@ -348,29 +351,13 @@ public class FriendlyURLServlet extends HttpServlet {
 		catch (LayoutPermissionException | NoSuchLayoutException exception) {
 			Layout redirectLayout = null;
 
-			if (exception instanceof LayoutPermissionException) {
-				List<Layout> layouts = layoutService.getLayouts(
-					group.getGroupId(), _private,
-					LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 1);
-
-				if (!layouts.isEmpty()) {
-					redirectLayout = layouts.get(0);
+			if (!(exception instanceof LayoutPermissionException)) {
+				if (layoutFriendlyURL == null) {
+					redirectLayout = defaultLayout;
 				}
-			}
-			else if (layoutFriendlyURL == null) {
-				redirectLayout = defaultLayout;
-			}
-			else {
-				List<Layout> layouts = layoutLocalService.getLayouts(
-					group.getGroupId(), _private,
-					LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
-
-				for (Layout layout : layouts) {
-					if (layout.matches(httpServletRequest, layoutFriendlyURL)) {
-						redirectLayout = layout;
-
-						break;
-					}
+				else {
+					redirectLayout = _getLayoutFriendlyURLLayout(
+						group.getGroupId(), layoutFriendlyURL);
 				}
 			}
 
@@ -823,6 +810,130 @@ public class FriendlyURLServlet extends HttpServlet {
 				httpServletRequest.getParameterMap()));
 	}
 
+	private Layout _getLayoutFriendlyURLLayout(
+		long groupId, String friendlyURL) {
+
+		LayoutFriendlyURL layoutFriendlyURL =
+			layoutFriendlyURLLocalService.fetchFirstLayoutFriendlyURL(
+				groupId, _private, friendlyURL);
+
+		if (layoutFriendlyURL == null) {
+			return null;
+		}
+
+		Layout layout = layoutLocalService.fetchLayout(
+			layoutFriendlyURL.getPlid());
+
+		if ((layout != null) && !layout.isSystem()) {
+			return layout;
+		}
+
+		return null;
+	}
+
+	private String _getLocalizedFriendlyURL(
+		HttpServletRequest httpServletRequest, Layout layout, Locale locale,
+		Locale originalLocale) {
+
+		String requestURI = _getRequestURI(httpServletRequest);
+
+		int[] groupFriendlyURLIndex = portal.getGroupFriendlyURLIndex(
+			requestURI);
+
+		if (groupFriendlyURLIndex != null) {
+			String originalRequestURI = _getRequestURI(
+				portal.getOriginalServletRequest(httpServletRequest));
+
+			if (httpServletRequest.getAttribute(WebKeys.I18N_PATH) != null) {
+				int pos = originalRequestURI.indexOf(StringPool.SLASH, 1);
+
+				if (pos != -1) {
+					originalRequestURI = originalRequestURI.substring(pos);
+				}
+			}
+
+			if (portal.getGroupFriendlyURLIndex(originalRequestURI) == null) {
+				requestURI = requestURI.substring(groupFriendlyURLIndex[1]);
+			}
+		}
+
+		String layoutFriendlyURL = null;
+
+		if (originalLocale == null) {
+			String path = httpServletRequest.getPathInfo();
+
+			int x = path.indexOf(CharPool.SLASH, 1);
+
+			if ((x != -1) && ((x + 1) != path.length())) {
+				layoutFriendlyURL = path.substring(x);
+			}
+
+			int y = layoutFriendlyURL.indexOf(
+				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR);
+
+			if (y != -1) {
+				y = layoutFriendlyURL.indexOf(CharPool.SLASH, 3);
+
+				if ((y != -1) && ((y + 1) != layoutFriendlyURL.length())) {
+					layoutFriendlyURL = layoutFriendlyURL.substring(y);
+				}
+			}
+
+			y = layoutFriendlyURL.indexOf(Portal.FRIENDLY_URL_SEPARATOR);
+
+			if (y != -1) {
+				layoutFriendlyURL = layoutFriendlyURL.substring(0, y);
+			}
+		}
+		else {
+			layoutFriendlyURL = layout.getFriendlyURL(originalLocale);
+		}
+
+		if (requestURI.contains(layoutFriendlyURL)) {
+			requestURI = StringUtil.replaceFirst(
+				requestURI, layoutFriendlyURL, layout.getFriendlyURL(locale));
+		}
+
+		boolean appendI18nPath = true;
+
+		int localePrependFriendlyURLStyle = PrefsPropsUtil.getInteger(
+			portal.getCompanyId(httpServletRequest),
+			PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
+
+		if ((localePrependFriendlyURLStyle == 0) ||
+			((localePrependFriendlyURLStyle == 1) &&
+			 locale.equals(LocaleUtil.getDefault()))) {
+
+			appendI18nPath = false;
+		}
+
+		String localizedFriendlyURL = portal.getPathContext();
+
+		if (appendI18nPath) {
+			String i18nPathLanguageId = portal.getI18nPathLanguageId(
+				locale, LocaleUtil.toLanguageId(locale));
+
+			String i18nPath = StringPool.SLASH + i18nPathLanguageId;
+
+			localizedFriendlyURL += i18nPath;
+		}
+
+		localizedFriendlyURL += requestURI;
+
+		String queryString = httpServletRequest.getQueryString();
+
+		if (Validator.isNull(queryString)) {
+			queryString = (String)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_SERVLET_FORWARD_QUERY_STRING);
+		}
+
+		if (Validator.isNotNull(queryString)) {
+			localizedFriendlyURL += StringPool.QUESTION + queryString;
+		}
+
+		return localizedFriendlyURL;
+	}
+
 	private String _getPathInfo(HttpServletRequest httpServletRequest) {
 		String requestURI = httpServletRequest.getRequestURI();
 
@@ -862,6 +973,20 @@ public class FriendlyURLServlet extends HttpServlet {
 
 		return new Redirect(
 			redirect.getDestinationURL(), true, redirect.isPermanent());
+	}
+
+	private String _getRequestURI(HttpServletRequest httpServletRequest) {
+		String contextPath = portal.getPathContext();
+		String requestURI = httpServletRequest.getRequestURI();
+
+		if (Validator.isNotNull(contextPath) &&
+			requestURI.startsWith(contextPath)) {
+
+			requestURI = requestURI.substring(contextPath.length());
+		}
+
+		return StringUtil.replace(
+			requestURI, StringPool.DOUBLE_SLASH, StringPool.SLASH);
 	}
 
 	private ServiceContext _getServiceContext(
@@ -999,7 +1124,7 @@ public class FriendlyURLServlet extends HttpServlet {
 				siteFriendlyURL.getLanguageId());
 		}
 
-		String alternativeLayoutFriendlyURL = portal.getLocalizedFriendlyURL(
+		String alternativeLayoutFriendlyURL = _getLocalizedFriendlyURL(
 			httpServletRequest, layout, groupLocale, locale);
 
 		if (_isShowAlternativeLayoutFriendlyURLMessage(companyId)) {

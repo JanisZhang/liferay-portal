@@ -1,8 +1,8 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.106.1",
-		"@clayui/form": "3.106.1",
-		"@clayui/tabs": "3.106.1",
+		"@clayui/button": "3.111.0",
+		"@clayui/form": "3.111.0",
+		"@clayui/tabs": "3.111.0",
 		"asset-taglib": "*",
 		"commerce-frontend-js": "*",
 		"frontend-js-web": "*",
@@ -14,5 +14,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "4.0.109"
+	"version": "4.0.113"
 }

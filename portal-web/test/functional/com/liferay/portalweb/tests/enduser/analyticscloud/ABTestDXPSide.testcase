@@ -32,9 +32,7 @@ definition {
 		}
 
 		task ("Go to Site Page") {
-			ACUtils.navigateToSitePage(
-				pageName = "AC Page",
-				siteName = "Site Name");
+			Navigator.openSiteURL(siteName = "Site Name");
 		}
 
 		task ("Edit the Content page to add a button fragment") {
@@ -141,6 +139,10 @@ definition {
 		}
 
 		task ("Go to Tests") {
+			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+
 			ACNavigation.goToTests();
 		}
 
@@ -183,9 +185,7 @@ definition {
 		}
 
 		task ("Go to DXP > Go to AB Test Side Panel") {
-			ACUtils.navigateToSitePage(
-				pageName = "AC Page",
-				siteName = "Site Name");
+			Navigator.openSiteURL(siteName = "Site Name");
 
 			ABTest.openABTestPanel();
 		}
@@ -218,14 +218,23 @@ definition {
 	@description = "Story: LRAC-14070 | Automation ID: LRAC-14574 | Test Summary: Can publish control from a terminated test"
 	@priority = 5
 	test CanPublishControlFromTerminatedTest {
+		task ("Create an AB test") {
+			ABTest.createABTest(
+				goal = "Bounce Rate",
+				testTitle = ${nameABTest});
+
+			ABTest.createVariant(variantName = "Variant name");
+		}
+
 		task ("Edit the variant created") {
 			ABTest.editVariant(variantName = "Variant name");
 		}
 
 		task ("Add a heading to the page to diferentiate from the control") {
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading");
+			PageEditor.editFragmentText(
+				fragmentName = "Button",
+				id = "link",
+				text = "New text");
 		}
 
 		task ("Click to save the variant") {
@@ -234,10 +243,10 @@ definition {
 
 		task ("Click to open the AB test panel") {
 			ABTest.openABTestPanel();
+		}
 
-			task ("Click to review and run the test") {
-				ABTest.runTest();
-			}
+		task ("Click to review and run the test") {
+			ABTest.runTest();
 		}
 
 		task ("Click to terminate the test") {
@@ -249,23 +258,28 @@ definition {
 		}
 
 		task ("Assert the control is published") {
-			AssertElementNotPresent(
-				locator1 = "Experience#FRAGMENT_HEADING",
-				value1 = "Heading Example");
+			ContentPages.viewFragmentText(
+				fragmentName = "button",
+				id = "link",
+				text = "Go Somewhere");
 		}
 
-		task ("Click to edit the page and add a widget to the page and then click save") {
+		task ("Click to edit the page then click save") {
 			ContentPages.gotoPageEditor();
 
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Button");
+			PageEditor.editFragmentText(
+				fragmentName = "Button",
+				id = "link",
+				text = "Text test");
 
 			PageEditor.publish();
 		}
 
 		task ("Assert if the page is published with the modifications") {
-			PageEditor.viewFragment(fragmentName = "Button");
+			ContentPages.viewFragmentText(
+				fragmentName = "button",
+				id = "link",
+				text = "Text test");
 		}
 
 		task ("Go to AC and open the AB test") {
@@ -286,14 +300,23 @@ definition {
 	@description = "Story: LRAC-14070 | Automation ID: LRAC-14573 | Test Summary: Can publish variant from a terminated test and delete test in AC"
 	@priority = 5
 	test CanPublishVariantFromTerminatedTestAndDeleteTest {
+		task ("Create an AB test") {
+			ABTest.createABTest(
+				goal = "Bounce Rate",
+				testTitle = ${nameABTest});
+
+			ABTest.createVariant(variantName = "Variant name");
+		}
+
 		task ("Edit the variant created") {
 			ABTest.editVariant(variantName = "Variant name");
 		}
 
 		task ("Add a heading to the page to diferentiate from the control") {
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading");
+			PageEditor.editFragmentText(
+				fragmentName = "Button",
+				id = "link",
+				text = "New text");
 		}
 
 		task ("Click to save the variant") {
@@ -302,10 +325,10 @@ definition {
 
 		task ("Click to open the AB test panel") {
 			ABTest.openABTestPanel();
+		}
 
-			task ("Click to review and run the test") {
-				ABTest.runTest();
-			}
+		task ("Click to review and run the test") {
+			ABTest.runTest();
 		}
 
 		task ("Terminate the test") {
@@ -318,23 +341,27 @@ definition {
 
 		task ("Assert the variant published") {
 			ContentPages.viewFragmentText(
-				fragmentName = "heading",
-				id = "element-text",
-				text = "Heading Example");
+				fragmentName = "button",
+				id = "link",
+				text = "New text");
 		}
 
-		task ("Now edit the variant and add a widget to the page and then click save") {
+		task ("Click to edit the page then click save") {
 			ContentPages.gotoPageEditor();
 
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Button");
+			PageEditor.editFragmentText(
+				fragmentName = "Button",
+				id = "link",
+				text = "Text test");
 
 			PageEditor.publish();
 		}
 
 		task ("Assert if the page is published with the modifications") {
-			PageEditor.viewFragment(fragmentName = "Button");
+			ContentPages.viewFragmentText(
+				fragmentName = "button",
+				id = "link",
+				text = "Text test");
 		}
 
 		task ("Go to AC > Tests") {

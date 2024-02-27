@@ -94,7 +94,8 @@ public interface DLAppService extends BaseService {
 	 * @throws PortalException if a portal exception occurred
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
 	 #addFileEntry(String, long, long, String, String, String,
-	 String, String, File, Date, Date, ServiceContext)}
+	 String, String, String, File, Date, Date, Date,
+	 ServiceContext)}
 	 */
 	@Deprecated
 	public FileEntry addFileEntry(
@@ -127,6 +128,8 @@ public interface DLAppService extends BaseService {
 	 * @param description the file's description
 	 * @param changeLog the file's version change log
 	 * @param bytes the file's data (optionally <code>null</code>)
+	 * @param displayDate the file's display date (optionally
+	 <code>null</code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review Date (optionally <code>null</code>)
@@ -143,7 +146,8 @@ public interface DLAppService extends BaseService {
 			String externalReferenceCode, long repositoryId, long folderId,
 			String sourceFileName, String mimeType, String title,
 			String urlTitle, String description, String changeLog, byte[] bytes,
-			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
+			Date displayDate, Date expirationDate, Date reviewDate,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -169,6 +173,8 @@ public interface DLAppService extends BaseService {
 	 * @param description the file's description
 	 * @param changeLog the file's version change log
 	 * @param file the file's data (optionally <code>null</code>)
+	 * @param displayDate the file's display date (optionally
+	 <code>null</code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review Date (optionally <code>null</code>)
@@ -185,7 +191,8 @@ public interface DLAppService extends BaseService {
 			String externalReferenceCode, long repositoryId, long folderId,
 			String sourceFileName, String mimeType, String title,
 			String urlTitle, String description, String changeLog, File file,
-			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
+			Date displayDate, Date expirationDate, Date reviewDate,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -212,7 +219,10 @@ public interface DLAppService extends BaseService {
 	 * @param changeLog the file's version change log
 	 * @param inputStream the file's data (optionally <code>null</code>)
 	 * @param size the file's size (optionally <code>0</code>)
-	 * @param expirationDate the file's expiration date (optionally <code>null</code>)
+	 * @param displayDate the file's display date (optionally
+	 <code>null</code>)
+	 * @param expirationDate the file's expiration date (optionally
+	 <code>null</code>)
 	 * @param reviewDate the file's review Date (optionally <code>null</code>)
 	 * @param serviceContext the service context to be applied. Can set the
 	 asset category IDs, asset tag names, and expando bridge
@@ -227,8 +237,8 @@ public interface DLAppService extends BaseService {
 			String externalReferenceCode, long repositoryId, long folderId,
 			String sourceFileName, String mimeType, String title,
 			String urlTitle, String description, String changeLog,
-			InputStream inputStream, long size, Date expirationDate,
-			Date reviewDate, ServiceContext serviceContext)
+			InputStream inputStream, long size, Date displayDate,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -337,7 +347,7 @@ public interface DLAppService extends BaseService {
 	 * @param fileEntryId the primary key of the file entry to cancel the
 	 checkout
 	 * @throws PortalException if a portal exception occurred
-	 * @see #checkInFileEntry(long, boolean, String, ServiceContext)
+	 * @see #checkInFileEntry(long, String, ServiceContext)
 	 * @see #checkOutFileEntry(long, ServiceContext)
 	 */
 	public void cancelCheckOut(long fileEntryId) throws PortalException;
@@ -416,7 +426,7 @@ public interface DLAppService extends BaseService {
 	 * @param serviceContext the service context to be applied
 	 * @throws PortalException if a portal exception occurred
 	 * @see #cancelCheckOut(long)
-	 * @see #checkInFileEntry(long, boolean, String, ServiceContext)
+	 * @see #checkInFileEntry(long, String, ServiceContext)
 	 */
 	public void checkOutFileEntry(
 			long fileEntryId, ServiceContext serviceContext)
@@ -446,7 +456,7 @@ public interface DLAppService extends BaseService {
 	 * @return the file entry
 	 * @throws PortalException if a portal exception occurred
 	 * @see #cancelCheckOut(long)
-	 * @see #checkInFileEntry(long, String)
+	 * @see #checkInFileEntry(long, String, ServiceContext)
 	 */
 	public FileEntry checkOutFileEntry(
 			long fileEntryId, String owner, long expirationTime,
@@ -1787,6 +1797,8 @@ public interface DLAppService extends BaseService {
 	 * @param dlVersionNumberIncrease the kind of version number increase to
 	 apply for these changes.
 	 * @param bytes the file's data (optionally <code>null</code>)
+	 * @param displayDate the file's display date (optionally <code>null
+	 </code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review date (optionally <code>null</code>)
@@ -1803,7 +1815,8 @@ public interface DLAppService extends BaseService {
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String urlTitle, String description, String changeLog,
 			DLVersionNumberIncrease dlVersionNumberIncrease, byte[] bytes,
-			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
+			Date displayDate, Date expirationDate, Date reviewDate,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -1832,6 +1845,8 @@ public interface DLAppService extends BaseService {
 	 * @param dlVersionNumberIncrease the kind of version number increase to
 	 apply for these changes.
 	 * @param file the file's data (optionally <code>null</code>)
+	 * @param displayDate the file's display date (optionally <code>null
+	 </code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review date (optionally <code>null</code>)
@@ -1848,7 +1863,8 @@ public interface DLAppService extends BaseService {
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String urlTitle, String description, String changeLog,
 			DLVersionNumberIncrease dlVersionNumberIncrease, File file,
-			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
+			Date displayDate, Date expirationDate, Date reviewDate,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -1878,6 +1894,8 @@ public interface DLAppService extends BaseService {
 	 apply for these changes.
 	 * @param inputStream the file's data (optionally <code>null</code>)
 	 * @param size the file's size (optionally <code>0</code>)
+	 * @param displayDate the file's display date (optionally <code>null
+	 </code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review date (optionally <code>null</code>)
@@ -1894,23 +1912,24 @@ public interface DLAppService extends BaseService {
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String urlTitle, String description, String changeLog,
 			DLVersionNumberIncrease dlVersionNumberIncrease,
-			InputStream inputStream, long size, Date expirationDate,
-			Date reviewDate, ServiceContext serviceContext)
-		throws PortalException;
-
-	public FileEntry updateFileEntryAndCheckIn(
-			long fileEntryId, String sourceFileName, String mimeType,
-			String title, String urlTitle, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease, File file,
+			InputStream inputStream, long size, Date displayDate,
 			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	public FileEntry updateFileEntryAndCheckIn(
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String urlTitle, String description, String changeLog,
+			DLVersionNumberIncrease dlVersionNumberIncrease, File file,
+			Date displayDate, Date expirationDate, Date reviewDate,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public FileEntry updateFileEntryAndCheckIn(
+			long fileEntryId, String sourceFileName, String mimeType,
+			String title, String urlTitle, String description, String changeLog,
 			DLVersionNumberIncrease dlVersionNumberIncrease,
-			InputStream inputStream, long size, Date expirationDate,
-			Date reviewDate, ServiceContext serviceContext)
+			InputStream inputStream, long size, Date displayDate,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**

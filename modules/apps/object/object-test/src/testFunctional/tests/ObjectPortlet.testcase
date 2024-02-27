@@ -140,9 +140,12 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		ObjectPortlet.assertObjectIsDisplayedOnControlPanel();
+		ObjectPortlet.assertIsDisplayedOnControlPanel(itemMenu = "Custom Objects");
 
-		ObjectPortlet.goToCustomObjectPortletOnControlPanel();
+		Click(
+			key_category = "Objects",
+			key_portlet = "Custom Objects",
+			locator1 = "ApplicationsMenu#PORTLET");
 
 		AssertElementPresent(
 			key_objectLabel = "Custom Object",
@@ -638,10 +641,7 @@ definition {
 
 		Navigator.openURL();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		Role.addAssignee(
 			assigneeName = "Site A",

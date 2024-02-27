@@ -14,6 +14,12 @@ boolean companyChatGPTEnabled = aiCreatorOpenAIGroupConfigurationDisplayContext.
 boolean companyDALLEEnabled = aiCreatorOpenAIGroupConfigurationDisplayContext.isCompanyDALLEEnabled();
 %>
 
+<liferay-util:html-top
+	outputKey="com.liferay.ai.creator.openai.web#/configuration/openai_group_configuration.jsp"
+>
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/configuration.css") %>" rel="stylesheet" type="text/css" />
+</liferay-util:html-top>
+
 <clay:content-row>
 	<clay:content-col
 		expand="<%= true %>"
@@ -29,7 +35,7 @@ boolean companyDALLEEnabled = aiCreatorOpenAIGroupConfigurationDisplayContext.is
 					message="to-enable-chatgpt-for-this-site,-first-enable-it-for-your-instance"
 				/>
 			</c:when>
-			<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-196648") && companyChatGPTEnabled && !companyDALLEEnabled %>'>
+			<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPD-10793") && companyChatGPTEnabled && !companyDALLEEnabled %>'>
 				<clay:alert
 					message="to-enable-dalle-for-this-site,-first-enable-it-for-your-instance"
 				/>
@@ -53,7 +59,7 @@ boolean companyDALLEEnabled = aiCreatorOpenAIGroupConfigurationDisplayContext.is
 </clay:content-row>
 
 <clay:content-row
-	cssClass="c-mt-2"
+	cssClass="c-my-4"
 >
 	<clay:content-col
 		expand="<%= true %>"
@@ -64,6 +70,7 @@ boolean companyDALLEEnabled = aiCreatorOpenAIGroupConfigurationDisplayContext.is
 
 <clay:content-row>
 	<clay:content-col
+		cssClass="ai-creator-config-checkbox"
 		expand="<%= true %>"
 	>
 		<c:choose>
@@ -88,11 +95,12 @@ boolean companyDALLEEnabled = aiCreatorOpenAIGroupConfigurationDisplayContext.is
 	</clay:content-col>
 </clay:content-row>
 
-<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPS-196648") %>'>
+<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-10793") %>'>
 	<clay:content-row
-		cssClass="c-mt-2"
+		cssClass="c-mt-5"
 	>
 		<clay:content-col
+			cssClass="ai-creator-config-checkbox"
 			expand="<%= true %>"
 		>
 			<c:choose>

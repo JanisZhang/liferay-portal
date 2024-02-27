@@ -6,20 +6,8 @@
 import {useEventListener} from '@liferay/frontend-js-react-web';
 import {useEffect, useState} from 'react';
 
-import {
-	ARROW_DOWN_KEY_CODE,
-	ARROW_LEFT_KEY_CODE,
-	ARROW_RIGHT_KEY_CODE,
-	ARROW_UP_KEY_CODE,
-} from '../utils/keyboardCodes';
+import {KeyboardKey} from '../types/KeyboardKey';
 import {ItemTypeValues, LIST_ITEM_TYPES} from '../utils/listItemTypes';
-
-const ALLOWED_KEY_CODES = [
-	ARROW_DOWN_KEY_CODE,
-	ARROW_LEFT_KEY_CODE,
-	ARROW_RIGHT_KEY_CODE,
-	ARROW_UP_KEY_CODE,
-];
 
 interface Props {
 	handleOpen: (key: string, editing: boolean) => void;
@@ -27,7 +15,7 @@ interface Props {
 	type: ItemTypeValues;
 }
 
-export default function useKeyboardNavigation({handleOpen, key, type}: Props) {
+export default function useKeyboardNavigation({type}: Props) {
 	const [element, setElement] = useState<HTMLElement | null>(null);
 	const [isTarget, setIsTarget] = useState<boolean>(false);
 
@@ -40,33 +28,21 @@ export default function useKeyboardNavigation({handleOpen, key, type}: Props) {
 		setIsTarget(!!isFirstChild && element?.tagName === 'BUTTON');
 	}, [element]);
 
-	const rtl =
-		Liferay.Language.direction?.[Liferay.ThemeDisplay.getLanguageId()] ===
-		'rtl';
-
 	useEventListener(
 		'keydown',
 		(event) => {
-			const {code} = <KeyboardEvent>event;
+			const key = (<KeyboardEvent>event).key as KeyboardKey;
 
-			if (!ALLOWED_KEY_CODES.includes(code) || !element) {
+			if ((key !== 'ArrowDown' && key !== 'ArrowUp') || !element) {
 				return;
 			}
 
 			event.preventDefault();
 
-			let nextCode = code;
-
-			if (rtl && code === ARROW_RIGHT_KEY_CODE) {
-				nextCode = ARROW_LEFT_KEY_CODE;
-			}
-
-			if (rtl && code === ARROW_LEFT_KEY_CODE) {
-				nextCode = ARROW_RIGHT_KEY_CODE;
-			}
+			const nextCode = key;
 
 			if (type === LIST_ITEM_TYPES.header) {
-				onHeaderKeyDown(element, nextCode, handleOpen, key);
+				onHeaderKeyDown(element, nextCode);
 			}
 			else if (type === LIST_ITEM_TYPES.listItem) {
 				onListItemKeyDown(element, nextCode);
@@ -100,13 +76,8 @@ export default function useKeyboardNavigation({handleOpen, key, type}: Props) {
 	return {isTarget, setElement};
 }
 
-function onHeaderKeyDown(
-	element: HTMLElement,
-	keyCode: string,
-	handleOpen: (key: string, editing: boolean) => void,
-	key: string
-) {
-	if (keyCode === ARROW_DOWN_KEY_CODE) {
+function onHeaderKeyDown(element: HTMLElement, keyCode: KeyboardKey) {
+	if (keyCode === 'ArrowDown') {
 
 		// Target first item of the list. If it's collapsed, target next header
 
@@ -124,7 +95,7 @@ function onHeaderKeyDown(
 			nextHeader?.focus();
 		}
 	}
-	else if (keyCode === ARROW_UP_KEY_CODE) {
+	else if (keyCode === 'ArrowUp') {
 
 		// Target last item of the previous list. If it's collapsed, target previous header
 
@@ -152,16 +123,10 @@ function onHeaderKeyDown(
 			previousHeader?.focus();
 		}
 	}
-	else if (keyCode === ARROW_RIGHT_KEY_CODE) {
-		handleOpen(key, false);
-	}
-	else if (keyCode === ARROW_LEFT_KEY_CODE) {
-		handleOpen(key, true);
-	}
 }
 
-function onListItemKeyDown(element: HTMLElement, keyCode: string) {
-	if (keyCode === ARROW_UP_KEY_CODE) {
+function onListItemKeyDown(element: HTMLElement, keyCode: KeyboardKey) {
+	if (keyCode === 'ArrowUp') {
 
 		// Target previous list item. If it's the first one, target header
 
@@ -176,7 +141,7 @@ function onListItemKeyDown(element: HTMLElement, keyCode: string) {
 			header?.focus();
 		}
 	}
-	else if (keyCode === ARROW_DOWN_KEY_CODE) {
+	else if (keyCode === 'ArrowDown') {
 
 		// Target next list item. If it's the last one, target next header
 
@@ -193,21 +158,5 @@ function onListItemKeyDown(element: HTMLElement, keyCode: string) {
 
 			nextHeader?.focus();
 		}
-	}
-	else if (keyCode === ARROW_RIGHT_KEY_CODE) {
-
-		// If the active element is the list item itself, target first option button
-
-		if (document.activeElement === element) {
-			const dragSpan = element.querySelector('span');
-
-			dragSpan?.focus();
-		}
-	}
-	else if (keyCode === ARROW_LEFT_KEY_CODE) {
-
-		// Focus the list element
-
-		element.focus();
 	}
 }

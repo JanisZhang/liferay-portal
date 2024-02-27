@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -434,41 +432,90 @@ public abstract class BaseProductOptionResourceTestCase {
 			testGetProductByExternalReferenceCodeProductOptionsPage_addProductOption(
 				externalReferenceCode, randomProductOption());
 
-		Page<ProductOption> page1 =
-			productOptionResource.
-				getProductByExternalReferenceCodeProductOptionsPage(
-					externalReferenceCode, null,
-					Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ProductOption> productOptions1 =
-			(List<ProductOption>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			productOptions1.toString(), totalCount + 2, productOptions1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductOption> page1 =
+				productOptionResource.
+					getProductByExternalReferenceCodeProductOptionsPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<ProductOption> page2 =
-			productOptionResource.
-				getProductByExternalReferenceCodeProductOptionsPage(
-					externalReferenceCode, null,
-					Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				productOption1, (List<ProductOption>)page1.getItems());
 
-		List<ProductOption> productOptions2 =
-			(List<ProductOption>)page2.getItems();
+			Page<ProductOption> page2 =
+				productOptionResource.
+					getProductByExternalReferenceCodeProductOptionsPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			productOptions2.toString(), 1, productOptions2.size());
+			assertContains(
+				productOption2, (List<ProductOption>)page2.getItems());
 
-		Page<ProductOption> page3 =
-			productOptionResource.
-				getProductByExternalReferenceCodeProductOptionsPage(
-					externalReferenceCode, null,
-					Pagination.of(1, (int)totalCount + 3), null);
+			Page<ProductOption> page3 =
+				productOptionResource.
+					getProductByExternalReferenceCodeProductOptionsPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(productOption1, (List<ProductOption>)page3.getItems());
-		assertContains(productOption2, (List<ProductOption>)page3.getItems());
-		assertContains(productOption3, (List<ProductOption>)page3.getItems());
+			assertContains(
+				productOption3, (List<ProductOption>)page3.getItems());
+		}
+		else {
+			Page<ProductOption> page1 =
+				productOptionResource.
+					getProductByExternalReferenceCodeProductOptionsPage(
+						externalReferenceCode, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<ProductOption> productOptions1 =
+				(List<ProductOption>)page1.getItems();
+
+			Assert.assertEquals(
+				productOptions1.toString(), totalCount + 2,
+				productOptions1.size());
+
+			Page<ProductOption> page2 =
+				productOptionResource.
+					getProductByExternalReferenceCodeProductOptionsPage(
+						externalReferenceCode, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductOption> productOptions2 =
+				(List<ProductOption>)page2.getItems();
+
+			Assert.assertEquals(
+				productOptions2.toString(), 1, productOptions2.size());
+
+			Page<ProductOption> page3 =
+				productOptionResource.
+					getProductByExternalReferenceCodeProductOptionsPage(
+						externalReferenceCode, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				productOption1, (List<ProductOption>)page3.getItems());
+			assertContains(
+				productOption2, (List<ProductOption>)page3.getItems());
+			assertContains(
+				productOption3, (List<ProductOption>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -749,35 +796,81 @@ public abstract class BaseProductOptionResourceTestCase {
 			testGetProductIdProductOptionsPage_addProductOption(
 				id, randomProductOption());
 
-		Page<ProductOption> page1 =
-			productOptionResource.getProductIdProductOptionsPage(
-				id, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ProductOption> productOptions1 =
-			(List<ProductOption>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			productOptions1.toString(), totalCount + 2, productOptions1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductOption> page1 =
+				productOptionResource.getProductIdProductOptionsPage(
+					id, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<ProductOption> page2 =
-			productOptionResource.getProductIdProductOptionsPage(
-				id, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				productOption1, (List<ProductOption>)page1.getItems());
 
-		List<ProductOption> productOptions2 =
-			(List<ProductOption>)page2.getItems();
+			Page<ProductOption> page2 =
+				productOptionResource.getProductIdProductOptionsPage(
+					id, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			productOptions2.toString(), 1, productOptions2.size());
+			assertContains(
+				productOption2, (List<ProductOption>)page2.getItems());
 
-		Page<ProductOption> page3 =
-			productOptionResource.getProductIdProductOptionsPage(
-				id, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<ProductOption> page3 =
+				productOptionResource.getProductIdProductOptionsPage(
+					id, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(productOption1, (List<ProductOption>)page3.getItems());
-		assertContains(productOption2, (List<ProductOption>)page3.getItems());
-		assertContains(productOption3, (List<ProductOption>)page3.getItems());
+			assertContains(
+				productOption3, (List<ProductOption>)page3.getItems());
+		}
+		else {
+			Page<ProductOption> page1 =
+				productOptionResource.getProductIdProductOptionsPage(
+					id, null, Pagination.of(1, totalCount + 2), null);
+
+			List<ProductOption> productOptions1 =
+				(List<ProductOption>)page1.getItems();
+
+			Assert.assertEquals(
+				productOptions1.toString(), totalCount + 2,
+				productOptions1.size());
+
+			Page<ProductOption> page2 =
+				productOptionResource.getProductIdProductOptionsPage(
+					id, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductOption> productOptions2 =
+				(List<ProductOption>)page2.getItems();
+
+			Assert.assertEquals(
+				productOptions2.toString(), 1, productOptions2.size());
+
+			Page<ProductOption> page3 =
+				productOptionResource.getProductIdProductOptionsPage(
+					id, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				productOption1, (List<ProductOption>)page3.getItems());
+			assertContains(
+				productOption2, (List<ProductOption>)page3.getItems());
+			assertContains(
+				productOption3, (List<ProductOption>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1522,6 +1615,10 @@ public abstract class BaseProductOptionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1955,9 +2052,9 @@ public abstract class BaseProductOptionResourceTestCase {
 	}
 
 	protected ProductOptionResource productOptionResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

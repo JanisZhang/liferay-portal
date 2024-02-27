@@ -5,14 +5,48 @@
 
 package com.liferay.jenkins.results.parser.test.clazz.group;
 
-import com.liferay.jenkins.results.parser.PortalTestClassJob;
+import com.google.common.collect.Lists;
 
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.PortalTestClassJob;
+import com.liferay.jenkins.results.parser.job.property.JobProperty;
+import com.liferay.jenkins.results.parser.test.clazz.TestClass;
+import com.liferay.jenkins.results.parser.test.clazz.TestClassFactory;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.TimeoutException;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
  * @author Kenji Heigel
  */
-public class PlaywrightBatchTestClassGroup extends DefaultBatchTestClassGroup {
+public class PlaywrightBatchTestClassGroup extends BatchTestClassGroup {
+
+	public void addDefaultProjectJobProperty(String batchName) {
+		JobProperty jobProperty = getJobProperty(
+			PLAYWRIGHT_TEST_PROJECT_PROPERTY_NAME, testSuiteName, batchName);
+
+		String jobPropertyValue = jobProperty.getValue();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(jobPropertyValue)) {
+			return;
+		}
+
+		_addProjectNames(jobPropertyValue);
+
+		recordJobProperty(jobProperty);
+	}
 
 	protected PlaywrightBatchTestClassGroup(
 		JSONObject jsonObject, PortalTestClassJob portalTestClassJob) {
@@ -24,6 +58,242 @@ public class PlaywrightBatchTestClassGroup extends DefaultBatchTestClassGroup {
 		String batchName, PortalTestClassJob portalTestClassJob) {
 
 		super(batchName, portalTestClassJob);
+
+		if (ignore()) {
+			return;
+		}
+
+		if (testRelevantChanges) {
+			List<JobProperty> relevantPlaywrightJobProperties =
+				getRelevantPlaywrightJobProperties();
+
+			if (!relevantPlaywrightJobProperties.isEmpty()) {
+				recordJobProperties(relevantPlaywrightJobProperties);
+			}
+		}
+
+		addDefaultProjectJobProperty(batchName);
+
+		for (String projectName : _projectNames) {
+			List<TestClass> testClasses = _getTestClasses(projectName);
+
+			if (testClasses.isEmpty()) {
+				continue;
+			}
+
+			SegmentTestClassGroup segmentTestClassGroup =
+				TestClassGroupFactory.newSegmentTestClassGroup(this);
+
+			if (segmentTestClassGroup instanceof
+					PlaywrightSegmentTestClassGroup) {
+
+				PlaywrightSegmentTestClassGroup
+					playwrightSegmentTestClassGroup =
+						(PlaywrightSegmentTestClassGroup)segmentTestClassGroup;
+
+				playwrightSegmentTestClassGroup.setProjectName(projectName);
+
+				AxisTestClassGroup axisTestClassGroup =
+					TestClassGroupFactory.newAxisTestClassGroup(this);
+
+				playwrightSegmentTestClassGroup.addAxisTestClassGroup(
+					axisTestClassGroup);
+
+				for (TestClass testClass : testClasses) {
+					axisTestClassGroup.addTestClass(testClass);
+
+					addTestClass(testClass);
+				}
+
+				addAxisTestClassGroup(axisTestClassGroup);
+
+				addSegmentTestClassGroup(playwrightSegmentTestClassGroup);
+			}
+		}
 	}
+
+	protected List<JobProperty> getRelevantPlaywrightJobProperties() {
+		Set<File> modifiedModuleDirsSet;
+
+		try {
+			modifiedModuleDirsSet = new HashSet<>(
+				portalGitWorkingDirectory.getModifiedModuleDirsList());
+		}
+		catch (IOException ioException) {
+			File workingDirectory =
+				portalGitWorkingDirectory.getWorkingDirectory();
+
+			throw new RuntimeException(
+				JenkinsResultsParserUtil.combine(
+					"Unable to get relevant module group directories in ",
+					workingDirectory.getPath()),
+				ioException);
+		}
+
+		modifiedModuleDirsSet.addAll(
+			getRequiredModuleDirs(Lists.newArrayList(modifiedModuleDirsSet)));
+
+		Set<JobProperty> playwrightJobProperties = new HashSet<>();
+
+		for (File modifiedModuleDir : modifiedModuleDirsSet) {
+			JobProperty playwrightTestProjectJobProperty = getJobProperty(
+				PLAYWRIGHT_TEST_PROJECT_PROPERTY_NAME, modifiedModuleDir,
+				JobProperty.Type.MODULE_TEST_DIR);
+
+			if (playwrightTestProjectJobProperty.getValue() != null) {
+				String projectNames =
+					playwrightTestProjectJobProperty.getValue();
+
+				_addProjectNames(projectNames);
+
+				playwrightJobProperties.add(playwrightTestProjectJobProperty);
+			}
+		}
+
+		playwrightJobProperties.removeAll(Collections.singleton(null));
+
+		return new ArrayList<>(playwrightJobProperties);
+	}
+
+	protected static final String PLAYWRIGHT_TEST_PROJECT_PROPERTY_NAME =
+		"playwright.test.project";
+
+	private void _addProjectNames(String projectNames) {
+		projectNames = projectNames.trim();
+
+		Collections.addAll(_projectNames, projectNames.split("\\s*,\\s*"));
+	}
+
+	private String _callNPMCommand(File baseDir, String npmCommand) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("export PATH=");
+
+		String npmHome = _getPortalProperty("npm.home");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(npmHome)) {
+			sb.append(npmHome);
+			sb.append(":");
+		}
+
+		String nodeHome = _getPortalProperty("node.home");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(nodeHome)) {
+			sb.append(nodeHome);
+			sb.append("/bin:");
+		}
+
+		sb.append("${PATH}\n");
+
+		sb.append(npmCommand);
+
+		File npmScriptFile = new File(baseDir, "npm_script.sh");
+
+		try {
+			JenkinsResultsParserUtil.write(npmScriptFile, sb.toString());
+
+			Process process = JenkinsResultsParserUtil.executeBashCommands(
+				true, baseDir, 1000 * 60 * 10, sb.toString());
+
+			return JenkinsResultsParserUtil.readInputStream(
+				process.getInputStream());
+		}
+		catch (IOException | TimeoutException exception) {
+			throw new RuntimeException(exception);
+		}
+		finally {
+			JenkinsResultsParserUtil.delete(npmScriptFile);
+		}
+	}
+
+	private synchronized JSONObject _getPlaywrightJSONObject() {
+		if (_playwrightJSONObject != null) {
+			return _playwrightJSONObject;
+		}
+
+		File playwrightBaseDir = new File(
+			portalGitWorkingDirectory.getWorkingDirectory(),
+			"modules/test/playwright");
+
+		_callNPMCommand(playwrightBaseDir, "npm install");
+
+		String result = _callNPMCommand(
+			playwrightBaseDir, "npx playwright test --list --reporter=json");
+
+		result = result.replace("Finished executing Bash commands.", "");
+
+		_playwrightJSONObject = new JSONObject(result.trim());
+
+		return _playwrightJSONObject;
+	}
+
+	private String _getPortalProperty(String propertyName) {
+		File workingDirectory = JenkinsResultsParserUtil.getCanonicalFile(
+			portalGitWorkingDirectory.getWorkingDirectory());
+
+		Properties portalProperties = JenkinsResultsParserUtil.getProperties(
+			new File(workingDirectory, "build.properties"),
+			new File(workingDirectory, "app.server.properties"),
+			new File(workingDirectory, "release.properties"),
+			new File(workingDirectory, "test.properties"));
+
+		portalProperties.setProperty(
+			"project.dir", workingDirectory.toString());
+
+		return JenkinsResultsParserUtil.getProperty(
+			portalProperties, propertyName);
+	}
+
+	private List<TestClass> _getTestClasses(String projectName) {
+		List<TestClass> testClasses = new ArrayList<>();
+
+		JSONObject playwrightJSONObject = _getPlaywrightJSONObject();
+
+		JSONObject configJSONObject = playwrightJSONObject.getJSONObject(
+			"config");
+
+		File rootDir = new File(configJSONObject.getString("rootDir"));
+
+		JSONArray suitesJSONArray = playwrightJSONObject.getJSONArray("suites");
+
+		for (int i = 0; i < suitesJSONArray.length(); i++) {
+			JSONObject suiteJSONObject = suitesJSONArray.getJSONObject(i);
+
+			JSONArray specsJSONArray = suiteJSONObject.optJSONArray("specs");
+
+			if (specsJSONArray == null) {
+				continue;
+			}
+
+			for (int j = 0; j < specsJSONArray.length(); j++) {
+				JSONObject specJSONObject = specsJSONArray.getJSONObject(j);
+
+				JSONArray testsJSONArray = specJSONObject.optJSONArray("tests");
+
+				if ((testsJSONArray == null) || testsJSONArray.isEmpty()) {
+					continue;
+				}
+
+				JSONObject testJSONObject = testsJSONArray.getJSONObject(0);
+
+				if (!Objects.equals(
+						projectName, testJSONObject.optString("projectName"))) {
+
+					continue;
+				}
+
+				testClasses.add(
+					TestClassFactory.newTestClass(
+						this,
+						new File(rootDir, suiteJSONObject.getString("file")),
+						specJSONObject.getString("title")));
+			}
+		}
+
+		return testClasses;
+	}
+
+	private JSONObject _playwrightJSONObject;
+	private final Set<String> _projectNames = new HashSet<>();
 
 }

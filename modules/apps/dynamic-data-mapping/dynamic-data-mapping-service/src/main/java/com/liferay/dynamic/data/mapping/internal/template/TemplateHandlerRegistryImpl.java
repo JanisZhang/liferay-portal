@@ -6,7 +6,6 @@
 package com.liferay.dynamic.data.mapping.internal.template;
 
 import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
-import com.liferay.dynamic.data.mapping.internal.util.ResourceBundleLoaderProvider;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.osgi.service.tracker.collections.EagerServiceTrackerCustomizer;
@@ -14,6 +13,7 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.language.Language;
@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.resource.bundle.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ClassResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
-import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -96,10 +96,18 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 					TemplateHandler templateHandler = bundleContext.getService(
 						serviceReference);
 
-					emitter.emit(
-						_portal.getClassNameId(templateHandler.getClassName()));
-
-					bundleContext.ungetService(serviceReference);
+					try {
+						DBPartitionUtil.forEachCompanyId(
+							companyId -> emitter.emit(
+								_portal.getClassNameId(
+									templateHandler.getClassName())));
+					}
+					catch (Exception exception) {
+						throw new RuntimeException(exception);
+					}
+					finally {
+						bundleContext.ungetService(serviceReference);
+					}
 				});
 
 		_classNameTemplateHandlersServiceTrackerMap =
@@ -125,9 +133,6 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 		_bundleContext = null;
 	}
 
-	@Reference
-	protected ResourceBundleLoaderProvider resourceBundleLoaderProvider;
-
 	private BundleContext _bundleContext;
 	private ServiceTrackerMap<Long, TemplateHandler>
 		_classNameIdTemplateHandlersServiceTrackerMap;
@@ -142,11 +147,6 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 
 	@Reference
 	private Language _language;
-
-	@Reference(
-		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)"
-	)
-	private ModelResourcePermission<DDMTemplate> _modelResourcePermission;
 
 	@Reference
 	private Portal _portal;
@@ -230,9 +230,8 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 				Bundle bundle = FrameworkUtil.getBundle(clazz);
 
 				if (bundle != null) {
-					resourceBundleLoader =
-						resourceBundleLoaderProvider.getResourceBundleLoader(
-							bundle.getSymbolicName());
+					resourceBundleLoader = _getResourceBundleLoader(
+						bundle.getSymbolicName());
 				}
 				else {
 					resourceBundleLoader = new AggregateResourceBundleLoader(
@@ -311,6 +310,23 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 
 			_name = StringBundler.concat(
 				super.getName(), StringPool.POUND, clazz.getName());
+		}
+
+		private ResourceBundleLoader _getResourceBundleLoader(
+			String bundleSymbolicName) {
+
+			ResourceBundleLoader resourceBundleLoader =
+				ResourceBundleLoaderUtil.
+					getResourceBundleLoaderByBundleSymbolicName(
+						bundleSymbolicName);
+
+			if (resourceBundleLoader == null) {
+				return ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
+			}
+
+			return new AggregateResourceBundleLoader(
+				resourceBundleLoader,
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 		}
 
 		private static final String _CLASS_NAME_PORTLET_DISPLAY_TEMPLATE =

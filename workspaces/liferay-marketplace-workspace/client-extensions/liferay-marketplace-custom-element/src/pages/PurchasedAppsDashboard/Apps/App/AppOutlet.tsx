@@ -17,14 +17,19 @@ import {
 import useGetProductByOrderId from '../../../../hooks/useGetProductByOrderId';
 import i18n from '../../../../i18n';
 import {getThumbnailByProductAttachment} from '../../../../utils/util';
-import useGetProductCreatorAccount from '../../../GetAppPage/hooks/useGetProductCreatorAccount';
 import OrderDetailsHeader from '../components/OrderDetailsHeader';
 
 import './App.scss';
 
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 
-const AppNavbar = () => {
+import getProductPriceModel from '../../../GetApp/utils/getProductPriceModel';
+
+type AppNavbarProps = {
+	showLicenseTab: boolean;
+};
+
+const AppNavbar: React.FC<AppNavbarProps> = ({showLicenseTab}) => {
 	const location = useLocation();
 
 	const routeParams = location.pathname.split('/').filter(Boolean);
@@ -43,16 +48,18 @@ const AppNavbar = () => {
 					Details
 				</NavLink>
 
-				<NavLink
-					className={({isActive}) =>
-						classNames('nav-link', {
-							active: isActive,
-						})
-					}
-					to="licenses"
-				>
-					Licenses
-				</NavLink>
+				{showLicenseTab && (
+					<NavLink
+						className={({isActive}) =>
+							classNames('nav-link', {
+								active: isActive,
+							})
+						}
+						to="licenses"
+					>
+						Licenses
+					</NavLink>
+				)}
 			</ul>
 		</div>
 	);
@@ -63,13 +70,11 @@ const AppOutlet = () => {
 
 	const {orderId} = useParams();
 
-	const {data, error, isLoading} = useGetProductByOrderId(orderId);
+	const {data, error, isLoading} = useGetProductByOrderId(orderId as string);
 
-	const appImage = getThumbnailByProductAttachment(
-		data?.product?.attachments
-	);
+	const appImage = getThumbnailByProductAttachment(data?.product?.images);
 
-	const productCreatorAccount = useGetProductCreatorAccount(data?.product);
+	const productCreatorAccountName = data?.product?.catalogName || '';
 
 	if (isLoading) {
 		return <ClayLoadingIndicator />;
@@ -78,6 +83,10 @@ const AppOutlet = () => {
 	if (error) {
 		return <div>Error: {error.message}</div>;
 	}
+
+	const placedOrderItems = data?.placedOrder.placedOrderItems ?? [];
+
+	const {isFreeApp} = getProductPriceModel(data?.product);
 
 	return (
 		<div className="app-details-header d-flex flex-column w-100">
@@ -94,14 +103,22 @@ const AppOutlet = () => {
 				className="d-flex flex-row justify-content-between pb-3 pt-5"
 				hasOrderDetails
 				image={appImage}
-				name={data?.product?.name?.en_US}
+				name={data?.product?.name}
 				order={data?.placedOrder}
-				productOwner={productCreatorAccount?.name}
+				productOwner={productCreatorAccountName}
 			/>
 
-			<AppNavbar />
+			<AppNavbar
+				showLicenseTab={
+					!(
+						isFreeApp ||
+						(placedOrderItems[0]?.price?.price === 0 &&
+							placedOrderItems[0]?.sku !== 'TRIAL')
+					)
+				}
+			/>
 
-			<Outlet context={{data}} />
+			<Outlet context={data} />
 		</div>
 	);
 };

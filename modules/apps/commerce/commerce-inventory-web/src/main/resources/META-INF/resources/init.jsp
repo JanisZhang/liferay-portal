@@ -26,7 +26,6 @@ page import="com.liferay.commerce.inventory.web.internal.constants.CommerceInven
 page import="com.liferay.commerce.inventory.web.internal.display.context.CommerceInventoryDisplayContext" %><%@
 page import="com.liferay.commerce.product.exception.CPInstanceUnitOfMeasureKeyException" %><%@
 page import="com.liferay.commerce.product.exception.NoSuchCPInstanceUnitOfMeasureException" %><%@
-page import="com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.security.auth.PrincipalException" %><%@
 page import="com.liferay.portal.kernel.util.CalendarFactoryUtil" %><%@
@@ -35,8 +34,6 @@ page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %>
-
-<%@ page import="java.math.BigDecimal" %>
 
 <%@ page import="java.util.Calendar" %><%@
 page import="java.util.Date" %>

@@ -104,9 +104,6 @@ export interface Config {
 	editFragmentEntryLinkURL: string;
 	editSegmentsEntryURL: string;
 	frontendTokens: {
-		getAvailableImageConfigurationsURL: string;
-		getAvailableListItemRenderersURL: string;
-		getAvailableListRenderersURL: string;
 		[key: string]:
 			| {
 					cssVariable: string;
@@ -117,16 +114,23 @@ export interface Config {
 			  }
 			| string;
 	};
+	getAvailableImageConfigurationsURL: string;
+	getAvailableListItemRenderersURL: string;
+	getAvailableListRenderersURL: string;
 	getAvailableTemplatesURL: string;
-	getCollectionConfigurationURL: string;
 	getCollectionFieldURL: string;
 	getCollectionFiltersURL: string;
 	getCollectionItemCountURL: string;
 	getCollectionMappingFieldsURL: string;
 	getCollectionSupportedFiltersURL: string;
+	getCollectionVariationsURL: string;
 	getCollectionWarningMessageURL: string;
+	getEditCollectionConfigurationURL: string;
 	getExperienceDataURL: string;
+	getFileEntryURL: string;
 	getFormConfigURL: string;
+	getFormFieldsURL: string;
+	getFragmentEntryInputFieldTypesURL: string;
 	getIframeContentCssURL: string;
 	getIframeContentURL: string;
 	getInfoItemActionErrorMessageURL: string;
@@ -208,8 +212,10 @@ export interface Config {
 	updateConfigurationValuesURL: string;
 	updateFormItemConfigURL: string;
 	updateFragmentPortletSetsSortURL: string;
+	updateFragmentsHighlightedConfigurationURL: string;
 	updateItemConfigURL: string;
 	updateLayoutPageTemplateDataURL: string;
+	updatePortletsHighlightedConfigurationURL: string;
 	updateRowColumnsURL: string;
 	updateRuleURL: string;
 	updateSegmentsExperiencePriorityURL: string;

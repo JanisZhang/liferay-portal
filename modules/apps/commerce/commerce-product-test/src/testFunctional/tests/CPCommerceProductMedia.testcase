@@ -19,9 +19,7 @@ definition {
 	test AddAnAttachment {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -47,9 +45,7 @@ definition {
 	test AddAnImage {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productName = "Simple T-Shirt",
@@ -87,9 +83,7 @@ definition {
 			optionEntryName = "Color",
 			optionValuesList = "Black:1");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -875,10 +869,7 @@ definition {
 	test EditAnAttachment {
 		property portal.acceptance = "false";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Custom Fields");
+		CustomFields.openCustomFieldAdmin();
 
 		CustomFields.addCP(
 			customFieldName = "Custom Field",
@@ -886,9 +877,7 @@ definition {
 			customInputDataType = "Text",
 			resourceName = "Product Attachment");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -925,9 +914,7 @@ definition {
 	test EditAnImage {
 		property portal.acceptance = "true";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -942,7 +929,7 @@ definition {
 
 		Click(
 			key_value = "Commerce_Black",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+			locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Edit");
 
@@ -980,9 +967,7 @@ definition {
 	test RemoveAnAttachment {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -997,7 +982,7 @@ definition {
 
 		Click(
 			key_value = "Commerce_Black",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+			locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Delete");
 
@@ -1016,9 +1001,7 @@ definition {
 	test RemoveAnImage {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -1033,7 +1016,7 @@ definition {
 
 		Click(
 			key_value = "Commerce_Black",
-			locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+			locator1 = "CommerceEntry#ORDERS_ENTRY_BODY_VERTICAL_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Delete");
 

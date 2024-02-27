@@ -7,8 +7,8 @@ package com.liferay.customer;
 
 import com.liferay.customer.object.model.TicketAttachment;
 import com.liferay.customer.object.service.TicketAttachmentWebService;
-import com.liferay.customer.zendesk.model.ZendeskUser;
-import com.liferay.customer.zendesk.service.ZendeskWebService;
+import com.liferay.osb.spring.boot.client.zendesk.model.ZendeskUser;
+import com.liferay.osb.spring.boot.client.zendesk.service.ZendeskWebService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -21,6 +21,7 @@ import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * @author Amos Fong
  */
+@ComponentScan(basePackages = "com.liferay.osb")
 @RequestMapping("/ticket-attachments/{ticketAttachmentId}/complete-upload")
 @RestController
 public class TicketAttachmentsCompleteUploadRestController
@@ -46,8 +48,19 @@ public class TicketAttachmentsCompleteUploadRestController
 		throws Exception {
 
 		try {
+			String emailAddress = null;
+
+			String grantType = jwt.getClaimAsString("grant_type");
+
+			if (grantType.equals("authorization_code")) {
+				emailAddress = jwt.getClaimAsString("username");
+			}
+			else {
+				emailAddress = _zendeskAPIEmailAddress;
+			}
+
 			ZendeskUser zendeskUser = _zendeskWebService.fetchZendeskUser(
-				jwt.getClaimAsString("username"));
+				emailAddress);
 
 			if (zendeskUser == null) {
 				return new ResponseEntity<>(
@@ -101,9 +114,9 @@ public class TicketAttachmentsCompleteUploadRestController
 		}
 
 		sb.append("<a href=\"");
-		sb.append(_lxcDXPServerProtocol);
+		sb.append(lxcDXPServerProtocol);
 		sb.append("://");
-		sb.append(_lxcDXPMainDomain);
+		sb.append(lxcDXPMainDomain);
 		sb.append("/placeholder/");
 		sb.append(ticketAttachment.getTicketAttachmentId());
 		sb.append("\">");
@@ -116,14 +129,11 @@ public class TicketAttachmentsCompleteUploadRestController
 	private static final Log _log = LogFactory.getLog(
 		TicketAttachmentsCompleteUploadRestController.class);
 
-	@Value("${com.liferay.lxc.dxp.mainDomain}")
-	private String _lxcDXPMainDomain;
-
-	@Value("${com.liferay.lxc.dxp.server.protocol}")
-	private String _lxcDXPServerProtocol;
-
 	@Autowired
 	private TicketAttachmentWebService _ticketAttachmentWebService;
+
+	@Value("${liferay.osb.spring.boot.client.zendesk.api.email.address}")
+	private String _zendeskAPIEmailAddress;
 
 	@Autowired
 	private ZendeskWebService _zendeskWebService;

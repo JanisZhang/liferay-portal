@@ -352,7 +352,7 @@
 </tr>
 <tr>
 	<td>SOURCE_OPTIONS_SELECT</td>
-	<td>//div[label[contains(.,'Source Options')]]/select</td>
+	<td>//div[label[contains(.,'Source Options')]]/select | //select[contains(@name, 'FDSViewsPortlet_SourceOption')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -377,12 +377,22 @@
 </tr>
 <tr>
 	<td>PRESELECT_VALUE_INPUT</td>
-	<td>//div[contains(@class,'form-group')]//input[contains(@placeholder,'${key_fieldName}')]</td>
+	<td>//div[contains(@class,'form-group')]//input[contains(@placeholder,'${key_fieldName}')] | //input[contains(@aria-label, 'Preselected Values')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRESELECT_VALUE_ITEM</td>
+	<td>//button[contains(@class, 'dropdown-item') and contains(., '${key_value}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SELECT_SORT_OPTION</td>
 	<td>//button[contains(@class,'dropdown-item') and contains(.,'${key_sortOption}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DATA_SET_FRAGMENT_FILTER</td>
+	<td>//button[contains(@class, 'filter-resume') and contains(., '${key_filterName}')]</td>
 	<td></td>
 </tr>
 
@@ -484,7 +494,26 @@
 	<td>xpath=(//a[contains(@class,'btn')][contains(@href,'new') or contains(@href,'redirect') or contains(@href,'mvc') or contains(@href,'javascript')][.//*[name()='svg'][contains(@class,'icon-plus')]][not(contains(@class,'borderless'))] | //button[not(contains(@class,'borderless'))][not(contains(@class,'btn-unstyled'))][*[contains(@class,'icon-plus')]])[2]</td>
 	<td></td>
 </tr>
-
+<tr>
+	<td>MESSAGE_FIELD</td>
+	<td>//div[contains(@aria-labelledby, "${key_option}")]//label[text()='Message']/..//input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COLLAPSE_OPEN</td>
+	<td>//span[contains(.,'${key_fieldName}')]/../*[*[name()='svg'][contains(@class,'lexicon-icon-angle-down')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COLLAPSE_CLOSED</td>
+	<td>//span[contains(.,'${key_fieldName}')]/../*[*[name()='svg'][contains(@class,'lexicon-icon-angle-right')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>RADIO_BUTTON_OPTION</td>
+	<td>//span[contains(., '${key_optionName}')]/preceding-sibling::input</td>
+	<td></td>
+</tr>
 </tbody>
 </table>
 </body>

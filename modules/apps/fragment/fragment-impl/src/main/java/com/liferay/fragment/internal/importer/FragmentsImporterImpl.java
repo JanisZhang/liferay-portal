@@ -31,7 +31,6 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
@@ -285,13 +284,14 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 		return fragmentCollection;
 	}
 
-	private FragmentEntry _addFragmentEntry(
-			long groupId, FragmentEntry fragmentEntry,
+	private void _addFragmentEntry(
+			long groupId, String fileName, FragmentEntry fragmentEntry,
 			long fragmentCollectionId, String fragmentEntryKey, String name,
 			String css, String html, String js, boolean cacheable,
 			String configuration, String icon, boolean readOnly,
-			String typeLabel, String typeOptions,
-			FragmentsImportStrategy fragmentsImportStrategy)
+			String thumbnailPath, String typeLabel, String typeOptions,
+			FragmentsImportStrategy fragmentsImportStrategy, long userId,
+			ZipFile zipFile)
 		throws Exception {
 
 		if (fragmentEntry != null) {
@@ -299,7 +299,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 					FragmentsImportStrategy.DO_NOT_IMPORT,
 					fragmentsImportStrategy)) {
 
-				return fragmentEntry;
+				return;
 			}
 
 			if (Objects.equals(
@@ -334,7 +334,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 						FragmentsImporterResultEntry.Type.FRAGMENT,
 						portalException.getMessage()));
 
-				return null;
+				return;
 			}
 
 			status = WorkflowConstants.STATUS_DRAFT;
@@ -345,9 +345,16 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 			if (fragmentEntry == null) {
 				fragmentEntry = _fragmentEntryService.addFragmentEntry(
 					groupId, fragmentCollectionId, fragmentEntryKey, name, css,
-					html, js, cacheable, configuration, icon, 0, type,
+					html, js, cacheable, configuration, icon, 0, readOnly, type,
 					typeOptions, status,
 					ServiceContextThreadLocal.getServiceContext());
+
+				_fragmentEntryLocalService.updateFragmentEntry(
+					fragmentEntry.getFragmentEntryId(),
+					_getPreviewFileEntryId(
+						userId, groupId, zipFile, FragmentEntry.class.getName(),
+						fragmentEntry.getFragmentEntryId(), fileName,
+						thumbnailPath));
 			}
 			else if (Objects.equals(
 						FragmentsImportStrategy.KEEP_BOTH,
@@ -359,22 +366,31 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 						groupId, fragmentEntryKey),
 					_fragmentEntryLocalService.getUniqueFragmentEntryName(
 						groupId, fragmentCollectionId, name),
-					css, html, js, cacheable, configuration, icon, 0, type,
-					typeOptions, status,
+					css, html, js, cacheable, configuration, icon, 0, readOnly,
+					type, typeOptions, status,
 					ServiceContextThreadLocal.getServiceContext());
+
+				_fragmentEntryLocalService.updateFragmentEntry(
+					fragmentEntry.getFragmentEntryId(),
+					_getPreviewFileEntryId(
+						userId, groupId, zipFile, FragmentEntry.class.getName(),
+						fragmentEntry.getFragmentEntryId(), fileName,
+						thumbnailPath));
 			}
 			else {
+				if (fragmentEntry.getPreviewFileEntryId() > 0) {
+					PortletFileRepositoryUtil.deletePortletFileEntry(
+						fragmentEntry.getPreviewFileEntryId());
+				}
+
 				fragmentEntry = _fragmentEntryService.updateFragmentEntry(
 					fragmentEntry.getFragmentEntryId(), fragmentCollectionId,
 					name, css, html, js, cacheable, configuration, icon,
-					fragmentEntry.getPreviewFileEntryId(), typeOptions, status);
-			}
-
-			if (fragmentEntry.isReadOnly() != readOnly) {
-				fragmentEntry.setReadOnly(readOnly);
-
-				fragmentEntry = _fragmentEntryLocalService.updateFragmentEntry(
-					fragmentEntry);
+					_getPreviewFileEntryId(
+						userId, groupId, zipFile, FragmentEntry.class.getName(),
+						fragmentEntry.getFragmentEntryId(), fileName,
+						thumbnailPath),
+					readOnly, typeOptions, status);
 			}
 
 			FragmentsImporterResultEntry.Status
@@ -390,8 +406,6 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 				new FragmentsImporterResultEntry(
 					name, fragmentsImporterResultEntryStatus,
 					FragmentsImporterResultEntry.Type.FRAGMENT, errorMessage));
-
-			return fragmentEntry;
 		}
 		catch (PortalException portalException) {
 			_fragmentsImporterResultEntries.add(
@@ -400,61 +414,6 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 					FragmentsImporterResultEntry.Type.FRAGMENT,
 					portalException.getMessage()));
 		}
-
-		return null;
-	}
-
-	private void _addPortletFileEntries(
-			long userId, long groupId, FragmentCollection fragmentCollection,
-			ZipFile zipFile, Map<String, String> resourceReferences,
-			Map<String, String> zipEntryNames, Repository repository)
-		throws Exception {
-
-		if (repository != null) {
-			FragmentServiceConfiguration fragmentServiceConfiguration =
-				_configurationProvider.getCompanyConfiguration(
-					FragmentServiceConfiguration.class,
-					fragmentCollection.getCompanyId());
-
-			for (FileEntry fileEntry :
-					PortletFileRepositoryUtil.getPortletFileEntries(
-						groupId, fragmentCollection.getResourcesFolderId())) {
-
-				if (zipEntryNames.containsKey(fileEntry.getFileName())) {
-					if (fragmentServiceConfiguration.propagateChanges()) {
-						PortletFileRepositoryUtil.deletePortletFileEntry(
-							fileEntry.getFileEntryId());
-					}
-					else {
-						String newFileName =
-							PortletFileRepositoryUtil.getUniqueFileName(
-								fileEntry.getGroupId(), fileEntry.getFolderId(),
-								fileEntry.getFileName());
-
-						resourceReferences.put(
-							fileEntry.getFileName(), newFileName);
-
-						zipEntryNames.put(
-							newFileName,
-							zipEntryNames.get(fileEntry.getFileName()));
-
-						zipEntryNames.remove(fileEntry.getFileName());
-					}
-				}
-			}
-		}
-
-		for (Map.Entry<String, String> entry : zipEntryNames.entrySet()) {
-			String fileName = entry.getKey();
-
-			PortletFileRepositoryUtil.addPortletFileEntry(
-				null, groupId, userId, FragmentCollection.class.getName(),
-				fragmentCollection.getFragmentCollectionId(),
-				FragmentPortletKeys.FRAGMENT,
-				fragmentCollection.getResourcesFolderId(),
-				_getInputStream(zipFile, entry.getValue()), fileName,
-				MimeTypesUtil.getContentType(fileName), false);
-		}
 	}
 
 	private void _addPortletFileEntriesWithFolders(
@@ -462,6 +421,10 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 			ZipFile zipFile, Map<String, String> resourceReferences,
 			Map<String, String> zipEntryNames, Repository repository)
 		throws Exception {
+
+		Map<String, Long> folderIdsMap = HashMapBuilder.put(
+			StringPool.BLANK, fragmentCollection.getResourcesFolderId()
+		).build();
 
 		if (repository != null) {
 			FragmentServiceConfiguration fragmentServiceConfiguration =
@@ -481,6 +444,31 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 					if (fragmentServiceConfiguration.propagateChanges()) {
 						PortletFileRepositoryUtil.deletePortletFileEntry(
 							fileEntry.getFileEntryId());
+
+						String fileName = entry.getKey();
+						String folderPath = StringPool.BLANK;
+
+						int index = fileName.lastIndexOf(StringPool.SLASH);
+
+						if (index != -1) {
+							folderPath = fileName.substring(0, index);
+							fileName = fileName.substring(index + 1);
+						}
+
+						PortletFileRepositoryUtil.addPortletFileEntry(
+							null, groupId, userId,
+							FragmentCollection.class.getName(),
+							fragmentCollection.getFragmentCollectionId(),
+							FragmentPortletKeys.FRAGMENT,
+							_getOrCreateFolderId(
+								folderIdsMap, folderPath,
+								repository.getRepositoryId(), userId),
+							_getInputStream(
+								zipFile, zipEntryNames.get(fileName)),
+							fileName, MimeTypesUtil.getContentType(fileName),
+							false);
+
+						zipEntryNames.remove(fileEntry.getFileName());
 					}
 					else {
 						String folderPath = StringPool.BLANK;
@@ -517,10 +505,6 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 			repository = PortletFileRepositoryUtil.addPortletRepository(
 				groupId, FragmentPortletKeys.FRAGMENT, serviceContext);
 		}
-
-		Map<String, Long> folderIdsMap = HashMapBuilder.put(
-			StringPool.BLANK, fragmentCollection.getResourcesFolderId()
-		).build();
 
 		for (Map.Entry<String, String> entry : zipEntryNames.entrySet()) {
 			String fileName = entry.getKey();
@@ -845,6 +829,10 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 			long classPK, String fileName, String contentPath)
 		throws Exception {
 
+		if (Validator.isNull(contentPath)) {
+			return 0;
+		}
+
 		InputStream inputStream = _getFragmentEntryInputStream(
 			zipFile, fileName, contentPath);
 
@@ -984,17 +972,14 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 						fragmentComposition.getPreviewFileEntryId());
 				}
 
-				String thumbnailPath = jsonObject.getString("thumbnailPath");
-
-				if (Validator.isNotNull(thumbnailPath)) {
-					_fragmentCompositionService.updateFragmentComposition(
+				_fragmentCompositionService.updateFragmentComposition(
+					fragmentComposition.getFragmentCompositionId(),
+					_getPreviewFileEntryId(
+						userId, groupId, zipFile,
+						FragmentComposition.class.getName(),
 						fragmentComposition.getFragmentCompositionId(),
-						_getPreviewFileEntryId(
-							userId, groupId, zipFile,
-							FragmentComposition.class.getName(),
-							fragmentComposition.getFragmentCompositionId(),
-							entry.getValue(), thumbnailPath));
-				}
+						entry.getValue(),
+						jsonObject.getString("thumbnailPath")));
 
 				_fragmentsImporterResultEntries.add(
 					new FragmentsImporterResultEntry(
@@ -1039,6 +1024,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 			String configuration = StringPool.BLANK;
 			String icon = StringPool.BLANK;
 			boolean readOnly = false;
+			String thumbnailPath = StringPool.BLANK;
 			String typeLabel = StringPool.BLANK;
 			String typeOptions = StringPool.BLANK;
 
@@ -1067,40 +1053,16 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 					jsonObject.getString("configurationPath"));
 				readOnly = jsonObject.getBoolean("readOnly");
 				icon = jsonObject.getString("icon");
+				thumbnailPath = jsonObject.getString("thumbnailPath");
 				typeLabel = jsonObject.getString("type");
 				typeOptions = jsonObject.getString("typeOptions");
 			}
 
-			fragmentEntry = _addFragmentEntry(
-				groupId, fragmentEntry, fragmentCollectionId, entry.getKey(),
-				name, css, html, js, cacheable, configuration, icon, readOnly,
-				typeLabel, typeOptions, fragmentsImportStrategy);
-
-			if (fragmentEntry == null) {
-				continue;
-			}
-
-			if (Validator.isNotNull(fragmentJSON)) {
-				if (fragmentEntry.getPreviewFileEntryId() > 0) {
-					PortletFileRepositoryUtil.deletePortletFileEntry(
-						fragmentEntry.getPreviewFileEntryId());
-				}
-
-				JSONObject jsonObject = _jsonFactory.createJSONObject(
-					fragmentJSON);
-
-				String thumbnailPath = jsonObject.getString("thumbnailPath");
-
-				if (Validator.isNotNull(thumbnailPath)) {
-					_fragmentEntryLocalService.updateFragmentEntry(
-						fragmentEntry.getFragmentEntryId(),
-						_getPreviewFileEntryId(
-							userId, groupId, zipFile,
-							FragmentEntry.class.getName(),
-							fragmentEntry.getFragmentEntryId(),
-							entry.getValue(), thumbnailPath));
-				}
-			}
+			_addFragmentEntry(
+				groupId, entry.getValue(), fragmentEntry, fragmentCollectionId,
+				entry.getKey(), name, css, html, js, cacheable, configuration,
+				icon, readOnly, thumbnailPath, typeLabel, typeOptions,
+				fragmentsImportStrategy, userId, zipFile);
 		}
 	}
 
@@ -1182,31 +1144,18 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 				continue;
 			}
 
-			if (FeatureFlagManagerUtil.isEnabled("LPS-158675")) {
-				zipEntryNames.put(
-					_getFilePath(fragmentCollectionKey, zipEntry.getName()),
-					zipEntry.getName());
-			}
-			else {
-				zipEntryNames.put(
-					_getFileName(zipEntry.getName()), zipEntry.getName());
-			}
+			zipEntryNames.put(
+				_getFilePath(fragmentCollectionKey, zipEntry.getName()),
+				zipEntry.getName());
 		}
 
 		Repository repository =
 			PortletFileRepositoryUtil.fetchPortletRepository(
 				groupId, FragmentPortletKeys.FRAGMENT);
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-158675")) {
-			_addPortletFileEntriesWithFolders(
-				userId, groupId, fragmentCollection, zipFile,
-				resourceReferences, zipEntryNames, repository);
-		}
-		else {
-			_addPortletFileEntries(
-				userId, groupId, fragmentCollection, zipFile,
-				resourceReferences, zipEntryNames, repository);
-		}
+		_addPortletFileEntriesWithFolders(
+			userId, groupId, fragmentCollection, zipFile, resourceReferences,
+			zipEntryNames, repository);
 	}
 
 	private boolean _isFragmentCollection(String fileName) {

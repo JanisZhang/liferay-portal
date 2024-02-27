@@ -19,19 +19,20 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLoca
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.taglib.security.PermissionsURLTag;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -41,12 +42,13 @@ import javax.servlet.http.HttpServletRequest;
 public class DisplayPageTemplateInfoPanelDisplayContext {
 
 	public DisplayPageTemplateInfoPanelDisplayContext(
-		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
-		RenderResponse renderResponse) {
+		HttpServletRequest httpServletRequest,
+		LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
 
 		_httpServletRequest = httpServletRequest;
-		_renderRequest = renderRequest;
-		_renderResponse = renderResponse;
+		_liferayPortletRequest = liferayPortletRequest;
+		_liferayPortletResponse = liferayPortletResponse;
 
 		_infoItemServiceRegistry =
 			(InfoItemServiceRegistry)httpServletRequest.getAttribute(
@@ -82,31 +84,16 @@ public class DisplayPageTemplateInfoPanelDisplayContext {
 				layoutPageTemplateCollection.getType());
 	}
 
-	public List<String> getLayoutPageTemplateCollectionPath(
-		long layoutPageTemplateCollectionId) {
+	public List<String> getLayoutPageTemplateCollectionPath() {
+		DisplayPageDisplayContext displayPageDisplayContext =
+			new DisplayPageDisplayContext(
+				_httpServletRequest, _liferayPortletRequest,
+				_liferayPortletResponse);
 
-		LayoutPageTemplateCollection layoutPageTemplateCollection =
-			getLayoutPageTemplateCollection(layoutPageTemplateCollectionId);
-
-		List<String> paths = new ArrayList<>();
-
-		if (layoutPageTemplateCollection != null) {
-			DisplayPageDisplayContext displayPageDisplayContext =
-				new DisplayPageDisplayContext(
-					_httpServletRequest, _renderRequest, _renderResponse);
-
-			paths = TransformUtil.transform(
-				displayPageDisplayContext.
-					getLayoutPageTemplateBreadcrumbEntries(),
-				curLayoutPageTemplateCollection -> HtmlUtil.escape(
-					curLayoutPageTemplateCollection.getTitle()));
-		}
-
-		paths.add(LanguageUtil.get(_httpServletRequest, "home"));
-
-		Collections.reverse(paths);
-
-		return paths;
+		return TransformUtil.transform(
+			displayPageDisplayContext.getLayoutPageTemplateBreadcrumbEntries(),
+			curLayoutPageTemplateCollection -> HtmlUtil.escape(
+				curLayoutPageTemplateCollection.getTitle()));
 	}
 
 	public List<LayoutPageTemplateCollection>
@@ -155,6 +142,31 @@ public class DisplayPageTemplateInfoPanelDisplayContext {
 		return _layoutPageTemplateEntries;
 	}
 
+	public String getPermissionsLayoutPageTemplateEntryCollectionURL(
+			LayoutPageTemplateCollection layoutPageTemplateCollection)
+		throws Exception {
+
+		return PermissionsURLTag.doTag(
+			StringPool.BLANK, LayoutPageTemplateCollection.class.getName(),
+			layoutPageTemplateCollection.getName(), null,
+			String.valueOf(
+				layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId()),
+			LiferayWindowState.POP_UP.toString(), null, _httpServletRequest);
+	}
+
+	public String getPermissionsLayoutPageTemplateEntryURL(
+			LayoutPageTemplateEntry layoutPageTemplateEntry)
+		throws Exception {
+
+		return PermissionsURLTag.doTag(
+			StringPool.BLANK, LayoutPageTemplateEntry.class.getName(),
+			layoutPageTemplateEntry.getName(), null,
+			String.valueOf(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()),
+			LiferayWindowState.POP_UP.toString(), null, _httpServletRequest);
+	}
+
 	public String getSubtypeLabel(
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
 
@@ -197,11 +209,17 @@ public class DisplayPageTemplateInfoPanelDisplayContext {
 		return infoItemClassDetails.getLabel(_themeDisplay.getLocale());
 	}
 
+	public String getUserName(long userId) {
+		User user = UserLocalServiceUtil.fetchUser(userId);
+
+		return HtmlUtil.escape(user.getFullName());
+	}
+
 	private final HttpServletRequest _httpServletRequest;
 	private final InfoItemServiceRegistry _infoItemServiceRegistry;
 	private List<LayoutPageTemplateEntry> _layoutPageTemplateEntries;
-	private final RenderRequest _renderRequest;
-	private final RenderResponse _renderResponse;
+	private final LiferayPortletRequest _liferayPortletRequest;
+	private final LiferayPortletResponse _liferayPortletResponse;
 	private final ThemeDisplay _themeDisplay;
 
 }

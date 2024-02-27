@@ -369,6 +369,15 @@ public class ObjectDefinitionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByAccountEntryRestricted() throws Exception {
+		_persistence.countByAccountEntryRestricted(
+			RandomTestUtil.randomBoolean());
+
+		_persistence.countByAccountEntryRestricted(
+			RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountBySystem() throws Exception {
 		_persistence.countBySystem(RandomTestUtil.randomBoolean());
 

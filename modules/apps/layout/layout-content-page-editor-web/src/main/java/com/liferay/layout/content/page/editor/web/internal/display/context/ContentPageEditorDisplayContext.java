@@ -418,10 +418,6 @@ public class ContentPageEditorDisplayContext {
 				_getResourceURL(
 					"/layout_content_page_editor/get_available_templates")
 			).put(
-				"getCollectionConfigurationURL",
-				_getResourceURL(
-					"/layout_content_page_editor/get_collection_configuration")
-			).put(
 				"getCollectionFieldURL",
 				_getResourceURL(
 					"/layout_content_page_editor/get_collection_field")
@@ -558,7 +554,7 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"layoutType", String.valueOf(_getLayoutType())
 			).put(
-				"lookAndFeelURL", _getLookAndFeelURL()
+				"lookAndFeelURL", getLookAndFeelURL()
 			).put(
 				"mappingFieldsURL",
 				_getResourceURL(
@@ -776,13 +772,6 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"masterLayout", _getMasterLayoutJSONObject()
 			).put(
-				"pageContents",
-				_contentManager.getPageContentsJSONArray(
-					httpServletRequest,
-					portal.getHttpServletResponse(renderResponse),
-					themeDisplay.getPlid(), _getRestrictedItemIds(),
-					getSegmentsExperienceId())
-			).put(
 				"permissions",
 				() -> {
 					boolean hasUpdatePermission = _hasPermissions(
@@ -950,6 +939,48 @@ public class ContentPageEditorDisplayContext {
 		return _groupId;
 	}
 
+	protected String getLookAndFeelURL() throws Exception {
+		return layoutLockManager.getUnlockDraftLayoutURL(
+			portal.getLiferayPortletResponse(renderResponse),
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				Layout layout = themeDisplay.getLayout();
+
+				return PortletURLBuilder.create(
+					portal.getControlPanelPortletURL(
+						httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+						PortletRequest.RENDER_PHASE)
+				).setMVCRenderCommandName(
+					"/layout_admin/edit_layout"
+				).setRedirect(
+					themeDisplay.getURLCurrent()
+				).setBackURL(
+					themeDisplay.getURLCurrent()
+				).setParameter(
+					"backURLTitle", layout.getName(themeDisplay.getLocale())
+				).setParameter(
+					"groupId", layout.getGroupId()
+				).setParameter(
+					"privateLayout", layout.isPrivateLayout()
+				).setParameter(
+					"screenNavigationEntryKey",
+					LayoutScreenNavigationEntryConstants.ENTRY_KEY_DESIGN
+				).setParameter(
+					"selPlid",
+					() -> {
+						if (layout.isDraftLayout()) {
+							return layout.getClassPK();
+						}
+
+						return layout.getPlid();
+					}
+				).buildString();
+			});
+	}
+
 	protected long getSegmentsExperienceId() {
 		if (_segmentsExperienceId != null) {
 			return _segmentsExperienceId;
@@ -1109,8 +1140,7 @@ public class ContentPageEditorDisplayContext {
 		List<SegmentsEntry> segmentsEntries =
 			_segmentsEntryService.getSegmentsEntries(
 				stagingGroupHelper.getStagedPortletGroupId(
-					getGroupId(), SegmentsPortletKeys.SEGMENTS),
-				true);
+					getGroupId(), SegmentsPortletKeys.SEGMENTS));
 
 		for (SegmentsEntry segmentsEntry : segmentsEntries) {
 			availableSegmentsEntries.put(
@@ -1576,48 +1606,6 @@ public class ContentPageEditorDisplayContext {
 		}
 
 		return _layoutType;
-	}
-
-	private Object _getLookAndFeelURL() throws Exception {
-		return layoutLockManager.getUnlockDraftLayoutURL(
-			portal.getLiferayPortletResponse(renderResponse),
-			() -> {
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)httpServletRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
-
-				Layout layout = themeDisplay.getLayout();
-
-				return PortletURLBuilder.create(
-					portal.getControlPanelPortletURL(
-						httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
-						PortletRequest.RENDER_PHASE)
-				).setMVCRenderCommandName(
-					"/layout_admin/edit_layout"
-				).setRedirect(
-					themeDisplay.getURLCurrent()
-				).setBackURL(
-					themeDisplay.getURLCurrent()
-				).setParameter(
-					"backURLTitle", layout.getName(themeDisplay.getLocale())
-				).setParameter(
-					"groupId", layout.getGroupId()
-				).setParameter(
-					"privateLayout", layout.isPrivateLayout()
-				).setParameter(
-					"screenNavigationEntryKey",
-					LayoutScreenNavigationEntryConstants.ENTRY_KEY_DESIGN
-				).setParameter(
-					"selPlid",
-					() -> {
-						if (layout.isDraftLayout()) {
-							return layout.getClassPK();
-						}
-
-						return layout.getPlid();
-					}
-				).buildString();
-			});
 	}
 
 	private JSONObject _getMappingFieldsJSONObject() throws Exception {

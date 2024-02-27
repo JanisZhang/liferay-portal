@@ -1017,11 +1017,6 @@ public class SourceFormatter {
 				new ExcludeSyntaxPattern(
 					ExcludeSyntax.GLOB, "**/node_modules_cache/**"),
 				new ExcludeSyntaxPattern(
-					ExcludeSyntax.GLOB,
-					"**/test*/**/dependencies/*.[jlw]ar/**"),
-				new ExcludeSyntaxPattern(
-					ExcludeSyntax.GLOB, "**/test*/**/dependencies/*.zip/**"),
-				new ExcludeSyntaxPattern(
 					ExcludeSyntax.REGEX,
 					".*/frontend-theme-unstyled/.*/_unstyled/css/clay/.+"),
 				new ExcludeSyntaxPattern(
@@ -1030,10 +1025,12 @@ public class SourceFormatter {
 						"clay|lexicon)/.+"),
 				new ExcludeSyntaxPattern(
 					ExcludeSyntax.REGEX,
-					"^((?!/frontend-js-node-shims/src/).)*/node_modules/.*"),
+					".*/tests?/.*/?dependencies/.+\\.(jar|lar|war|zip)/.+"),
 				new ExcludeSyntaxPattern(
 					ExcludeSyntax.REGEX,
-					".*(?<!/gradle-plugins-source-formatter)/build/.*")));
+					"^((?!/frontend-js-node-shims/src/).)*/node_modules/.*"),
+				new ExcludeSyntaxPattern(
+					ExcludeSyntax.REGEX, "^((?!/src/).)*/build/.*")));
 
 		_portalSource = _containsDir("portal-impl");
 
@@ -1310,7 +1307,7 @@ public class SourceFormatter {
 				if (matcher.find()) {
 					throw new Exception(
 						StringBundler.concat(
-							"Found formatting issues in SHA ", parts[0], ":\n",
+							"Found formatting issue in SHA ", parts[0], ":\n",
 							"The commit message contains the word '", keyword,
 							"', which could reveal potential security ",
 							"vulnerablities. Please see the vulnerability ",

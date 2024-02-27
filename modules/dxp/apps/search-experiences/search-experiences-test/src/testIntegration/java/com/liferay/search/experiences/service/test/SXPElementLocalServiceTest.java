@@ -6,7 +6,12 @@
 package com.liferay.search.experiences.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
@@ -30,7 +35,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,6 +56,18 @@ public class SXPElementLocalServiceTest {
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
 
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		_originalName = PrincipalThreadLocal.getName();
+
+		PrincipalThreadLocal.setName(TestPropsValues.getUserId());
+	}
+
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		PrincipalThreadLocal.setName(_originalName);
+	}
+
 	@Test
 	public void testAddSXPElement() throws Exception {
 		String externalReferenceCode = RandomTestUtil.randomString();
@@ -62,11 +81,14 @@ public class SXPElementLocalServiceTest {
 
 		// Duplicate external reference code in a different company
 
-		User user = UserTestUtil.addCompanyAdminUser(
-			CompanyTestUtil.addCompany());
+		Company company = CompanyTestUtil.addCompany();
+
+		User user = UserTestUtil.getAdminUser(company.getCompanyId());
 
 		SXPElement differentCompanySXPElement = _addSXPElement(
 			sxpElement.getExternalReferenceCode(), user.getUserId());
+
+		_companyLocalService.deleteCompany(company);
 
 		Assert.assertEquals(
 			sxpElement.getExternalReferenceCode(),
@@ -106,7 +128,8 @@ public class SXPElementLocalServiceTest {
 			RandomTestUtil.randomString(), fallbackDescription, fallbackTitle,
 			Collections.singletonMap(
 				LocaleUtil.US, RandomTestUtil.randomString()),
-			TestPropsValues.getUserId());
+			TestPropsValues.getUserId(),
+			ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertEquals(
 			fallbackDescription,
@@ -121,7 +144,8 @@ public class SXPElementLocalServiceTest {
 			Collections.singletonMap(LocaleUtil.US, description),
 			RandomTestUtil.randomString(), null, null,
 			Collections.singletonMap(LocaleUtil.US, title),
-			TestPropsValues.getUserId());
+			TestPropsValues.getUserId(),
+			ServiceContextTestUtil.getServiceContext());
 
 		Assert.assertEquals(
 			description, noFallbackFieldsSXPElement.getFallbackDescription());
@@ -130,17 +154,48 @@ public class SXPElementLocalServiceTest {
 
 		// Title
 
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
 		try {
 			_addSXPElement(
-				Collections.singletonMap(LocaleUtil.SPAIN, description),
+				Collections.singletonMap(LocaleUtil.US, StringPool.BLANK),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(),
-				Collections.singletonMap(LocaleUtil.SPAIN, title),
-				TestPropsValues.getUserId());
+				RandomTestUtil.randomString(), Collections.emptyMap(),
+				TestPropsValues.getUserId(), serviceContext);
 		}
 		catch (SXPElementTitleException sxpElementTitleException) {
 			Assert.assertNotNull(sxpElementTitleException);
 		}
+
+		// Validate
+
+		String attributeName =
+			"com.liferay.search.experiences.service.impl." +
+				"SXPElementLocalServiceImpl#_validate";
+
+		serviceContext.setAttribute(attributeName, Boolean.TRUE);
+
+		try {
+			_addSXPElement(
+				Collections.singletonMap(LocaleUtil.US, StringPool.BLANK),
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), Collections.emptyMap(),
+				TestPropsValues.getUserId(), serviceContext);
+		}
+		catch (SXPElementTitleException sxpElementTitleException) {
+			Assert.assertNotNull(sxpElementTitleException);
+		}
+
+		serviceContext.setAttribute(attributeName, Boolean.FALSE);
+
+		sxpElement = _addSXPElement(
+			Collections.emptyMap(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			Collections.emptyMap(), TestPropsValues.getUserId(),
+			serviceContext);
+
+		Assert.assertEquals(Collections.emptyMap(), sxpElement.getTitleMap());
 	}
 
 	@Test
@@ -209,14 +264,14 @@ public class SXPElementLocalServiceTest {
 	private SXPElement _addSXPElement(
 			Map<Locale, String> descriptionMap, String externalReferenceCode,
 			String fallbackDescription, String fallbackTitle,
-			Map<Locale, String> titleMap, long userId)
+			Map<Locale, String> titleMap, long userId,
+			ServiceContext serviceContext)
 		throws Exception {
 
 		SXPElement sxpElement = _sxpElementLocalService.addSXPElement(
 			externalReferenceCode, userId, descriptionMap, "{}",
 			fallbackDescription, fallbackTitle, false,
-			RandomTestUtil.randomString(), titleMap, 0,
-			ServiceContextTestUtil.getServiceContext());
+			RandomTestUtil.randomString(), titleMap, 0, serviceContext);
 
 		_sxpElements.add(sxpElement);
 
@@ -233,8 +288,13 @@ public class SXPElementLocalServiceTest {
 			RandomTestUtil.randomString(),
 			Collections.singletonMap(
 				LocaleUtil.US, RandomTestUtil.randomString()),
-			userId);
+			userId, ServiceContextTestUtil.getServiceContext());
 	}
+
+	@Inject
+	private static CompanyLocalService _companyLocalService;
+
+	private static String _originalName;
 
 	@Inject
 	private SXPElementLocalService _sxpElementLocalService;

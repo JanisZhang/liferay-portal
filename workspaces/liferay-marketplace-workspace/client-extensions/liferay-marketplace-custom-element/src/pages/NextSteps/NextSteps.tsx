@@ -24,11 +24,11 @@ import './NextSteps.scss';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 
 import CommerceSelectAccountImpl from '../../services/rest/CommerceSelectAccount';
-import {PaymentStatus} from '../GetAppPage/enums/PaymentStatus';
-import getProductPriceModel from '../GetAppPage/utils/getProductPriceModel';
+import {PaymentStatus} from '../GetApp/enums/PaymentStatus';
+import getProductPriceModel from '../GetApp/utils/getProductPriceModel';
 import useNextSteps from './useNextSteps';
 
-interface NextStepsProps {
+type NextStepsProps = {
 	children?: ReactNode;
 	continueButtonText?: string;
 	header?: {
@@ -40,7 +40,7 @@ interface NextStepsProps {
 	showBackButton?: boolean;
 	showOrderId?: boolean;
 	size?: 'lg';
-}
+};
 
 type TypeNextStepBody = {
 	[key in string]?: ReactNode;
@@ -72,7 +72,7 @@ export function NextSteps({
 			item.sku.endsWith('ts') || item.sku.toLowerCase().includes('trial')
 	);
 
-	const appIcon = getThumbnailByProductAttachment(product?.attachments);
+	const appIcon = getThumbnailByProductAttachment(product?.images);
 
 	const appLogo = showAppImage(appIcon as string).replace(
 		(appIcon as string)?.split('/o')[0],
@@ -132,12 +132,8 @@ export function NextSteps({
 					isTrial ? (
 						<>
 							<p>
-								Congratulations on agreeing to purchase{' '}
-								<strong>{appName}</strong>. Payment is required
-								before licensing the app. An invoice will be
-								sent to the email address listed in the order.
-								Once payment is processed, you will be notified
-								as to the next steps to license your app.
+								You will need to create a license for your app
+								before deploying it to your DXP instance
 							</p>
 							<p>
 								Your Order ID is: <strong>{orderId}</strong>
@@ -221,16 +217,19 @@ export function NextSteps({
 							Liferay.CommerceContext.account = {
 								accountId: cart?.accountId,
 							};
-							window.location.href = Liferay.ThemeDisplay.getCanonicalURL().replace(
-								'/next-steps',
-								`/customer-dashboard`
+
+							Liferay.Util.navigate(
+								Liferay.ThemeDisplay.getCanonicalURL().replace(
+									'/next-steps',
+									`/customer-dashboard`
+								)
 							);
 						});
 					}}
 					onClickContinue={() => {
 						if (onClickContinue) {
 							window.location.href =
-								'https://console.marketplacedemo.liferay.sh/projects';
+								'https://console.liferay.cloud/projects';
 						}
 					}}
 					showBackButton={showBackButton}

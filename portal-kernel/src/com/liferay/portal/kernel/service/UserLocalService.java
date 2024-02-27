@@ -1810,12 +1810,13 @@ public interface UserLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<User> searchBySocial(
-		long companyId, long[] groupIds, String keywords, int start, int end);
+		long companyId, long[] groupIds, long[] userGroupIds, String keywords,
+		int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<User> searchBySocial(
-		long companyId, long[] groupIds, String keywords, int start, int end,
-		OrderByComparator<User> orderByComparator);
+		long companyId, long[] groupIds, long[] userGroupIds, String keywords,
+		int start, int end, OrderByComparator<User> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<User> searchBySocial(
@@ -2176,6 +2177,16 @@ public interface UserLocalService
 			long userId, boolean emailAddressVerified)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
+	public User updateExternalReferenceCode(
+			long userId, String externalReferenceCode)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public User updateExternalReferenceCode(
+			User user, String externalReferenceCode)
+		throws PortalException;
+
 	/**
 	 * Updates the user's Facebook ID.
 	 *
@@ -2265,6 +2276,9 @@ public interface UserLocalService
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public User updateJobTitle(long userId, String jobTitle)
+		throws PortalException;
+
+	public User updateLanguageId(long userId, String languageId)
 		throws PortalException;
 
 	/**

@@ -16,6 +16,7 @@ export default defineConfig({
 				entryFileNames: '[name]-[hash].js',
 			},
 		},
+		target: 'esnext',
 	},
 	plugins: [react()],
 	server: {

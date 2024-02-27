@@ -26,8 +26,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -360,39 +358,78 @@ public abstract class BasePlacedOrderItemResourceTestCase {
 			testGetPlacedOrderPlacedOrderItemsPage_addPlacedOrderItem(
 				placedOrderId, randomPlacedOrderItem());
 
-		Page<PlacedOrderItem> page1 =
-			placedOrderItemResource.getPlacedOrderPlacedOrderItemsPage(
-				placedOrderId, null, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PlacedOrderItem> placedOrderItems1 =
-			(List<PlacedOrderItem>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			placedOrderItems1.toString(), totalCount + 2,
-			placedOrderItems1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PlacedOrderItem> page1 =
+				placedOrderItemResource.getPlacedOrderPlacedOrderItemsPage(
+					placedOrderId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<PlacedOrderItem> page2 =
-			placedOrderItemResource.getPlacedOrderPlacedOrderItemsPage(
-				placedOrderId, null, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				placedOrderItem1, (List<PlacedOrderItem>)page1.getItems());
 
-		List<PlacedOrderItem> placedOrderItems2 =
-			(List<PlacedOrderItem>)page2.getItems();
+			Page<PlacedOrderItem> page2 =
+				placedOrderItemResource.getPlacedOrderPlacedOrderItemsPage(
+					placedOrderId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(
-			placedOrderItems2.toString(), 1, placedOrderItems2.size());
+			assertContains(
+				placedOrderItem2, (List<PlacedOrderItem>)page2.getItems());
 
-		Page<PlacedOrderItem> page3 =
-			placedOrderItemResource.getPlacedOrderPlacedOrderItemsPage(
-				placedOrderId, null, Pagination.of(1, (int)totalCount + 3));
+			Page<PlacedOrderItem> page3 =
+				placedOrderItemResource.getPlacedOrderPlacedOrderItemsPage(
+					placedOrderId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertContains(
-			placedOrderItem1, (List<PlacedOrderItem>)page3.getItems());
-		assertContains(
-			placedOrderItem2, (List<PlacedOrderItem>)page3.getItems());
-		assertContains(
-			placedOrderItem3, (List<PlacedOrderItem>)page3.getItems());
+			assertContains(
+				placedOrderItem3, (List<PlacedOrderItem>)page3.getItems());
+		}
+		else {
+			Page<PlacedOrderItem> page1 =
+				placedOrderItemResource.getPlacedOrderPlacedOrderItemsPage(
+					placedOrderId, null, Pagination.of(1, totalCount + 2));
+
+			List<PlacedOrderItem> placedOrderItems1 =
+				(List<PlacedOrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				placedOrderItems1.toString(), totalCount + 2,
+				placedOrderItems1.size());
+
+			Page<PlacedOrderItem> page2 =
+				placedOrderItemResource.getPlacedOrderPlacedOrderItemsPage(
+					placedOrderId, null, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PlacedOrderItem> placedOrderItems2 =
+				(List<PlacedOrderItem>)page2.getItems();
+
+			Assert.assertEquals(
+				placedOrderItems2.toString(), 1, placedOrderItems2.size());
+
+			Page<PlacedOrderItem> page3 =
+				placedOrderItemResource.getPlacedOrderPlacedOrderItemsPage(
+					placedOrderId, null, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				placedOrderItem1, (List<PlacedOrderItem>)page3.getItems());
+			assertContains(
+				placedOrderItem2, (List<PlacedOrderItem>)page3.getItems());
+			assertContains(
+				placedOrderItem3, (List<PlacedOrderItem>)page3.getItems());
+		}
 	}
 
 	protected PlacedOrderItem
@@ -677,6 +714,14 @@ public abstract class BasePlacedOrderItemResourceTestCase {
 
 			if (Objects.equals("virtualItemURLs", additionalAssertFieldName)) {
 				if (placedOrderItem.getVirtualItemURLs() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("virtualItems", additionalAssertFieldName)) {
+				if (placedOrderItem.getVirtualItems() == null) {
 					valid = false;
 				}
 
@@ -1049,6 +1094,17 @@ public abstract class BasePlacedOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("virtualItems", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						placedOrderItem1.getVirtualItems(),
+						placedOrderItem2.getVirtualItems())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -1085,6 +1141,10 @@ public abstract class BasePlacedOrderItemResourceTestCase {
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
+
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
 
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
@@ -1550,6 +1610,11 @@ public abstract class BasePlacedOrderItemResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("virtualItems")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -1629,9 +1694,9 @@ public abstract class BasePlacedOrderItemResourceTestCase {
 	}
 
 	protected PlacedOrderItemResource placedOrderItemResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

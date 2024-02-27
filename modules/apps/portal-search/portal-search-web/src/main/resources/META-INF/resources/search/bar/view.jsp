@@ -54,7 +54,7 @@ SearchBarPortletDisplayContext searchBarPortletDisplayContext = (SearchBarPortle
 		</div>
 	</c:when>
 	<c:otherwise>
-		<aui:form action="<%= searchBarPortletDisplayContext.getSearchURL() %>" method="get" name="fm">
+		<form action="<%= searchBarPortletDisplayContext.getSearchURL() %>" id="<portlet:namespace />fm" method="get" name="<portlet:namespace />fm">
 			<c:if test="<%= !Validator.isBlank(searchBarPortletDisplayContext.getPaginationStartParameterName()) %>">
 				<input class="search-bar-reset-start-page" name="<%= searchBarPortletDisplayContext.getPaginationStartParameterName() %>" type="hidden" value="0" />
 			</c:if>
@@ -80,7 +80,7 @@ SearchBarPortletDisplayContext searchBarPortletDisplayContext = (SearchBarPortle
 					<c:when test="<%= searchBarPortletDisplayContext.isSuggestionsEnabled() %>">
 						<div id="<portlet:namespace />reactSearchBar">
 							<react:component
-								module="js/components/SearchBar"
+								module="{ReactSearchBar} from portal-search-web"
 								props='<%=
 									HashMapBuilder.<String, Object>put(
 										"destinationFriendlyURL", searchBarPortletDisplayContext.getDestinationFriendlyURL()
@@ -167,10 +167,15 @@ SearchBarPortletDisplayContext searchBarPortletDisplayContext = (SearchBarPortle
 					</c:otherwise>
 				</c:choose>
 			</liferay-ddm:template-renderer>
-		</aui:form>
+		</form>
 
 		<liferay-frontend:component
-			module="js/SearchBar"
+			context='<%=
+				HashMapBuilder.<String, Object>put(
+					"namespace", liferayPortletResponse.getNamespace()
+				).build()
+			%>'
+			module="{SearchBar} from portal-search-web"
 		/>
 	</c:otherwise>
 </c:choose>

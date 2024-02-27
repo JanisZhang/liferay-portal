@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -234,28 +232,65 @@ public abstract class BaseFieldResourceTestCase {
 
 		Field field3 = testGetFieldsAccountsPage_addField(randomField());
 
-		Page<Field> page1 = fieldResource.getFieldsAccountsPage(
-			null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Field> fields1 = (List<Field>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(fields1.toString(), totalCount + 2, fields1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Field> page1 = fieldResource.getFieldsAccountsPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<Field> page2 = fieldResource.getFieldsAccountsPage(
-			null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(field1, (List<Field>)page1.getItems());
 
-		List<Field> fields2 = (List<Field>)page2.getItems();
+			Page<Field> page2 = fieldResource.getFieldsAccountsPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(fields2.toString(), 1, fields2.size());
+			assertContains(field2, (List<Field>)page2.getItems());
 
-		Page<Field> page3 = fieldResource.getFieldsAccountsPage(
-			null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Field> page3 = fieldResource.getFieldsAccountsPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(field1, (List<Field>)page3.getItems());
-		assertContains(field2, (List<Field>)page3.getItems());
-		assertContains(field3, (List<Field>)page3.getItems());
+			assertContains(field3, (List<Field>)page3.getItems());
+		}
+		else {
+			Page<Field> page1 = fieldResource.getFieldsAccountsPage(
+				null, Pagination.of(1, totalCount + 2), null);
+
+			List<Field> fields1 = (List<Field>)page1.getItems();
+
+			Assert.assertEquals(
+				fields1.toString(), totalCount + 2, fields1.size());
+
+			Page<Field> page2 = fieldResource.getFieldsAccountsPage(
+				null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Field> fields2 = (List<Field>)page2.getItems();
+
+			Assert.assertEquals(fields2.toString(), 1, fields2.size());
+
+			Page<Field> page3 = fieldResource.getFieldsAccountsPage(
+				null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(field1, (List<Field>)page3.getItems());
+			assertContains(field2, (List<Field>)page3.getItems());
+			assertContains(field3, (List<Field>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -438,28 +473,65 @@ public abstract class BaseFieldResourceTestCase {
 
 		Field field3 = testGetFieldsOrdersPage_addField(randomField());
 
-		Page<Field> page1 = fieldResource.getFieldsOrdersPage(
-			null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Field> fields1 = (List<Field>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(fields1.toString(), totalCount + 2, fields1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Field> page1 = fieldResource.getFieldsOrdersPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<Field> page2 = fieldResource.getFieldsOrdersPage(
-			null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(field1, (List<Field>)page1.getItems());
 
-		List<Field> fields2 = (List<Field>)page2.getItems();
+			Page<Field> page2 = fieldResource.getFieldsOrdersPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(fields2.toString(), 1, fields2.size());
+			assertContains(field2, (List<Field>)page2.getItems());
 
-		Page<Field> page3 = fieldResource.getFieldsOrdersPage(
-			null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Field> page3 = fieldResource.getFieldsOrdersPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(field1, (List<Field>)page3.getItems());
-		assertContains(field2, (List<Field>)page3.getItems());
-		assertContains(field3, (List<Field>)page3.getItems());
+			assertContains(field3, (List<Field>)page3.getItems());
+		}
+		else {
+			Page<Field> page1 = fieldResource.getFieldsOrdersPage(
+				null, Pagination.of(1, totalCount + 2), null);
+
+			List<Field> fields1 = (List<Field>)page1.getItems();
+
+			Assert.assertEquals(
+				fields1.toString(), totalCount + 2, fields1.size());
+
+			Page<Field> page2 = fieldResource.getFieldsOrdersPage(
+				null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Field> fields2 = (List<Field>)page2.getItems();
+
+			Assert.assertEquals(fields2.toString(), 1, fields2.size());
+
+			Page<Field> page3 = fieldResource.getFieldsOrdersPage(
+				null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(field1, (List<Field>)page3.getItems());
+			assertContains(field2, (List<Field>)page3.getItems());
+			assertContains(field3, (List<Field>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -641,28 +713,65 @@ public abstract class BaseFieldResourceTestCase {
 
 		Field field3 = testGetFieldsPeoplePage_addField(randomField());
 
-		Page<Field> page1 = fieldResource.getFieldsPeoplePage(
-			null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Field> fields1 = (List<Field>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(fields1.toString(), totalCount + 2, fields1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Field> page1 = fieldResource.getFieldsPeoplePage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<Field> page2 = fieldResource.getFieldsPeoplePage(
-			null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(field1, (List<Field>)page1.getItems());
 
-		List<Field> fields2 = (List<Field>)page2.getItems();
+			Page<Field> page2 = fieldResource.getFieldsPeoplePage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(fields2.toString(), 1, fields2.size());
+			assertContains(field2, (List<Field>)page2.getItems());
 
-		Page<Field> page3 = fieldResource.getFieldsPeoplePage(
-			null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Field> page3 = fieldResource.getFieldsPeoplePage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(field1, (List<Field>)page3.getItems());
-		assertContains(field2, (List<Field>)page3.getItems());
-		assertContains(field3, (List<Field>)page3.getItems());
+			assertContains(field3, (List<Field>)page3.getItems());
+		}
+		else {
+			Page<Field> page1 = fieldResource.getFieldsPeoplePage(
+				null, Pagination.of(1, totalCount + 2), null);
+
+			List<Field> fields1 = (List<Field>)page1.getItems();
+
+			Assert.assertEquals(
+				fields1.toString(), totalCount + 2, fields1.size());
+
+			Page<Field> page2 = fieldResource.getFieldsPeoplePage(
+				null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Field> fields2 = (List<Field>)page2.getItems();
+
+			Assert.assertEquals(fields2.toString(), 1, fields2.size());
+
+			Page<Field> page3 = fieldResource.getFieldsPeoplePage(
+				null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(field1, (List<Field>)page3.getItems());
+			assertContains(field2, (List<Field>)page3.getItems());
+			assertContains(field3, (List<Field>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -844,28 +953,65 @@ public abstract class BaseFieldResourceTestCase {
 
 		Field field3 = testGetFieldsProductsPage_addField(randomField());
 
-		Page<Field> page1 = fieldResource.getFieldsProductsPage(
-			null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Field> fields1 = (List<Field>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(fields1.toString(), totalCount + 2, fields1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Field> page1 = fieldResource.getFieldsProductsPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<Field> page2 = fieldResource.getFieldsProductsPage(
-			null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(field1, (List<Field>)page1.getItems());
 
-		List<Field> fields2 = (List<Field>)page2.getItems();
+			Page<Field> page2 = fieldResource.getFieldsProductsPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(fields2.toString(), 1, fields2.size());
+			assertContains(field2, (List<Field>)page2.getItems());
 
-		Page<Field> page3 = fieldResource.getFieldsProductsPage(
-			null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Field> page3 = fieldResource.getFieldsProductsPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(field1, (List<Field>)page3.getItems());
-		assertContains(field2, (List<Field>)page3.getItems());
-		assertContains(field3, (List<Field>)page3.getItems());
+			assertContains(field3, (List<Field>)page3.getItems());
+		}
+		else {
+			Page<Field> page1 = fieldResource.getFieldsProductsPage(
+				null, Pagination.of(1, totalCount + 2), null);
+
+			List<Field> fields1 = (List<Field>)page1.getItems();
+
+			Assert.assertEquals(
+				fields1.toString(), totalCount + 2, fields1.size());
+
+			Page<Field> page2 = fieldResource.getFieldsProductsPage(
+				null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Field> fields2 = (List<Field>)page2.getItems();
+
+			Assert.assertEquals(fields2.toString(), 1, fields2.size());
+
+			Page<Field> page3 = fieldResource.getFieldsProductsPage(
+				null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(field1, (List<Field>)page3.getItems());
+			assertContains(field2, (List<Field>)page3.getItems());
+			assertContains(field3, (List<Field>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1326,6 +1472,10 @@ public abstract class BaseFieldResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1651,9 +1801,9 @@ public abstract class BaseFieldResourceTestCase {
 	}
 
 	protected FieldResource fieldResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

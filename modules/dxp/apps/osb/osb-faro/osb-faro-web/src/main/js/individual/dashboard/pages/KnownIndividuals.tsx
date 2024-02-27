@@ -36,7 +36,7 @@ import {RootState} from 'shared/store';
 import {Routes, toRoute} from 'shared/util/router';
 import {Segment, User} from 'shared/util/records';
 import {sub} from 'shared/util/lang';
-import {useDataSource} from 'shared/hooks/useDataSource';
+import {useDataSource} from 'shared/hooks';
 import {useParams} from 'react-router-dom';
 import {useQueryPagination, useRequest} from 'shared/hooks';
 
@@ -222,7 +222,7 @@ const KnownIndividuals: React.FC<IKnownIndividualsProps> = ({
 								'connect-a-data-source-with-people-data'
 							)}
 
-							<a
+							<ClayLink
 								className='d-block mb-3'
 								href={URLConstants.DataSourceConnection}
 								key='DOCUMENTATION'
@@ -231,7 +231,7 @@ const KnownIndividuals: React.FC<IKnownIndividualsProps> = ({
 								{Liferay.Language.get(
 									'access-our-documentation-to-learn-more'
 								)}
-							</a>
+							</ClayLink>
 						</>
 					}
 					icon={{
@@ -270,7 +270,7 @@ const KnownIndividuals: React.FC<IKnownIndividualsProps> = ({
 								'connect-a-data-source-to-get-started'
 							)}
 
-							<a
+							<ClayLink
 								className='d-block mb-3'
 								href={URLConstants.DataSourceConnection}
 								key='DOCUMENTATION'
@@ -279,7 +279,7 @@ const KnownIndividuals: React.FC<IKnownIndividualsProps> = ({
 								{Liferay.Language.get(
 									'access-our-documentation-to-learn-more'
 								)}
-							</a>
+							</ClayLink>
 
 							{authorized && (
 								<ClayLink

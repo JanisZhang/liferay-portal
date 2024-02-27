@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -367,28 +365,65 @@ public abstract class BaseOrderResourceTestCase {
 
 		Order order3 = testGetOrdersPage_addOrder(randomOrder());
 
-		Page<Order> page1 = orderResource.getOrdersPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Order> orders1 = (List<Order>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(orders1.toString(), totalCount + 2, orders1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Order> page1 = orderResource.getOrdersPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<Order> page2 = orderResource.getOrdersPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(order1, (List<Order>)page1.getItems());
 
-		List<Order> orders2 = (List<Order>)page2.getItems();
+			Page<Order> page2 = orderResource.getOrdersPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(orders2.toString(), 1, orders2.size());
+			assertContains(order2, (List<Order>)page2.getItems());
 
-		Page<Order> page3 = orderResource.getOrdersPage(
-			null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<Order> page3 = orderResource.getOrdersPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(order1, (List<Order>)page3.getItems());
-		assertContains(order2, (List<Order>)page3.getItems());
-		assertContains(order3, (List<Order>)page3.getItems());
+			assertContains(order3, (List<Order>)page3.getItems());
+		}
+		else {
+			Page<Order> page1 = orderResource.getOrdersPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<Order> orders1 = (List<Order>)page1.getItems();
+
+			Assert.assertEquals(
+				orders1.toString(), totalCount + 2, orders1.size());
+
+			Page<Order> page2 = orderResource.getOrdersPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Order> orders2 = (List<Order>)page2.getItems();
+
+			Assert.assertEquals(orders2.toString(), 1, orders2.size());
+
+			Page<Order> page3 = orderResource.getOrdersPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(order1, (List<Order>)page3.getItems());
+			assertContains(order2, (List<Order>)page3.getItems());
+			assertContains(order3, (List<Order>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -3337,6 +3372,10 @@ public abstract class BaseOrderResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -5506,9 +5545,9 @@ public abstract class BaseOrderResourceTestCase {
 	}
 
 	protected OrderResource orderResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

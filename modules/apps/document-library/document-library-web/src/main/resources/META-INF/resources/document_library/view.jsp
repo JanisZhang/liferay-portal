@@ -77,6 +77,8 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 				).put(
 					"openViewMoreFileEntryTypesURL", dlViewDisplayContext.getViewMoreFileEntryTypesURL()
 				).put(
+					"redirect", dlViewDisplayContext.getRedirect()
+				).put(
 					"selectAssetCategoriesURL", dlViewDisplayContext.getSelectAssetCategoriesURL()
 				).put(
 					"selectAssetTagsURL", dlViewDisplayContext.getSelectAssetTagsURL()
@@ -272,8 +274,6 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 					"scopeGroupId", scopeGroupId
 				).put(
 					"searchContainerId", "entries"
-				).put(
-					"selectFolderURL", dlViewDisplayContext.getSelectFolderURL()
 				).put(
 					"uploadable", dlViewDisplayContext.isUploadable()
 				).put(

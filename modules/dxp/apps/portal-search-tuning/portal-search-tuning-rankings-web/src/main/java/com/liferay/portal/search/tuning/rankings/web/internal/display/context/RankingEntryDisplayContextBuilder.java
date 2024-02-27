@@ -7,7 +7,7 @@ package com.liferay.portal.search.tuning.rankings.web.internal.display.context;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.Ranking;
+import com.liferay.portal.search.tuning.rankings.index.Ranking;
 
 import java.util.List;
 
@@ -27,14 +27,23 @@ public class RankingEntryDisplayContextBuilder {
 		_setAliases(rankingEntryDisplayContext);
 		_setGroupExternalReferenceCode(rankingEntryDisplayContext);
 		_setHiddenResultsCount(rankingEntryDisplayContext);
-		_setInactive(rankingEntryDisplayContext);
 		_setIndex(rankingEntryDisplayContext);
 		_setNameForDisplay(rankingEntryDisplayContext);
 		_setPinnedResultsCount(rankingEntryDisplayContext);
+		_setStatus(rankingEntryDisplayContext);
 		_setSXPBlueprintExternalReferenceCode(rankingEntryDisplayContext);
+		_setSXPBlueprintTitle(rankingEntryDisplayContext);
 		_setUid(rankingEntryDisplayContext);
 
 		return rankingEntryDisplayContext;
+	}
+
+	public RankingEntryDisplayContextBuilder sxpBlueprintTitle(
+		String sxpBlueprintTitle) {
+
+		_sxpBlueprintTitle = sxpBlueprintTitle;
+
+		return this;
 	}
 
 	private String _getSizeString(List<?> list) {
@@ -63,12 +72,6 @@ public class RankingEntryDisplayContextBuilder {
 			_getSizeString(_ranking.getHiddenDocumentIds()));
 	}
 
-	private void _setInactive(
-		RankingEntryDisplayContext rankingEntryDisplayContext) {
-
-		rankingEntryDisplayContext.setInactive(_ranking.isInactive());
-	}
-
 	private void _setIndex(
 		RankingEntryDisplayContext rankingEntryDisplayContext) {
 
@@ -88,11 +91,23 @@ public class RankingEntryDisplayContextBuilder {
 			_getSizeString(_ranking.getPins()));
 	}
 
+	private void _setStatus(
+		RankingEntryDisplayContext rankingEntryDisplayContext) {
+
+		rankingEntryDisplayContext.setStatus(_ranking.getStatus());
+	}
+
 	private void _setSXPBlueprintExternalReferenceCode(
 		RankingEntryDisplayContext rankingEntryDisplayContext) {
 
 		rankingEntryDisplayContext.setSXPBlueprintExternalReferenceCode(
 			_ranking.getSXPBlueprintExternalReferenceCode());
+	}
+
+	private void _setSXPBlueprintTitle(
+		RankingEntryDisplayContext rankingEntryDisplayContext) {
+
+		rankingEntryDisplayContext.setSXPBlueprintTitle(_sxpBlueprintTitle);
 	}
 
 	private void _setUid(
@@ -102,5 +117,6 @@ public class RankingEntryDisplayContextBuilder {
 	}
 
 	private final Ranking _ranking;
+	private String _sxpBlueprintTitle;
 
 }

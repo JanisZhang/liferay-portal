@@ -85,7 +85,6 @@ public class SegmentsEntryServiceTest {
 			RandomTestUtil.randomLocaleStringMap(), true,
 			CriteriaSerializer.serialize(new Criteria()),
 			SegmentsEntryConstants.SOURCE_DEFAULT,
-			RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId()));
 	}
@@ -130,7 +129,6 @@ public class SegmentsEntryServiceTest {
 				RandomTestUtil.randomLocaleStringMap(), true,
 				RandomTestUtil.randomString(),
 				SegmentsEntryConstants.SOURCE_DEFAULT,
-				RandomTestUtil.randomString(),
 				ServiceContextTestUtil.getServiceContext(
 					_group, _groupUser.getUserId()));
 		}
@@ -184,7 +182,7 @@ public class SegmentsEntryServiceTest {
 			Assert.assertEquals(
 				2,
 				_segmentsEntryService.getSegmentsEntriesCount(
-					_group.getGroupId(), false));
+					_group.getGroupId()));
 		}
 	}
 
@@ -206,7 +204,7 @@ public class SegmentsEntryServiceTest {
 			Assert.assertEquals(
 				3,
 				_segmentsEntryService.getSegmentsEntriesCount(
-					_group.getGroupId(), false));
+					_group.getGroupId()));
 		}
 	}
 
@@ -229,8 +227,7 @@ public class SegmentsEntryServiceTest {
 				_groupUser, PermissionCheckerFactoryUtil.create(_groupUser))) {
 
 			List<SegmentsEntry> segmentsEntries =
-				_segmentsEntryService.getSegmentsEntries(
-					_group.getGroupId(), false);
+				_segmentsEntryService.getSegmentsEntries(_group.getGroupId());
 
 			Assert.assertEquals(
 				segmentsEntries.toString(), 2, segmentsEntries.size());
@@ -258,7 +255,7 @@ public class SegmentsEntryServiceTest {
 
 			List<SegmentsEntry> segmentsEntries =
 				_segmentsEntryService.getSegmentsEntries(
-					_group.getGroupId(), false, 0, 100, null);
+					_group.getGroupId(), 0, 100, null);
 
 			Assert.assertEquals(
 				segmentsEntries.toString(), 3, segmentsEntries.size());
@@ -321,8 +318,7 @@ public class SegmentsEntryServiceTest {
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(),
 			CriteriaSerializer.serialize(new Criteria()),
-			SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND,
-			RandomTestUtil.randomString(), serviceContext);
+			SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND, serviceContext);
 
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				_groupUser, PermissionCheckerFactoryUtil.create(_groupUser))) {

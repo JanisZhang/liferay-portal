@@ -1,14 +1,15 @@
 {
 	"dependencies": {
-		"@clayui/date-picker": "3.106.1",
+		"@clayui/date-picker": "3.111.0",
 		"@liferay/fragment-renderer-collection-filter-impl": "*",
 		"react": "16.12.0"
 	},
+	"main": "js/index.js",
 	"name": "@liferay/fragment-collection-filter-date",
 	"scripts": {
 		"build": "liferay-npm-scripts build",
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "1.0.27"
+	"version": "1.0.32"
 }

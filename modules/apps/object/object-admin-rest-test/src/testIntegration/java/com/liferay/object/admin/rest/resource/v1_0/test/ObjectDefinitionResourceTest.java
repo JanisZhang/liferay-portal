@@ -7,6 +7,8 @@ package com.liferay.object.admin.rest.resource.v1_0.test;
 
 import com.liferay.account.model.AccountEntry;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.list.type.model.ListTypeDefinition;
+import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectField;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectValidationRule;
@@ -63,7 +65,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Javier Gamarra
  */
-@FeatureFlags({"LPS-148856", "LPS-181663", "LPS-187142"})
+@FeatureFlags("LPS-187142")
 @RunWith(Arquillian.class)
 public class ObjectDefinitionResourceTest
 	extends BaseObjectDefinitionResourceTestCase {
@@ -119,6 +121,50 @@ public class ObjectDefinitionResourceTest
 		Assert.assertEquals(
 			"/o/c/" + objectDefinitionPluralName,
 			objectDefinition.getRestContextPath());
+	}
+
+	@Override
+	@Test
+	public void testGetObjectDefinitionsPage() throws Exception {
+		super.testGetObjectDefinitionsPage();
+
+		Page<ObjectDefinition> page =
+			objectDefinitionResource.getObjectDefinitionsPage(
+				null, null, "status/any(k:k eq 2)", Pagination.of(1, 20), null);
+
+		long totalCount = page.getTotalCount();
+
+		ObjectDefinition objectDefinition =
+			testGetObjectDefinitionsPage_addObjectDefinition(
+				randomObjectDefinition());
+
+		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
+
+		Status status = new Status() {
+			{
+				code = WorkflowConstants.STATUS_APPROVED;
+				label = WorkflowConstants.getStatusLabel(
+					WorkflowConstants.STATUS_APPROVED);
+				label_i18n = _language.get(
+					LanguageResources.getResourceBundle(
+						LocaleUtil.getDefault()),
+					WorkflowConstants.getStatusLabel(
+						WorkflowConstants.STATUS_APPROVED));
+			}
+		};
+
+		randomObjectDefinition.setStatus(status);
+
+		testGetObjectDefinitionsPage_addObjectDefinition(
+			randomObjectDefinition);
+
+		page = objectDefinitionResource.getObjectDefinitionsPage(
+			null, null, "status/any(k:k eq 2)", Pagination.of(1, 20), null);
+
+		Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+		assertContains(
+			objectDefinition, (List<ObjectDefinition>)page.getItems());
 	}
 
 	@Override
@@ -256,6 +302,46 @@ public class ObjectDefinitionResourceTest
 
 		assertEquals(postObjectDefinition, randomObjectDefinition);
 		assertValid(postObjectDefinition);
+
+		String randomListTypeDefinitionExternalReferenceCode =
+			RandomTestUtil.randomString();
+
+		ObjectDefinition randomModifiableSystemObjectDefinition =
+			_randomModifiableSystemObjectDefinition();
+
+		randomModifiableSystemObjectDefinition.setObjectFields(
+			new ObjectField[] {
+				new ObjectField() {
+					{
+						businessType = BusinessType.PICKLIST;
+						DBType = ObjectField.DBType.create("String");
+						externalReferenceCode = RandomTestUtil.randomString();
+						indexed = false;
+						indexedAsKeyword = false;
+						label = Collections.singletonMap(
+							"en-US", RandomTestUtil.randomString());
+						listTypeDefinitionExternalReferenceCode =
+							randomListTypeDefinitionExternalReferenceCode;
+						localized = false;
+						name = "a" + RandomTestUtil.randomString();
+						readOnly = ReadOnly.FALSE;
+						required = false;
+						system = true;
+					}
+				}
+			});
+
+		testPostObjectDefinition_addObjectDefinition(
+			randomModifiableSystemObjectDefinition);
+
+		ListTypeDefinition serviceBuilderlistTypeDefinition =
+			_listTypeDefinitionLocalService.
+				fetchListTypeDefinitionByExternalReferenceCode(
+					randomListTypeDefinitionExternalReferenceCode,
+					TestPropsValues.getCompanyId());
+
+		Assert.assertNotNull(serviceBuilderlistTypeDefinition);
+		Assert.assertTrue(serviceBuilderlistTypeDefinition.isSystem());
 	}
 
 	@Override
@@ -287,7 +373,7 @@ public class ObjectDefinitionResourceTest
 				ObjectRelationshipConstants.DELETION_TYPE_DISASSOCIATE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"a" + RandomTestUtil.randomString(), false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY));
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null));
 
 		postObjectDefinition = objectDefinitionResource.getObjectDefinition(
 			postObjectDefinition.getId());
@@ -318,6 +404,52 @@ public class ObjectDefinitionResourceTest
 
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			postObjectDefinition.getId());
+
+		// Draft custom object definition
+
+		postObjectDefinition = objectDefinitionResource.postObjectDefinition(
+			randomObjectDefinition());
+
+		Assert.assertEquals(
+			postObjectDefinition.getStatus(),
+			new Status() {
+				{
+					code = WorkflowConstants.STATUS_DRAFT;
+					label = WorkflowConstants.getStatusLabel(
+						WorkflowConstants.STATUS_DRAFT);
+					label_i18n = _language.get(
+						LanguageResources.getResourceBundle(
+							LocaleUtil.getDefault()),
+						WorkflowConstants.getStatusLabel(
+							WorkflowConstants.STATUS_DRAFT));
+				}
+			});
+
+		postObjectDefinition.setStatus(
+			new Status() {
+				{
+					code = WorkflowConstants.STATUS_APPROVED;
+				}
+			});
+
+		ObjectDefinition randomPersistedPublishedObjectDefinition =
+			objectDefinitionResource.putObjectDefinition(
+				postObjectDefinition.getId(), postObjectDefinition);
+
+		Assert.assertEquals(
+			randomPersistedPublishedObjectDefinition.getStatus(),
+			new Status() {
+				{
+					code = WorkflowConstants.STATUS_APPROVED;
+					label = WorkflowConstants.getStatusLabel(
+						WorkflowConstants.STATUS_APPROVED);
+					label_i18n = _language.get(
+						LanguageResources.getResourceBundle(
+							LocaleUtil.getDefault()),
+						WorkflowConstants.getStatusLabel(
+							WorkflowConstants.STATUS_APPROVED));
+				}
+			});
 
 		// Modifiable system object definition
 
@@ -484,7 +616,7 @@ public class ObjectDefinitionResourceTest
 		objectDefinition.setModifiable(true);
 		objectDefinition.setName("O" + objectDefinition.getName());
 		objectDefinition.setObjectFolderExternalReferenceCode(
-			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_UNCATEGORIZED);
+			ObjectFolderConstants.EXTERNAL_REFERENCE_CODE_DEFAULT);
 		objectDefinition.setPluralLabel(
 			Collections.singletonMap(
 				"en_US", "O" + objectDefinition.getName()));
@@ -592,7 +724,7 @@ public class ObjectDefinitionResourceTest
 			_objectFolder1 = _objectFolderLocalService.updateObjectFolder(
 				RandomTestUtil.randomString(),
 				_objectFolder1.getObjectFolderId(),
-				_objectFolder1.getLabelMap(), Collections.emptyList());
+				_objectFolder1.getLabelMap());
 
 			objectDefinition1 = objectDefinitionResource.getObjectDefinition(
 				objectDefinition1.getId());
@@ -842,6 +974,9 @@ public class ObjectDefinitionResourceTest
 
 	@Inject
 	private Language _language;
+
+	@Inject
+	private ListTypeDefinitionLocalService _listTypeDefinitionLocalService;
 
 	private ObjectDefinition _objectDefinition;
 

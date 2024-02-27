@@ -7,15 +7,19 @@ import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput, ClayToggle} from '@clayui/form';
 import ClayPanel from '@clayui/panel';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {useId} from 'frontend-js-components-web';
 import {openToast} from 'frontend-js-web';
 import React, {useCallback, useEffect, useState} from 'react';
 
-import updateItemLocalConfig from '../../../../../../app/actions/updateItemLocalConfig';
 import {CheckboxField} from '../../../../../../app/components/fragment_configuration_fields/CheckboxField';
 import {SelectField} from '../../../../../../app/components/fragment_configuration_fields/SelectField';
 import {TextField} from '../../../../../../app/components/fragment_configuration_fields/TextField';
 import {COMMON_STYLES_ROLES} from '../../../../../../app/config/constants/commonStylesRoles';
+import {
+	useItemLocalConfig,
+	useUpdateItemLocalConfig,
+} from '../../../../../../app/contexts/LocalConfigContext';
 import {
 	useDispatch,
 	useSelector,
@@ -35,19 +39,44 @@ import ContainerDisplayOptions from './ContainerDisplayOptions';
 import FormMappingOptions from './FormMappingOptions';
 
 export function FormGeneralPanel({item}) {
+	const isMounted = useIsMounted();
 	const dispatch = useDispatch();
+	const updateItemLocalConfig = useUpdateItemLocalConfig();
 
 	const onValueSelect = useCallback(
-		(nextConfig, overridePreviousConfig = true) =>
+		(nextConfig) => {
+			const isMapping = Boolean(nextConfig.classNameId);
+
+			if (isMapping) {
+				updateItemLocalConfig(item.itemId, {
+					loading: true,
+					showMessagePreview: false,
+				});
+			}
+
 			dispatch(
 				updateFormItemConfig({
 					itemConfig: nextConfig,
 					itemId: item.itemId,
-					overridePreviousConfig,
 				})
-			),
-		[dispatch, item.itemId]
+			).then(() =>
+				updateItemLocalConfig(item.itemId, {
+					loading: false,
+				})
+			);
+		},
+		[dispatch, item.itemId, updateItemLocalConfig]
 	);
+
+	useEffect(() => {
+		return () => {
+			if (!isMounted()) {
+				updateItemLocalConfig(item.itemId, {
+					showMessagePreview: false,
+				});
+			}
+		};
+	}, [isMounted, item.itemId, updateItemLocalConfig]);
 
 	if (formIsUnavailable(item)) {
 		return (
@@ -146,6 +175,9 @@ const SUCCESS_MESSAGE_OPTIONS = [
 ];
 
 function SuccessInteractionOptions({item, onValueSelect}) {
+	const localConfig = useItemLocalConfig(item.itemId);
+	const updateItemLocalConfig = useUpdateItemLocalConfig();
+
 	const {successMessage: interactionConfig = {}} = item.config;
 
 	const {
@@ -158,8 +190,6 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 		url,
 	} = interactionConfig || {};
 
-	const dispatch = useDispatch();
-
 	const languageId = useSelector(selectLanguageId);
 
 	const helpTextId = useId();
@@ -171,20 +201,6 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 		Liferay.Language.get('your-information-was-successfully-received')
 	);
 
-	useEffect(() => {
-		return () => {
-			dispatch(
-				updateItemLocalConfig({
-					disableUndo: true,
-					itemConfig: {
-						showMessagePreview: false,
-					},
-					itemId: item.itemId,
-				})
-			);
-		};
-	}, [item.itemId, dispatch]);
-
 	const onConfigChange = useCallback(
 		(config, override = false) => {
 			const nextConfig = override
@@ -194,7 +210,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 						...config,
 				  };
 
-			onValueSelect({successMessage: nextConfig}, false);
+			onValueSelect({successMessage: nextConfig});
 		},
 		[interactionConfig, onValueSelect]
 	);
@@ -202,20 +218,6 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 	const [showNotificationPreview, setShowNotificationPreview] = useState(
 		item.config.showNotificationPreview
 	);
-
-	const onPreviewNotification = (checked) => {
-		setShowNotificationPreview(checked);
-
-		dispatch(
-			updateItemLocalConfig({
-				disableUndo: true,
-				itemConfig: {
-					showNotificationPreview: checked,
-				},
-				itemId: item.itemId,
-			})
-		);
-	};
 
 	const hidePreview = () => {
 		const previewElement = document.getElementById(previewId);
@@ -287,18 +289,12 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 							label={Liferay.Language.get(
 								'preview-embedded-message'
 							)}
-							onToggle={(checked) => {
-								dispatch(
-									updateItemLocalConfig({
-										disableUndo: true,
-										itemConfig: {
-											showMessagePreview: checked,
-										},
-										itemId: item.itemId,
-									})
-								);
-							}}
-							toggled={Boolean(item.config.showMessagePreview)}
+							onToggle={(checked) =>
+								updateItemLocalConfig(item.itemId, {
+									showMessagePreview: checked,
+								})
+							}
+							toggled={localConfig.showMessagePreview}
 						/>
 					</ClayForm.Group>
 				</>
@@ -389,7 +385,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 											}}
 											onValueSelect={(_, value) => {
 												if (showNotificationPreview) {
-													onPreviewNotification(
+													setShowNotificationPreview(
 														false
 													);
 													hidePreview();
@@ -415,13 +411,17 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 									aria-label={Liferay.Language.get(
 										'preview-success-notification'
 									)}
+									disabled={showNotificationPreview}
 									displayType="secondary"
 									onClick={() => {
-										onPreviewNotification(true);
+										setShowNotificationPreview(true);
+
 										openToast({
 											message: localizedNotificationText,
 											onClose: () =>
-												onPreviewNotification(false),
+												setShowNotificationPreview(
+													false
+												),
 											toastProps: {
 												id: previewId,
 											},

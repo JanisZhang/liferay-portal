@@ -54,7 +54,6 @@ function getLocationValue(field, context) {
 			0,
 			null
 		);
-
 		while ((res = result.iterateNext())) {
 			const resNodesAttributes = getChildAttributes(res.childNodes);
 
@@ -172,12 +171,49 @@ function getLocationValue(field, context) {
 														] = {};
 
 														for (const grandGrandChild of grandGrand.children) {
-															grandGrandContent[
-																grandGrand.tagName
-															][
-																grandGrandChild.tagName
-															] =
-																grandGrandChild.textContent;
+															if (
+																!grandGrandChild
+																	.children
+																	.length
+															) {
+																fillContent(
+																	grandGrandChild.tagName,
+																	grandGrandContent[
+																		grandGrand
+																			.tagName
+																	],
+																	grandGrandChild.textContent
+																);
+															}
+															else {
+																for (const grandGrandGrandChild of grandGrandChild.children) {
+																	if (
+																		!grandGrandContent[
+																			grandGrand
+																				.tagName
+																		][
+																			grandGrandGrandChild
+																				.tagName
+																		]
+																	) {
+																		grandGrandContent[
+																			grandGrand.tagName
+																		][
+																			grandGrandGrandChild.tagName
+																		] = [];
+																	}
+
+																	grandGrandContent[
+																		grandGrand
+																			.tagName
+																	][
+																		grandGrandGrandChild
+																			.tagName
+																	].push(
+																		grandGrandGrandChild.textContent
+																	);
+																}
+															}
 														}
 													}
 													else {
@@ -197,9 +233,11 @@ function getLocationValue(field, context) {
 												] = grandGrandChildren;
 											}
 											else {
-												subItemContent[
-													itemGrandChild.tagName
-												] = itemGrandChild.textContent;
+												fillContent(
+													itemGrandChild.tagName,
+													subItemContent,
+													itemGrandChild.textContent
+												);
 											}
 
 											for (const itemGrandChildAttribute of itemGrandChild.attributes) {
@@ -266,27 +304,11 @@ function getLocationValue(field, context) {
 									itemContent = item.textContent;
 								}
 
-								if (childContent[item.tagName]) {
-									if (
-										Array.isArray(
-											childContent[item.tagName]
-										)
-									) {
-										childContent[item.tagName] = [
-											...childContent[item.tagName],
-											itemContent,
-										];
-									}
-									else {
-										childContent[item.tagName] = [
-											childContent[item.tagName],
-											itemContent,
-										];
-									}
-								}
-								else {
-									childContent[item.tagName] = itemContent;
-								}
+								fillContent(
+									item.tagName,
+									childContent,
+									itemContent
+								);
 							}
 						}
 					}
@@ -305,6 +327,19 @@ function getLocationValue(field, context) {
 	return parse(value, field);
 }
 
+function fillContent(index, item, content) {
+	if (item[index]) {
+		if (Array.isArray(item[index])) {
+			item[index] = [...item[index], content];
+		}
+		else {
+			item[index] = [item[index], content];
+		}
+	}
+	else {
+		item[index] = content;
+	}
+}
 function parseMeta(metaFields, xmldoc_in, data_out) {
 	if (isObject(metaFields)) {
 		let key;

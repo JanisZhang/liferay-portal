@@ -549,7 +549,7 @@ components:
 info:
     description:
         "Headless Delivery Commerce Cart API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.delivery.cart.client', and version '4.0.31'."
+        artifact ID 'com.liferay.headless.commerce.delivery.cart.client', and version '4.0.35'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -1520,12 +1520,6 @@ paths:
                       type: integer
                   style: simple
                 - in: query
-                  name: skuId
-                  required: false
-                  schema:
-                      format: int64
-                      type: integer
-                - in: query
                   name: page
                   required: false
                   schema:
@@ -1534,6 +1528,12 @@ paths:
                   name: pageSize
                   required: false
                   schema:
+                      type: integer
+                - in: query
+                  name: skuId
+                  required: false
+                  schema:
+                      format: int64
                       type: integer
             responses:
                 200:

@@ -42,40 +42,64 @@ public class SkuOptionUtil {
 			for (CPDefinitionOptionValueRel cpDefinitionOptionValueRel :
 					cpDefinitionOptionValueRels) {
 
-				CPInstance cpInstance =
-					cpInstanceLocalService.fetchCProductInstance(
-						cpDefinitionOptionValueRel.getCProductId(),
-						cpDefinitionOptionValueRel.getCPInstanceUuid());
-				BigDecimal priceBigDecimal =
-					cpDefinitionOptionValueRel.getPrice();
-
 				SkuOption skuOption = new SkuOption() {
 					{
-						key =
-							cpDefinitionOptionRel.getCPDefinitionOptionRelId();
-						price =
-							(priceBigDecimal == null) ?
-								BigDecimal.ZERO.toString() :
-									priceBigDecimal.toString();
-						priceType = cpDefinitionOptionRel.getPriceType();
-						quantity = String.valueOf(
-							cpDefinitionOptionValueRel.getQuantity());
-						skuId = (cpInstance == null) ? null :
-							cpInstance.getCPInstanceId();
-						skuOptionId =
-							cpDefinitionOptionRel.getCPDefinitionOptionRelId();
-						skuOptionKey = cpDefinitionOptionRel.getKey();
-						skuOptionName = cpDefinitionOptionRel.getName(locale);
-						skuOptionValueId =
-							cpDefinitionOptionValueRel.
-								getCPDefinitionOptionValueRelId();
-						skuOptionValueKey = cpDefinitionOptionValueRel.getKey();
-						skuOptionValueNames = new String[] {
-							cpDefinitionOptionValueRel.getName(locale)
-						};
-						value =
-							cpDefinitionOptionValueRel.
-								getCPDefinitionOptionValueRelId();
+						setKey(
+							() ->
+								cpDefinitionOptionRel.
+									getCPDefinitionOptionRelId());
+						setPrice(
+							() -> {
+								BigDecimal priceBigDecimal =
+									cpDefinitionOptionValueRel.getPrice();
+
+								if (priceBigDecimal == null) {
+									return BigDecimal.ZERO.toString();
+								}
+
+								return priceBigDecimal.toString();
+							});
+						setPriceType(cpDefinitionOptionRel::getPriceType);
+						setQuantity(
+							() -> String.valueOf(
+								cpDefinitionOptionValueRel.getQuantity()));
+						setSkuId(
+							() -> {
+								CPInstance cpInstance =
+									cpInstanceLocalService.
+										fetchCProductInstance(
+											cpDefinitionOptionValueRel.
+												getCProductId(),
+											cpDefinitionOptionValueRel.
+												getCPInstanceUuid());
+
+								if (cpInstance == null) {
+									return null;
+								}
+
+								return cpInstance.getCPInstanceId();
+							});
+						setSkuOptionId(
+							() ->
+								cpDefinitionOptionRel.
+									getCPDefinitionOptionRelId());
+						setSkuOptionKey(cpDefinitionOptionRel::getKey);
+						setSkuOptionName(
+							() -> cpDefinitionOptionRel.getName(locale));
+						setSkuOptionValueId(
+							() ->
+								cpDefinitionOptionValueRel.
+									getCPDefinitionOptionValueRelId());
+						setSkuOptionValueKey(
+							cpDefinitionOptionValueRel::getKey);
+						setSkuOptionValueNames(
+							() -> new String[] {
+								cpDefinitionOptionValueRel.getName(locale)
+							});
+						setValue(
+							() ->
+								cpDefinitionOptionValueRel.
+									getCPDefinitionOptionValueRelId());
 					}
 				};
 

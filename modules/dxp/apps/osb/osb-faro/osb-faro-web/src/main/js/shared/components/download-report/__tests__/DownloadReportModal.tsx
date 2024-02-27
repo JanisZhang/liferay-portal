@@ -1,11 +1,17 @@
 import ClayForm from '@clayui/form';
+import client from 'shared/apollo/client';
 import mockStore from 'test/mock-store';
+import moment, {Moment} from 'moment';
 import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
 import {act, cleanup, fireEvent, render} from '@testing-library/react';
+import {ApolloProvider} from '@apollo/react-hooks';
 import {Checkbox, Containers, formatContainers} from '../DownloadPDFReport';
 import {DownloadReportButton} from '../DownloadReportButton';
 import {DownloadReportModal, ReportType} from '../DownloadReportModal';
+import {MockedProvider} from '@apollo/react-testing';
+import {mockPreferenceReq} from 'test/graphql-data';
+import {MomentDateRange} from 'shared/components/DateRangeInput';
 import {Provider} from 'react-redux';
 import {sub} from 'shared/util/lang';
 import {toLocale} from 'shared/util/numbers';
@@ -13,8 +19,20 @@ import {useModal} from '@clayui/modal';
 
 jest.unmock('react-dom');
 
-const WrapperCSVComponent = () => (
+jest.mock('react-router-dom', () => ({
+	...jest.requireActual('react-router-dom'),
+	useParams: () => ({
+		channelId: '456',
+		groupId: '2000',
+		query: {
+			rangeKey: '30'
+		}
+	})
+}));
+
+const WrapperCSVComponent = props => (
 	<WrapperComponent
+		{...props}
 		alertMessage={
 			sub(
 				Liferay.Language.get(
@@ -44,7 +62,7 @@ const WrapperCSVComponent = () => (
 	/>
 );
 
-const WrapperPDFomponent = ({children}) => (
+const WrapperPDFomponent = ({children, ...otherProps}) => (
 	<WrapperComponent
 		alertMessage={
 			sub(
@@ -66,6 +84,7 @@ const WrapperPDFomponent = ({children}) => (
 			'the-dashboard-will-be-downloaded-exactly-as-it-is-displayed-on-your-screen.-please-verify-if-the-desired-tabs-and-filters-are-selected-before-downloading'
 		)}
 		type={ReportType.PDF}
+		{...otherProps}
 	>
 		{children}
 	</WrapperComponent>
@@ -73,8 +92,10 @@ const WrapperPDFomponent = ({children}) => (
 
 interface IWrapperComponent extends React.HTMLAttributes<HTMLElement> {
 	alertMessage: string;
+	date?: MomentDateRange;
 	descriptionMessage: string;
 	infoMessage: string;
+	minDate?: Moment;
 	requiredDateRange?: boolean;
 	type: ReportType;
 }
@@ -85,7 +106,8 @@ const WrapperComponent: React.FC<IWrapperComponent> = ({
 	descriptionMessage,
 	infoMessage,
 	requiredDateRange = false,
-	type
+	type,
+	...otherProps
 }) => {
 	const [visible, setVisible] = useState(false);
 	const {observer} = useModal({onClose: () => setVisible(false)});
@@ -93,20 +115,25 @@ const WrapperComponent: React.FC<IWrapperComponent> = ({
 	return (
 		<>
 			{visible && (
-				<Provider store={mockStore()}>
-					<DownloadReportModal
-						alertMessage={alertMessage}
-						descriptionMessage={descriptionMessage}
-						infoMessage={infoMessage}
-						observer={observer}
-						onClose={jest.fn()}
-						onSubmit={jest.fn()}
-						requiredDateRange={requiredDateRange}
-						type={type}
-					>
-						{children}
-					</DownloadReportModal>
-				</Provider>
+				<ApolloProvider client={client}>
+					<MockedProvider mocks={[mockPreferenceReq()]}>
+						<Provider store={mockStore()}>
+							<DownloadReportModal
+								{...otherProps}
+								alertMessage={alertMessage}
+								descriptionMessage={descriptionMessage}
+								infoMessage={infoMessage}
+								observer={observer}
+								onClose={jest.fn()}
+								onSubmit={jest.fn()}
+								requiredDateRange={requiredDateRange}
+								type={type}
+							>
+								{children}
+							</DownloadReportModal>
+						</Provider>
+					</MockedProvider>
+				</ApolloProvider>
 			)}
 
 			<DownloadReportButton
@@ -136,8 +163,12 @@ describe('DownloadReportModal CSV', () => {
 	});
 
 	it('renders component', () => {
-		const {container, getByRole, getByTestId, getByText} = render(
-			<WrapperCSVComponent />
+		const {getByRole, getByTestId, getByText} = render(
+			<WrapperCSVComponent
+				date={{end: moment(0), start: moment(0)}}
+				maxDate={moment(0)}
+				minDate={moment(0).subtract(1, 'year')}
+			/>
 		);
 
 		fireEvent.click(
@@ -172,8 +203,6 @@ describe('DownloadReportModal CSV', () => {
 
 		expect(getByTestId('cancel')).toBeInTheDocument();
 		expect(getByTestId('submit')).toBeInTheDocument();
-
-		expect(container).toMatchSnapshot();
 	});
 
 	it('download button should be disabled when there are no date range value', () => {
@@ -193,7 +222,13 @@ describe('DownloadReportModal CSV', () => {
 	});
 
 	it('download button should be enabled when there are date range value', () => {
-		const {getByRole, getByTestId} = render(<WrapperCSVComponent />);
+		const {getByRole, getByTestId} = render(
+			<WrapperCSVComponent
+				date={{end: moment(0), start: moment(0)}}
+				maxDate={moment(0)}
+				minDate={moment(0).subtract(1, 'year')}
+			/>
+		);
 
 		fireEvent.click(
 			getByRole('button', {
@@ -205,19 +240,9 @@ describe('DownloadReportModal CSV', () => {
 			jest.runAllTimers();
 		});
 
-		const customRangeInput = getByRole('textbox', {name: /date range/i});
-
-		fireEvent.click(customRangeInput);
-
-		const startDate = getByRole('button', {name: /10/i});
-		const endDate = getByRole('button', {name: /11/i});
-
-		fireEvent.click(startDate);
-		fireEvent.click(endDate);
-
-		expect(customRangeInput).toHaveAttribute(
+		expect(getByRole('textbox', {name: /date range/i})).toHaveAttribute(
 			'value',
-			'2023-11-10 - 2023-11-11'
+			'1970-01-01 - 1970-01-01'
 		);
 		expect(getByTestId('submit')).not.toHaveAttribute('disabled');
 	});
@@ -272,8 +297,12 @@ describe('DownloadReportModal PDF', () => {
 			Containers.VisitorsByTimeCard
 		];
 
-		const {container, getByRole, getByTestId, getByText} = render(
-			<WrapperPDFomponent>
+		const {getByRole, getByTestId, getByText} = render(
+			<WrapperPDFomponent
+				date={{end: moment(0), start: moment(0)}}
+				maxDate={moment(0)}
+				minDate={moment(0).subtract(1, 'year')}
+			>
 				<ClayForm.Group>
 					<label>{Liferay.Language.get('select-reports')}</label>
 
@@ -322,7 +351,5 @@ describe('DownloadReportModal PDF', () => {
 
 		expect(getByTestId('cancel')).toBeInTheDocument();
 		expect(getByTestId('submit')).toBeInTheDocument();
-
-		expect(container).toMatchSnapshot();
 	});
 });

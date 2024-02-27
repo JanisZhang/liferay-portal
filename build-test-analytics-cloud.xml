@@ -75,6 +75,57 @@ networks:
 		</sequential>
 	</macrodef>
 
+	<macrodef name="download-gradle-wrapper-binary">
+		<sequential>
+			<if>
+				<and>
+					<available file="${analytics.cloud.asah.dir}/gradle/wrapper/gradle-wrapper.properties" />
+					<not>
+						<available file="${analytics.cloud.asah.dir}/gradle/wrapper/${gradle.wrapper.bin.file.name}" />
+					</not>
+				</and>
+				<then>
+					<local name="gradle.wrapper.bin.file.name" />
+					<local name="gradle.wrapper.bin.file.url" />
+
+					<beanshell>
+						<![CDATA[
+							import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+
+							File gradleWrapperPropertiesFile = new File(project.getProperty("analytics.cloud.asah.dir") + "/gradle/wrapper/gradle-wrapper.properties");
+
+							Properties gradleWrapperProperties = JenkinsResultsParserUtil.getProperties(new File[] {gradleWrapperPropertiesFile});
+
+							String distributionURL = gradleWrapperProperties.getProperty("distributionUrl");
+
+							project.setProperty("gradle.wrapper.bin.file.name", distributionURL.replaceAll(".*/([^/]+)", "$1"));
+							project.setProperty("gradle.wrapper.bin.file.url", distributionURL);
+						]]>
+					</beanshell>
+
+					<mirrors-get
+						dest="${analytics.cloud.asah.dir}/gradle/wrapper/${gradle.wrapper.bin.file.name}"
+						src="${gradle.wrapper.bin.file.url}"
+					/>
+
+					<beanshell>
+						<![CDATA[
+							import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+
+							File gradleWrapperPropertiesFile = new File(project.getProperty("analytics.cloud.asah.dir") + "/gradle/wrapper/gradle-wrapper.properties");
+
+							Properties gradleWrapperProperties = JenkinsResultsParserUtil.getProperties(new File[] {gradleWrapperPropertiesFile});
+
+							gradleWrapperProperties.setProperty("distributionUrl", "./" + project.getProperty("gradle.wrapper.bin.file.name"));
+
+							JenkinsResultsParserUtil.writePropertiesFile(gradleWrapperPropertiesFile, gradleWrapperProperties, true);
+						]]>
+					</beanshell>
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="print-analytics-cloud-logs">
 		<sequential>
 			<property location="${analytics.cloud.asah.dir}/docker-compose.test.yml" name="analytics.cloud.docker.test.yaml" />
@@ -240,6 +291,20 @@ OSB_ASAH_PUBLISHER_URL=${analytics.cloud.asah.publisher.url}
 OSB_FARO_FRONTEND_URL=${analytics.cloud.faro.frontend.url}</echo>
 
 			<if>
+				<isset property="test.portal.license.url" />
+				<then>
+					<mkdir dir="${analytics.cloud.faro.dir}/osb-faro-docker/common/license/" />
+
+					<mirrors-get
+						dest="${analytics.cloud.faro.dir}/osb-faro-docker/common/license/"
+						src="${test.portal.license.url}"
+					/>
+				</then>
+			</if>
+
+			<download-gradle-wrapper-binary />
+
+			<if>
 				<equals arg1="${analytics.cloud.asah.build}" arg2="true" />
 				<then>
 					<pull-docker-image-dependencies
@@ -317,9 +382,7 @@ OSB_FARO_FRONTEND_URL=${analytics.cloud.faro.frontend.url}</echo>
 
 				docker logs ${analytics.cloud.faro.container.name}
 
-				docker container prune -f
-				docker image prune -f
-				docker volume prune -f
+				docker system df
 			</echo>
 
 			<trycatch>
@@ -475,9 +538,7 @@ if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 
 				docker-compose --file=${analytics.cloud.docker.test.yaml} --project-name=${analytics.cloud.project.name} down --volumes
 
-				docker container prune -f
-				docker image prune -f
-				docker volume prune -f
+				docker system df
 			</execute>
 		</sequential>
 	</macrodef>
@@ -491,9 +552,7 @@ if (Os.isFamily(Os.FAMILY_WINDOWS)) {
 
 				docker-compose -f docker-compose.integration-test.yml down --volumes
 
-				docker container prune -f
-				docker image prune -f
-				docker volume prune -f
+				docker system df
 			</execute>
 		</sequential>
 	</macrodef>

@@ -7,15 +7,8 @@
 
 <%@ include file="/init.jsp" %>
 
-<div>
-	<react:component
-		module="{BetaButton} from frontend-js-components-web"
-		props='<%=
-			HashMapBuilder.<String, Object>put(
-				"learnResourceContext", LearnMessageUtil.getReactDataJSONObject("frontend-js-components-web")
-			).put(
-				"tooltipAlign", "bottom"
-			).build()
-		%>'
-	/>
-</div>
+<liferay-frontend:feature-indicator
+	interactive="<%= true %>"
+	tooltipAlign="bottom"
+	type="beta"
+/>

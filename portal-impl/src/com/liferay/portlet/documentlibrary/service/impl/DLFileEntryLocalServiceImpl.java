@@ -200,8 +200,8 @@ public class DLFileEntryLocalServiceImpl
 			String mimeType, String title, String urlTitle, String description,
 			String changeLog, long fileEntryTypeId,
 			Map<String, DDMFormValues> ddmFormValuesMap, File file,
-			InputStream inputStream, long size, Date expirationDate,
-			Date reviewDate, ServiceContext serviceContext)
+			InputStream inputStream, long size, Date displayDate,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
 		throws PortalException {
 
 		if (Validator.isNull(title)) {
@@ -293,6 +293,7 @@ public class DLFileEntryLocalServiceImpl
 		dlFileEntry.setFileEntryTypeId(fileEntryTypeId);
 		dlFileEntry.setVersion(DLFileEntryConstants.VERSION_DEFAULT);
 		dlFileEntry.setSize(size);
+		dlFileEntry.setDisplayDate(displayDate);
 		dlFileEntry.setExpirationDate(expirationDate);
 		dlFileEntry.setReviewDate(reviewDate);
 
@@ -308,8 +309,8 @@ public class DLFileEntryLocalServiceImpl
 			user, dlFileEntry, fileName, extension, mimeType, title,
 			description, changeLog, StringPool.BLANK, fileEntryTypeId,
 			ddmFormValuesMap, DLFileEntryConstants.VERSION_DEFAULT, size,
-			expirationDate, reviewDate, WorkflowConstants.STATUS_DRAFT,
-			serviceContext);
+			displayDate, expirationDate, reviewDate,
+			WorkflowConstants.STATUS_DRAFT, serviceContext);
 
 		// Folder
 
@@ -607,6 +608,7 @@ public class DLFileEntryLocalServiceImpl
 			sourceDLFileEntry.getDescription(), null,
 			sourceDLFileEntry.getFileEntryTypeId(), null, null,
 			sourceInputStream, sourceDLFileEntry.getSize(),
+			sourceDLFileEntry.getDisplayDate(),
 			sourceDLFileEntry.getExpirationDate(),
 			sourceDLFileEntry.getReviewDate(), serviceContext);
 
@@ -772,7 +774,7 @@ public class DLFileEntryLocalServiceImpl
 		// File
 
 		try {
-			DLStoreUtil.deleteDirectory(
+			DLStoreUtil.deleteFile(
 				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
 				dlFileEntry.getName());
 		}
@@ -1765,8 +1767,8 @@ public class DLFileEntryLocalServiceImpl
 			dlFileVersion.getDescription(), changeLog, dlVersionNumberIncrease,
 			dlFileVersion.getExtraSettings(), fileEntryTypeId, ddmFormValuesMap,
 			null, inputStream, dlFileVersion.getSize(),
-			dlFileVersion.getExpirationDate(), dlFileVersion.getReviewDate(),
-			serviceContext);
+			dlFileVersion.getDisplayDate(), dlFileVersion.getExpirationDate(),
+			dlFileVersion.getReviewDate(), serviceContext);
 
 		DLFileVersion newDLFileVersion =
 			_dlFileVersionLocalService.getLatestFileVersion(fileEntryId, false);
@@ -1885,8 +1887,8 @@ public class DLFileEntryLocalServiceImpl
 			String mimeType, String title, String urlTitle, String description,
 			String changeLog, DLVersionNumberIncrease dlVersionNumberIncrease,
 			long fileEntryTypeId, Map<String, DDMFormValues> ddmFormValuesMap,
-			File file, InputStream inputStream, long size, Date expirationDate,
-			Date reviewDate, ServiceContext serviceContext)
+			File file, InputStream inputStream, long size, Date displayDate,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
 		throws PortalException {
 
 		DLFileEntry dlFileEntry = dlFileEntryPersistence.findByPrimaryKey(
@@ -1937,7 +1939,7 @@ public class DLFileEntryLocalServiceImpl
 			userId, fileEntryId, sourceFileName, extension, mimeType, title,
 			description, changeLog, dlVersionNumberIncrease, extraSettings,
 			fileEntryTypeId, ddmFormValuesMap, file, inputStream, size,
-			expirationDate, reviewDate, serviceContext);
+			displayDate, expirationDate, reviewDate, serviceContext);
 	}
 
 	@Override
@@ -2006,6 +2008,7 @@ public class DLFileEntryLocalServiceImpl
 					dlFileVersion.getFileEntryTypeId());
 				dlFileEntry.setVersion(dlFileVersion.getVersion());
 				dlFileEntry.setSize(dlFileVersion.getSize());
+				dlFileEntry.setDisplayDate(dlFileVersion.getDisplayDate());
 				dlFileEntry.setExpirationDate(
 					dlFileVersion.getExpirationDate());
 				dlFileEntry.setReviewDate(dlFileVersion.getReviewDate());
@@ -2199,8 +2202,8 @@ public class DLFileEntryLocalServiceImpl
 			String extension, String mimeType, String title, String description,
 			String changeLog, String extraSettings, long fileEntryTypeId,
 			Map<String, DDMFormValues> ddmFormValuesMap, String version,
-			long size, Date expirationDate, Date reviewDate, int status,
-			ServiceContext serviceContext)
+			long size, Date displayDate, Date expirationDate, Date reviewDate,
+			int status, ServiceContext serviceContext)
 		throws PortalException {
 
 		long fileVersionId = counterLocalService.increment();
@@ -2230,6 +2233,7 @@ public class DLFileEntryLocalServiceImpl
 		dlFileVersion.setVersion(version);
 		dlFileVersion.setSize(size);
 		dlFileVersion.setStoreUUID(String.valueOf(UUID.randomUUID()));
+		dlFileVersion.setDisplayDate(displayDate);
 		dlFileVersion.setExpirationDate(expirationDate);
 		dlFileVersion.setReviewDate(reviewDate);
 		dlFileVersion.setStatus(status);
@@ -2337,15 +2341,8 @@ public class DLFileEntryLocalServiceImpl
 				_dlFileVersionLocalService.fetchLatestFileVersion(
 					fileEntry.getFileEntryId(), false);
 
-			_notifySubscribers(
-				fileEntry.getUserId(), _EMAIL_TYPE_REVIEW,
-				_buildEntryURL(latestFileVersion), latestFileVersion,
-				new ServiceContext());
-
-			_notifyOwner(
-				fileEntry.getUserId(), _EMAIL_TYPE_REVIEW,
-				_buildEntryURL(latestFileVersion), latestFileVersion,
-				new ServiceContext());
+			_notify(
+				fileEntry.getUserId(), _EMAIL_TYPE_REVIEW, latestFileVersion);
 		}
 	}
 
@@ -2429,6 +2426,7 @@ public class DLFileEntryLocalServiceImpl
 					existingDLFileVersion.getFileEntryTypeId(), null,
 					DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION, null,
 					null, existingDLFileVersion.getSize(),
+					existingDLFileVersion.getDisplayDate(),
 					existingDLFileVersion.getExpirationDate(),
 					existingDLFileVersion.getReviewDate(),
 					WorkflowConstants.STATUS_DRAFT,
@@ -2445,6 +2443,7 @@ public class DLFileEntryLocalServiceImpl
 					oldDLFileVersion.getFileEntryTypeId(), null,
 					DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION,
 					oldDLFileVersion.getSize(),
+					oldDLFileVersion.getDisplayDate(),
 					oldDLFileVersion.getExpirationDate(),
 					oldDLFileVersion.getReviewDate(),
 					WorkflowConstants.STATUS_DRAFT, serviceContext);
@@ -2674,29 +2673,23 @@ public class DLFileEntryLocalServiceImpl
 
 				for (DLFileVersion fileVersion : fileVersions) {
 					_expireFileVersion(
-						userId, fileEntry, fileVersion, workflowContext,
-						serviceContext);
+						userId, fileEntry, fileVersion,
+						fileVersion.getFileVersionId() ==
+							latestFileVersion.getFileVersionId(),
+						workflowContext, serviceContext);
 				}
 			}
 			else {
 				_expireFileVersion(
-					userId, fileEntry, latestFileVersion, workflowContext,
+					userId, fileEntry, latestFileVersion, true, workflowContext,
 					serviceContext);
 			}
-
-			_notifySubscribers(
-				userId, _EMAIL_TYPE_EXPIRED, _buildEntryURL(latestFileVersion),
-				latestFileVersion, new ServiceContext());
-
-			_notifyOwner(
-				userId, _EMAIL_TYPE_EXPIRED, _buildEntryURL(latestFileVersion),
-				latestFileVersion, new ServiceContext());
 		}
 	}
 
 	private void _expireFileVersion(
 			long userId, DLFileEntry fileEntry, DLFileVersion fileVersion,
-			Map<String, Serializable> workflowContext,
+			boolean notify, Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -2708,12 +2701,17 @@ public class DLFileEntryLocalServiceImpl
 			_log.debug(
 				StringBundler.concat(
 					"Expiring file entry ", fileEntry.getFileEntryId(),
+					" on version ", fileVersion.getVersion(),
 					" with expiration date ", fileEntry.getExpirationDate()));
 		}
 
 		updateStatus(
 			userId, fileEntry, fileVersion, WorkflowConstants.STATUS_EXPIRED,
 			serviceContext, workflowContext);
+
+		if (notify) {
+			_notify(userId, _EMAIL_TYPE_EXPIRED, fileVersion);
+		}
 	}
 
 	private long _getActiveCompanyAdminUserId(long companyId)
@@ -2989,6 +2987,18 @@ public class DLFileEntryLocalServiceImpl
 			dlFileEntry.getDataRepositoryId(), dlFileEntry.getName());
 
 		return dlFileEntry;
+	}
+
+	private void _notify(long userId, int emailType, DLFileVersion fileVersion)
+		throws PortalException {
+
+		_notifySubscribers(
+			userId, emailType, _buildEntryURL(fileVersion), fileVersion,
+			new ServiceContext());
+
+		_notifyOwner(
+			userId, emailType, _buildEntryURL(fileVersion), fileVersion,
+			new ServiceContext());
 	}
 
 	private void _notifyOwner(
@@ -3328,6 +3338,7 @@ public class DLFileEntryLocalServiceImpl
 		dlFileEntry.setFileEntryTypeId(
 			latestDLFileVersion.getFileEntryTypeId());
 		dlFileEntry.setSize(latestDLFileVersion.getSize());
+		dlFileEntry.setDisplayDate(latestDLFileVersion.getDisplayDate());
 		dlFileEntry.setExpirationDate(lastDLFileVersion.getExpirationDate());
 		dlFileEntry.setReviewDate(lastDLFileVersion.getReviewDate());
 
@@ -3351,6 +3362,7 @@ public class DLFileEntryLocalServiceImpl
 			latestDLFileVersion.getFileEntryTypeId());
 		lastDLFileVersion.setSize(latestDLFileVersion.getSize());
 		lastDLFileVersion.setStoreUUID(String.valueOf(UUID.randomUUID()));
+		lastDLFileVersion.setDisplayDate(latestDLFileVersion.getDisplayDate());
 		lastDLFileVersion.setExpirationDate(
 			latestDLFileVersion.getExpirationDate());
 		lastDLFileVersion.setReviewDate(latestDLFileVersion.getReviewDate());
@@ -3482,8 +3494,8 @@ public class DLFileEntryLocalServiceImpl
 			String changeLog, DLVersionNumberIncrease dlVersionNumberIncrease,
 			String extraSettings, long fileEntryTypeId,
 			Map<String, DDMFormValues> ddmFormValuesMap, File file,
-			InputStream inputStream, long size, Date expirationDate,
-			Date reviewDate, ServiceContext serviceContext)
+			InputStream inputStream, long size, Date displayDate,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
 		throws PortalException {
 
 		User user = _userPersistence.findByPrimaryKey(userId);
@@ -3572,8 +3584,9 @@ public class DLFileEntryLocalServiceImpl
 				user, dlFileVersion, sourceFileName, fileName, extension,
 				mimeType, title, description, changeLog, extraSettings,
 				fileEntryTypeId, ddmFormValuesMap, version, file, inputStream,
-				size, expirationDate, reviewDate, dlFileVersion.getStatus(),
-				serviceContext.getModifiedDate(date), serviceContext);
+				size, displayDate, expirationDate, reviewDate,
+				dlFileVersion.getStatus(), serviceContext.getModifiedDate(date),
+				serviceContext);
 
 			// Folder
 
@@ -3647,8 +3660,8 @@ public class DLFileEntryLocalServiceImpl
 			String description, String changeLog, String extraSettings,
 			long fileEntryTypeId, Map<String, DDMFormValues> ddmFormValuesMap,
 			String version, File file, InputStream inputStream, long size,
-			Date expirationDate, Date reviewDate, int status, Date statusDate,
-			ServiceContext serviceContext)
+			Date displayDate, Date expirationDate, Date reviewDate, int status,
+			Date statusDate, ServiceContext serviceContext)
 		throws PortalException {
 
 		dlFileVersion.setUserId(user.getUserId());
@@ -3673,6 +3686,7 @@ public class DLFileEntryLocalServiceImpl
 			dlFileVersion.setStoreUUID(String.valueOf(UUID.randomUUID()));
 		}
 
+		dlFileVersion.setDisplayDate(displayDate);
 		dlFileVersion.setExpirationDate(expirationDate);
 		dlFileVersion.setReviewDate(reviewDate);
 		dlFileVersion.setStatus(status);

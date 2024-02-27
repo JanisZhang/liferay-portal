@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -323,32 +321,75 @@ public abstract class BaseProductGroupResourceTestCase {
 		ProductGroup productGroup3 = testGetProductGroupsPage_addProductGroup(
 			randomProductGroup());
 
-		Page<ProductGroup> page1 = productGroupResource.getProductGroupsPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ProductGroup> productGroups1 =
-			(List<ProductGroup>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			productGroups1.toString(), totalCount + 2, productGroups1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductGroup> page1 =
+				productGroupResource.getProductGroupsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<ProductGroup> page2 = productGroupResource.getProductGroupsPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(productGroup1, (List<ProductGroup>)page1.getItems());
 
-		List<ProductGroup> productGroups2 =
-			(List<ProductGroup>)page2.getItems();
+			Page<ProductGroup> page2 =
+				productGroupResource.getProductGroupsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			productGroups2.toString(), 1, productGroups2.size());
+			assertContains(productGroup2, (List<ProductGroup>)page2.getItems());
 
-		Page<ProductGroup> page3 = productGroupResource.getProductGroupsPage(
-			null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<ProductGroup> page3 =
+				productGroupResource.getProductGroupsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(productGroup1, (List<ProductGroup>)page3.getItems());
-		assertContains(productGroup2, (List<ProductGroup>)page3.getItems());
-		assertContains(productGroup3, (List<ProductGroup>)page3.getItems());
+			assertContains(productGroup3, (List<ProductGroup>)page3.getItems());
+		}
+		else {
+			Page<ProductGroup> page1 =
+				productGroupResource.getProductGroupsPage(
+					null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<ProductGroup> productGroups1 =
+				(List<ProductGroup>)page1.getItems();
+
+			Assert.assertEquals(
+				productGroups1.toString(), totalCount + 2,
+				productGroups1.size());
+
+			Page<ProductGroup> page2 =
+				productGroupResource.getProductGroupsPage(
+					null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductGroup> productGroups2 =
+				(List<ProductGroup>)page2.getItems();
+
+			Assert.assertEquals(
+				productGroups2.toString(), 1, productGroups2.size());
+
+			Page<ProductGroup> page3 =
+				productGroupResource.getProductGroupsPage(
+					null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(productGroup1, (List<ProductGroup>)page3.getItems());
+			assertContains(productGroup2, (List<ProductGroup>)page3.getItems());
+			assertContains(productGroup3, (List<ProductGroup>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1196,6 +1237,10 @@ public abstract class BaseProductGroupResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1402,9 +1447,9 @@ public abstract class BaseProductGroupResourceTestCase {
 	}
 
 	protected ProductGroupResource productGroupResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

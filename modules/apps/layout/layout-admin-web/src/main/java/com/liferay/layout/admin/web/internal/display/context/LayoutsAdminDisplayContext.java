@@ -68,6 +68,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
+import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -629,7 +630,8 @@ public class LayoutsAdminDisplayContext {
 		Layout selLayout = getSelLayout();
 
 		if (selLayout.isTypeAssetDisplay()) {
-			friendlyURLBase.append("/e");
+			friendlyURLBase.append(
+				FriendlyURLResolverConstants.URL_SEPARATOR_X_CUSTOM_ASSET);
 
 			return friendlyURLBase.toString();
 		}
@@ -1333,29 +1335,27 @@ public class LayoutsAdminDisplayContext {
 					"all-pages");
 		}
 
+		String url = PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCRenderCommandName(
+			"/layout_admin/edit_layout_set"
+		).setRedirect(
+			PortalUtil.getCurrentURL(httpServletRequest)
+		).setBackURL(
+			_backURL
+		).setParameter(
+			"groupId", themeDisplay.getScopeGroupId()
+		).setParameter(
+			"privateLayout", false
+		).setWindowState(
+			LiferayWindowState.MAXIMIZED
+		).buildString();
+
 		return LanguageUtil.format(
 			httpServletRequest,
 			"private-pages-is-using-a-different-theme-than-the-one-set-for-x-" +
 				"public-pages-x",
-			new String[] {
-				"<a href =\"" +
-					PortletURLBuilder.createRenderURL(
-						_liferayPortletResponse
-					).setMVCRenderCommandName(
-						"/layout_admin/edit_layout_set"
-					).setRedirect(
-						PortalUtil.getCurrentURL(httpServletRequest)
-					).setBackURL(
-						_backURL
-					).setParameter(
-						"groupId", themeDisplay.getScopeGroupId()
-					).setParameter(
-						"privateLayout", false
-					).setWindowState(
-						LiferayWindowState.MAXIMIZED
-					).buildString() + "\">",
-				"</a>"
-			});
+			new String[] {"<a href =\"" + url + "\">", "</a>"});
 	}
 
 	public String getTabs1() {
@@ -1692,7 +1692,8 @@ public class LayoutsAdminDisplayContext {
 
 		for (AssetVocabulary assetVocabulary : assetVocabularies) {
 			if (assetVocabulary.isAssociatedToClassNameId(classNameId) &&
-				assetVocabulary.isRequired(classNameId, 0)) {
+				assetVocabulary.isRequired(
+					classNameId, 0, themeDisplay.getScopeGroupId())) {
 
 				return true;
 			}
@@ -1906,7 +1907,8 @@ public class LayoutsAdminDisplayContext {
 
 		for (AssetVocabulary assetVocabulary : assetVocabularies) {
 			if (assetVocabulary.isAssociatedToClassNameId(classNameId) &&
-				assetVocabulary.isRequired(classNameId, 0)) {
+				assetVocabulary.isRequired(
+					classNameId, 0, themeDisplay.getScopeGroupId())) {
 
 				int assetVocabularyCategoriesCount =
 					AssetCategoryServiceUtil.getVocabularyCategoriesCount(
@@ -2046,6 +2048,14 @@ public class LayoutsAdminDisplayContext {
 
 		if (_layoutActionsHelper.isShowExportTranslationAction(layout)) {
 			availableActions.add("exportTranslation");
+		}
+
+		if (FeatureFlagManagerUtil.isEnabled("LPS-196847") &&
+			LayoutPermissionUtil.contains(
+				themeDisplay.getPermissionChecker(), layout,
+				ActionKeys.PERMISSIONS)) {
+
+			availableActions.add("changePermissions");
 		}
 
 		return availableActions;

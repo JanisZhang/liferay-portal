@@ -31,9 +31,7 @@ export declare function createElements(): (
 )[];
 export declare function getEdgeParams(
 	source: Node,
-	sourceIncrementY: number,
-	target: Node,
-	targetIncrementY: number
+	target: Node
 ): {
 	sourcePos: Position;
 	sourceX: number;
@@ -43,7 +41,58 @@ export declare function getEdgeParams(
 	targetY: number;
 };
 export declare function getObjectFolderName(): string;
+interface getObjectDefinitionNodePosition {
+	index: number;
+	objectDefinition: ObjectDefinitionNodeData;
+	objectFolderExternalReferenceCode: string;
+	outdatedObjectFolderItems: ObjectFolderItem[];
+	positionColumn: {
+		x: number;
+		y: number;
+	};
+	updatedObjectFolderItems: ObjectFolderItem[];
+}
+export declare function getObjectDefinitionNodePosition({
+	index,
+	objectDefinition,
+	objectFolderExternalReferenceCode,
+	outdatedObjectFolderItems,
+	positionColumn,
+	updatedObjectFolderItems,
+}: getObjectDefinitionNodePosition): {
+	x: number;
+	y: number;
+};
+export declare function getObjectDefinitionNodeNextPosition(
+	objectFolderItems: ObjectFolderItem[]
+): {
+	x: number;
+	y: number;
+};
+export declare function getObjectFolderDiagramCenterPosition(): {
+	x: number;
+	y: number;
+};
+export declare function getUnsupportedObjectRelationshipErrorMessage(
+	nodes: Node<ObjectDefinitionNodeData>[],
+	sourceNode: Node<ObjectDefinitionNodeData>,
+	targetNode: Node<ObjectDefinitionNodeData>
+):
+	| {
+			errorMessage: string;
+			learnMessage?: undefined;
+	  }
+	| {
+			errorMessage: string;
+			learnMessage: string;
+	  }
+	| undefined;
+export declare function updatePreviousURLParam(
+	paramType: string,
+	paramValue: string
+): void;
 export declare function updateURLParam(
 	paramType: string,
 	paramValue: string
 ): void;
+export {};

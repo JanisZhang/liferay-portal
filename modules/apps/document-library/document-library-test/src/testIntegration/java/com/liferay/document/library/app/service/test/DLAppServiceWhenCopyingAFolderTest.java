@@ -6,12 +6,12 @@
 package com.liferay.document.library.app.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.document.library.app.service.test.util.DLAppServiceTestUtil;
 import com.liferay.document.library.kernel.exception.DuplicateFolderNameException;
 import com.liferay.document.library.kernel.exception.InvalidFolderException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.test.util.BaseDLAppTestCase;
 import com.liferay.document.library.workflow.WorkflowHandlerInvocationCounter;
 import com.liferay.petra.string.StringPool;
@@ -59,7 +59,7 @@ public class DLAppServiceWhenCopyingAFolderTest extends BaseDLAppTestCase {
 			ServiceContext serviceContext =
 				ServiceContextTestUtil.getServiceContext(group.getGroupId());
 
-			Folder folder = DLAppServiceUtil.addFolder(
+			Folder folder = dlAppService.addFolder(
 				null, group.getGroupId(), parentFolder.getFolderId(),
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				serviceContext);
@@ -72,7 +72,7 @@ public class DLAppServiceWhenCopyingAFolderTest extends BaseDLAppTestCase {
 				workflowHandlerInvocationCounter.getCount(
 					"updateStatus", Object.class, int.class, Map.class));
 
-			DLAppServiceUtil.copyFolder(
+			dlAppService.copyFolder(
 				folder.getRepositoryId(), folder.getFolderId(),
 				parentFolder.getParentFolderId(), folder.getName(),
 				folder.getDescription(), serviceContext);
@@ -92,7 +92,7 @@ public class DLAppServiceWhenCopyingAFolderTest extends BaseDLAppTestCase {
 			ServiceContextTestUtil.getServiceContext(group.getGroupId());
 
 		try {
-			DLAppServiceUtil.copyFolder(
+			dlAppService.copyFolder(
 				group.getGroupId(), parentFolder.getFolderId(),
 				group.getGroupId(), parentFolder.getFolderId(), new HashMap<>(),
 				null, serviceContext);
@@ -121,12 +121,12 @@ public class DLAppServiceWhenCopyingAFolderTest extends BaseDLAppTestCase {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(group.getGroupId());
 
-		Folder folder = DLAppServiceUtil.addFolder(
+		Folder folder = dlAppService.addFolder(
 			null, group.getGroupId(), parentFolder.getFolderId(),
 			RandomTestUtil.randomString(), StringPool.BLANK, serviceContext);
 
 		try {
-			DLAppServiceUtil.copyFolder(
+			dlAppService.copyFolder(
 				group.getGroupId(), parentFolder.getFolderId(),
 				group.getGroupId(), folder.getFolderId(), new HashMap<>(), null,
 				serviceContext);
@@ -152,7 +152,7 @@ public class DLAppServiceWhenCopyingAFolderTest extends BaseDLAppTestCase {
 	public void testShouldFailIfUsingSameNameAndDestinationIsParentFolder()
 		throws PortalException {
 
-		DLAppServiceUtil.copyFolder(
+		dlAppService.copyFolder(
 			group.getGroupId(), parentFolder.getFolderId(), group.getGroupId(),
 			parentFolder.getParentFolderId(), new HashMap<>(), null,
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
@@ -167,7 +167,7 @@ public class DLAppServiceWhenCopyingAFolderTest extends BaseDLAppTestCase {
 
 		_addFoldersAndFileEntries(fileNamesMap, serviceContext);
 
-		Folder folder = DLAppServiceUtil.copyFolder(
+		Folder folder = dlAppService.copyFolder(
 			group.getGroupId(), parentFolder.getFolderId(),
 			targetGroup.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, new HashMap<>(), null,
@@ -183,7 +183,7 @@ public class DLAppServiceWhenCopyingAFolderTest extends BaseDLAppTestCase {
 		throws Exception {
 
 		for (Map.Entry<String, List<String>> entry : fileNamesMap.entrySet()) {
-			Folder folder = DLAppServiceUtil.addFolder(
+			Folder folder = dlAppService.addFolder(
 				null, group.getGroupId(), parentFolder.getFolderId(),
 				entry.getKey(), StringPool.BLANK, serviceContext);
 
@@ -219,11 +219,11 @@ public class DLAppServiceWhenCopyingAFolderTest extends BaseDLAppTestCase {
 
 		Map<String, List<String>> fileNamesMap = new HashMap<>();
 
-		List<Folder> folders = DLAppServiceUtil.getFolders(
+		List<Folder> folders = dlAppService.getFolders(
 			parentFolder.getRepositoryId(), parentFolder.getFolderId());
 
 		for (Folder folder : folders) {
-			List<FileEntry> fileEntries = DLAppServiceUtil.getFileEntries(
+			List<FileEntry> fileEntries = dlAppService.getFileEntries(
 				parentFolder.getRepositoryId(), folder.getFolderId());
 
 			List<String> fileNames = new ArrayList<>();

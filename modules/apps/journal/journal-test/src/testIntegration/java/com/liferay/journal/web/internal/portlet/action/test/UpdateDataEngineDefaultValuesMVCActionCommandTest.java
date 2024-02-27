@@ -41,6 +41,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockMultipartHttpServletRequest;
 
 /**
  * @author Jürgen Kappler
@@ -64,9 +65,6 @@ public class UpdateDataEngineDefaultValuesMVCActionCommandTest {
 	public void testAddArticleDefaultValuesWithoutDisplayDate()
 		throws Exception {
 
-		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
-			_group.getGroupId(), JournalArticle.class.getName());
-
 		MockActionRequest mockActionRequest = new MockActionRequest();
 
 		mockActionRequest.setAttribute(
@@ -75,8 +73,18 @@ public class UpdateDataEngineDefaultValuesMVCActionCommandTest {
 		mockActionRequest.addParameter(
 			ActionRequest.ACTION_NAME,
 			"/journal/add_data_engine_default_values");
+
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), JournalArticle.class.getName());
+
 		mockActionRequest.addParameter(
 			"groupId", String.valueOf(ddmStructure.getGroupId()));
+
+		MockMultipartHttpServletRequest mockMultipartHttpServletRequest =
+			new MockMultipartHttpServletRequest();
+
+		mockMultipartHttpServletRequest.setContentType(
+			"multipart/form-data;boundary=" + System.currentTimeMillis());
 
 		Calendar calendar = Calendar.getInstance();
 
@@ -95,7 +103,7 @@ public class UpdateDataEngineDefaultValuesMVCActionCommandTest {
 		UploadPortletRequest uploadPortletRequest =
 			UploadTestUtil.createUploadPortletRequest(
 				UploadTestUtil.createUploadServletRequest(
-					new MockHttpServletRequest(), new HashMap<>(),
+					mockMultipartHttpServletRequest, new HashMap<>(),
 					HashMapBuilder.put(
 						ActionRequest.ACTION_NAME,
 						Collections.singletonList(

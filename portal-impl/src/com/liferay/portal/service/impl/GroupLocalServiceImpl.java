@@ -26,6 +26,8 @@ import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.exportimport.kernel.staging.StagingURLHelperUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -821,7 +823,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			if (group == null) {
 				String className = null;
 				long classPK = 0;
-				int type = GroupConstants.TYPE_SITE_OPEN;
+				int type = GroupConstants.TYPE_SITE_RESTRICTED;
 				String friendlyURL = null;
 				boolean site = true;
 
@@ -850,7 +852,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				group = groupLocalService.addGroup(
 					guestUserId, GroupConstants.DEFAULT_PARENT_GROUP_ID,
 					className, classPK, GroupConstants.DEFAULT_LIVE_GROUP_ID,
-					getLocalizationMap(groupKey), null, type, false,
+					getLocalizationMap(groupKey), null, type, true,
 					GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, friendlyURL,
 					site, true, null);
 
@@ -3930,9 +3932,13 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 		if (Validator.isNotNull(newLanguageIds)) {
 			Group companyGroup = getCompanyGroup(group.getCompanyId());
+
+			group = groupPersistence.findByPrimaryKey(groupId);
+
 			String oldLanguageIds =
 				oldTypeSettingsUnicodeProperties.getProperty(
 					PropsKeys.LOCALES, StringPool.BLANK);
+
 			String defaultLanguageId =
 				typeSettingsUnicodeProperties.getProperty(
 					"languageId",
@@ -5133,10 +5139,6 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			throw remoteOptionsException;
 		}
 
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
@@ -5149,9 +5151,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			remoteURL, user.getLogin(), user.getPassword(),
 			user.isPasswordEncrypted());
 
-		try {
-			currentThread.setContextClassLoader(
-				PortalClassLoaderUtil.getClassLoader());
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				PortalClassLoaderUtil.getClassLoader())) {
 
 			// Ping the remote host and verify that the remote group exists in
 			// the same company as the remote user
@@ -5290,9 +5291,6 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			remoteExportException.setURL(remoteURL);
 
 			throw remoteExportException;
-		}
-		finally {
-			currentThread.setContextClassLoader(contextClassLoader);
 		}
 	}
 

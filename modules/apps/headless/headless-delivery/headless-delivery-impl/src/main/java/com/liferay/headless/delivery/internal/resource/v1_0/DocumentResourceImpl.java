@@ -13,7 +13,6 @@ import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLAppService;
-import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.util.DLFileEntryTypeUtil;
@@ -397,6 +396,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 				documentId, fileName, binaryFile.getContentType(), title, null,
 				description, null, DLVersionNumberIncrease.AUTOMATIC,
 				binaryFile.getInputStream(), binaryFile.getSize(),
+				existingFileEntry.getDisplayDate(),
 				existingFileEntry.getExpirationDate(),
 				existingFileEntry.getReviewDate(),
 				_createServiceContext(
@@ -564,6 +564,7 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 				externalReferenceCode, repositoryId, documentFolderId, fileName,
 				binaryFile.getContentType(), title, null, description, null,
 				binaryFile.getInputStream(), binaryFile.getSize(), null, null,
+				null,
 				_createServiceContext(
 					Constants.ADD, () -> new Long[0], () -> new String[0],
 					documentFolderId, document, groupId)));
@@ -979,8 +980,8 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 				fileEntry.getFileEntryId(), fileName,
 				binaryFile.getContentType(), title, null, description, null,
 				DLVersionNumberIncrease.AUTOMATIC, binaryFile.getInputStream(),
-				binaryFile.getSize(), fileEntry.getExpirationDate(),
-				fileEntry.getReviewDate(),
+				binaryFile.getSize(), fileEntry.getDisplayDate(),
+				fileEntry.getExpirationDate(), fileEntry.getReviewDate(),
 				_createServiceContext(
 					Constants.UPDATE, () -> new Long[0], () -> new String[0],
 					fileEntry.getFolderId(), document,
@@ -1013,9 +1014,6 @@ public class DocumentResourceImpl extends BaseDocumentResourceImpl {
 
 	@Reference
 	private DLAppService _dlAppService;
-
-	@Reference
-	private DLFileEntryLocalService _dlFileEntryLocalService;
 
 	@Reference
 	private DLFileEntryService _dlFileEntryService;

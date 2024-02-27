@@ -28,6 +28,7 @@ import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPOption;
+import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
@@ -68,7 +69,6 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
-import com.liferay.portal.kernel.settings.ArchivedSettingsFactory;
 import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
@@ -377,16 +377,17 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 			ProductSpecification productSpecification =
 				new ProductSpecification() {
 					{
-						productId = cpDefinition.getCPDefinitionId();
-						specificationKey = jsonObject.getString("key");
-						value = JSONUtil.toStringMap(
-							jsonObject.getJSONObject(
-								"productSpecificationValue"));
+						setProductId(cpDefinition::getCProductId);
+						setSpecificationKey(() -> jsonObject.getString("key"));
+						setValue(
+							() -> JSONUtil.toStringMap(
+								jsonObject.getJSONObject(
+									"productSpecificationValue")));
 					}
 				};
 
 			productSpecificationResource.postProductIdProductSpecification(
-				cpDefinition.getCPDefinitionId(), productSpecification);
+				cpDefinition.getCProductId(), productSpecification);
 		}
 	}
 
@@ -409,10 +410,10 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		for (CPDefinition cpDefinition : existingCPDefinitions) {
+			CProduct cProduct = cpDefinition.getCProduct();
+
 			stringUtilReplaceValues.put(
-				"CP_DEFINITION_ID:" +
-					cpDefinition.getCProduct(
-					).getExternalReferenceCode(),
+				"CP_DEFINITION_ID:" + cProduct.getExternalReferenceCode(),
 				String.valueOf(cpDefinition.getCPDefinitionId()));
 		}
 
@@ -441,10 +442,10 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 		}
 
 		for (CPDefinition cpDefinition : cpDefinitions) {
+			CProduct cProduct = cpDefinition.getCProduct();
+
 			stringUtilReplaceValues.put(
-				"CP_DEFINITION_ID:" +
-					cpDefinition.getCProduct(
-					).getExternalReferenceCode(),
+				"CP_DEFINITION_ID:" + cProduct.getExternalReferenceCode(),
 				String.valueOf(cpDefinition.getCPDefinitionId()));
 
 			List<CPInstance> cpInstances = cpDefinition.getCPInstances();
@@ -509,14 +510,15 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 				new ProductOption[] {
 					new ProductOption() {
 						{
-							facetable = cpOption.isFacetable();
-							fieldType = cpOption.getCommerceOptionTypeKey();
-							key = cpOption.getKey();
-							name = LocalizedMapUtil.getI18nMap(
-								cpOption.getNameMap());
-							optionId = cpOption.getCPOptionId();
-							required = cpOption.isRequired();
-							skuContributor = cpOption.isSkuContributor();
+							setFacetable(cpOption::isFacetable);
+							setFieldType(cpOption::getCommerceOptionTypeKey);
+							setKey(cpOption::getKey);
+							setName(
+								() -> LocalizedMapUtil.getI18nMap(
+									cpOption.getNameMap()));
+							setOptionId(cpOption::getCPOptionId);
+							setRequired(cpOption::isRequired);
+							setSkuContributor(cpOption::isSkuContributor);
 						}
 					}
 				});
@@ -1000,9 +1002,6 @@ public class CommerceSiteInitializerImpl implements CommerceSiteInitializer {
 
 	@Reference
 	private AdminAccountGroupResource.Factory _adminAccountGroupResourceFactory;
-
-	@Reference
-	private ArchivedSettingsFactory _archivedSettingsFactory;
 
 	@Reference
 	private CatalogResource.Factory _catalogResourceFactory;

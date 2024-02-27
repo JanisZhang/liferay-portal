@@ -7,6 +7,7 @@ import {ReactNode, createContext, useContext} from 'react';
 import useSWR, {KeyedMutator} from 'swr';
 
 import SearchBuilder from '../core/SearchBuilder';
+import {Liferay} from '../liferay/liferay';
 import HeadlessAdminUserImpl from '../services/rest/HeadlessAdminUser';
 import HeadlessCommerceDeliveryCatalogImpl from '../services/rest/HeadlessCommerceDeliveryCatalog';
 
@@ -31,6 +32,13 @@ type MarketplaceContextProviderProps = {
 	properties: DefaultProperties;
 };
 
+const urlSearchParams = new URLSearchParams();
+
+urlSearchParams.set(
+	'filter',
+	SearchBuilder.contains('name', 'Marketplace Channel')
+);
+
 const MarketplaceContextProvider: React.FC<MarketplaceContextProviderProps> = ({
 	children,
 	properties,
@@ -38,13 +46,6 @@ const MarketplaceContextProvider: React.FC<MarketplaceContextProviderProps> = ({
 	const {data: marketplaceChannel} = useSWR(
 		'/marketplace/channel',
 		async () => {
-			const urlSearchParams = new URLSearchParams();
-
-			urlSearchParams.set(
-				'filter',
-				SearchBuilder.contains('name', 'Marketplace Channel')
-			);
-
 			const channelResponse = await HeadlessCommerceDeliveryCatalogImpl.getChannels(
 				urlSearchParams
 			);
@@ -53,11 +54,14 @@ const MarketplaceContextProvider: React.FC<MarketplaceContextProviderProps> = ({
 		}
 	);
 
-	const {data: myUserAccount, mutate} = useSWR(
-		'/marketplace/my-user-account',
-		() => {
-			return HeadlessAdminUserImpl.getMyUserAccount();
-		}
+	const {
+		data: myUserAccount,
+		mutate,
+	} = useSWR(
+		Liferay.ThemeDisplay.isSignedIn()
+			? '/marketplace/my-user-account'
+			: null,
+		() => HeadlessAdminUserImpl.getMyUserAccount()
 	);
 
 	return (

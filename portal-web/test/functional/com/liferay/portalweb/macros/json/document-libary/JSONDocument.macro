@@ -144,6 +144,15 @@ definition {
 			var sourceFileName = ${fileName};
 		}
 
+		if (!(isSet(displayDate))) {
+			var displayDate = DateUtil.getFormattedCurrentDate("yyyy-MM-dd HH:mm");
+		}
+		else {
+			var displayDate = DateUtil.getDateOffsetByMinutes(${increaseMinutes}, "yyyy-MM-dd HH:mm");
+
+			echo("## * displayDate: ${displayDate}");
+		}
+
 		if (!(isSet(expirationDate))) {
 			var expirationDate = "2099-01-25 01:00";
 		}
@@ -195,6 +204,7 @@ definition {
 					-F urlTitle=${dmFriendlyURL} \
 					-F description=${description} \
 					-F changeLog= \
+					-F <CURL_DATA[displayDate=${displayDate}]CURL_DATA> \
 					-F <CURL_DATA[expirationDate=${expirationDate}]CURL_DATA> \
 					-F <CURL_DATA[reviewDate=${reviewDate}]CURL_DATA> \
 					-F file=@${filePath} \
@@ -344,11 +354,12 @@ definition {
 
 	@summary = "Default summary"
 	macro checkInFile(dmDocumentTitle = null, groupName = null) {
-		Variables.assertDefined(parameterList = "${groupName},${dmDocumentTitle}");
+		Variables.assertDefined(parameterList = ${dmDocumentTitle});
 
 		var portalURL = JSONCompany.getPortalURL();
 		var fileEntryId = JSONDocument.getFileEntryId(
 			dmDocumentTitle = ${dmDocumentTitle},
+			groupId = ${groupId},
 			groupName = ${groupName});
 		var userLoginInfo = JSONUtil2.formatJSONUser();
 
@@ -364,11 +375,12 @@ definition {
 
 	@summary = "Default summary"
 	macro checkOutFile(dmDocumentTitle = null, groupName = null) {
-		Variables.assertDefined(parameterList = "${groupName},${dmDocumentTitle}");
+		Variables.assertDefined(parameterList = ${dmDocumentTitle});
 
 		var portalURL = JSONCompany.getPortalURL();
 		var fileEntryId = JSONDocument.getFileEntryId(
 			dmDocumentTitle = ${dmDocumentTitle},
+			groupId = ${groupId},
 			groupName = ${groupName});
 		var userLoginInfo = JSONUtil2.formatJSONUser();
 
@@ -425,10 +437,12 @@ definition {
 			var site = "true";
 		}
 
-		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = ${groupName},
-			portalURL = ${portalURL},
-			site = ${site});
+		if (!(isSet(groupId))) {
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = ${groupName},
+				portalURL = ${portalURL},
+				site = ${site});
+		}
 
 		if (!(isSet(folderId))) {
 			var folderId = 0;

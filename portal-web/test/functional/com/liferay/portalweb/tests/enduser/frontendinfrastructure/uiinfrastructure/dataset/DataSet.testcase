@@ -2,7 +2,6 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-164563=true";
-	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Frontend Data Set";
@@ -29,7 +28,7 @@ definition {
 	}
 
 	@description = "LPS-178858 Confirm the empty message on the Data Set administration page"
-	@priority = 5
+	@priority = 3
 	test AssertEmptyMessageInDSAdmin {
 		task ("And the text “No Datasets Created. Start creating one to show your data.” is present on the page") {
 			AssertTextPresent(
@@ -47,7 +46,7 @@ definition {
 	}
 
 	@description = "LPS-178858 Confirm that the new Data Set Modal is displayed by clicking on the add button"
-	@priority = 5
+	@priority = 3
 	test AssertNewDataSetModal {
 		task ("When the user clicks on “Create Dataset” button") {
 			LexiconEntry.gotoAdd();
@@ -162,95 +161,11 @@ definition {
 		}
 	}
 
-	@description = "LPS-194126 Confirm that a new translation field has been created"
-	@priority = 3
-	test AssertTheNewFieldTranslation {
-		task ("Given an object definition 'Data Set Object' with name field and Scope: custom Text Entry and Add a translation to the added field title") {
-			ObjectAdmin.addObjectViaAPI(
-				labelName = "DataSetObject",
-				objectName = "DataSetObject",
-				pluralLabelName = "DataSetObjects");
-
-			ObjectAdmin.openObjectAdmin();
-
-			ObjectPortlet.selectCustomObject(label = "DataSetObject");
-
-			ObjectAdmin.goToFieldsTab();
-
-			ObjectAdmin.addObjectFieldViaUI(
-				fieldLabel = "Text Entry",
-				fieldType = "Text");
-
-			ObjectAdmin.goToFieldsDetails(label = "Text Entry");
-
-			ObjectAdmin.chooseAnyLanguage(
-				newLanguage = "pt_BR",
-				symbolName = "");
-
-			Type(
-				key_placeHolder = "Text to translate",
-				locator1 = "TextInput#ANY_PLACEHOLDER",
-				value1 = "Portugues");
-
-			CreateObject.saveObject();
-
-			ObjectAdmin.goToDetailsTab();
-
-			ObjectAdmin.selectDropdownItem(
-				labelName = "Panel Link",
-				optionName = "Object");
-
-			Check.checkNotVisible(
-				checkboxName = "Enable Entry Translation",
-				locator1 = "Checkbox#ANY_CHECKBOX");
-
-			Button.clickSave();
-
-			PortletEntry.publish();
-		}
-
-		task ("Given a new data set entry //Name: Data Set Test //REST Application: /c/datasetobjects //REST Schema: DataSetObject //REST Endpoint:/ ") {
-			Navigator.openURL();
-
-			DataSetAdmin.goToDataSetAdminPage();
-
-			DataSetAdmin.createDataSetEntryViaAPI(
-				dataSetName = "Data Set Test",
-				restApplication = "/c/datasetobjects",
-				restEndpoint = "/",
-				restSchema = "DataSetObject");
-
-			Refresh();
-		}
-
-		task ("And go to views tab on data set created") {
-			DataSetAdmin.goToViews(dataSetName = "Data Set Test");
-
-			DataSetAdmin.createDataSetView(
-				description = "Description",
-				key_name = "Data Set View");
-		}
-
-		task ("When go to the View page of the data set created.") {
-			DataSetAdmin.goToSpecificViewPage(
-				dataSetName = "Data Set Test",
-				key_viewName = "Data Set View");
-
-			DataSetAdmin.goToTab(tabName = "Fields");
-		}
-
-		task ("Then there is “custom Text Entry” field available") {
-			LexiconEntry.gotoAdd();
-
-			AssertElementPresent(
-				key_columnName = "textEntry",
-				locator1 = "DataSet#NEW_FIELD_OPTION");
-		}
-	}
-
 	@description = "LPS-181546 Confirm that the new data set information is created and displayed correctly in the page content"
 	@priority = 5
 	test AssertTheValueInFieldsName {
+		property portal.acceptance = "true";
+
 		task ("And create a user creates a new data Set entry") {
 			DataSetAdmin.createDataSetEntryViaAPI(
 				dataSetName = "Blog Posts Posts",
@@ -392,33 +307,11 @@ definition {
 		}
 	}
 
-	@description = "LPS-178858 Confirm that the modal data set view is displayed"
-	@priority = 5
-	test CanAsserTheDataSetViewCanBeCreate {
-		task ("Given the creation of a new dataset") {
-			DataSetAdmin.createDataSet(
-				key_name = "DataSet Test",
-				key_type = "/data-set-manager/fields");
-		}
-
-		task ("When the user goes to the Views admin page of the new dataset") {
-			DataSetAdmin.goToViews(dataSetName = "DataSet Test");
-		}
-
-		task ("And clicks on the “New Dataset View” button") {
-			LexiconEntry.gotoAdd();
-		}
-
-		task ("Then the “New Dataset View” modal is displayed") {
-			AssertElementPresent(
-				key_modal_title = "New Data Set View",
-				locator1 = "AccessibilityMenu#MODAL_TITLE");
-		}
-	}
-
 	@description = "LPS-185990 Confirm that when creating a filter and selecting a picklist item, the item's checkbox remains selected when you click elsewhere and return to dropdown items"
 	@priority = 5
 	test CanAssertTheCheckBoxItemIsChecked {
+		property portal.acceptance = "true";
+
 		task ("Given the creation of a new data set") {
 			DataSetAdmin.goToDataSetAdminPage();
 
@@ -516,8 +409,32 @@ definition {
 		}
 	}
 
+	@description = "LPS-178858 Confirm that the modal data set view is displayed"
+	@priority = 3
+	test CanAssertTheDataSetViewCanBeCreated {
+		task ("Given the creation of a new dataset") {
+			DataSetAdmin.createDataSet(
+				key_name = "DataSet Test",
+				key_type = "/data-set-manager/fields");
+		}
+
+		task ("When the user goes to the Views admin page of the new dataset") {
+			DataSetAdmin.goToViews(dataSetName = "DataSet Test");
+		}
+
+		task ("And clicks on the “New Dataset View” button") {
+			LexiconEntry.gotoAdd();
+		}
+
+		task ("Then the “New Dataset View” modal is displayed") {
+			AssertElementPresent(
+				key_modal_title = "New Data Set View",
+				locator1 = "AccessibilityMenu#MODAL_TITLE");
+		}
+	}
+
 	@description = "LPS-178858 Confirm the empty message in the Data Set View admin page"
-	@priority = 5
+	@priority = 3
 	test CanAssertTheEmptyMessageInDataSetView {
 		task ("Given the creation of a new dataset") {
 			DataSetAdmin.createDataSet(
@@ -547,58 +464,21 @@ definition {
 	@description = "LPS-181546 Confirm that the rest app /scopes/{scopeKey} is displayed in the data set, and the other information"
 	@priority = 5
 	test CanAssertTheEndpointObjectInDataSetCreated {
-		task ("Given an object definition 'Student' with name field and Scope: Site created") {
-			ObjectAdmin.openObjectAdmin();
+		property portal.acceptance = "true";
 
-			ObjectAdmin.addObjectViaAPI(
+		task ("Given an object definition 'Student' with name field and Scope: Site created") {
+			DataSetAdmin.setUpObjectForDataSet(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Custom Field",
+				fieldName = "customObjectField",
+				fieldType = "String",
 				labelName = "Student",
 				objectName = "Student",
-				pluralLabelName = "Student");
-
-			Refresh();
-
-			Click(
-				key_termsAndConditionsName = "Student",
-				locator1 = "CommercePaymentTerms#ORDER_DETAILS_TERMS_AND_CONDITIONS_NAME");
-
-			Click(
-				key_sorting = "Company",
-				locator1 = "ObjectCustomViews#EDIT_SORTING");
-
-			Click(
-				key_menuItem = "Site",
-				locator1 = "MenuItem#MENU_ITEM_SPECIFIC");
-
-			Button.clickSave();
-
-			ObjectAdmin.goToFieldsTab();
-
-			Refresh();
-
-			SelectFrameTop();
-
-			Click(locator1 = "Button#PLUS");
-
-			Type(
-				locator1 = "ObjectField#LABEL_INPUT",
-				value1 = "SiteCreated");
-
-			ObjectField.selectType(fieldType = "Precision Decimal");
-
-			Click(
-				key_text = "Save",
-				locator1 = "CP2ActivationKeys#KEY_DEACTIVATION_TERMS");
-
-			ObjectCustomValidation.gotoTab(tabName = "Details");
-
-			Button.clickPublish();
+				pluralLabelName = "Student",
+				scope = "site");
 		}
 
-		task ("And the Data Set admin page and fill in the fields Name, REST App and REST Schema//Name: Students//REST App: /c/Student//REST Schema: Student") {
-			Navigator.openURL();
-
-			DataSetAdmin.goToDataSetAdminPage();
-
+		task ("And the Data Set admin page and fill in the fields Name, REST App and REST Schema") {
 			DataSetAdmin.createDataSetEntryViaAPI(
 				dataSetName = "Students",
 				restApplication = "/c/Student",
@@ -616,59 +496,22 @@ definition {
 	}
 
 	@description = "LPS-181546 Confirm that the rest endpoint /scopes/{scopeKey} is displayed in the data set"
-	@priority = 4
+	@priority = 3
 	test CanAssertTheEndpointObjectInDataSetModal {
 		task ("Given an object definition 'Student' with name field and Scope: Site created") {
-			ObjectAdmin.openObjectAdmin();
-
-			ObjectAdmin.addObjectViaAPI(
+			DataSetAdmin.setUpObjectForDataSet(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Custom Field",
+				fieldName = "customObjectField",
+				fieldType = "String",
 				labelName = "Student",
 				objectName = "Student",
-				pluralLabelName = "Student");
-
-			Refresh();
-
-			Click(
-				key_termsAndConditionsName = "Student",
-				locator1 = "CommercePaymentTerms#ORDER_DETAILS_TERMS_AND_CONDITIONS_NAME");
-
-			Click(
-				key_sorting = "Company",
-				locator1 = "ObjectCustomViews#EDIT_SORTING");
-
-			Click(
-				key_menuItem = "Site",
-				locator1 = "MenuItem#MENU_ITEM_SPECIFIC");
-
-			Button.clickSave();
-
-			ObjectAdmin.goToFieldsTab();
-
-			Refresh();
-
-			SelectFrameTop();
-
-			Click(locator1 = "Button#PLUS");
-
-			Type(
-				locator1 = "ObjectField#LABEL_INPUT",
-				value1 = "SiteCreated");
-
-			ObjectField.selectType(fieldType = "Precision Decimal");
-
-			Click(
-				key_text = "Save",
-				locator1 = "CP2ActivationKeys#KEY_DEACTIVATION_TERMS");
-
-			ObjectCustomValidation.gotoTab(tabName = "Details");
-
-			Button.clickPublish();
+				pluralLabelName = "Student",
+				scope = "site");
 		}
 
-		task ("And the Data Set admin page and fill in the fields Name, REST App and REST Schema//Name: Students//REST App: /c/Student//REST Schema: Student") {
-			Navigator.openURL();
-
-			DataSetAdmin.goToDataSetAdminPage();
+		task ("And the Data Set admin page and fill in the fields Name, REST App and REST Schema") {
+			Refresh();
 
 			LexiconEntry.gotoAdd();
 
@@ -676,7 +519,7 @@ definition {
 				locator1 = "TextInput#NAME",
 				value1 = "Data Set Test");
 
-			DataSetAdmin.selectProvider(key_type = "/c/students");
+			DataSetAdmin.selectProvider(key_type = "/c/student");
 		}
 
 		task ("Then confirm that the option /scopes/{scopeKey} is displayed") {
@@ -687,7 +530,7 @@ definition {
 	}
 
 	@description = "LPS-185990 Confirm that when creating a filter, items added to the picklist appear in preselect value selecting Multiple radio button"
-	@priority = 5
+	@priority = 3
 	test CanAssertTheItemsInPreselectValueMultiple {
 		task ("Given the creation of a new data set") {
 			DataSetAdmin.goToDataSetAdminPage();
@@ -775,7 +618,7 @@ definition {
 	}
 
 	@description = "LPS-185990 Confirm that when creating a filter, items added to the picklist appear in preselect value selecting Single radio button"
-	@priority = 5
+	@priority = 3
 	test CanAssertTheItemsInPreselectValueSingle {
 		task ("Given the creation of a new data set") {
 			DataSetAdmin.goToDataSetAdminPage();
@@ -947,6 +790,8 @@ definition {
 	@description = "LPS-181546 Confirm that the /v1.0/sites/{siteId}/blog-postings endpoint is displayed correctly when creating the data set"
 	@priority = 5
 	test CanAssertTheRestEndpointIsCorrect {
+		property portal.acceptance = "true";
+
 		task ("When the user creates a new data entry") {
 			DataSetAdmin.createDataSetEntryViaAPI(
 				dataSetName = "Data Set Test",
@@ -965,7 +810,7 @@ definition {
 	}
 
 	@description = "LPS-185990 Confirm that when creating a filter within the view, there is a search bar field to preselect values"
-	@priority = 5
+	@priority = 3
 	test CanAssertTheSearchBarField {
 		task ("Given the creation of a new data set") {
 			DataSetAdmin.goToDataSetAdminPage();
@@ -1080,6 +925,8 @@ definition {
 	@description = "LPS-175990. Confirm that the user can create a data set entry"
 	@priority = 5
 	test CanCreateDataSet {
+		property portal.acceptance = "true";
+
 		task ("When Create a DataSet ") {
 			DataSetAdmin.createDataSet(
 				key_name = "Test Data Set",
@@ -1102,6 +949,8 @@ definition {
 	@description = "LPS-172398. Confirm that the data set can be deleted"
 	@priority = 5
 	test CanDeleteDataSet {
+		property portal.acceptance = "true";
+
 		task ("When the user goes to add data sets") {
 			DataSetAdmin.createDataSet(
 				key_name = "Test Data Set",
@@ -1122,6 +971,7 @@ definition {
 	@description = "LPS-172882: Display a list of headless resources in new FDS View modal"
 	@priority = 5
 	test CanDisplayHeadlessDeliveryAPIResources {
+		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -1218,7 +1068,7 @@ definition {
 	}
 
 	@description = "LPS-185990 Confirm that when searching for a valid item value, it is displayed in the drop-down menu"
-	@priority = 5
+	@priority = 4
 	test CanSearchASpecificItemCreated {
 		task ("Given the creation of a new data set") {
 			DataSetAdmin.goToDataSetAdminPage();
@@ -1398,6 +1248,8 @@ definition {
 	@description = "LPS-183502. Confirm that the user can sort Data Set entries by Date"
 	@priority = 5
 	test CanSortByDate {
+		property portal.acceptance = "true";
+
 		task ("Given two datasets entries via API:") {
 			DataSetAdmin.createDataSetEntryViaAPI(
 				dataSetName = "FDSEntry",
@@ -1636,9 +1488,9 @@ definition {
 	@description = "LPS-187312 Confirm the creation of new translations, right after translating the page"
 	@priority = 5
 	test ConfirmThatTheCreatedTranslationWorks {
-		task ("Given object created via API") {
-			Navigator.openURL();
+		property portal.acceptance = "true";
 
+		task ("Given object created via API") {
 			ObjectAdmin.openObjectAdmin();
 
 			ObjectAdmin.addObjectViaAPI(
@@ -1782,7 +1634,9 @@ definition {
 		}
 
 		task ("And change the URL page adding /pr/ and confirm the "Portugues"") {
-			Navigator.openSpecificURL(url = "http://localhost:8080/pt/test-page-name");
+			var portalURL = PropsUtil.get("portal.url");
+
+			Navigator.openSpecificURL(url = "${portalURL}/pt/test-page-name");
 
 			AssertElementPresent(
 				key_addressType = "Portugues",
@@ -2041,7 +1895,7 @@ definition {
 	}
 
 	@description = "LPS-175990. Confirm that the user can cancel the creation of a data set entry"
-	@priority = 5
+	@priority = 4
 	test NotCreatedAfterCancel {
 		task ("When The user goes to add data sets") {
 			LexiconEntry.gotoAdd();
@@ -2069,7 +1923,7 @@ definition {
 	}
 
 	@description = "LPS-172398. Confirm that the data set was not deleted after clicking CANCEL in the modal"
-	@priority = 5
+	@priority = 3
 	test NotDeleteDataSetAfterCancel {
 		task ("When the user goes to add data sets") {
 			DataSetAdmin.createDataSet(
@@ -2099,7 +1953,7 @@ definition {
 	}
 
 	@description = "LPS-172398. Confirm that the data set was not deleted after clicking clicks on the 'X' button in the modal"
-	@priority = 5
+	@priority = 3
 	test NotDeleteDataSetAfterCloseButton {
 		task ("When The user goes to add a new data set") {
 			DataSetAdmin.createDataSet(
@@ -2135,6 +1989,8 @@ definition {
 	@description = "LPS-194126 Confirm that translated object entries are displayed in the page fragment, and translated when adding pt to the page url"
 	@priority = 5
 	test TheFieldsAreTranslatedOnPage {
+		property portal.acceptance = "true";
+
 		task ("Given an object with name field 'custom Text Entry' and Add a translation to the added field title") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "DataSetObject",
@@ -2260,7 +2116,9 @@ definition {
 		}
 
 		task ("Then Confirm the “First Text Translated“ field is shown in the fragment") {
-			Navigator.openSpecificURL(url = "http://localhost:8080/pt/data-set-test");
+			var portalURL = PropsUtil.get("portal.url");
+
+			Navigator.openSpecificURL(url = "${portalURL}/pt/data-set-test");
 
 			Navigator.gotoPage(pageName = "Test Page Name");
 
@@ -2271,7 +2129,7 @@ definition {
 	}
 
 	@description = "LPS-194126 Confirm that when creating a field with a pt-BR translation, the label is translated when pt is added to the page URL"
-	@priority = 5
+	@priority = 4
 	test TheFieldValueIsTranslated {
 		task ("Given a product created and a data set entry with app:/headless-commerce-admin-catalog/v1.0") {
 			ApplicationsMenu.gotoPortlet(
@@ -2355,9 +2213,9 @@ definition {
 		}
 
 		task ("And go to the page created, and put a "pt" in URL page") {
-			Navigator.openURL();
+			var portalURL = PropsUtil.get("portal.url");
 
-			Navigator.openSpecificURL(url = "http://localhost:8080/pt/data-set-test");
+			Navigator.openSpecificURL(url = "${portalURL}/pt/data-set-test");
 
 			Navigator.gotoPage(pageName = "Data Set Test");
 
@@ -2368,7 +2226,7 @@ definition {
 	}
 
 	@description = "Needs refactor after LPS-183512 is fixed | LPS-175990. Confirm that the user can create a data set entry with special chatacters"
-	@priority = 5
+	@priority = 3
 	test WithSpecialCharacters {
 		task ("When Create a DataSet") {
 			DataSetAdmin.createDataSet(

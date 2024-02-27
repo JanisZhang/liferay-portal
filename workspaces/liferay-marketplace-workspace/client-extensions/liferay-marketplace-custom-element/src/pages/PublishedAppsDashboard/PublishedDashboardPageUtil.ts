@@ -6,12 +6,9 @@
 import solutionsIcon from '../../assets/icons/analytics_icon.svg';
 import appsIcon from '../../assets/icons/apps_fill_icon.svg';
 import businessIcon from '../../assets/icons/business_center_icon.svg';
-import membersIcon from '../../assets/icons/person_fill_icon.svg';
-import projectsIcon from '../../assets/icons/projects_icon.svg';
 import {DashboardListItems} from '../../components/DashboardNavigation/DashboardNavigation';
 import {AppProps} from '../../components/DashboardTable/DashboardTable';
 import {Liferay} from '../../liferay/liferay';
-import {getProductSpecifications} from '../../utils/api';
 
 export type AccountBriefProps = {
 	externalReferenceCode: string;
@@ -85,45 +82,11 @@ export const initialDashboardNavigationItems: DashboardListItems[] = [
 		path: '/solutions',
 	},
 	{
-		itemIcon: projectsIcon,
-		itemName: 'projects',
-		itemSelected: false,
-		itemTitle: 'Projects',
-		path: '/projects',
-	},
-	{
-		itemIcon: membersIcon,
-		itemName: 'members',
-		itemSelected: false,
-		itemTitle: 'Members',
-		path: '/members',
-	},
-	{
 		itemIcon: businessIcon,
 		itemName: 'account',
 		itemSelected: false,
 		itemTitle: 'Account',
 		path: '/accounts',
-	},
-];
-
-export const appTableHeaders = [
-	{
-		iconSymbol: 'order-arrow',
-		style: {width: '2%'},
-		title: 'Name',
-	},
-	{
-		title: 'Version',
-	},
-	{
-		title: 'Type',
-	},
-	{
-		title: 'Last Updated',
-	},
-	{
-		title: 'Status',
 	},
 ];
 
@@ -137,17 +100,6 @@ export const memberTableHeaders = [
 	},
 	{
 		title: 'Role',
-	},
-];
-
-export const initialAccountsState: Account[] = [
-	{
-		description: '',
-		emailAddress: '',
-		externalReferenceCode: '',
-		id: 0,
-		name: '',
-		type: '',
 	},
 ];
 
@@ -232,26 +184,6 @@ export function formatDate(date: string) {
 	);
 
 	return formattedDate;
-}
-
-export async function getAppListProductSpecifications(productIds: number[]) {
-	return Promise.all(
-		productIds.map(async (productId) => {
-			return getProductSpecifications({
-				appProductId: productId,
-			});
-		})
-	);
-}
-
-export function getAppListProductIds(products: Product[]) {
-	const productIds: number[] = [];
-
-	products.map((product) => {
-		productIds.push(product.productId);
-	});
-
-	return productIds;
 }
 
 export function getProductTypeFromSpecifications(

@@ -141,7 +141,7 @@ public class FreemarkerFragmentEntryProcessorTest {
 					"fragment-entry", "Fragment Entry", null,
 					_readFileToString(
 						"fragment_entry_with_invalid_freemarker_variable.html"),
-					null, false, null, null, 0,
+					null, false, null, null, 0, false,
 					FragmentConstants.TYPE_COMPONENT, null,
 					WorkflowConstants.STATUS_DRAFT, serviceContext);
 
@@ -304,7 +304,7 @@ public class FreemarkerFragmentEntryProcessorTest {
 			FileUtil.getBytes(
 				FreemarkerFragmentEntryProcessorTest.class,
 				"dependencies/image.jpg"),
-			null, null, new ServiceContext());
+			null, null, null, new ServiceContext());
 
 		FragmentEntry fragmentEntry = _addFragmentEntry(
 			"fragment_entry_with_configuration_itemselector_file_entry.html",
@@ -561,7 +561,7 @@ public class FreemarkerFragmentEntryProcessorTest {
 			_group.getGroupId(), fragmentCollection.getFragmentCollectionId(),
 			"fragment-entry", "Fragment Entry", null,
 			_readFileToString(htmlFile), null, false, configuration, null, 0,
-			FragmentConstants.TYPE_COMPONENT, null,
+			false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 

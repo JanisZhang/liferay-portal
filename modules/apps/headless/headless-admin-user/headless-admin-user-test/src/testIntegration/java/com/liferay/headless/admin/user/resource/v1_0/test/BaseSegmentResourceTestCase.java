@@ -26,8 +26,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -256,29 +254,62 @@ public abstract class BaseSegmentResourceTestCase {
 		Segment segment3 = testGetSiteSegmentsPage_addSegment(
 			siteId, randomSegment());
 
-		Page<Segment> page1 = segmentResource.getSiteSegmentsPage(
-			siteId, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Segment> segments1 = (List<Segment>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			segments1.toString(), totalCount + 2, segments1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Segment> page1 = segmentResource.getSiteSegmentsPage(
+				siteId,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<Segment> page2 = segmentResource.getSiteSegmentsPage(
-			siteId, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(segment1, (List<Segment>)page1.getItems());
 
-		List<Segment> segments2 = (List<Segment>)page2.getItems();
+			Page<Segment> page2 = segmentResource.getSiteSegmentsPage(
+				siteId,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(segments2.toString(), 1, segments2.size());
+			assertContains(segment2, (List<Segment>)page2.getItems());
 
-		Page<Segment> page3 = segmentResource.getSiteSegmentsPage(
-			siteId, Pagination.of(1, (int)totalCount + 3));
+			Page<Segment> page3 = segmentResource.getSiteSegmentsPage(
+				siteId,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertContains(segment1, (List<Segment>)page3.getItems());
-		assertContains(segment2, (List<Segment>)page3.getItems());
-		assertContains(segment3, (List<Segment>)page3.getItems());
+			assertContains(segment3, (List<Segment>)page3.getItems());
+		}
+		else {
+			Page<Segment> page1 = segmentResource.getSiteSegmentsPage(
+				siteId, Pagination.of(1, totalCount + 2));
+
+			List<Segment> segments1 = (List<Segment>)page1.getItems();
+
+			Assert.assertEquals(
+				segments1.toString(), totalCount + 2, segments1.size());
+
+			Page<Segment> page2 = segmentResource.getSiteSegmentsPage(
+				siteId, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Segment> segments2 = (List<Segment>)page2.getItems();
+
+			Assert.assertEquals(segments2.toString(), 1, segments2.size());
+
+			Page<Segment> page3 = segmentResource.getSiteSegmentsPage(
+				siteId, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(segment1, (List<Segment>)page3.getItems());
+			assertContains(segment2, (List<Segment>)page3.getItems());
+			assertContains(segment3, (List<Segment>)page3.getItems());
+		}
 	}
 
 	protected Segment testGetSiteSegmentsPage_addSegment(
@@ -811,6 +842,10 @@ public abstract class BaseSegmentResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1167,9 +1202,9 @@ public abstract class BaseSegmentResourceTestCase {
 	}
 
 	protected SegmentResource segmentResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

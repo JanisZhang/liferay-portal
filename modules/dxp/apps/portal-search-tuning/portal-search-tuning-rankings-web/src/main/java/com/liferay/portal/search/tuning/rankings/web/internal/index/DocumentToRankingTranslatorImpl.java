@@ -10,12 +10,17 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.document.Document;
+import com.liferay.portal.search.tuning.rankings.constants.ResultRankingsConstants;
+import com.liferay.portal.search.tuning.rankings.index.Ranking;
+import com.liferay.portal.search.tuning.rankings.index.RankingBuilderFactory;
+import com.liferay.portal.search.tuning.rankings.index.RankingPinBuilderFactory;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author André de Oliveira
@@ -33,8 +38,6 @@ public class DocumentToRankingTranslatorImpl
 			document.getString(RankingFields.GROUP_EXTERNAL_REFERENCE_CODE)
 		).hiddenDocumentIds(
 			document.getStrings(RankingFields.BLOCKS)
-		).inactive(
-			document.getBoolean(RankingFields.INACTIVE)
 		).indexName(
 			document.getString("index")
 		).name(
@@ -45,14 +48,16 @@ public class DocumentToRankingTranslatorImpl
 			_getQueryString(document)
 		).rankingDocumentId(
 			rankingDocumentId
+		).status(
+			_getStatus(document)
 		).sxpBlueprintExternalReferenceCode(
 			document.getString(
 				RankingFields.SXP_BLUEPRINT_EXTERNAL_REFERENCE_CODE)
 		).build();
 	}
 
-	protected Ranking.RankingBuilder builder() {
-		return new Ranking.RankingBuilder();
+	protected Ranking.Builder builder() {
+		return _rankingBuilderFactory.builder();
 	}
 
 	private List<String> _getAliases(Document document) {
@@ -105,9 +110,34 @@ public class DocumentToRankingTranslatorImpl
 		return string;
 	}
 
-	private Ranking.Pin _toPin(Map<String, String> map) {
-		return new Ranking.Pin(
-			GetterUtil.getInteger(map.get("position")), map.get("uid"));
+	private String _getStatus(Document document) {
+		String status = document.getString(RankingFields.STATUS);
+
+		if (!Validator.isBlank(status)) {
+			return status;
+		}
+
+		if (document.getBoolean("inactive")) {
+			return ResultRankingsConstants.STATUS_INACTIVE;
+		}
+
+		return ResultRankingsConstants.STATUS_ACTIVE;
 	}
+
+	private Ranking.Pin _toPin(Map<String, String> map) {
+		Ranking.Pin.Builder builder = _rankingPinBuilderFactory.builder();
+
+		return builder.documentId(
+			map.get("uid")
+		).position(
+			GetterUtil.getInteger(map.get("position"))
+		).build();
+	}
+
+	@Reference
+	private RankingBuilderFactory _rankingBuilderFactory;
+
+	@Reference
+	private RankingPinBuilderFactory _rankingPinBuilderFactory;
 
 }

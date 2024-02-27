@@ -21,36 +21,40 @@ export interface AggregationFilters {
 	valueList?: LabelValueObject[];
 }
 interface BasicInfoTabProps {
+	baseResourceURL: string;
 	containerWrapper: ElementType;
+	dbObjectFieldRequired?: boolean;
 	errors: ObjectFieldErrors;
 	filterOperators: TFilterOperators;
 	handleChange: React.ChangeEventHandler<HTMLInputElement>;
-	isApproved: boolean;
 	isDefaultStorageType: boolean;
 	modelBuilder?: boolean;
-	objectDefinitionExternalReferenceCode: string;
-	objectFieldTypes: ObjectFieldType[];
+	objectDefinition?: ObjectDefinition;
+	objectFieldBusinessTypes: ObjectFieldBusinessType[];
 	objectRelationshipId: number;
 	onSubmit?: (editedObjectField?: Partial<ObjectField>) => void;
 	readOnly: boolean;
+	setDbObjectFieldRequired?: (value: boolean) => void;
 	setValues: (values: Partial<ObjectField>) => void;
 	sidebarElements: SidebarCategory[];
 	values: Partial<ObjectField>;
 	workflowStatuses: LabelValueObject[];
 }
 export declare function BasicInfoTab({
+	baseResourceURL,
 	containerWrapper: ContainerWrapper,
+	dbObjectFieldRequired,
 	errors,
 	filterOperators,
 	handleChange,
-	isApproved,
 	isDefaultStorageType,
 	modelBuilder,
-	objectDefinitionExternalReferenceCode,
-	objectFieldTypes,
+	objectDefinition,
+	objectFieldBusinessTypes,
 	objectRelationshipId,
 	onSubmit,
 	readOnly,
+	setDbObjectFieldRequired,
 	setValues,
 	sidebarElements,
 	values,

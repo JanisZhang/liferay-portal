@@ -46,6 +46,7 @@ const AccountSelection: React.FC<AccountSelectionProps> = ({
 	const [accounts, setAccounts] = useState<RadioCardContent<Account>[]>(
 		() => {
 			return accountForm.accounts.map((account: Account) => ({
+				id: account.id,
 				imageURL: account.logoURL,
 				selected:
 					accountSelected?.externalReferenceCode ===
@@ -127,7 +128,9 @@ const AccountSelection: React.FC<AccountSelectionProps> = ({
 									className="font-weight-bold"
 									displayType="unstyled"
 									onClick={() => {
-										window.location.href = `${Liferay.ThemeDisplay.getPortalURL()}${getSiteURL()}/solutions-marketplace`;
+										Liferay.Util.navigate(
+											`${Liferay.ThemeDisplay.getPortalURL()}${getSiteURL()}/solutions-marketplace`
+										);
 									}}
 								>
 									Cancel

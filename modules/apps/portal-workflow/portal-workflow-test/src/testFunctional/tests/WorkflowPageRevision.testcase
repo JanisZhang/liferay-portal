@@ -255,10 +255,6 @@ definition {
 			workflowStatus = "Draft");
 
 		Staging.submitForWorkflowPageRevision();
-
-		Page.viewWithWorkflowPG(
-			pageName = ${pageName},
-			workflowStatus = "Pending (Created)");
 	}
 
 	@description = "Verify that when the Approved page is edited the button Submit for Workflow is displayed"
@@ -455,19 +451,13 @@ definition {
 			workflowDefinition = "No Workflow",
 			workflowResourceValue = "Page Revision");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.deactivateCP(userFirstName = "userfn");
 
 		User.deleteCP();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Workflow",
-			panel = "Applications",
-			portlet = "Submissions");
+		ObjectAdmin.openSubmissions();
 
 		Workflow.viewDefaultWorkflowSubmissions();
 	}

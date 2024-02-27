@@ -16,12 +16,16 @@ export function formatCartItem(
 ) {
 	let optionsJSON = cpInstance.skuOptions || [];
 
-	if (namespace && skuOptionsNamespace && namespace === skuOptionsNamespace) {
-		optionsJSON = skuOptions;
+	if (namespace === skuOptionsNamespace) {
+		optionsJSON = skuOptions.map((skuOption) => ({
+			...skuOption,
+			skuId: skuOption.skuId ? String(skuOption.skuId) : null,
+		}));
 	}
 	else if (optionsJSON.length) {
 		optionsJSON = optionsJSON.map((optionJSON) => ({
 			...optionJSON,
+			key: optionJSON.skuOptionKey || optionJSON.key,
 			value: optionJSON.skuOptionValueKey || optionJSON.value,
 		}));
 	}

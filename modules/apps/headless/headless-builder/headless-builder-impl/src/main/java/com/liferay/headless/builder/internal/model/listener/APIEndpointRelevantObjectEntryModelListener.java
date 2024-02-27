@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.util.Validator;
 import java.io.Serializable;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,7 +71,7 @@ public class APIEndpointRelevantObjectEntryModelListener
 		if (!_equals(
 				originalObjectEntry.getValues(), objectEntry.getValues(),
 				"httpMethod", "path", "pathParameter",
-				"pathParameterDescription",
+				"pathParameterDescription", "retrieveType",
 				"r_apiApplicationToAPIEndpoints_c_apiApplicationId",
 				"r_requestAPISchemaToAPIEndpoints_c_apiSchemaId",
 				"r_responseAPISchemaToAPIEndpoints_c_apiSchemaId")) {
@@ -280,6 +281,7 @@ public class APIEndpointRelevantObjectEntryModelListener
 
 		Map<String, Serializable> values = objectEntry.getValues();
 
+		String pathParameter = (String)values.get("pathParameter");
 		String pathString = (String)values.get("path");
 
 		if (Objects.equals(
@@ -287,12 +289,28 @@ public class APIEndpointRelevantObjectEntryModelListener
 					(String)values.get("retrieveType")),
 				APIApplication.Endpoint.RetrieveType.SINGLE_ELEMENT)) {
 
-			String pathParameter = (String)values.get("pathParameter");
+			if (!Validator.isBlank(pathParameter) &&
+				(responseAPISchemaId == 0)) {
+
+				throw new ObjectEntryValuesException.InvalidObjectField(
+					null,
+					"Path parameter cannot be set without a response schema",
+					"path-parameter-cannot-be-set-without-a-response-schema");
+			}
 
 			_validateSingleElementPath(
 				objectEntry, pathParameter, pathString, responseAPISchemaId);
 		}
 		else {
+			if (!Validator.isBlank(pathParameter)) {
+				throw new ObjectEntryValuesException.InvalidObjectField(
+					null,
+					"Path parameters are not supported by GET API endpoints " +
+						"with the \"collection\" retrieve type",
+					"path-parameters-are-not-supported-by-get-api-endpoints-" +
+						"with-the-collection-retrieve-type");
+			}
+
 			_validatePath(objectEntry, pathString);
 		}
 	}
@@ -342,26 +360,20 @@ public class APIEndpointRelevantObjectEntryModelListener
 				APIApplication.Endpoint.RetrieveType.COLLECTION)) {
 
 			throw new ObjectEntryValuesException.InvalidObjectField(
-				Arrays.asList("singleElement"),
+				Collections.singletonList("singleElement"),
 				"POST API endpoints retrieve type must be \"singleElement\"",
 				"post-api-endpoints-retrieve-type-must-be-x");
 		}
 
-		String pathString = (String)values.get("path");
-
-		String pathInParameterString = StringUtil.extractLast(
-			pathString, StringPool.FORWARD_SLASH);
-
-		Matcher curlyBraceMatcher = _curlyBracePattern.matcher(
-			pathInParameterString);
-
 		String pathParameter = (String)values.get("pathParameter");
 
-		if (!Validator.isBlank(pathParameter) || curlyBraceMatcher.matches()) {
+		if (!Validator.isBlank(pathParameter)) {
 			throw new ObjectEntryValuesException.InvalidObjectField(
 				null, "Path parameters are not supported by POST API endpoints",
 				"path-parameters-are-not-supported-by-post-api-endpoints");
 		}
+
+		String pathString = (String)values.get("path");
 
 		_validatePath(objectEntry, pathString);
 	}
@@ -370,6 +382,31 @@ public class APIEndpointRelevantObjectEntryModelListener
 			ObjectEntry objectEntry, String pathParameter, String pathString,
 			long responseAPISchemaId)
 		throws Exception {
+
+		ObjectField objectField = _objectFieldLocalService.getObjectField(
+			objectEntry.getObjectDefinitionId(), "path");
+
+		User user = _userLocalService.getUser(objectEntry.getUserId());
+
+		if (!pathString.startsWith(StringPool.FORWARD_SLASH)) {
+			throw new ObjectEntryValuesException.InvalidObjectField(
+				Arrays.asList(objectField.getLabel(user.getLocale()), "\"/\""),
+				"%s must start with the %s character",
+				"x-must-start-with-the-x-character");
+		}
+
+		String pathInParameterString = StringUtil.extractLast(
+			pathString, StringPool.FORWARD_SLASH);
+
+		if (!StringUtil.isLowerCase(
+				StringUtil.extractFirst(pathString, pathInParameterString))) {
+
+			throw new ObjectEntryValuesException.InvalidObjectField(
+				Collections.singletonList(
+					objectField.getLabel(user.getLocale())),
+				"%s must contain only lower case characters",
+				"x-must-contain-only-lower-case-characters");
+		}
 
 		if (!Validator.isBlank(pathParameter) && (responseAPISchemaId != 0) &&
 			!_isValidPathParameter(
@@ -384,18 +421,6 @@ public class APIEndpointRelevantObjectEntryModelListener
 					"unique-field");
 		}
 
-		ObjectField objectField = _objectFieldLocalService.getObjectField(
-			objectEntry.getObjectDefinitionId(), "path");
-
-		User user = _userLocalService.getUser(objectEntry.getUserId());
-
-		if (!pathString.startsWith(StringPool.FORWARD_SLASH)) {
-			throw new ObjectEntryValuesException.InvalidObjectField(
-				Arrays.asList(objectField.getLabel(user.getLocale()), "\"/\""),
-				"%s must start with the \"/\" character",
-				"x-must-start-with-the-x-character");
-		}
-
 		Map<String, Serializable> values = objectEntry.getValues();
 
 		if (Objects.equals(
@@ -406,7 +431,8 @@ public class APIEndpointRelevantObjectEntryModelListener
 				pathParameter, HeadlessBuilderConstants.PATH_PARAMETER_ID)) {
 
 			throw new ObjectEntryValuesException.InvalidObjectField(
-				Arrays.asList(objectField.getLabel(user.getLocale())),
+				Collections.singletonList(
+					objectField.getLabel(user.getLocale())),
 				"Single element ID endpoint cannot be scoped by site",
 				"single-element-id-endpoint-cannot-be-scoped-by-site");
 		}
@@ -421,9 +447,6 @@ public class APIEndpointRelevantObjectEntryModelListener
 				"x-can-have-a-maximum-of-255-alphanumeric-characters");
 		}
 
-		String pathInParameterString = StringUtil.extractLast(
-			pathString, StringPool.FORWARD_SLASH);
-
 		Matcher curlyBraceMatcher = _curlyBracePattern.matcher(
 			pathInParameterString);
 
@@ -432,15 +455,6 @@ public class APIEndpointRelevantObjectEntryModelListener
 				Arrays.asList(objectField.getLabel(user.getLocale())),
 				"%s must contain a path parameter between curly braces",
 				"x-must-contain-a-path-parameter-between-curly-braces");
-		}
-
-		if (!StringUtil.isLowerCase(
-				StringUtil.extractFirst(pathString, pathInParameterString))) {
-
-			throw new ObjectEntryValuesException.InvalidObjectField(
-				Arrays.asList(objectField.getLabel(user.getLocale())),
-				"%s must contain only lower case characters",
-				"x-must-contain-only-lower-case-characters");
 		}
 	}
 

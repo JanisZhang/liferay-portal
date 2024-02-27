@@ -14,7 +14,9 @@ import com.liferay.fragment.importer.FragmentsImporter;
 import com.liferay.fragment.importer.FragmentsImporterResultEntry;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
+import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.util.comparator.FragmentEntryCreateDateComparator;
 import com.liferay.petra.function.transform.TransformUtil;
@@ -43,7 +45,6 @@ import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactory;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -92,7 +93,7 @@ public class FragmentsImporterTest {
 
 		_user = TestPropsValues.getUser();
 
-		_file = _generateZipFile();
+		_file = _generateZipFile(_PATH_DEPENDENCIES + "fragments");
 
 		_resourcesFile = _generateResourcesZipFile();
 	}
@@ -213,7 +214,6 @@ public class FragmentsImporterTest {
 		Assert.assertFalse(fragmentEntries.isEmpty());
 	}
 
-	@FeatureFlags("LPS-158675")
 	@Test
 	public void testImportFragmentsWithFolderResources() throws Exception {
 		File fileWithFolderResources = _generateZipFileWithFolderResources();
@@ -284,6 +284,61 @@ public class FragmentsImporterTest {
 			FragmentEntry::getFragmentEntryKey);
 
 		Assert.assertTrue(fragmentEntryNames.contains("resource"));
+	}
+
+	@Test
+	public void testImportFragmentsWithThumbnailPathAndPropagation()
+		throws Exception {
+
+		_configurationProvider.saveCompanyConfiguration(
+			FragmentServiceConfiguration.class, _group.getCompanyId(),
+			HashMapDictionaryBuilder.<String, Object>put(
+				"propagateChanges", true
+			).build());
+
+		ServiceContextThreadLocal.pushServiceContext(
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		try {
+			_fragmentsImporter.importFragmentEntries(
+				_user.getUserId(), _group.getGroupId(), 0, _file,
+				FragmentsImportStrategy.OVERWRITE);
+
+			FragmentEntry fragmentEntry =
+				_fragmentEntryLocalService.fetchFragmentEntry(
+					_group.getGroupId(), "heading");
+
+			FragmentEntryLink fragmentEntryLink =
+				_fragmentEntryLinkLocalService.addFragmentEntryLink(
+					_user.getUserId(), _group.getGroupId(), 0,
+					fragmentEntry.getFragmentEntryId(), 0, 0,
+					fragmentEntry.getCss(), fragmentEntry.getHtml(),
+					fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+					StringPool.BLANK, StringPool.BLANK, 0, StringPool.BLANK, 0,
+					ServiceContextTestUtil.getServiceContext(
+						_group.getGroupId()));
+
+			Assert.assertTrue(fragmentEntryLink.isLatestVersion());
+
+			_fragmentsImporter.importFragmentEntries(
+				_user.getUserId(), _group.getGroupId(), 0, _file,
+				FragmentsImportStrategy.OVERWRITE);
+
+			fragmentEntryLink =
+				_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+					fragmentEntryLink.getFragmentEntryLinkId());
+
+			Assert.assertTrue(fragmentEntryLink.isLatestVersion());
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+
+			_configurationProvider.saveCompanyConfiguration(
+				FragmentServiceConfiguration.class, _group.getCompanyId(),
+				HashMapDictionaryBuilder.<String, Object>put(
+					"propagateChanges", false
+				).build());
+		}
 	}
 
 	@Test
@@ -400,6 +455,93 @@ public class FragmentsImporterTest {
 		FragmentEntry fragmentEntry = filteredFragmentEntries.get(0);
 
 		Assert.assertTrue(fragmentEntry.isDraft());
+	}
+
+	@Test
+	public void testImportFragmentWithUpdatedName() throws Exception {
+		List<FragmentCollection> fragmentCollections =
+			_fragmentCollectionLocalService.getFragmentCollections(
+				_group.getGroupId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			fragmentCollections.toString(), 0, fragmentCollections.size());
+
+		ServiceContextThreadLocal.pushServiceContext(
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		_file = _generateZipFile(
+			_PATH_FRAGMENTS_WITH_UPDATED_NAME + "import-1/fragments");
+
+		try {
+			_fragmentsImporter.importFragmentEntries(
+				_user.getUserId(), _group.getGroupId(), 0, _file,
+				FragmentsImportStrategy.DO_NOT_OVERWRITE);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+
+		fragmentCollections =
+			_fragmentCollectionLocalService.getFragmentCollections(
+				_group.getGroupId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			fragmentCollections.toString(), 1, fragmentCollections.size());
+
+		FragmentCollection fragmentCollection = fragmentCollections.get(0);
+
+		List<FragmentEntry> filteredFragmentEntries = ListUtil.filter(
+			_fragmentEntryLocalService.getFragmentEntries(
+				fragmentCollection.getFragmentCollectionId()),
+			fragmentEntry -> Objects.equals(
+				fragmentEntry.getName(), "Fragment One"));
+
+		FragmentEntry filteredFragmentEntry = filteredFragmentEntries.get(0);
+
+		String fragmentEntryKey = "fragment-one";
+
+		Assert.assertEquals(
+			fragmentEntryKey, filteredFragmentEntry.getFragmentEntryKey());
+
+		Assert.assertEquals(
+			filteredFragmentEntries.toString(), 1,
+			filteredFragmentEntries.size());
+
+		_file = _generateZipFile(
+			_PATH_FRAGMENTS_WITH_UPDATED_NAME + "import-2/fragments");
+
+		try {
+			_fragmentsImporter.importFragmentEntries(
+				_user.getUserId(), _group.getGroupId(), 0, _file,
+				FragmentsImportStrategy.OVERWRITE);
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+
+		fragmentCollections =
+			_fragmentCollectionLocalService.getFragmentCollections(
+				_group.getGroupId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			fragmentCollections.toString(), 1, fragmentCollections.size());
+
+		fragmentCollection = fragmentCollections.get(0);
+
+		filteredFragmentEntries = ListUtil.filter(
+			_fragmentEntryLocalService.getFragmentEntries(
+				fragmentCollection.getFragmentCollectionId()),
+			fragmentEntry -> Objects.equals(
+				fragmentEntry.getName(), "Fragment One Updated"));
+
+		Assert.assertEquals(
+			filteredFragmentEntries.toString(), 1,
+			filteredFragmentEntries.size());
+
+		filteredFragmentEntry = filteredFragmentEntries.get(0);
+
+		Assert.assertEquals(
+			fragmentEntryKey, filteredFragmentEntry.getFragmentEntryKey());
 	}
 
 	@Test
@@ -578,20 +720,20 @@ public class FragmentsImporterTest {
 		return zipWriter.getFile();
 	}
 
-	private File _generateZipFile() throws Exception {
+	private File _generateZipFile(String path) throws Exception {
 		ZipWriter zipWriter = _zipWriterFactory.getZipWriter();
 
 		URL collectionURL = _bundle.getEntry(
-			_PATH_FRAGMENTS +
+			path + StringPool.FORWARD_SLASH +
 				FragmentExportImportConstants.FILE_NAME_COLLECTION);
 
 		try (InputStream inputStream = collectionURL.openStream()) {
-			zipWriter.addEntry(
-				FragmentExportImportConstants.FILE_NAME_COLLECTION,
-				inputStream);
+			_addZipWriterEntry(
+				zipWriter, path,
+				FragmentExportImportConstants.FILE_NAME_COLLECTION);
 		}
 
-		_populateZipWriter(_PATH_FRAGMENTS, zipWriter, true);
+		_populateZipWriter(path, zipWriter, true);
 
 		return zipWriter.getFile();
 	}
@@ -789,6 +931,9 @@ public class FragmentsImporterTest {
 	private static final String _PATH_FRAGMENTS_WITH_FOLDER_RESOURCES =
 		_PATH_DEPENDENCIES + "fragments-with-folder-resources/";
 
+	private static final String _PATH_FRAGMENTS_WITH_UPDATED_NAME =
+		_PATH_DEPENDENCIES + "fragments-with-updated-name/";
+
 	private static final String _PATH_RESOURCES_COLLECTION =
 		_PATH_DEPENDENCIES + "resources-collection/";
 
@@ -801,6 +946,9 @@ public class FragmentsImporterTest {
 
 	@Inject
 	private FragmentCollectionLocalService _fragmentCollectionLocalService;
+
+	@Inject
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
 	@Inject
 	private FragmentEntryLocalService _fragmentEntryLocalService;

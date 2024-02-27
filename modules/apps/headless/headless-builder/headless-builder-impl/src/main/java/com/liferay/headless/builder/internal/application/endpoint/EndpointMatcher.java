@@ -7,6 +7,8 @@ package com.liferay.headless.builder.internal.application.endpoint;
 
 import com.liferay.headless.builder.application.APIApplication;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +29,8 @@ public class EndpointMatcher {
 		for (APIApplication.Endpoint endpoint : endpoints) {
 			if (Objects.equals(
 					endpoint.getRetrieveType(),
-					APIApplication.Endpoint.RetrieveType.SINGLE_ELEMENT)) {
+					APIApplication.Endpoint.RetrieveType.SINGLE_ELEMENT) &&
+				Validator.isNotNull(endpoint.getPathParameter())) {
 
 				Pattern pattern = Pattern.compile(
 					_getSingleElementRegex(endpoint));
@@ -48,10 +51,12 @@ public class EndpointMatcher {
 	}
 
 	public APIApplication.Endpoint getEndpoint(
-		String path, APIApplication.Endpoint.Scope scope) {
+		Http.Method method, String path, APIApplication.Endpoint.Scope scope) {
 
 		for (APIApplication.Endpoint endpoint : _endpoints) {
-			if (scope != endpoint.getScope()) {
+			if ((method != endpoint.getMethod()) ||
+				(scope != endpoint.getScope())) {
+
 				continue;
 			}
 

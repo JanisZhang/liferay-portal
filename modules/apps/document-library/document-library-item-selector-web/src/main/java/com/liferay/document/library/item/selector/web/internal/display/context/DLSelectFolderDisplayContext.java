@@ -54,12 +54,13 @@ import javax.servlet.http.HttpServletRequest;
 public class DLSelectFolderDisplayContext {
 
 	public DLSelectFolderDisplayContext(
-		DLAppService dlAppService, Folder folder,
+		long blockedFolderId, DLAppService dlAppService, Folder folder,
 		ModelResourcePermission<Folder> folderModelResourcePermission,
 		HttpServletRequest httpServletRequest, PortletURL portletURL,
 		long repositoryId, long selectedFolderId, long selectedRepositoryId,
 		boolean showGroupSelector) {
 
+		_blockedFolderId = blockedFolderId;
 		_dlAppService = dlAppService;
 		_folder = folder;
 		_folderModelResourcePermission = folderModelResourcePermission;
@@ -181,6 +182,10 @@ public class DLSelectFolderDisplayContext {
 			Folder folder, LiferayPortletResponse liferayPortletResponse)
 		throws PortalException, PortletException {
 
+		if (folder.getFolderId() == _blockedFolderId) {
+			return null;
+		}
+
 		return _getFolderPortletURL(
 			folder.getFolderId(), liferayPortletResponse);
 	}
@@ -199,15 +204,6 @@ public class DLSelectFolderDisplayContext {
 
 	public Map<String, Object> getSelectorButtonData(Folder folder) {
 		return HashMapBuilder.<String, Object>put(
-			"folderid",
-			() -> {
-				if (folder != null) {
-					return folder.getFolderId();
-				}
-
-				return DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
-			}
-		).put(
 			"folderissupportsmetadata",
 			() -> {
 				if (folder != null) {
@@ -224,15 +220,6 @@ public class DLSelectFolderDisplayContext {
 				}
 
 				return true;
-			}
-		).put(
-			"foldername",
-			() -> {
-				if (folder != null) {
-					return folder.getName();
-				}
-
-				return getFolderName();
 			}
 		).put(
 			"repositoryid", getRepositoryId()
@@ -252,6 +239,24 @@ public class DLSelectFolderDisplayContext {
 						getRepositoryId());
 
 				return repository.getName();
+			}
+		).put(
+			"resourceid",
+			() -> {
+				if (folder != null) {
+					return folder.getFolderId();
+				}
+
+				return DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
+			}
+		).put(
+			"resourcename",
+			() -> {
+				if (folder != null) {
+					return folder.getName();
+				}
+
+				return getFolderName();
 			}
 		).build();
 	}
@@ -273,7 +278,10 @@ public class DLSelectFolderDisplayContext {
 	}
 
 	public boolean isSelectButtonDisabled(long folderId, long repositoryId) {
-		if ((folderId == getSelectedFolderId()) &&
+		if ((((DLFolderConstants.DEFAULT_PARENT_FOLDER_ID !=
+				_blockedFolderId) &&
+			  (folderId == _blockedFolderId)) ||
+			 (folderId == getSelectedFolderId())) &&
 			(repositoryId == getSelectedRepositoryId())) {
 
 			return true;
@@ -337,6 +345,7 @@ public class DLSelectFolderDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		DLSelectFolderDisplayContext.class);
 
+	private final long _blockedFolderId;
 	private final DLAppService _dlAppService;
 	private final Folder _folder;
 	private final ModelResourcePermission<Folder>

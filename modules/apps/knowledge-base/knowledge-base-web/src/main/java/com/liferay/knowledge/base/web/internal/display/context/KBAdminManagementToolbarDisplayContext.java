@@ -347,17 +347,6 @@ public class KBAdminManagementToolbarDisplayContext {
 		).build();
 	}
 
-	public List<DropdownItem> getFilterDropDownItems() {
-		return DropdownItemListBuilder.addGroup(
-			() -> !FeatureFlagManagerUtil.isEnabled("LPS-144527"),
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
-				dropdownGroupItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "order-by"));
-			}
-		).build();
-	}
-
 	public List<DropdownItem> getOrderByDropdownItems() {
 		return new DropdownItemList() {
 			{

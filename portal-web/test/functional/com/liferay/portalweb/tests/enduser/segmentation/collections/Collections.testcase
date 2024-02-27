@@ -1,12 +1,12 @@
-@component-name = "portal-segmentation"
+@component-name = "portal-wcm"
 definition {
 
 	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Collections,Segmentation";
-	property testray.main.component.name = "Segmentation";
+	property testray.component.names = "Collections";
+	property testray.main.component.name = "Collections";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -72,7 +72,7 @@ definition {
 
 		task ("When the user selects item types") {
 			AssetListsAdmin.configureItemTypeInManualCollection(
-				itemType = "Select Types...",
+				itemType = "Select Types",
 				moveToAvailableItemTypeList = "Blogs Entry,Web Content Article");
 		}
 
@@ -3776,7 +3776,7 @@ definition {
 		}
 
 		task ("Sort segments") {
-			ManagementBar.toggleViewOrder(order = "up");
+			ManagementBar.sortAssets(sortDirection = "Descending");
 
 			AssertTextEquals.assertPartialText(
 				index = 1,
@@ -4236,6 +4236,42 @@ definition {
 				key_assetTitle = "Web Content Article",
 				locator1 = "AssetLists#ASSET_TYPE_ROW",
 				value1 = "Web Content Article");
+		}
+	}
+
+	@description = "This is a test for LPS-177675. The tooltip of the back button is Go to Collections in the edit mode of a new Collection."
+	@priority = 3
+	test ViewBackButtonTooltipOfCollectionEditor {
+		task ("Given a site administrator accesses to dynamic collection editor") {
+			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
+
+			AssetListsAdmin.addDynamicSelection(assetListTitle = "Dynamic Collection");
+		}
+
+		task ("When the site administrator hovers over the back button") {
+			MouseOver(locator1 = "Icon#BACK");
+		}
+
+		task ("Then the site administrator could see the tooltip message") {
+			AssertVisible(
+				key_content = "Go to Collections",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
+		}
+
+		task ("Given a site administrator accesses to manual collection editor") {
+			Navigator.gotoBack();
+
+			AssetListsAdmin.addManualSelection(assetListTitle = "Manual Collection");
+		}
+
+		task ("When the site administrator hovers over the back button") {
+			MouseOver(locator1 = "Icon#BACK");
+		}
+
+		task ("Then the site administrator could see the tooltip message") {
+			AssertVisible(
+				key_content = "Go to Collections",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
 		}
 	}
 
@@ -5129,7 +5165,7 @@ definition {
 		}
 
 		task ("Then the site designer sees the list styles of collections") {
-			AssertElementNotPresent(locator1 = "Dropdown#FILTER_AND_ORDER");
+			AssertElementNotPresent(locator1 = "ManagementBar#ORDER");
 
 			for (var collectionName : list "Dynamic Collection,Manual Collection") {
 				LexiconList.viewListEntryTitle(listEntry = ${collectionName});

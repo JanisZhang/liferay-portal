@@ -1,4 +1,4 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.acceptance = "true";
@@ -1127,6 +1127,8 @@ definition {
 		VideoShortcut.addCP(
 			videoShortcutTitle = "Test YouTube Video",
 			videoURL = "https://www.youtube.com/watch?v=HOdbzGCI5ME");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
 
 		DMNavigator.openToEditEntryInSite(
 			dmDocumentTitle = "Test YouTube Video",

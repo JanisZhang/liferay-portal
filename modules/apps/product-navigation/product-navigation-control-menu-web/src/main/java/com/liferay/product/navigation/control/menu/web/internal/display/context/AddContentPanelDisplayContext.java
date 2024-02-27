@@ -43,6 +43,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,6 +104,8 @@ public class AddContentPanelDisplayContext {
 				ResourceURL resourceURL =
 					_liferayPortletResponse.createResourceURL();
 
+				resourceURL.setParameter(
+					"status", String.valueOf(WorkflowConstants.STATUS_ANY));
 				resourceURL.setResourceID(
 					"/product_navigation_control_menu/get_contents");
 
@@ -159,7 +162,7 @@ public class AddContentPanelDisplayContext {
 
 			AssetRenderer<?> assetRenderer = assetEntry.getAssetRenderer();
 
-			if ((assetRenderer == null) || !assetRenderer.isDisplayable()) {
+			if (assetRenderer == null) {
 				continue;
 			}
 

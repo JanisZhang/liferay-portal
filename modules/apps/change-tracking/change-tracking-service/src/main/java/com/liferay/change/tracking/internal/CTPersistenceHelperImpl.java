@@ -8,13 +8,18 @@ package com.liferay.change.tracking.internal;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTEntryLocalService;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.change.tracking.CTRequiredModelException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.util.PropsUtil;
 
 import java.io.Serializable;
 
@@ -39,7 +44,6 @@ public class CTPersistenceHelperImpl implements CTPersistenceHelper {
 
 		long modelClassNameId = _classNameLocalService.getClassNameId(
 			ctModel.getModelClass());
-
 		long modelClassPK = ctModel.getPrimaryKey();
 
 		CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(
@@ -82,6 +86,7 @@ public class CTPersistenceHelperImpl implements CTPersistenceHelper {
 		return isProductionMode(ctModelClass, null);
 	}
 
+	@Override
 	public <T extends CTModel<T>> boolean isProductionMode(
 		Class<T> ctModelClass, Serializable primaryKey) {
 
@@ -121,14 +126,29 @@ public class CTPersistenceHelperImpl implements CTPersistenceHelper {
 
 		long ctCollectionId = CTCollectionThreadLocal.getCTCollectionId();
 
-		if (ctCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
-			return true;
-		}
-
 		long modelClassNameId = _classNameLocalService.getClassNameId(
 			ctModel.getModelClass());
 
 		long modelClassPK = ctModel.getPrimaryKey();
+
+		if (ctCollectionId == CTConstants.CT_COLLECTION_ID_PRODUCTION) {
+			if (GetterUtil.getBoolean(
+					PropsUtil.get(
+						PropsKeys.
+							CHANGE_TRACKING_DELETION_PROTECTION_ENABLED)) &&
+				_ctEntryLocalService.hasUnpublishedCTEntries(
+					modelClassNameId, modelClassPK,
+					CTConstants.CT_CHANGE_TYPE_MODIFICATION)) {
+
+				throw new CTRequiredModelException(
+					String.format(
+						"Model %s %s cannot be deleted because it is being " +
+							"modified in one or more publications",
+						ctModel.getModelClassName(), modelClassPK));
+			}
+
+			return true;
+		}
 
 		CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(
 			ctCollectionId, modelClassNameId, modelClassPK);
@@ -166,6 +186,26 @@ public class CTPersistenceHelperImpl implements CTPersistenceHelper {
 		}
 
 		return false;
+	}
+
+	@Override
+	public <T extends CTModel<T>> SafeCloseable
+		setCTCollectionIdWithSafeCloseable(Class<T> ctModelClass) {
+
+		return setCTCollectionIdWithSafeCloseable(ctModelClass, null);
+	}
+
+	@Override
+	public <T extends CTModel<T>> SafeCloseable
+		setCTCollectionIdWithSafeCloseable(
+			Class<T> ctModelClass, Serializable primaryKey) {
+
+		if (isProductionMode(ctModelClass, primaryKey)) {
+			return CTCollectionThreadLocal.setProductionModeWithSafeCloseable();
+		}
+
+		return CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+			CTCollectionThreadLocal.getCTCollectionId());
 	}
 
 	@Reference

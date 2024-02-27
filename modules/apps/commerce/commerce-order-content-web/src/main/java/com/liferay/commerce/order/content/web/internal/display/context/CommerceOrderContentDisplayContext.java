@@ -32,6 +32,9 @@ import com.liferay.commerce.order.importer.type.CommerceOrderImporterType;
 import com.liferay.commerce.order.importer.type.CommerceOrderImporterTypeRegistry;
 import com.liferay.commerce.order.status.CommerceOrderStatus;
 import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
+import com.liferay.commerce.payment.constants.CommercePaymentIntegrationConstants;
+import com.liferay.commerce.payment.integration.CommercePaymentIntegration;
+import com.liferay.commerce.payment.integration.CommercePaymentIntegrationRegistry;
 import com.liferay.commerce.payment.method.CommercePaymentMethod;
 import com.liferay.commerce.payment.method.CommercePaymentMethodRegistry;
 import com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel;
@@ -63,7 +66,6 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -130,6 +132,8 @@ public class CommerceOrderContentDisplayContext {
 			CommerceOrderService commerceOrderService,
 			CommerceOrderStatusRegistry commerceOrderStatusRegistry,
 			CommerceOrderTypeService commerceOrderTypeService,
+			CommercePaymentIntegrationRegistry
+				commercePaymentIntegrationRegistry,
 			CommercePaymentMethodGroupRelLocalService
 				commercePaymentMethodGroupRelLocalService,
 			CommercePaymentMethodRegistry commercePaymentMethodRegistry,
@@ -152,6 +156,8 @@ public class CommerceOrderContentDisplayContext {
 		_commerceOrderService = commerceOrderService;
 		_commerceOrderStatusRegistry = commerceOrderStatusRegistry;
 		_commerceOrderTypeService = commerceOrderTypeService;
+		_commercePaymentIntegrationRegistry =
+			commercePaymentIntegrationRegistry;
 		_commercePaymentMethodGroupRelLocalService =
 			commercePaymentMethodGroupRelLocalService;
 		_commercePaymentMethodRegistry = commercePaymentMethodRegistry;
@@ -462,7 +468,7 @@ public class CommerceOrderContentDisplayContext {
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "csv_template.csv",
 				MimeTypesUtil.getContentType(file), "csv_template",
 				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, file,
-				null, null,
+				null, null, null,
 				ServiceContextFactory.getInstance(
 					_cpRequestHelper.getRequest()));
 
@@ -1160,10 +1166,6 @@ public class CommerceOrderContentDisplayContext {
 	}
 
 	public boolean isRequestQuoteEnabled() throws PortalException {
-		if (!FeatureFlagManagerUtil.isEnabled("COMMERCE-11028")) {
-			return false;
-		}
-
 		CommerceOrderFieldsConfiguration commerceOrderFieldsConfiguration =
 			_getCommerceOrderFieldsConfiguration();
 
@@ -1351,9 +1353,23 @@ public class CommerceOrderContentDisplayContext {
 			_commercePaymentMethodRegistry.getCommercePaymentMethod(
 				commercePaymentMethodKey);
 
-		return ArrayUtil.contains(
-			CommercePaymentMethodConstants.TYPES_ONLINE,
-			commercePaymentMethod.getPaymentType());
+		if (commercePaymentMethod != null) {
+			return ArrayUtil.contains(
+				CommercePaymentMethodConstants.TYPES_ONLINE,
+				commercePaymentMethod.getPaymentType());
+		}
+
+		CommercePaymentIntegration commercePaymentIntegration =
+			_commercePaymentIntegrationRegistry.getCommercePaymentIntegration(
+				commercePaymentMethodKey);
+
+		if (commercePaymentIntegration != null) {
+			return ArrayUtil.contains(
+				CommercePaymentIntegrationConstants.TYPES_ONLINE,
+				commercePaymentIntegration.getPaymentIntegrationType());
+		}
+
+		return false;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -1377,6 +1393,8 @@ public class CommerceOrderContentDisplayContext {
 	private final CommerceOrderStatusRegistry _commerceOrderStatusRegistry;
 	private final Format _commerceOrderTimeFormat;
 	private final CommerceOrderTypeService _commerceOrderTypeService;
+	private final CommercePaymentIntegrationRegistry
+		_commercePaymentIntegrationRegistry;
 	private final CommercePaymentMethodGroupRelLocalService
 		_commercePaymentMethodGroupRelLocalService;
 	private final CommercePaymentMethodRegistry _commercePaymentMethodRegistry;

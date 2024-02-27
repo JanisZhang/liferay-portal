@@ -9,7 +9,7 @@ import getCN from 'classnames';
 import NotificationAlertList, {
 	useNotificationsAPI
 } from '../NotificationAlertList';
-import React from 'react';
+import React, {useState} from 'react';
 import Row from './Row';
 import TextTruncate from 'shared/components/TextTruncate';
 import {getMatchedRoute, setUriQueryValues, toRoute} from 'shared/util/router';
@@ -35,9 +35,14 @@ const NavBar: React.FC<INavBarProps> = ({
 }) => {
 	const matchedRoute = getMatchedRoute(items);
 
+	const initialItem =
+		items.find(item => item.route === matchedRoute) ?? items[0];
+
+	const [activeLabel, setActiveLabel] = useState(initialItem.label);
+
 	return (
 		<div className='row'>
-			<ClayNavigationBar triggerLabel={matchedRoute}>
+			<ClayNavigationBar triggerLabel={activeLabel}>
 				{items.map(({label, route}) => (
 					<ClayNavigationBar.Item
 						active={matchedRoute === route}
@@ -48,6 +53,7 @@ const NavBar: React.FC<INavBarProps> = ({
 								pickBy(routeQueries),
 								toRoute(route, routeParams)
 							)}
+							onClick={() => setActiveLabel(label)}
 						>
 							{label}
 						</ClayLink>
@@ -62,6 +68,10 @@ interface Action extends React.HTMLAttributes<HTMLElement> {
 	disabled: boolean;
 	label: string;
 	href: string;
+	icon?: {
+		symbol: string;
+	};
+	external?: boolean;
 }
 
 interface IPageActionsProps {
@@ -79,7 +89,7 @@ const PageActions: React.FC<IPageActionsProps> = ({
 }) => (
 	<>
 		{actions.length <= actionsDisplayLimit &&
-			actions.map(({label, ...props}) => {
+			actions.map(({icon, label, ...props}) => {
 				const Button = props.href ? ClayLink : ClayButton;
 
 				return (
@@ -94,6 +104,10 @@ const PageActions: React.FC<IPageActionsProps> = ({
 						key={label}
 						{...props}
 					>
+						{icon && (
+							<ClayIcon className='mr-2' symbol={icon.symbol} />
+						)}
+
 						{label}
 					</Button>
 				);
@@ -180,7 +194,7 @@ const Actions: React.FC<IActionsProps> = ({actions = []}) => (
 	<div className='header-actions'>
 		{actions.map(({displayType, label, onClick, redirectURL}, index) =>
 			redirectURL ? (
-				<a
+				<ClayLink
 					className={getCN(`btn btn-${displayType}`, 'ml-2')}
 					href={redirectURL}
 					key={index}
@@ -189,7 +203,7 @@ const Actions: React.FC<IActionsProps> = ({actions = []}) => (
 					<ClayIcon className='mr-2' symbol='shortcut' />
 
 					{label}
-				</a>
+				</ClayLink>
 			) : (
 				<ClayButton
 					className='ml-2'

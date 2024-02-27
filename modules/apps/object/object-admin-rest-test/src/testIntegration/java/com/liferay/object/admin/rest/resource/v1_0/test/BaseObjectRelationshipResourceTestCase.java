@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -420,45 +418,97 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 			testGetObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage_addObjectRelationship(
 				externalReferenceCode, randomObjectRelationship());
 
-		Page<ObjectRelationship> page1 =
-			objectRelationshipResource.
-				getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
-					externalReferenceCode, null, null,
-					Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ObjectRelationship> objectRelationships1 =
-			(List<ObjectRelationship>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			objectRelationships1.toString(), totalCount + 2,
-			objectRelationships1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ObjectRelationship> page1 =
+				objectRelationshipResource.
+					getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<ObjectRelationship> page2 =
-			objectRelationshipResource.
-				getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
-					externalReferenceCode, null, null,
-					Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				objectRelationship1,
+				(List<ObjectRelationship>)page1.getItems());
 
-		List<ObjectRelationship> objectRelationships2 =
-			(List<ObjectRelationship>)page2.getItems();
+			Page<ObjectRelationship> page2 =
+				objectRelationshipResource.
+					getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			objectRelationships2.toString(), 1, objectRelationships2.size());
+			assertContains(
+				objectRelationship2,
+				(List<ObjectRelationship>)page2.getItems());
 
-		Page<ObjectRelationship> page3 =
-			objectRelationshipResource.
-				getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
-					externalReferenceCode, null, null,
-					Pagination.of(1, (int)totalCount + 3), null);
+			Page<ObjectRelationship> page3 =
+				objectRelationshipResource.
+					getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(
-			objectRelationship1, (List<ObjectRelationship>)page3.getItems());
-		assertContains(
-			objectRelationship2, (List<ObjectRelationship>)page3.getItems());
-		assertContains(
-			objectRelationship3, (List<ObjectRelationship>)page3.getItems());
+			assertContains(
+				objectRelationship3,
+				(List<ObjectRelationship>)page3.getItems());
+		}
+		else {
+			Page<ObjectRelationship> page1 =
+				objectRelationshipResource.
+					getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<ObjectRelationship> objectRelationships1 =
+				(List<ObjectRelationship>)page1.getItems();
+
+			Assert.assertEquals(
+				objectRelationships1.toString(), totalCount + 2,
+				objectRelationships1.size());
+
+			Page<ObjectRelationship> page2 =
+				objectRelationshipResource.
+					getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ObjectRelationship> objectRelationships2 =
+				(List<ObjectRelationship>)page2.getItems();
+
+			Assert.assertEquals(
+				objectRelationships2.toString(), 1,
+				objectRelationships2.size());
+
+			Page<ObjectRelationship> page3 =
+				objectRelationshipResource.
+					getObjectDefinitionByExternalReferenceCodeObjectRelationshipsPage(
+						externalReferenceCode, null, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				objectRelationship1,
+				(List<ObjectRelationship>)page3.getItems());
+			assertContains(
+				objectRelationship2,
+				(List<ObjectRelationship>)page3.getItems());
+			assertContains(
+				objectRelationship3,
+				(List<ObjectRelationship>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -895,45 +945,97 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 			testGetObjectDefinitionObjectRelationshipsPage_addObjectRelationship(
 				objectDefinitionId, randomObjectRelationship());
 
-		Page<ObjectRelationship> page1 =
-			objectRelationshipResource.
-				getObjectDefinitionObjectRelationshipsPage(
-					objectDefinitionId, null, null,
-					Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ObjectRelationship> objectRelationships1 =
-			(List<ObjectRelationship>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			objectRelationships1.toString(), totalCount + 2,
-			objectRelationships1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ObjectRelationship> page1 =
+				objectRelationshipResource.
+					getObjectDefinitionObjectRelationshipsPage(
+						objectDefinitionId, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<ObjectRelationship> page2 =
-			objectRelationshipResource.
-				getObjectDefinitionObjectRelationshipsPage(
-					objectDefinitionId, null, null,
-					Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				objectRelationship1,
+				(List<ObjectRelationship>)page1.getItems());
 
-		List<ObjectRelationship> objectRelationships2 =
-			(List<ObjectRelationship>)page2.getItems();
+			Page<ObjectRelationship> page2 =
+				objectRelationshipResource.
+					getObjectDefinitionObjectRelationshipsPage(
+						objectDefinitionId, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			objectRelationships2.toString(), 1, objectRelationships2.size());
+			assertContains(
+				objectRelationship2,
+				(List<ObjectRelationship>)page2.getItems());
 
-		Page<ObjectRelationship> page3 =
-			objectRelationshipResource.
-				getObjectDefinitionObjectRelationshipsPage(
-					objectDefinitionId, null, null,
-					Pagination.of(1, (int)totalCount + 3), null);
+			Page<ObjectRelationship> page3 =
+				objectRelationshipResource.
+					getObjectDefinitionObjectRelationshipsPage(
+						objectDefinitionId, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(
-			objectRelationship1, (List<ObjectRelationship>)page3.getItems());
-		assertContains(
-			objectRelationship2, (List<ObjectRelationship>)page3.getItems());
-		assertContains(
-			objectRelationship3, (List<ObjectRelationship>)page3.getItems());
+			assertContains(
+				objectRelationship3,
+				(List<ObjectRelationship>)page3.getItems());
+		}
+		else {
+			Page<ObjectRelationship> page1 =
+				objectRelationshipResource.
+					getObjectDefinitionObjectRelationshipsPage(
+						objectDefinitionId, null, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<ObjectRelationship> objectRelationships1 =
+				(List<ObjectRelationship>)page1.getItems();
+
+			Assert.assertEquals(
+				objectRelationships1.toString(), totalCount + 2,
+				objectRelationships1.size());
+
+			Page<ObjectRelationship> page2 =
+				objectRelationshipResource.
+					getObjectDefinitionObjectRelationshipsPage(
+						objectDefinitionId, null, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ObjectRelationship> objectRelationships2 =
+				(List<ObjectRelationship>)page2.getItems();
+
+			Assert.assertEquals(
+				objectRelationships2.toString(), 1,
+				objectRelationships2.size());
+
+			Page<ObjectRelationship> page3 =
+				objectRelationshipResource.
+					getObjectDefinitionObjectRelationshipsPage(
+						objectDefinitionId, null, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				objectRelationship1,
+				(List<ObjectRelationship>)page3.getItems());
+			assertContains(
+				objectRelationship2,
+				(List<ObjectRelationship>)page3.getItems());
+			assertContains(
+				objectRelationship3,
+				(List<ObjectRelationship>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1626,6 +1728,14 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("objectField", additionalAssertFieldName)) {
+				if (objectRelationship.getObjectField() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"parameterObjectFieldId", additionalAssertFieldName)) {
 
@@ -1967,6 +2077,17 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("objectField", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						objectRelationship1.getObjectField(),
+						objectRelationship2.getObjectField())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"parameterObjectFieldId", additionalAssertFieldName)) {
 
@@ -2062,6 +2183,10 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
+
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
 
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
@@ -2407,6 +2532,11 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("objectField")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("parameterObjectFieldId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2557,9 +2687,9 @@ public abstract class BaseObjectRelationshipResourceTestCase {
 	}
 
 	protected ObjectRelationshipResource objectRelationshipResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

@@ -26,8 +26,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -231,28 +229,62 @@ public abstract class BaseRoleResourceTestCase {
 
 		Role role3 = testGetRolesPage_addRole(randomRole());
 
-		Page<Role> page1 = roleResource.getRolesPage(
-			null, null, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Role> roles1 = (List<Role>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(roles1.toString(), totalCount + 2, roles1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Role> page1 = roleResource.getRolesPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<Role> page2 = roleResource.getRolesPage(
-			null, null, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(role1, (List<Role>)page1.getItems());
 
-		List<Role> roles2 = (List<Role>)page2.getItems();
+			Page<Role> page2 = roleResource.getRolesPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(roles2.toString(), 1, roles2.size());
+			assertContains(role2, (List<Role>)page2.getItems());
 
-		Page<Role> page3 = roleResource.getRolesPage(
-			null, null, Pagination.of(1, (int)totalCount + 3));
+			Page<Role> page3 = roleResource.getRolesPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertContains(role1, (List<Role>)page3.getItems());
-		assertContains(role2, (List<Role>)page3.getItems());
-		assertContains(role3, (List<Role>)page3.getItems());
+			assertContains(role3, (List<Role>)page3.getItems());
+		}
+		else {
+			Page<Role> page1 = roleResource.getRolesPage(
+				null, null, Pagination.of(1, totalCount + 2));
+
+			List<Role> roles1 = (List<Role>)page1.getItems();
+
+			Assert.assertEquals(
+				roles1.toString(), totalCount + 2, roles1.size());
+
+			Page<Role> page2 = roleResource.getRolesPage(
+				null, null, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Role> roles2 = (List<Role>)page2.getItems();
+
+			Assert.assertEquals(roles2.toString(), 1, roles2.size());
+
+			Page<Role> page3 = roleResource.getRolesPage(
+				null, null, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(role1, (List<Role>)page3.getItems());
+			assertContains(role2, (List<Role>)page3.getItems());
+			assertContains(role3, (List<Role>)page3.getItems());
+		}
 	}
 
 	protected Role testGetRolesPage_addRole(Role role) throws Exception {
@@ -301,6 +333,77 @@ public abstract class BaseRoleResourceTestCase {
 
 	protected Role testGraphQLGetRolesPage_addRole() throws Exception {
 		return testGraphQLRole_addRole();
+	}
+
+	@Test
+	public void testPostRole() throws Exception {
+		Role randomRole = randomRole();
+
+		Role postRole = testPostRole_addRole(randomRole);
+
+		assertEquals(randomRole, postRole);
+		assertValid(postRole);
+	}
+
+	protected Role testPostRole_addRole(Role role) throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutRoleByExternalReferenceCode() throws Exception {
+		Role postRole = testPutRoleByExternalReferenceCode_addRole();
+
+		Role randomRole = randomRole();
+
+		Role putRole = roleResource.putRoleByExternalReferenceCode(
+			postRole.getExternalReferenceCode(), randomRole);
+
+		assertEquals(randomRole, putRole);
+		assertValid(putRole);
+
+		Role getRole = testPutRoleByExternalReferenceCode_getRole(
+			putRole.getExternalReferenceCode());
+
+		assertEquals(randomRole, getRole);
+		assertValid(getRole);
+
+		Role newRole = testPutRoleByExternalReferenceCode_createRole();
+
+		putRole = roleResource.putRoleByExternalReferenceCode(
+			newRole.getExternalReferenceCode(), newRole);
+
+		assertEquals(newRole, putRole);
+		assertValid(putRole);
+
+		getRole = testPutRoleByExternalReferenceCode_getRole(
+			putRole.getExternalReferenceCode());
+
+		assertEquals(newRole, getRole);
+
+		Assert.assertEquals(
+			newRole.getExternalReferenceCode(),
+			putRole.getExternalReferenceCode());
+	}
+
+	protected Role testPutRoleByExternalReferenceCode_getRole(
+		String externalReferenceCode) {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Role testPutRoleByExternalReferenceCode_createRole()
+		throws Exception {
+
+		return randomRole();
+	}
+
+	protected Role testPutRoleByExternalReferenceCode_addRole()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -681,6 +784,14 @@ public abstract class BaseRoleResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("rolePermissions", additionalAssertFieldName)) {
+				if (role.getRolePermissions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("roleType", additionalAssertFieldName)) {
 				if (role.getRoleType() == null) {
 					valid = false;
@@ -915,6 +1026,17 @@ public abstract class BaseRoleResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("rolePermissions", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						role1.getRolePermissions(),
+						role2.getRolePermissions())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("roleType", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						role1.getRoleType(), role2.getRoleType())) {
@@ -961,6 +1083,10 @@ public abstract class BaseRoleResourceTestCase {
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
+
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
 
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
@@ -1258,6 +1384,11 @@ public abstract class BaseRoleResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("rolePermissions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("roleType")) {
 			Object object = role.getRoleType();
 
@@ -1373,9 +1504,9 @@ public abstract class BaseRoleResourceTestCase {
 	}
 
 	protected RoleResource roleResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

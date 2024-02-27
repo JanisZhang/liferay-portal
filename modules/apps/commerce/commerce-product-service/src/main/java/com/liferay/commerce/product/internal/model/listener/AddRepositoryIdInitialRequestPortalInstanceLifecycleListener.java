@@ -40,6 +40,8 @@ import java.io.File;
 
 import java.util.List;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -49,6 +51,12 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = PortalInstanceLifecycleListener.class)
 public class AddRepositoryIdInitialRequestPortalInstanceLifecycleListener
 	extends InitialRequestPortalInstanceLifecycleListener {
+
+	@Activate
+	@Override
+	protected void activate(BundleContext bundleContext) {
+		super.activate(bundleContext);
+	}
 
 	@Override
 	protected void doPortalInstanceRegistered(long companyId) throws Exception {
@@ -116,7 +124,7 @@ public class AddRepositoryIdInitialRequestPortalInstanceLifecycleListener
 						repository.getRepositoryId(),
 						DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 						"company_logo.png", mimeType, image.getTextObj(), null,
-						null, serviceContext);
+						null, null, serviceContext);
 				}
 				finally {
 					_file.delete(file);

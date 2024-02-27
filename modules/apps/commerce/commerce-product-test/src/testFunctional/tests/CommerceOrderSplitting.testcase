@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-10890=true${line.separator}feature.flag.COMMERCE-11026=true${line.separator}jsonws.web.service.paths.excludes=";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Order Management";
@@ -1570,7 +1570,15 @@ definition {
 
 			CommerceSKUs.generateAllSkuCombinations();
 
-			CommerceNavigator.gotoEntry(entryName = "VALUE1VALUE2");
+			var skuCombinationName = selenium.getText("//div[(@class='dnd-td') and (contains(string(), 'VALUE1VALUE2') or contains(string(), 'VALUE2VALUE1'))]//..//div[(@class='dnd-td')][1]");
+
+			CommerceNavigator.gotoEntry(entryName = ${skuCombinationName});
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 
 			CommerceEntry.editSkuPricingAndInventory(
 				basePrice = "20.00",
@@ -3471,9 +3479,7 @@ definition {
 		}
 
 		task ("When the admin navigates to Commerce -> Inventory -> SKU (e.g. the one relating to the product from the Minium catalog) -> On Order tab") {
-			CommerceNavigator.gotoPortlet(
-				category = "Inventory Management",
-				portlet = "Inventory");
+			CommerceInventory.openInventoryAdmin();
 
 			AppBuilderAdmin.searchByItem(itemName = "MIN55861");
 
@@ -3497,9 +3503,7 @@ definition {
 		}
 
 		task ("When the admin navigates to Commerce -> Inventory -> SKU (the other one) -> On Order tab") {
-			CommerceNavigator.gotoPortlet(
-				category = "Inventory Management",
-				portlet = "Inventory");
+			CommerceInventory.openInventoryAdmin();
 
 			AppBuilderAdmin.searchByItem(itemName = "TESTSKU");
 

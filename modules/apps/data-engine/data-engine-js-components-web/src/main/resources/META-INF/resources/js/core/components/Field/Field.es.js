@@ -237,7 +237,17 @@ export function Field({field, itemPath, loc, ...otherProps}) {
 	return (
 		<ErrorBoundary onError={setHasError}>
 			<AutoFocus>
-				<div className="ddm-field" data-field-name={field.fieldName}>
+				<div
+					className="ddm-field"
+					data-ddm-localizable-field-id={
+						(Liferay.FeatureFlags['LPS-114700'] &&
+							field.localizable &&
+							field.instanceId) ||
+						null
+					}
+					data-field-name={field.fieldName}
+					data-qa-id={field.fieldName}
+				>
 					<Suspense fallback={<ClayLoadingIndicator />}>
 						<ParentFieldContext.Provider
 							value={getRootParentField(field, loc, parentField)}

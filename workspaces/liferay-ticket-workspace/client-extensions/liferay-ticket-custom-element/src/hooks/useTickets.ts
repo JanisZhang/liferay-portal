@@ -7,7 +7,8 @@ import {useMemo} from 'react';
 import {useQuery} from 'react-query';
 
 import {FetchTicketsQueryKey, fetchTickets} from '../services/tickets';
-import {Ticket, TicketPayload} from '../types';
+import {Ticket} from '../types';
+import normalizeTicket from '../utils/normalizeTicket';
 
 const useTickets = ({
 	filter,
@@ -23,31 +24,13 @@ const useTickets = ({
 	const tickets = useQuery(
 		['tickets', {filter, page, pageSize, search}],
 		({queryKey}) => fetchTickets({queryKey} as FetchTicketsQueryKey),
-		{refetchInterval: 5000, refetchOnMount: false}
+		{refetchInterval: 5000, refetchOnMount: true}
 	);
 
 	const ticketsMemoized = useMemo(() => {
 		if (tickets.isSuccess) {
 			return {
-				rows: tickets?.data?.items?.map((ticket: TicketPayload) => {
-					let suggestions = [];
-					try {
-						suggestions = JSON.parse(ticket?.suggestions);
-					}
-					catch (error) {}
-
-					return {
-						description: ticket.description,
-						id: ticket.id,
-						priority: ticket.priority?.name,
-						region: ticket.region?.name,
-						resolution: ticket.resolution?.name,
-						subject: ticket.subject,
-						suggestions,
-						ticketStatus: ticket.ticketStatus?.name,
-						type: ticket.type?.name,
-					};
-				}),
+				rows: tickets?.data?.items?.map(normalizeTicket),
 				totalCount: tickets?.data?.totalCount,
 			};
 		}

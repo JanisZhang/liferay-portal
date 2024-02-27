@@ -2,7 +2,12 @@ definition {
 
 	@summary = "Default summary"
 	macro addColumnsViaUI(addColumns = null) {
-		LexiconEntry.gotoAdd();
+		if (IsElementNotPresent(key_text = "Add Column", locator1 = "ObjectCustomViews#ADD_COLUMN")) {
+			Click(locator1 = "Button#PLUS");
+		}
+		else {
+			Click(locator1 = "ObjectCustomViews#ADD_COLUMN");
+		}
 
 		SelectFrame(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
 
@@ -41,7 +46,7 @@ definition {
 
 	@summary = "Default summary"
 	macro addNewAggregationFilterViaUI(dateValueList = null, filterValue = null, filterBy = null, filterType = null) {
-		Click(locator1 = "ObjectCustomViews#ADD_BUTTON_FILTERS");
+		Click(locator1 = "ObjectCustomViews#ADD_NEW_FILTER");
 
 		Click(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
 
@@ -82,7 +87,12 @@ definition {
 
 	@summary = "Default summary"
 	macro addNewFilterViaUI(filterValue = null, filterBy = null, filterType = null) {
-		Click(locator1 = "ObjectCustomViews#ADD_BUTTON_FILTERS");
+		if (IsElementPresent(key_text = "No filter was created yet", locator1 = "ObjectCustomViews#ADD_NEW_FILTER")) {
+			Click(locator1 = "ObjectCustomViews#ADD_NEW_FILTER");
+		}
+		else {
+			Click(locator1 = "ObjectCustomViews#FILTER_ADD_BUTTON");
+		}
 
 		Click(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
 
@@ -143,7 +153,7 @@ definition {
 
 	@summary = "Default summary"
 	macro assertFilterPresent(filterBy = null) {
-		Click(locator1 = "ObjectCustomViews#ADD_BUTTON_FILTERS");
+		Click(locator1 = "ObjectCustomViews#ADD_NEW_FILTER");
 
 		Click(locator1 = "ObjectCustomViews#VIEW_MODAL_CONTENT");
 

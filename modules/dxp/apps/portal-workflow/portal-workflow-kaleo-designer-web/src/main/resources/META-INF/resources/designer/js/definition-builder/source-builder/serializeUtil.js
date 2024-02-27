@@ -161,6 +161,13 @@ function appendXMLAssignments(
 	wrapperNodeAttrs
 ) {
 	if (dataAssignments) {
+		if (
+			!dataAssignments.assignmentType &&
+			dataAssignments[0].assignmentType
+		) {
+			dataAssignments = dataAssignments[0];
+		}
+
 		const assignmentType = Array.from(dataAssignments.assignmentType)[0];
 
 		const xmlAssignments = XMLUtil.createObj(
@@ -272,7 +279,7 @@ function appendXMLAssignments(
 					XMLUtil.create('script', cdata(item)),
 					createTagWithEscapedContent(
 						'scriptLanguage',
-						dataAssignments.scriptLanguage
+						dataAssignments.scriptLanguage || DEFAULT_LANGUAGE
 					),
 					xmlScriptedRecipient.close
 				);

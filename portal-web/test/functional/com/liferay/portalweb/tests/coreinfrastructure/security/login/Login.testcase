@@ -194,10 +194,7 @@ definition {
 		task ("Login and go to control panel - roles") {
 			User.firstLoginUI();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Roles");
+			Role.openRolesAdmin();
 		}
 	}
 
@@ -388,6 +385,10 @@ definition {
 		task ("Enable and save configuration") {
 			FormFields.enableCheckbox(fieldName = "Enabled");
 
+			FormFields.selectSelectOption(
+				fieldName = "Token Location",
+				selectOption = "Request Header");
+
 			SystemSettings.saveConfiguration();
 
 			// The pause is necessary because it takes a while to load new configuration
@@ -548,10 +549,7 @@ definition {
 		}
 
 		task ("When: User start to create a virtuali instance") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			LexiconEntry.gotoAdd();
 		}

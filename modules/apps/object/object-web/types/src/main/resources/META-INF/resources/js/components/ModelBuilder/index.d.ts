@@ -5,6 +5,7 @@
 
 /// <reference types="react" />
 
+import {ILearnResourceContext} from 'frontend-js-components-web';
 import {Scope} from '../ObjectDetails/EditObjectDetails';
 interface CustomObjectFolderWrapperProps {
 	baseResourceURL: string;
@@ -14,10 +15,10 @@ interface CustomObjectFolderWrapperProps {
 	forbiddenChars: string[];
 	forbiddenLastChars: string[];
 	forbiddenNames: string[];
+	learnResourceContext: ILearnResourceContext;
 	objectDefinitionPermissionsURL: string;
 	objectDefinitionsStorageTypes: LabelValueObject[];
 	objectRelationshipDeletionTypes: LabelValueObject[];
-	objectWebLearnResources: ObjectWebLearnResources;
 	sites: Scope[];
 	workflowStatuses: LabelValueObject[];
 }
@@ -29,10 +30,10 @@ export default function CustomObjectFolderWrapper({
 	forbiddenChars,
 	forbiddenLastChars,
 	forbiddenNames,
+	learnResourceContext,
 	objectDefinitionPermissionsURL,
 	objectDefinitionsStorageTypes,
 	objectRelationshipDeletionTypes,
-	objectWebLearnResources,
 	sites,
 	workflowStatuses,
 }: CustomObjectFolderWrapperProps): JSX.Element;

@@ -138,7 +138,7 @@ public class BlogPostingImageResourceImpl
 		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, siteId, folder.getFolderId(), binaryFile.getFileName(),
 			binaryFile.getContentType(), title, null, null, null,
-			binaryFile.getInputStream(), binaryFile.getSize(), null, null,
+			binaryFile.getInputStream(), binaryFile.getSize(), null, null, null,
 			ServiceContextBuilder.create(
 				siteId, contextHttpServletRequest, viewableBy
 			).build());
@@ -166,16 +166,18 @@ public class BlogPostingImageResourceImpl
 
 		return new BlogPostingImage() {
 			{
-				contentUrl = _dlURLHelper.getPreviewURL(
-					fileEntry, fileEntry.getFileVersion(), null, "");
-				contentValue = ContentValueUtil.toContentValue(
-					"contentValue", fileEntry::getContentStream,
-					contextUriInfo);
-				encodingFormat = fileEntry.getMimeType();
-				fileExtension = fileEntry.getExtension();
-				id = fileEntry.getFileEntryId();
-				sizeInBytes = fileEntry.getSize();
-				title = fileEntry.getTitle();
+				setContentUrl(
+					() -> _dlURLHelper.getPreviewURL(
+						fileEntry, fileEntry.getFileVersion(), null, ""));
+				setContentValue(
+					() -> ContentValueUtil.toContentValue(
+						"contentValue", fileEntry::getContentStream,
+						contextUriInfo));
+				setEncodingFormat(fileEntry::getMimeType);
+				setFileExtension(fileEntry::getExtension);
+				setId(fileEntry::getFileEntryId);
+				setSizeInBytes(fileEntry::getSize);
+				setTitle(fileEntry::getTitle);
 			}
 		};
 	}

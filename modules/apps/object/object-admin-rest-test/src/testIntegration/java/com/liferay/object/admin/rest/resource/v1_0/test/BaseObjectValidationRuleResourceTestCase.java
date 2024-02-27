@@ -28,8 +28,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -309,49 +307,97 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 			testGetObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage_addObjectValidationRule(
 				externalReferenceCode, randomObjectValidationRule());
 
-		Page<ObjectValidationRule> page1 =
-			objectValidationRuleResource.
-				getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
-					externalReferenceCode, null,
-					Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ObjectValidationRule> objectValidationRules1 =
-			(List<ObjectValidationRule>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			objectValidationRules1.toString(), totalCount + 2,
-			objectValidationRules1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ObjectValidationRule> page1 =
+				objectValidationRuleResource.
+					getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<ObjectValidationRule> page2 =
-			objectValidationRuleResource.
-				getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
-					externalReferenceCode, null,
-					Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				objectValidationRule1,
+				(List<ObjectValidationRule>)page1.getItems());
 
-		List<ObjectValidationRule> objectValidationRules2 =
-			(List<ObjectValidationRule>)page2.getItems();
+			Page<ObjectValidationRule> page2 =
+				objectValidationRuleResource.
+					getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			objectValidationRules2.toString(), 1,
-			objectValidationRules2.size());
+			assertContains(
+				objectValidationRule2,
+				(List<ObjectValidationRule>)page2.getItems());
 
-		Page<ObjectValidationRule> page3 =
-			objectValidationRuleResource.
-				getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
-					externalReferenceCode, null,
-					Pagination.of(1, (int)totalCount + 3), null);
+			Page<ObjectValidationRule> page3 =
+				objectValidationRuleResource.
+					getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(
-			objectValidationRule1,
-			(List<ObjectValidationRule>)page3.getItems());
-		assertContains(
-			objectValidationRule2,
-			(List<ObjectValidationRule>)page3.getItems());
-		assertContains(
-			objectValidationRule3,
-			(List<ObjectValidationRule>)page3.getItems());
+			assertContains(
+				objectValidationRule3,
+				(List<ObjectValidationRule>)page3.getItems());
+		}
+		else {
+			Page<ObjectValidationRule> page1 =
+				objectValidationRuleResource.
+					getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
+						externalReferenceCode, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<ObjectValidationRule> objectValidationRules1 =
+				(List<ObjectValidationRule>)page1.getItems();
+
+			Assert.assertEquals(
+				objectValidationRules1.toString(), totalCount + 2,
+				objectValidationRules1.size());
+
+			Page<ObjectValidationRule> page2 =
+				objectValidationRuleResource.
+					getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
+						externalReferenceCode, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ObjectValidationRule> objectValidationRules2 =
+				(List<ObjectValidationRule>)page2.getItems();
+
+			Assert.assertEquals(
+				objectValidationRules2.toString(), 1,
+				objectValidationRules2.size());
+
+			Page<ObjectValidationRule> page3 =
+				objectValidationRuleResource.
+					getObjectDefinitionByExternalReferenceCodeObjectValidationRulesPage(
+						externalReferenceCode, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				objectValidationRule1,
+				(List<ObjectValidationRule>)page3.getItems());
+			assertContains(
+				objectValidationRule2,
+				(List<ObjectValidationRule>)page3.getItems());
+			assertContains(
+				objectValidationRule3,
+				(List<ObjectValidationRule>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -686,49 +732,97 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 			testGetObjectDefinitionObjectValidationRulesPage_addObjectValidationRule(
 				objectDefinitionId, randomObjectValidationRule());
 
-		Page<ObjectValidationRule> page1 =
-			objectValidationRuleResource.
-				getObjectDefinitionObjectValidationRulesPage(
-					objectDefinitionId, null, Pagination.of(1, totalCount + 2),
-					null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ObjectValidationRule> objectValidationRules1 =
-			(List<ObjectValidationRule>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			objectValidationRules1.toString(), totalCount + 2,
-			objectValidationRules1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ObjectValidationRule> page1 =
+				objectValidationRuleResource.
+					getObjectDefinitionObjectValidationRulesPage(
+						objectDefinitionId, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<ObjectValidationRule> page2 =
-			objectValidationRuleResource.
-				getObjectDefinitionObjectValidationRulesPage(
-					objectDefinitionId, null, Pagination.of(2, totalCount + 2),
-					null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				objectValidationRule1,
+				(List<ObjectValidationRule>)page1.getItems());
 
-		List<ObjectValidationRule> objectValidationRules2 =
-			(List<ObjectValidationRule>)page2.getItems();
+			Page<ObjectValidationRule> page2 =
+				objectValidationRuleResource.
+					getObjectDefinitionObjectValidationRulesPage(
+						objectDefinitionId, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			objectValidationRules2.toString(), 1,
-			objectValidationRules2.size());
+			assertContains(
+				objectValidationRule2,
+				(List<ObjectValidationRule>)page2.getItems());
 
-		Page<ObjectValidationRule> page3 =
-			objectValidationRuleResource.
-				getObjectDefinitionObjectValidationRulesPage(
-					objectDefinitionId, null,
-					Pagination.of(1, (int)totalCount + 3), null);
+			Page<ObjectValidationRule> page3 =
+				objectValidationRuleResource.
+					getObjectDefinitionObjectValidationRulesPage(
+						objectDefinitionId, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(
-			objectValidationRule1,
-			(List<ObjectValidationRule>)page3.getItems());
-		assertContains(
-			objectValidationRule2,
-			(List<ObjectValidationRule>)page3.getItems());
-		assertContains(
-			objectValidationRule3,
-			(List<ObjectValidationRule>)page3.getItems());
+			assertContains(
+				objectValidationRule3,
+				(List<ObjectValidationRule>)page3.getItems());
+		}
+		else {
+			Page<ObjectValidationRule> page1 =
+				objectValidationRuleResource.
+					getObjectDefinitionObjectValidationRulesPage(
+						objectDefinitionId, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<ObjectValidationRule> objectValidationRules1 =
+				(List<ObjectValidationRule>)page1.getItems();
+
+			Assert.assertEquals(
+				objectValidationRules1.toString(), totalCount + 2,
+				objectValidationRules1.size());
+
+			Page<ObjectValidationRule> page2 =
+				objectValidationRuleResource.
+					getObjectDefinitionObjectValidationRulesPage(
+						objectDefinitionId, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ObjectValidationRule> objectValidationRules2 =
+				(List<ObjectValidationRule>)page2.getItems();
+
+			Assert.assertEquals(
+				objectValidationRules2.toString(), 1,
+				objectValidationRules2.size());
+
+			Page<ObjectValidationRule> page3 =
+				objectValidationRuleResource.
+					getObjectDefinitionObjectValidationRulesPage(
+						objectDefinitionId, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				objectValidationRule1,
+				(List<ObjectValidationRule>)page3.getItems());
+			assertContains(
+				objectValidationRule2,
+				(List<ObjectValidationRule>)page3.getItems());
+			assertContains(
+				objectValidationRule3,
+				(List<ObjectValidationRule>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1736,6 +1830,10 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -2227,9 +2325,9 @@ public abstract class BaseObjectValidationRuleResourceTestCase {
 	}
 
 	protected ObjectValidationRuleResource objectValidationRuleResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

@@ -14,11 +14,11 @@ import {InputLocalized} from 'frontend-js-components-web';
 import {fetch, openModal} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-import {API_URL, OBJECT_RELATIONSHIP} from '../../Constants';
 import {FDSViewType} from '../../FDSViews';
 import RequiredMark from '../../components/RequiredMark';
 import Search from '../../components/Search';
 import ValidationFeedback from '../../components/ValidationFeedback';
+import {API_URL, OBJECT_RELATIONSHIP} from '../../utils/constants';
 import openDefaultFailureToast from '../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../utils/openDefaultSuccessToast';
 import {IFDSAction} from '../Actions';
@@ -180,6 +180,17 @@ const ActionForm = ({
 		type: initialValues?.type ?? 'link',
 		url: initialValues?.url ?? '',
 	});
+
+	const handleActionTypeChange = (event: any) => {
+		const type = event.target.value;
+
+		setActionData({
+			...actionData,
+			method: type === ACTION_TYPE.ASYNC ? ACTION_METHOD.DELETE : '',
+			modalSize: type === ACTION_TYPE.MODAL ? MODAL_SIZES[0].value : '',
+			type,
+		});
+	};
 
 	const saveFDSAction = async () => {
 		setSaveButtonDisabled(true);
@@ -548,10 +559,7 @@ const ActionForm = ({
 									disabled={editing}
 									id={typeFormElementId}
 									onChange={(event) =>
-										setActionData({
-											...actionData,
-											type: event.target.value,
-										})
+										handleActionTypeChange(event)
 									}
 									options={
 										activeTab === 0

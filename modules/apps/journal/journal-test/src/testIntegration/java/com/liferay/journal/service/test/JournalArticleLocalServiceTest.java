@@ -294,6 +294,7 @@ public class JournalArticleLocalServiceTest {
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(getClass(), "dependencies/image.jpg"), null, null,
+			null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		JournalArticle journalArticle = _journalArticleLocalService.addArticle(
@@ -517,6 +518,61 @@ public class JournalArticleLocalServiceTest {
 			newArticle.getImagesFileEntriesCount());
 
 		_validateDDMFormValuesImages(newArticle);
+	}
+
+	@Test
+	public void testCopyArticleWithSpecialCharacters() throws Exception {
+		JournalArticle oldArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, "hatékony",
+			RandomTestUtil.randomString());
+
+		JournalArticle newArticle = _journalArticleLocalService.copyArticle(
+			oldArticle.getUserId(), oldArticle.getGroupId(),
+			oldArticle.getArticleId(), null, true, oldArticle.getVersion());
+
+		Assert.assertNotEquals(oldArticle, newArticle);
+		Assert.assertEquals("hat%C3%A9kony-copy-", newArticle.getUrlTitle());
+
+		List<ResourcePermission> oldResourcePermissions =
+			_resourcePermissionLocalService.getResourcePermissions(
+				oldArticle.getCompanyId(), JournalArticle.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(oldArticle.getResourcePrimKey()));
+
+		List<ResourcePermission> newResourcePermissions =
+			_resourcePermissionLocalService.getResourcePermissions(
+				newArticle.getCompanyId(), JournalArticle.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(newArticle.getResourcePrimKey()));
+
+		Assert.assertEquals(
+			StringBundler.concat(
+				"Old resource permissions: ", oldResourcePermissions,
+				", new resource permissions: ", newResourcePermissions),
+			oldResourcePermissions.size(), newResourcePermissions.size());
+
+		for (int i = 0; i < oldResourcePermissions.size(); i++) {
+			ResourcePermission oldResourcePermission =
+				oldResourcePermissions.get(i);
+			ResourcePermission newResourcePermission =
+				newResourcePermissions.get(i);
+
+			Assert.assertNotEquals(
+				oldResourcePermission, newResourcePermission);
+			Assert.assertEquals(
+				oldResourcePermission.getRoleId(),
+				newResourcePermission.getRoleId());
+			Assert.assertEquals(
+				oldResourcePermission.getOwnerId(),
+				newResourcePermission.getOwnerId());
+			Assert.assertEquals(
+				oldResourcePermission.getActionIds(),
+				newResourcePermission.getActionIds());
+			Assert.assertEquals(
+				oldResourcePermission.isViewActionId(),
+				newResourcePermission.isViewActionId());
+		}
 	}
 
 	@Test
@@ -1066,6 +1122,7 @@ public class JournalArticleLocalServiceTest {
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(getClass(), "dependencies/image.jpg"), null, null,
+			null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		JournalArticle journalArticle =
@@ -1119,6 +1176,7 @@ public class JournalArticleLocalServiceTest {
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(getClass(), "dependencies/image.jpg"), null, null,
+			null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		JournalArticle journalArticle =
@@ -1305,6 +1363,7 @@ public class JournalArticleLocalServiceTest {
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(getClass(), "dependencies/image.jpg"), null, null,
+			null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
@@ -1377,6 +1436,7 @@ public class JournalArticleLocalServiceTest {
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(getClass(), "dependencies/image.jpg"), null, null,
+			null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
@@ -1435,6 +1495,71 @@ public class JournalArticleLocalServiceTest {
 		Assert.assertFalse(availableLocales.contains(LocaleUtil.SPAIN));
 
 		_validateDDMFormFieldValues(ddmFormValues.getDDMFormFieldValues());
+	}
+
+	@Test
+	public void testTrashArticleExternalReferenceCode() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
+
+		JournalArticle originalJournalArticle =
+			JournalTestUtil.addArticleWithWorkflow(
+				_group.getGroupId(), 0, RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), true, serviceContext);
+
+		JournalArticle latestJournalArticle =
+			_journalArticleLocalService.updateArticle(
+				originalJournalArticle.getUserId(),
+				originalJournalArticle.getGroupId(),
+				originalJournalArticle.getFolderId(),
+				originalJournalArticle.getArticleId(),
+				originalJournalArticle.getVersion(),
+				originalJournalArticle.getTitleMap(),
+				originalJournalArticle.getDescriptionMap(),
+				originalJournalArticle.getContent(),
+				originalJournalArticle.getLayoutUuid(), serviceContext);
+
+		Map<Double, String> externalReferenceCodeMap = HashMapBuilder.put(
+			originalJournalArticle.getVersion(),
+			originalJournalArticle.getExternalReferenceCode()
+		).put(
+			latestJournalArticle.getVersion(),
+			latestJournalArticle.getExternalReferenceCode()
+		).build();
+
+		latestJournalArticle = _journalArticleLocalService.moveArticleToTrash(
+			TestPropsValues.getUserId(), latestJournalArticle);
+
+		for (Map.Entry<Double, String> entry :
+				externalReferenceCodeMap.entrySet()) {
+
+			JournalArticle persistedJournalArticle =
+				_journalArticleLocalService.fetchArticleByUrlTitle(
+					originalJournalArticle.getGroupId(),
+					originalJournalArticle.getUrlTitle(), entry.getKey());
+
+			Assert.assertTrue(persistedJournalArticle.isInTrash());
+			Assert.assertEquals(
+				entry.getValue(),
+				persistedJournalArticle.getExternalReferenceCode());
+		}
+
+		_journalArticleLocalService.restoreArticleFromTrash(
+			TestPropsValues.getUserId(), latestJournalArticle);
+
+		for (Map.Entry<Double, String> entry :
+				externalReferenceCodeMap.entrySet()) {
+
+			JournalArticle persistedJournalArticle =
+				_journalArticleLocalService.fetchArticleByUrlTitle(
+					originalJournalArticle.getGroupId(),
+					originalJournalArticle.getUrlTitle(), entry.getKey());
+
+			Assert.assertFalse(persistedJournalArticle.isInTrash());
+			Assert.assertEquals(
+				entry.getValue(),
+				persistedJournalArticle.getExternalReferenceCode());
+		}
 	}
 
 	@Test

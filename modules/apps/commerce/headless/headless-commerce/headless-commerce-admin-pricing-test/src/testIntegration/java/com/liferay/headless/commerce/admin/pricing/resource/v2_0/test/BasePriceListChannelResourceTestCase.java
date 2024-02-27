@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -302,43 +300,87 @@ public abstract class BasePriceListChannelResourceTestCase {
 			testGetPriceListByExternalReferenceCodePriceListChannelsPage_addPriceListChannel(
 				externalReferenceCode, randomPriceListChannel());
 
-		Page<PriceListChannel> page1 =
-			priceListChannelResource.
-				getPriceListByExternalReferenceCodePriceListChannelsPage(
-					externalReferenceCode, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceListChannel> priceListChannels1 =
-			(List<PriceListChannel>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceListChannels1.toString(), totalCount + 2,
-			priceListChannels1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceListChannel> page1 =
+				priceListChannelResource.
+					getPriceListByExternalReferenceCodePriceListChannelsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<PriceListChannel> page2 =
-			priceListChannelResource.
-				getPriceListByExternalReferenceCodePriceListChannelsPage(
-					externalReferenceCode, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				priceListChannel1, (List<PriceListChannel>)page1.getItems());
 
-		List<PriceListChannel> priceListChannels2 =
-			(List<PriceListChannel>)page2.getItems();
+			Page<PriceListChannel> page2 =
+				priceListChannelResource.
+					getPriceListByExternalReferenceCodePriceListChannelsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			priceListChannels2.toString(), 1, priceListChannels2.size());
+			assertContains(
+				priceListChannel2, (List<PriceListChannel>)page2.getItems());
 
-		Page<PriceListChannel> page3 =
-			priceListChannelResource.
-				getPriceListByExternalReferenceCodePriceListChannelsPage(
-					externalReferenceCode,
-					Pagination.of(1, (int)totalCount + 3));
+			Page<PriceListChannel> page3 =
+				priceListChannelResource.
+					getPriceListByExternalReferenceCodePriceListChannelsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertContains(
-			priceListChannel1, (List<PriceListChannel>)page3.getItems());
-		assertContains(
-			priceListChannel2, (List<PriceListChannel>)page3.getItems());
-		assertContains(
-			priceListChannel3, (List<PriceListChannel>)page3.getItems());
+			assertContains(
+				priceListChannel3, (List<PriceListChannel>)page3.getItems());
+		}
+		else {
+			Page<PriceListChannel> page1 =
+				priceListChannelResource.
+					getPriceListByExternalReferenceCodePriceListChannelsPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<PriceListChannel> priceListChannels1 =
+				(List<PriceListChannel>)page1.getItems();
+
+			Assert.assertEquals(
+				priceListChannels1.toString(), totalCount + 2,
+				priceListChannels1.size());
+
+			Page<PriceListChannel> page2 =
+				priceListChannelResource.
+					getPriceListByExternalReferenceCodePriceListChannelsPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceListChannel> priceListChannels2 =
+				(List<PriceListChannel>)page2.getItems();
+
+			Assert.assertEquals(
+				priceListChannels2.toString(), 1, priceListChannels2.size());
+
+			Page<PriceListChannel> page3 =
+				priceListChannelResource.
+					getPriceListByExternalReferenceCodePriceListChannelsPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				priceListChannel1, (List<PriceListChannel>)page3.getItems());
+			assertContains(
+				priceListChannel2, (List<PriceListChannel>)page3.getItems());
+			assertContains(
+				priceListChannel3, (List<PriceListChannel>)page3.getItems());
+		}
 	}
 
 	protected PriceListChannel
@@ -574,39 +616,82 @@ public abstract class BasePriceListChannelResourceTestCase {
 			testGetPriceListIdPriceListChannelsPage_addPriceListChannel(
 				id, randomPriceListChannel());
 
-		Page<PriceListChannel> page1 =
-			priceListChannelResource.getPriceListIdPriceListChannelsPage(
-				id, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceListChannel> priceListChannels1 =
-			(List<PriceListChannel>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceListChannels1.toString(), totalCount + 2,
-			priceListChannels1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceListChannel> page1 =
+				priceListChannelResource.getPriceListIdPriceListChannelsPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<PriceListChannel> page2 =
-			priceListChannelResource.getPriceListIdPriceListChannelsPage(
-				id, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				priceListChannel1, (List<PriceListChannel>)page1.getItems());
 
-		List<PriceListChannel> priceListChannels2 =
-			(List<PriceListChannel>)page2.getItems();
+			Page<PriceListChannel> page2 =
+				priceListChannelResource.getPriceListIdPriceListChannelsPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			priceListChannels2.toString(), 1, priceListChannels2.size());
+			assertContains(
+				priceListChannel2, (List<PriceListChannel>)page2.getItems());
 
-		Page<PriceListChannel> page3 =
-			priceListChannelResource.getPriceListIdPriceListChannelsPage(
-				id, null, null, Pagination.of(1, (int)totalCount + 3), null);
+			Page<PriceListChannel> page3 =
+				priceListChannelResource.getPriceListIdPriceListChannelsPage(
+					id, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(
-			priceListChannel1, (List<PriceListChannel>)page3.getItems());
-		assertContains(
-			priceListChannel2, (List<PriceListChannel>)page3.getItems());
-		assertContains(
-			priceListChannel3, (List<PriceListChannel>)page3.getItems());
+			assertContains(
+				priceListChannel3, (List<PriceListChannel>)page3.getItems());
+		}
+		else {
+			Page<PriceListChannel> page1 =
+				priceListChannelResource.getPriceListIdPriceListChannelsPage(
+					id, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<PriceListChannel> priceListChannels1 =
+				(List<PriceListChannel>)page1.getItems();
+
+			Assert.assertEquals(
+				priceListChannels1.toString(), totalCount + 2,
+				priceListChannels1.size());
+
+			Page<PriceListChannel> page2 =
+				priceListChannelResource.getPriceListIdPriceListChannelsPage(
+					id, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceListChannel> priceListChannels2 =
+				(List<PriceListChannel>)page2.getItems();
+
+			Assert.assertEquals(
+				priceListChannels2.toString(), 1, priceListChannels2.size());
+
+			Page<PriceListChannel> page3 =
+				priceListChannelResource.getPriceListIdPriceListChannelsPage(
+					id, null, null, Pagination.of(1, (int)totalCount + 3),
+					null);
+
+			assertContains(
+				priceListChannel1, (List<PriceListChannel>)page3.getItems());
+			assertContains(
+				priceListChannel2, (List<PriceListChannel>)page3.getItems());
+			assertContains(
+				priceListChannel3, (List<PriceListChannel>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1223,6 +1308,10 @@ public abstract class BasePriceListChannelResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1484,9 +1573,9 @@ public abstract class BasePriceListChannelResourceTestCase {
 	}
 
 	protected PriceListChannelResource priceListChannelResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

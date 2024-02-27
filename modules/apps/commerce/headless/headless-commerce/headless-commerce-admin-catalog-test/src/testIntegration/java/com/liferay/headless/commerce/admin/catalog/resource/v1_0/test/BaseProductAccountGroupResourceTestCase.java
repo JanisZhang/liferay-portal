@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -433,43 +431,94 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			testGetProductByExternalReferenceCodeProductAccountGroupsPage_addProductAccountGroup(
 				externalReferenceCode, randomProductAccountGroup());
 
-		Page<ProductAccountGroup> page1 =
-			productAccountGroupResource.
-				getProductByExternalReferenceCodeProductAccountGroupsPage(
-					externalReferenceCode, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ProductAccountGroup> productAccountGroups1 =
-			(List<ProductAccountGroup>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			productAccountGroups1.toString(), totalCount + 2,
-			productAccountGroups1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductAccountGroup> page1 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<ProductAccountGroup> page2 =
-			productAccountGroupResource.
-				getProductByExternalReferenceCodeProductAccountGroupsPage(
-					externalReferenceCode, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				productAccountGroup1,
+				(List<ProductAccountGroup>)page1.getItems());
 
-		List<ProductAccountGroup> productAccountGroups2 =
-			(List<ProductAccountGroup>)page2.getItems();
+			Page<ProductAccountGroup> page2 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			productAccountGroups2.toString(), 1, productAccountGroups2.size());
+			assertContains(
+				productAccountGroup2,
+				(List<ProductAccountGroup>)page2.getItems());
 
-		Page<ProductAccountGroup> page3 =
-			productAccountGroupResource.
-				getProductByExternalReferenceCodeProductAccountGroupsPage(
-					externalReferenceCode,
-					Pagination.of(1, (int)totalCount + 3));
+			Page<ProductAccountGroup> page3 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertContains(
-			productAccountGroup1, (List<ProductAccountGroup>)page3.getItems());
-		assertContains(
-			productAccountGroup2, (List<ProductAccountGroup>)page3.getItems());
-		assertContains(
-			productAccountGroup3, (List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup3,
+				(List<ProductAccountGroup>)page3.getItems());
+		}
+		else {
+			Page<ProductAccountGroup> page1 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<ProductAccountGroup> productAccountGroups1 =
+				(List<ProductAccountGroup>)page1.getItems();
+
+			Assert.assertEquals(
+				productAccountGroups1.toString(), totalCount + 2,
+				productAccountGroups1.size());
+
+			Page<ProductAccountGroup> page2 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductAccountGroup> productAccountGroups2 =
+				(List<ProductAccountGroup>)page2.getItems();
+
+			Assert.assertEquals(
+				productAccountGroups2.toString(), 1,
+				productAccountGroups2.size());
+
+			Page<ProductAccountGroup> page3 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				productAccountGroup1,
+				(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup2,
+				(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup3,
+				(List<ProductAccountGroup>)page3.getItems());
+		}
 	}
 
 	protected ProductAccountGroup
@@ -592,39 +641,91 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			testGetProductIdProductAccountGroupsPage_addProductAccountGroup(
 				id, randomProductAccountGroup());
 
-		Page<ProductAccountGroup> page1 =
-			productAccountGroupResource.getProductIdProductAccountGroupsPage(
-				id, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ProductAccountGroup> productAccountGroups1 =
-			(List<ProductAccountGroup>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			productAccountGroups1.toString(), totalCount + 2,
-			productAccountGroups1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductAccountGroup> page1 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<ProductAccountGroup> page2 =
-			productAccountGroupResource.getProductIdProductAccountGroupsPage(
-				id, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				productAccountGroup1,
+				(List<ProductAccountGroup>)page1.getItems());
 
-		List<ProductAccountGroup> productAccountGroups2 =
-			(List<ProductAccountGroup>)page2.getItems();
+			Page<ProductAccountGroup> page2 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			productAccountGroups2.toString(), 1, productAccountGroups2.size());
+			assertContains(
+				productAccountGroup2,
+				(List<ProductAccountGroup>)page2.getItems());
 
-		Page<ProductAccountGroup> page3 =
-			productAccountGroupResource.getProductIdProductAccountGroupsPage(
-				id, Pagination.of(1, (int)totalCount + 3));
+			Page<ProductAccountGroup> page3 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertContains(
-			productAccountGroup1, (List<ProductAccountGroup>)page3.getItems());
-		assertContains(
-			productAccountGroup2, (List<ProductAccountGroup>)page3.getItems());
-		assertContains(
-			productAccountGroup3, (List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup3,
+				(List<ProductAccountGroup>)page3.getItems());
+		}
+		else {
+			Page<ProductAccountGroup> page1 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id, Pagination.of(1, totalCount + 2));
+
+			List<ProductAccountGroup> productAccountGroups1 =
+				(List<ProductAccountGroup>)page1.getItems();
+
+			Assert.assertEquals(
+				productAccountGroups1.toString(), totalCount + 2,
+				productAccountGroups1.size());
+
+			Page<ProductAccountGroup> page2 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductAccountGroup> productAccountGroups2 =
+				(List<ProductAccountGroup>)page2.getItems();
+
+			Assert.assertEquals(
+				productAccountGroups2.toString(), 1,
+				productAccountGroups2.size());
+
+			Page<ProductAccountGroup> page3 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				productAccountGroup1,
+				(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup2,
+				(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup3,
+				(List<ProductAccountGroup>)page3.getItems());
+		}
 	}
 
 	protected ProductAccountGroup
@@ -979,6 +1080,10 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1217,9 +1322,9 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 	}
 
 	protected ProductAccountGroupResource productAccountGroupResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

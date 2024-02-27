@@ -858,7 +858,7 @@ definition {
 				picklistName = "Status");
 		}
 
-		task ("And given an object with a field is created") {
+		task ("and Given an object with a field is created") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 175196",
 				objectName = "CustomObject175196",
@@ -874,8 +874,9 @@ definition {
 				picklistName = "Status");
 		}
 
-		task ("And given a custom validation with expression builder is created and the object is published (via API)") {
+		task ("and Given a custom validation with expression builder is created and the object is published (via API)") {
 			JSONObject.addObjectValidation(
+				isActive = "false",
 				labelName = "Custom validation",
 				objectName = "CustomObject175196",
 				script = "oldValue('customPicklistField') == 'open'",
@@ -890,6 +891,20 @@ definition {
 			ObjectAdmin.addObjectPicklistFieldEntryViaUI(
 				labelName = "Custom Picklist Field",
 				picklistOption = "Open");
+		}
+
+		task ("and When the validation toggle is active") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 175196");
+
+			ObjectAdmin.goToValidationsTab();
+
+			ObjectCustomValidation.gotoCustomValidation(validationName = "Custom validation");
+
+			ObjectCustomValidation.activeValidation();
+
+			PortletEntry.save();
 		}
 
 		task ("Then the validation condition is met and the entry can be updated") {

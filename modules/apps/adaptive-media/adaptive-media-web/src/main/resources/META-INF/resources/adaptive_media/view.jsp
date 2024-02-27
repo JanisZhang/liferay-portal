@@ -8,19 +8,15 @@
 <%@ include file="/adaptive_media/init.jsp" %>
 
 <%
-AMManagementToolbarDisplayContext amManagementToolbarDisplayContext = new AMManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, currentURLObj);
+SearchContainer<?> amSearchContainer = new SearchContainer<>(renderRequest, renderResponse.createRenderURL(), null, "there-are-no-image-resolutions");
+
+amSearchContainer.setId("imageConfigurationEntries");
+amSearchContainer.setResultsAndTotal((List)request.getAttribute(AMWebKeys.CONFIGURATION_ENTRIES_LIST));
+amSearchContainer.setRowChecker(new ImageConfigurationEntriesChecker(liferayPortletResponse));
 %>
 
 <clay:management-toolbar
-	clearResultsURL="<%= amManagementToolbarDisplayContext.getClearResultsURL() %>"
-	creationMenu="<%= amManagementToolbarDisplayContext.getCreationMenu() %>"
-	disabled="<%= amManagementToolbarDisplayContext.isDisabled() %>"
-	filterDropdownItems="<%= amManagementToolbarDisplayContext.getFilterDropdownItems() %>"
-	filterLabelItems="<%= amManagementToolbarDisplayContext.getFilterLabelItems() %>"
-	infoPanelId="infoPanelId"
-	itemsTotal="<%= amManagementToolbarDisplayContext.getTotalItems() %>"
-	searchContainerId="imageConfigurationEntries"
-	showSearch="<%= false %>"
+	managementToolbarDisplayContext="<%= new AMManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, amSearchContainer) %>"
 />
 
 <div class="closed sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
@@ -69,23 +65,12 @@ AMManagementToolbarDisplayContext amManagementToolbarDisplayContext = new AMMana
 
 			currentBackgroundTaskConfigurationEntryUuids.add(configurationEntryUuid);
 		}
-
-		List<AMImageConfigurationEntry> selectedConfigurationEntries = amManagementToolbarDisplayContext.getSelectedConfigurationEntries();
 		%>
 
 		<aui:form action="<%= deleteImageConfigurationEntryURL %>" method="post" name="fm">
 			<liferay-ui:search-container
-				emptyResultsMessage="there-are-no-image-resolutions"
-				id="imageConfigurationEntries"
-				iteratorURL="<%= renderResponse.createRenderURL() %>"
-				rowChecker="<%= new ImageConfigurationEntriesChecker(liferayPortletResponse) %>"
-				total="<%= selectedConfigurationEntries.size() %>"
+				searchContainer="<%= amSearchContainer %>"
 			>
-				<liferay-ui:search-container-results
-					calculateStartAndEnd="<%= true %>"
-					results="<%= selectedConfigurationEntries %>"
-				/>
-
 				<liferay-ui:search-container-row
 					className="com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry"
 					modelVar="amImageConfigurationEntry"
@@ -136,7 +121,7 @@ AMManagementToolbarDisplayContext amManagementToolbarDisplayContext = new AMMana
 							</portlet:resourceURL>
 
 							<react:component
-								module="adaptive_media/js/AdaptiveMediaProgress"
+								module="{AdaptiveMediaProgress} from adaptive-media-web"
 								props='<%=
 									HashMapBuilder.<String, Object>put(
 										"adaptedImages", Math.min(adaptedImages, totalImages)

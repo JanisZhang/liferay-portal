@@ -50,6 +50,12 @@ if (cur2 > 0) {
 
 portletURL.setParameter("mbCategoryId", String.valueOf(categoryId));
 
+String searchCategoryId = ParamUtil.getString(request, "searchCategoryId");
+
+if (Validator.isNotNull(searchCategoryId)) {
+	portletURL.setParameter("searchCategoryId", searchCategoryId);
+}
+
 String keywords = ParamUtil.getString(request, "keywords");
 
 if (Validator.isNotNull(keywords)) {

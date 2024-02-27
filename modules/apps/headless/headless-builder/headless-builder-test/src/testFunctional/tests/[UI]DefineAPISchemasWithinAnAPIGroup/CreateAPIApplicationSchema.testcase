@@ -41,11 +41,8 @@ definition {
 	test AllObjectDefinitionsAreAvailableInTheObjectMenu {
 		property portal.acceptance = "true";
 
-		task ("Given multiple custom object definitions created without publishing") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Object",
-				panel = "Control Panel",
-				portlet = "Objects");
+		task ("Given multiple custom object definitions created and published") {
+			ObjectAdmin.openObjectAdmin();
 
 			var i = 0;
 
@@ -56,7 +53,7 @@ definition {
 			while (${moreThanTwenty} != "Showing 1 to 20 of 21 entries.") {
 				var i = ${i} + 1;
 
-				ObjectDefinitionAPI.createObjectDefinition(
+				ObjectDefinitionAPI.createAndPublishObjectDefinition(
 					en_US_label = "Student${i}",
 					en_US_plural_label = "Student${i}s",
 					name = "Student${i}",
@@ -71,10 +68,7 @@ definition {
 		}
 
 		task ("And Given all 20+ object deinifition entities available in Objects") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Object",
-				panel = "Control Panel",
-				portlet = "Objects");
+			ObjectAdmin.openObjectAdmin();
 
 			AssertTextEquals(
 				locator1 = "Pagination#RESULTS",
@@ -156,9 +150,8 @@ definition {
 
 		task ("Then a text 'Add a short description that describes this schema' visible in the Description field") {
 			AssertElementPresent(
-				key_fieldName = "Add a short description that describes this schema",
-				key_fieldValue = "Add a short description that describes this schema",
-				locator1 = "Translation#TARGET_LANGUAGE_TEXT_BOX_FIELD");
+				key_value = "schema",
+				locator1 = "APIBuilder#DESCRIPTION");
 		}
 	}
 

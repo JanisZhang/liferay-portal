@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -424,47 +422,95 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 			testGetShippingFixedOptionIdShippingFixedOptionOrderTypesPage_addShippingFixedOptionOrderType(
 				id, randomShippingFixedOptionOrderType());
 
-		Page<ShippingFixedOptionOrderType> page1 =
-			shippingFixedOptionOrderTypeResource.
-				getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
-					id, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ShippingFixedOptionOrderType> shippingFixedOptionOrderTypes1 =
-			(List<ShippingFixedOptionOrderType>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			shippingFixedOptionOrderTypes1.toString(), totalCount + 2,
-			shippingFixedOptionOrderTypes1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ShippingFixedOptionOrderType> page1 =
+				shippingFixedOptionOrderTypeResource.
+					getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<ShippingFixedOptionOrderType> page2 =
-			shippingFixedOptionOrderTypeResource.
-				getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
-					id, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				shippingFixedOptionOrderType1,
+				(List<ShippingFixedOptionOrderType>)page1.getItems());
 
-		List<ShippingFixedOptionOrderType> shippingFixedOptionOrderTypes2 =
-			(List<ShippingFixedOptionOrderType>)page2.getItems();
+			Page<ShippingFixedOptionOrderType> page2 =
+				shippingFixedOptionOrderTypeResource.
+					getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			shippingFixedOptionOrderTypes2.toString(), 1,
-			shippingFixedOptionOrderTypes2.size());
+			assertContains(
+				shippingFixedOptionOrderType2,
+				(List<ShippingFixedOptionOrderType>)page2.getItems());
 
-		Page<ShippingFixedOptionOrderType> page3 =
-			shippingFixedOptionOrderTypeResource.
-				getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
-					id, null, null, Pagination.of(1, (int)totalCount + 3),
-					null);
+			Page<ShippingFixedOptionOrderType> page3 =
+				shippingFixedOptionOrderTypeResource.
+					getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(
-			shippingFixedOptionOrderType1,
-			(List<ShippingFixedOptionOrderType>)page3.getItems());
-		assertContains(
-			shippingFixedOptionOrderType2,
-			(List<ShippingFixedOptionOrderType>)page3.getItems());
-		assertContains(
-			shippingFixedOptionOrderType3,
-			(List<ShippingFixedOptionOrderType>)page3.getItems());
+			assertContains(
+				shippingFixedOptionOrderType3,
+				(List<ShippingFixedOptionOrderType>)page3.getItems());
+		}
+		else {
+			Page<ShippingFixedOptionOrderType> page1 =
+				shippingFixedOptionOrderTypeResource.
+					getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
+						id, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<ShippingFixedOptionOrderType> shippingFixedOptionOrderTypes1 =
+				(List<ShippingFixedOptionOrderType>)page1.getItems();
+
+			Assert.assertEquals(
+				shippingFixedOptionOrderTypes1.toString(), totalCount + 2,
+				shippingFixedOptionOrderTypes1.size());
+
+			Page<ShippingFixedOptionOrderType> page2 =
+				shippingFixedOptionOrderTypeResource.
+					getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
+						id, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ShippingFixedOptionOrderType> shippingFixedOptionOrderTypes2 =
+				(List<ShippingFixedOptionOrderType>)page2.getItems();
+
+			Assert.assertEquals(
+				shippingFixedOptionOrderTypes2.toString(), 1,
+				shippingFixedOptionOrderTypes2.size());
+
+			Page<ShippingFixedOptionOrderType> page3 =
+				shippingFixedOptionOrderTypeResource.
+					getShippingFixedOptionIdShippingFixedOptionOrderTypesPage(
+						id, null, null, Pagination.of(1, (int)totalCount + 3),
+						null);
+
+			assertContains(
+				shippingFixedOptionOrderType1,
+				(List<ShippingFixedOptionOrderType>)page3.getItems());
+			assertContains(
+				shippingFixedOptionOrderType2,
+				(List<ShippingFixedOptionOrderType>)page3.getItems());
+			assertContains(
+				shippingFixedOptionOrderType3,
+				(List<ShippingFixedOptionOrderType>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1116,6 +1162,10 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1341,9 +1391,9 @@ public abstract class BaseShippingFixedOptionOrderTypeResourceTestCase {
 
 	protected ShippingFixedOptionOrderTypeResource
 		shippingFixedOptionOrderTypeResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 

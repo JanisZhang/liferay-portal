@@ -12,7 +12,6 @@ export default function DocumentLibrary({
 	editEntryUrl,
 	namespace,
 	searchContainerId,
-	selectFolderURL,
 	...config
 }) {
 	let searchContainer;
@@ -140,7 +139,8 @@ export default function DocumentLibrary({
 	window[`${namespace}move`] = function (
 		selectedItems,
 		parameterName,
-		parameterValue
+		parameterValue,
+		selectFolderURL
 	) {
 		const dialogTitle =
 			selectedItems === 1
@@ -153,13 +153,13 @@ export default function DocumentLibrary({
 			onSelect: (selectedItem) => {
 				if (parameterName && parameterValue) {
 					_moveSingleElement(
-						selectedItem.folderid,
+						selectedItem.resourceid,
 						parameterName,
 						parameterValue
 					);
 				}
 				else {
-					_moveCurrentSelection(selectedItem.folderid);
+					_moveCurrentSelection(selectedItem.resourceid);
 				}
 			},
 			selectEventName: `${namespace}selectFolder`,

@@ -634,6 +634,38 @@ public class ObjectFieldLocalServiceWrapper
 	}
 
 	@Override
+	public void validateExternalReferenceCode(
+			String externalReferenceCode, long objectFieldId, long companyId,
+			long objectDefinitionId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectFieldLocalService.validateExternalReferenceCode(
+			externalReferenceCode, objectFieldId, companyId,
+			objectDefinitionId);
+	}
+
+	@Override
+	public void validateReadOnlyAndReadOnlyConditionExpression(
+			String businessType, String readOnly,
+			String readOnlyConditionExpression, boolean required)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectFieldLocalService.validateReadOnlyAndReadOnlyConditionExpression(
+			businessType, readOnly, readOnlyConditionExpression, required);
+	}
+
+	@Override
+	public void validateRequired(
+			String businessType, boolean objectDefinitionApproved,
+			com.liferay.object.model.ObjectField oldObjectField,
+			boolean required)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectFieldLocalService.validateRequired(
+			businessType, objectDefinitionApproved, oldObjectField, required);
+	}
+
+	@Override
 	public BasePersistence<?> getBasePersistence() {
 		return _objectFieldLocalService.getBasePersistence();
 	}

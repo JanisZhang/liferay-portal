@@ -40,9 +40,7 @@ definition {
 		}
 
 		task ("And a simple product with a new option is created") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CPCommerceCatalog.newProductsEntry(
 				productCatalog = "Minium",
@@ -527,9 +525,7 @@ definition {
 				productName = "Simple T-Shirt",
 				productType = "Simple");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 		}
 
 		task ("And the admin navigates inside the product entry") {
@@ -579,9 +575,7 @@ definition {
 		}
 
 		task ("Then the changes are not saved on the corresponding option on the Simple T-Shirt 'Options' tab") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Simple T-Shirt");
 
@@ -622,9 +616,7 @@ definition {
 		}
 
 		task ("And a Single Selection option with a value is created within a product") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
 
@@ -702,9 +694,7 @@ definition {
 				urlAppend = "web/minium",
 				userEmailAddress = "test@liferay.com");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
 
@@ -1027,7 +1017,9 @@ definition {
 		task ("And adding only two of the four values as SKUs from SKUs tab of the Product") {
 			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
-			CommerceSKUs.addSKU(optionValuesList = "Delhi:1,Mumbai:2");
+			CommerceSKUs.addSKU(
+				optionValuesList = "Delhi:1,Mumbai:2",
+				priceList = "Minium Base Price List");
 		}
 
 		task ("When the buyer user logs in and navigates to the product detail page") {
@@ -1112,9 +1104,7 @@ definition {
 		}
 
 		task ("And the options are assigned to ABS Sensor product") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
 
@@ -1247,6 +1237,12 @@ definition {
 
 			CommerceNavigator.gotoEntry(entryName = 112);
 
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
+
 			CommerceEntry.editSkuPricingAndInventory(
 				basePrice = "20.00",
 				italyQuantity = 20,
@@ -1319,9 +1315,7 @@ definition {
 		}
 
 		task ("And 1 option for each option field type is added to a product") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
 
@@ -1538,6 +1532,12 @@ definition {
 				var priceAndQuantity = StringUtil.extractLast(${value}, ":");
 
 				CommerceNavigator.gotoEntry(entryName = ${sku});
+
+				SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+				CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+				CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 
 				CommerceEntry.editSkuPricingAndInventory(
 					basePrice = ${priceAndQuantity},
@@ -1792,9 +1792,7 @@ definition {
 				productName = "Simple T-Shirt",
 				productType = "Simple");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 		}
 
 		task ("And the admin navigates inside the product entry") {
@@ -2311,7 +2309,7 @@ definition {
 	@description = "COMMERCE-12701 Verify that is possible to view and use the accordion 'Show Options' for the bundled products with UOM"
 	@priority = 5
 	test CanUseTheAccordionForBundledProductsWithUOM {
-		property custom.properties = "feature.flag.COMMERCE-9599=true${line.separator}feature.flag.COMMERCE-11287=true${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.COMMERCE-9599=true${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given a Minium site with a buyer user is created") {
@@ -2711,7 +2709,7 @@ definition {
 
 				AssertElementNotPresent(
 					key_cartItemName = ${optionName},
-					locator1 = "CommerceAccelerators#MINI_CART_ITEM_NAME_H6_ACCORDION_SHOW");
+					locator1 = "CommerceAccelerators#MINI_CART_ITEM_NAME_ACCORDION_SHOW");
 
 				AssertElementNotPresent(
 					key_cartItemSku = ${optionValue},
@@ -2766,9 +2764,7 @@ definition {
 		}
 
 		task ("And assigning the options to ABS Sensor product") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
 
@@ -2810,9 +2806,7 @@ definition {
 		}
 
 		task ("And navigates to the ABS Sensor Product Detail page") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
 		}
@@ -3198,9 +3192,7 @@ definition {
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		AppBuilderAdmin.searchByItem(itemName = "ABS Sensor");
 
@@ -3291,9 +3283,7 @@ definition {
 			optionEntryName = "Color",
 			optionValuesList = "Black:1");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CPCommerceCatalog.newProductsEntry(
 			productCatalog = "Master",
@@ -3328,11 +3318,7 @@ definition {
 
 		Alert.viewSuccessMessage();
 
-		Navigator.openURL();
-
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Simple T-Shirt");
 

@@ -81,7 +81,7 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 		assertValid(page);
 
 		page = roleResource.getRolesPage(
-			null, role1.getName(), Pagination.of(1, roles.size()));
+			role1.getName(), null, Pagination.of(1, roles.size()));
 
 		roles = (List<Role>)page.getItems();
 
@@ -244,6 +244,7 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 	protected Role randomRole() throws Exception {
 		Role role = super.randomRole();
 
+		role.setExternalReferenceCode(role.getName());
 		role.setRoleType(
 			RoleConstants.getTypeLabel(
 				RoleConstants.TYPES_ORGANIZATION_AND_REGULAR_AND_SITE
@@ -335,6 +336,14 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 	}
 
 	@Override
+	protected Role testPostRole_addRole(Role role) throws Exception {
+		role.setRoleType(
+			RoleConstants.getTypeLabel(RoleConstants.TYPE_REGULAR));
+
+		return _addRole(role);
+	}
+
+	@Override
 	protected Role testPostRoleUserAccountAssociation_addRole()
 		throws Exception {
 
@@ -346,6 +355,24 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 		throws Exception {
 
 		return _addRole(RoleConstants.TYPE_SITE);
+	}
+
+	@Override
+	protected Role testPutRoleByExternalReferenceCode_addRole()
+		throws Exception {
+
+		return _addRole(RoleConstants.TYPE_REGULAR);
+	}
+
+	@Override
+	protected Role testPutRoleByExternalReferenceCode_getRole(
+		String externalReferenceCode) {
+
+		com.liferay.portal.kernel.model.Role serviceBuilderRole =
+			RoleLocalServiceUtil.fetchRole(
+				testCompany.getCompanyId(), externalReferenceCode);
+
+		return _toRole(serviceBuilderRole);
 	}
 
 	private Role _addRole(int type) throws Exception {
@@ -388,6 +415,8 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 	private Role _toRole(com.liferay.portal.kernel.model.Role role) {
 		return new Role() {
 			{
+				dateCreated = role.getCreateDate();
+				dateModified = role.getModifiedDate();
 				description = role.getDescription();
 				id = role.getRoleId();
 				name = role.getName();

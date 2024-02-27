@@ -27,8 +27,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -415,47 +413,95 @@ public abstract class BasePaymentMethodGroupRelTermResourceTestCase {
 			testGetPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage_addPaymentMethodGroupRelTerm(
 				id, randomPaymentMethodGroupRelTerm());
 
-		Page<PaymentMethodGroupRelTerm> page1 =
-			paymentMethodGroupRelTermResource.
-				getPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage(
-					id, null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PaymentMethodGroupRelTerm> paymentMethodGroupRelTerms1 =
-			(List<PaymentMethodGroupRelTerm>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			paymentMethodGroupRelTerms1.toString(), totalCount + 2,
-			paymentMethodGroupRelTerms1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PaymentMethodGroupRelTerm> page1 =
+				paymentMethodGroupRelTermResource.
+					getPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<PaymentMethodGroupRelTerm> page2 =
-			paymentMethodGroupRelTermResource.
-				getPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage(
-					id, null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				paymentMethodGroupRelTerm1,
+				(List<PaymentMethodGroupRelTerm>)page1.getItems());
 
-		List<PaymentMethodGroupRelTerm> paymentMethodGroupRelTerms2 =
-			(List<PaymentMethodGroupRelTerm>)page2.getItems();
+			Page<PaymentMethodGroupRelTerm> page2 =
+				paymentMethodGroupRelTermResource.
+					getPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			paymentMethodGroupRelTerms2.toString(), 1,
-			paymentMethodGroupRelTerms2.size());
+			assertContains(
+				paymentMethodGroupRelTerm2,
+				(List<PaymentMethodGroupRelTerm>)page2.getItems());
 
-		Page<PaymentMethodGroupRelTerm> page3 =
-			paymentMethodGroupRelTermResource.
-				getPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage(
-					id, null, null, Pagination.of(1, (int)totalCount + 3),
-					null);
+			Page<PaymentMethodGroupRelTerm> page3 =
+				paymentMethodGroupRelTermResource.
+					getPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertContains(
-			paymentMethodGroupRelTerm1,
-			(List<PaymentMethodGroupRelTerm>)page3.getItems());
-		assertContains(
-			paymentMethodGroupRelTerm2,
-			(List<PaymentMethodGroupRelTerm>)page3.getItems());
-		assertContains(
-			paymentMethodGroupRelTerm3,
-			(List<PaymentMethodGroupRelTerm>)page3.getItems());
+			assertContains(
+				paymentMethodGroupRelTerm3,
+				(List<PaymentMethodGroupRelTerm>)page3.getItems());
+		}
+		else {
+			Page<PaymentMethodGroupRelTerm> page1 =
+				paymentMethodGroupRelTermResource.
+					getPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage(
+						id, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<PaymentMethodGroupRelTerm> paymentMethodGroupRelTerms1 =
+				(List<PaymentMethodGroupRelTerm>)page1.getItems();
+
+			Assert.assertEquals(
+				paymentMethodGroupRelTerms1.toString(), totalCount + 2,
+				paymentMethodGroupRelTerms1.size());
+
+			Page<PaymentMethodGroupRelTerm> page2 =
+				paymentMethodGroupRelTermResource.
+					getPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage(
+						id, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PaymentMethodGroupRelTerm> paymentMethodGroupRelTerms2 =
+				(List<PaymentMethodGroupRelTerm>)page2.getItems();
+
+			Assert.assertEquals(
+				paymentMethodGroupRelTerms2.toString(), 1,
+				paymentMethodGroupRelTerms2.size());
+
+			Page<PaymentMethodGroupRelTerm> page3 =
+				paymentMethodGroupRelTermResource.
+					getPaymentMethodGroupRelIdPaymentMethodGroupRelTermsPage(
+						id, null, null, Pagination.of(1, (int)totalCount + 3),
+						null);
+
+			assertContains(
+				paymentMethodGroupRelTerm1,
+				(List<PaymentMethodGroupRelTerm>)page3.getItems());
+			assertContains(
+				paymentMethodGroupRelTerm2,
+				(List<PaymentMethodGroupRelTerm>)page3.getItems());
+			assertContains(
+				paymentMethodGroupRelTerm3,
+				(List<PaymentMethodGroupRelTerm>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -1078,6 +1124,10 @@ public abstract class BasePaymentMethodGroupRelTermResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1292,9 +1342,9 @@ public abstract class BasePaymentMethodGroupRelTermResourceTestCase {
 
 	protected PaymentMethodGroupRelTermResource
 		paymentMethodGroupRelTermResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
