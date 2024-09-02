@@ -1,10 +1,10 @@
-@component-name = "portal-content-management"
+@component-name = "portal-page-management"
 definition {
 
 	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "SEO";
+	property testray.main.component.name = "Page SEO Links";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -32,7 +32,6 @@ definition {
 	@refactordone
 	test CanViewPreview {
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		var portalURL = PropsUtil.get("portal.url");

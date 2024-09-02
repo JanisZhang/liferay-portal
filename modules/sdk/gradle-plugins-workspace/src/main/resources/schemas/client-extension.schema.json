@@ -217,6 +217,27 @@
 					"allOf": [
 						{
 							"$ref": "#/definitions/propertySets/properties/url"
+						},
+						{
+							"properties": {
+								"scriptElementAttributes": {
+									"additionalProperties": {
+										"type": [
+											"boolean",
+											"integer",
+											"number",
+											"string"
+										]
+									},
+									"description": "",
+									"properties": {
+										"src": false
+									},
+									"title": "Script Element Attributes",
+									"type": "object"
+								}
+							},
+							"type": "object"
 						}
 					],
 					"description": "Description for globalJS"
@@ -363,7 +384,13 @@
 					"allOf": [
 						{
 							"properties": {
+								"clayRTLURL": {
+									"type": "string"
+								},
 								"clayURL": {
+									"type": "string"
+								},
+								"mainRTLURL": {
 									"type": "string"
 								},
 								"mainURL": {

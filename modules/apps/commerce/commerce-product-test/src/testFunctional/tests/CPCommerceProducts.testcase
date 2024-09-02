@@ -531,7 +531,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "categorymanager@liferay.com");
 
@@ -562,7 +562,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "categorymanager@liferay.com");
 
@@ -769,7 +769,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
 
@@ -806,7 +806,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
 
@@ -873,7 +873,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "categorymanager@liferay.com");
 
@@ -1039,7 +1039,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "categorymanager@liferay.com");
 
@@ -1069,7 +1069,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "categorymanager@liferay.com");
 
@@ -1274,7 +1274,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1294,7 +1294,7 @@ definition {
 				orderId = ${orderId},
 				parameter = "nestedFields",
 				parameterValue = "orderItems",
-				password = "test");
+				password = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("And the virtualItemURLs field is empty") {
@@ -1323,7 +1323,7 @@ definition {
 				orderId = ${orderId},
 				parameter = "nestedFields",
 				parameterValue = "orderItems",
-				password = "test");
+				password = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("And the GET order item API is called") {
@@ -1331,7 +1331,7 @@ definition {
 				email = "buyer@liferay.com",
 				jsonPath = "$..virtualItemURLs[:1]",
 				orderId = ${orderId},
-				password = "test");
+				password = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Then the URL into the response is the same for both the API calls") {
@@ -1463,7 +1463,7 @@ definition {
 				orderId = ${orderId},
 				parameter = "nestedFields",
 				parameterValue = "orderItems",
-				password = "test");
+				password = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Then the buyer can't receive the URL") {
@@ -1476,17 +1476,15 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
 			var virtualItemURLs = CommerceJSONOrdersAPI.getOrderField(
-				email = "test@liferay.com",
 				jsonPath = "$..virtualItemURLs[:1]",
 				orderId = ${orderId},
 				parameter = "nestedFields",
-				parameterValue = "orderItems",
-				password = "test");
+				parameterValue = "orderItems");
 		}
 
 		task ("Then the buyer will not be able to download the resource") {
@@ -1575,12 +1573,39 @@ definition {
 		}
 
 		task ("Then the date of the new entry is using the correct format") {
+			for (var dateKeyWords : list "Seconds,Minutes,Hours,Days,Months") {
+				AssertElementNotPresent(
+					key_columnNumber = 3,
+					key_productName = "Commerce_Black",
+					key_value = "${dateKeyWords} Ago",
+					locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
+			}
+
+			var imageDisplayDate = CommerceJSONProductsAPI.getCommerceProductMediaFieldValues(
+				jsonPath = "$..['displayDate']",
+				productName = "Simple Product",
+				type = "images");
+
+			var imageDisplayDate = DateUtil.format(${imageDisplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yy");
+
+			AssertElementPresent(
+				key_columnNumber = 3,
+				key_productName = "Commerce_Black",
+				key_value = ${imageDisplayDate},
+				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
+		}
+
+		task ("And a new attachment is added") {
+			CommerceProductImages.addAttachmentImages(imageTitles = "White");
+		}
+
+		task ("Then the date of the new entry is using the correct format") {
 			var imageDiplayDate = CommerceJSONProductsAPI.getCommerceProductMediaFieldValues(
 				jsonPath = "$..['displayDate']",
 				productName = "Simple Product",
 				type = "images");
 
-			var imageDiplayDate = DateUtil.format(${imageDiplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yyyy");
+			var imageDiplayDate = DateUtil.format(${imageDiplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yy");
 
 			for (var dateKeyWords : list "Seconds,Minutes,Hours,Days,Months") {
 				AssertElementNotPresent(
@@ -1594,33 +1619,6 @@ definition {
 				key_columnNumber = 3,
 				key_productName = "Commerce_Black",
 				key_value = ${imageDiplayDate},
-				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-		}
-
-		task ("And a new attachment is added") {
-			CommerceProductImages.addAttachmentImages(imageTitles = "White");
-		}
-
-		task ("Then the date of the new entry is using the correct format") {
-			var attachmentDiplayDate = CommerceJSONProductsAPI.getCommerceProductMediaFieldValues(
-				jsonPath = "$..['displayDate']",
-				productName = "Simple Product",
-				type = "attachment");
-
-			var attachmentDiplayDate = DateUtil.format(${attachmentDiplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yyyy");
-
-			for (var dateKeyWords : list "Seconds,Minutes,Hours,Days,Months") {
-				AssertElementNotPresent(
-					key_columnNumber = 3,
-					key_productName = "Commerce_White",
-					key_value = "${dateKeyWords} Ago",
-					locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
-			}
-
-			AssertElementPresent(
-				key_columnNumber = 3,
-				key_productName = "Commerce_White",
-				key_value = ${attachmentDiplayDate},
 				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
 		}
 
@@ -1735,7 +1733,7 @@ definition {
 		}
 
 		task ("When the search result is cleared") {
-			Search.clearSearchResult();
+			Click(locator1 = "//button[text()='Clear']");
 		}
 
 		task ("Then all three products previously added are shown on the Grouped tab") {
@@ -2001,10 +1999,11 @@ definition {
 		task ("When a product is created with an image using JSON") {
 			var baseURL = PropsUtil.get("portal.url");
 			var catalogId = CommerceJSONCatalogsAPI._getCommerceCatalogIdByName(catalogName = "Master");
+			var userLoginInfo = JSONUtil2.formatJSONUser();
 
 			var curl = '''
 				${baseURL}/o/headless-commerce-admin-catalog/v1.0/products \
-					-u test@liferay.com:test \
+					-u ${userLoginInfo} \
 					-H 'accept: application/json' \
 					-H 'Content-Type: application/json' \
 					-d '{
@@ -2122,7 +2121,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -2287,7 +2286,7 @@ definition {
 				virtualHost = "www.able.com");
 
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 
@@ -2435,7 +2434,7 @@ definition {
 			locator1 = "FrontendDataSet#COLUMN_NAME");
 
 		AssertElementPresent(
-			key_index = "Commerce_Black (1).jpg",
+			key_index = "Commerce_Black.jpg",
 			locator1 = "WorkflowMetrics#SEARCH_FIELD_MAPPINGS_METRICS_INDEXES");
 
 		AssertTextEquals(
@@ -2809,8 +2808,6 @@ definition {
 
 	@priority = 5
 	test ProductPublishing {
-		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");

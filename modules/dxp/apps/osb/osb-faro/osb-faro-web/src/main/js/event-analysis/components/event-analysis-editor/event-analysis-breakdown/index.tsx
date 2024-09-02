@@ -29,7 +29,7 @@ import {OrderedMap} from 'immutable';
 import {SafeResults} from 'shared/hoc/util';
 import {sub} from 'shared/util/lang';
 import {useQuery} from '@apollo/react-hooks';
-import {useStatefulPagination} from 'shared/hooks';
+import {useStatefulPagination} from 'shared/hooks/useStatefulPagination';
 import {withPaginationBar} from 'shared/hoc';
 import {WithRangeKeyProps} from 'shared/hoc/WithRangeKey';
 
@@ -357,7 +357,7 @@ const getColumns = ({
 	value
 }) => {
 	const columns = order.map((breakdownId: string, i: number) => {
-		const {attributeId, sortType} = breakdowns[breakdownId];
+		const {attributeId, attributeType, sortType} = breakdowns[breakdownId];
 
 		const accessor = `breakdown${i}`;
 
@@ -399,7 +399,7 @@ const getColumns = ({
 					>
 						<TextTruncate
 							maxCharLength={maxBreakdownLength}
-							title={dataValue.name}
+							title={decodeURIComponent(dataValue.name)}
 						/>
 					</td>
 				);
@@ -409,7 +409,7 @@ const getColumns = ({
 			},
 			label: (
 				<div>
-					{/* TODO: Enable when multiple types available <span className='breakdown-category'>{attributeType}</span>*/}
+					<span className='breakdown-category'>{attributeType}</span>
 
 					{attributes[attributeId].displayName}
 				</div>

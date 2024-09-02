@@ -6,13 +6,11 @@
 package com.liferay.knowledge.base.web.internal.portlet.action;
 
 import com.liferay.knowledge.base.constants.KBPortletKeys;
-import com.liferay.knowledge.base.model.KBArticle;
+import com.liferay.knowledge.base.exception.LockedKBArticleException;
 import com.liferay.knowledge.base.service.KBArticleService;
+import com.liferay.knowledge.base.util.KnowledgeBaseUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
-import com.liferay.portal.kernel.lock.DuplicateLockException;
 import com.liferay.portal.kernel.model.TrashedModel;
-import com.liferay.portal.kernel.portlet.LiferayPortletURL;
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -23,11 +21,8 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Objects;
-
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -58,6 +53,14 @@ public class DeleteKBArticleMVCActionCommand extends BaseMVCActionCommand {
 		long resourcePrimKey = ParamUtil.getLong(
 			actionRequest, "resourcePrimKey");
 
+		if (ParamUtil.getBoolean(actionRequest, "forceLock")) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			_kbArticleService.forceLockKBArticle(
+				themeDisplay.getScopeGroupId(), resourcePrimKey);
+		}
+
 		try {
 			if (cmd.equals(Constants.MOVE_TO_TRASH) &&
 				FeatureFlagManagerUtil.isEnabled("LPS-188058")) {
@@ -76,35 +79,17 @@ public class DeleteKBArticleMVCActionCommand extends BaseMVCActionCommand {
 				_kbArticleService.deleteKBArticle(resourcePrimKey);
 			}
 		}
-		catch (DuplicateLockException duplicateLockException) {
+		catch (LockedKBArticleException lockedKBArticleException) {
 			hideDefaultErrorMessage(actionRequest);
 
-			throw duplicateLockException;
-		}
+			lockedKBArticleException.setActionURL(
+				KnowledgeBaseUtil.getKBArticleDeleteURL(
+					_portal.getLiferayPortletResponse(actionResponse), cmd,
+					true, KnowledgeBaseUtil.getRedirect(actionRequest),
+					resourcePrimKey));
+			lockedKBArticleException.setCmd(Constants.DELETE);
 
-		if (Objects.equals(
-				_portal.getPortletId(actionRequest),
-				KBPortletKeys.KNOWLEDGE_BASE_DISPLAY)) {
-
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
-
-			KBArticle kbArticle = _kbArticleService.getLatestKBArticle(
-				resourcePrimKey);
-
-			LiferayPortletURL liferayPortletURL = PortletURLFactoryUtil.create(
-				actionRequest, _portal.getPortletId(actionRequest),
-				themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
-
-			if (kbArticle.getParentResourcePrimKey() !=
-					kbArticle.getKbFolderId()) {
-
-				liferayPortletURL.setParameter(
-					"resourcePrimKey",
-					String.valueOf(kbArticle.getParentResourcePrimKey()));
-			}
-
-			actionResponse.sendRedirect(liferayPortletURL.toString());
+			throw lockedKBArticleException;
 		}
 	}
 

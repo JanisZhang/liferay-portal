@@ -6,7 +6,11 @@
 package com.liferay.journal.web.internal.layout.display.page.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.friendly.url.configuration.FriendlyURLSeparatorCompanyConfiguration;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
@@ -16,13 +20,19 @@ import com.liferay.portal.configuration.test.util.CompanyConfigurationTemporaryS
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -64,6 +74,51 @@ public class JournalArticleLayoutDisplayPageProviderTest {
 	}
 
 	@Test
+	public void testGetLayoutDisplayPageObjectProviderJournalArticleWithExpiredArticleVersionInfoItemReference()
+		throws Exception {
+
+		JournalArticle originalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		JournalTestUtil.updateArticle(originalArticle);
+
+		JournalTestUtil.expireArticle(
+			originalArticle.getGroupId(), originalArticle,
+			originalArticle.getVersion());
+
+		AssetRendererFactory<?> assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(
+				JournalArticle.class);
+
+		AssetEntry assetEntry = assetRendererFactory.getAssetEntry(
+			JournalArticle.class.getName(),
+			originalArticle.getResourcePrimKey());
+
+		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+			new ClassPKInfoItemIdentifier(assetEntry.getClassPK());
+
+		classPKInfoItemIdentifier.setVersion(
+			String.valueOf(originalArticle.getVersion()));
+
+		Assert.assertNull(
+			_layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+				new InfoItemReference(
+					assetEntry.getClassName(), classPKInfoItemIdentifier)));
+	}
+
+	@Test
+	public void testGetLayoutDisplayPageObjectProviderJournalArticleWithExpiredJournalArticle()
+		throws Exception {
+
+		_journalArticle.setStatus(WorkflowConstants.STATUS_EXPIRED);
+
+		Assert.assertNull(
+			_layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+				_journalArticle));
+	}
+
+	@Test
 	public void testGetLayoutDisplayPageObjectProviderJournalArticleWithInvalidInfoItemReference() {
 		Assert.assertNull(
 			_layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
@@ -82,6 +137,60 @@ public class JournalArticleLayoutDisplayPageProviderTest {
 	@Test
 	public void testGetLayoutDisplayPageObjectProviderJournalArticleWithJournalArticle() {
 		Assert.assertNotNull(
+			_layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+				_journalArticle));
+	}
+
+	@Test
+	public void testGetLayoutDisplayPageObjectProviderJournalArticleWithPendingJournalArticle()
+		throws Exception {
+
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		_journalArticle.setStatus(WorkflowConstants.STATUS_PENDING);
+
+		try {
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(TestPropsValues.getUser()));
+
+			Assert.assertNotNull(
+				_layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+					_journalArticle));
+
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(
+					UserLocalServiceUtil.getGuestUser(
+						_journalArticle.getCompanyId())));
+
+			Assert.assertNull(
+				_layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+					_journalArticle));
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+		}
+	}
+
+	@Test
+	public void testGetLayoutDisplayPageObjectProviderJournalArticleWithScheduledJournalArticle()
+		throws Exception {
+
+		_journalArticle.setStatus(WorkflowConstants.STATUS_SCHEDULED);
+
+		Assert.assertNotNull(
+			_layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+				_journalArticle));
+	}
+
+	@Test
+	public void testGetLayoutDisplayPageObjectProviderJournalArticleWithTrashedJournalArticle()
+		throws Exception {
+
+		_journalArticle.setStatus(WorkflowConstants.STATUS_IN_TRASH);
+
+		Assert.assertNull(
 			_layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
 				_journalArticle));
 	}

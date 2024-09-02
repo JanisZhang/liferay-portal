@@ -4,28 +4,16 @@
  */
 
 import {IItemsActions} from '..';
-import {navigate, openConfirmModal} from 'frontend-js-web';
 import React, {useContext, useState} from 'react';
 
 import FrontendDataSetContext, {
 	IFrontendDataSetContext,
 } from '../FrontendDataSetContext';
-import {ACTION_ITEM_TARGETS} from '../utils/actionItems/constants';
 import filterItemActions from '../utils/actionItems/filterItemActions';
-import formatActionURL from '../utils/actionItems/formatActionURL';
-import {openPermissionsModal} from '../utils/modals/openPermissionsModal';
-import {resolveModalSize} from '../utils/modals/resolveModalSize';
-
-// @ts-ignore
-
+import handleActionClick from '../utils/actionItems/handleActionClick';
 import ViewsContext from '../views/ViewsContext';
-
-// @ts-ignore
-
 import ActionsDropdown from './ActionsDropdown';
 import QuickActions from './QuickActions';
-
-const {MODAL_PERMISSIONS} = ACTION_ITEM_TARGETS;
 
 const QUICK_ACTIONS_MAX_NUMBER = 3;
 
@@ -39,8 +27,8 @@ function Actions({
 	actions: Array<IItemsActions>;
 	itemData: any;
 	itemId: string | number;
-	menuActive: boolean;
-	onMenuActiveChange: Function;
+	menuActive?: boolean;
+	onMenuActiveChange?: Function;
 }) {
 	const {
 		executeAsyncItemAction,
@@ -85,117 +73,21 @@ function Actions({
 		closeMenu: any;
 		event: any;
 	}) => {
-		const {data, href, method, onClick, target} = action;
-
-		const {
-			confirmationMessage,
-			errorMessage,
-			size,
-			status,
-			successMessage,
-			title,
-		} = data ?? {};
-
-		const url = formatActionURL(href, itemData);
-
-		const doAction = ({defaultPrevented}: {defaultPrevented: boolean}) => {
-			if (target?.includes('modal')) {
-				event.preventDefault();
-
-				if (target === MODAL_PERMISSIONS) {
-					openPermissionsModal(url);
-				}
-				else {
-					openModal({
-						size: size || resolveModalSize(target),
-						title,
-						url,
-					});
-				}
-			}
-			else if (target === 'sidePanel') {
-				event.preventDefault();
-
-				highlightItems([itemId]);
-
-				openSidePanel({
-					size: 'lg',
-					title,
-					url,
-				});
-			}
-			else if (target === 'async' || target === 'headless') {
-				event.preventDefault();
-
-				setLoading(true);
-
-				executeAsyncItemAction({
-					errorMessage,
-					method: method ?? data?.method,
-					setActionItemLoading: setLoading,
-					successMessage,
-					url,
-				});
-			}
-			else if (target === 'inlineEdit') {
-				event.preventDefault();
-
-				toggleItemInlineEdit(itemId);
-			}
-			else if (target === 'blank') {
-				event.preventDefault();
-
-				window.open(url);
-			}
-
-			const exposedProps = {
-				action,
-				event,
-				itemData,
-				loadData,
-				openSidePanel,
-			};
-
-			if (onClick) {
-				onClick(exposedProps);
-			}
-
-			if (onActionDropdownItemClick) {
-				onActionDropdownItemClick(exposedProps);
-			}
-
-			if (target === 'link' && defaultPrevented) {
-				navigate(url);
-			}
-		};
-
-		if (confirmationMessage) {
-			let defaultPrevented = false;
-
-			if (target === 'link') {
-				event.preventDefault();
-
-				defaultPrevented = true;
-			}
-
-			openConfirmModal({
-				message: confirmationMessage,
-				onConfirm: (isConfirmed) => {
-					if (isConfirmed) {
-						doAction({defaultPrevented});
-					}
-				},
-				status,
-				title,
-			});
-		}
-		else {
-			doAction({defaultPrevented: false});
-		}
-
-		if (closeMenu) {
-			closeMenu();
-		}
+		handleActionClick({
+			action,
+			closeMenu,
+			event,
+			executeAsyncItemAction,
+			highlightItems,
+			itemData,
+			itemId,
+			loadData,
+			onActionDropdownItemClick,
+			openModal,
+			openSidePanel,
+			setLoading,
+			toggleItemInlineEdit,
+		});
 	};
 
 	return (

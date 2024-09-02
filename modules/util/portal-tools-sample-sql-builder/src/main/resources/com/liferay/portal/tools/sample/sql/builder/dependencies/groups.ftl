@@ -1,12 +1,12 @@
 <#include "sample_user.ftl">
 
+<#include "default_service_account_user.ftl">
+
 <#include "commerce_groups.ftl">
 
 <#include "asset.ftl">
 
 <#include "ddm.ftl">
-
-<#include "segments.ftl">
 
 <#list dataFactory.newGroupModels() as groupModel>
 	<#assign groupId = groupModel.groupId />
@@ -28,36 +28,48 @@
 	<#include "wiki.ftl">
 
 	<@insertDLFolder
-		_ddmStructureId=dataFactory.defaultDLDDMStructureId
-		_dlFolderDepth=1
-		_groupModel=groupModel
-		_parentDLFolderId=0
+		_ddmStructureId = dataFactory.defaultDLDDMStructureId
+		_dlFolderDepth = 1
+		_groupModel = groupModel
+		_parentDLFolderId = 0
 	/>
 
-	<#assign homePageContentLayoutModels = dataFactory.newContentPageLayoutModels(groupId, "home") />
+	<#assign
+		homePageContentLayoutModels = dataFactory.newContentPageLayoutModels(groupId, "home")
+		homePageSegmentsExperienceModel = dataFactory.newSegmentsExperienceModel(homePageContentLayoutModels)
+	 />
+
+	 ${dataFactory.toInsertSQL(homePageSegmentsExperienceModel)}
 
 	<@insertContentPageLayout
-		_fragmentEntryLinkModels=dataFactory.newFragmentEntryLinkModels(homePageContentLayoutModels)
-		_layoutModels=homePageContentLayoutModels
-		_templateFileName="default-homepage-layout-definition.json"
+		_fragmentEntryLinkModels = dataFactory.newFragmentEntryLinkModels(homePageContentLayoutModels, homePageSegmentsExperienceModel.getSegmentsExperienceId())
+		_layoutModels = homePageContentLayoutModels
+		_templateFileName = "default-homepage-layout-definition.json"
 	/>
 
 	<#list dataFactory.newGroupLayoutModels(groupId) as groupLayoutModel>
-		<@insertLayout _layoutModel=groupLayoutModel />
+		<@insertLayout _layoutModel = groupLayoutModel />
 	</#list>
 
-	<@insertGroup _groupModel=groupModel />
+	<@insertGroup _groupModel = groupModel />
 
 	${csvFileWriter.write("repository", virtualHostModel.hostname + "," + groupModel.friendlyURL + "," + groupId + ", " + groupModel.name + "\n")}
 </#list>
 
-<#assign defaultSiteHomePageContentLayoutModels = dataFactory.newContentPageLayoutModels(guestGroupModel.groupId, "home") />
+<#assign
+	defaultSiteHomePageContentLayoutModels = dataFactory.newContentPageLayoutModels(guestGroupModel.groupId, "home")
+	defaultSiteHomePageSegmentsExperienceModel = dataFactory.newSegmentsExperienceModel(defaultSiteHomePageContentLayoutModels)
+/>
+
+${dataFactory.toInsertSQL(defaultSiteHomePageSegmentsExperienceModel)}
 
 <@insertContentPageLayout
-	_fragmentEntryLinkModels=dataFactory.newFragmentEntryLinkModels(defaultSiteHomePageContentLayoutModels)
-	_layoutModels=defaultSiteHomePageContentLayoutModels
-	_templateFileName="default-homepage-layout-definition.json"
+	_fragmentEntryLinkModels = dataFactory.newFragmentEntryLinkModels(defaultSiteHomePageContentLayoutModels, defaultSiteHomePageSegmentsExperienceModel.getSegmentsExperienceId())
+	_layoutModels = defaultSiteHomePageContentLayoutModels
+	_templateFileName = "default-homepage-layout-definition.json"
 />
+
+<#include "segments.ftl">
 
 <#assign
 	searchLayoutModel = dataFactory.newSearchLayoutModel(guestGroupModel.groupId, true)
@@ -66,10 +78,10 @@
 	searchGroupLayoutModel = dataFactory.newSearchGroupLayoutModel(searchTemplateGroupModel.groupId, searchLayoutModel)
 />
 
-<@insertLayout _layoutModel=searchLayoutModel />
+<@insertLayout _layoutModel = searchLayoutModel />
 
-<@insertLayout _layoutModel=searchGroupLayoutModel />
+<@insertLayout _layoutModel = searchGroupLayoutModel />
 
 ${dataFactory.toInsertSQL(layoutPrototypeModel)}
 
-<@insertGroup _groupModel=searchTemplateGroupModel />
+<@insertGroup _groupModel = searchTemplateGroupModel />

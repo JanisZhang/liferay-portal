@@ -1,9 +1,9 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/drop-down": "3.111.0",
+		"@clayui/drop-down": "3.118.0",
 		"@clayui/icon": "3.111.0",
-		"@clayui/tooltip": "3.111.0",
+		"@clayui/tooltip": "3.116.0",
 		"classnames": "2.3.1",
 		"dagre": "0.8.2",
 		"frontend-js-web": "*",
@@ -20,10 +20,10 @@
 	"name": "@liferay/portal-workflow-instance-tracker-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "1.0.34"
+	"version": "1.0.44"
 }

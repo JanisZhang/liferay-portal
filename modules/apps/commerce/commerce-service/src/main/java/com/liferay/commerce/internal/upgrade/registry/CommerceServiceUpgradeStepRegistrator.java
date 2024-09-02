@@ -18,7 +18,6 @@ import com.liferay.commerce.internal.upgrade.v2_1_0.CommerceSubscriptionEntryUpg
 import com.liferay.commerce.internal.upgrade.v4_1_0.CommerceAddressUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v4_3_0.CommerceOrderDateUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v4_5_1.CommerceShippingMethodUpgradeProcess;
-import com.liferay.commerce.internal.upgrade.v4_8_1.CommerceOrderStatusesUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v5_0_1.CommercePermissionUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v5_9_0.CommerceAccountOrganizationRelUpgradeProcess;
 import com.liferay.commerce.internal.upgrade.v5_9_0.CommerceAccountUserRelUpgradeProcess;
@@ -40,6 +39,7 @@ import com.liferay.commerce.model.impl.CPDAvailabilityEstimateModelImpl;
 import com.liferay.commerce.model.impl.CPDefinitionInventoryModelImpl;
 import com.liferay.commerce.model.impl.CommerceAvailabilityEstimateModelImpl;
 import com.liferay.commerce.model.impl.CommerceOrderItemModelImpl;
+import com.liferay.commerce.model.impl.CommerceOrderModelImpl;
 import com.liferay.commerce.model.impl.CommerceShipmentItemModelImpl;
 import com.liferay.commerce.model.impl.CommerceShippingMethodModelImpl;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
@@ -232,7 +232,12 @@ public class CommerceServiceUpgradeStepRegistrator
 		registry.register("4.6.0", "4.7.0", new DummyUpgradeProcess());
 
 		registry.register(
-			"4.7.0", "4.8.1", new CommerceOrderStatusesUpgradeProcess());
+			"4.7.0", "4.8.1",
+			UpgradeProcessFactory.runSQL(
+				"update CommerceOrder set orderStatus = 1 where orderStatus " +
+					"= 11",
+				"update CommerceOrder set orderStatus = 10 where orderStatus " +
+					"= 12"));
 
 		registry.register(
 			"4.8.1", "4.9.0",
@@ -269,8 +274,9 @@ public class CommerceServiceUpgradeStepRegistrator
 
 		registry.register(
 			"4.9.0", "4.9.1",
-			new com.liferay.commerce.internal.upgrade.v4_9_1.
-				CommerceOrderUpgradeProcess());
+			UpgradeProcessFactory.runSQL(
+				"update CommerceOrder set orderDate = createDate where " +
+					"orderDate is NULL"));
 
 		registry.register(
 			"4.9.1", "4.10.0",
@@ -694,6 +700,11 @@ public class CommerceServiceUpgradeStepRegistrator
 				OperationsManagerRoleUpgradeProcess(
 					_companyLocalService, _resourcePermissionLocalService,
 					_roleLocalService));
+
+		registry.register(
+			"11.4.2", "11.5.0",
+			UpgradeProcessFactory.addColumns(
+				CommerceOrderModelImpl.TABLE_NAME, "name VARCHAR(75) null"));
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce upgrade step registrator finished");

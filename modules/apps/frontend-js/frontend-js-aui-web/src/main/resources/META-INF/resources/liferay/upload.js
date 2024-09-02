@@ -85,7 +85,7 @@ AUI.add(
 
 			'<tpl if="values.error && !this.multipleFiles">',
 			'<li class="alert alert-danger upload-error" data-fileId="{id}" id="{id}">',
-			'<h4 class="upload-error-message">{[ Lang.sub(this.strings.fileCannotBeSavedText, [LString.escapeHTML(values.name)]) ]}</h4>',
+			'<div class="h4 upload-error-message">{[ Lang.sub(this.strings.fileCannotBeSavedText, [LString.escapeHTML(values.name)]) ]}</div>',
 
 			'<span class="error-message" title="{[ LString.escapeHTML(values.error) ]}">{[ LString.escapeHTML(values.error) ]}</span>',
 
@@ -135,7 +135,7 @@ AUI.add(
 			'</div>',
 
 			'<div class="hide upload-list-info" id="{$ns}listInfo">',
-			'<h4>{[ this.strings.uploadsCompleteText ]}</h4>',
+			'<div class="h4">{[ this.strings.uploadsCompleteText ]}</div>',
 			'</div>',
 
 			'<div class="alert alert-warning hide pending-files-info" role="alert">',
@@ -194,9 +194,8 @@ AUI.add(
 
 				maxFileSize: {
 					setter: Lang.toInt,
-					value:
-						Liferay.PropsValues
-							.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE,
+					value: Liferay.PropsValues
+						.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE,
 				},
 
 				metadataContainer: {
@@ -240,13 +239,11 @@ AUI.add(
 
 				strings: {
 					value: {
-						allFilesSelectedText: Liferay.Language.get(
-							'all-files-selected'
-						),
+						allFilesSelectedText:
+							Liferay.Language.get('all-files-selected'),
 						cancelFileText: Liferay.Language.get('cancel-upload'),
-						cancelUploadsText: Liferay.Language.get(
-							'cancel-all-uploads'
-						),
+						cancelUploadsText:
+							Liferay.Language.get('cancel-all-uploads'),
 						clearRecentUploadsText: Liferay.Language.get(
 							'clear-documents-already-saved'
 						),
@@ -269,9 +266,8 @@ AUI.add(
 						invalidUploadRequestSizeText: Liferay.Language.get(
 							'request-is-larger-than-x-and-could-not-be-processed'
 						),
-						noFilesSelectedText: Liferay.Language.get(
-							'no-files-selected'
-						),
+						noFilesSelectedText:
+							Liferay.Language.get('no-files-selected'),
 						notAvailableText: Liferay.Language.get(
 							'multiple-file-uploading-is-not-available'
 						),
@@ -305,9 +301,8 @@ AUI.add(
 						xFilesReadyText: Liferay.Language.get(
 							'x-files-ready-to-be-uploaded'
 						),
-						xFilesSelectedText: Liferay.Language.get(
-							'x-files-selected'
-						),
+						xFilesSelectedText:
+							Liferay.Language.get('x-files-selected'),
 						zeroByteSizeText: Liferay.Language.get(
 							'the-file-contains-no-data-and-cannot-be-uploaded.-please-use-the-classic-uploader'
 						),
@@ -409,17 +404,14 @@ AUI.add(
 
 							let tempTitle = title;
 
-							const tempRandomSuffix = instance.get(
-								'tempRandomSuffix'
-							);
+							const tempRandomSuffix =
+								instance.get('tempRandomSuffix');
 
 							if (tempRandomSuffix) {
-								const lastIndexOfPeriod = title.lastIndexOf(
-									'.'
-								);
-								const posTempRandomSuffix = title.indexOf(
-									tempRandomSuffix
-								);
+								const lastIndexOfPeriod =
+									title.lastIndexOf('.');
+								const posTempRandomSuffix =
+									title.indexOf(tempRandomSuffix);
 
 								if (posTempRandomSuffix !== -1) {
 									tempTitle = title.substr(
@@ -428,9 +420,8 @@ AUI.add(
 									);
 
 									if (lastIndexOfPeriod > 0) {
-										tempTitle += title.substr(
-											lastIndexOfPeriod
-										);
+										tempTitle +=
+											title.substr(lastIndexOfPeriod);
 									}
 								}
 							}
@@ -582,6 +573,7 @@ AUI.add(
 						queue &&
 						(!!queue.queuedFiles.length ||
 							queue.numberOfUploads > 0 ||
+
 							// eslint-disable-next-line @liferay/aui/no-object
 							!A.Object.isEmpty(queue.currentFiles)) &&
 						queue._currentState === UploaderQueue.UPLOADING
@@ -654,7 +646,7 @@ AUI.add(
 					const removeOnComplete = instance.get('removeOnComplete');
 
 					if (removeOnComplete) {
-						instance._listInfo.one('h4').hide();
+						instance._listInfo.one('.h4').hide();
 
 						instance._allRowIdsCheckbox.hide();
 					}
@@ -1016,10 +1008,11 @@ AUI.add(
 					// LPS-102399
 
 					if (A.UA.ie) {
-						instance._fileListTPL.tpls = instance._fileListTPL.tpls.map(
-							(tpl) => {
+						instance._fileListTPL.tpls =
+							instance._fileListTPL.tpls.map((tpl) => {
 								if (tpl.tplFn) {
-									const tplBodyRegex = /function anonymous\(values,parent\s*\) \{\s*(.*)\s*\}/;
+									const tplBodyRegex =
+										/function anonymous\(values,parent\s*\) \{\s*(.*)\s*\}/;
 									const tplFn = tpl.tplFn.toString();
 
 									if (tplBodyRegex.test(tplFn)) {
@@ -1035,13 +1028,11 @@ AUI.add(
 								}
 
 								return tpl;
-							}
-						);
+							});
 					}
 
-					instance._selectUploadedFileCheckboxId = instance.ns(
-						'selectUploadedFile'
-					);
+					instance._selectUploadedFileCheckboxId =
+						instance.ns('selectUploadedFile');
 
 					const idNS = '#' + instance.NS;
 
@@ -1061,12 +1052,10 @@ AUI.add(
 					instance._manageUploadTarget = uploadFragment.one(
 						idNS + 'manageUploadTarget'
 					);
-					instance._cancelButton = uploadFragment.one(
-						'.cancel-uploads'
-					);
-					instance._clearUploadsButton = uploadFragment.one(
-						'.clear-uploads'
-					);
+					instance._cancelButton =
+						uploadFragment.one('.cancel-uploads');
+					instance._clearUploadsButton =
+						uploadFragment.one('.clear-uploads');
 					instance._fileList = uploadFragment.one(
 						instance._fileListSelector
 					);
@@ -1116,9 +1105,8 @@ AUI.add(
 					const fileListBuffer = instance._fileListBuffer;
 					const fileListContent = instance._fileListContent;
 
-					const fileListHTML = instance._fileListTPL.parse(
-						fileListBuffer
-					);
+					const fileListHTML =
+						instance._fileListTPL.parse(fileListBuffer);
 
 					const firstLi = fileListContent.one('li.upload-complete');
 
@@ -1167,7 +1155,7 @@ AUI.add(
 
 					const strings = instance.get(STRINGS);
 
-					const infoTitle = instance._listInfo.one('h4');
+					const infoTitle = instance._listInfo.one('.h4');
 
 					if (!instance.get('multipleFiles')) {
 						infoTitle.html('');
@@ -1189,9 +1177,8 @@ AUI.add(
 					const hasSavedFiles = !!fileListContent.one(
 						'.file-saved,.upload-error'
 					);
-					const hasUploadedFiles = !!fileListContent.one(
-						'.upload-complete'
-					);
+					const hasUploadedFiles =
+						!!fileListContent.one('.upload-complete');
 
 					if (instance._allRowIdsCheckbox) {
 						instance._allRowIdsCheckbox.toggle(hasUploadedFiles);
@@ -1242,9 +1229,8 @@ AUI.add(
 										.ancestor('[data-title]');
 
 									if (titleNode) {
-										selectedFilesText = titleNode.attr(
-											'data-title'
-										);
+										selectedFilesText =
+											titleNode.attr('data-title');
 									}
 								}
 								else if (
@@ -1261,9 +1247,8 @@ AUI.add(
 								}
 							}
 
-							const selectedFilesCountContainer = metadataContainer.one(
-								'.selected-files-count'
-							);
+							const selectedFilesCountContainer =
+								metadataContainer.one('.selected-files-count');
 
 							if (selectedFilesCountContainer) {
 								selectedFilesCountContainer.html(
@@ -1308,9 +1293,8 @@ AUI.add(
 							']'
 					);
 
-					const warningContainer = instance._fileList.one(
-						'.upload-error'
-					);
+					const warningContainer =
+						instance._fileList.one('.upload-error');
 
 					if (!totalFiles.size() && warningContainer) {
 						warningContainer.hide();
@@ -1494,9 +1478,8 @@ AUI.add(
 							[maxUploadRequestSize]
 						);
 
-						instance._metadataContainer = instance.get(
-							'metadataContainer'
-						);
+						instance._metadataContainer =
+							instance.get('metadataContainer');
 						instance._metadataExplanationContainer = instance.get(
 							'metadataExplanationContainer'
 						);

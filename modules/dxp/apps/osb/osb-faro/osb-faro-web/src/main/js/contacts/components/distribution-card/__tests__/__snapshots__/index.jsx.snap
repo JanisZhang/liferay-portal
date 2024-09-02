@@ -4,7 +4,7 @@ exports[`DistributionCard renders /w AddPropertyForm 1`] = `
 <div>
   <div
     class="card card-root distribution-card-root"
-    id="distributionBreakdownCardRoot"
+    id="container.report.distributionBreakdownCard"
     style="min-height: 536px;"
   >
     <div
@@ -52,9 +52,11 @@ exports[`DistributionCard renders /w AddPropertyForm 1`] = `
           <div
             class="description"
           >
-            <h4>
+            <div
+              class="h4"
+            >
               Add a Breakdown by Individual Attribute
-            </h4>
+            </div>
             <p>
               Breakdown will display the top 10 results or be divided into a maximum of 10 bins depending on your attribute type.
             </p>
@@ -179,7 +181,7 @@ exports[`DistributionCard renders 1`] = `
 <div>
   <div
     class="card card-root distribution-card-root"
-    id="distributionBreakdownCardRoot"
+    id="container.report.distributionBreakdownCard"
     style="min-height: 536px;"
   >
     <div
@@ -269,7 +271,7 @@ exports[`DistributionCard renders empty state via props with noResultsRenderer 1
 <div>
   <div
     class="card card-root distribution-card-root"
-    id="distributionBreakdownCardRoot"
+    id="container.report.distributionBreakdownCard"
     style="min-height: 536px;"
   >
     <div
@@ -363,17 +365,17 @@ exports[`DistributionCard renders w/ showAddDataSource 1`] = `
 <div>
   <div
     class="card card-root distribution-card-root"
-    id="distributionBreakdownCardRoot"
+    id="container.report.distributionBreakdownCard"
     style="min-height: 536px;"
   >
     <div
       class="card-header"
     >
-      <h5
+      <div
         class="card-title"
       >
         Distribution
-      </h5>
+      </div>
     </div>
     <div
       class="card-body"

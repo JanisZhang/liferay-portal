@@ -7,12 +7,20 @@ package com.liferay.commerce.product.service.impl;
 
 import com.liferay.commerce.constants.CommercePriceConstants;
 import com.liferay.commerce.product.constants.CPField;
+import com.liferay.commerce.product.exception.CPInstanceCostException;
 import com.liferay.commerce.product.exception.CPInstanceDeliverySubscriptionLengthException;
+import com.liferay.commerce.product.exception.CPInstanceDepthException;
 import com.liferay.commerce.product.exception.CPInstanceDisplayDateException;
 import com.liferay.commerce.product.exception.CPInstanceExpirationDateException;
+import com.liferay.commerce.product.exception.CPInstanceHeightException;
 import com.liferay.commerce.product.exception.CPInstanceMaxPriceValueException;
+import com.liferay.commerce.product.exception.CPInstanceMinPriceValueException;
+import com.liferay.commerce.product.exception.CPInstancePriceException;
+import com.liferay.commerce.product.exception.CPInstancePromoPriceException;
 import com.liferay.commerce.product.exception.CPInstanceReplacementCPInstanceUuidException;
 import com.liferay.commerce.product.exception.CPInstanceSkuException;
+import com.liferay.commerce.product.exception.CPInstanceWeightException;
+import com.liferay.commerce.product.exception.CPInstanceWidthException;
 import com.liferay.commerce.product.exception.DuplicateCPInstanceException;
 import com.liferay.commerce.product.exception.NoSuchCPInstanceException;
 import com.liferay.commerce.product.exception.NoSuchSkuContributorCPDefinitionOptionRelException;
@@ -67,6 +75,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -134,6 +143,7 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		_validate(cost, depth, height, price, promoPrice, weight, width);
 		_validateExternalReferenceCode(
 			0, serviceContext.getCompanyId(), externalReferenceCode);
 		_validateSku(cpDefinitionId, 0, sku);
@@ -228,9 +238,6 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 			cpInstance.setStatus(WorkflowConstants.STATUS_EXPIRED);
 		}
 
-		cpInstance.setStatusByUserId(user.getUserId());
-		cpInstance.setStatusDate(serviceContext.getModifiedDate(date));
-		cpInstance.setExpandoBridgeAttributes(serviceContext);
 		cpInstance.setUnspsc(unspsc);
 		cpInstance.setDiscontinued(discontinued);
 		cpInstance.setDiscontinuedDate(
@@ -239,6 +246,9 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 				discontinuedDateYear));
 		cpInstance.setReplacementCPInstanceUuid(replacementCPInstanceUuid);
 		cpInstance.setReplacementCProductId(replacementCProductId);
+		cpInstance.setStatusByUserId(user.getUserId());
+		cpInstance.setStatusDate(serviceContext.getModifiedDate(date));
+		cpInstance.setExpandoBridgeAttributes(serviceContext);
 
 		cpInstance = cpInstancePersistence.update(cpInstance);
 
@@ -963,6 +973,7 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 		return searchCPInstances(searchContext);
 	}
 
+	@Override
 	public BaseModelSearchResult<CPInstance> searchCPInstances(
 			long companyId, String cpInstanceUuid, long cProductId,
 			String keywords, int status, int start, int end, Sort sort)
@@ -1036,6 +1047,7 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		_validate(cost, depth, height, price, promoPrice, weight, width);
 		_validateExternalReferenceCode(
 			cpInstanceId, serviceContext.getCompanyId(), externalReferenceCode);
 
@@ -1043,23 +1055,10 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 			cpInstanceId);
 
 		_validateSku(cpInstance.getCPDefinitionId(), cpInstanceId, sku);
-
 		_validateReplacementCPInstance(
 			cpInstance, replacementCPInstanceUuid, replacementCProductId);
 
 		User user = _userLocalService.getUser(serviceContext.getUserId());
-
-		if (CPDefinitionLocalServiceCircularDependencyUtil.isVersionable(
-				cpInstance.getCPDefinitionId())) {
-
-			CPDefinition newCPDefinition =
-				CPDefinitionLocalServiceCircularDependencyUtil.copyCPDefinition(
-					cpInstance.getCPDefinitionId());
-
-			cpInstance = cpInstancePersistence.findByC_C(
-				newCPDefinition.getCPDefinitionId(),
-				cpInstance.getCPInstanceUuid());
-		}
 
 		Date expirationDate = null;
 		Date date = new Date();
@@ -1105,7 +1104,21 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 					deliverySubscriptionTypeSettingsUnicodeProperties);
 		}
 
-		cpInstance.setExternalReferenceCode(externalReferenceCode);
+		if (CPDefinitionLocalServiceCircularDependencyUtil.isVersionable(
+				cpInstance.getCPDefinitionId())) {
+
+			CPDefinition newCPDefinition =
+				CPDefinitionLocalServiceCircularDependencyUtil.copyCPDefinition(
+					cpInstance.getCPDefinitionId());
+
+			cpInstance = cpInstancePersistence.findByC_C(
+				newCPDefinition.getCPDefinitionId(),
+				cpInstance.getCPInstanceUuid());
+		}
+		else {
+			cpInstance.setExternalReferenceCode(externalReferenceCode);
+		}
+
 		cpInstance.setSku(sku);
 		cpInstance.setGtin(gtin);
 		cpInstance.setManufacturerPartNumber(manufacturerPartNumber);
@@ -1139,9 +1152,6 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 			cpInstance.setStatus(WorkflowConstants.STATUS_EXPIRED);
 		}
 
-		cpInstance.setStatusByUserId(user.getUserId());
-		cpInstance.setStatusDate(serviceContext.getModifiedDate(date));
-		cpInstance.setExpandoBridgeAttributes(serviceContext);
 		cpInstance.setUnspsc(unspsc);
 		cpInstance.setDiscontinued(discontinued);
 		cpInstance.setDiscontinuedDate(
@@ -1150,6 +1160,9 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 				discontinuedDateYear));
 		cpInstance.setReplacementCPInstanceUuid(replacementCPInstanceUuid);
 		cpInstance.setReplacementCProductId(replacementCProductId);
+		cpInstance.setStatusByUserId(user.getUserId());
+		cpInstance.setStatusDate(serviceContext.getModifiedDate(date));
+		cpInstance.setExpandoBridgeAttributes(serviceContext);
 
 		cpInstance = cpInstancePersistence.update(cpInstance);
 
@@ -1221,6 +1234,15 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 			(promoPrice.compareTo(maxValue) > 0)) {
 
 			throw new CPInstanceMaxPriceValueException();
+		}
+
+		BigDecimal minValue = BigDecimal.valueOf(
+			GetterUtil.getDouble(CommercePriceConstants.PRICE_VALUE_MIN));
+
+		if ((cost.compareTo(minValue) < 0) || (price.compareTo(minValue) < 0) ||
+			(promoPrice.compareTo(minValue) < 0)) {
+
+			throw new CPInstanceMinPriceValueException();
 		}
 
 		CPInstance cpInstance = cpInstancePersistence.findByPrimaryKey(
@@ -1960,6 +1982,40 @@ public class CPInstanceLocalServiceImpl extends CPInstanceLocalServiceBaseImpl {
 		}
 
 		return cpDefinitionOptionRelIdCPDefinitionOptionValueRelIds;
+	}
+
+	private void _validate(
+			BigDecimal cost, double depth, double height, BigDecimal price,
+			BigDecimal promoPrice, double weight, double width)
+		throws PortalException {
+
+		if (BigDecimalUtil.lt(cost, BigDecimal.ZERO)) {
+			throw new CPInstanceCostException();
+		}
+
+		if (depth < 0) {
+			throw new CPInstanceDepthException();
+		}
+
+		if (height < 0) {
+			throw new CPInstanceHeightException();
+		}
+
+		if (BigDecimalUtil.lt(price, BigDecimal.ZERO)) {
+			throw new CPInstancePriceException();
+		}
+
+		if (BigDecimalUtil.lt(promoPrice, BigDecimal.ZERO)) {
+			throw new CPInstancePromoPriceException();
+		}
+
+		if (weight < 0) {
+			throw new CPInstanceWeightException();
+		}
+
+		if (width < 0) {
+			throw new CPInstanceWidthException();
+		}
 	}
 
 	private UnicodeProperties

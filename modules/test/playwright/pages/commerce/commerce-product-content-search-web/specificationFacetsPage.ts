@@ -9,9 +9,15 @@ import {CommerceLayoutsPage} from '../commerceLayoutsPage';
 
 export class SpecificationFacetsPage {
 	readonly addSearchOptionsLabel: Locator;
+	readonly addOptionFacetLabel: Locator;
 	readonly addSpecificationFacetLabel: Locator;
 	readonly addWidgetButton: Locator;
+	readonly configurationMenuItem: Locator;
+	readonly configurationSaveButton: Locator;
+	readonly displayTemplateSelect: Locator;
+	readonly frequencyThresholdInput: Locator;
 	readonly layoutsPage: CommerceLayoutsPage;
+	readonly optionFacetConfigurationEditButton: Locator;
 	readonly page: Page;
 	readonly pageLabel: Locator;
 	readonly pageTitle: Locator;
@@ -21,18 +27,40 @@ export class SpecificationFacetsPage {
 	readonly searchOptionsConfigurationEditButton: Locator;
 	readonly searchOptionsConfigurationSaveButton: Locator;
 	readonly selectSpecificationFacetPageInput: Locator;
+	readonly specificationFacetConfigurationEditButton: Locator;
+	readonly specificationFacetOrderSpecificationInput: Locator;
 
 	constructor(page: Page) {
 		this.addSearchOptionsLabel = page
 			.getByTestId('addPanelTabItem')
 			.filter({hasText: /^Search Options$/})
 			.getByRole('button', {exact: true, name: 'Add Content'});
+		this.addOptionFacetLabel = page
+			.getByTestId('addPanelTabItem')
+			.filter({hasText: /^Option Facet$/})
+			.getByRole('button', {exact: true, name: 'Add Content'});
 		this.addSpecificationFacetLabel = page
 			.getByTestId('addPanelTabItem')
 			.filter({hasText: /^Specification Facet$/})
 			.getByRole('button', {exact: true, name: 'Add Content'});
 		this.addWidgetButton = page.getByTestId('add');
+		this.configurationMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'Configuration',
+		});
+		this.configurationSaveButton = page
+			.frameLocator('iframe[id="modalIframe"]')
+			.getByRole('button', {name: 'Save'});
+		this.displayTemplateSelect = page
+			.frameLocator('iframe[id="modalIframe"]')
+			.getByLabel('Display Template');
+		this.frequencyThresholdInput = page
+			.frameLocator('iframe[id="modalIframe"]')
+			.getByLabel('Frequency Threshold');
 		this.layoutsPage = new CommerceLayoutsPage(page);
+		this.optionFacetConfigurationEditButton = page
+			.locator('//section[contains(@id, "CPOptionFacetsPortlet")]')
+			.getByLabel('Options');
 		this.page = page;
 		this.pageLabel = page
 			.getByTestId('layoutHref')
@@ -58,6 +86,14 @@ export class SpecificationFacetsPage {
 		this.selectSpecificationFacetPageInput = page
 			.getByTestId('selectLayout')
 			.getByLabel('Select Specification Facet Page');
+		this.specificationFacetConfigurationEditButton = page
+			.locator(
+				'//section[contains(@id, "CPSpecificationOptionFacetsPortlet")]'
+			)
+			.getByLabel('Options');
+		this.specificationFacetOrderSpecificationInput = page
+			.frameLocator('iframe[id="modalIframe"]')
+			.getByLabel('Order Specifications By');
 	}
 
 	async addSearchOptionsWidget() {
@@ -72,9 +108,16 @@ export class SpecificationFacetsPage {
 		await this.addSpecificationFacetLabel.click();
 	}
 
+	async addOptionFacetWidget() {
+		await this.searchFormInput.click();
+		await this.searchFormInput.fill('Option Facet');
+		await this.addOptionFacetLabel.click();
+	}
+
 	async addRequiredFacetWidgets() {
 		await this.addWidgetButton.click();
 		await this.addSearchOptionsWidget();
+		await this.addOptionFacetWidget();
 		await this.addSpecificationFacetWidget();
 	}
 
@@ -85,6 +128,36 @@ export class SpecificationFacetsPage {
 		});
 		await this.searchOptionsAllowEmptySearchesInput.click();
 		await this.searchOptionsConfigurationSaveButton.click();
+	}
+
+	async configureOptionFacetFrequencyThreshold(value: string) {
+		await this.optionFacetConfigurationEditButton.click();
+		await this.configurationMenuItem.click();
+		await this.displayTemplateSelect.waitFor({
+			state: 'attached',
+		});
+		await this.frequencyThresholdInput.fill(value);
+		await this.configurationSaveButton.click();
+	}
+
+	async configureSpecificationFacetFrequencyThreshold(value: string) {
+		await this.specificationFacetConfigurationEditButton.click();
+		await this.configurationMenuItem.click();
+		await this.displayTemplateSelect.waitFor({
+			state: 'attached',
+		});
+		await this.frequencyThresholdInput.fill(value);
+		await this.configurationSaveButton.click();
+	}
+
+	async configureSpecificationFacetOrdering(value: string) {
+		await this.specificationFacetConfigurationEditButton.click();
+		await this.configurationMenuItem.click();
+		await this.specificationFacetOrderSpecificationInput.selectOption(
+			value
+		);
+		await this.configurationSaveButton.click();
+		await this.reloadPage();
 	}
 
 	async deleteSpecificationPage() {

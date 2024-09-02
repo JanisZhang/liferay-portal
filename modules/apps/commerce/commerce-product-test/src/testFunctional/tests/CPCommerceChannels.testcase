@@ -157,72 +157,6 @@ definition {
 
 	}
 
-	@description = "This is a test for COMMERCE-6116. AddShippingOptionFedEx"
-	@priority = 3
-	test AddShippingOptionFedEx {
-		property portal.acceptance = "false";
-
-		CommerceChannels.openChannelsAdmin();
-
-		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
-
-		Click(
-			key_entryName = "FedEx",
-			locator1 = "CommerceEntry#CHANNELS_GENERAL_TAB_EDITS");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Check.checkToggleSwitch(
-			key_toggleSwitchLabel = "Active",
-			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
-
-		Button.clickSave();
-
-		Alert.viewSuccessMessage();
-
-		Click(
-			locator1 = "CommerceEntry#PAYMENT_METHODS_SIDE_PANEL_NAV_ITEMS",
-			navItem = "Configuration");
-
-		for (var labels : list "URL,Key,Account Number,Meter Number") {
-			Type(
-				key_fieldLabel = ${labels},
-				locator1 = "TextInput#GENERIC_TEXT_INPUT",
-				value1 = "Test");
-		}
-
-		Type(
-			locator1 = "TextInput#PASSWORD_TYPE",
-			value1 = "Test");
-
-		for (var key_value : list "FedEx Europe First International Priority,FedEx 1Day Freight,FedEx 2Day,FedEx 2Day AM,FedEx 2Day Freight,FedEx 3Day Freight,FedEx Distance Deferred,FedEx Express Saver,FedEx First Freight,FedEx Freight Economy,FedEx Freight Priority,FedEx Ground,FedEx Next Day Afternoon,FedEx Next Day Early Morning,FedEx Next Day End of Day,FedEx Next Day Freight,FedEx Next Day Mid-Morning,FedEx First Overnight,FedEx Ground Home Delivery,FedEx International Economy,FedEx International Economy Freight,FedEx International First,FedEx International Priority,FedEx International Priority Express,FedEx International Priority Freight,FedEx Priority Overnight,FedEx Same Day,FedEx Same Day City,FedEx SmartPost,FedEx Standard Overnight") {
-			Check.checkToggleSwitch(
-				checkboxName = ${key_value},
-				locator1 = "Checkbox#ANY_CHECKBOX");
-		}
-
-		Button.clickSave();
-
-		Alert.viewSuccessMessage();
-
-		Refresh();
-
-		Click(
-			key_entryName = "FedEx",
-			locator1 = "CommerceEntry#CHANNELS_GENERAL_TAB_EDITS");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-		Click(
-			locator1 = "CommerceEntry#PAYMENT_METHODS_SIDE_PANEL_NAV_ITEMS",
-			navItem = "Configuration");
-
-		AssertTextEquals(
-			key_fieldLabel = "URL",
-			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "Test");
-	}
-
 	@description = "This is a test for COMMERCE-6111. AddShippingOptionFlatRate"
 	@priority = 3
 	test AddShippingOptionFlatRate {
@@ -691,64 +625,6 @@ definition {
 			key_fieldLabel = "Tracking URL",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
 			value1 = "");
-	}
-
-	@description = "Verify users without edit permission cannot change the currency of a channel."
-	@priority = 5
-	test CanNotEditChannelCurrencyAsUserWithoutEditPermission {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-		property portal.acceptance = "true";
-
-		task ("Given a Commerce account with a buyer user") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And given the buyer has permission to view a channel's configuration") {
-			CommercePermissions.defineChannelPermissionsViaJSONAPI(
-				roleTitle = "User",
-				update = "false",
-				view = "true");
-
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "MANAGE_COMMERCE_PRODUCT_CHANNEL_VISIBILITY",
-				resourceName = "com.liferay.commerce.product",
-				roleTitle = "User");
-		}
-
-		task ("When the buyer logs in and goes to the Minium channel") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			CommerceChannels.openChannelsAdmin();
-
-			AssertTextEquals(
-				key_columnIndex = 1,
-				key_rowIndex = 1,
-				locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
-				value1 = "Minium Portal");
-		}
-
-		task ("Then the buyer is unable to change the channel currency code") {
-			AssertElementNotPresent(
-				key_entryName = "Minium Portal",
-				locator1 = "CommerceNavigation#ENTRY_NAME",
-				value1 = "Minium Portal");
-		}
 	}
 
 	@description = "This is a test for COMMERCE-10053. An error message shows up when the eligibility element is already linked"
@@ -1757,7 +1633,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2435,7 +2311,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2557,7 +2433,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2655,7 +2531,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -3000,7 +2876,7 @@ definition {
 
 		task ("When an order is placed") {
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 

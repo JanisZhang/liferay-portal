@@ -50,6 +50,8 @@ public interface Build {
 
 	public String getBranchName();
 
+	public BuildDatabase getBuildDatabase();
+
 	public String getBuildDescription();
 
 	public String getBuildDirPath();
@@ -149,6 +151,8 @@ public interface Build {
 
 	public List<URL> getTestrayAttachmentURLs();
 
+	public String getTestrayBuildDateString();
+
 	public List<URL> getTestrayS3AttachmentURLs();
 
 	public JSONObject getTestReportJSONObject(boolean checkCache);
@@ -191,6 +195,8 @@ public interface Build {
 
 	public void reset();
 
+	public void saveBuildURLInBuildDatabase();
+
 	public void setArchiveName(String archiveName);
 
 	public void setArchiveRootDir(File archiveRootDir);
@@ -226,6 +232,8 @@ public interface Build {
 		public String getSenderBranchName();
 
 		public String getSenderBranchSHA();
+
+		public String getSenderBranchSHAShort();
 
 		public RemoteGitRef getSenderRemoteGitRef();
 

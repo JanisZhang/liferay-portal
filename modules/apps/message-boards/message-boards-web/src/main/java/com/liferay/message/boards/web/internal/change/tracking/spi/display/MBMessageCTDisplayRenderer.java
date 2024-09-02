@@ -83,6 +83,11 @@ public class MBMessageCTDisplayRenderer
 	}
 
 	@Override
+	public boolean isHideable(MBMessage mbMessage) {
+		return mbMessage.isDiscussion();
+	}
+
+	@Override
 	public String renderPreview(DisplayContext<MBMessage> displayContext) {
 		MBMessage mbMessage = displayContext.getModel();
 
@@ -130,7 +135,7 @@ public class MBMessageCTDisplayRenderer
 		).display(
 			"last-modified", mbMessage.getModifiedDate()
 		).display(
-			"answer", mbMessage.isAnswer()
+			"answer[noun]", mbMessage.isAnswer()
 		).display(
 			"number-of-attachments", mbMessage.getAttachmentsFileEntriesCount()
 		).display(

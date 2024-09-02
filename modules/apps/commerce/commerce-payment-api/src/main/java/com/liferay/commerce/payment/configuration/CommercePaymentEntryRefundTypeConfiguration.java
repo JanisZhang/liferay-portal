@@ -15,7 +15,6 @@ import com.liferay.portal.kernel.settings.LocalizedValuesMap;
  */
 @ExtendedObjectClassDefinition(
 	category = "payment", factoryInstanceLabelAttribute = "key",
-	featureFlagKey = "COMMERCE-12754",
 	scope = ExtendedObjectClassDefinition.Scope.COMPANY
 )
 @Meta.OCD(
@@ -25,6 +24,9 @@ import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 	name = "commerce-payment-entry-refund-type-configuration-name"
 )
 public interface CommercePaymentEntryRefundTypeConfiguration {
+
+	@Meta.AD(deflt = "true", name = "enabled", required = false)
+	public boolean enabled();
 
 	@Meta.AD(name = "key")
 	public String key();

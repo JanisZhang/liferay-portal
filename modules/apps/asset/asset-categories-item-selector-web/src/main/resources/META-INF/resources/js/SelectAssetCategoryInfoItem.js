@@ -97,10 +97,10 @@ function SelectAssetCategory({
 						{selectedItemsCount > 1
 							? `${selectedItemsCount} ${Liferay.Language.get(
 									'items-selected'
-							  )}`
+								)}`
 							: `${selectedItemsCount} ${Liferay.Language.get(
 									'item-selected'
-							  )}`}
+								)}`}
 					</p>
 
 					<ClayButton
@@ -141,7 +141,7 @@ function SelectAssetCategory({
 								description={Liferay.Language.get(
 									'no-categories-were-found'
 								)}
-								imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.gif`}
+								imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.svg`}
 								title={Liferay.Language.get('no-results-found')}
 							/>
 						)}

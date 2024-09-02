@@ -34,6 +34,7 @@ import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectLayoutBoxConstants;
+import com.liferay.object.info.collection.provider.util.ObjectEntryInfoCollectionProviderUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -134,7 +135,8 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 
 		try {
 			if (!_objectDefinition.isAccountEntryRestricted() &&
-				_objectDefinition.isDefaultStorageType()) {
+				_objectDefinition.isDefaultStorageType() &&
+				_objectDefinition.isEnableIndexSearch()) {
 
 				return _getCollectionInfoPageByIndexer(collectionQuery);
 			}
@@ -367,9 +369,7 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		for (Map.Entry<String, String[]> entry : configuration.entrySet()) {
 			String[] values = entry.getValue();
 
-			if ((values == null) || (values.length == 0) ||
-				values[0].isEmpty()) {
-
+			if (ArrayUtil.isEmpty(values) || values[0].isEmpty()) {
 				continue;
 			}
 
@@ -445,8 +445,11 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 					false, null, null, null, null, themeDisplay.getLocale(),
 					null, themeDisplay.getUser()),
 				_getFilterString(collectionQuery),
-				_getPagination(collectionQuery.getPagination()),
-				_getSearch(collectionQuery), null);
+				ObjectEntryInfoCollectionProviderUtil.getPagination(
+					collectionQuery.getPagination()),
+				ObjectEntryInfoCollectionProviderUtil.getSearch(
+					collectionQuery),
+				null);
 
 		return InfoPage.of(
 			TransformUtil.transform(
@@ -689,32 +692,6 @@ public class ObjectEntrySingleFormVariationInfoCollectionProvider
 		}
 
 		return optionInfoFieldTypes;
-	}
-
-	private com.liferay.portal.vulcan.pagination.Pagination _getPagination(
-		Pagination pagination) {
-
-		int page = 1;
-
-		int pageSize = pagination.getEnd() - pagination.getStart();
-
-		if (pageSize > 0) {
-			page = pagination.getEnd() / pageSize;
-		}
-
-		return com.liferay.portal.vulcan.pagination.Pagination.of(
-			page, pageSize);
-	}
-
-	private String _getSearch(CollectionQuery collectionQuery) {
-		KeywordsInfoFilter keywordsInfoFilter = collectionQuery.getInfoFilter(
-			KeywordsInfoFilter.class);
-
-		if (keywordsInfoFilter != null) {
-			return keywordsInfoFilter.getKeywords();
-		}
-
-		return null;
 	}
 
 	private boolean _hasCategorizationObjectLayoutBox() {

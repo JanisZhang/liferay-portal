@@ -104,6 +104,31 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#deleteCartByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"deleteCartByExternalReferenceCode"));
+					put(
+						"mutation#patchCartByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"patchCartByExternalReferenceCode"));
+					put(
+						"mutation#updateCartByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"putCartByExternalReferenceCode"));
+					put(
+						"mutation#createCartByExternalReferenceCodeCheckout",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"postCartByExternalReferenceCodeCheckout"));
+					put(
+						"mutation#createCartByExternalReferenceCodeCouponCode",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"postCartByExternalReferenceCodeCouponCode"));
+					put(
 						"mutation#deleteCart",
 						new ObjectValuePair<>(
 							CartResourceImpl.class, "deleteCart"));
@@ -132,9 +157,29 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CartResourceImpl.class, "postCartCouponCode"));
 					put(
+						"mutation#createChannelCartByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"postChannelCartByExternalReferenceCode"));
+					put(
 						"mutation#createChannelCart",
 						new ObjectValuePair<>(
 							CartResourceImpl.class, "postChannelCart"));
+					put(
+						"mutation#deleteCartCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"deleteCartCommentByExternalReferenceCode"));
+					put(
+						"mutation#patchCartCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"patchCartCommentByExternalReferenceCode"));
+					put(
+						"mutation#updateCartCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"putCartCommentByExternalReferenceCode"));
 					put(
 						"mutation#deleteCartComment",
 						new ObjectValuePair<>(
@@ -159,9 +204,29 @@ public class ServletDataImpl implements ServletData {
 							CartCommentResourceImpl.class,
 							"putCartCommentBatch"));
 					put(
+						"mutation#createCartByExternalReferenceCodeComment",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"postCartByExternalReferenceCodeComment"));
+					put(
 						"mutation#createCartComment",
 						new ObjectValuePair<>(
 							CartCommentResourceImpl.class, "postCartComment"));
+					put(
+						"mutation#deleteCartItemByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class,
+							"deleteCartItemByExternalReferenceCode"));
+					put(
+						"mutation#patchCartItemByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class,
+							"patchCartItemByExternalReferenceCode"));
+					put(
+						"mutation#updateCartItemByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class,
+							"putCartItemByExternalReferenceCode"));
 					put(
 						"mutation#deleteCartItem",
 						new ObjectValuePair<>(
@@ -183,6 +248,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CartItemResourceImpl.class, "putCartItemBatch"));
 					put(
+						"mutation#createCartByExternalReferenceCodeItem",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class,
+							"postCartByExternalReferenceCodeItem"));
+					put(
 						"mutation#createCartItem",
 						new ObjectValuePair<>(
 							CartItemResourceImpl.class, "postCartItem"));
@@ -198,6 +268,16 @@ public class ServletDataImpl implements ServletData {
 							"postCartShippingMethodsPageExportBatch"));
 
 					put(
+						"query#cartByExternalReferenceCodeBillingAddres",
+						new ObjectValuePair<>(
+							AddressResourceImpl.class,
+							"getCartByExternalReferenceCodeBillingAddres"));
+					put(
+						"query#cartByExternalReferenceCodeShippingAddres",
+						new ObjectValuePair<>(
+							AddressResourceImpl.class,
+							"getCartByExternalReferenceCodeShippingAddres"));
+					put(
 						"query#cartBillingAddres",
 						new ObjectValuePair<>(
 							AddressResourceImpl.class, "getCartBillingAddres"));
@@ -207,6 +287,16 @@ public class ServletDataImpl implements ServletData {
 							AddressResourceImpl.class,
 							"getCartShippingAddres"));
 					put(
+						"query#cartByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"getCartByExternalReferenceCode"));
+					put(
+						"query#cartByExternalReferenceCodePaymentUrl",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"getCartByExternalReferenceCodePaymentUrl"));
+					put(
 						"query#cart",
 						new ObjectValuePair<>(
 							CartResourceImpl.class, "getCart"));
@@ -215,31 +305,66 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CartResourceImpl.class, "getCartPaymentURL"));
 					put(
+						"query#channelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodeCarts",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodeCartsPage"));
+					put(
 						"query#channelCarts",
 						new ObjectValuePair<>(
 							CartResourceImpl.class, "getChannelCartsPage"));
 					put(
+						"query#cartCommentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"getCartCommentByExternalReferenceCode"));
+					put(
 						"query#cartComment",
 						new ObjectValuePair<>(
 							CartCommentResourceImpl.class, "getCartComment"));
+					put(
+						"query#cartByExternalReferenceCodeComments",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"getCartByExternalReferenceCodeCommentsPage"));
 					put(
 						"query#cartComments",
 						new ObjectValuePair<>(
 							CartCommentResourceImpl.class,
 							"getCartCommentsPage"));
 					put(
+						"query#cartItemByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class,
+							"getCartItemByExternalReferenceCode"));
+					put(
 						"query#cartItem",
 						new ObjectValuePair<>(
 							CartItemResourceImpl.class, "getCartItem"));
+					put(
+						"query#cartByExternalReferenceCodeItems",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class,
+							"getCartByExternalReferenceCodeItemsPage"));
 					put(
 						"query#cartItems",
 						new ObjectValuePair<>(
 							CartItemResourceImpl.class, "getCartItemsPage"));
 					put(
+						"query#cartByExternalReferenceCodePaymentMethods",
+						new ObjectValuePair<>(
+							PaymentMethodResourceImpl.class,
+							"getCartByExternalReferenceCodePaymentMethodsPage"));
+					put(
 						"query#cartPaymentMethods",
 						new ObjectValuePair<>(
 							PaymentMethodResourceImpl.class,
 							"getCartPaymentMethodsPage"));
+					put(
+						"query#cartByExternalReferenceCodeShippingMethods",
+						new ObjectValuePair<>(
+							ShippingMethodResourceImpl.class,
+							"getCartByExternalReferenceCodeShippingMethodsPage"));
 					put(
 						"query#cartShippingMethods",
 						new ObjectValuePair<>(
@@ -252,10 +377,10 @@ public class ServletDataImpl implements ServletData {
 							PaymentMethodResourceImpl.class,
 							"getCartPaymentMethodsPage"));
 					put(
-						"query#Cart.comments",
+						"query#Cart.byExternalReferenceCodeShippingAddres",
 						new ObjectValuePair<>(
-							CartCommentResourceImpl.class,
-							"getCartCommentsPage"));
+							AddressResourceImpl.class,
+							"getCartByExternalReferenceCodeShippingAddres"));
 					put(
 						"query#Cart.shippingAddres",
 						new ObjectValuePair<>(
@@ -266,6 +391,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							ShippingMethodResourceImpl.class,
 							"getCartShippingMethodsPage"));
+					put(
+						"query#Cart.byExternalReferenceCodePaymentUrl",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"getCartByExternalReferenceCodePaymentUrl"));
 					put(
 						"query#Cart.paymentURL",
 						new ObjectValuePair<>(
@@ -278,6 +408,51 @@ public class ServletDataImpl implements ServletData {
 						"query#Cart.billingAddres",
 						new ObjectValuePair<>(
 							AddressResourceImpl.class, "getCartBillingAddres"));
+					put(
+						"query#Cart.commentByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"getCartCommentByExternalReferenceCode"));
+					put(
+						"query#Cart.byExternalReferenceCodeBillingAddres",
+						new ObjectValuePair<>(
+							AddressResourceImpl.class,
+							"getCartByExternalReferenceCodeBillingAddres"));
+					put(
+						"query#Cart.comments",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"getCartCommentsPage"));
+					put(
+						"query#Cart.itemByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class,
+							"getCartItemByExternalReferenceCode"));
+					put(
+						"query#Cart.byExternalReferenceCodePaymentMethods",
+						new ObjectValuePair<>(
+							PaymentMethodResourceImpl.class,
+							"getCartByExternalReferenceCodePaymentMethodsPage"));
+					put(
+						"query#Cart.byExternalReferenceCodeComments",
+						new ObjectValuePair<>(
+							CartCommentResourceImpl.class,
+							"getCartByExternalReferenceCodeCommentsPage"));
+					put(
+						"query#Cart.byExternalReferenceCodeShippingMethods",
+						new ObjectValuePair<>(
+							ShippingMethodResourceImpl.class,
+							"getCartByExternalReferenceCodeShippingMethodsPage"));
+					put(
+						"query#CartComment.cartByExternalReferenceCode",
+						new ObjectValuePair<>(
+							CartResourceImpl.class,
+							"getCartByExternalReferenceCode"));
+					put(
+						"query#Cart.byExternalReferenceCodeItems",
+						new ObjectValuePair<>(
+							CartItemResourceImpl.class,
+							"getCartByExternalReferenceCodeItemsPage"));
 
 					put(
 						"query#CartItem.parentCartItem",

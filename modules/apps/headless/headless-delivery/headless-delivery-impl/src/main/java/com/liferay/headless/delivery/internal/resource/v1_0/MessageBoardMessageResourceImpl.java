@@ -32,7 +32,6 @@ import com.liferay.message.boards.util.comparator.MessageCreateDateComparator;
 import com.liferay.message.boards.util.comparator.MessageModifiedDateComparator;
 import com.liferay.message.boards.util.comparator.MessageSubjectComparator;
 import com.liferay.message.boards.util.comparator.MessageURLSubjectComparator;
-import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
@@ -87,7 +86,6 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/message-board-message.properties",
 	scope = ServiceScope.PROTOTYPE, service = MessageBoardMessageResource.class
 )
-@CTAware
 public class MessageBoardMessageResourceImpl
 	extends BaseMessageBoardMessageResourceImpl {
 
@@ -344,6 +342,7 @@ public class MessageBoardMessageResourceImpl
 			sorts);
 	}
 
+	@Override
 	public Page<MessageBoardMessage>
 			getSiteUserMessageBoardMessagesActivityPage(
 				Long siteId, Long userId, Pagination pagination)
@@ -581,19 +580,19 @@ public class MessageBoardMessageResourceImpl
 			String fieldName = sort.getFieldName();
 
 			if (Objects.equals(fieldName, "createDate_sortable")) {
-				orderByComparator = new MessageCreateDateComparator(
+				orderByComparator = MessageCreateDateComparator.getInstance(
 					!sort.isReverse());
 			}
 			else if (Objects.equals(fieldName, "modified_sortable")) {
-				orderByComparator = new MessageModifiedDateComparator(
+				orderByComparator = MessageModifiedDateComparator.getInstance(
 					!sort.isReverse());
 			}
 			else if (fieldName.contains("title")) {
-				orderByComparator = new MessageSubjectComparator(
+				orderByComparator = MessageSubjectComparator.getInstance(
 					!sort.isReverse());
 			}
 			else if (fieldName.contains("urlSubject")) {
-				orderByComparator = new MessageURLSubjectComparator(
+				orderByComparator = MessageURLSubjectComparator.getInstance(
 					!sort.isReverse());
 			}
 		}

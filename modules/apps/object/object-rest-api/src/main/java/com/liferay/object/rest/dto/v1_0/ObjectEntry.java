@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -394,23 +395,99 @@ public class ObjectEntry implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _keywordsSupplier;
 
-	@JsonAnyGetter
+	@Schema
+	@Valid
+	public com.liferay.portal.vulcan.permission.Permission[] getPermissions() {
+		if (_permissionsSupplier != null) {
+			permissions = _permissionsSupplier.get();
+
+			_permissionsSupplier = null;
+		}
+
+		return permissions;
+	}
+
+	public void setPermissions(
+		com.liferay.portal.vulcan.permission.Permission[] permissions) {
+
+		this.permissions = permissions;
+
+		_permissionsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPermissions(
+		UnsafeSupplier
+			<com.liferay.portal.vulcan.permission.Permission[], Exception>
+				permissionsUnsafeSupplier) {
+
+		_permissionsSupplier = () -> {
+			try {
+				return permissionsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected com.liferay.portal.vulcan.permission.Permission[] permissions;
+
+	@JsonIgnore
+	private Supplier<com.liferay.portal.vulcan.permission.Permission[]>
+		_permissionsSupplier;
+
 	@Schema
 	@Valid
 	public Map<String, Object> getProperties() {
-		if (_propertiesSupplier != null) {
-			properties = _propertiesSupplier.get();
-
-			_propertiesSupplier = null;
+		if (properties == null) {
+			return null;
 		}
+
+		properties.replaceAll(
+			(key, value) -> {
+				if (!(value instanceof UnsafeSupplier<?, ?>)) {
+					return value;
+				}
+
+				try {
+					UnsafeSupplier<?, ?> unsafeSupplier =
+						(UnsafeSupplier<?, ?>)value;
+
+					return unsafeSupplier.get();
+				}
+				catch (Throwable throwable) {
+					throw new RuntimeException(throwable);
+				}
+			});
 
 		return properties;
 	}
 
 	public void setProperties(Map<String, Object> properties) {
-		this.properties = properties;
+		if (properties == null) {
+			this.properties = null;
 
-		_propertiesSupplier = null;
+			return;
+		}
+
+		Map<String, Object> propertiesMap = new HashMap<>(properties);
+
+		propertiesMap.replaceAll(
+			(key, value) -> {
+				if (!(value instanceof UnsafeSupplier<?, ?>)) {
+					return value;
+				}
+
+				return new CachedUnsafeSupplier((UnsafeSupplier<?, ?>)value);
+			});
+
+		this.properties = Collections.synchronizedMap(propertiesMap);
 	}
 
 	@JsonIgnore
@@ -418,8 +495,14 @@ public class ObjectEntry implements Serializable {
 		UnsafeSupplier<Map<String, Object>, Exception>
 			propertiesUnsafeSupplier) {
 
+		if (propertiesUnsafeSupplier == null) {
+			setProperties((Map<String, Object>)null);
+
+			return;
+		}
+
 		try {
-			properties = propertiesUnsafeSupplier.get();
+			setProperties(propertiesUnsafeSupplier.get());
 		}
 		catch (RuntimeException runtimeException) {
 			throw runtimeException;
@@ -430,12 +513,11 @@ public class ObjectEntry implements Serializable {
 	}
 
 	@GraphQLField
+	@JsonAnyGetter
 	@JsonAnySetter
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Map<String, Object> properties = new HashMap<>();
-
-	@JsonIgnore
-	private Supplier<Map<String, Object>> _propertiesSupplier;
+	protected Map<String, Object> properties = Collections.synchronizedMap(
+		new HashMap<>());
 
 	@Schema
 	public String getScopeKey() {
@@ -652,6 +734,9 @@ public class ObjectEntry implements Serializable {
 		else if (Objects.equals(propertyName, "keywords")) {
 			return getKeywords();
 		}
+		else if (Objects.equals(propertyName, "permissions")) {
+			return getPermissions();
+		}
 		else if (Objects.equals(propertyName, "scopeKey")) {
 			return getScopeKey();
 		}
@@ -665,14 +750,53 @@ public class ObjectEntry implements Serializable {
 			return getTaxonomyCategoryIds();
 		}
 		else {
-			Map<String, Object> properties = getProperties();
-
 			if (properties.containsKey(propertyName)) {
-				return properties.get(propertyName);
+				Object value = properties.get(propertyName);
+
+				if (!(value instanceof UnsafeSupplier<?, ?>)) {
+					return value;
+				}
+
+				UnsafeSupplier<?, ?> unsafeSupplier =
+					(UnsafeSupplier<?, ?>)value;
+
+				try {
+					return unsafeSupplier.get();
+				}
+				catch (Throwable throwable) {
+					throw new RuntimeException(throwable);
+				}
 			}
 		}
 
 		return null;
+	}
+
+	private final class CachedUnsafeSupplier<T, E extends Throwable>
+		implements UnsafeSupplier<T, E> {
+
+		public CachedUnsafeSupplier(UnsafeSupplier<T, E> unsafeSupplier) {
+			_unsafeSupplier = unsafeSupplier;
+		}
+
+		public T get() throws E {
+			if (_set) {
+				return _value;
+			}
+
+			synchronized (_unsafeSupplier) {
+				_value = _unsafeSupplier.get();
+
+				_set = true;
+			}
+
+			return _value;
+		}
+
+		private boolean _set;
+		private final UnsafeSupplier<T, E> _unsafeSupplier;
+		private T _value;
+
 	}
 
 	@Override
@@ -822,6 +946,29 @@ public class ObjectEntry implements Serializable {
 			sb.append("]");
 		}
 
+		com.liferay.portal.vulcan.permission.Permission[] permissions =
+			getPermissions();
+
+		if (permissions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"permissions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < permissions.length; i++) {
+				sb.append(permissions[i]);
+
+				if ((i + 1) < permissions.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		Map<String, Object> properties = getProperties();
 
 		if (properties != null) {
@@ -959,7 +1106,10 @@ public class ObjectEntry implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

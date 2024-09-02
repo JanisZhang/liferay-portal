@@ -209,6 +209,26 @@ public class ${entity.name}ModelImpl extends BaseModelImpl<${entity.name}> imple
 
 	public static final String ORDER_BY_SQL = " ORDER BY ${orderBySQL}";
 
+	<#if entity.isPermissionCheckEnabled() && serviceBuilder.isVersionGTE_7_4_0()>
+		<#assign orderBySQLInlineDistinct = "" />
+
+		<#list orderList as order>
+			<#assign orderBySQLInlineDistinct = orderBySQLInlineDistinct + entity.alias + "." + order.DBName />
+
+			<#if order.isOrderByAscending()>
+				<#assign orderBySQLInlineDistinct = orderBySQLInlineDistinct + " ASC" />
+			<#else>
+				<#assign orderBySQLInlineDistinct = orderBySQLInlineDistinct + " DESC" />
+			</#if>
+
+			<#if order_has_next>
+				<#assign orderBySQLInlineDistinct = orderBySQLInlineDistinct + ", " />
+			</#if>
+		</#list>
+
+		public static final String ORDER_BY_SQL_INLINE_DISTINCT = " ORDER BY ${orderBySQLInlineDistinct}";
+	</#if>
+
 	public static final String DATA_SOURCE = "${entity.dataSource}";
 
 	public static final String SESSION_FACTORY = "${entity.sessionFactory}";
@@ -1757,12 +1777,14 @@ public class ${entity.name}ModelImpl extends BaseModelImpl<${entity.name}> imple
 		</#list>
 
 		<#list cacheFields as cacheField>
-			<#assign
-				variableName = serviceBuilder.getVariableName(cacheField)
-				methodName = serviceBuilder.getCacheFieldMethodName(cacheField)
-			/>
+			<#if !serviceBuilder.isCacheFieldPermanent(cacheField)>
+				<#assign
+					variableName = serviceBuilder.getVariableName(cacheField)
+					methodName = serviceBuilder.getCacheFieldMethodName(cacheField)
+				/>
 
-			set${methodName}(null);
+				set${methodName}(null);
+			</#if>
 		</#list>
 
 		<#if columnBitmaskEnabled>
@@ -1816,7 +1838,9 @@ public class ${entity.name}ModelImpl extends BaseModelImpl<${entity.name}> imple
 		<#list cacheFields as cacheField>
 			<#assign methodName = serviceBuilder.getCacheFieldMethodName(cacheField) />
 
-			set${methodName}(null);
+			<#if !serviceBuilder.isCacheFieldPermanent(cacheField)>
+				set${methodName}(null);
+			</#if>
 
 			${entity.variableName}CacheModel.${cacheField.name} = get${methodName}();
 		</#list>

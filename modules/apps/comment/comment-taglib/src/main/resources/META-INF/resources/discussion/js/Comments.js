@@ -34,6 +34,7 @@ export default function Comments({
 	portletDisplayId,
 	randomNamespace,
 	ratingsEnabled,
+	refreshPageOnReply,
 	subscriptionClassName,
 	userId,
 }) {
@@ -79,9 +80,8 @@ export default function Comments({
 					);
 
 					if (moreCommentsContainer) {
-						const newCommentsContainer = document.createElement(
-							'div'
-						);
+						const newCommentsContainer =
+							document.createElement('div');
 
 						newCommentsContainer.innerHTML = response;
 
@@ -385,7 +385,7 @@ export default function Comments({
 			});
 		}
 		else {
-			sendMessage(form);
+			sendMessage(form, refreshPageOnReply);
 
 			editorInstance.dispose();
 		}

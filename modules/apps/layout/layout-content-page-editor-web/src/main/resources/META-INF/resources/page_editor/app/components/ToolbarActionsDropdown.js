@@ -7,12 +7,18 @@ import {ClayButtonWithIcon} from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import React from 'react';
 
+import {
+	useSelectItem,
+	useSelectMultipleItems,
+} from '../contexts/ControlsContext';
 import {useSelector} from '../contexts/StoreContext';
-import {onDiscardDraft, useDisabledDiscardDraft} from './DiscardDraftButton';
-import {useOnToggleSidebars} from './HideSidebarButton';
-import {useDisabledRedo, useDisabledUndo, useUndoRedo} from './undo/Undo';
+import {onDiscardDraft} from './DiscardDraftButton';
+import {useDisabledRedo, useDisabledUndo} from './undo/Undo';
 import {useHistoryItems, useOnHistoryItemClick} from './undo/UndoHistory';
 import UndoOverlay from './undo/UndoOverlay';
+import useUndoRedoActions from './undo/useUndoRedoActions';
+import useDisabledDiscardDraft from './useDisabledDiscardDraft';
+import useOnToggleSidebars from './useOnToggleSidebars';
 
 export default function ToolbarActionsDropdown({discardDraftFormRef}) {
 	const disabledDiscardDraft = useDisabledDiscardDraft();
@@ -20,10 +26,16 @@ export default function ToolbarActionsDropdown({discardDraftFormRef}) {
 	const disabledUndo = useDisabledUndo();
 	const historyItems = useHistoryItems();
 	const {loadingHistory, onHistoryItemClick} = useOnHistoryItemClick();
-	const {onRedo, onUndo} = useUndoRedo();
+	const {onRedo, onUndo} = useUndoRedoActions();
 	const onToggleSidebars = useOnToggleSidebars();
+	const selectItem = useSelectItem();
+	const selectMultipleItems = useSelectMultipleItems();
 	const sidebarHidden = useSelector((state) => state.sidebar.hidden);
 	const undoHistory = useSelector((state) => state.undoHistory);
+
+	const selectItems = Liferay.FeatureFlags['LPD-18221']
+		? selectMultipleItems
+		: selectItem;
 
 	return (
 		<>
@@ -34,13 +46,13 @@ export default function ToolbarActionsDropdown({discardDraftFormRef}) {
 					{
 						disabled: disabledUndo,
 						label: Liferay.Language.get('undo'),
-						onClick: onUndo,
+						onClick: () => onUndo({selectItems}),
 						symbolLeft: 'undo',
 					},
 					{
 						disabled: disabledRedo,
 						label: Liferay.Language.get('redo'),
-						onClick: onRedo,
+						onClick: () => onRedo({selectItems}),
 						symbolLeft: 'redo',
 					},
 					{
@@ -54,7 +66,7 @@ export default function ToolbarActionsDropdown({discardDraftFormRef}) {
 										label: Liferay.Language.get('undo-all'),
 										onClick: onHistoryItemClick,
 									},
-							  ]
+								]
 							: null,
 						label: Liferay.Language.get('history'),
 						symbolLeft: 'time',

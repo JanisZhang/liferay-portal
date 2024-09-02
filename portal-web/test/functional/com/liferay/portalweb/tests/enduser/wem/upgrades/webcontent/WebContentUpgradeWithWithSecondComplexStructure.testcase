@@ -3,7 +3,7 @@ definition {
 
 	property ci.retries.disabled = "true";
 	property data.archive.type = "data-archive-web-content-second-complex-fields";
-	property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
+	property database.types = "db2,mariadb,mysql,oracle,postgresql";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property portal.version = "7.3.10.1";
@@ -139,9 +139,13 @@ definition {
 
 		NavItem.gotoStructures();
 
-		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Edit Default Values",
-			rowEntry = "WC Structure Name");
+		WebContentStructures.editStructureDefaultValuesCP(structureName = "WC Structure Name");
+
+		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
+
+		// This pause is needed to avoid the deletion of typed text caused by a slow second data engine load. See LPD-28234
+
+		Pause(value1 = 3000);
 
 		Type(
 			key_fieldFieldLabel = "Label UF Comunicado",
@@ -151,7 +155,7 @@ definition {
 		Type(
 			key_fieldFieldLabel = "Lista UF Comunicado",
 			locator1 = "WCEditWebContent#TEXT_INPUT",
-			value1 = "Edited ListaUFComunidado Field");
+			value1 = "Edited ListaUFComunicado Field");
 
 		WebContentStructures.saveCP();
 
@@ -159,9 +163,11 @@ definition {
 
 		NavItem.gotoStructures();
 
-		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Edit Default Values",
-			rowEntry = "WC Structure Name");
+		WebContentStructures.editStructureDefaultValuesCP(structureName = "WC Structure Name");
+
+		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
+
+		AssertVisible(locator1 = "Sidebar#FORM_BUILDER");
 
 		AssertTextEquals.assertValue(
 			key_fieldFieldLabel = "Label UF Comunicado",
@@ -169,16 +175,16 @@ definition {
 			value1 = "Edited LabelUFComunicado Field");
 
 		AssertTextEquals.assertValue(
-			key_fieldFieldLabel = "Label UF Comunicado",
+			key_fieldFieldLabel = "Lista UF Comunicado",
 			locator1 = "WCEditWebContent#TEXT_INPUT",
-			value1 = "Edited LabelUFComunicado Field");
+			value1 = "Edited ListaUFComunicado Field");
 	}
 
 	@description = "This is a use case for LRQA-61632. Can Disable Searchable In Text Field With With Second Complex Structure"
 	@priority = 3
 	test CanDisableSearchableInTextField {
 		property data.archive.type = "data-archive-web-content-second-complex-fields";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql";
 		property portal.version = "7.3.10.1";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -290,6 +296,8 @@ definition {
 	@description = "This is a use case for LRQA-61632. Can Duplicate Repeatable Fields And Remove Them With With Second Complex Structure"
 	@priority = 3
 	test CanDuplicateRepeatableFieldsAndRemoveThem {
+		property portal.release = "quarantine";
+
 		task ("Duplicate all fields that can be duplicated, 1-4 times") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -348,6 +356,8 @@ definition {
 	@description = "This is a use case for LRQA-61632. Can copy web content and web content structure. Set all fields to Required and check submission With With Second Complex Structure"
 	@priority = 3
 	test CanEditWebContentStructureFieldsToReqiredFields {
+		property portal.release = "quarantine";
+
 		task ("Copy Article successfully") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 

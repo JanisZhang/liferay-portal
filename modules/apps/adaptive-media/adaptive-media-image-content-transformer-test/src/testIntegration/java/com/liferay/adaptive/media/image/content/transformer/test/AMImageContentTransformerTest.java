@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -47,7 +48,9 @@ public class AMImageContentTransformerTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -92,7 +95,7 @@ public class AMImageContentTransformerTest {
 
 		String transformedHTML = _contentTransformerHandler.transform(rawHTML);
 
-		Assert.assertTrue(transformedHTML.matches(regex));
+		Assert.assertTrue(transformedHTML, transformedHTML.matches(regex));
 	}
 
 	private FileEntry _addImageFileEntry(ServiceContext serviceContext)

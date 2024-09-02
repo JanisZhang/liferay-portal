@@ -4,7 +4,7 @@
  */
 
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import CodeMirror from '@liferay/frontend-js-codemirror-web';
+import {CodeMirror} from '@liferay/frontend-js-codemirror-web';
 import getCN from 'classnames';
 import React, {useContext, useEffect, useRef} from 'react';
 
@@ -224,9 +224,8 @@ export function getCodeMirrorHints(cm, autocompleteSchema, availableLanguages) {
 					Array.isArray(item.type) ? item.type.join('|') : item.type
 				}`,
 				render: (element, cm, data) => {
-					const [propertyName, propertyType] = data.displayText.split(
-						'#'
-					);
+					const [propertyName, propertyType] =
+						data.displayText.split('#');
 
 					const name = document.createElement('span');
 					name.className = CSS_CLASS_HINT_NAME;

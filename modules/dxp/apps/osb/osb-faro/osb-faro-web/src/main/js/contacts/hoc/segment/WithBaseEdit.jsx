@@ -74,11 +74,11 @@ export default WrappedComponent => {
 			open(modalTypes.CONFIRMATION_MODAL, {
 				message: (
 					<div>
-						<h4 className='text-secondary'>
+						<div className='h4 text-secondary'>
 							{Liferay.Language.get(
 								'are-you-sure-you-want-to-delete-this-segment'
 							)}
-						</h4>
+						</div>
 
 						<p>
 							{Liferay.Language.get(
@@ -175,26 +175,6 @@ export default WrappedComponent => {
 
 			submitFn(form)
 				.then(segment => {
-					if (!id) {
-						const {channelId, id, segmentType} = Array.isArray(
-							segment
-						)
-							? segment[0]
-							: segment;
-
-						analytics.track(
-							`${segmentType[0]}${segmentType
-								.slice(1)
-								.toLowerCase()} Segment Creation - Saved`,
-							{
-								channelId,
-								createDelta: Date.now() - this._startDate,
-								segmentId: id
-							},
-							{ip: '0'}
-						);
-					}
-
 					if (
 						(Array.isArray(segment) && segment.length) ||
 						(segment && !Array.isArray(segment))

@@ -19,6 +19,7 @@ import {config} from '../../config/index';
 import {useSetCollectionActiveItemContext} from '../../contexts/CollectionActiveItemContext';
 import {
 	useActivationOrigin,
+	useActiveItemIds,
 	useHoverItem,
 	useIsActive,
 	useIsHovered,
@@ -35,11 +36,13 @@ import {
 	useSelector,
 	useSelectorCallback,
 } from '../../contexts/StoreContext';
+import {useLayoutKeyboardNavigation} from '../../hooks/app_hooks/useLayoutKeyboardNavigation';
 import selectCanUpdateItemConfiguration from '../../selectors/selectCanUpdateItemConfiguration';
 import selectCanUpdatePageStructure from '../../selectors/selectCanUpdatePageStructure';
 import selectLayoutDataItemLabel from '../../selectors/selectLayoutDataItemLabel';
 import moveItem from '../../thunks/moveItem';
 import switchSidebarPanel from '../../thunks/switchSidebarPanel';
+import {deepEqual} from '../../utils/checkDeepEqual';
 import {TARGET_POSITIONS} from '../../utils/drag_and_drop/constants/targetPositions';
 import {
 	useDragItem,
@@ -93,12 +96,14 @@ function TopperContent({
 	item,
 	itemElement,
 }) {
+	const activeItemIds = useActiveItemIds();
 	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
-	const commentsPanelId = config.sidebarPanels?.comments?.sidebarPanelId;
+	const commentsPanelId = config.sidebarPanelsMap?.comments?.sidebarPanelId;
 	const dispatch = useDispatch();
 	const editableProcessorUniqueId = useEditableProcessorUniqueId();
 	const hoverItem = useHoverItem();
 	const {isOverTarget, targetPosition, targetRef} = useDropTarget(item);
+	const isMultiSelect = activeItemIds.length > 1;
 	const {itemId: keyboardMovementTargetId} = useMovementTarget();
 	const keyboardMovementPosition = useMovementTargetPosition();
 	const selectItem = useSelectItem();
@@ -119,7 +124,10 @@ function TopperContent({
 			? item.children.includes(dropContainerId)
 			: isDropContainer) && isDroppable;
 
-	const canBeDragged = canUpdatePageStructure && !editableProcessorUniqueId;
+	const canBeDragged =
+		canUpdatePageStructure &&
+		!editableProcessorUniqueId &&
+		item.type !== LAYOUT_DATA_ITEM_TYPES.formStepContainer;
 
 	const name = useSelectorCallback(
 		(state) => selectLayoutDataItemLabel(state, item),
@@ -131,7 +139,7 @@ function TopperContent({
 		[item]
 	);
 
-	const fragmentEntryType = useSelectorCallback(
+	const {fieldTypes, fragmentEntryType} = useSelectorCallback(
 		(state) => {
 			if (!item.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
 				return null;
@@ -140,9 +148,13 @@ function TopperContent({
 			const fragmentEntryLink =
 				state.fragmentEntryLinks[item.config?.fragmentEntryLinkId];
 
-			return fragmentEntryLink?.fragmentEntryType ?? null;
+			return {
+				fieldTypes: fragmentEntryLink?.fieldTypes ?? [],
+				fragmentEntryType: fragmentEntryLink?.fragmentEntryType ?? null,
+			};
 		},
-		[item]
+		[item],
+		deepEqual
 	);
 
 	const onDragEnd = (parentItemId, position) => {
@@ -155,27 +167,33 @@ function TopperContent({
 		);
 	};
 
-	const {
-		handlerRef: itemHandlerRef,
-		isDraggingSource: itemIsDraggingSource,
-	} = useDragItem(
-		{...item, fragmentEntryType, isWidget, name},
-		onDragEnd,
-		() => {
-			if (!isActive) {
-				selectItem(item.itemId);
+	const {handlerRef: itemHandlerRef, isDraggingSource: itemIsDraggingSource} =
+		useDragItem(
+			{...item, fieldTypes, fragmentEntryType, isWidget, name},
+			onDragEnd,
+			() => {
+				if (!isActive) {
+					selectItem(item.itemId, {
+						origin: ITEM_ACTIVATION_ORIGINS.layout,
+					});
+				}
 			}
-		}
-	);
+		);
 
 	const {
 		handlerRef: topperHandlerRef,
 		isDraggingSource: topperIsDraggingSource,
-	} = useDragItem({...item, fragmentEntryType, name}, onDragEnd, () => {
-		if (!isActive) {
-			selectItem(item.itemId);
+	} = useDragItem(
+		{...item, fieldTypes, fragmentEntryType, name},
+		onDragEnd,
+		() => {
+			if (!isActive) {
+				selectItem(item.itemId, {
+					origin: ITEM_ACTIVATION_ORIGINS.layout,
+				});
+			}
 		}
-	});
+	);
 
 	const keyboardMovementSource = useMovementSource();
 
@@ -183,6 +201,8 @@ function TopperContent({
 		itemIsDraggingSource ||
 		topperIsDraggingSource ||
 		keyboardMovementSource?.itemId === item.itemId;
+
+	const {elementRef, isFocusable} = useLayoutKeyboardNavigation(item);
 
 	return (
 		<div
@@ -214,7 +234,13 @@ function TopperContent({
 					return;
 				}
 
-				selectItem(item.itemId);
+				if (!isSelectionAllowed(event.target)) {
+					return;
+				}
+
+				selectItem(item.itemId, {
+					origin: ITEM_ACTIVATION_ORIGINS.layout,
+				});
 			}}
 			onMouseLeave={(event) => {
 				event.stopPropagation();
@@ -224,7 +250,9 @@ function TopperContent({
 				}
 
 				if (isHovered) {
-					hoverItem(null);
+					hoverItem(null, {
+						origin: ITEM_ACTIVATION_ORIGINS.layout,
+					});
 				}
 			}}
 			onMouseOver={(event) => {
@@ -234,9 +262,18 @@ function TopperContent({
 					return;
 				}
 
-				hoverItem(item.itemId);
+				hoverItem(item.itemId, {
+					origin: ITEM_ACTIVATION_ORIGINS.layout,
+				});
 			}}
-			ref={canBeDragged ? itemHandlerRef : null}
+			ref={(element) => {
+				if (canBeDragged) {
+					itemHandlerRef(element);
+				}
+
+				elementRef.current = element;
+			}}
+			tabIndex={isFocusable ? 0 : -1}
 		>
 			{isActive || isHighlighted ? (
 				<TopperLabel
@@ -269,7 +306,9 @@ function TopperContent({
 									aria-label={Liferay.Language.get(
 										'comments'
 									)}
+									disabled={isMultiSelect}
 									displayType="unstyled"
+									onClick={(event) => event.stopPropagation()}
 									size="sm"
 									title={Liferay.Language.get('comments')}
 								>
@@ -279,7 +318,8 @@ function TopperContent({
 											dispatch(
 												switchSidebarPanel({
 													sidebarOpen: true,
-													sidebarPanelId: commentsPanelId,
+													sidebarPanelId:
+														commentsPanelId,
 												})
 											);
 										}}
@@ -291,7 +331,10 @@ function TopperContent({
 
 						{canUpdatePageStructure && isActive && (
 							<li className="page-editor__topper__item tbar-item">
-								<TopperItemActions item={item} />
+								<TopperItemActions
+									disabled={isMultiSelect}
+									item={item}
+								/>
 							</li>
 						)}
 					</ul>
@@ -380,4 +423,12 @@ class TopperErrorBoundary extends React.Component {
 			this.props.children
 		);
 	}
+}
+
+function isSelectionAllowed(element) {
+	if (element.closest('.portlet-options')) {
+		return false;
+	}
+
+	return true;
 }

@@ -5,20 +5,29 @@
 
 package com.liferay.glowroot.proxy.internal.servlet;
 
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
+import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.servlet.Servlet;
@@ -39,11 +48,31 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"osgi.http.whiteboard.context.path=/",
 		"osgi.http.whiteboard.servlet.pattern=/glowroot/*",
-		"servlet.init.targetUri=http://localhost:4000/o/glowroot"
+		"servlet.init.targetUri=" + GlowrootProxyServlet.URL_GLOWROOT
 	},
 	service = Servlet.class
 )
 public class GlowrootProxyServlet extends ProxyServlet implements Serializable {
+
+	public static final String URL_GLOWROOT =
+		"http://localhost:4000/o/glowroot";
+
+	@Override
+	protected String getConfigParam(String key) {
+		String value = super.getConfigParam(key);
+
+		if (P_TARGET_URI.equals(key) && URL_GLOWROOT.equals(value)) {
+			String contextPath = _portal.getPathContext();
+
+			if (Validator.isNotNull(contextPath)) {
+				value = "http://localhost:4000" + contextPath + "/o/glowroot";
+
+				_updateGlowrootContextPath();
+			}
+		}
+
+		return value;
+	}
 
 	@Override
 	protected void service(
@@ -81,10 +110,70 @@ public class GlowrootProxyServlet extends ProxyServlet implements Serializable {
 		return _permissionCheckerFactory.create(user);
 	}
 
+	private JSONObject _loadBackendAdminWebJSON() {
+		try {
+			return _jsonFactory.createJSONObject(
+				_http.URLtoString(_URL_BACKEND_ADMIN_WEB));
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Unable to load " + _URL_BACKEND_ADMIN_WEB, exception);
+			}
+
+			return null;
+		}
+	}
+
+	private void _updateGlowrootContextPath() {
+		JSONObject jsonObject = _loadBackendAdminWebJSON();
+
+		if (jsonObject == null) {
+			return;
+		}
+
+		try {
+			Http.Options options = new Http.Options();
+
+			options.addHeader(
+				HttpHeaders.CONTENT_TYPE, ContentTypes.APPLICATION_JSON);
+
+			JSONObject configJSONObject = jsonObject.getJSONObject("config");
+
+			String contextPath = configJSONObject.getString("contextPath");
+
+			if (Objects.equals(contextPath, "/o/glowroot")) {
+				configJSONObject.put(
+					"contextPath", _portal.getPathContext() + "/o/glowroot");
+			}
+
+			options.setBody(
+				configJSONObject.toString(), ContentTypes.APPLICATION_JSON,
+				StandardCharsets.UTF_8.name());
+
+			options.setLocation(_URL_BACKEND_ADMIN_WEB);
+			options.setMethod(Http.Method.POST);
+
+			_http.URLtoString(options);
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+	}
+
+	private static final String _URL_BACKEND_ADMIN_WEB =
+		URL_GLOWROOT + "/backend/admin/web";
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		GlowrootProxyServlet.class);
 
 	private static final long serialVersionUID = 1L;
+
+	@Reference
+	private Http _http;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private PermissionCheckerFactory _permissionCheckerFactory;

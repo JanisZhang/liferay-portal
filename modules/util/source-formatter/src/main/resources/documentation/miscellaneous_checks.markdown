@@ -6,6 +6,7 @@ Check | File Extensions | Description
 [BNDSuiteCheck](check/bnd_suite_check.markdown#bndsuitecheck) | .bnd | Checks that deprecated apps are moved to the `archived` folder. |
 [CreationMenuBuilderCheck](check/builder_check.markdown#buildercheck) | .java | Checks that `CreationMenuBuilder` is used when possible. |
 FullyQualifiedNameCheck | .java | Finds cases where a Fully Qualified Name is used instead of importing a class. |
+GoogleFontsCheck | | Checks that we do not use Google fonts. |
 [ItemBuilderCheck](check/builder_check.markdown#buildercheck) | .java | Checks that `DropdownItemBuilder`, `LabelItemBuilder` or `NavigationItemBuilder` is used when possible. |
 [ItemListBuilderCheck](check/builder_check.markdown#buildercheck) | .java | Checks that `DropdownItemListBuilder`, `LabelItemListBuilder` or `NavigationItemListBuilder` is used when possible. |
 [JSPModuleIllegalImportsCheck](check/jsp_module_illegal_imports_check.markdown#jspmoduleillegalimportscheck) | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds incorrect use of `com.liferay.registry.Registry` or `com.liferay.util.ContentUtil`. |
@@ -20,5 +21,6 @@ JavaEmptyLineAfterSuperCallCheck | .java | Finds missing empty line after a `sup
 [JavaUnusedSourceFormatterChecksCheck](check/java_unused_source_formatter_checks_check.markdown#javaunusedsourceformattercheckscheck) | .java | Finds `*Check` classes that are not configured. |
 [MapBuilderCheck](check/builder_check.markdown#buildercheck) | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that `ConcurrentHashMapBuilder`, `HashMapBuilder`, `LinkedHashMapBuilder` or `TreeMapBuilder` is used when possible. |
 [PortletURLBuilderCheck](check/builder_check.markdown#buildercheck) | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that `PortletURLBuilder` is used when possible. |
+ReturnVariableDeclarationAsUsedCheck | .java | Finds cases where a variable declaration should be moved. |
 [UnicodePropertiesBuilderCheck](check/builder_check.markdown#buildercheck) | .java | Checks that `UnicodePropertiesBuilder` is used when possible. |
 XMLLog4jLoggersCheck | .action, .function, .jelly, .jrxml, .macro, .pom, .project, .properties, .svg, .testcase, .toggle, .tpl, .wsdl, .xml or .xsd | Checks the loggers defined in `*-log4j.xml` file. |

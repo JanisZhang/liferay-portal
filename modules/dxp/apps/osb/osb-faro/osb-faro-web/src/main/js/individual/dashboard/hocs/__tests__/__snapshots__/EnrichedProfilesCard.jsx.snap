@@ -4,16 +4,16 @@ exports[`EnrichedProfilesCard should render 1`] = `
 <div>
   <div
     class="card card-root enriched-profiles-card-root text-secondary"
-    id="enrichedProfilesCardRoot"
+    id="container.report.enrichedProfilesCard"
   >
     <div
       class="card-header d-flex justify-content-between"
     >
-      <h5
+      <div
         class="card-title"
       >
         Enriched Profiles
-      </h5>
+      </div>
       <span
         class="info-popover-root"
       >

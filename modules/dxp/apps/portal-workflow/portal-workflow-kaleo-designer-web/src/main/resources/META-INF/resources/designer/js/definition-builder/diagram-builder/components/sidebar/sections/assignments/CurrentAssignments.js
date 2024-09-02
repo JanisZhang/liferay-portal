@@ -34,9 +34,8 @@ const CurrentAssignments = ({assignments, setContentName}) => {
 
 	useEffect(() => {
 		if (assignmentType === 'resourceActions') {
-			const resourceActionsArray = assignments.resourceAction.split(
-				/(?:,| )+/
-			);
+			const resourceActionsArray =
+				assignments.resourceAction.split(/(?:,| )+/);
 
 			setAssignmentsDetails({
 				assignmentsCount: resourceActionsArray.length,
@@ -124,11 +123,13 @@ const CurrentAssignments = ({assignments, setContentName}) => {
 				</ClayLink>
 
 				<ClayButtonWithIcon
+					aria-label={Liferay.Language.get('delete-assignments')}
 					className="delete-button text-secondary trash-button"
 					disabled
 					displayType="unstyled"
 					onClick={deleteCurrentAssignments}
 					symbol="trash"
+					title={Liferay.Language.get('delete-assignments')}
 				/>
 			</ClayLayout.Row>
 		</ClayLayout.ContentCol>

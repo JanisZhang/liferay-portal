@@ -28,7 +28,11 @@ SitemapCompanyConfigurationDisplayContext sitemapCompanyConfigurationDisplayCont
 	</clay:content-col>
 </clay:content-row>
 
-<clay:sheet-section role="group" aria-labelledby='<%= liferayPortletResponse.getNamespace() + "sitesIncludedTitle" %>'>
+<clay:sheet-section
+	aria-labelledby='<%= liferayPortletResponse.getNamespace() + "sitesIncludedTitle" %>'
+	cssClass="c-mb-0"
+	role="group"
+>
 	<clay:content-row
 		containerElement="h3"
 		cssClass="c-mb-3 sheet-subtitle"
@@ -55,9 +59,19 @@ SitemapCompanyConfigurationDisplayContext sitemapCompanyConfigurationDisplayCont
 		<clay:content-col
 			expand="<%= true %>"
 		>
+			<clay:alert
+				cssClass="c-mb-0 c-mt-2"
+				message="the-companys-xml-sitemap-only-includes-sites-without-virtual-hosts"
+			/>
+		</clay:content-col>
+	</clay:content-row>
+
+	<clay:content-row>
+		<clay:content-col
+			expand="<%= true %>"
+		>
 			<liferay-ui:search-container
 				compactEmptyResultsMessage="<%= true %>"
-				headerNames="null,site-name,null"
 				id="groupsSearchContainer"
 				searchContainer="<%= sitemapCompanyConfigurationDisplayContext.getSearchContainer() %>"
 			>
@@ -68,15 +82,27 @@ SitemapCompanyConfigurationDisplayContext sitemapCompanyConfigurationDisplayCont
 					modelVar="group"
 					rowIdProperty="groupId"
 				>
-					<liferay-ui:search-container-column-icon
-						icon="sites"
-					/>
+					<liferay-ui:search-container-column-text>
+						<clay:icon
+							cssClass="c-ml-2 text-4 text-secondary"
+							symbol="sites"
+						/>
+					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text
 						name="site-name"
 						truncate="<%= true %>"
-						value="<%= HtmlUtil.escape(group.getDescriptiveName()) %>"
-					/>
+					>
+						<%= HtmlUtil.escape(group.getDescriptiveName()) %>
+
+						<c:if test="<%= sitemapCompanyConfigurationDisplayContext.hasVirtualHost(group) %>">
+							<clay:icon
+								aria-label='<%= LanguageUtil.get(request, "this-site-is-not-included-in-the-companys-xml-sitemap-because-it-already-has-a-virtual-host") %>'
+								cssClass="text-warning"
+								symbol="warning-full"
+							/>
+						</c:if>
+					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text>
 						<c:if test="<%= !group.isGuest() %>">
@@ -85,7 +111,7 @@ SitemapCompanyConfigurationDisplayContext sitemapCompanyConfigurationDisplayCont
 								borderless="<%= true %>"
 								cssClass="lfr-portal-tooltip remove-button"
 								data-rowId="<%= group.getGroupId() %>"
-								displayType="secondary"
+								displayType=""
 								icon="times-circle"
 								monospaced="<%= true %>"
 								small="<%= true %>"
@@ -105,7 +131,10 @@ SitemapCompanyConfigurationDisplayContext sitemapCompanyConfigurationDisplayCont
 	</clay:content-row>
 </clay:sheet-section>
 
-<clay:sheet-section role="group" aria-labelledby='<%= liferayPortletResponse.getNamespace() + "pagesTitle" %>'>
+<clay:sheet-section
+	aria-labelledby='<%= liferayPortletResponse.getNamespace() + "pagesTitle" %>'
+	role="group"
+>
 	<clay:content-row
 		containerElement="h3"
 		cssClass="c-mb-3 sheet-subtitle"
@@ -135,7 +164,10 @@ SitemapCompanyConfigurationDisplayContext sitemapCompanyConfigurationDisplayCont
 	</clay:content-row>
 </clay:sheet-section>
 
-<clay:sheet-section role="group" aria-labelledby='<%= liferayPortletResponse.getNamespace() + "webContentTitle" %>'>
+<clay:sheet-section
+	aria-labelledby='<%= liferayPortletResponse.getNamespace() + "webContentTitle" %>'
+	role="group"
+>
 	<clay:content-row
 		containerElement="h3"
 		cssClass="c-mb-3 sheet-subtitle"
@@ -165,7 +197,10 @@ SitemapCompanyConfigurationDisplayContext sitemapCompanyConfigurationDisplayCont
 	</clay:content-row>
 </clay:sheet-section>
 
-<clay:sheet-section role="group" aria-labelledby='<%= liferayPortletResponse.getNamespace() + "categoriesTitle" %>'>
+<clay:sheet-section
+	aria-labelledby='<%= liferayPortletResponse.getNamespace() + "categoriesTitle" %>'
+	role="group"
+>
 	<clay:content-row
 		containerElement="h3"
 		cssClass="c-mb-3 sheet-subtitle"

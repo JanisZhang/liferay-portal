@@ -6,7 +6,7 @@
 import {Text} from '@clayui/core';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-import {API, getLocalizableLabel} from '@liferay/object-js-components-web';
+import {API, stringUtils} from '@liferay/object-js-components-web';
 import {createResourceURL, fetch, sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
@@ -42,29 +42,24 @@ export default function Fields({
 	style,
 	url,
 }: FieldsProps) {
-	const [creationLanguageId, setCreationLanguageId] = useState<
-		Liferay.Language.Locale
-	>();
+	const [creationLanguageId, setCreationLanguageId] =
+		useState<Liferay.Language.Locale>();
 
-	const [
-		deletedObjectField,
-		setDeletedObjectField,
-	] = useState<ObjectField | null>(null);
+	const [deletedObjectField, setDeletedObjectField] =
+		useState<ObjectField | null>(null);
 
 	const [loadingFDS, setLoadingFDS] = useState<boolean>(false);
 
-	const [objectFieldBusinessTypes, setObjectFieldBusinessTypes] = useState<
-		Map<string, ObjectFieldBusinessType>
-	>();
+	const [objectFieldBusinessTypes, setObjectFieldBusinessTypes] =
+		useState<Map<string, ObjectFieldBusinessType>>();
 
-	const [objectFieldDeleteInfo, setObjectFieldDeleteInfo] = useState<
-		ObjectFieldDeleteInfoProps
-	>({
-		deleteLastPublishedObjectDefinitionObjectField: false,
-		deleteObjectFieldObjectValidationRuleSetting: false,
-		showObjectFieldDeletionConfirmationModal: false,
-		showObjectFieldDeletionNotAllowedModal: false,
-	});
+	const [objectFieldDeleteInfo, setObjectFieldDeleteInfo] =
+		useState<ObjectFieldDeleteInfoProps>({
+			deleteLastPublishedObjectDefinitionObjectField: false,
+			deleteObjectFieldObjectValidationRuleSetting: false,
+			showObjectFieldDeletionConfirmationModal: false,
+			showObjectFieldDeletionNotAllowedModal: false,
+		});
 
 	const [showAddFieldModal, setShowAddFieldModal] = useState(false);
 
@@ -78,9 +73,10 @@ export default function Fields({
 		const makeFetch = async () => {
 			setLoadingFDS(true);
 
-			const objectDefinitionResponse = await API.getObjectDefinitionByExternalReferenceCode(
-				objectDefinitionExternalReferenceCode
-			);
+			const objectDefinitionResponse =
+				await API.getObjectDefinitionByExternalReferenceCode(
+					objectDefinitionExternalReferenceCode
+				);
 
 			const url = createResourceURL(baseResourceURL, {
 				objectDefinitionId: objectDefinitionResponse.id,
@@ -92,11 +88,10 @@ export default function Fields({
 				method: 'GET',
 			});
 
-			const {
-				objectFieldBusinessTypes: newObjectFieldBusinessTypes,
-			} = (await objectFieldBusinessTypesResponse.json()) as {
-				objectFieldBusinessTypes: ObjectFieldBusinessType[];
-			};
+			const {objectFieldBusinessTypes: newObjectFieldBusinessTypes} =
+				(await objectFieldBusinessTypesResponse.json()) as {
+					objectFieldBusinessTypes: ObjectFieldBusinessType[];
+				};
 
 			const objectFieldBusinessTypesMap = new Map<
 				string,
@@ -182,7 +177,7 @@ export default function Fields({
 					handleTriggerDeleteObjectField({
 						baseResourceURL,
 						objectFieldId: itemData?.id,
-						objectFieldLabel: getLocalizableLabel(
+						objectFieldLabel: stringUtils.getLocalizableLabel(
 							creationLanguageId!,
 							itemData.label,
 							itemData.name
@@ -310,7 +305,7 @@ export default function Fields({
 										Liferay.Language.get(
 											'the-object-field-x-cannot-be-deleted-because-it-is-the-only-custom-object-field-of-the-published-object-definition'
 										),
-										`${getLocalizableLabel(
+										`${stringUtils.getLocalizableLabel(
 											creationLanguageId as Liferay.Language.Locale,
 											deletedObjectField.label,
 											deletedObjectField.name
@@ -323,7 +318,7 @@ export default function Fields({
 										Liferay.Language.get(
 											'the-object-field-x-cannot-be-deleted-because-it-is-used-in-a-unique-composite-key-validation'
 										),
-										`${getLocalizableLabel(
+										`${stringUtils.getLocalizableLabel(
 											creationLanguageId as Liferay.Language.Locale,
 											deletedObjectField.label,
 											deletedObjectField.name

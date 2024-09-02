@@ -254,7 +254,7 @@ public class EditInfoItemStrutsActionTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				_group.getCreatorUserId(), _group.getGroupId(), 0,
+				null, _group.getCreatorUserId(), _group.getGroupId(), 0,
 				_portal.getClassNameId(_objectDefinition.getClassName()), 0,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, false, 0,
@@ -295,6 +295,39 @@ public class EditInfoItemStrutsActionTest {
 			null, "http://localhost:8080/home", null, null, null, null, null,
 			"123456", "123456", null, null, WorkflowConstants.STATUS_APPROVED,
 			null, null);
+	}
+
+	@Test
+	public void testAddInfoItemWithEmptyValues() throws Exception {
+		MockHttpServletResponse mockHttpServletResponse =
+			new MockHttpServletResponse();
+
+		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
+
+		PipingServletResponse pipingServletResponse = new PipingServletResponse(
+			mockHttpServletResponse, unsyncStringWriter);
+
+		UploadPortletRequest uploadPortletRequest = _getUploadPortletRequest(
+			null, null, StringPool.BLANK, StringPool.BLANK, 0, StringPool.BLANK,
+			StringPool.BLANK, null, StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, null, StringPool.BLANK, StringPool.BLANK, 0,
+			StringPool.BLANK, null);
+
+		_processEvents(uploadPortletRequest, mockHttpServletResponse, _user);
+
+		_editInfoItemStrutsAction.execute(
+			uploadPortletRequest, pipingServletResponse);
+
+		Assert.assertNull(SessionErrors.get(uploadPortletRequest, _formItemId));
+
+		List<ObjectEntry> objectEntries =
+			_objectEntryLocalService.getObjectEntries(
+				0, _objectDefinition.getObjectDefinitionId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		ObjectEntry objectEntry = objectEntries.get(0);
+
+		_assertEmptyValues(objectEntry);
 	}
 
 	@Test
@@ -354,8 +387,6 @@ public class EditInfoItemStrutsActionTest {
 			"123456", "9007199254740991",
 			Arrays.asList(listTypeEntry2.getKey(), listTypeEntry3.getKey()),
 			listTypeEntry2.getKey(), "<p>SUBTITLE</p>", 0, null, null);
-
-		uploadPortletRequest.getParameterMap();
 
 		_processEvents(uploadPortletRequest, mockHttpServletResponse, _user);
 
@@ -520,7 +551,7 @@ public class EditInfoItemStrutsActionTest {
 
 		UploadPortletRequest uploadPortletRequest = _getUploadPortletRequest(
 			null, null, "-99999999999999.9999999999999999",
-			Boolean.TRUE.toString(), 0, "2023-03-01", null, null,
+			Boolean.TRUE.toString(), 0, "2023-03-01", "2023-03-01T11:08", null,
 			"-999.9999999999999", "-123456", "-9007199254740991", null,
 			listTypeEntry.getKey(), "<p>TITLE</p>", 0, null, null);
 
@@ -545,39 +576,26 @@ public class EditInfoItemStrutsActionTest {
 
 		uploadPortletRequest = _getUploadPortletRequest(
 			null, null, StringPool.BLANK, StringPool.BLANK,
-			objectEntry.getObjectEntryId(), StringPool.BLANK, null, null,
-			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, null,
+			objectEntry.getObjectEntryId(), StringPool.BLANK, StringPool.BLANK,
+			null, StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, null,
 			StringPool.BLANK, StringPool.BLANK, 0, StringPool.BLANK, null);
-
-		uploadPortletRequest.getParameterMap();
 
 		_processEvents(uploadPortletRequest, mockHttpServletResponse, _user);
 
 		_editInfoItemStrutsAction.execute(
 			uploadPortletRequest, pipingServletResponse);
 
+		Assert.assertNull(SessionErrors.get(uploadPortletRequest, _formItemId));
+
 		objectEntry = _objectEntryLocalService.fetchObjectEntry(
 			objectEntry.getObjectEntryId());
 
-		Map<String, Serializable> values = objectEntry.getValues();
-
-		Assert.assertEquals(
-			Boolean.FALSE.toString(), String.valueOf(values.get("myBoolean")));
-		Assert.assertNull(values.get("myDate"));
-		Assert.assertEquals("0.0", String.valueOf(values.get("myDecimal")));
-		Assert.assertEquals("0", String.valueOf(values.get("myInteger")));
-		Assert.assertEquals("0", String.valueOf(values.get("myLongInteger")));
-		Assert.assertTrue(
-			Validator.isNull(String.valueOf(values.get("myPicklist"))));
-		Assert.assertEquals(
-			0, GetterUtil.getLong(values.get("myPrecisionDecimal")));
-		Assert.assertEquals(
-			StringPool.BLANK, String.valueOf(values.get("myRichText")));
+		_assertEmptyValues(objectEntry);
 	}
 
 	private Layout _addLayout() throws Exception {
 		Layout layout = _layoutLocalService.addLayout(
-			_user.getUserId(), _group.getGroupId(), false,
+			null, _user.getUserId(), _group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 0,
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), Collections.emptyMap(),
@@ -707,7 +725,7 @@ public class EditInfoItemStrutsActionTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				_user.getUserId(), 0, false, false, true,
+				_user.getUserId(), 0, false, true, false, true,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
@@ -738,6 +756,24 @@ public class EditInfoItemStrutsActionTest {
 
 		return _objectDefinitionLocalService.publishCustomObjectDefinition(
 			_user.getUserId(), objectDefinition.getObjectDefinitionId());
+	}
+
+	private void _assertEmptyValues(ObjectEntry objectEntry) {
+		Map<String, Serializable> values = objectEntry.getValues();
+
+		Assert.assertEquals(
+			Boolean.FALSE.toString(), String.valueOf(values.get("myBoolean")));
+		Assert.assertNull(values.get("myDate"));
+		Assert.assertNull(values.get("myDateTime"));
+		Assert.assertEquals("0.0", String.valueOf(values.get("myDecimal")));
+		Assert.assertEquals("0", String.valueOf(values.get("myInteger")));
+		Assert.assertEquals("0", String.valueOf(values.get("myLongInteger")));
+		Assert.assertTrue(
+			Validator.isNull(String.valueOf(values.get("myPicklist"))));
+		Assert.assertEquals(
+			0, GetterUtil.getLong(values.get("myPrecisionDecimal")));
+		Assert.assertEquals(
+			StringPool.BLANK, String.valueOf(values.get("myRichText")));
 	}
 
 	private FileItem _createFileItem(byte[] bytes) throws Exception {
@@ -927,7 +963,7 @@ public class EditInfoItemStrutsActionTest {
 				).put(
 					"myDateTime",
 					() -> {
-						if (Validator.isNotNull(dateTimeValueInput)) {
+						if (dateTimeValueInput != null) {
 							return Collections.singletonList(
 								dateTimeValueInput);
 						}

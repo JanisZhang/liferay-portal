@@ -19,8 +19,9 @@ import com.liferay.portal.search.engine.adapter.search.CountSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.CountSearchResponse;
 import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.security.script.management.test.rule.ScriptManagementConfigurationTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -54,6 +55,7 @@ public abstract class BaseWorkflowMetricsTestCase {
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE,
+			ScriptManagementConfigurationTestRule.INSTANCE,
 			SynchronousMailTestRule.INSTANCE);
 
 	@Before
@@ -276,7 +278,10 @@ public abstract class BaseWorkflowMetricsTestCase {
 	@Inject
 	protected Queries queries;
 
-	@Inject(blocking = false, filter = "search.engine.impl=Elasticsearch")
+	@Inject(
+		blocking = false,
+		filter = "|(search.engine.impl=Elasticsearch)(search.engine.impl=OpenSearch)"
+	)
 	protected SearchEngineAdapter searchEngineAdapter;
 
 	protected WorkflowDefinition workflowDefinition;

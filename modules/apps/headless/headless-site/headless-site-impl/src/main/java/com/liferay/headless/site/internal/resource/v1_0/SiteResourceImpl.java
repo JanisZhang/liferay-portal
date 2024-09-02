@@ -11,6 +11,7 @@ import com.liferay.portal.events.ServicePreAction;
 import com.liferay.portal.events.ThemeServicePreAction;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
@@ -40,6 +41,7 @@ import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.site.initializer.SiteInitializer;
 import com.liferay.site.initializer.SiteInitializerFactory;
 import com.liferay.site.initializer.SiteInitializerRegistry;
+import com.liferay.site.initializer.SiteInitializerSerializer;
 import com.liferay.sites.kernel.util.Sites;
 
 import java.io.File;
@@ -48,6 +50,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -82,6 +86,63 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 		}
 
 		_groupService.deleteGroup(group.getGroupId());
+	}
+
+	@Override
+	public Site getSiteByExternalReferenceCode(String externalReferenceCode)
+		throws Exception {
+
+		Group group = _groupLocalService.getGroupByExternalReferenceCode(
+			externalReferenceCode, contextCompany.getCompanyId());
+
+		return new Site() {
+			{
+				setExternalReferenceCode(group::getExternalReferenceCode);
+				setFriendlyUrlPath(group::getFriendlyURL);
+				setId(group::getGroupId);
+				setKey(group::getGroupKey);
+				setName(() -> group.getName(LocaleUtil.getDefault()));
+			}
+		};
+	}
+
+	@Override
+	public Response getSiteByExternalReferenceCodeSiteInitializer(
+			String externalReferenceCode)
+		throws Exception {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-19870")) {
+			throw new UnsupportedOperationException();
+		}
+
+		Group group = _groupLocalService.getGroupByExternalReferenceCode(
+			externalReferenceCode, contextCompany.getCompanyId());
+
+		File file = _siteInitializerSerializer.serialize(group.getGroupId());
+
+		try {
+			return Response.ok(
+				file
+			).header(
+				"Content-Disposition",
+				"attachment; filename=\"" + file.getName() + "\""
+			).build();
+		}
+		finally {
+
+			// TODO LPD-19870
+
+			//file.delete();
+		}
+	}
+
+	@Override
+	public Site postSite(MultipartBody multipartBody) throws Exception {
+		Site site = postSite(
+			multipartBody.getValueAsInstance("site", Site.class));
+
+		return putSiteByExternalReferenceCode(
+			site.getExternalReferenceCode(), multipartBody);
 	}
 
 	@Override
@@ -386,6 +447,9 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 
 	@Reference
 	private SiteInitializerRegistry _siteInitializerRegistry;
+
+	@Reference
+	private SiteInitializerSerializer _siteInitializerSerializer;
 
 	@Reference
 	private Sites _sites;

@@ -54,14 +54,6 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro noViewTopVisitedPages(key_entry = null, key_result = null) {
-		AssertElementNotPresent(
-			key_entryName = ${key_entry},
-			key_resultNumber = ${key_result},
-			locator1 = "ACSites#TOP_VISITED_PAGES");
-	}
-
-	@summary = "Default summary"
 	macro selectInterval(cardName = null, interval = null) {
 		if (isSet(cardName)) {
 			Click(
@@ -115,6 +107,23 @@ definition {
 			locator1 = "ACCards#GEOMAP_TABLE_TEXT",
 			position = "right",
 			value1 = ${rightText});
+	}
+
+	@summary = "Check that the metric number is between the correct range for cases where the exact metric number is not necessary"
+	macro viewIfVisitorsBehaviorMetricIsBetweenCorrectRange(maxMetricValue, metricTitle, minMetricValue) {
+		var key_metricTitle = ${metricTitle};
+
+		WaitForElementPresent(locator1 = "ACCards#METRIC_VALUE_BY_METRIC_TITLE");
+
+		var actualMetricValue = selenium.getText("ACCards#METRIC_VALUE_BY_METRIC_TITLE");
+
+		TestUtils.isLessThan(
+			actual = ${minMetricValue},
+			expected = ${actualMetricValue});
+
+		TestUtils.isGreaterThan(
+			actual = ${maxMetricValue},
+			expected = ${actualMetricValue});
 	}
 
 	@summary = "Default summary"
@@ -236,15 +245,11 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro viewTopVisitedPages(key_entry = null, key_result = null) {
-		AssertElementPresent(
-			key_entryName = ${key_entry},
-			key_resultNumber = ${key_result},
-			locator1 = "ACSites#TOP_VISITED_PAGES");
-	}
+	macro viewTotalCount(cardName, count) {
+		while ((IsElementNotPresent(key_cardTitle = ${cardName}, key_count = ${count}, locator1 = "ACCards#TOTAL_COUNT_VALUE")) && (maxIterations = "50")) {
+			TestUtils.hardRefresh();
+		}
 
-	@summary = "Default summary"
-	macro viewTotalCount(cardName = null, count = null) {
 		AssertTextEquals(
 			key_cardTitle = ${cardName},
 			locator1 = "ACCards#TOTAL_COUNT",

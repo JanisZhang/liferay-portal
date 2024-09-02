@@ -1,3 +1,64 @@
+const COLORS = [
+	'#59adf6',
+	'#42d6a4',
+	'#ff6961',
+	'#ffb480',
+	'#f8f38d',
+	'#08cad1',
+	'#9d94ff',
+	'#c780e8'
+];
+
+const MAX_WEEKLY_SERVER_DURATION_MILLIS = 2370 * 7 * 24 * 60 * 60 * 1000;
+
+function addReportName() {
+	var headerElement = document.getElementById('report-name');
+
+	headerElement.textContent = reportName;
+
+	var titleElement = document.getElementById('title');
+
+	titleElement.textContent = reportName;
+}
+
+function addTotalColumn(tableElement) {
+	theadElement = tableElement.querySelector('thead tr');
+
+	let totalHeaderElement = document.createElement('th');
+
+	totalHeaderElement.textContent = 'Total';
+
+	theadElement.appendChild(totalHeaderElement);
+
+	var rowElements = tableElement.querySelectorAll('tbody tr');
+
+	rowElements.forEach(rowElement => {
+		let totalValue = 0;
+
+		let cellElements = rowElement.querySelectorAll('td');
+
+		for (let i = 2; i < cellElements.length; i++) {
+			let value = parseFloat(cellElements[i].getAttribute('data-value'));
+
+			if (!isNaN(value)) {
+				totalValue += value;
+			}
+		}
+
+		let totalCellElement = document.createElement('td');
+
+		totalCellElement.setAttribute('data-value', totalValue);
+
+		if (cellElements[1].textContent.includes('Duration')) {
+			totalValue = getReadableDuration(totalValue);
+		}
+
+		totalCellElement.textContent = totalValue;
+
+		rowElement.appendChild(totalCellElement);
+	});
+}
+
 function createTable(table, tableElementID) {
 	let tableElement = document.getElementById(tableElementID);
 
@@ -21,6 +82,8 @@ function createTable(table, tableElementID) {
 					thElement.classList.add('col-2');
 				}
 				else {
+					thElement.setAttribute('value', cellValue);
+
 					let date = moment(cellValue, 'YYYYMMDD');
 
 					cellValue = date.format('ddd MMM DD');
@@ -51,21 +114,21 @@ function createTable(table, tableElementID) {
 			let node = null;
 
 			if ((typeof cellValue === 'string') || (cellValue instanceof String)) {
-				let divElement = document.createElement("div");
-				let spanElement = document.createElement("span");
+				let divElement = document.createElement('div');
+				let spanElement = document.createElement('span');
 
 				spanElement.appendChild(document.createTextNode(cellValue));
 
 				divElement.appendChild(spanElement);
 
-				divElement.setAttribute("data-value", cellValue);
+				divElement.setAttribute('data-value', cellValue);
 
 				node = divElement;
 			}
 			else {
-				cellElement.setAttribute("data-value", cellValue);
+				cellElement.setAttribute('data-value', cellValue);
 
-				if (cellValues[1].includes("Duration")) {
+				if (cellValues[1].includes('Duration')) {
 					cellValue = getReadableDuration(cellValue);
 				}
 
@@ -77,6 +140,12 @@ function createTable(table, tableElementID) {
 		});
 
 	});
+
+	return tableElement;
+}
+
+function getColor(index) {
+	return COLORS[index % COLORS.length];
 }
 
 function getElementByXpath(path) {

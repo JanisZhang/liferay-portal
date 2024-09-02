@@ -118,6 +118,10 @@ public class ObjectEntryVariablesUtil {
 					objectDefinition,
 					Collections.unmodifiableSet(currentVariables.keySet()));
 			}
+		).put(
+			"originalEntryDTO",
+			payloadJSONObject.get(
+				"originalObjectEntryDTO" + objectDefinition.getShortName())
 		).build();
 	}
 
@@ -159,7 +163,7 @@ public class ObjectEntryVariablesUtil {
 
 			String defaultValue =
 				ObjectFieldSettingUtil.getDefaultValueAsString(
-					null, objectField.getObjectFieldId(),
+					null, objectField,
 					ObjectFieldSettingLocalServiceUtil.getService(), null);
 
 			if (Validator.isNotNull(defaultValue) &&
@@ -199,17 +203,16 @@ public class ObjectEntryVariablesUtil {
 
 		Map<String, Object> objectEntry =
 			(Map<String, Object>)payloadJSONObject.get("objectEntry");
-		String userId = payloadJSONObject.getString("userId");
 
 		Map<String, Object> allowedVariables =
 			HashMapBuilder.<String, Object>put(
 				"creator",
 				() -> {
 					if (objectDefinition.isUnmodifiableSystemObject()) {
-						return userId;
+						return null;
 					}
 
-					return MapUtil.getString(objectEntry, "userId");
+					return MapUtil.getLong(objectEntry, "userId");
 				}
 			).put(
 				"currentDate",
@@ -229,7 +232,7 @@ public class ObjectEntryVariablesUtil {
 					return dateFormat.format(new Date());
 				}
 			).put(
-				"currentUserId", userId
+				"currentUserId", payloadJSONObject.getLong("userId")
 			).put(
 				"groupId",
 				() -> {
@@ -249,15 +252,26 @@ public class ObjectEntryVariablesUtil {
 					getSystemObjectDefinitionManager(
 						objectDefinition.getName());
 
+			String contentType = _getContentType(
+				dtoConverterRegistry, objectDefinition,
+				systemObjectDefinitionManagerRegistry);
+
 			variables = systemObjectDefinitionManager.getVariables(
-				_getContentType(
-					dtoConverterRegistry, objectDefinition,
-					systemObjectDefinitionManagerRegistry),
-				objectDefinition, oldValues, payloadJSONObject);
+				contentType, objectDefinition, oldValues, payloadJSONObject);
 
 			if (variables == null) {
-				return payloadJSONObject.toMap();
+				return HashMapBuilder.<String, Object>putAll(
+					allowedVariables
+				).putAll(
+					payloadJSONObject.toMap()
+				).build();
 			}
+
+			allowedVariables.put(
+				"creator", MapUtil.getString(variables, "userId"));
+
+			allowedVariables.put(
+				"entryDTO", payloadJSONObject.get("modelDTO" + contentType));
 		}
 		else {
 			if (oldValues) {

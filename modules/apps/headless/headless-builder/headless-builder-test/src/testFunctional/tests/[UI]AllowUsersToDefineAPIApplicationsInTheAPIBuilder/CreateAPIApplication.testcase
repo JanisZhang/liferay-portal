@@ -4,8 +4,7 @@ definition {
 	property custom.properties = "feature.flag.LPS-178642=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -74,7 +73,7 @@ definition {
 
 		task ("When I create an API with title "test" on the virtual instance") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@liferay.com");
 

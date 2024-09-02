@@ -1,24 +1,24 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.111.0",
-		"@clayui/card": "3.111.0",
-		"@clayui/drop-down": "3.111.0",
-		"@clayui/empty-state": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/card": "3.118.0",
+		"@clayui/drop-down": "3.118.0",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/label": "3.111.0",
 		"@clayui/link": "3.111.0",
 		"@clayui/loading-indicator": "3.111.0",
 		"@clayui/management-toolbar": "3.111.0",
-		"@clayui/modal": "3.111.0",
-		"@clayui/navigation-bar": "3.111.0",
-		"@clayui/pagination-bar": "3.111.1",
-		"@clayui/popover": "3.111.0",
+		"@clayui/modal": "3.117.0",
+		"@clayui/navigation-bar": "3.116.0",
+		"@clayui/pagination-bar": "3.118.0",
+		"@clayui/popover": "3.116.1",
 		"@clayui/sticker": "3.111.0",
-		"@clayui/tabs": "3.111.0",
-		"@clayui/tooltip": "3.111.0",
-		"@clayui/upper-toolbar": "3.111.0",
+		"@clayui/tabs": "3.116.0",
+		"@clayui/tooltip": "3.116.0",
+		"@clayui/upper-toolbar": "3.116.0",
 		"@liferay/flags-taglib": "*",
 		"@liferay/frontend-js-react-web": "*",
 		"asset-taglib": "*",
@@ -32,6 +32,7 @@
 		"moment": "2.29.4",
 		"prop-types": "15.7.2",
 		"react": "16.12.0",
+		"react-dom": "16.12.0",
 		"react-helmet": "^6.1.0",
 		"react-router-dom": "^5.0.1"
 	},
@@ -40,14 +41,14 @@
 			"<rootDir>/test/helpers.es.js"
 		]
 	},
-	"main": "js/index.es.js",
+	"main": "js/index.js",
 	"name": "questions-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "2.0.105"
+	"version": "2.0.118"
 }

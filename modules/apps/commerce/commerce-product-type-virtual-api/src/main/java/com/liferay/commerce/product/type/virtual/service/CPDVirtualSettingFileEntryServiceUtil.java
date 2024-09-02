@@ -7,6 +7,9 @@ package com.liferay.commerce.product.type.virtual.service;
 
 import com.liferay.commerce.product.type.virtual.model.CPDVirtualSettingFileEntry;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
+
+import java.io.InputStream;
 
 import java.util.List;
 
@@ -38,6 +41,24 @@ public class CPDVirtualSettingFileEntryServiceUtil {
 		return getService().addCPDefinitionVirtualSetting(
 			groupId, className, classPK, cpDefinitionVirtualSettingId,
 			fileEntryId, url, version);
+	}
+
+	public static com.liferay.portal.kernel.repository.model.FileEntry
+			addFileEntry(
+				long groupId, long folderId, InputStream inputStream,
+				String fileName, String mimeType, String serviceName)
+		throws PortalException {
+
+		return getService().addFileEntry(
+			groupId, folderId, inputStream, fileName, mimeType, serviceName);
+	}
+
+	public static CPDVirtualSettingFileEntry deleteCPDVirtualSettingFileEntry(
+			long cpdVirtualSettingFileEntryId)
+		throws PortalException {
+
+		return getService().deleteCPDVirtualSettingFileEntry(
+			cpdVirtualSettingFileEntryId);
 	}
 
 	public static CPDVirtualSettingFileEntry deleteCPDVirtualSettingFileEntry(
@@ -93,13 +114,12 @@ public class CPDVirtualSettingFileEntryServiceUtil {
 	}
 
 	public static CPDVirtualSettingFileEntryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPDVirtualSettingFileEntryService service) {
-		_service = service;
-	}
-
-	private static volatile CPDVirtualSettingFileEntryService _service;
+	private static final Snapshot<CPDVirtualSettingFileEntryService>
+		_serviceSnapshot = new Snapshot<>(
+			CPDVirtualSettingFileEntryServiceUtil.class,
+			CPDVirtualSettingFileEntryService.class);
 
 }

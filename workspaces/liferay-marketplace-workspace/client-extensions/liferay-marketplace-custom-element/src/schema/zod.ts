@@ -7,30 +7,56 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
 
 import i18n from '../i18n';
+import {removeHTMLTags} from '../utils/string';
+
+const baseContentSchema = z.object({
+	description: z.string().min(1).refine(removeHTMLTags),
+	title: z.string().min(1),
+});
+
+const blocksContentSchemas = {
+	textBlock: baseContentSchema,
+	textImages: baseContentSchema.extend({
+		files: z.array(z.any()).min(1),
+	}),
+	textVideo: baseContentSchema.extend({
+		videoUrl: z.string().url().min(1),
+	}),
+};
+
+const contentMediaTypeImage = z.object({
+	headerImages: z.array(z.any()).min(1),
+});
+
+const contentMediaTypeVideo = z.object({
+	headerVideoDescription: z.string().optional(),
+	headerVideoUrl: z.string().url().min(1),
+});
 
 const zodSchema = {
 	accountCreator: z.object({
 		accounts: z.any().array().optional(),
-		agreeToTermsAndConditions: z.boolean(),
 		companyName: z
 			.string()
 			.min(1, {message: 'Please enter a company name to continue'}),
-		emailAddress: z.string().email('Please fill in valid email'),
+		country: z
+			.string()
+			.min(2, {message: 'Please select the country to continue'}),
+		emailAddress: z
+			.string()
+			.email(i18n.translate('this-field-is-required')),
 		extension: z.string().optional(),
 		familyName: z
 			.string()
 			.min(3, {message: i18n.translate('this-field-is-required')}),
 		givenName: z.string(),
-		industry: z
-			.string()
-			.min(3, {message: 'Please select an industry to continue'}),
 		phone: z.object({
 			code: z.string(),
 			flag: z.string(),
 		}),
 		phoneNumber: z
 			.string()
-			.min(1, {message: i18n.translate('this-field-is-required')}),
+			.min(1, {message: 'Please enter a phone number to continue.'}),
 	}),
 	becomePublisherForm: z.object({
 		emailAddress: z.string().email('Please fill in valid email'),
@@ -46,9 +72,10 @@ const zodSchema = {
 		phoneNumber: z
 			.string()
 			.min(1, {message: i18n.translate('this-field-is-required')}),
+		publisherType: z.array(z.string()).min(1),
 		requestDescription: z
 			.string()
-			.max(500, {message: 'Request Description is required'}),
+			.min(3, {message: 'Request Description is required'}),
 	}),
 	billingAddress: z.object({
 		city: z.string().min(1),
@@ -79,6 +106,7 @@ const zodSchema = {
 			.object({
 				name: z.string(),
 				productPurchasedKey: z.string(),
+				productVersion: z.string(),
 				skuId: z.number(),
 			})
 			.optional(),
@@ -107,6 +135,54 @@ const zodSchema = {
 		newsSubscription: z.boolean(),
 		password: z.string().optional(),
 	}),
+	solutionPublishing: {
+		company: z
+			.object({
+				description: z.string().min(1),
+				email: z.string().email().min(1),
+				phone: z.string().min(1),
+				website: z.string().min(1),
+			})
+			.refine((data) => !!removeHTMLTags(data.description)),
+		contactUs: z.string().email().min(1),
+		details: z
+			.array(
+				z.object({
+					content: z.lazy(() =>
+						z.union([
+							blocksContentSchemas.textBlock,
+							blocksContentSchemas.textImages,
+							blocksContentSchemas.textVideo,
+						])
+					),
+					type: z.enum([
+						'text-block',
+						'text-images-block',
+						'text-video-block',
+					]),
+				})
+			)
+			.min(2),
+		header: z
+			.object({
+				contentType: z.object({
+					content: z.lazy(() =>
+						z.union([contentMediaTypeImage, contentMediaTypeVideo])
+					),
+					type: z.enum(['embed-video-url', 'upload-images']),
+				}),
+				description: z.string().min(1),
+				title: z.string().min(1),
+			})
+			.refine((data) => !!removeHTMLTags(data.description)),
+		profile: z.object({
+			categories: z.array(z.any()).nonempty(),
+			description: z.string().min(3),
+			name: z.string().min(3),
+			tags: z.array(z.any()).nonempty(),
+		}),
+		termsAndConditions: z.boolean().refine((data) => data === true),
+	},
 };
 
 export {zodResolver};

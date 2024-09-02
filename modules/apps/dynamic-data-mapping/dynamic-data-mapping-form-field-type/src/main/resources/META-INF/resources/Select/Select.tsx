@@ -9,7 +9,7 @@ import {ClayTooltipProvider} from '@clayui/tooltip';
 import {useFormState} from 'data-engine-js-components-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
-import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import FieldBase from '../FieldBase/ReactFieldBase.es';
 
 // @ts-ignore
 
@@ -212,6 +212,7 @@ const Main = ({
 				showEmptyOption,
 				valueArray,
 			}),
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[fixedOptions, multiple, options, showEmptyOption, valueArray]
 	);
@@ -315,10 +316,10 @@ const Main = ({
 				type="hidden"
 				value={
 					multiple
-						? newValue
+						? JSON.stringify(newValue)
 						: newValue?.[0] === 'chooseAnOption'
-						? undefined
-						: newValue
+							? undefined
+							: JSON.stringify(newValue)
 				}
 			/>
 		</FieldBase>

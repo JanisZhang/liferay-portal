@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -315,6 +316,10 @@ public class DispatchTriggerLocalServiceUtil {
 			uuid, companyId);
 	}
 
+	public static List<DispatchTrigger> getDispatchTriggers(boolean active) {
+		return getService().getDispatchTriggers(active);
+	}
+
 	public static List<DispatchTrigger> getDispatchTriggers(
 		boolean active,
 		com.liferay.dispatch.executor.DispatchTaskClusterMode
@@ -463,13 +468,12 @@ public class DispatchTriggerLocalServiceUtil {
 	}
 
 	public static DispatchTriggerLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(DispatchTriggerLocalService service) {
-		_service = service;
-	}
-
-	private static volatile DispatchTriggerLocalService _service;
+	private static final Snapshot<DispatchTriggerLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			DispatchTriggerLocalServiceUtil.class,
+			DispatchTriggerLocalService.class);
 
 }

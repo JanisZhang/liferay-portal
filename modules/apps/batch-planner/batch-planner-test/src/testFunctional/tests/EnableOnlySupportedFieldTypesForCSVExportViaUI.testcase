@@ -1,10 +1,10 @@
-@component-name = "portal-batch-planner"
+@component-name = "portal-headless"
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true${line.separator}feature.flag.LPS-173135=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Import/Export";
+	property testray.main.component.name = "Data Migration Center";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -54,7 +54,7 @@ definition {
 
 		task ("When selecting custom object entity type with CSV format") {
 			ImportExport.configureExport(
-				entityType = "C_Test (v1_0 - Liferay Object REST)",
+				entityType = "Test (v1.0 - Liferay Object REST)",
 				exportFileFormat = "CSV");
 		}
 
@@ -77,7 +77,7 @@ definition {
 
 		task ("And Given selecting custom object entity type with CSV format") {
 			ImportExport.configureExport(
-				entityType = "C_Test (v1_0 - Liferay Object REST)",
+				entityType = "Test (v1.0 - Liferay Object REST)",
 				exportFileFormat = "CSV");
 		}
 
@@ -102,7 +102,7 @@ definition {
 
 		task ("When selecting custom object entity type with CSV format") {
 			ImportExport.configureExport(
-				entityType = "C_Test (v1_0 - Liferay Object REST)",
+				entityType = "Test (v1.0 - Liferay Object REST)",
 				exportFileFormat = "CSV");
 		}
 

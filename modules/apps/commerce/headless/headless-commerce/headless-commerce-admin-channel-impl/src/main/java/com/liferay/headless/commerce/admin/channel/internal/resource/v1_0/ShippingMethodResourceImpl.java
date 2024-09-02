@@ -53,7 +53,8 @@ public class ShippingMethodResourceImpl extends BaseShippingMethodResourceImpl {
 				_commerceShippingMethodService.getCommerceShippingMethods(
 					commerceChannel.getGroupId(), pagination.getStartPosition(),
 					pagination.getEndPosition(),
-					new CommerceShippingMethodPriorityComparator()),
+					CommerceShippingMethodPriorityComparator.getInstance(
+						false)),
 				this::_toShippingMethod),
 			pagination,
 			_commerceShippingMethodService.getCommerceShippingMethodsCount(
@@ -66,7 +67,8 @@ public class ShippingMethodResourceImpl extends BaseShippingMethodResourceImpl {
 		return transformToArray(
 			_commerceShippingFixedOptionService.getCommerceShippingFixedOptions(
 				shippingMethodId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new CommerceShippingFixedOptionPriorityComparator()),
+				CommerceShippingFixedOptionPriorityComparator.getInstance(
+					false)),
 			commerceShippingFixedOption -> new ShippingOption() {
 				{
 					setDescription(

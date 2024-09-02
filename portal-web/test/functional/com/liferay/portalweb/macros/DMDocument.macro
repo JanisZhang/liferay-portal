@@ -270,6 +270,18 @@ definition {
 
 			AssertElementNotPresent(locator1 = "TextInput#FILE_PRESENT");
 		}
+		else if (isSet(fileExtensionMismatch)) {
+			Button.clickPublish();
+
+			Alert.viewRequestFailedToComplete();
+
+			AssertTextEquals.assertPartialText(
+				key_alertMessage = "The file extension cannot be different from the file name extension.",
+				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE",
+				value1 = "The file extension cannot be different from the file name extension.");
+
+			AssertElementNotPresent(locator1 = "TextInput#FILE_PRESENT");
+		}
 		else if (isSet(validateStorageQuota)) {
 			Button.clickPublish();
 
@@ -1396,7 +1408,7 @@ definition {
 			else {
 				AssertClick(
 					key_dmFolderName = ${targetFolderName},
-					locator1 = "DocumentsAndMedia#SELECT_FOLDER_BUTTON",
+					locator1 = "DocumentsAndMedia#SELECT_RESOURCE_BUTTON",
 					value1 = "Select");
 			}
 
@@ -2273,9 +2285,17 @@ definition {
 
 		var dmDocumentURL = selenium.getAttribute("//img[contains(@class,'preview-file-image') and contains(@src,'${dmDocumentFileName}')]@src");
 
+		echo("## * Document URL: ${dmDocumentURL}");
+
 		var curl = '''${dmDocumentURL} -I''';
 
 		var responseHeader = JSONCurlUtil.post(${curl});
+
+		if (${responseHeader} == "") {
+			fail("FAIL. Cannot get document.");
+		}
+
+		echo("## * Headers: ${responseHeader}");
 
 		return ${responseHeader};
 	}
@@ -2390,16 +2410,9 @@ definition {
 
 			var key_dmFolderName = ${dmFolderName};
 
-			if (IsElementPresent(key_text = "Select", locator1 = "DocumentsAndMedia#SELECT_FOLDER_BUTTON")) {
-				AssertClick(
-					locator1 = "DocumentsAndMedia#SELECT_FOLDER_BUTTON",
-					value1 = "Select");
-			}
-			else {
-				AssertClick(
-					locator1 = "DocumentsAndMedia#SELECT_RESOURCE_BUTTON",
-					value1 = "Select");
-			}
+			AssertClick(
+				locator1 = "DocumentsAndMedia#SELECT_RESOURCE_BUTTON",
+				value1 = "Select");
 		}
 
 		SelectFrame(locator1 = "relative=top");
@@ -2919,18 +2932,10 @@ definition {
 					value1 = ${breadcrumbName});
 			}
 
-			if (IsElementPresent(key_text = "Select", locator1 = "DocumentsAndMedia#SELECT_FOLDER_BUTTON")) {
-				AssertClick(
-					key_dmFolderName = ${dmRootFolderName},
-					locator1 = "DocumentsAndMedia#SELECT_FOLDER_BUTTON",
-					value1 = "Select");
-			}
-			else {
-				AssertClick(
-					key_dmFolderName = ${dmRootFolderName},
-					locator1 = "DocumentsAndMedia#SELECT_RESOURCE_BUTTON",
-					value1 = "Select");
-			}
+			AssertClick(
+				key_dmFolderName = ${dmRootFolderName},
+				locator1 = "DocumentsAndMedia#SELECT_RESOURCE_BUTTON",
+				value1 = "Select");
 		}
 
 		SelectFrame(locator1 = "relative=top");
@@ -4260,7 +4265,7 @@ definition {
 	macro viewNoTagInfo() {
 		for (var tagName : list ${tagName}) {
 			AssertElementNotPresent(
-				key_tagName = StringUtil.lowerCase(${tagName}),
+				key_tagName = ${tagName},
 				locator1 = "DocumentsAndMedia#TAG");
 		}
 	}
@@ -4807,8 +4812,6 @@ definition {
 		for (var tagName : list ${tagName}) {
 			ScrollWebElementIntoView(locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_RATING");
 
-			var tagName = StringUtil.lowerCase(${tagName});
-
 			AssertTextEquals.assertPartialText(
 				locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_TAGS",
 				value1 = ${tagName});
@@ -4832,8 +4835,6 @@ definition {
 
 	@summary = "Default summary"
 	macro viewVideoPreviewGeneratingInfo() {
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EMBEDDED_VIDEO_IFRAME");
-
 		if (isSet(disabled)) {
 			AssertTextEquals.assertPartialText(
 				key_text = "No video preview available.",
@@ -4843,14 +4844,12 @@ definition {
 		else {
 			VerifyElementPresent(
 				key_text = "Generating preview will take a few minutes.",
-				locator1 = "DocumentsAndMediaDocument#VIDEO_GENERATION_INFO");
+				locator1 = "Message#INFO");
 
-			while (IsElementPresent(key_text = "Generating preview will take a few minutes.", locator1 = "DocumentsAndMediaDocument#VIDEO_GENERATION_INFO")) {
+			while (IsElementPresent(key_text = "Generating preview will take a few minutes.", locator1 = "Message#INFO")) {
 				WaitForElementPresent.waitForLastScript();
 
 				Refresh();
-
-				SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EMBEDDED_VIDEO_IFRAME");
 			}
 		}
 

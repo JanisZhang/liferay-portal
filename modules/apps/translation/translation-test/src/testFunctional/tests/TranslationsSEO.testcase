@@ -63,6 +63,8 @@ definition {
 	@description = "This ensures that all languages hreflang tag of an untranslated page can be viewed when the OTH is disabled."
 	@priority = 4
 	test CanViewPageDefaultHreflangTags {
+		property portal.release = "quarantine";
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		JSONLayout.addPublicLayout(
@@ -73,6 +75,10 @@ definition {
 			groupName = "Test Site Name",
 			layoutName = "Translation Content Page",
 			type = "content");
+
+		JSONLayout.publishLayout(
+			groupName = "Test Site Name",
+			layoutName = "Translation Content Page");
 
 		Navigator.openSpecificURL(url = "${portalURL}/c/portal/logout");
 

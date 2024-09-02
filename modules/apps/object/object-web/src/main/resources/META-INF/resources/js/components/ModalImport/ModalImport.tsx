@@ -5,25 +5,31 @@
 
 import ClayModal, {useModal} from '@clayui/modal';
 import {API} from '@liferay/object-js-components-web';
-import {ErrorDetails} from '@liferay/object-js-components-web/src/main/resources/META-INF/resources/utils/api';
-import {fetch} from 'frontend-js-web';
 import React, {FormEvent, useEffect, useState} from 'react';
 
-import {FormDataJSONFormat, jsonToFormData} from '../../utils/formData';
 import {ModalImportContent} from './ModalImportContent';
+import {ModalImportFailed} from './ModalImportFailed';
 import {ModalImportWarning} from './ModalImportWarning';
+import {
+	handleDefaultImport,
+	handleImport,
+	handleImportMultiplesObjectDefinitions,
+} from './handleImportUtil';
 
+export type ModalImportKeys =
+	| 'listTypeDefinition'
+	| 'objectDefinition'
+	| 'objectDefinitions'
+	| 'objectFolder';
 interface ModalImportProps {
 	JSONInputId: string;
 	apiURL: string;
 	handleOnClose?: () => void;
-	importExtendedInfo?: {
-		key: string;
-		value: string;
-	};
+	importExtendedInfo: KeyValueObject;
 	importURL: string;
-	modalImportKey: string;
+	modalImportKey: ModalImportKeys;
 	nameMaxLength: string;
+	objectFolderExternalReferenceCode?: string;
 	onAfterImport?: () => void;
 	portletNamespace: string;
 	showModal?: boolean;
@@ -42,20 +48,29 @@ export default function ModalImport({
 	importURL,
 	modalImportKey,
 	nameMaxLength,
+	objectFolderExternalReferenceCode,
 	onAfterImport,
 	portletNamespace,
 	showModal,
 }: ModalImportProps) {
-	const [error, setError] = useState<ErrorDetails>();
-	const [externalReferenceCode, setExternalReferenceCode] = useState<string>(
-		''
-	);
+	const [importLoading, setImportLoading] = useState(false);
+	const [error, setError] = useState<API.ErrorDetails>();
+	const [existingObjectDefinitions, setExistingObjectDefinitions] = useState<
+		ObjectDefinition[]
+	>([]);
+	const [externalReferenceCode, setExternalReferenceCode] =
+		useState<string>('');
+	const [importedObjectDefinitions, setImportedObjectDefinitions] =
+		useState<ObjectDefinition[]>();
 	const [{fileName, inputFile}, setFile] = useState<TFile>({});
 	const [importFormData, setImportFormData] = useState<FormData>();
 	const importModalComponentId = `${portletNamespace}importModal`;
+	const [modalImportKeyState, setModalImportKeyState] =
+		useState(modalImportKey);
 	const [name, setName] = useState('');
 	const [visible, setVisible] = useState(showModal ?? false);
 	const [warningModalVisible, setWarningModalVisible] = useState(false);
+	const [failedModalVisible, setFailedModalVisible] = useState(false);
 
 	const {observer, onClose} = useModal({
 		onClose: () => {
@@ -67,6 +82,7 @@ export default function ModalImport({
 				inputFile: null,
 			});
 			setName('');
+			setFailedModalVisible(false);
 			setWarningModalVisible(false);
 
 			if (handleOnClose) {
@@ -84,60 +100,43 @@ export default function ModalImport({
 		},
 	});
 
-	const handleImport = async (formData: FormData) => {
-		try {
-			await API.save({
-				item: formData,
-				method: 'POST',
-				url: importURL,
-			});
-
-			if (onAfterImport) {
-				onAfterImport();
-
-				onClose();
-			}
-			else {
-				window.location.reload();
-			}
-		}
-		catch (error) {
-			setError(error as ErrorDetails);
-		}
-	};
-
-	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
-		const formData = new FormData(event.currentTarget);
-		const formDataObject: FormDataJSONFormat = {};
-		formData.forEach((value, key) => {
-			if (key.includes(JSONInputId)) {
-				formDataObject[key] = inputFile as File;
-
-				return;
-			}
-
-			formDataObject[key] = value;
+		if (Liferay.FeatureFlags['LPS-187142'] && importedObjectDefinitions) {
+			handleImportMultiplesObjectDefinitions({
+				importURL,
+				importedObjectDefinitions,
+				objectFolderExternalReferenceCode:
+					objectFolderExternalReferenceCode as string,
+				onClose,
+				setError,
+				setExistingObjectDefinitions,
+				setFailedModalVisible,
+				setImportFormData,
+				setImportLoading,
+				setModalImportKeyState,
+				setWarningModalVisible,
+			});
 
 			return;
+		}
+
+		handleDefaultImport({
+			JSONInputId,
+			apiURL,
+			event,
+			externalReferenceCode,
+			importExtendedInfo,
+			importURL,
+			inputFile,
+			onAfterImport,
+			onClose,
+			setError,
+			setImportFormData,
+			setImportLoading,
+			setWarningModalVisible,
 		});
-
-		if (importExtendedInfo) {
-			formDataObject[importExtendedInfo.key] = importExtendedInfo.value;
-		}
-
-		const newFormData = jsonToFormData(formDataObject);
-
-		const response = await fetch(`${apiURL}${externalReferenceCode}`);
-
-		if (response.status === 204 || response.status === 404) {
-			handleImport(newFormData);
-		}
-		else {
-			setImportFormData(newFormData);
-			setWarningModalVisible(true);
-		}
 	};
 
 	useEffect(() => {
@@ -160,18 +159,47 @@ export default function ModalImport({
 		<ClayModal
 			center
 			observer={observer}
-			status={warningModalVisible ? 'warning' : 'info'}
+			size={failedModalVisible ? 'lg' : undefined}
+			status={
+				warningModalVisible || failedModalVisible
+					? 'warning'
+					: undefined
+			}
 		>
-			{warningModalVisible ? (
+			{warningModalVisible && (
 				<ModalImportWarning
 					errorMessage={error?.message ?? ''}
+					existingObjectDefinitions={existingObjectDefinitions}
 					handleImport={() =>
-						handleImport(importFormData as FormData)
+						handleImport({
+							importURL,
+							item: importFormData as FormData,
+							onAfterImport,
+							onClose,
+							setError,
+							setFailedModalVisible,
+							setImportLoading,
+							setWarningModalVisible,
+						})
 					}
 					handleOnClose={onClose}
-					modalImportKey={modalImportKey}
+					importLoading={importLoading}
+					modalImportKey={modalImportKeyState}
 				/>
-			) : (
+			)}
+
+			{Liferay.FeatureFlags['LPS-187142'] &&
+				failedModalVisible &&
+				importedObjectDefinitions &&
+				error?.type === 'importMultipleObjectDefinitions' && (
+					<ModalImportFailed
+						error={error}
+						handleOnclose={() => onClose()}
+						importedObjectDefinitions={importedObjectDefinitions}
+					/>
+				)}
+
+			{!warningModalVisible && !failedModalVisible && (
 				<ModalImportContent
 					JSONInputId={JSONInputId}
 					apiURL={apiURL}
@@ -180,15 +208,18 @@ export default function ModalImport({
 					fileName={fileName as string}
 					handleOnClose={onClose}
 					handleSubmit={handleSubmit}
+					importLoading={importLoading}
 					importURL={importURL}
+					importedObjectDefinitions={importedObjectDefinitions}
 					inputFile={inputFile as File}
-					modalImportKey={modalImportKey}
+					modalImportKey={modalImportKeyState}
 					name={name}
 					nameMaxLength={nameMaxLength}
 					portletNamespace={portletNamespace}
 					setError={setError}
 					setExternalReferenceCode={setExternalReferenceCode}
 					setFile={setFile}
+					setImportedObjectDefinitions={setImportedObjectDefinitions}
 					setName={setName}
 				/>
 			)}

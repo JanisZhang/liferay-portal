@@ -5,6 +5,7 @@
 
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
+import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {useModal} from '@clayui/modal';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
@@ -12,47 +13,66 @@ import ClayTabs from '@clayui/tabs';
 import {useState} from 'react';
 import {CSVLink} from 'react-csv';
 
+import './index.css';
 import Modal from '../../common/components/Modal';
 import Table from '../../common/components/Table';
 import TableHeader from '../../common/components/TableHeader';
+import DropDownWithDrillDown from '../../common/components/TableHeader/Filter/components/DropDownWithDrillDown';
+import {FilterTypes} from '../../common/components/TableHeader/Filter/components/FilterSelector/FilterSelector';
+import {Dates} from '../../common/components/TableHeader/Filter/components/filters/DateFilter/DateFilter';
 import Search from '../../common/components/TableHeader/Search';
 import {DealRegistrationColumnKey} from '../../common/enums/dealRegistrationColumnKey';
 import {ObjectActionName} from '../../common/enums/objectActionName';
 import {PermissionActionType} from '../../common/enums/permissionActionType';
 import {PRMPageRoute} from '../../common/enums/prmPageRoute';
+import {SortableTable} from '../../common/enums/sortableTable';
+import useDebounce from '../../common/hooks/useDebounce';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
 import usePagination from '../../common/hooks/usePagination';
 import usePermissionActions from '../../common/hooks/usePermissionActions';
+import useQueryParams from '../../common/hooks/useQueryParams';
 import {DealRegistrationListItem} from '../../common/interfaces/dealRegistrationListItem';
+import TableColumn from '../../common/interfaces/tableColumn';
 import {Liferay} from '../../common/services/liferay';
+import {
+	currentFiscalYearStart,
+	previousFiscalYearStart,
+} from '../../common/utils/constants/filters';
+import {maxPagination} from '../../common/utils/constants/maxPagination';
 import getDoubleParagraph from '../../common/utils/getDoubleParagraph';
 import ModalContent from './components/ModalContent';
 import useFilters from './hooks/useFilters';
 import useGetListItemsFromDealRegistration from './hooks/useGetListItemsFromDealRegistration';
+import {INITIAL_FILTER} from './utils/constants/initialFilter';
+
 export type DealRegistrationItem = {
 	[key in DealRegistrationColumnKey]?: any;
 };
-interface IProps {
-	getFilteredItems: (
-		items: DealRegistrationItem[],
-		submittedDealsFilter: boolean
-	) => DealRegistrationItem[];
-	sort: string;
-}
 
-const BASE_PAGE = 1;
-const MAX_ITEMS = 200;
-
-const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
+const DealRegistrationList = () => {
 	const [submittedDealsFilter, setSubmittedDealsFilter] = useState(
 		JSON.parse(sessionStorage.getItem('submittedDealsFilter')!) === null
 			? true
 			: (JSON.parse(
 					sessionStorage.getItem('submittedDealsFilter')!
-			  ) as boolean)
+				) as boolean)
 	);
 
-	const {filters, filtersTerm, onFilter} = useFilters(submittedDealsFilter);
+	const [dealRegistrationTableSort, setDealRegistrationTableSort] =
+		useState<string>('partnerAccountName:asc');
+
+	const debouncedDealRegistrationTableSort = useDebounce(
+		dealRegistrationTableSort,
+		1000
+	);
+
+	const urlParams = useQueryParams();
+
+	const {filters, onFilter} = useFilters(
+		debouncedDealRegistrationTableSort,
+		urlParams,
+		submittedDealsFilter
+	);
 
 	const [isVisibleModal, setIsVisibleModal] = useState(false);
 	const [modalContent, setModalContent] = useState<DealRegistrationItem>({});
@@ -70,52 +90,54 @@ const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 	const {data, isValidating} = useGetListItemsFromDealRegistration(
 		pagination.activePage,
 		pagination.activeDelta,
-		filtersTerm,
-		sort
+		urlParams
 	);
 
 	const {data: dataCSV} = useGetListItemsFromDealRegistration(
-		BASE_PAGE,
-		MAX_ITEMS,
-		filtersTerm,
-		sort
+		pagination.activePage,
+		maxPagination.MAX_ITEMS_SF.size,
+		urlParams
 	);
 
 	const actions = usePermissionActions(ObjectActionName.DEAL_REGISTRATION);
 
-	const filteredData =
-		data.items && getFilteredItems(data.items, submittedDealsFilter);
-	const filteredCSVData =
-		dataCSV.items && getFilteredItems(dataCSV.items, submittedDealsFilter);
+	const filteredData = data.items;
+	const filteredCSVData = dataCSV.items;
 
-	const columns = [
+	const columns: TableColumn<DealRegistrationItem>[] = [
 		{
 			columnKey: DealRegistrationColumnKey.PARTNER_ACCOUNT_NAME,
 			label: 'Partner Account Name',
+			size: 'md',
 		},
 		{
 			columnKey: DealRegistrationColumnKey.PARTNER_NAME,
 			label: 'Partner Name',
+			size: 'md',
 		},
 		{
 			columnKey: DealRegistrationColumnKey.ACCOUNT_NAME,
 			label: 'Account Name',
+			size: 'sm',
 		},
 		{
-			columnKey: DealRegistrationColumnKey.DATE_SUBMITTED,
+			columnKey: DealRegistrationColumnKey.DEAL_DATE_SUBMITTED,
 			label: 'Date Submitted',
 		},
 		{
 			columnKey: DealRegistrationColumnKey.PRIMARY_PROSPECT_NAME,
 			label: getDoubleParagraph('Primary Prospect', 'Name'),
+			size: 'sm',
 		},
 		{
 			columnKey: DealRegistrationColumnKey.PRIMARY_PROSPECT_EMAIL,
 			label: getDoubleParagraph('Primary Prospect', 'Email'),
+			size: 'sm',
 		},
 		{
 			columnKey: DealRegistrationColumnKey.PRIMARY_PROSPECT_PHONE,
 			label: getDoubleParagraph('Primary Prospect', 'Phone'),
+			size: 'sm',
 		},
 		{
 			columnKey: DealRegistrationColumnKey.STATUS,
@@ -156,9 +178,18 @@ const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 			return (
 				<div className="mt-3">
 					<Table<DealRegistrationListItem>
+						className="custom-table"
 						columns={columns}
 						customClickOnRow={handleCustomClickOnRow}
 						rows={items}
+						setTableSort={setDealRegistrationTableSort}
+						sortable={[
+							SortableTable.ACCOUNT_NAME,
+							SortableTable.DATE_SUBMITTED,
+							SortableTable.PARTNER_ACCOUNT_NAME,
+							SortableTable.PARTNER_NAME,
+						]}
+						tableLayoutAuto
 					/>
 
 					<ClayPaginationBarWithBasicItems
@@ -169,6 +200,40 @@ const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 			);
 		}
 	};
+
+	const todayDate = new Date();
+	const formattedDate = todayDate.toISOString().slice(0, 10);
+
+	const rangeDataPicker = submittedDealsFilter
+		? {
+				end: formattedDate,
+				start: previousFiscalYearStart,
+			}
+		: {
+				end: formattedDate,
+				start: currentFiscalYearStart,
+			};
+
+	const filterFields = [
+		{
+			component: {
+				initialValues: filters.dataSubmitted?.dates,
+				props: {
+					clearInputs: filters?.dataSubmitted,
+					filterDescription: 'Date Submitted',
+					years: rangeDataPicker,
+				},
+				type: FilterTypes.DATE,
+				updateFilter: (dates: Dates) =>
+					onFilter({
+						dataSubmitted: {
+							dates,
+						},
+					}),
+			},
+			name: 'Date Submitted',
+		},
+	];
 
 	return (
 		<div className="border-0 my-4">
@@ -202,6 +267,7 @@ const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 									searchTerm,
 								})
 							}
+							urlParams={urlParams}
 						/>
 
 						<div className="bd-highlight flex-shrink-2 mt-1">
@@ -216,8 +282,39 @@ const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 										</p>
 									</div>
 								)}
+							{filters.hasValue && (
+								<ClayButton
+									borderless
+									className="link"
+									onClick={() => {
+										onFilter({
+											...INITIAL_FILTER,
+											searchTerm: filters.searchTerm,
+										});
+									}}
+									small
+								>
+									<ClayIcon
+										className="ml-n2 mr-1"
+										symbol="times-circle"
+									/>
+									Clear All Filters
+								</ClayButton>
+							)}
 						</div>
 					</div>
+
+					<DropDownWithDrillDown
+						menuItems={filterFields}
+						trigger={
+							<ClayButton borderless className="btn-secondary">
+								<span className="inline-item inline-item-before">
+									<ClayIcon symbol="filter" />
+								</span>
+								Filter
+							</ClayButton>
+						}
+					/>
 				</div>
 
 				<div>

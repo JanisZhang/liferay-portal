@@ -67,6 +67,24 @@ public class DropZoneFragmentEntryLinkListener
 	}
 
 	@Override
+	public void onCopyFragmentEntryLink(
+		FragmentEntryLink fragmentEntryLink,
+		FragmentEntryLink originalFragmentEntryLink) {
+
+		try {
+			updateLayoutPageTemplateStructure(
+				fragmentEntryLink, originalFragmentEntryLink);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Unable to update layout page template structure",
+					exception);
+			}
+		}
+	}
+
+	@Override
 	public void onDeleteFragmentEntryLink(FragmentEntryLink fragmentEntryLink) {
 	}
 
@@ -190,7 +208,8 @@ public class DropZoneFragmentEntryLinkListener
 				childrenItemIdsToRemove.forEach(
 					itemId ->
 						layoutStructure.markLayoutStructureItemForDeletion(
-							itemId, Collections.emptyList()));
+							Collections.singletonList(itemId),
+							Collections.emptyList()));
 			}
 			else {
 				for (int i = childrenItemIds.size(); i < elements.size(); i++) {
@@ -379,7 +398,8 @@ public class DropZoneFragmentEntryLinkListener
 					noExistingIdFragmentDropZoneLayoutStructureItems) {
 
 			layoutStructure.markLayoutStructureItemForDeletion(
-				fragmentDropZoneLayoutStructureItem.getItemId(),
+				Collections.singletonList(
+					fragmentDropZoneLayoutStructureItem.getItemId()),
 				Collections.emptyList());
 
 			update = true;
@@ -390,7 +410,8 @@ public class DropZoneFragmentEntryLinkListener
 					noIdFragmentDropZoneLayoutStructureItems) {
 
 			layoutStructure.markLayoutStructureItemForDeletion(
-				fragmentDropZoneLayoutStructureItem.getItemId(),
+				Collections.singletonList(
+					fragmentDropZoneLayoutStructureItem.getItemId()),
 				Collections.emptyList());
 
 			update = true;

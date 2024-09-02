@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.MessageBusUtil;
+import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceAction;
@@ -36,10 +37,12 @@ import com.liferay.portal.kernel.model.Subscription;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
 import com.liferay.portal.kernel.notifications.UserNotificationManagerUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
@@ -147,7 +150,8 @@ public class SubscriptionSender implements Serializable {
 
 				List<Subscription> subscriptions =
 					SubscriptionLocalServiceUtil.getSubscriptions(
-						companyId, className, classPK);
+						CompanyThreadLocal.getNonsystemCompanyId(), className,
+						classPK);
 
 				for (Subscription subscription : subscriptions) {
 					try {
@@ -243,8 +247,12 @@ public class SubscriptionSender implements Serializable {
 			});
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	public long getCompanyId() {
-		return companyId;
+		return CompanyThreadLocal.getNonsystemCompanyId();
 	}
 
 	public Object getContextAttribute(String key) {
@@ -260,6 +268,8 @@ public class SubscriptionSender implements Serializable {
 	}
 
 	public ServiceContext getServiceContext() {
+		serviceContext.setCompanyId(CompanyThreadLocal.getNonsystemCompanyId());
+
 		return serviceContext;
 	}
 
@@ -274,7 +284,8 @@ public class SubscriptionSender implements Serializable {
 
 			List<Subscription> subscriptions =
 				SubscriptionLocalServiceUtil.getSubscriptions(
-					companyId, className, classPK);
+					CompanyThreadLocal.getNonsystemCompanyId(), className,
+					classPK);
 
 			if (!subscriptions.isEmpty()) {
 				return true;
@@ -295,7 +306,8 @@ public class SubscriptionSender implements Serializable {
 			setScopeGroupId(serviceContext.getScopeGroupId());
 		}
 
-		Company company = CompanyLocalServiceUtil.getCompany(companyId);
+		Company company = CompanyLocalServiceUtil.getCompany(
+			CompanyThreadLocal.getNonsystemCompanyId());
 
 		setContextAttribute("[$COMPANY_ID$]", company.getCompanyId());
 		setContextAttribute("[$COMPANY_MX$]", company.getMx());
@@ -336,9 +348,10 @@ public class SubscriptionSender implements Serializable {
 		}
 
 		if (groupId > 0) {
-			Group group = GroupLocalServiceUtil.getGroup(groupId);
-
-			setContextAttribute("[$SITE_NAME$]", group.getDescriptiveName());
+			setLocalizedContextAttribute(
+				"[$SITE_NAME$]",
+				new EscapableLocalizableFunction(
+					locale -> _getGroupDescriptiveName(groupId, locale)));
 		}
 
 		if ((creatorUserId > 0) &&
@@ -385,8 +398,11 @@ public class SubscriptionSender implements Serializable {
 		_classPK = classPK;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setCompanyId(long companyId) {
-		this.companyId = companyId;
 	}
 
 	public void setContextAttribute(String key, EscapableObject<String> value) {
@@ -508,8 +524,21 @@ public class SubscriptionSender implements Serializable {
 		_mailIdIds = ids;
 	}
 
+	public void setNotificationClassName(String notificationClassName) {
+		_notificationClassName = notificationClassName;
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #setNotificationClassName(String)}
+	 */
+	@Deprecated
 	public void setNotificationClassNameId(long notificationClassNameId) {
-		_notificationClassNameId = notificationClassNameId;
+		ClassName className = ClassNameLocalServiceUtil.fetchByClassNameId(
+			notificationClassNameId);
+
+		if (className != null) {
+			_notificationClassName = className.getClassName();
+		}
 	}
 
 	/**
@@ -752,6 +781,7 @@ public class SubscriptionSender implements Serializable {
 	protected void notifyRuntimeSubscriber(InternetAddress to, Locale locale)
 		throws Exception {
 
+		long companyId = CompanyThreadLocal.getNonsystemCompanyId();
 		String emailAddress = to.getAddress();
 
 		User user = UserLocalServiceUtil.fetchUserByEmailAddress(
@@ -924,7 +954,7 @@ public class SubscriptionSender implements Serializable {
 
 	protected void sendEmailNotification(User user) throws Exception {
 		if (UserNotificationManagerUtil.isDeliver(
-				user.getUserId(), portletId, _notificationClassNameId,
+				user.getUserId(), portletId, _getNotificationClassNameId(),
 				_notificationType,
 				UserNotificationDeliveryConstants.TYPE_EMAIL)) {
 
@@ -984,7 +1014,7 @@ public class SubscriptionSender implements Serializable {
 		populateNotificationEventJSONObject(notificationEventJSONObject);
 
 		if (UserNotificationManagerUtil.isDeliver(
-				user.getUserId(), portletId, _notificationClassNameId,
+				user.getUserId(), portletId, _getNotificationClassNameId(),
 				_notificationType,
 				UserNotificationDeliveryConstants.TYPE_PUSH)) {
 
@@ -995,7 +1025,7 @@ public class SubscriptionSender implements Serializable {
 		}
 
 		if (UserNotificationManagerUtil.isDeliver(
-				user.getUserId(), portletId, _notificationClassNameId,
+				user.getUserId(), portletId, _getNotificationClassNameId(),
 				_notificationType,
 				UserNotificationDeliveryConstants.TYPE_WEBSITE)) {
 
@@ -1008,7 +1038,13 @@ public class SubscriptionSender implements Serializable {
 
 	protected String body;
 	protected boolean bulk;
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	protected long companyId;
+
 	protected long creatorUserId;
 	protected long currentUserId;
 	protected List<FileAttachment> fileAttachments = new ArrayList<>();
@@ -1091,6 +1127,21 @@ public class SubscriptionSender implements Serializable {
 			key.substring(0, i), StringPool.PIPE, escapeMode, "$]");
 	}
 
+	private String _getGroupDescriptiveName(long groupId, Locale locale) {
+		try {
+			Group group = GroupLocalServiceUtil.getGroup(groupId);
+
+			return group.getDescriptiveName(locale);
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
+
+		return StringPool.BLANK;
+	}
+
 	private <T> List<Hook<T>> _getHooks(Hook.Event<T> event) {
 		return (List)_hooks.computeIfAbsent(event, key -> new ArrayList<>());
 	}
@@ -1103,6 +1154,14 @@ public class SubscriptionSender implements Serializable {
 			MapUtil.getWithFallbackKey(
 				localizedValueMap, locale, LocaleUtil.getDefault()),
 			defaultValue);
+	}
+
+	private long _getNotificationClassNameId() {
+		if (_notificationClassName == null) {
+			return 0;
+		}
+
+		return ClassNameLocalServiceUtil.getClassNameId(_notificationClassName);
 	}
 
 	private String _getPortletName(Locale locale) {
@@ -1173,7 +1232,7 @@ public class SubscriptionSender implements Serializable {
 		new HashMap<>();
 	private Object[] _mailIdIds;
 	private String _mailIdPopPortletPrefix;
-	private long _notificationClassNameId;
+	private String _notificationClassName;
 	private int _notificationType;
 	private final List<Tuple> _persistedSubscribersTuples = new ArrayList<>();
 	private final List<ObjectValuePair<String, String>>

@@ -30,6 +30,7 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -243,6 +244,16 @@ public class CPFileImporterImpl implements CPFileImporter {
 		throws Exception {
 
 		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject layoutJSONObject = jsonArray.getJSONObject(i);
+
+			String layoutName = layoutJSONObject.getString("name");
+
+			if (layoutName.equals("Returns") &&
+				!FeatureFlagManagerUtil.isEnabled("LPD-10562")) {
+
+				continue;
+			}
+
 			_createLayout(
 				jsonArray.getJSONObject(i), parentLayout, classLoader,
 				dependenciesFilePath, serviceContext);
@@ -418,7 +429,7 @@ public class CPFileImporterImpl implements CPFileImporter {
 		friendlyURL = CharPool.SLASH + friendlyURL;
 
 		Layout layout = _layoutLocalService.addLayout(
-			serviceContext.getUserId(), serviceContext.getScopeGroupId(),
+			null, serviceContext.getUserId(), serviceContext.getScopeGroupId(),
 			privateLayout, parentLayoutId, name, name, StringPool.BLANK,
 			layoutType, hidden, friendlyURL, serviceContext);
 
@@ -558,10 +569,11 @@ public class CPFileImporterImpl implements CPFileImporter {
 
 		if (ddmTemplate == null) {
 			ddmTemplate = _ddmTemplateLocalService.addTemplate(
-				serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-				classNameId, classPK, resourceClassNameId, _getKey(name),
-				nameMap, null, type, mode, language, script, cacheable, false,
-				StringPool.BLANK, null, serviceContext);
+				null, serviceContext.getUserId(),
+				serviceContext.getScopeGroupId(), classNameId, classPK,
+				resourceClassNameId, _getKey(name), nameMap, null, type, mode,
+				language, script, cacheable, false, StringPool.BLANK, null,
+				serviceContext);
 		}
 		else {
 			ddmTemplate = _ddmTemplateLocalService.updateTemplate(
@@ -710,7 +722,7 @@ public class CPFileImporterImpl implements CPFileImporter {
 
 		if (role == null) {
 			role = _roleLocalService.addRole(
-				serviceContext.getUserId(), null, 0, name,
+				null, serviceContext.getUserId(), null, 0, name,
 				HashMapBuilder.put(
 					serviceContext.getLocale(), name
 				).build(),

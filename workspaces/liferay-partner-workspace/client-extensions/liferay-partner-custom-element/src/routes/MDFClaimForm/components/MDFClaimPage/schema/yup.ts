@@ -22,80 +22,90 @@ const claimSchema = object({
 				budgets: array().when('selected', {
 					is: (selected: boolean) => selected,
 					then: (schema) =>
-						schema.of(
-							object({
-								invoice: mixed().when('selected', {
-									is: (selected: boolean) => selected,
-									then: (schema) =>
-										schema
-											.test(
-												'fileSize',
-												validateDocument.fileSize
-													.message,
-												(invoice) => {
-													if (
-														invoice &&
-														!invoice.documentId
-													) {
-														return (
-															Math.ceil(
-																invoice.size /
-																	1000
-															) <=
-															validateDocument
-																.fileSize
-																.maxSize
-														);
-													}
+						schema
+							.of(
+								object({
+									invoiceAmount: number().when('selected', {
+										is: (selected: boolean) => selected,
+										then: (schema) =>
+											schema
+												.moreThan(
+													0,
+													'Need be bigger than 0'
+												)
+												.test(
+													'biggerAmount',
+													'Invoice amount is larger than the MDF requested amount',
+													(
+														invoiceAmount,
+														testContext
+													) =>
+														Number(invoiceAmount) <=
+														Number(
+															testContext.parent
+																.requestAmount
+														)
+												)
+												.required('Required'),
+									}),
+									invoiceFile: mixed().when('selected', {
+										is: (selected: boolean) => selected,
+										then: (schema) =>
+											schema
+												.test(
+													'fileSize',
+													validateDocument.fileSize
+														.message,
+													(invoiceFile) => {
+														if (
+															invoiceFile &&
+															!invoiceFile.documentId
+														) {
+															return (
+																Math.ceil(
+																	invoiceFile.size /
+																		1000
+																) <=
+																validateDocument
+																	.fileSize
+																	.maxSize
+															);
+														}
 
-													return true;
-												}
-											)
-											.required()
-											.test(
-												'fileType',
-												validateDocument.document
-													.message,
-												(invoice) => {
-													if (
-														invoice &&
-														!invoice.documentId
-													) {
-														return validateDocument.document.types.includes(
-															invoice.type
-														);
+														return true;
 													}
+												)
+												.required()
+												.test(
+													'fileType',
+													validateDocument.document
+														.message,
+													(invoiceFile) => {
+														if (
+															invoiceFile &&
+															!invoiceFile.documentId
+														) {
+															return validateDocument.document.types.includes(
+																invoiceFile.type
+															);
+														}
 
-													return true;
-												}
-											)
-											.required('Required'),
-								}),
-								invoiceAmount: number().when('selected', {
-									is: (selected: boolean) => selected,
-									then: (schema) =>
-										schema
-											.moreThan(
-												0,
-												'Need be bigger than 0'
-											)
-											.test(
-												'biggerAmount',
-												'Invoice amount is larger than the MDF requested amount',
-												(invoiceAmount, testContext) =>
-													Number(invoiceAmount) <=
-													Number(
-														testContext.parent
-															.requestAmount
-													)
-											)
-											.required('Required'),
-								}),
-								requestAmount: number(),
-							})
-						),
+														return true;
+													}
+												)
+												.required('Required'),
+									}),
+									requestAmount: number(),
+								})
+							)
+							.test(
+								'needMoreThanOneBudgetSelected',
+								'Need at least one budget selected',
+								(value: any) =>
+									value.some((item: any) => item.selected)
+							),
 				}),
-				eventProgram: mixed().when(['selected', 'typeActivity'], {
+				eventProgramFile: mixed().when(['selected', 'typeActivity'], {
 					is: (selected: boolean, typeActivity: LiferayPicklist) =>
 						selected && typeActivity.key === TypeActivityKey.EVENT,
 					then: (schema) =>
@@ -104,14 +114,14 @@ const claimSchema = object({
 							.test(
 								'fileSize',
 								validateDocument.fileSize.message,
-								(eventProgram) => {
+								(eventProgramFile) => {
 									if (
-										eventProgram &&
-										!eventProgram.documentId
+										eventProgramFile &&
+										!eventProgramFile.documentId
 									) {
 										return (
 											Math.ceil(
-												eventProgram.size / 1000
+												eventProgramFile.size / 1000
 											) <=
 											validateDocument.fileSize.maxSize
 										);
@@ -123,13 +133,13 @@ const claimSchema = object({
 							.test(
 								'fileType',
 								validateDocument.document.message,
-								(eventProgram) => {
+								(eventProgramFile) => {
 									if (
-										eventProgram &&
-										!eventProgram.documentId
+										eventProgramFile &&
+										!eventProgramFile.documentId
 									) {
 										return validateDocument.document.types.includes(
-											eventProgram.type
+											eventProgramFile.type
 										);
 									}
 
@@ -137,7 +147,7 @@ const claimSchema = object({
 								}
 							),
 				}),
-				listOfQualifiedLeads: mixed()
+				listOfQualifiedLeadsFile: mixed()
 					.when('selected', {
 						is: (selected: boolean) => selected,
 						then: (schema) =>
@@ -145,14 +155,14 @@ const claimSchema = object({
 								.test(
 									'fileSize',
 									validateDocument.fileSize.message,
-									(listOfQualifiedLeads) => {
+									(listOfQualifiedLeadsFile) => {
 										if (
-											listOfQualifiedLeads &&
-											!listOfQualifiedLeads.documentId
+											listOfQualifiedLeadsFile &&
+											!listOfQualifiedLeadsFile.documentId
 										) {
 											return (
 												Math.ceil(
-													listOfQualifiedLeads.size /
+													listOfQualifiedLeadsFile.size /
 														1000
 												) <=
 												validateDocument.fileSize
@@ -167,13 +177,13 @@ const claimSchema = object({
 									'fileType',
 									validateDocument.listOfLeadsDocuments
 										.message,
-									(listOfQualifiedLeads) => {
+									(listOfQualifiedLeadsFile) => {
 										if (
-											listOfQualifiedLeads &&
-											!listOfQualifiedLeads.documentId
+											listOfQualifiedLeadsFile &&
+											!listOfQualifiedLeadsFile.documentId
 										) {
 											return validateDocument.listOfLeadsDocuments.types.includes(
-												listOfQualifiedLeads.type
+												listOfQualifiedLeadsFile.type
 											);
 										}
 
@@ -255,21 +265,22 @@ const claimSchema = object({
 								),
 					}
 				),
-				telemarketingScript: mixed().when('selected', {
+				telemarketingScriptFile: mixed().when('selected', {
 					is: (selected: boolean) => selected,
 					then: (schema) =>
 						schema
 							.test(
 								'fileSize',
 								validateDocument.fileSize.message,
-								(telemarketingScript) => {
+								(telemarketingScriptFile) => {
 									if (
-										telemarketingScript &&
-										!telemarketingScript.documentId
+										telemarketingScriptFile &&
+										!telemarketingScriptFile.documentId
 									) {
 										return (
 											Math.ceil(
-												telemarketingScript.size / 1000
+												telemarketingScriptFile.size /
+													1000
 											) <=
 											validateDocument.fileSize.maxSize
 										);
@@ -281,13 +292,13 @@ const claimSchema = object({
 							.test(
 								'fileType',
 								validateDocument.listOfLeadsDocuments.message,
-								(telemarketingScript) => {
+								(telemarketingScriptFile) => {
 									if (
-										telemarketingScript &&
-										!telemarketingScript.documentId
+										telemarketingScriptFile &&
+										!telemarketingScriptFile.documentId
 									) {
 										return validateDocument.document.types.includes(
-											telemarketingScript.type
+											telemarketingScriptFile.type
 										);
 									}
 
@@ -314,18 +325,6 @@ const claimSchema = object({
 				Boolean(activities?.some((activity) => activity.selected))
 		)
 		.test(
-			'needMoreThanOneBudgetSelected',
-			'Need at least one budget selected',
-			(activities) =>
-				Boolean(
-					activities?.some((activity) =>
-						Boolean(
-							activity.budgets?.some((budget) => budget.selected)
-						)
-					)
-				)
-		)
-		.test(
 			'selectedActivityNeedsAtLeastOneBudget',
 			'Need at least one budget per activity selected',
 			(activities) => {
@@ -350,41 +349,52 @@ const claimSchema = object({
 				Boolean(
 					activities?.some((activity) =>
 						Boolean(
-							activity.budgets?.some((budget) => budget.invoice)
+							activity.budgets?.some(
+								(budget) => budget.invoiceFile
+							)
 						)
 					)
 				)
 		),
+	reimbursementInvoices: array()
+		.of(
+			mixed()
+				.test(
+					'fileSize',
+					validateDocument.fileSize.message,
+					(reimbursementInvoice) => {
+						if (
+							reimbursementInvoice &&
+							!reimbursementInvoice.documentId
+						) {
+							return (
+								Math.ceil(reimbursementInvoice.size / 1000) <=
+								validateDocument.fileSize.maxSize
+							);
+						}
 
-	reimbursementInvoice: mixed()
-		.required('Required')
-		.test(
-			'fileSize',
-			validateDocument.fileSize.message,
-			(reimbursementInvoice) => {
-				if (reimbursementInvoice && !reimbursementInvoice.documentId) {
-					return (
-						Math.ceil(reimbursementInvoice.size / 1000) <=
-						validateDocument.fileSize.maxSize
-					);
-				}
+						return true;
+					}
+				)
+				.test(
+					'fileType',
+					validateDocument.document.message,
+					(reimbursementInvoice) => {
+						if (
+							reimbursementInvoice &&
+							!reimbursementInvoice.documentId
+						) {
+							return validateDocument.document.types.includes(
+								reimbursementInvoice.type
+							);
+						}
 
-				return true;
-			}
+						return true;
+					}
+				)
 		)
-		.test(
-			'fileType',
-			validateDocument.document.message,
-			(reimbursementInvoice) => {
-				if (reimbursementInvoice && !reimbursementInvoice.documentId) {
-					return validateDocument.document.types.includes(
-						reimbursementInvoice.type
-					);
-				}
-
-				return true;
-			}
-		),
+		.min(1, 'Reimbursement Invoices must have at least 1 file')
+		.required('Required'),
 	totalClaimAmount: number()
 		.moreThan(0, 'Need be bigger than 0')
 		.required('Required')

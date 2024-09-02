@@ -1,4 +1,4 @@
-@component-name = "portal-calendar"
+@component-name = "portal-bpm"
 definition {
 
 	property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}default.layout.template.id=1_column";
@@ -57,11 +57,11 @@ definition {
 
 		CalendarPermissions.changePaginationPermissions(itemsPerPage = 4);
 
-		CalendarPermissions.viewResultsEntries(results = "Showing 1 to 4 of 9 entries.");
+		CalendarPermissions.viewResultsEntries(results = "Showing 1 to 4 of 8 entries.");
 
 		CalendarPermissions.changePaginationPermissions(itemsPerPage = 8);
 
-		CalendarPermissions.viewResultsEntries(results = "Showing 1 to 8 of 9 entries.");
+		CalendarPermissions.viewResultsEntries(results = "Showing 1 to 8 of 8 entries.");
 	}
 
 	@description = "LRQA-71890 - Verify that the user can clear the result bar after a search"

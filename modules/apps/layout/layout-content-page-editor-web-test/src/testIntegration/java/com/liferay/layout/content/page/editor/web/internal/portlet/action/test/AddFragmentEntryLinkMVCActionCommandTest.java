@@ -198,11 +198,11 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
-				TestPropsValues.getUserId(), groupId, StringUtil.randomString(),
-				StringPool.BLANK, serviceContext);
+				null, TestPropsValues.getUserId(), groupId,
+				StringUtil.randomString(), StringPool.BLANK, serviceContext);
 
 		return _fragmentEntryLocalService.addFragmentEntry(
-			TestPropsValues.getUserId(), groupId,
+			null, TestPropsValues.getUserId(), groupId,
 			fragmentCollection.getFragmentCollectionId(),
 			StringUtil.randomString(), StringUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),

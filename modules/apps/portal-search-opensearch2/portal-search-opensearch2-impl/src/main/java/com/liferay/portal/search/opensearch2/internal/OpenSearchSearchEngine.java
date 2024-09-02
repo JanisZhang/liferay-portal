@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.search.IndexWriter;
 import com.liferay.portal.kernel.search.SearchEngine;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -49,8 +50,10 @@ import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.opensearch2.internal.configuration.OpenSearchConfigurationObserver;
 import com.liferay.portal.search.opensearch2.internal.configuration.OpenSearchConfigurationWrapper;
 import com.liferay.portal.search.opensearch2.internal.connection.OpenSearchConnectionManager;
-import com.liferay.portal.search.opensearch2.internal.index.IndexConfigurationDynamicUpdatesExecutor;
 import com.liferay.portal.search.opensearch2.internal.index.IndexFactory;
+
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
 
 import java.io.IOException;
 
@@ -59,13 +62,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.lang.ArrayUtils;
-
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.cat.OpenSearchCatClient;
 import org.opensearch.client.opensearch.cat.RepositoriesResponse;
 import org.opensearch.client.opensearch.cat.repositories.RepositoriesRecord;
+import org.opensearch.client.opensearch.cluster.GetClusterSettingsResponse;
+import org.opensearch.client.opensearch.cluster.OpenSearchClusterClient;
+import org.opensearch.client.opensearch.cluster.PutClusterSettingsRequest;
 import org.opensearch.client.opensearch.ingest.OpenSearchIngestClient;
 import org.opensearch.client.opensearch.ingest.Processor;
 import org.opensearch.client.opensearch.ingest.PutPipelineRequest;
@@ -162,7 +166,7 @@ public class OpenSearchSearchEngine
 		OpenSearchClient openSearchClient =
 			_openSearchConnectionManager.getOpenSearchClient();
 
-		boolean created = _indexFactory.createIndices(
+		boolean created = _indexFactory.initializeIndex(
 			companyId, openSearchClient.indices());
 
 		_indexFactory.registerCompanyId(companyId);
@@ -170,8 +174,6 @@ public class OpenSearchSearchEngine
 		if (created) {
 			_waitForYellowStatus();
 		}
-
-		_indexConfigurationDynamicUpdatesExecutor.execute(companyId);
 
 		CrossClusterReplicationHelper crossClusterReplicationHelper =
 			_crossClusterReplicationHelperSnapshot.get();
@@ -221,11 +223,13 @@ public class OpenSearchSearchEngine
 				_indexNameBuilder.getIndexName(companyId));
 		}
 
+		setAutoCreateIndex(false);
+
 		try {
 			OpenSearchClient openSearchClient =
 				_openSearchConnectionManager.getOpenSearchClient();
 
-			_indexFactory.deleteIndices(companyId, openSearchClient.indices());
+			_indexFactory.deleteIndex(companyId, openSearchClient.indices());
 
 			_indexFactory.unregisterCompanyId(companyId);
 		}
@@ -267,6 +271,31 @@ public class OpenSearchSearchEngine
 		_waitForYellowStatus();
 	}
 
+	public void setAutoCreateIndex(boolean enable) {
+		if (Validator.isBlank(_indexNameBuilder.getIndexNamePrefix())) {
+			return;
+		}
+
+		OpenSearchClient openSearchClient =
+			_openSearchConnectionManager.getOpenSearchClient();
+
+		OpenSearchClusterClient openSearchClusterClient =
+			openSearchClient.cluster();
+
+		try {
+			openSearchClusterClient.putSettings(
+				PutClusterSettingsRequest.of(
+					putClusterSettingsRequest ->
+						putClusterSettingsRequest.persistent(
+							"action.auto_create_index",
+							JsonData.of(
+								_createAutoCreateIndexSetting(enable)))));
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
 	@Activate
 	protected void activate(Map<String, Object> properties) {
 		_checkNodeVersions();
@@ -277,6 +306,8 @@ public class OpenSearchSearchEngine
 				OpenSearchSearchEngine.class.getClassLoader())) {
 
 			_checkNodeVersions();
+
+			setAutoCreateIndex(false);
 
 			if (StartupHelperUtil.isDBNew()) {
 				_companyLocalService.forEachCompanyId(
@@ -329,10 +360,99 @@ public class OpenSearchSearchEngine
 		}
 	}
 
+	private String _createAutoCreateIndexSetting(boolean enable) {
+		String currentValue = _getAutoCreateIndexSetting();
+		String disableAutoCreateLiferayIndexPattern = StringBundler.concat(
+			StringPool.MINUS, _indexNameBuilder.getIndexNamePrefix(),
+			StringPool.STAR);
+		String enableAutoCreateLiferayIndexPattern = StringBundler.concat(
+			StringPool.PLUS, _indexNameBuilder.getIndexNamePrefix(),
+			StringPool.STAR);
+
+		if (enable) {
+			if (Validator.isBlank(currentValue) ||
+				currentValue.equals(StringPool.STAR) ||
+				StringUtil.equalsIgnoreCase(currentValue, "true") ||
+				currentValue.contains(enableAutoCreateLiferayIndexPattern)) {
+
+				return currentValue;
+			}
+			else if (StringUtil.equalsIgnoreCase(currentValue, "false")) {
+				return enableAutoCreateLiferayIndexPattern;
+			}
+			else if (currentValue.contains(
+						disableAutoCreateLiferayIndexPattern)) {
+
+				return StringUtil.replace(
+					currentValue, disableAutoCreateLiferayIndexPattern,
+					enableAutoCreateLiferayIndexPattern);
+			}
+
+			return StringBundler.concat(
+				enableAutoCreateLiferayIndexPattern, StringPool.COMMA_AND_SPACE,
+				currentValue);
+		}
+
+		if (Validator.isBlank(currentValue) ||
+			currentValue.equals(StringPool.STAR) ||
+			StringUtil.equalsIgnoreCase(currentValue, "true")) {
+
+			return StringBundler.concat(
+				disableAutoCreateLiferayIndexPattern,
+				StringPool.COMMA_AND_SPACE, StringPool.STAR);
+		}
+		else if (StringUtil.equalsIgnoreCase(currentValue, "false") ||
+				 currentValue.contains(disableAutoCreateLiferayIndexPattern)) {
+
+			return currentValue;
+		}
+		else if (currentValue.contains(enableAutoCreateLiferayIndexPattern)) {
+			return StringUtil.replace(
+				currentValue, enableAutoCreateLiferayIndexPattern,
+				disableAutoCreateLiferayIndexPattern);
+		}
+
+		return StringBundler.concat(
+			disableAutoCreateLiferayIndexPattern, StringPool.COMMA_AND_SPACE,
+			currentValue);
+	}
+
+	private String _getAutoCreateIndexSetting() {
+		OpenSearchClient openSearchClient =
+			_openSearchConnectionManager.getOpenSearchClient();
+
+		OpenSearchClusterClient openSearchClusterClient =
+			openSearchClient.cluster();
+
+		try {
+			GetClusterSettingsResponse getClusterSettingsResponse =
+				openSearchClusterClient.getSettings();
+
+			Map<String, JsonData> persistentSettings =
+				getClusterSettingsResponse.persistent();
+
+			JsonData jsonData = persistentSettings.get("action");
+
+			if (jsonData == null) {
+				return null;
+			}
+
+			JsonValue jsonValue = jsonData.toJson();
+
+			JsonObject jsonObject = jsonValue.asJsonObject();
+
+			return jsonObject.getString("auto_create_index");
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
 	private long[] _getIndexedCompanyIds() {
 		List<Long> companyIds = new ArrayList<>();
 
-		String firstIndexName = _indexNameBuilder.getIndexName(0);
+		String firstIndexName = _indexNameBuilder.getIndexName(
+			CompanyConstants.SYSTEM);
 
 		String prefix = firstIndexName.substring(
 			0, firstIndexName.length() - 1);
@@ -352,7 +472,7 @@ public class OpenSearchSearchEngine
 			companyIds.add(companyId);
 		}
 
-		return ArrayUtils.toPrimitive(companyIds.toArray(new Long[0]));
+		return ArrayUtil.toLongArray(companyIds);
 	}
 
 	private boolean _hasBackupRepository() {
@@ -487,10 +607,6 @@ public class OpenSearchSearchEngine
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
-
-	@Reference
-	private IndexConfigurationDynamicUpdatesExecutor
-		_indexConfigurationDynamicUpdatesExecutor;
 
 	@Reference
 	private IndexFactory _indexFactory;

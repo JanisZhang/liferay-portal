@@ -9,27 +9,29 @@ import {ReactFlowProvider} from 'react-flow-renderer';
 import {DefinitionBuilderContextProvider} from '../../src/main/resources/META-INF/resources/designer/js/definition-builder/DefinitionBuilderContext';
 
 export default function MockDefinitionBuilderContext({children}) {
-	const [blockingErrors, setBlockingErrors] = useState({});
+	const [blockingError, setBlockingError] = useState({});
 	const [selectedLanguageId, setSelectedLanguageId] = useState('');
 	const [translations, setTranslations] = useState({});
 	const [showDefinitionInfo, setShowDefinitionInfo] = useState(false);
-	const [
-		definitionTitleTranslations,
-		setDefinitionTitleTranslations,
-	] = useState('');
+	const [definitionTitleTranslations, setDefinitionTitleTranslations] =
+		useState('');
+	const [workflowDefinitionVersions, setWorkflowDefinitionVersions] =
+		useState([{}]);
 
 	const contextProps = {
-		blockingErrors,
+		blockingError,
 		defaultLanguageId: themeDisplay.getLanguageId(),
 		definitionTitleTranslations,
 		selectedLanguageId,
-		setBlockingErrors,
+		setBlockingError,
 		setDefinitionTitleTranslations,
 		setSelectedLanguageId,
 		setShowDefinitionInfo,
 		setTranslations,
+		setWorkflowDefinitionVersions,
 		showDefinitionInfo,
 		translations,
+		workflowDefinitionVersions,
 	};
 
 	return (

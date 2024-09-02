@@ -67,16 +67,16 @@ function QueryBuilderTab({
 	 * @param {string} type A `SIDEBAR_TYPES` value.
 	 * @param {visible} boolean Defaults to false if sidebar is open.
 	 */
-	const _handleChangeSidebarVisibility = (type) => (
-		visible = openSidebar !== type
-	) => {
-		if (visible) {
-			setOpenSidebar(type);
-		}
-		else if (openSidebar === type) {
-			setOpenSidebar('');
-		}
-	};
+	const _handleChangeSidebarVisibility =
+		(type) =>
+		(visible = openSidebar !== type) => {
+			if (visible) {
+				setOpenSidebar(type);
+			}
+			else if (openSidebar === type) {
+				setOpenSidebar('');
+			}
+		};
 
 	/**
 	 * Handles navigating to a different vertical nav tab. Certain sidebars
@@ -90,7 +90,9 @@ function QueryBuilderTab({
 			(verticalNavKey === VERTICAL_NAV_KEYS.QUERY_SXP_ELEMENTS &&
 				openSidebar === SIDEBAR_TYPES.CLAUSE_CONTRIBUTORS) ||
 			(verticalNavKey === VERTICAL_NAV_KEYS.QUERY_SXP_ELEMENTS &&
-				openSidebar === SIDEBAR_TYPES.INDEXER_CLAUSES) ||
+				openSidebar === SIDEBAR_TYPES.INDEXER_CLAUSES_HELP) ||
+			(verticalNavKey === VERTICAL_NAV_KEYS.QUERY_SXP_ELEMENTS &&
+				openSidebar === SIDEBAR_TYPES.QUERY_CONTRIBUTORS_HELP) ||
 			(verticalNavKey === VERTICAL_NAV_KEYS.QUERY_SETTINGS &&
 				openSidebar === SIDEBAR_TYPES.ADD_SXP_ELEMENT)
 		) {
@@ -172,8 +174,11 @@ function QueryBuilderTab({
 									onChangeClauseContributorsVisibility={_handleChangeSidebarVisibility(
 										SIDEBAR_TYPES.CLAUSE_CONTRIBUTORS
 									)}
-									onChangeIndexerClausesVisibility={_handleChangeSidebarVisibility(
-										SIDEBAR_TYPES.INDEXER_CLAUSES
+									onChangeIndexerClausesHelpVisibility={_handleChangeSidebarVisibility(
+										SIDEBAR_TYPES.INDEXER_CLAUSES_HELP
+									)}
+									onChangeQueryContributorsHelpVisibility={_handleChangeSidebarVisibility(
+										SIDEBAR_TYPES.QUERY_CONTRIBUTORS_HELP
 									)}
 									onFetchSearchableTypes={
 										onFetchSearchableTypes

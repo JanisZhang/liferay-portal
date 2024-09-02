@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
@@ -24,6 +25,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PortalInstances;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.Locale;
 
@@ -56,178 +58,213 @@ public class I18nFilterTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_mockHttpServletRequest = new MockHttpServletRequest();
-		_mockHttpServletResponse = new MockHttpServletResponse();
-
 		_group = GroupTestUtil.addGroup();
 	}
 
 	@Test
-	public void testEnglishUserEnglishSessionEnglishCookieWithoutVirtualHostAlgorithm3()
+	public void testEnglishUserEnglishSessionEnglishCookieWithoutVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertNull(
 			_getPrependI18nLanguageId(
-				3, LocaleUtil.US, LocaleUtil.US, LocaleUtil.US, null));
+				3, LocaleUtil.US, LocaleUtil.US, LocaleUtil.US, null, null));
 	}
 
 	@Test
-	public void testEnglishUserEnglishSessionSpanishCookieWithoutVirtualHostAlgorithm3()
+	public void testEnglishUserEnglishSessionSpanishCookieWithoutVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertNull(
 			_getPrependI18nLanguageId(
-				3, LocaleUtil.US, LocaleUtil.US, LocaleUtil.SPAIN, null));
+				3, LocaleUtil.US, LocaleUtil.US, LocaleUtil.SPAIN, null, null));
 	}
 
 	@Test
-	public void testEnglishUserEnglishSessionWithoutCookieVirtualHostAlgorithm3()
+	public void testEnglishUserEnglishSessionWithoutCookieVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertNull(
 			_getPrependI18nLanguageId(
-				3, LocaleUtil.US, LocaleUtil.US, null, null));
+				3, LocaleUtil.US, LocaleUtil.US, null, null, null));
 	}
 
 	@Test
-	public void testEnglishUserSpanishCookieSpanishVirtualHostWithoutSessionAlgorithm3()
+	public void testEnglishUserSpanishCookieSpanishVirtualHostWithoutSessionPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertNull(
 			_getPrependI18nLanguageId(
-				3, LocaleUtil.ENGLISH, null, LocaleUtil.SPAIN,
-				LocaleUtil.SPAIN));
+				3, LocaleUtil.ENGLISH, null, LocaleUtil.SPAIN, LocaleUtil.SPAIN,
+				null));
 	}
 
 	@Test
-	public void testEnglishUserSpanishSessionEnglishCookieWithoutVirtualHostAlgorithm3()
+	public void testEnglishUserSpanishSessionEnglishCookieWithoutVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
 			_getPrependI18nLanguageId(
-				3, LocaleUtil.US, LocaleUtil.SPAIN, LocaleUtil.US, null));
+				3, LocaleUtil.US, LocaleUtil.SPAIN, LocaleUtil.US, null, null));
 	}
 
 	@Test
-	public void testEnglishUserSpanishSessionSpanishCookieSpanishVirtualHostAlgorithm3()
+	public void testEnglishUserSpanishSessionSpanishCookieSpanishVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
 			_getPrependI18nLanguageId(
 				3, LocaleUtil.ENGLISH, LocaleUtil.SPAIN, LocaleUtil.SPAIN,
-				LocaleUtil.SPAIN));
+				LocaleUtil.SPAIN, null));
 	}
 
 	@Test
-	public void testEnglishUserSpanishSessionSpanishCookieWithoutVirtualHostAlgorithm3()
+	public void testEnglishUserSpanishSessionSpanishCookieWithoutVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
 			_getPrependI18nLanguageId(
-				3, LocaleUtil.US, LocaleUtil.SPAIN, LocaleUtil.SPAIN, null));
+				3, LocaleUtil.US, LocaleUtil.SPAIN, LocaleUtil.SPAIN, null,
+				null));
 	}
 
 	@Test
-	public void testEnglishUserSpanishSessionWithoutCookieVirtualHostAlgorithm3()
+	public void testEnglishUserSpanishSessionWithoutCookieVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
 			_getPrependI18nLanguageId(
-				3, LocaleUtil.US, LocaleUtil.SPAIN, null, null));
+				3, LocaleUtil.US, LocaleUtil.SPAIN, null, null, null));
 	}
 
 	@Test
-	public void testGuestEnglishSessionEnglishCookieWithoutVirtualHostAlgorithm3()
+	public void testGuestEnglishPreferredWithoutSessionCookieVirtualHostAlgorithm3()
 		throws Exception {
 
 		Assert.assertNull(
 			_getPrependI18nLanguageId(
-				3, null, LocaleUtil.US, LocaleUtil.US, null));
+				3, null, null, null, null, LocaleUtil.ENGLISH));
+		Assert.assertNull(
+			_getPrependI18nLanguageId(
+				3, null, null, null, null, LocaleUtil.US));
 	}
 
 	@Test
-	public void testGuestEnglishSessionSpanishCookieWithoutVirtualHostAlgorithm3()
+	public void testGuestEnglishSessionEnglishCookieWithoutVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertNull(
 			_getPrependI18nLanguageId(
-				3, null, LocaleUtil.US, LocaleUtil.SPAIN, null));
+				3, null, LocaleUtil.US, LocaleUtil.US, null, null));
 	}
 
 	@Test
-	public void testGuestEnglishSessionWithoutCookieVirtualHostAlgorithm3()
+	public void testGuestEnglishSessionSpanishCookieWithoutVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertNull(
-			_getPrependI18nLanguageId(3, null, LocaleUtil.US, null, null));
+			_getPrependI18nLanguageId(
+				3, null, LocaleUtil.US, LocaleUtil.SPAIN, null, null));
 	}
 
 	@Test
-	public void testGuestSpanishCookieSpanishVirtualHostWithoutSessionAlgorithm3()
+	public void testGuestEnglishSessionWithoutCookieVirtualHostPreferredAlgorithm3()
+		throws Exception {
+
+		Assert.assertNull(
+			_getPrependI18nLanguageId(
+				3, null, LocaleUtil.US, null, null, null));
+	}
+
+	@Test
+	public void testGuestSpanishCookieSpanishVirtualHostWithoutSessionPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
 			_getPrependI18nLanguageId(
-				3, null, null, LocaleUtil.SPAIN, LocaleUtil.SPAIN));
+				3, null, null, LocaleUtil.SPAIN, LocaleUtil.SPAIN, null));
 	}
 
 	@Test
-	public void testGuestSpanishSessionEnglishCookieWithoutVirtualHostAlgorithm3()
+	public void testGuestSpanishPreferredWithoutSessionCookieVirtualHostAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
 			_getPrependI18nLanguageId(
-				3, null, LocaleUtil.SPAIN, LocaleUtil.US, null));
+				3, null, null, null, null, LocaleUtil.SPAIN));
+
+		Assert.assertEquals(
+			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
+			_getPrependI18nLanguageId(
+				3, null, null, null, null, new Locale("es")));
 	}
 
 	@Test
-	public void testGuestSpanishSessionSpanishCookieSpanishVirtualHostAlgorithm3()
+	public void testGuestSpanishSessionEnglishCookieWithoutVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
 			_getPrependI18nLanguageId(
-				3, null, LocaleUtil.SPAIN, LocaleUtil.SPAIN, LocaleUtil.SPAIN));
+				3, null, LocaleUtil.SPAIN, LocaleUtil.US, null, null));
 	}
 
 	@Test
-	public void testGuestSpanishSessionSpanishCookieWithoutVirtualHostAlgorithm3()
+	public void testGuestSpanishSessionSpanishCookieSpanishVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
 			_getPrependI18nLanguageId(
-				3, null, LocaleUtil.SPAIN, LocaleUtil.SPAIN, null));
+				3, null, LocaleUtil.SPAIN, LocaleUtil.SPAIN, LocaleUtil.SPAIN,
+				null));
 	}
 
 	@Test
-	public void testGuestSpanishSessionWithoutCookieVirtualHostAlgorithm3()
+	public void testGuestSpanishSessionSpanishCookieWithoutVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
-			_getPrependI18nLanguageId(3, null, LocaleUtil.SPAIN, null, null));
+			_getPrependI18nLanguageId(
+				3, null, LocaleUtil.SPAIN, LocaleUtil.SPAIN, null, null));
 	}
 
 	@Test
-	public void testGuestSpanishVirtualHostWithoutSessionCookieAlgorithm3()
+	public void testGuestSpanishSessionWithoutCookieVirtualHostPreferredAlgorithm3()
 		throws Exception {
 
 		Assert.assertEquals(
 			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
-			_getPrependI18nLanguageId(3, null, null, null, LocaleUtil.SPAIN));
+			_getPrependI18nLanguageId(
+				3, null, LocaleUtil.SPAIN, null, null, null));
+	}
+
+	@Test
+	public void testGuestSpanishVirtualHostWithoutSessionCookiePreferredAlgorithm3()
+		throws Exception {
+
+		Assert.assertEquals(
+			LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
+			_getPrependI18nLanguageId(
+				3, null, null, null, LocaleUtil.SPAIN, null));
 	}
 
 	private String _getPrependI18nLanguageId(
 			int localePrependFriendlyURLStyle, Locale userLocale,
-			Locale sessionLocale, Locale cookieLocale, Locale virtualHostLocale)
+			Locale sessionLocale, Locale cookieLocale, Locale virtualHostLocale,
+			Locale preferredLocale)
 		throws Exception {
+
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+		MockHttpServletResponse mockHttpServletResponse =
+			new MockHttpServletResponse();
 
 		if (virtualHostLocale != null) {
 			String layoutHostname =
@@ -243,14 +280,14 @@ public class I18nFilterTest {
 					LocaleUtil.toLanguageId(virtualHostLocale)
 				).build());
 
-			_mockHttpServletRequest.addHeader("Host", layoutHostname);
-			_mockHttpServletRequest.setServerName(layoutHostname);
+			mockHttpServletRequest.addHeader("Host", layoutHostname);
+			mockHttpServletRequest.setServerName(layoutHostname);
 
-			PortalInstances.getCompanyId(_mockHttpServletRequest);
+			PortalInstances.getCompanyId(mockHttpServletRequest);
 		}
 
 		if (sessionLocale != null) {
-			HttpSession httpSession = _mockHttpServletRequest.getSession();
+			HttpSession httpSession = mockHttpServletRequest.getSession();
 
 			httpSession.setAttribute(WebKeys.LOCALE, sessionLocale);
 		}
@@ -261,33 +298,47 @@ public class I18nFilterTest {
 				RandomTestUtil.randomString(),
 				new long[] {_group.getGroupId()});
 
-			_mockHttpServletRequest.setAttribute(WebKeys.USER, _user);
+			mockHttpServletRequest.setAttribute(WebKeys.USER, _user);
 		}
 
 		if (cookieLocale != null) {
 			_language.updateCookie(
-				_mockHttpServletRequest, _mockHttpServletResponse,
-				cookieLocale);
+				mockHttpServletRequest, mockHttpServletResponse, cookieLocale);
 
 			// Passing cookies from mock HTTP servlet response to mock HTTP
 			// servlet request
 
-			_mockHttpServletRequest.setCookies(
-				_mockHttpServletResponse.getCookies());
+			mockHttpServletRequest.setCookies(
+				mockHttpServletResponse.getCookies());
 		}
 
-		Assert.assertTrue(
-			ReflectionTestUtil.invoke(
-				_i18nFilter, "isFilterEnabled",
-				new Class<?>[] {
-					HttpServletRequest.class, HttpServletResponse.class
-				},
-				_mockHttpServletRequest, _mockHttpServletResponse));
+		boolean localeDefaultRequest = false;
 
-		return ReflectionTestUtil.invoke(
-			_i18nFilter, "prependI18nLanguageId",
-			new Class<?>[] {HttpServletRequest.class, int.class},
-			_mockHttpServletRequest, localePrependFriendlyURLStyle);
+		if (preferredLocale != null) {
+			localeDefaultRequest = true;
+
+			mockHttpServletRequest.setPreferredLocales(
+				ListUtil.fromArray(preferredLocale));
+		}
+
+		try (AutoCloseable autoCloseable =
+				ReflectionTestUtil.setFieldValueWithAutoCloseable(
+					PropsValues.class, "LOCALE_DEFAULT_REQUEST",
+					localeDefaultRequest)) {
+
+			Assert.assertTrue(
+				ReflectionTestUtil.invoke(
+					_i18nFilter, "isFilterEnabled",
+					new Class<?>[] {
+						HttpServletRequest.class, HttpServletResponse.class
+					},
+					mockHttpServletRequest, mockHttpServletResponse));
+
+			return ReflectionTestUtil.invoke(
+				_i18nFilter, "prependI18nLanguageId",
+				new Class<?>[] {HttpServletRequest.class, int.class},
+				mockHttpServletRequest, localePrependFriendlyURLStyle);
+		}
 	}
 
 	@DeleteAfterTestRun
@@ -298,9 +349,6 @@ public class I18nFilterTest {
 
 	@Inject
 	private Language _language;
-
-	private MockHttpServletRequest _mockHttpServletRequest;
-	private MockHttpServletResponse _mockHttpServletResponse;
 
 	@DeleteAfterTestRun
 	private User _user;

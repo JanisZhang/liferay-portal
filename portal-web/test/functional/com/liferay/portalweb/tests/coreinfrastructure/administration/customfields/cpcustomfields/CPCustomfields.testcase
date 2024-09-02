@@ -1,4 +1,4 @@
-@component-name = "portal-portal-configuration"
+@component-name = "portal-core-infra"
 definition {
 
 	property portal.release = "true";
@@ -204,6 +204,8 @@ definition {
 	@description = "This is a use case for LPS-146795. The user admin could add new user with space character in geolocation custom field name."
 	@priority = 4
 	test AddNewUserWithGeolocationCustomFields {
+		property portal.upstream = "quarantine";
+
 		CustomFields.openCustomFieldAdmin();
 
 		CustomFields.addCP(
@@ -274,8 +276,8 @@ definition {
 
 	@priority = 5
 	test EditCustomFieldUserTextField {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";

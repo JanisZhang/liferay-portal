@@ -35,10 +35,12 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -59,8 +61,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -101,7 +101,7 @@ public abstract class BasePinResourceTestCase {
 		PinResource.Builder builder = PinResource.builder();
 
 		pinResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -115,7 +115,32 @@ public abstract class BasePinResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Pin pin1 = randomPin();
+
+		String json = objectMapper.writeValueAsString(pin1);
+
+		Pin pin2 = PinSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(pin1, pin2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Pin pin = randomPin();
+
+		String json1 = objectMapper.writeValueAsString(pin);
+		String json2 = PinSerDes.toJSON(pin);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -130,40 +155,6 @@ public abstract class BasePinResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Pin pin1 = randomPin();
-
-		String json = objectMapper.writeValueAsString(pin1);
-
-		Pin pin2 = PinSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(pin1, pin2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Pin pin = randomPin();
-
-		String json1 = objectMapper.writeValueAsString(pin);
-		String json2 = PinSerDes.toJSON(pin);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -181,6 +172,399 @@ public abstract class BasePinResourceTestCase {
 		pin = PinSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, pin.getSequence());
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage()
+		throws Exception {
+
+		String channelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getChannelExternalReferenceCode();
+		String irrelevantChannelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getIrrelevantChannelExternalReferenceCode();
+		String productExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getProductExternalReferenceCode();
+		String irrelevantProductExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getIrrelevantProductExternalReferenceCode();
+
+		Page<Pin> page =
+			pinResource.
+				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+					channelExternalReferenceCode, productExternalReferenceCode,
+					null, null, Pagination.of(1, 10), null);
+
+		long totalCount = page.getTotalCount();
+
+		if ((irrelevantChannelExternalReferenceCode != null) &&
+			(irrelevantProductExternalReferenceCode != null)) {
+
+			Pin irrelevantPin =
+				testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
+					irrelevantChannelExternalReferenceCode,
+					irrelevantProductExternalReferenceCode,
+					randomIrrelevantPin());
+
+			page =
+				pinResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+						irrelevantChannelExternalReferenceCode,
+						irrelevantProductExternalReferenceCode, null, null,
+						Pagination.of(1, (int)totalCount + 1), null);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantPin, (List<Pin>)page.getItems());
+			assertValid(
+				page,
+				testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getExpectedActions(
+					irrelevantChannelExternalReferenceCode,
+					irrelevantProductExternalReferenceCode));
+		}
+
+		Pin pin1 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomPin());
+
+		Pin pin2 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomPin());
+
+		page =
+			pinResource.
+				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+					channelExternalReferenceCode, productExternalReferenceCode,
+					null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(pin1, (List<Pin>)page.getItems());
+		assertContains(pin2, (List<Pin>)page.getItems());
+		assertValid(
+			page,
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getExpectedActions(
+				channelExternalReferenceCode, productExternalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getExpectedActions(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithPagination()
+		throws Exception {
+
+		String channelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getChannelExternalReferenceCode();
+		String productExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getProductExternalReferenceCode();
+
+		Page<Pin> pinPage =
+			pinResource.
+				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+					channelExternalReferenceCode, productExternalReferenceCode,
+					null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(pinPage.getTotalCount());
+
+		Pin pin1 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomPin());
+
+		Pin pin2 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomPin());
+
+		Pin pin3 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomPin());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Pin> page1 =
+				pinResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(pin1, (List<Pin>)page1.getItems());
+
+			Page<Pin> page2 =
+				pinResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			assertContains(pin2, (List<Pin>)page2.getItems());
+
+			Page<Pin> page3 =
+				pinResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
+
+			assertContains(pin3, (List<Pin>)page3.getItems());
+		}
+		else {
+			Page<Pin> page1 =
+				pinResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode, null, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<Pin> pins1 = (List<Pin>)page1.getItems();
+
+			Assert.assertEquals(pins1.toString(), totalCount + 2, pins1.size());
+
+			Page<Pin> page2 =
+				pinResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode, null, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Pin> pins2 = (List<Pin>)page2.getItems();
+
+			Assert.assertEquals(pins2.toString(), 1, pins2.size());
+
+			Page<Pin> page3 =
+				pinResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode, null, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(pin1, (List<Pin>)page3.getItems());
+			assertContains(pin2, (List<Pin>)page3.getItems());
+			assertContains(pin3, (List<Pin>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithSortDateTime()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, pin1, pin2) -> {
+				BeanTestUtil.setProperty(
+					pin1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithSortDouble()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, pin1, pin2) -> {
+				BeanTestUtil.setProperty(pin1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(pin2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithSortInteger()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, pin1, pin2) -> {
+				BeanTestUtil.setProperty(pin1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(pin2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithSortString()
+		throws Exception {
+
+		testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, pin1, pin2) -> {
+				Class<?> clazz = pin1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						pin1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						pin2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						pin1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						pin2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						pin1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						pin2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPageWithSort(
+				EntityField.Type type,
+				UnsafeTriConsumer<EntityField, Pin, Pin, Exception>
+					unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		String channelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getChannelExternalReferenceCode();
+		String productExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getProductExternalReferenceCode();
+
+		Pin pin1 = randomPin();
+		Pin pin2 = randomPin();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, pin1, pin2);
+		}
+
+		pin1 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				pin1);
+
+		pin2 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				pin2);
+
+		Page<Pin> page =
+			pinResource.
+				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+					channelExternalReferenceCode, productExternalReferenceCode,
+					null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<Pin> ascPage =
+				pinResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":asc");
+
+			assertContains(pin1, (List<Pin>)ascPage.getItems());
+			assertContains(pin2, (List<Pin>)ascPage.getItems());
+
+			Page<Pin> descPage =
+				pinResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":desc");
+
+			assertContains(pin2, (List<Pin>)descPage.getItems());
+			assertContains(pin1, (List<Pin>)descPage.getItems());
+		}
+	}
+
+	protected Pin
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_addPin(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode, Pin pin)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getChannelExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getIrrelevantChannelExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getProductExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodePinsPage_getIrrelevantProductExternalReferenceCode()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -335,7 +719,7 @@ public abstract class BasePinResourceTestCase {
 			(entityField, pin1, pin2) -> {
 				BeanTestUtil.setProperty(
 					pin1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -949,7 +1333,8 @@ public abstract class BasePinResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1008,12 +1393,12 @@ public abstract class BasePinResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1022,11 +1407,16 @@ public abstract class BasePinResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1058,6 +1448,24 @@ public abstract class BasePinResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1079,16 +1487,6 @@ public abstract class BasePinResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

@@ -13,8 +13,6 @@ import com.liferay.layout.model.LockedLayoutType;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
-import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
-import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
@@ -26,7 +24,6 @@ import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.LockedLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.lock.LockManager;
 import com.liferay.portal.kernel.model.Group;
@@ -39,6 +36,7 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -54,6 +52,7 @@ import com.liferay.portal.model.impl.LayoutModelImpl;
 import java.sql.Types;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -91,9 +90,7 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 
 	@Override
 	public void getLock(Layout layout, long userId) throws PortalException {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-180328") ||
-			(layout == null) || !layout.isDraftLayout()) {
-
+		if ((layout == null) || !layout.isDraftLayout()) {
 			return;
 		}
 
@@ -127,6 +124,8 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 	@Override
 	public List<LockedLayout> getLockedLayouts(
 		long companyId, long groupId, Locale locale) {
+
+		List<LockedLayout> lockedLayouts = new ArrayList<>();
 
 		List<Object[]> results = _layoutLocalService.dslQuery(
 			DSLQueryFactoryUtil.select(
@@ -165,15 +164,14 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 							new String[] {
 								LayoutConstants.TYPE_ASSET_DISPLAY,
 								LayoutConstants.TYPE_COLLECTION,
-								LayoutConstants.TYPE_CONTENT
+								LayoutConstants.TYPE_CONTENT,
+								LayoutConstants.TYPE_UTILITY
 							})
 					)
 				).as(
 					"LockedLayoutsTable", LockedLayoutsTable.INSTANCE
 				)
 			));
-
-		List<LockedLayout> lockedLayouts = new ArrayList<>();
 
 		for (Object[] columns : results) {
 			Layout layout = _layoutLocalService.fetchLayout(
@@ -250,10 +248,6 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 				redirectUnsafeSupplier)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-180328")) {
-			return String.valueOf(redirectUnsafeSupplier.get());
-		}
-
 		return PortletURLBuilder.createActionURL(
 			liferayPortletResponse
 		).setActionName(
@@ -265,9 +259,7 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 
 	@Override
 	public void unlock(Layout layout, long userId) {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-180328") ||
-			(layout == null) || !layout.isDraftLayout()) {
-
+		if ((layout == null) || !layout.isDraftLayout()) {
 			return;
 		}
 
@@ -352,23 +344,12 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 	public void unlockLayoutsByUserId(long companyId, long userId)
 		throws PortalException {
 
-		ActionableDynamicQuery actionableDynamicQuery =
-			_lockLocalService.getActionableDynamicQuery();
+		for (com.liferay.portal.lock.model.Lock lock :
+				_lockLocalService.getLocks(
+					companyId, userId, _CLASS_NAME_LAYOUT)) {
 
-		actionableDynamicQuery.setAddCriteriaMethod(
-			dynamicQuery -> {
-				dynamicQuery.add(
-					RestrictionsFactoryUtil.eq("companyId", companyId));
-				dynamicQuery.add(
-					RestrictionsFactoryUtil.eq(
-						"className", Layout.class.getName()));
-				dynamicQuery.add(RestrictionsFactoryUtil.eq("userId", userId));
-			});
-		actionableDynamicQuery.setPerformActionMethod(
-			(com.liferay.portal.lock.model.Lock lock) -> _lockManager.unlock(
-				lock.getClassName(), lock.getKey()));
-
-		actionableDynamicQuery.performActions();
+			_lockLocalService.unlock(_CLASS_NAME_LAYOUT, lock.getKey());
+		}
 	}
 
 	@Activate
@@ -460,8 +441,8 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 				_configurationAdmin.listConfigurations(
 					_getLockedLayoutsGroupConfigurationFilterString(companyId));
 
-			if ((configurations == null) || (configurations.length == 0)) {
-				return lockedLayoutsGroupConfigurations;
+			if (ArrayUtil.isEmpty(configurations)) {
+				return Collections.emptyMap();
 			}
 
 			for (Configuration configuration : configurations) {
@@ -490,9 +471,11 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 		if (Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY)) {
 			return LockedLayoutType.DISPLAY_PAGE_TEMPLATE;
 		}
-
-		if (Objects.equals(type, LayoutConstants.TYPE_COLLECTION)) {
+		else if (Objects.equals(type, LayoutConstants.TYPE_COLLECTION)) {
 			return LockedLayoutType.COLLECTION_PAGE;
+		}
+		else if (Objects.equals(type, LayoutConstants.TYPE_UTILITY)) {
+			return LockedLayoutType.UTILITY_PAGE;
 		}
 
 		if (!Objects.equals(type, LayoutConstants.TYPE_CONTENT)) {
@@ -508,16 +491,10 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 				layoutPageTemplateEntry);
 		}
 
-		LayoutUtilityPageEntry layoutUtilityPageEntry =
-			_layoutUtilityPageEntryLocalService.
-				fetchLayoutUtilityPageEntryByPlid(classPK);
-
-		if (layoutUtilityPageEntry != null) {
-			return LockedLayoutType.UTILITY_PAGE;
-		}
-
 		return LockedLayoutType.CONTENT_PAGE;
 	}
+
+	private static final String _CLASS_NAME_LAYOUT = Layout.class.getName();
 
 	@Reference
 	private ConfigurationAdmin _configurationAdmin;
@@ -534,10 +511,6 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 	@Reference
 	private LayoutPageTemplateEntryLocalService
 		_layoutPageTemplateEntryLocalService;
-
-	@Reference
-	private LayoutUtilityPageEntryLocalService
-		_layoutUtilityPageEntryLocalService;
 
 	private volatile long _lockExpirationTime;
 

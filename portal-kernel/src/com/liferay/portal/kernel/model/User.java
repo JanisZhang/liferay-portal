@@ -46,9 +46,6 @@ public interface User extends PersistedModel, UserModel {
 
 		};
 
-	public void addRemotePreference(
-		com.liferay.portal.kernel.util.RemotePreference remotePreference);
-
 	public Contact fetchContact();
 
 	public String fetchPortraitURL(
@@ -60,6 +57,12 @@ public interface User extends PersistedModel, UserModel {
 	 * @return the user's addresses
 	 */
 	public java.util.List<Address> getAddresses();
+
+	public java.util.List<Group> getAllGroups()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public java.util.List<Role> getAllRoles()
+		throws com.liferay.portal.kernel.exception.PortalException;
 
 	/**
 	 * Returns the user's birth date.
@@ -209,6 +212,17 @@ public interface User extends PersistedModel, UserModel {
 
 	public java.util.List<Group> getGroups();
 
+	public java.util.List<Group> getInheritedGroups()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public java.util.List<Role> getInheritedRoles()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public java.util.List<Group> getInheritedSiteGroups()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public java.util.List<Role> getInheritedSiteRoles();
+
 	public String getInitials();
 
 	public java.util.Locale getLocale();
@@ -247,6 +261,16 @@ public interface User extends PersistedModel, UserModel {
 			boolean includeAdministrative)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	public java.util.List<Organization> getOrganizations(
+			boolean includeAdministrative, boolean includeParentOrganizations)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public java.util.List<Group> getOrganizationsGroups()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public java.util.List<Role> getOrganizationsRoles()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
 	public String getOriginalEmailAddress();
 
 	public boolean getPasswordModified();
@@ -271,12 +295,6 @@ public interface User extends PersistedModel, UserModel {
 	public java.util.Set<String> getReminderQueryQuestions()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
-	public com.liferay.portal.kernel.util.RemotePreference getRemotePreference(
-		String name);
-
-	public Iterable<com.liferay.portal.kernel.util.RemotePreference>
-		getRemotePreferences();
-
 	public long[] getRoleIds();
 
 	public java.util.List<Role> getRoles();
@@ -285,6 +303,9 @@ public interface User extends PersistedModel, UserModel {
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public java.util.List<Group> getSiteGroups(boolean includeAdministrative)
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public java.util.List<Role> getSiteRoles()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public long[] getTeamIds();
@@ -299,6 +320,9 @@ public interface User extends PersistedModel, UserModel {
 	public java.util.Date getUnlockDate(PasswordPolicy passwordPolicy);
 
 	public long[] getUserGroupIds();
+
+	public java.util.List<UserGroupRole> getUserGroupRoles()
+		throws com.liferay.portal.kernel.exception.PortalException;
 
 	public java.util.List<UserGroup> getUserGroups();
 
@@ -347,6 +371,8 @@ public interface User extends PersistedModel, UserModel {
 
 	public boolean isPasswordModified();
 
+	public boolean isPasswordResetRequired();
+
 	public boolean isReminderQueryComplete();
 
 	public boolean isServiceAccountUser();
@@ -356,6 +382,10 @@ public interface User extends PersistedModel, UserModel {
 	public boolean isTermsOfUseComplete();
 
 	public void setContact(Contact contact);
+
+	public void setGroup(Group group);
+
+	public void setGroupId(long groupId);
 
 	public void setGroupIds(long[] groupIds);
 

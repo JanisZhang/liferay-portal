@@ -24,10 +24,6 @@ definition {
 
 		Click(locator1 = "ACSegments#SEGMENT_OVERVIEW_ATTRIBUTE");
 
-		Type(
-			locator1 = "ACSegments#SEGMENT_OVERVIEW_ATTRIBUTE",
-			value1 = ${attribute});
-
 		Click(
 			locator1 = "ACSegments#ATTRIBUTE_DROPDOWN_MENU_ITEM",
 			menuItem = ${attribute});
@@ -339,6 +335,8 @@ definition {
 		ACUtils.clickKebab();
 
 		Click(locator1 = "ACSegments#EDIT_SEGMENT");
+
+		ACUtils.waitForLoading();
 	}
 
 	@summary = "Default summary"
@@ -543,6 +541,8 @@ definition {
 	macro previewSegmentMembership() {
 		WaitForElementNotPresent(locator1 = "ACSegments#FORM_HEADER_LOADING_ANIMATION");
 
+		ACUtils.waitForSendingRequest();
+
 		Click(locator1 = "Icon#EYE_PREVIEW");
 	}
 
@@ -584,6 +584,8 @@ definition {
 		KeyPress(
 			locator1 = "ACSettings#SEARCH_BAR",
 			value1 = "\ENTER");
+
+		ACUtils.waitForLoading();
 	}
 
 	@summary = "Default summary"
@@ -615,10 +617,6 @@ definition {
 	@summary = "Default summary"
 	macro selectDistributionByAttribute(attribute = null) {
 		Click(locator1 = "ACSegments#ATTRIBUTE_TEXT_INPUT");
-
-		Type(
-			locator1 = "ACSegments#ATTRIBUTE_TEXT_INPUT",
-			value1 = ${attribute});
 
 		Click(
 			locator1 = "ACSegments#ATTRIBUTE_DROPDOWN_MENU_ITEM",
@@ -707,6 +705,8 @@ definition {
 
 	@summary = "Default summary"
 	macro viewBreakdownChartsEntry(key_entry = null) {
+		WaitForElementPresent(locator1 = "ACSegments#BREAKDOWN_CHART");
+
 		AssertTextEquals.assertPartialText(
 			locator1 = "ACSegments#BREAKDOWN_CHART",
 			value1 = ${key_entry});
@@ -771,28 +771,6 @@ definition {
 		AssertTextPresent(
 			locator1 = "ACLoading#PREVIEW_NUMBER",
 			value1 = ${previewNumber});
-	}
-
-	@summary = "Default summary"
-	macro viewSegmentComposition(individualsPercent = null, individualsNumber = null, individualsType = null) {
-		if (${individualsType} == "Active") {
-			AssertTextEquals(
-				locator1 = "ACSegments#SEGMENT_COMPOSITION_COUNT",
-				value1 = ${individualsNumber});
-
-			AssertTextEquals(
-				locator1 = "ACSegments#SEGMENT_COMPOSITION_PERCENT",
-				value1 = ${individualsPercent});
-		}
-		else if (${individualsType} == "Known") {
-			AssertTextEquals(
-				locator1 = "ACSegments#SEGMENT_COMPOSITION_COUNT",
-				value1 = ${individualsNumber});
-
-			AssertTextEquals(
-				locator1 = "ACSegments#SEGMENT_COMPOSITION_PERCENT",
-				value1 = ${individualsPercent});
-		}
 	}
 
 	@summary = "Default summary"
@@ -903,7 +881,7 @@ definition {
 		}
 
 		if (isSet(searchTerm)) {
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				key_index = 1,
 				locator1 = "ACSegments#SEGMENT_CRITERIA_WEB_BEHAVIOR_B",
 				value1 = ${searchTerm});
@@ -998,28 +976,6 @@ definition {
 		ACSegments.searchSegment(findSegment = ${searchTerm});
 
 		AssertElementPresent(locator1 = "ACSegments#SELECT_SEGMENT");
-	}
-
-	@summary = "Default summary"
-	macro viewSegmentProfileCards() {
-		AssertTextPresent(
-			locator1 = "ACSegments#SEGMENT_MEMBERSHIP_CARD",
-			value1 = "Segment Membership");
-
-		AssertTextPresent(
-			locator1 = "ACSegments#SEGMENT_TOP_INTERESTS_CARD",
-			value1 = "Top Interests");
-
-		AssertTextPresent(
-			locator1 = "ACSegments#SEGMENT_BREAKDOWN_CARD",
-			value1 = "Add a Breakdown by Attribute");
-	}
-
-	@summary = "Default summary"
-	macro viewSegmentProfileTopInterestCard() {
-		AssertTextPresent(
-			locator1 = "ACSegments#SEGMENT_TOP_INTERESTS_CARD",
-			value1 = "Top Interests");
 	}
 
 }

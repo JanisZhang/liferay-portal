@@ -87,7 +87,7 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionService.
 				addLayoutPageTemplateCollection(
-					_group.getGroupId(),
+					null, _group.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 					RandomTestUtil.randomString(), null,
@@ -96,7 +96,7 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				_group.getGroupId(),
+				null, _group.getGroupId(),
 				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
 				RandomTestUtil.randomString(),
@@ -133,10 +133,12 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 				layoutStructure.getMainItemId(), 1, 3);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
-			layoutStructureItem1.getItemId(), Collections.emptyList());
+			Collections.singletonList(layoutStructureItem1.getItemId()),
+			Collections.emptyList());
 
 		layoutStructure.markLayoutStructureItemForDeletion(
-			layoutStructureItem2.getItemId(), Collections.emptyList());
+			Collections.singletonList(layoutStructureItem2.getItemId()),
+			Collections.emptyList());
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(

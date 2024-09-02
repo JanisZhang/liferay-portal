@@ -39,8 +39,8 @@ const FeatureFlagList: React.FC<IFeatureFlagListProps> = ({featureFlags}) => {
 							'no-feature-flags-were-found'
 						),
 					}}
-					imgSrc={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/search_state.gif`}
-					imgSrcReducedMotion={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/empty_state_reduced_motion.gif`}
+					imgSrc={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/search_state.svg`}
+					imgSrcReducedMotion={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/search_state_reduced_motion.svg`}
 				/>
 			)}
 
@@ -62,7 +62,7 @@ const FeatureFlagList: React.FC<IFeatureFlagListProps> = ({featureFlags}) => {
 										<ClayList.ItemTitle>
 											{`${title} `}
 
-											<span className="text-muted">
+											<span className="small text-secondary">
 												({key})
 											</span>
 										</ClayList.ItemTitle>
@@ -94,14 +94,15 @@ const FeatureFlagList: React.FC<IFeatureFlagListProps> = ({featureFlags}) => {
 											onItemsChange={(newItems) => {
 												setItems((items) =>
 													items.map((item) => {
-														const newItem = newItems.find(
-															(newItem) => {
-																return (
-																	newItem.key ===
-																	item.key
-																);
-															}
-														);
+														const newItem =
+															newItems.find(
+																(newItem) => {
+																	return (
+																		newItem.key ===
+																		item.key
+																	);
+																}
+															);
 
 														if (newItem) {
 															return {

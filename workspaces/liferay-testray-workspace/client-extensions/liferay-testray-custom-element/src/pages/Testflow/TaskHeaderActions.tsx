@@ -4,17 +4,19 @@
  */
 
 import ClayButton from '@clayui/button';
+import {useAtom} from 'jotai';
 import {useEffect, useState} from 'react';
 import {useNavigate, useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
 import useMutate from '~/hooks/useMutate';
+import {taskSidebarRefresh} from '~/hooks/useSidebarTask';
 
 import useFormModal from '../../hooks/useFormModal';
 import i18n from '../../i18n';
 import {Liferay} from '../../services/liferay';
 import {
 	APIResponse,
-	TestraySubTask,
+	TestraySubtask,
 	TestrayTask,
 	TestrayTaskUser,
 	testrayTaskImpl,
@@ -25,7 +27,7 @@ import TestflowAssignUserModal, {TestflowAssigUserType} from './modal';
 
 type OutletContext = {
 	data: {
-		testraySubtasks: APIResponse<TestraySubTask>;
+		testraySubtasks: APIResponse<TestraySubtask>;
 		testrayTask: TestrayTask & {
 			actions: {
 				[key: string]: string;
@@ -41,6 +43,7 @@ type OutletContext = {
 };
 
 const TaskHeaderActions = () => {
+	const [, setTaskSidebarRefresh] = useAtom(taskSidebarRefresh);
 	const {
 		data: {testraySubtasks, testrayTask, testrayTaskUser},
 		mutate: {mutateTask},
@@ -49,11 +52,10 @@ const TaskHeaderActions = () => {
 
 	const {mutatePartial: mutateTaskPartial} = useMutate(mutateTask);
 
-	const subTaskAllCompleted = testraySubtasks?.totalCount === 0;
+	const subtaskAllCompleted = testraySubtasks?.totalCount === 0;
 
-	const [modalType, setModalType] = useState<TestflowAssigUserType>(
-		'select-users'
-	);
+	const [modalType, setModalType] =
+		useState<TestflowAssigUserType>('select-users');
 
 	const [userIds, setUsersId] = useState<number[]>([]);
 	const {modal} = useFormModal<number[]>({
@@ -71,7 +73,7 @@ const TaskHeaderActions = () => {
 		},
 		onSave: async (newUserIds) => {
 			await testrayTaskUsersImpl.assign(testrayTask.id, newUserIds);
-
+			setTaskSidebarRefresh(new Date().getTime());
 			revalidateTaskUser();
 		},
 	});
@@ -115,9 +117,10 @@ const TaskHeaderActions = () => {
 						<ClayButton
 							displayType="secondary"
 							onClick={async () => {
-								const response = await testrayTaskImpl.reanalyze(
-									testrayTask
-								);
+								const response =
+									await testrayTaskImpl.reanalyze(
+										testrayTask
+									);
 
 								mutateTaskPartial({
 									dueStatus: response.dueStatus,
@@ -129,6 +132,8 @@ const TaskHeaderActions = () => {
 								);
 
 								revalidateTaskUser();
+
+								setTaskSidebarRefresh(new Date().getTime());
 							}}
 						>
 							{i18n.translate('reanalyze')}
@@ -152,6 +157,8 @@ const TaskHeaderActions = () => {
 										testrayTask.id
 									);
 
+									setTaskSidebarRefresh(new Date().getTime());
+
 									navigate('/testflow');
 
 									Liferay.Util.openToast({
@@ -170,7 +177,7 @@ const TaskHeaderActions = () => {
 					<ClayButton
 						displayType="secondary"
 						onClick={() => {
-							const fn = subTaskAllCompleted
+							const fn = subtaskAllCompleted
 								? (task: TestrayTask) =>
 										testrayTaskImpl.complete(task)
 								: (task: TestrayTask) =>
@@ -180,11 +187,14 @@ const TaskHeaderActions = () => {
 								.then(({dueStatus}) =>
 									mutateTaskPartial({dueStatus})
 								)
+								.then(() =>
+									setTaskSidebarRefresh(new Date().getTime())
+								)
 								.catch(console.error);
 						}}
 					>
 						{i18n.translate(
-							subTaskAllCompleted ? 'complete' : 'abandon'
+							subtaskAllCompleted ? 'complete' : 'abandon'
 						)}
 					</ClayButton>
 				)}

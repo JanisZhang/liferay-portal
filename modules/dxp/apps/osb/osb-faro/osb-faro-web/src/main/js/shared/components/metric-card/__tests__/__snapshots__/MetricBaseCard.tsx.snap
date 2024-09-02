@@ -9,11 +9,11 @@ exports[`MetricBaseCard renders component 1`] = `
     <div
       class="card-header align-items-center d-flex justify-content-between"
     >
-      <h5
+      <div
         class="card-title"
       >
         Visitors Behavior
-      </h5>
+      </div>
       <div
         class="d-flex"
       >
@@ -23,11 +23,11 @@ exports[`MetricBaseCard renders component 1`] = `
           <div
             class="no-results-content"
           >
-            <h4
-              class="no-results-title"
+            <div
+              class="h4 no-results-title"
             >
               An unexpected error occurred.
-            </h4>
+            </div>
           </div>
         </div>
       </div>
@@ -554,12 +554,16 @@ exports[`MetricBaseCard renders component 1`] = `
                       class="recharts-legend-item-text"
                       style="color: rgb(75, 155, 255);"
                     >
-                      Known Visitors:
-                      <b
-                        class="ml-1"
+                      <span
+                        class="legend-text-color"
                       >
-                        1
-                      </b>
+                        Known Visitors
+                        <b
+                          class="ml-1"
+                        >
+                          1
+                        </b>
+                      </span>
                     </span>
                   </li>
                   <li
@@ -588,12 +592,16 @@ exports[`MetricBaseCard renders component 1`] = `
                       class="recharts-legend-item-text"
                       style="color: rgb(255, 180, 110);"
                     >
-                      Anonymous Visitors:
-                      <b
-                        class="ml-1"
+                      <span
+                        class="legend-text-color"
                       >
-                        0
-                      </b>
+                        Anonymous Visitors
+                        <b
+                          class="ml-1"
+                        >
+                          0
+                        </b>
+                      </span>
                     </span>
                   </li>
                 </ul>

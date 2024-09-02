@@ -37,18 +37,15 @@ public class SiteNavigationMenuPortletUtil {
 			orderByAsc = true;
 		}
 
-		OrderByComparator<SiteNavigationMenu> orderByComparator = null;
-
 		if (orderByCol.equals("create-date")) {
-			orderByComparator = new SiteNavigationMenuCreateDateComparator(
+			return SiteNavigationMenuCreateDateComparator.getInstance(
 				orderByAsc);
 		}
 		else if (orderByCol.equals("name")) {
-			orderByComparator = new SiteNavigationMenuNameComparator(
-				orderByAsc);
+			return SiteNavigationMenuNameComparator.getInstance(orderByAsc);
 		}
 
-		return orderByComparator;
+		return null;
 	}
 
 	public static JSONArray getSiteNavigationMenuItemsJSONArray(

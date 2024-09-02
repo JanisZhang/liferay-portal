@@ -1,31 +1,26 @@
 # 3aa30f7e03264d3798731f301853ec4f952c3637
 
-The commit message does not include the full path. The correct message should be:
+The commit message does not have the complete file path. The correct message is:
 
 ```
 COMMERCE-12579 Use new find method. Also rename hasDirectReplacement.
 
 # breaking
- 
+
 ## What modules/apps/commerce/commerce-product-content-api/src/main/java/com/liferay/commerce/product/content/helper/CPContentHelper.java
 
-modules/apps/commerce/commerce-product-content-api/src/main/java/com/liferay/commerce/product/content/helper/CPContentHelper.java has method hasDirectReplacement renamed to isDirectReplacement
+modules/apps/commerce/commerce-product-content-api/src/main/java/com/liferay/commerce/product/content/helper/CPContentHelper.java The hasDirectReplacement method is renamed to isDirectReplacement
 
 ## Why
 
-The method now checks whether the sku is a replacement of another product rather than checking whether it has replacements
-
+The method now checks whether the SKU is a replacement of another product instead of checking whether it has replacements.
 ```
 
 ----
 
 # 1063732432e7a5e5d3cf782ec1652728ef053eb9
 
-On the message of the commit 1063732432e7a5e5d3cf782ec1652728ef053eb9 the file path is not the complete path:
-
-so the correct message on **What** section should be
-
-modules/apps/document-library/document-library-repository-external-api/src/main/java/com/liferay/document/library/repository/external/ExtRepository.java
+The commit message does not have the complete file path. The correct message is:
 
 ```
 LPS-197315 add new param to the addExtRepositoryFileEntry method with the fileName of the file Entry
@@ -34,23 +29,18 @@ LPS-197315 add new param to the addExtRepositoryFileEntry method with the fileNa
 
 ## What modules/apps/document-library/document-library-repository-external-api/src/main/java/com/liferay/document/library/repository/external/ExtRepository.java
 
-com/liferay/document/library/repository/external/ExtRepository.java has changed the method ExtRepositoryFileEntry addExtRepositoryFileEntry(String extRepositoryParentFolderKey, String mimeType, String title, String description, String changeLog, InputStream inputStream) to ExtRepositoryFileEntry addExtRepositoryFileEntry(String extRepositoryParentFolderKey, String fileName, String mimeType, String title, String description, String changeLog, InputStream inputStream) adding the new parameter fileName.
+modules/apps/document-library/document-library-repository-external-api/src/main/java/com/liferay/document/library/repository/external/ExtRepository.java The addExtRepositoryFileEntry(String extRepositoryParentFolderKey, String mimeType, String title, String description, String changeLog, InputStream inputStream) method has a new fileName parameter.
 
 ## Why
-   
-this change is required to create the files on the sharepoint external repository with the file source file name.
 
+This change is required to create the files in an sharepoint external repository with the correct source file's name.
 ```
 
 ----
 
 # 2681b881ad469095e572928f265cefe2f51cdb16
 
-On the message of the commit 2681b881ad469095e572928f265cefe2f51cdb16 the file path is not the complete path:
-
-so the correct message on **What** section should be
-
-modules/apps/frontend-taglib/frontend-taglib-chart/src/main/resources/META-INF/liferay-chart.tld
+The commit message does not have the complete file path. The correct message is:
 
 ```
 LPS-198114 Removes unused taglib and sample since those are not used in portal and have dependencies with soy
@@ -59,307 +49,560 @@ LPS-198114 Removes unused taglib and sample since those are not used in portal a
 
 ## What modules/apps/frontend-taglib/frontend-taglib-chart/src/main/resources/META-INF/liferay-chart.tld
 
-We are deleting all taglibs under liferay chart module
+All taglibs in the Liferay chart module are deleted.
 
 ## Why
 
-The DXP support from soy was removed as part of https://liferay.atlassian.net/browse/LPS-122954 and the following classes; TemplateRendererTag and ComponentRendererTag, were deprecated as part of https://liferay.atlassian.net/browse/LPS-122966
-
+DXP support for Soy was removed as part of https://liferay.atlassian.net/browse/LPS-122954 and the TemplateRendererTag and ComponentRendererTag classes were deprecated as part of https://liferay.atlassian.net/browse/LPS-122966
 ```
 
 ----
 
 # 87a3c8bf38374f1987debdcedaed7f9e7a0dfdbc
 
-On the message of the commit 87a3c8bf38374f1987debdcedaed7f9e7a0dfdbc the file path is not the complete path:
-
-so the correct message on **What** section should be
-
-modules/apps/frontend-taglib/frontend-taglib-clay/src/main/java/com/liferay/frontend/taglib/clay/servlet/taglib/base/BaseClayTag.java
+The commit message does not have the complete path. The correct message is:
 
 ```
 LPS-198462 Removes unused BaseClayTag
-   
-# breaking
-   
-## What modules/apps/frontend-taglib/frontend-taglib-clay/src/main/java/com/liferay/frontend/taglib/clay/servlet/taglib/base/BaseClayTag.java
-    
-We are deleting BaseClayTag.java
-    
-## Why
-    
-It is an internal class and it doesn't have any usage in portal
 
+# breaking
+
+## What modules/apps/frontend-taglib/frontend-taglib-clay/src/main/java/com/liferay/frontend/taglib/clay/servlet/taglib/base/BaseClayTag.java
+
+The BaseClayTag class is deleted.
+
+## Why
+
+The class no longer has any useage.
 ```
 
 ----
 
 # 678e4379fb055804a2100169b6310319d8f0d07e
 
-Incorrect format on multiple file breaking change
+The commit message has the wrong format for multiple files. The correct message is:
 
-Correct message should be:
 ```
 LPS-199164 Move XmlRpcUtil, Success, Fault into impl
-    
-# breaking_change_report
-## What portal-kernel/src/com/liferay/portal/kernel.xmlrpc.Success.java
-XmlRpcUtil related files are moved from portal-kernel into portal-impl.
+
+# breaking
+
+## What portal-kernel/src/com/liferay/portal/kernel/xmlrpc/Success.java
+
+Success and its related classes are moved from portal-kernel to portal-impl.
+
 ## Why
-We are merging portal-kernel into portal-impl.
+
+Code from portal-kernel is moving to portal-impl to reduce code complexity.
+
 ## Alternatives
-Make sure to have portal-impl in build dependency and change import statement to use the same classes in portal-impl.
+
+Add portal-impl as a build dependency and fix the import statements to continue using the refactored classes.
+
 ----
 
-# breaking_change_report
-## What portal-kernel/src/com/liferay/portal/kernel.xmlrpc.Fault.java
-XmlRpcUtil related files are moved from portal-kernel into portal-impl.
+# breaking
+
+## What portal-kernel/src/com/liferay/portal/kernel/xmlrpc/Fault.java
+
+Fault and its related classes are moved from portal-kernel to portal-impl.
+
 ## Why
-We are merging portal-kernel into portal-impl.
+
+Code from portal-kernel is moving to portal-impl to reduce code complexity.
+
 ## Alternatives
-Make sure to have portal-impl in build dependency and change import statement to use the same classes in portal-impl.
+
+Add portal-impl as a build dependency and fix the import statements to continue using the refactored classes.
+
 ----
 
-# breaking_change_report
-## What portal-kernel/src/com/liferay/portal/kernel.xmlrpc.XmlRpcUtil.java
-XmlRpcUtil related files are moved from portal-kernel into portal-impl.
+# breaking
+
+## What portal-kernel/src/com/liferay/portal/kernel/xmlrpc/XmlRpcUtil.java
+
+XmlRpcUtil and its related classes are moved from portal-kernel to portal-impl.
+
 ## Why
-We are merging portal-kernel into portal-impl.
+
+Code from portal-kernel is moving to portal-impl to reduce code complexity.
+
 ## Alternatives
-Make sure to have portal-impl in build dependency and change import statement to use the same classes in portal-impl.
-----
+
+Add portal-impl as a build dependency and fix the import statements to continue using the refactored classes.
 ```
 
 ----
 
 # ab4a450c1d7ffe215a8d56379c787fb34c1ea41b
 
-Incorrect format on multiple file breaking change
+The commit message has the wrong format for multiple files. The correct message is:
 
-Correct message should be:
 ```
 LPS-198859 Remove ThreadLocalDistributor, no usage
-    
-# breaking_change_report
+
+# breaking
+
 ## What portal-kernel/src/com/liferay/portal/kernel/util/ThreadLocalDistributor.java
-ThreadLocalDistributor is being removed.
+
+The ThreadLocalDistributor class is removed.
+
 ## Why
+
 ThreadLocalDistributor has no current usage.
+
 ----
 
-# breaking_change_report
+# breaking
+
 ## What portal-kernel/src/com/liferay/portal/kernel/util/ThreadLocalDistributorRegistry.java
-ThreadLocalDistributorRegistry is being removed.
+
+The ThreadLocalDistributorRegistry class is removed.
+
 ## Why
+
 ThreadLocalDistributor has no current usage.
-----
 ```
+
 ----
 
 # 0bfc1206ac4a93ec401be491f9553ac94ecea0ed
 
-Missing breaking change
+This commit is missing a breaking change message. The correct message is:
 
-Correct message should be:
 ```
 LPS-200453 Make PortletToolbar not a spring bean and provide the instance through filed INSTANCE.
-    
-# breaking_change_report
+
+# breaking
 
 ## What portal-kernel/src/com/liferay/portal/kernel/portlet/toolbar/PortletToolbar.java
 
-PortletToolbar constructor changed to private.
+The PortletToolbar constructor is now private.
 
 ## Why
 
-PortletToolbar is being removed from util-spring, it needs a static INSTANCE field inside to replace existing usages.
+PortletToolbar is being removed from util-spring, and it needs a static INSTANCE field to replace its existing usages.
 
 ## Alternatives
 
 Directly use PortletToolbar.INSTANCE to get the instance of PortletToolbar.
-----
 ```
+
 ----
 
 # f971716348b82b1ea6747ae3c011b40616bb5884
 
-Missing breaking change
+The commit message is missing a breaking change message. The correct message is:
 
-Correct message should be:
 ```
 LPS-198809 Remove ModelSearchRegistrarHelper, not used anymore
 
-# breaking_change_report
+# breaking
+
 ## What modules/apps/portal-search/portal-search-spi/src/main/java/com/liferay/portal/search/spi/model/registrar/ModelSearchRegistrarHelper.java
-ModelSearchRegistrarHelper is removed.
+
+The ModelSearchRegistrarHelper class is removed.
+
 ## Why
-The self bootstraping style *SearchRegistrar has been changed to service collecting of ModelSearchConfigurator
+
+The self-bootstrapping style *SearchRegistrar has changed so this class is no longer used.
+
 ----
 
-# breaking_change_report
+# breaking
+
 ## What modules/apps/portal-search/portal-search-spi/src/main/java/com/liferay/portal/search/spi/model/registrar/contributor/ModelSearchDefinitionContributor.java
-ModelSearchDefinitionContributor is removed.
+
+The ModelSearchDefinitionContributor class is removed.
+
 ## Why
-The self bootstraping style *SearchRegistrar has been changed to service collecting of ModelSearchConfigurator
+
+The self-bootstrapping style *SearchRegistrar has changed so this class is no longer used.
+
 ## Alternatives
-Rewrite *SearchRegistrar to become an osgi service of type ModelSearchConfigurator. Move all previous ModelSearchConfigurator setter call parameter as corresponding ModelSearchConfigurator getter return value.
-----
+
+Rewrite *SearchRegistrar as an OSGi service of type ModelSearchConfigurator. Return all the previous ModelSearchConfigurator setter method parameters as your corresponding ModelSearchConfigurator getter return values.
 ```
+
 ----
 
 # ce0cf3a6fab17cb1ac42b17f8bce790cbf176317
 
-Incorrect format on multiple file breaking change
+The commit message has the wrong format for multiple files. The correct message is:
 
-Correct message should be:
 ```
 LPS-201086 Merge AuditMessageFactoryUtil/AuditMessageFactoryImpl into AuditMessageFactory
 
-# breaking_change_report
+# breaking
+
 ## What portal-kernel/src/com/liferay/portal/kernel/audit/AuditMessageFactory.java
-AuditMessageFactoryUtil and AuditMessageFactoryImpl logic are merged into AuditMessageFactory
+
+The logic from AuditMessageFactoryUtil and AuditMessageFactoryImpl is now in the AuditMessageFactory class.
+
 ## Why
-This interface/impl/util separation does not have any value. Merge it into single class to avoid the unnecessary module.
+
+The logic being split between multiple classes did not provide any value. They are merged into a single class to simplify the code.
+
 ----
 
-# breaking_change_report
+# breaking
+
 ## What portal-kernel/src/com/liferay/portal/kernel/audit/AuditMessageFactoryUtil.java
-AuditMessageFactoryUtil and AuditMessageFactoryImpl logic are merged into AuditMessageFactory
+
+The logic from AuditMessageFactoryUtil and AuditMessageFactoryImpl is now in the AuditMessageFactory class.
+
 ## Why
-This interface/impl/util separation does not have any value. Merge it into single class to avoid the unnecessary module.
-----
+
+The logic being split between multiple classes did not provide any value. They are merged into a single class to simplify the code.
 ```
+
 ----
 
 # 258a63398ddedbdba27e1b193c83c30031509725
 
-Incorrect the format of file path line
+The commit message has an incorrect file path format. The correct message is:
 
-Correct message should be:
 ```
 LPS-200073 Remove class AssetEntriesFacet
 
 # breaking
+
 ## What portal-kernel/src/com/liferay/portal/kernel/search/facet/AssetEntriesFacet.java
-Class is removed.
-## Why
-This class has been deprecated since 7.1.x, its only usage in rules_user_custom_attribute_content.drl is replaced by FacetImpl.
-----
-```
-----
 
-# f46f1e49076f31484ad6cceede099bb16c9ef911
-Incorrect format on breaking change
+The AssetEntriesFacet class is removed.
 
-Correct message should be:
-```
-# breaking
-## What portal-kernel/src/com/liferay/portal/kernel/dao/orm/IndexableActionableDynamicQuery.java
-setIndexWriterHelper() method is being removed.
 ## Why
-This setter was added for the class UserIndexer (see 73427a8). UserIndexer has been deprecated and removed from the portal though.
-----
+
+This class has been deprecated since 7.1.x, and its only usage in rules_user_custom_attribute_content.drl is replaced by FacetImpl.
 ```
+
 ----
 
 # 76c2d3b68c19a1b33f18e9221d83f34310daed45
 
-Typo in file path.
+The commit message's file path has a typo. The correct message is:
 
-Correct message should be:
 ```
 LPS-196035 Avoid needing to regenerate after every screenName or emailAddress change. Use the immutable userId field for WebDAV access.
 
-# breaking_change_report
+# breaking
+
 ## What portal-impl/src/com/liferay/portal/model/impl/UserImpl.java
-WebDAV clients can no longer use the user's screenName or emailAddress, nor the user's regular password when authenticating via Digest Auth.
+
+WebDAV clients can no longer use the user's screen name, email address, or regular password when authenticating via Digest Auth.
+
 ## Why
-WebDAV (or Digest Auth more generally) now requires each user to generate a separate password for this access, and it requires the user to take specific Account Settings UI actions to do so. Previously a simple web login would suffice. To avoid unexpected WebDav access rejections, we decided to simplify the the UX and use userId.
-----
+
+WebDAV (or Digest Auth more generally) now requires each user to generate a separate password for this access, and it requires the user to take specific Account Settings UI actions to do so. Previously a simple web login would suffice. To avoid unexpected WebDav access rejections and simplify the user experience, now a userId is required.
 ```
+
 ----
 
 # 51895916ce756437c2ae1c11a734c9e640abbb05
 
-On the message of the commit 51895916ce756437c2ae1c11a734c9e640abbb05 the file path is not the complete path:
+The commit message has an incomplete file path. The correct message is:
 
-so the correct message on **What** section should be
+```
+LPS-200359 Allow configure No Cache for documents and make it the default option
 
-modules/apps/document-library/document-library-web/src/main/java/com/liferay/document/library/web/internal/configuration/CacheControlConfiguration.java
+# breaking
+
+## What modules/apps/document-library/document-library-web/src/main/java/com/liferay/document/library/web/internal/configuration/CacheControlConfiguration.java
+
+The default cacheControl configuration values are changed.
+
+## Why
+
+The new configuration to avoid caching documents is now the default configuration to improve security.
+```
 
 ----
 
 # a35946f28515783df6d3de0a45ff8c9631dc416a
 
-Missing breaking change
+The commit message is missing a breaking change message. The correct message is:
 
-Correct message should be:
 ```
 LPS-188270 Add new method getPortletInstanceConfiguration in class ConfigurationProviderImpl to replace method getPortletInstanceConfiguration in class PortletDisplay
-    
+
 # breaking
+
 ## What portal-kernel/src/com/liferay/portal/kernel/theme/PortletDisplay.java
-Method getPortletInstanceConfiguration(Class<T> clazz) in class PortletDisplay is being removed.
+
+The getPortletInstanceConfiguration(Class<T> clazz) method is removed.
+
 ## Why
-Method getPortletInstanceConfiguration should belong to class ConfigurationProvider.
+
+The getPortletInstanceConfiguration method should be implemented in ConfigurationProvider.
+
 ## Alternatives
-Directly use ConfigurationProviderUtil.getPortletInstanceConfiguration(Class<T> clazz, ThemeDisplay themeDisplay) or reference service ConfigurationProvider and use the same method.
-----
+
+Directly use ConfigurationProviderUtil.getPortletInstanceConfiguration(Class<T> clazz, ThemeDisplay themeDisplay) or reference the ConfigurationProvider service and use the same method.
 ```
+
 ----
 
 # 29f42c44bfcc71b02e16edb99081a7a89fc3ceed
 
-Missing breaking change
+The commit message is missing a breaking change. The correct message is:
 
-Correct message should be:
 ```
 LPS-188270 Move class ConfigurationProviderUtil to module, prepare for next
-    
+
 # breaking
+
 ## What portal-kernel/src/com/liferay/portal/kernel/module/configuration/ConfigurationProviderUtil.java
-CLass ConfigurationProviderUtil is moving from portal-kernel into module portal-configuration-module-configuration-api.
+
+The ConfigurationProviderUtil class is moved from portal-kernel to the portal-configuration-module-configuration-api module.
+
 ## Why
-We want to replace class ServiceProxyFactory with class Snapshot in class ConfigurationProviderUtil, and need to ensure that service ConfigurationProvider is always available.
+
+This change ensures ConfigurationProvider is always available to the module. This allows the Snapshot class to replace ServiceProxyFactory's usage.
+
 ## Alternatives
-Add portal-configuration-module-configuration-api in build dependency and use the same class.
-----
+
+Add portal-configuration-module-configuration-api as a build dependency to continue using the same class.
 ```
+
 ----
 
 # fe131c06d9596e3eb7954a1d73876db8ad16ae7f
 
-Missing breaking change
+The commit message is missing a breaking change. The correct message is:
 
-Correct message should be:
 ```
 LPS-188270 Move interface ConfigurationProvider to module
-    
+
 # breaking
+
 ## What portal-kernel/src/com/liferay/portal/kernel/module/configuration/ConfigurationProvider.java
-CLass ConfigurationProvider is moving from portal-kernel into module portal-configuration-module-configuration-api.
+
+The ConfigurationProvider class is moved from portal-kernel to the portal-configuration-module-configuration-api module.
+
 ## Why
-Class ConfigurationProvider is only used in modules.
+
+This class is only used in modules.
+
 ## Alternatives
-Add portal-configuration-module-configuration-api in build dependency and use the same class.
-----
+
+Add portal-configuration-module-configuration-api as a build dependency to continue using the same class.
 ```
+
 ----
 
 # 5eeb81045e4c30d7f0b253fc3e282ec67a12c306
 
-Missing breaking change
+The commit message is missing a breaking change. The correct message is:
 
-Correct message should be:
 ```
 LPS-196524 Move Snapshot and its test to module portal-kernel
-    
+
 # breaking
+
 ## What osgi-util/src/main/java/com/liferay/osgi/util/service/Snapshot.java
-CLass Snapshot is moving into portal-kernel.
+
+The Snapshot class is moved into portal-kernel.
+
 ## Why
-We're trying to replace all ServiceProxyFactory usages in portal with class Snapshot.
+
+Snapshot is replacing all usages of ServiceProxyFactory.
+
 ## Alternatives
+
 Use com.liferay.portal.kernel.module.service.Snapshot instead.
+```
+
 ----
+
+# 169322529677c73dbd060ea11b64a9eee56415c9
+
+The commit message is missing a breaking change. The correct message is:
+
+```
+LPD-16492 Object fields with aggregation and formula business type should not be indexable
+
+# breaking
+
+## What modules/apps/object/object-service/src/main/java/com/liferay/object/service/impl/ObjectFieldLocalServiceImpl.java
+
+The aggregation and formula object field types have new validation to avoid indexing them.
+
+## Why
+
+Elasticsearch does not fully support indexing these object field types because they're created at runtime.
+```
+
+----
+
+# 64fbb2481d5a6af40fb4882fc53bacb78384069e
+
+The breaking change message has a tab. The correct message is:
+
+```
+LPS-194004 generalize JSOnClickConfig to be passed as the default argument in the dynamically loaded JS module
+
+# breaking
+
+## What modules/apps/product-navigation/product-navigation-personal-menu-api/src/main/java/com/liferay/product/navigation/personal/menu/PersonalMenuEntry.java
+
+The getJSOnClickConfigJSONObject function in PersonalMenuEntry is changed so it requires a JavaScript function to getOnClickJSModuleURL. That function is called using getJSOnClickConfigJSONObject's return value as a parameter.
+
+## Why
+
+This change makes getJSOnClickConfigJSONObject generic so that it can be used for any type of on-click interaction, not just for opening a selection modal.
+```
+
+----
+
+# 1b0f30a46f323932a2b9151fd4771910f07bb0b7
+
+The breaking change message is missing a reason. The correct message is:
+
+```
+LPD-15236 Add companyId argument to scope every request by companyId.
+
+This is necessary because, given the following Object Definitions and companyIds:
+    - C_Test & companyId 1
+    - C_test & companyId 2
+
+If we call the method with itemClassName = com.liferay.object.rest.dto.v1_0.ObjectEntry and taskItemDelegateName = C_test from a request in the companyId = 1, the method will return an instance of BatchEngineTaskItemDelegate, but thatshould not happen, as the C_test taskItemDelegateName is only defined in companyId = 2.
+
+For that, in the following commits we need to scope by companyId all the BatchEngineTaskItemDelegates (if there is a companyId parameter, if not, it will be returned for all the companies)
+
+# breaking
+
+## What modules/apps/batch-engine/batch-engine-api/src/main/java/com/liferay/batch/engine/BatchEngineTaskItemDelegateRegistry.java
+
+The method getBatchEngineTaskItemDelegate(String itemClassName, String taskItemDelegateName) is replaced with getBatchEngineTaskItemDelegate(long companyId, String itemClassName, String taskItemDelegateName).
+
+## Why
+
+Whether a taskItemDelegateName exists depends on the company, so BatchEngineTaskItemDelegate objects must also be retrieved with a company's scope.
+```
+
+----
+
+# ac48b1fe243d41f6e4691e3f6e7025037811e4ac
+
+The breaking change message has the wrong format. The correct message is:
+
+```
+LRAC-15144 segments-service Add Experiment type support
+
+# breaking
+
+## What modules/apps/segments/segments-service/src/main/java/com/liferay/segments/service/impl/SegmentsExperimentServiceImpl.java
+
+The runSegmentsExperiment method has a new Experiment parameter.
+
+## Why
+
+This change adds support for additional Experiment types.
+
+----
+
+# breaking
+
+## What modules/apps/segments/segments-service/src/main/java/com/liferay/segments/service/impl/SegmentsExperimentLocalServiceImpl.java
+
+The runSegmentsExperiment method has a new Experiment parameter.
+
+## Why
+
+This change adds support for additional Experiment types.
+```
+
+----
+
+# 0132519ea6ba7d70f64253f85a97ef1bd8f55136
+
+The commit message is missing a breaking change. The correct message is:
+
+```
+LPS-199540 portal-impl: Remove portal property and add obsolete portal key to VerifyProperties
+
+# breaking
+
+## What portal-impl/src/portal.properties
+
+The index.permission.filter.search.amplification.factor property is removed.
+
+## Why
+
+The index.permission.filter.search.amplification.factor property did not effectively improve permission filtering and it was only applied on the first search.
+
+## Alternatives
+
+The search amplification uses a better algorithm to speed permission filtering.
+
+If the total time spent searching is still a concern, regulate it with the new Permission Filtering Time Limit at Control Panel &rarr; System Settings &rarr; Search &rarr; Default Search Result Permission Filter.
+```
+
+----
+
+# 6de9f9ce7bd603ca6b0dbb5035c359c2c9c2ed4f
+
+This commit is missing a breaking change message. The correct message is:
+
+```
+LPS-196539 SF rename variable name
+
+# breaking
+
+## What portal-kernel/src/com/liferay/portal/kernel/theme/PortletDisplay.java
+
+The getPortletSetup() method is renamed to getPortletPreferences(), and setPortletSetup() is renamed to setPortletPreferences().
+
+## Why
+
+This change makes the method names consistent with the `PortletPreferences` variable.
+
+## Alternatives
+
+Use getPortletPreferences() and setPortletPreferences() instead.
+```
+
+----
+
+# 3abd46aedba5663099d5c66abd057d1f0392582f
+
+This commit is missing a breaking change message. The correct message is:
+
+```
+LPS-197267 Move PermissionConverter to portal-security-permission-api and Remove Util
+
+# breaking
+
+## What portal-kernel/src/com/liferay/portal/kernel/security/permission/PermissionConverterUtil.java
+
+Remove class PermissionConverterUtil.
+
+## Why
+
+Move PermissionConverter to portal-security-permission-api.
+
+## Alternative
+
+ Use OSGi service reference PermissionConverter
+
+```
+
+----
+
+# 91ba4f2de757ad28f4129563b8a0059dad4d58ad
+
+This commit is missing a breaking change message. The correct message is:
+
+```
+LPS-197267 Remove unused PermissionConverter overloaded methods
+
+# breaking
+
+## What portal-kernel/src/com/liferay/portal/kernel/security/permission/PermissionConverterUtil.java
+
+Remove class PermissionConverterUtil.
+
+## Why
+
+Move PermissionConverter to portal-security-permission-api.
 ```

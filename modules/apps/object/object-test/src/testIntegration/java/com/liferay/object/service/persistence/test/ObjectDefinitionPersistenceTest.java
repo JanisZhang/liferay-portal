@@ -162,6 +162,9 @@ public class ObjectDefinitionPersistenceTest {
 
 		newObjectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
 
+		newObjectDefinition.setEnableIndexSearch(
+			RandomTestUtil.randomBoolean());
+
 		newObjectDefinition.setEnableLocalization(
 			RandomTestUtil.randomBoolean());
 
@@ -265,6 +268,9 @@ public class ObjectDefinitionPersistenceTest {
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableComments(),
 			newObjectDefinition.isEnableComments());
+		Assert.assertEquals(
+			existingObjectDefinition.isEnableIndexSearch(),
+			newObjectDefinition.isEnableIndexSearch());
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableLocalization(),
 			newObjectDefinition.isEnableLocalization());
@@ -385,6 +391,22 @@ public class ObjectDefinitionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_U() throws Exception {
+		_persistence.countByC_U(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByC_U(0L, 0L);
+	}
+
+	@Test
+	public void testCountByC_RODI() throws Exception {
+		_persistence.countByC_RODI(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByC_RODI(0L, 0L);
+	}
+
+	@Test
 	public void testCountByC_C() throws Exception {
 		_persistence.countByC_C(RandomTestUtil.nextLong(), "");
 
@@ -490,13 +512,13 @@ public class ObjectDefinitionPersistenceTest {
 			"rootObjectDefinitionId", true, "titleObjectFieldId", true,
 			"accountEntryRestricted", true, "active", true, "dbTableName", true,
 			"label", true, "className", true, "enableCategorization", true,
-			"enableComments", true, "enableLocalization", true,
-			"enableObjectEntryDraft", true, "enableObjectEntryHistory", true,
-			"modifiable", true, "name", true, "panelAppOrder", true,
-			"panelCategoryKey", true, "pkObjectFieldDBColumnName", true,
-			"pkObjectFieldName", true, "pluralLabel", true, "portlet", true,
-			"scope", true, "storageType", true, "system", true, "version", true,
-			"status", true);
+			"enableComments", true, "enableIndexSearch", true,
+			"enableLocalization", true, "enableObjectEntryDraft", true,
+			"enableObjectEntryHistory", true, "modifiable", true, "name", true,
+			"panelAppOrder", true, "panelCategoryKey", true,
+			"pkObjectFieldDBColumnName", true, "pkObjectFieldName", true,
+			"pluralLabel", true, "portlet", true, "scope", true, "storageType",
+			true, "system", true, "version", true, "status", true);
 	}
 
 	@Test
@@ -850,6 +872,8 @@ public class ObjectDefinitionPersistenceTest {
 			RandomTestUtil.randomBoolean());
 
 		objectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
+
+		objectDefinition.setEnableIndexSearch(RandomTestUtil.randomBoolean());
 
 		objectDefinition.setEnableLocalization(RandomTestUtil.randomBoolean());
 

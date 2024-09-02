@@ -147,7 +147,8 @@ public class DataRecordResourceImpl extends BaseDataRecordResourceImpl {
 
 		DataRecordExporter dataRecordExporter = new DataRecordExporter(
 			_ddlRecordSetLocalService, _ddmFormFieldTypeServicesRegistry,
-			_ddmStructureLayoutLocalService, _spiDDMFormRuleConverter);
+			_ddmStructureLayoutLocalService, _ddmStructureLocalService,
+			_spiDDMFormRuleConverter);
 
 		return dataRecordExporter.export(
 			transform(
@@ -283,7 +284,7 @@ public class DataRecordResourceImpl extends BaseDataRecordResourceImpl {
 		DDLRecordSet ddlRecordSet = _ddlRecordSetLocalService.getRecordSet(
 			dataRecordCollectionId);
 
-		dataRecord.setDataRecordCollectionId(dataRecordCollectionId);
+		dataRecord.setDataRecordCollectionId(() -> dataRecordCollectionId);
 
 		DDMStructure ddmStructure = ddlRecordSet.getDDMStructure();
 
@@ -324,9 +325,9 @@ public class DataRecordResourceImpl extends BaseDataRecordResourceImpl {
 
 		DDLRecordSet ddlRecordSet = ddlRecord.getRecordSet();
 
-		dataRecord.setDataRecordCollectionId(ddlRecordSet.getRecordSetId());
+		dataRecord.setDataRecordCollectionId(ddlRecordSet::getRecordSetId);
 
-		dataRecord.setId(dataRecordId);
+		dataRecord.setId(() -> dataRecordId);
 
 		DDMStructure ddmStructure = ddlRecordSet.getDDMStructure();
 

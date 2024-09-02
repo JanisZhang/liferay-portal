@@ -13,7 +13,7 @@ import type {FragmentEntryLinkComment} from './addFragmentEntryLinkComment';
 
 export interface FragmentEntryLink<
 	EditableId extends string = string,
-	ConfigurationFieldId extends string = string
+	ConfigurationFieldId extends string = string,
 > {
 	collectionContent?: Record<string, string>;
 	comments: FragmentEntryLinkComment[];
@@ -37,6 +37,7 @@ export interface FragmentEntryLink<
 			[key in ConfigurationFieldId]: EditableValue;
 		};
 	};
+	fieldTypes: string[];
 	fragmentEntryId: string;
 	fragmentEntryKey: string;
 	fragmentEntryLinkId: string;

@@ -71,11 +71,13 @@ public class CalendarBookingIterator implements Iterator<CalendarBooking> {
 
 		Calendar jCalendar = _getStartTimeJCalendar(_currentDateValue);
 
+		long startTime = jCalendar.getTimeInMillis();
+
+		newCalendarBooking.setStartTime(startTime);
 		newCalendarBooking.setEndTime(
-			jCalendar.getTimeInMillis() + _calendarBooking.getDuration());
+			startTime + _calendarBooking.getDuration());
 
 		newCalendarBooking.setInstanceIndex(_instanceIndex);
-		newCalendarBooking.setStartTime(jCalendar.getTimeInMillis());
 
 		_instanceIndex++;
 
@@ -96,6 +98,10 @@ public class CalendarBookingIterator implements Iterator<CalendarBooking> {
 			jCalendar.get(Calendar.HOUR_OF_DAY), jCalendar.get(Calendar.MINUTE),
 			jCalendar.get(Calendar.SECOND), jCalendar.get(Calendar.MILLISECOND),
 			_getTimeZone(_calendarBooking));
+
+		if (_calendarBooking.isRecurring()) {
+			return startTimeJCalendar;
+		}
 
 		int shift = JCalendarUtil.getDSTShift(
 			jCalendar, startTimeJCalendar,

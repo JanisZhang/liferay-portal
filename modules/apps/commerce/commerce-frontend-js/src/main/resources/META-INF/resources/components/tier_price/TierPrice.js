@@ -11,6 +11,8 @@ import React, {useEffect, useRef, useState} from 'react';
 import ServiceProvider from '../../ServiceProvider/index';
 import {CP_INSTANCE_CHANGED} from '../../utilities/eventsDefinitions';
 
+import './tier_price.scss';
+
 function TierPrice({
 	accountId,
 	alwaysVisible,
@@ -40,7 +42,7 @@ function TierPrice({
 		const skuUnitOfMeasures = cpInstance.skuUnitOfMeasures || [];
 
 		if (skuUnitOfMeasures.length) {
-			setColumns([
+			const cols = [
 				{
 					classes: 'text-weight-semi-bold',
 					key: 'unit',
@@ -59,7 +61,26 @@ function TierPrice({
 					key: 'price',
 					label: Liferay.Language.get('net-price'),
 				},
-			]);
+			];
+
+			const havePricingQuantity = skuUnitOfMeasures.find(
+				(unitOfMeasure) => {
+					return unitOfMeasure.price?.pricingQuantityPriceFormatted;
+				}
+			);
+
+			if (havePricingQuantity) {
+				cols.push({
+					classes: 'price-col text-weight-semi-bold',
+					key: 'pricingQuantity',
+					label:
+						Liferay.Language.get('price') +
+						' / ' +
+						Liferay.Language.get('quantity'),
+				});
+			}
+
+			setColumns(cols);
 
 			for (const unitOfMeasure of skuUnitOfMeasures) {
 				const priceOnApplication =
@@ -74,7 +95,15 @@ function TierPrice({
 				rows.push({
 					classes: priceOnApplication ? 'price-on-application' : '',
 					key: unitOfMeasure.key,
-					price: unitOfMeasure.price?.priceFormatted,
+					price: unitOfMeasure.price?.priceFormatted || '',
+					pricingQuantity:
+						unitOfMeasure.price?.pricingQuantityPriceFormatted ||
+						unitOfMeasure.price?.priceFormatted +
+							' / ' +
+							(unitOfMeasure.incrementalOrderQuantity !== 1
+								? unitOfMeasure.incrementalOrderQuantity + ' '
+								: '') +
+							unitOfMeasure.name,
 					quantity: unitOfMeasure.incrementalOrderQuantity,
 					unit: unitOfMeasure.name,
 				});
@@ -86,6 +115,15 @@ function TierPrice({
 						classes: '',
 						key: unitOfMeasure.key,
 						price: tierPrice.priceFormatted,
+						pricingQuantity:
+							tierPrice.pricingQuantityPriceFormatted ||
+							tierPrice.priceFormatted +
+								' / ' +
+								(unitOfMeasure.incrementalOrderQuantity !== 1
+									? unitOfMeasure.incrementalOrderQuantity +
+										' '
+									: '') +
+								unitOfMeasure.name,
 						quantity: tierPrice.quantity,
 						unit: unitOfMeasure.name,
 					});

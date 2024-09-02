@@ -8,7 +8,7 @@ exports[`InterestDetails renders 1`] = `
     <div
       class="card-header align-items-center d-flex justify-content-between"
     >
-      <h5
+      <div
         class="card-title"
       >
         Pages Containing - 
@@ -17,7 +17,7 @@ exports[`InterestDetails renders 1`] = `
         >
           "test"
         </span>
-      </h5>
+      </div>
     </div>
     <div
       class="d-flex flex-column flex-grow-1 justify-content-between"
@@ -224,7 +224,7 @@ exports[`InterestDetails renders 1`] = `
                     >
                       <a
                         class="text-truncate"
-                        href="/workspace/23/321321/sites/pages/overview/https%3A%2F%2Fwww.liferay.com/Dashboard%20-%20Retail?rangeKey=30"
+                        href="/workspace/23/321321/sites/pages/overview/https%3A%2F%2Fwww.liferay.com/Dashboard - Retail?rangeKey=30"
                       >
                         Dashboard - Retail
                       </a>

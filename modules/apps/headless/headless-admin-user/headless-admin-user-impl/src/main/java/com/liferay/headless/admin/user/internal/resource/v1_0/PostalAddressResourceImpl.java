@@ -8,10 +8,13 @@ package com.liferay.headless.admin.user.internal.resource.v1_0;
 import com.liferay.account.constants.AccountListTypeConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
+import com.liferay.headless.admin.user.dto.v1_0.Account;
 import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
+import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.PostalAddressUtil;
 import com.liferay.headless.admin.user.resource.v1_0.PostalAddressResource;
+import com.liferay.portal.kernel.exception.NoSuchAddressException;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.Contact;
@@ -23,6 +26,7 @@ import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.AddressLocalService;
 import com.liferay.portal.kernel.service.AddressService;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CountryService;
@@ -30,8 +34,10 @@ import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.UserService;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.service.permission.CommonPermissionUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
+import com.liferay.portal.vulcan.dto.converter.util.DTOConverterUtil;
 import com.liferay.portal.vulcan.pagination.Page;
 
 import java.util.Iterator;
@@ -59,6 +65,35 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 	}
 
 	@Override
+	public void deletePostalAddressByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception {
+
+		Address address =
+			_addressLocalService.fetchAddressByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (address == null) {
+			throw new NoSuchAddressException(
+				"No address found with external reference code " +
+					externalReferenceCode);
+		}
+
+		_addressService.deleteAddress(address.getAddressId());
+	}
+
+	@Override
+	public Page<PostalAddress>
+			getAccountByExternalReferenceCodePostalAddressesPage(
+				String externalReferenceCode)
+		throws Exception {
+
+		return getAccountPostalAddressesPage(
+			DTOConverterUtil.getModelPrimaryKey(
+				_accountResourceDTOConverter, externalReferenceCode));
+	}
+
+	@Override
 	public Page<PostalAddress> getAccountPostalAddressesPage(Long accountId)
 		throws Exception {
 
@@ -72,6 +107,18 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 					contextAcceptLanguage.isAcceptAllLanguages(), address,
 					contextCompany.getCompanyId(),
 					contextAcceptLanguage.getPreferredLocale())));
+	}
+
+	@Override
+	public Page<PostalAddress>
+			getOrganizationByExternalReferenceCodePostalAddressesPage(
+				String externalReferenceCode)
+		throws Exception {
+
+		return getOrganizationPostalAddressesPage(
+			String.valueOf(
+				DTOConverterUtil.getModelPrimaryKey(
+					_organizationResourceDTOConverter, externalReferenceCode)));
 	}
 
 	@Override
@@ -102,6 +149,35 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 			_addressService.getAddress(postalAddressId),
 			contextCompany.getCompanyId(),
 			contextAcceptLanguage.getPreferredLocale());
+	}
+
+	@Override
+	public PostalAddress getPostalAddressByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception {
+
+		Address address =
+			_addressLocalService.fetchAddressByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (address == null) {
+			throw new NoSuchAddressException(
+				"No address found with external reference code " +
+					externalReferenceCode);
+		}
+
+		return getPostalAddress(address.getAddressId());
+	}
+
+	@Override
+	public Page<PostalAddress>
+			getUserAccountByExternalReferenceCodePostalAddressesPage(
+				String externalReferenceCode)
+		throws Exception {
+
+		return getUserAccountPostalAddressesPage(
+			DTOConverterUtil.getModelPrimaryKey(
+				_userResourceDTOConverter, externalReferenceCode));
 	}
 
 	@Override
@@ -194,10 +270,34 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 			address.getCountryId(), address.getListTypeId(),
 			address.isMailing(), address.isPrimary(), phoneNumber);
 
+		address = _addressService.updateExternalReferenceCode(
+			address,
+			GetterUtil.getString(
+				postalAddress.getExternalReferenceCode(),
+				address.getExternalReferenceCode()));
+
 		return PostalAddressUtil.toPostalAddress(
 			contextAcceptLanguage.isAcceptAllLanguages(), address,
 			contextCompany.getCompanyId(),
 			contextAcceptLanguage.getPreferredLocale());
+	}
+
+	@Override
+	public PostalAddress patchPostalAddressByExternalReferenceCode(
+			String externalReferenceCode, PostalAddress postalAddress)
+		throws Exception {
+
+		Address address =
+			_addressLocalService.fetchAddressByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (address == null) {
+			throw new NoSuchAddressException(
+				"No address found with external reference code " +
+					externalReferenceCode);
+		}
+
+		return patchPostalAddress(address.getAddressId(), postalAddress);
 	}
 
 	@Override
@@ -212,9 +312,9 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 		ListType listType = _getListType(null, postalAddress);
 
 		Address address = _addressService.addAddress(
-			null, AccountEntry.class.getName(), accountId,
-			postalAddress.getName(), null,
-			postalAddress.getStreetAddressLine1(),
+			postalAddress.getExternalReferenceCode(),
+			AccountEntry.class.getName(), accountId, postalAddress.getName(),
+			null, postalAddress.getStreetAddressLine1(),
 			postalAddress.getStreetAddressLine2(),
 			postalAddress.getStreetAddressLine3(),
 			postalAddress.getAddressLocality(), postalAddress.getPostalCode(),
@@ -251,10 +351,34 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 			address.isMailing(), postalAddress.getPrimary(),
 			postalAddress.getPhoneNumber());
 
+		address = _addressService.updateExternalReferenceCode(
+			address,
+			GetterUtil.getString(
+				postalAddress.getExternalReferenceCode(),
+				address.getExternalReferenceCode()));
+
 		return PostalAddressUtil.toPostalAddress(
 			contextAcceptLanguage.isAcceptAllLanguages(), address,
 			contextCompany.getCompanyId(),
 			contextAcceptLanguage.getPreferredLocale());
+	}
+
+	@Override
+	public PostalAddress putPostalAddressByExternalReferenceCode(
+			String externalReferenceCode, PostalAddress postalAddress)
+		throws Exception {
+
+		Address address =
+			_addressLocalService.fetchAddressByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (address == null) {
+			throw new NoSuchAddressException(
+				"No address found with external reference code " +
+					externalReferenceCode);
+		}
+
+		return putPostalAddress(address.getAddressId(), postalAddress);
 	}
 
 	private Country _getCountryByTitle(PostalAddress postalAddress) {
@@ -352,6 +476,12 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 	@Reference
 	private AccountEntryService _accountEntryService;
 
+	@Reference(target = DTOConverterConstants.ACCOUNT_RESOURCE_DTO_CONVERTER)
+	private DTOConverter<AccountEntry, Account> _accountResourceDTOConverter;
+
+	@Reference
+	private AddressLocalService _addressLocalService;
+
 	@Reference
 	private AddressService _addressService;
 
@@ -373,6 +503,9 @@ public class PostalAddressResourceImpl extends BasePostalAddressResourceImpl {
 
 	@Reference
 	private RegionService _regionService;
+
+	@Reference(target = DTOConverterConstants.USER_RESOURCE_DTO_CONVERTER)
+	private DTOConverter<User, UserAccount> _userResourceDTOConverter;
 
 	@Reference
 	private UserService _userService;

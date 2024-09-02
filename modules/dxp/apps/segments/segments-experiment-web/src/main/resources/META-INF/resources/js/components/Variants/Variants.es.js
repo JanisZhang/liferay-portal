@@ -29,25 +29,21 @@ function Variants({selectedSegmentsExperienceId}) {
 	const {APIService, page} = useContext(SegmentsExperimentsContext);
 	const [creatingVariant, setCreatingVariant] = useState(false);
 
-	const {
-		observer: creatingVariantObserver,
-		onClose: creatingVariantOnClose,
-	} = useModal({
-		onClose: () => setCreatingVariant(false),
-	});
+	const {observer: creatingVariantObserver, onClose: creatingVariantOnClose} =
+		useModal({
+			onClose: () => setCreatingVariant(false),
+		});
 
 	const [editingVariant, setEditingVariant] = useState({active: false});
 
-	const {
-		observer: editingVariantObserver,
-		onClose: editingVariantOnClose,
-	} = useModal({
-		onClose: () => setEditingVariant({active: false}),
-	});
+	const {observer: editingVariantObserver, onClose: editingVariantOnClose} =
+		useModal({
+			onClose: () => setEditingVariant({active: false}),
+		});
 
 	return (
 		<>
-			<h4 className="mb-3 mt-4 sheet-subtitle">
+			<div className="h4 mb-3 mt-4 sheet-subtitle">
 				{Liferay.Language.get('variants')}
 
 				{experiment.status.value === STATUS_DRAFT && (
@@ -57,7 +53,7 @@ function Variants({selectedSegmentsExperienceId}) {
 						symbol="asterisk"
 					/>
 				)}
-			</h4>
+			</div>
 
 			{variants.length === 1 && (
 				<>
@@ -160,7 +156,9 @@ function Variants({selectedSegmentsExperienceId}) {
 				});
 
 				if (variantExperienceId === selectedSegmentsExperienceId) {
-					navigateToExperience(experiment.segmentsExperienceId);
+					navigateToExperience({
+						experienceId: experiment.segmentsExperienceId,
+					});
 				}
 				else {
 					dispatch(updateVariants(newVariants));

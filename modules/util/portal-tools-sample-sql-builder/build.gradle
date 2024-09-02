@@ -5,6 +5,9 @@ import org.gradle.util.VersionNumber
 
 task writeReleases
 
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
 baseline {
 	onlyIf {
 		Properties properties = new Properties()
@@ -63,6 +66,8 @@ dependencies {
 	compileInclude project(":apps:layout:layout-page-template-api")
 	compileInclude project(":apps:layout:layout-page-template-service")
 	compileInclude project(":apps:layout:layout-service")
+	compileInclude project(":apps:list-type:list-type-api")
+	compileInclude project(":apps:list-type:list-type-service")
 	compileInclude project(":apps:login:login-web-api")
 	compileInclude project(":apps:message-boards:message-boards-api")
 	compileInclude project(":apps:message-boards:message-boards-service")
@@ -79,7 +84,7 @@ dependencies {
 	compileInclude project(":apps:wiki:wiki-api")
 	compileInclude project(":apps:wiki:wiki-service")
 
-	compileOnly group: "com.liferay", name: "org.freemarker", version: "2.3.30.LIFERAY-PATCHED-1"
+	compileOnly group: "com.liferay", name: "org.freemarker", version: "2.3.32.LIFERAY-PATCHED-2"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	compileOnly project(":core:petra:petra-function")

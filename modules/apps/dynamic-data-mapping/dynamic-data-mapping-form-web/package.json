@@ -1,21 +1,21 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.111.0",
-		"@clayui/data-provider": "3.111.0",
-		"@clayui/drop-down": "3.111.0",
-		"@clayui/empty-state": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/data-provider": "3.116.0",
+		"@clayui/drop-down": "3.118.0",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/label": "3.111.0",
 		"@clayui/layout": "3.111.0",
 		"@clayui/link": "3.111.0",
-		"@clayui/list": "3.111.0",
+		"@clayui/list": "3.118.0",
 		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/modal": "3.111.0",
-		"@clayui/multi-select": "3.111.0",
-		"@clayui/navigation-bar": "3.111.0",
-		"@clayui/panel": "3.111.0",
+		"@clayui/modal": "3.117.0",
+		"@clayui/multi-select": "3.118.0",
+		"@clayui/navigation-bar": "3.116.0",
+		"@clayui/panel": "3.116.0",
 		"@liferay/frontend-icons-web": "*",
 		"@liferay/frontend-js-react-web": "*",
 		"classnames": "2.3.1",
@@ -37,14 +37,14 @@
 			"/__mock__/"
 		]
 	},
-	"main": "admin/js/App.es.js",
+	"main": "js/index.js",
 	"name": "dynamic-data-mapping-form-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "4.0.162"
+	"version": "4.0.174"
 }

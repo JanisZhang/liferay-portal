@@ -54,6 +54,15 @@ public class PropsValues {
 	public static final String ADMIN_EMAIL_PASSWORD_CHANGED_SUBJECT =
 		PropsUtil.get(PropsKeys.ADMIN_EMAIL_PASSWORD_CHANGED_SUBJECT);
 
+	public static final String ADMIN_EMAIL_PASSWORD_LOCKOUT_BODY =
+		PropsUtil.get(PropsKeys.ADMIN_EMAIL_PASSWORD_LOCKOUT_BODY);
+
+	public static final String ADMIN_EMAIL_PASSWORD_LOCKOUT_SUBJECT =
+		PropsUtil.get(PropsKeys.ADMIN_EMAIL_PASSWORD_LOCKOUT_SUBJECT);
+
+	public static final String ADMIN_EMAIL_PASSWORD_LOCKOUT_UNTIL_BODY =
+		PropsUtil.get(PropsKeys.ADMIN_EMAIL_PASSWORD_LOCKOUT_UNTIL_BODY);
+
 	public static final String ADMIN_EMAIL_PASSWORD_RESET_BODY = PropsUtil.get(
 		PropsKeys.ADMIN_EMAIL_PASSWORD_RESET_BODY);
 
@@ -340,6 +349,11 @@ public class PropsValues {
 
 	public static final int COMBO_MAX_FILES = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.COMBO_MAX_FILES), -1);
+
+	public static final boolean COMPANY_DEFAULT_ADD_DEFAULT_ADMIN_USER =
+		GetterUtil.getBoolean(
+			PropsUtil.get(PropsKeys.COMPANY_DEFAULT_ADD_DEFAULT_ADMIN_USER),
+			true);
 
 	public static final String COMPANY_DEFAULT_HOME_URL = PropsUtil.get(
 		PropsKeys.COMPANY_DEFAULT_HOME_URL);
@@ -1013,6 +1027,9 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.JSON_SERVICE_SERIALIZE_THROWABLE));
 
+	public static final int JSON_STRING_MAX_LENGTH = GetterUtil.getInteger(
+		PropsUtil.get(PropsKeys.JSON_STRING_MAX_LENGTH));
+
 	public static final boolean JSON_WEB_SERVICE_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.JSON_WEB_SERVICE_ENABLED));
@@ -1067,7 +1084,7 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.LAYOUT_GUEST_SHOW_MIN_ICON));
 
-	public static final int LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN =
+	public static int LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN =
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN));
 
@@ -1155,16 +1172,6 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(
 				PropsKeys.LAYOUT_USER_PUBLIC_LAYOUTS_POWER_USER_REQUIRED));
-
-	public static final boolean LEARN_RESOURCES_CDN_ENABLED =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.LEARN_RESOURCES_CDN_ENABLED));
-
-	public static final boolean LEARN_RESOURCES_ENABLED = GetterUtil.getBoolean(
-		PropsUtil.get(PropsKeys.LEARN_RESOURCES_ENABLED));
-
-	public static final long LEARN_RESOURCES_REFRESH_TIME = GetterUtil.getLong(
-		PropsUtil.get(PropsKeys.LEARN_RESOURCES_REFRESH_TIME));
 
 	public static final String LIFERAY_HOME = PropsUtil.get(
 		PropsKeys.LIFERAY_HOME);
@@ -1770,21 +1777,21 @@ public class PropsValues {
 		PropsKeys.PORTAL_INSTANCE_PROTOCOL);
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PORTAL_JAAS_AUTH_TYPE = GetterUtil.getString(
 		PropsUtil.get(PropsKeys.PORTAL_JAAS_AUTH_TYPE));
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static boolean PORTAL_JAAS_ENABLE = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.PORTAL_JAAS_ENABLE));
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final boolean PORTAL_JAAS_PLAIN_PASSWORD =
@@ -1996,6 +2003,10 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.SCHEMA_MODULE_BUILD_AUTO_UPGRADE));
 
+	public static boolean SCRIPT_MANAGEMENT_CONFIGURATION_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(PropsKeys.SCRIPT_MANAGEMENT_CONFIGURATION_ENABLED));
+
 	public static final int SEARCH_CONTAINER_PAGE_DEFAULT_DELTA =
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.SEARCH_CONTAINER_PAGE_DEFAULT_DELTA), 20);
@@ -2194,6 +2205,11 @@ public class PropsValues {
 	public static String SOCIAL_ACTIVITY_SETS_SELECTOR = GetterUtil.getString(
 		PropsUtil.get(PropsKeys.SOCIAL_ACTIVITY_SETS_SELECTOR));
 
+	public static boolean SPRING_BEANFACTORY_STRICT_LIFECYCLE_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(
+				PropsKeys.SPRING_BEANFACTORY_STRICT_LIFECYCLE_ENABLED));
+
 	public static final String[] SPRING_CONFIGS = PropsUtil.getArray(
 		PropsKeys.SPRING_CONFIGS);
 
@@ -2229,6 +2245,10 @@ public class PropsValues {
 				PropsKeys.
 					STAGING_DRAFT_EXPORT_IMPORT_CONFIGURATION_CLEAN_UP_COUNT));
 
+	public static final int STAGING_GROUPS_IN_MEMORY_FILTER_LIMIT =
+		GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.STAGING_GROUPS_IN_MEMORY_FILTER_LIMIT));
+
 	public static final boolean STAGING_LIVE_GROUP_LOCKING_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.STAGING_LIVE_GROUP_LOCKING_ENABLED));
@@ -2262,6 +2282,10 @@ public class PropsValues {
 
 	public static String[] STRIP_MIME_TYPES = PropsUtil.getArray(
 		PropsKeys.STRIP_MIME_TYPES);
+
+	public static final boolean TEMPLATE_ENGINE_CACHE_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(PropsKeys.TEMPLATE_ENGINE_CACHE_ENABLED));
 
 	public static final boolean
 		TEMPLATE_ENGINE_FREEMARKER_TRANSACTION_READ_ONLY =
@@ -2321,9 +2345,6 @@ public class PropsValues {
 
 	public static int THREAD_DUMP_SPEED_THRESHOLD = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.THREAD_DUMP_SPEED_THRESHOLD));
-
-	public static int TRANSACTION_ISOLATION_COUNTER = GetterUtil.getInteger(
-		PropsUtil.get(PropsKeys.TRANSACTION_ISOLATION_COUNTER));
 
 	public static int TRANSACTION_ISOLATION_PORTAL = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.TRANSACTION_ISOLATION_PORTAL));
@@ -2487,6 +2508,11 @@ public class PropsValues {
 
 	public static final String[] VIRTUAL_HOSTS_IGNORE_EXTENSIONS =
 		PropsUtil.getArray(PropsKeys.VIRTUAL_HOSTS_IGNORE_EXTENSIONS);
+
+	public static final int VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT =
+		GetterUtil.getInteger(
+			PropsUtil.get(
+				PropsKeys.VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT));
 
 	public static final boolean VIRTUAL_HOSTS_STRICT_ACCESS =
 		GetterUtil.getBoolean(

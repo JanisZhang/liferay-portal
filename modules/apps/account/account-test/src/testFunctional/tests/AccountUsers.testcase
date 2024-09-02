@@ -1,4 +1,4 @@
-@component-name = "portal-user-management"
+@component-name = "portal-commerce"
 definition {
 
 	property portal.release = "true";
@@ -197,7 +197,7 @@ definition {
 
 		AccountUsers.setUserPassword(
 			accountUser = "userea@liferay.com",
-			accountUserPassword = "test");
+			accountUserPassword = PropsUtil.get("default.admin.password"));
 
 		AccountUsers.openAccountUsersAdmin();
 
@@ -205,7 +205,7 @@ definition {
 			accountUser = "userfn userln",
 			editEmailAddress = "edituserfn@liferay.com",
 			editFirstName = "edituserfn",
-			password = "test");
+			password = PropsUtil.get("default.admin.password"));
 
 		AccountUsers.openAccountUsersAdmin();
 

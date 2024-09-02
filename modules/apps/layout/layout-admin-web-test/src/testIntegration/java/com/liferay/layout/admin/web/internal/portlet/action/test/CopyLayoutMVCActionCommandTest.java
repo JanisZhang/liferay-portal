@@ -122,9 +122,10 @@ public class CopyLayoutMVCActionCommandTest {
 				expectedLayout.getPlid()));
 
 		Role role = _roleLocalService.addRole(
-			_serviceContext.getUserId(), null, 0, StringUtil.randomString(),
-			Collections.emptyMap(), Collections.emptyMap(),
-			RoleConstants.TYPE_REGULAR, StringPool.BLANK, _serviceContext);
+			RandomTestUtil.randomString(), _serviceContext.getUserId(), null, 0,
+			StringUtil.randomString(), Collections.emptyMap(),
+			Collections.emptyMap(), RoleConstants.TYPE_REGULAR,
+			StringPool.BLANK, _serviceContext);
 
 		_addModelResources(role, expectedLayout);
 
@@ -169,7 +170,7 @@ public class CopyLayoutMVCActionCommandTest {
 
 		SiteNavigationMenu siteNavigationMenu =
 			_siteNavigationMenuLocalService.addSiteNavigationMenu(
-				TestPropsValues.getUserId(), _group.getGroupId(), "Menu",
+				null, TestPropsValues.getUserId(), _group.getGroupId(), "Menu",
 				SiteNavigationConstants.TYPE_DEFAULT, true, _serviceContext);
 
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
@@ -193,9 +194,10 @@ public class CopyLayoutMVCActionCommandTest {
 				expectedLayout.getPlid()));
 
 		Role role = _roleLocalService.addRole(
-			_serviceContext.getUserId(), null, 0, StringUtil.randomString(),
-			Collections.emptyMap(), Collections.emptyMap(),
-			RoleConstants.TYPE_REGULAR, StringPool.BLANK, _serviceContext);
+			RandomTestUtil.randomString(), _serviceContext.getUserId(), null, 0,
+			StringUtil.randomString(), Collections.emptyMap(),
+			Collections.emptyMap(), RoleConstants.TYPE_REGULAR,
+			StringPool.BLANK, _serviceContext);
 
 		_addModelResources(role, expectedLayout);
 
@@ -265,9 +267,10 @@ public class CopyLayoutMVCActionCommandTest {
 				expectedLayout.getPlid()));
 
 		Role role = _roleLocalService.addRole(
-			_serviceContext.getUserId(), null, 0, StringUtil.randomString(),
-			Collections.emptyMap(), Collections.emptyMap(),
-			RoleConstants.TYPE_REGULAR, StringPool.BLANK, _serviceContext);
+			RandomTestUtil.randomString(), _serviceContext.getUserId(), null, 0,
+			StringUtil.randomString(), Collections.emptyMap(),
+			Collections.emptyMap(), RoleConstants.TYPE_REGULAR,
+			StringPool.BLANK, _serviceContext);
 
 		_addModelResources(role, expectedLayout);
 
@@ -339,12 +342,12 @@ public class CopyLayoutMVCActionCommandTest {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				_serviceContext);
 
 		_fragmentEntry = _fragmentEntryLocalService.addFragmentEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), "fragment-entry-key",
 			RandomTestUtil.randomString(), StringPool.BLANK,
 			"<div data-lfr-styles><span>Test</span>Fragment</div>",

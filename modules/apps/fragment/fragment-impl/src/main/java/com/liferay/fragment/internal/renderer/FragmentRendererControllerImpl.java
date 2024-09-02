@@ -100,14 +100,21 @@ public class FragmentRendererControllerImpl
 					httpServletResponse, unsyncStringWriter));
 		}
 		catch (Exception exception) {
-			Throwable throwable = exception.getCause();
+			Throwable throwable = exception;
+
+			if (throwable.getCause() != null) {
+				throwable = throwable.getCause();
+			}
 
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					StringBundler.concat(
 						"Unable to render content of fragment entry ",
-						fragmentEntryLink.getFragmentEntryId(), ":",
-						exception.getMessage(), ", ", throwable.getMessage()),
+						fragmentEntryLink.getFragmentEntryId(),
+						" with fragment entry link ",
+						fragmentEntryLink.getFragmentEntryLinkId(),
+						" and PLID ", fragmentEntryLink.getPlid(), ": ",
+						throwable.getMessage()),
 					exception);
 			}
 

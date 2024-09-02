@@ -8,8 +8,12 @@ package com.liferay.portal.search.rest.internal.graphql.servlet.v1_0;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.search.rest.internal.graphql.mutation.v1_0.Mutation;
 import com.liferay.portal.search.rest.internal.graphql.query.v1_0.Query;
+import com.liferay.portal.search.rest.internal.resource.v1_0.EmbeddingModelResourceImpl;
+import com.liferay.portal.search.rest.internal.resource.v1_0.EmbeddingProviderValidationResultResourceImpl;
 import com.liferay.portal.search.rest.internal.resource.v1_0.SearchResultResourceImpl;
 import com.liferay.portal.search.rest.internal.resource.v1_0.SuggestionResourceImpl;
+import com.liferay.portal.search.rest.resource.v1_0.EmbeddingModelResource;
+import com.liferay.portal.search.rest.resource.v1_0.EmbeddingProviderValidationResultResource;
 import com.liferay.portal.search.rest.resource.v1_0.SearchResultResource;
 import com.liferay.portal.search.rest.resource.v1_0.SuggestionResource;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
@@ -36,10 +40,18 @@ public class ServletDataImpl implements ServletData {
 
 	@Activate
 	public void activate(BundleContext bundleContext) {
+		Mutation.
+			setEmbeddingProviderValidationResultResourceComponentServiceObjects(
+				_embeddingProviderValidationResultResourceComponentServiceObjects);
 		Mutation.setSearchResultResourceComponentServiceObjects(
 			_searchResultResourceComponentServiceObjects);
 		Mutation.setSuggestionResourceComponentServiceObjects(
 			_suggestionResourceComponentServiceObjects);
+
+		Query.setEmbeddingModelResourceComponentServiceObjects(
+			_embeddingModelResourceComponentServiceObjects);
+		Query.setSearchResultResourceComponentServiceObjects(
+			_searchResultResourceComponentServiceObjects);
 	}
 
 	public String getApplicationName() {
@@ -53,7 +65,7 @@ public class ServletDataImpl implements ServletData {
 
 	@Override
 	public String getPath() {
-		return "/portal-search-rest-graphql/v1_0";
+		return "/search-graphql/v1_0";
 	}
 
 	@Override
@@ -77,6 +89,11 @@ public class ServletDataImpl implements ServletData {
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
 					put(
+						"mutation#createEmbeddingValidateProviderConfiguration",
+						new ObjectValuePair<>(
+							EmbeddingProviderValidationResultResourceImpl.class,
+							"postEmbeddingValidateProviderConfiguration"));
+					put(
 						"mutation#createSearchPage",
 						new ObjectValuePair<>(
 							SearchResultResourceImpl.class, "postSearchPage"));
@@ -85,8 +102,22 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							SuggestionResourceImpl.class,
 							"postSuggestionsPage"));
+
+					put(
+						"query#embeddingEmbeddingModels",
+						new ObjectValuePair<>(
+							EmbeddingModelResourceImpl.class,
+							"getEmbeddingEmbeddingModelsPage"));
+					put(
+						"query#search",
+						new ObjectValuePair<>(
+							SearchResultResourceImpl.class, "getSearchPage"));
 				}
 			};
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<EmbeddingProviderValidationResultResource>
+		_embeddingProviderValidationResultResourceComponentServiceObjects;
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<SearchResultResource>
@@ -95,5 +126,9 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<SuggestionResource>
 		_suggestionResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<EmbeddingModelResource>
+		_embeddingModelResourceComponentServiceObjects;
 
 }

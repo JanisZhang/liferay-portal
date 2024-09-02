@@ -301,6 +301,32 @@ public class ContentDashboardAdminDisplayContext {
 		return _contentDashboardItemSubtypePayloads;
 	}
 
+	public String getContentPerformanceDataFetchURL(
+		InfoItemReference infoItemReference) {
+
+		InfoItemIdentifier infoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		if (!(infoItemIdentifier instanceof ClassPKInfoItemIdentifier)) {
+			return null;
+		}
+
+		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+			(ClassPKInfoItemIdentifier)infoItemIdentifier;
+
+		return ResourceURLBuilder.createResourceURL(
+			_liferayPortletResponse
+		).setBackURL(
+			_portal.getCurrentURL(_liferayPortletRequest)
+		).setParameter(
+			"className", infoItemReference.getClassName()
+		).setParameter(
+			"classPK", String.valueOf(classPKInfoItemIdentifier.getClassPK())
+		).setResourceID(
+			"/content_dashboard/get_content_performance_info"
+		).buildString();
+	}
+
 	public Map<String, Object> getData() {
 		if (_data != null) {
 			return _data;
@@ -315,11 +341,31 @@ public class ContentDashboardAdminDisplayContext {
 		return _data;
 	}
 
+	public String getDateType() {
+		if (_dateType != null) {
+			return _dateType;
+		}
+
+		_dateType = ParamUtil.getString(_liferayPortletRequest, "dateType");
+
+		return _dateType;
+	}
+
 	public List<DropdownItem> getDropdownItems(
 		ContentDashboardItem contentDashboardItem) {
 
 		return _contentDashboardDropdownItemsProvider.getDropdownItems(
 			contentDashboardItem);
+	}
+
+	public String getEndDateString() {
+		if (_endDateString != null) {
+			return _endDateString;
+		}
+
+		_endDateString = ParamUtil.getString(_liferayPortletRequest, "endDate");
+
+		return _endDateString;
 	}
 
 	public String getPanelState() {
@@ -436,6 +482,17 @@ public class ContentDashboardAdminDisplayContext {
 				PropsKeys.JAVASCRIPT_SINGLE_PAGE_APPLICATION_ENABLED));
 	}
 
+	public String getStartDateString() {
+		if (_startDateString != null) {
+			return _startDateString;
+		}
+
+		_startDateString = ParamUtil.getString(
+			_liferayPortletRequest, "startDate");
+
+		return _startDateString;
+	}
+
 	public Integer getStatus() {
 		if (_status != null) {
 			return _status;
@@ -550,6 +607,8 @@ public class ContentDashboardAdminDisplayContext {
 	private List<ContentDashboardItemSubtype>
 		_contentDashboardItemSubtypePayloads;
 	private Map<String, Object> _data;
+	private String _dateType;
+	private String _endDateString;
 	private final ItemSelector _itemSelector;
 	private final String _languageDirection;
 	private final LiferayPortletRequest _liferayPortletRequest;
@@ -559,6 +618,7 @@ public class ContentDashboardAdminDisplayContext {
 	private String _reviewDateString;
 	private long _scopeId;
 	private final SearchContainer<ContentDashboardItem<?>> _searchContainer;
+	private String _startDateString;
 	private Integer _status;
 	private Boolean _swapConfigurationEnabled;
 	private long _userId;

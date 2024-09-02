@@ -23,7 +23,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alessio Antonio Rendina
  */
 @Component(
-	property = "dto.class.name=com.liferay.commerce.product.model.CPSpecificationOption",
+	property = "dto.class.name=com.liferay.headless.commerce.admin.catalog.dto.v1_0.Specification",
 	service = DTOConverter.class
 )
 public class SpecificationDTOConverter
@@ -47,9 +47,13 @@ public class SpecificationDTOConverter
 				setDescription(
 					() -> LanguageUtils.getLanguageIdMap(
 						cpSpecificationOption.getDescriptionMap()));
+				setExternalReferenceCode(
+					cpSpecificationOption::getExternalReferenceCode);
 				setFacetable(cpSpecificationOption::isFacetable);
 				setId(cpSpecificationOption::getCPSpecificationOptionId);
 				setKey(cpSpecificationOption::getKey);
+				setListTypeDefinitionId(
+					cpSpecificationOption::getListTypeDefinitionId);
 				setOptionCategory(
 					() -> {
 						CPOptionCategory cpOptionCategory =
@@ -64,6 +68,7 @@ public class SpecificationDTOConverter
 								cpOptionCategory.getCPOptionCategoryId(),
 								dtoConverterContext.getLocale()));
 					});
+				setPriority(cpSpecificationOption::getPriority);
 				setTitle(
 					() -> LanguageUtils.getLanguageIdMap(
 						cpSpecificationOption.getTitleMap()));

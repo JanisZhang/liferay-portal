@@ -8,6 +8,7 @@ definition {
 			groupName = ${groupName},
 			portalURL = ${baseURL});
 		var portalURL = JSONCompany.getPortalURL();
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		if (!(isSet(parentCommentId))) {
 			var parentCommentId = 0;
@@ -16,9 +17,10 @@ definition {
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/documents/${fileEntryId}/comments \
 				-H 'Content-Type: application/json' \
-				-u 'test@liferay.com:test'
+				-u 'test@liferay.com:${userPassword}'
 				-d '{
-					"creator": {},
+					"creator": {
+					},
 					"parentCommentId": "${parentCommentId}",
 					"text": "${commentBody}"
 				}'
@@ -180,7 +182,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		var serviceContext = JSONDocumentSetter.setServiceContext(
@@ -288,7 +290,6 @@ definition {
 
 		var portalURL = JSONCompany.getPortalURL();
 		var targetRepositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${targetGroupName});
-		var sourceRepositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${sourceGroupName});
 
 		if (isSet(sourceFolderName)) {
 			Variables.assertDefined(parameterList = ${sourceFolderName});
@@ -339,12 +340,15 @@ definition {
 		}
 
 		var userLoginInfo = JSONUtil2.formatJSONUser();
+		var targetGroupId = JSONGroupAPI._getGroupIdByName(
+			groupName = ${targetGroupName},
+			site = "true");
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfileshortcut/add-file-shortcut  \
 				-u ${userLoginInfo} \
-				-d groupId=${targetRepositoryId} \
-				-d repositoryId=${sourceRepositoryId} \
+				-d groupId=${targetGroupId} \
+				-d repositoryId=${targetRepositoryId} \
 				-d folderId=${targetFolderId} \
 				-d toFileEntryId=${fileEntryId}
 		''';
@@ -664,7 +668,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		var curl = '''

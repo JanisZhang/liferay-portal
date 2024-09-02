@@ -11,6 +11,7 @@ import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.Job;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
 import com.liferay.jenkins.results.parser.job.property.JobProperty;
+import com.liferay.jenkins.results.parser.test.batch.JUnitTestBatch;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +21,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONObject;
@@ -40,6 +40,13 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 		String batchName, PortalTestClassJob portalTestClassJob) {
 
 		super(batchName, portalTestClassJob);
+	}
+
+	protected ModulesJUnitBatchTestClassGroup(
+		String batchName, PortalTestClassJob portalTestClassJob,
+		JUnitTestBatch jUnitTestBatch) {
+
+		super(batchName, portalTestClassJob, jUnitTestBatch);
 	}
 
 	@Override
@@ -109,7 +116,7 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 			}
 
 			excludesJobProperties.addAll(
-				_getJobProperties(
+				getJobProperties(
 					modifiedFile,
 					"modules.includes.required.test.batch.class.names.excludes",
 					JobProperty.Type.MODULE_EXCLUDE_GLOB, null));
@@ -155,30 +162,9 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 
 		Set<JobProperty> includesJobProperties = new HashSet<>();
 
-		String moduleName = null;
-
-		Matcher matcher = _singleModuleBatchNamePattern.matcher(batchName);
-
-		if (matcher.find()) {
-			moduleName = matcher.group("moduleName");
-		}
-
 		for (File modifiedModuleDir : modifiedModuleDirsSet) {
 			if (modifiedPoshiModulesList.contains(modifiedModuleDir) &&
 				!modifiedNonposhiModulesList.contains(modifiedModuleDir)) {
-
-				continue;
-			}
-
-			String modifiedModuleAbsolutePath =
-				JenkinsResultsParserUtil.getCanonicalPath(modifiedModuleDir);
-
-			String modifiedModuleRelativePath =
-				modifiedModuleAbsolutePath.substring(
-					modifiedModuleAbsolutePath.indexOf("modules/"));
-
-			if ((moduleName != null) &&
-				!modifiedModuleRelativePath.contains("/" + moduleName)) {
 
 				continue;
 			}
@@ -187,11 +173,6 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 				getJobProperty(
 					"test.batch.class.names.includes.modules",
 					modifiedModuleDir, JobProperty.Type.INCLUDE_GLOB));
-
-			includesJobProperties.add(
-				getJobProperty(
-					"modules.includes.required.test.batch.class.names.includes",
-					modifiedModuleDir, JobProperty.Type.MODULE_INCLUDE_GLOB));
 		}
 
 		for (File modifiedFile :
@@ -206,13 +187,13 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 
 			if (modifiedFileCanonicalPath.contains("modules")) {
 				includesJobProperties.addAll(
-					_getJobProperties(
+					getJobProperties(
 						modifiedFile, "test.batch.class.names.includes.modules",
 						JobProperty.Type.MODULE_INCLUDE_GLOB, null));
 			}
 
 			includesJobProperties.addAll(
-				_getJobProperties(
+				getJobProperties(
 					modifiedFile,
 					"modules.includes.required.test.batch.class.names.includes",
 					JobProperty.Type.MODULE_INCLUDE_GLOB, null));
@@ -284,67 +265,6 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 		return bundledModuleNames;
 	}
 
-	private List<JobProperty> _getJobProperties(
-		File file, String basePropertyName, JobProperty.Type jobType,
-		Set<File> traversedPropertyFileSet) {
-
-		List<JobProperty> jobPropertiesList = new ArrayList<>();
-
-		File modulesBaseDir = new File(
-			portalGitWorkingDirectory.getWorkingDirectory(), "modules");
-
-		if ((file == null) || file.equals(modulesBaseDir) ||
-			JenkinsResultsParserUtil.isPoshiFile(file)) {
-
-			return jobPropertiesList;
-		}
-
-		if (!file.isDirectory()) {
-			file = file.getParentFile();
-		}
-
-		File testPropertiesFile = new File(file, "test.properties");
-
-		if (traversedPropertyFileSet == null) {
-			traversedPropertyFileSet = new HashSet<>();
-		}
-
-		if (testPropertiesFile.exists() &&
-			!traversedPropertyFileSet.contains(testPropertiesFile)) {
-
-			JobProperty jobProperty = getJobProperty(
-				basePropertyName, file, jobType);
-
-			String jobPropertyValue = jobProperty.getValue();
-
-			if (!JenkinsResultsParserUtil.isNullOrEmpty(jobPropertyValue) &&
-				!jobPropertiesList.contains(jobProperty)) {
-
-				jobPropertiesList.add(jobProperty);
-			}
-
-			traversedPropertyFileSet.add(testPropertiesFile);
-		}
-
-		JobProperty ignoreParentsJobProperty = getJobProperty(
-			"ignoreParents[" + getTestSuiteName() + "]", file,
-			JobProperty.Type.MODULE_TEST_DIR);
-
-		boolean ignoreParents = Boolean.valueOf(
-			ignoreParentsJobProperty.getValue());
-
-		if (ignoreParents) {
-			return jobPropertiesList;
-		}
-
-		jobPropertiesList.addAll(
-			_getJobProperties(
-				file.getParentFile(), basePropertyName, jobType,
-				traversedPropertyFileSet));
-
-		return jobPropertiesList;
-	}
-
 	private File _getLiferayHome() {
 		Properties buildProperties = JenkinsResultsParserUtil.getProperties(
 			new File(
@@ -377,9 +297,9 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 	}
 
 	private Set<File> _getReleaseModuleAppDirs() {
-		Set<String> bundledAppNames = _getBundledAppNames();
-
 		Set<File> releaseModuleAppDirs = new HashSet<>();
+
+		Set<String> bundledAppNames = _getBundledAppNames();
 
 		for (File moduleAppDir : portalGitWorkingDirectory.getModuleAppDirs()) {
 			File appBndFile = new File(moduleAppDir, "app.bnd");
@@ -427,9 +347,9 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 	}
 
 	private Set<File> _getReleaseModuleDirs() {
-		Set<String> bundledModuleNames = _getBundledModuleNames();
-
 		Set<File> releaseModuleDirs = new HashSet<>();
+
+		Set<String> bundledModuleNames = _getBundledModuleNames();
 
 		for (File moduleDir : portalGitWorkingDirectory.getModuleDirs()) {
 			File bndBndFile = new File(moduleDir, "bnd.bnd");
@@ -466,8 +386,5 @@ public class ModulesJUnitBatchTestClassGroup extends JUnitBatchTestClassGroup {
 
 		return bndBndProperties.getProperty("Bundle-SymbolicName");
 	}
-
-	private static final Pattern _singleModuleBatchNamePattern =
-		Pattern.compile("modules-unit-(?<moduleName>\\S+)-jdk\\d+");
 
 }

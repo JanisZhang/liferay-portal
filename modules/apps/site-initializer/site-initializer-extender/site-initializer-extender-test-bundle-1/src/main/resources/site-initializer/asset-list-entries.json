@@ -1,16 +1,47 @@
 [
 	{
-		"ddmStructureKey": "TEST DDM STRUCTURE NAME",
+		"assetEntrySubtypeId": "[$DDM_STRUCTURE_ID:TEST DDM STRUCTURE NAME$]",
 		"title": "Test Asset List Entry 1",
+		"unicodeProperties": {
+			"classNameIds": "com.liferay.journal.model.JournalArticle",
+			"filterBy": [
+				{
+					"key": "queryAndOperator0",
+					"value": "true"
+				},
+				{
+					"key": "queryContains0",
+					"value": "true"
+				},
+				{
+					"key": "queryName0",
+					"value": "keywords"
+				},
+				{
+					"key": "queryValues0",
+					"value": "Test Keyword"
+				}
+			]
+		}
+	},
+	{
+		"assetEntrySubtypeId": "[$DDM_STRUCTURE_ID:TEST DDM STRUCTURE NAME$]",
+		"title": "Test Asset List Entry 2",
 		"unicodeProperties": {
 			"classNameIds": "com.liferay.journal.model.JournalArticle"
 		}
 	},
 	{
-		"ddmStructureKey": "TEST DDM STRUCTURE NAME",
-		"title": "Test Asset List Entry 2",
+		"assetEntrySubtypeId": "[$DOCUMENT_FILE_ENTRY_TYPE_ID:BASIC-DOCUMENT$]",
+		"title": "Test Asset List Entry 3",
 		"unicodeProperties": {
-			"classNameIds": "com.liferay.journal.model.JournalArticle"
+			"classNameIds": "com.liferay.document.library.kernel.model.DLFileEntry"
+		}
+	},
+	{
+		"title": "Test Asset List Entry 4",
+		"unicodeProperties": {
+			"classNameIds": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:TestObjectDefinition1$]"
 		}
 	}
 ]

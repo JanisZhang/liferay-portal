@@ -5,9 +5,21 @@
 
 package com.liferay.jenkins.results.parser;
 
+import com.liferay.jenkins.results.parser.test.batch.TestBatch;
+import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
+import com.liferay.jenkins.results.parser.test.suite.RelevantTestSuite;
+
 import java.io.File;
 
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.PathMatcher;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -18,6 +30,43 @@ import org.json.JSONObject;
  */
 public class PortalAcceptancePullRequestJob
 	extends PortalAcceptanceTestSuiteJob implements PortalWorkspaceJob {
+
+	@Override
+	public List<BatchTestClassGroup> getBatchTestClassGroups() {
+		synchronized (jobProperties) {
+			if (_isRelevantTestSuite()) {
+				PortalGitWorkingDirectory portalGitWorkingDirectory =
+					getPortalGitWorkingDirectory();
+
+				Properties testProperties =
+					JenkinsResultsParserUtil.getProperties(
+						new File(
+							portalGitWorkingDirectory.getWorkingDirectory(),
+							"test.properties"));
+
+				boolean relevantEngineEnabled = Boolean.parseBoolean(
+					testProperties.getProperty("relevant.engine.enabled"));
+
+				if (relevantEngineEnabled) {
+					if (batchTestClassGroups != null) {
+						return batchTestClassGroups;
+					}
+
+					System.out.println("Relevant engine is enabled");
+
+					batchTestClassGroups = Collections.synchronizedList(
+						new ArrayList<BatchTestClassGroup>());
+
+					batchTestClassGroups.addAll(
+						getBatchTestClassGroups(getTestBatches()));
+
+					return batchTestClassGroups;
+				}
+			}
+		}
+
+		return super.getBatchTestClassGroups();
+	}
 
 	public boolean isCentralMergePullRequest() {
 		if (_centralMergePullRequest != null) {
@@ -64,7 +113,17 @@ public class PortalAcceptancePullRequestJob
 	protected Set<String> getRawBatchNames() {
 		Set<String> batchNames = super.getRawBatchNames();
 
-		if (_isRelevantTestSuite() && _isPortalWebOnly()) {
+		if (_isRelevantTestSuite() &&
+			!_hasMatchingFiles(_restBuilderFilePathMatchers)) {
+
+			batchNames.remove("rest-builder-jdk8");
+		}
+
+		if (_isRelevantTestSuite() && _hasOnlyFilesInDirectory("modules")) {
+			batchNames.remove("semantic-versioning-jdk8");
+		}
+
+		if (_isRelevantTestSuite() && _hasOnlyFilesInDirectory("portal-web")) {
 			String[] portalWebOnlyBatchNameMarkers = {
 				"compile-jsp", "functional", "portal-web", "source-format"
 			};
@@ -89,15 +148,44 @@ public class PortalAcceptancePullRequestJob
 		return batchNames;
 	}
 
-	private boolean _isPortalWebOnly() {
+	@Override
+	protected List<TestBatch> getTestBatches() {
+		if (!_isRelevantTestSuite()) {
+			return super.getTestBatches();
+		}
+
+		RelevantTestSuite relevantTestSuite = new RelevantTestSuite(this);
+
+		List<TestBatch> testBatches = relevantTestSuite.getTestBatches();
+
+		recordJobProperties(relevantTestSuite.getTestBatchNamesJobProperties());
+
+		return testBatches;
+	}
+
+	private boolean _hasMatchingFiles(List<PathMatcher> pathMatchers) {
 		GitWorkingDirectory gitWorkingDirectory = getGitWorkingDirectory();
 
-		File portalWebDirectory = new File(
-			gitWorkingDirectory.getWorkingDirectory(), "portal-web");
+		for (File modifiedFile : gitWorkingDirectory.getModifiedFilesList()) {
+			for (PathMatcher pathMatcher : pathMatchers) {
+				if (pathMatcher.matches(modifiedFile.toPath())) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private boolean _hasOnlyFilesInDirectory(String directoryName) {
+		GitWorkingDirectory gitWorkingDirectory = getGitWorkingDirectory();
+
+		File directory = new File(
+			gitWorkingDirectory.getWorkingDirectory(), directoryName);
 
 		for (File modifiedFile : gitWorkingDirectory.getModifiedFilesList()) {
 			if (!JenkinsResultsParserUtil.isFileInDirectory(
-					portalWebDirectory, modifiedFile)) {
+					directory, modifiedFile)) {
 
 				return false;
 			}
@@ -110,6 +198,17 @@ public class PortalAcceptancePullRequestJob
 		String testSuiteName = getTestSuiteName();
 
 		return testSuiteName.equals("relevant");
+	}
+
+	private static List<PathMatcher> _restBuilderFilePathMatchers;
+
+	static {
+		FileSystem fs = FileSystems.getDefault();
+
+		_restBuilderFilePathMatchers = Arrays.asList(
+			fs.getPathMatcher("glob:**/portal-tools-rest-builder/**"),
+			fs.getPathMatcher("glob:**/rest-config*.yaml"),
+			fs.getPathMatcher("glob:**/rest-openapi*.yaml"));
 	}
 
 	private Boolean _centralMergePullRequest;

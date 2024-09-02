@@ -15,6 +15,7 @@ import com.liferay.jenkins.results.parser.failure.message.generator.JSUnitTestFa
 import com.liferay.jenkins.results.parser.failure.message.generator.LocalGitMirrorFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.ModulesCompilationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PMDFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.PlaywrightCompilationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PluginGitIDFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.SemanticVersioningFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.ServiceBuilderFailureMessageGenerator;
@@ -218,7 +219,7 @@ public class DownstreamBuild extends BaseBuild {
 
 		String batchName = getBatchName();
 
-		if (batchName.contains("playwright")) {
+		if (batchName.contains("playwright-js")) {
 			for (URL url : getTestrayAttachmentURLs()) {
 				String urlString = url.toString();
 
@@ -237,7 +238,7 @@ public class DownstreamBuild extends BaseBuild {
 			Element failureMessageElement = getFailureMessageElement();
 
 			if ((failureMessageElement != null) &&
-				!batchName.contains("playwright")) {
+				!batchName.contains("playwright-js")) {
 
 				messageElement.add(failureMessageElement);
 			}
@@ -579,6 +580,14 @@ public class DownstreamBuild extends BaseBuild {
 		return warningMessages;
 	}
 
+	@Override
+	public void saveBuildURLInBuildDatabase() {
+		BuildDatabase buildDatabase = getBuildDatabase();
+
+		buildDatabase.putProperty(
+			BUILD_URLS_PROPERTIES_KEY, getAxisName(), getBuildURL(), false);
+	}
+
 	protected DownstreamBuild(String url, TopLevelBuild topLevelBuild) {
 		super(url, topLevelBuild);
 	}
@@ -593,6 +602,7 @@ public class DownstreamBuild extends BaseBuild {
 		return null;
 	}
 
+	@Override
 	protected List<Element> getJenkinsReportBuildDurationsElements() {
 		String urlSuffix = "buildDurationsElements";
 
@@ -768,6 +778,7 @@ public class DownstreamBuild extends BaseBuild {
 		return jenkinsReportTableRowElements;
 	}
 
+	@Override
 	protected List<Element> getJenkinsReportTestDurationsElements() {
 		String batchName = getBatchName();
 
@@ -998,8 +1009,8 @@ public class DownstreamBuild extends BaseBuild {
 		new CompileFailureMessageGenerator(),
 		new IntegrationTestTimeoutFailureMessageGenerator(),
 		new JSUnitTestFailureMessageGenerator(),
-		new LocalGitMirrorFailureMessageGenerator(),
 		new PMDFailureMessageGenerator(),
+		new PlaywrightCompilationFailureMessageGenerator(),
 		new PluginGitIDFailureMessageGenerator(),
 		new SemanticVersioningFailureMessageGenerator(),
 		new ServiceBuilderFailureMessageGenerator(),
@@ -1007,6 +1018,7 @@ public class DownstreamBuild extends BaseBuild {
 		new StartupFailureMessageGenerator(),
 		//
 		new GradleTaskFailureMessageGenerator(),
+		new LocalGitMirrorFailureMessageGenerator(),
 		//
 		new CIFailureMessageGenerator(),
 		new GenericFailureMessageGenerator()

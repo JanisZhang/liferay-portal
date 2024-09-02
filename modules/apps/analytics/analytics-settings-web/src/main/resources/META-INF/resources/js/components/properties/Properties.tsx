@@ -85,12 +85,8 @@ const ToggleSwitch = ({
 	item: TItem;
 	property: TProperty;
 }) => {
-	const [
-		,
-		{value: totalCommerceChannels},
-		,
-		{value: commerceSyncEnabled},
-	] = item.columns;
+	const [, {value: totalCommerceChannels}, , {value: commerceSyncEnabled}] =
+		item.columns;
 	const [toggle, setToggle] = useState<boolean>(
 		commerceSyncEnabled as boolean
 	);
@@ -283,6 +279,7 @@ const Properties: React.FC = () => {
 				onAddItem={() => onCreatePropertyModalOpenChange(true)}
 				requestFn={fetchProperties}
 				showCheckbox={false}
+				type="properties"
 			/>
 
 			{selectedProperty && assignModalOpen && (

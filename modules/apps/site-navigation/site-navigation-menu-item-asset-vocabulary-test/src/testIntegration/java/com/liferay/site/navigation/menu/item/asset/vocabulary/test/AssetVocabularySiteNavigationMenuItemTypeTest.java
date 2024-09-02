@@ -215,7 +215,7 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 		throws Exception {
 
 		_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-			_group.getCreatorUserId(), _group.getGroupId(), 0,
+			null, _group.getCreatorUserId(), _group.getGroupId(), 0,
 			_portal.getClassNameId(AssetCategory.class.getName()), 0,
 			RandomTestUtil.randomString(),
 			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0, 0, 0,
@@ -616,7 +616,7 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 		throws Exception {
 
 		_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-			_group.getCreatorUserId(), _group.getGroupId(), 0,
+			null, _group.getCreatorUserId(), _group.getGroupId(), 0,
 			_portal.getClassNameId(AssetCategory.class.getName()), 0,
 			RandomTestUtil.randomString(),
 			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0, 0, 0,
@@ -693,12 +693,12 @@ public class AssetVocabularySiteNavigationMenuItemTypeTest {
 
 		SiteNavigationMenu siteNavigationMenu =
 			_siteNavigationMenuLocalService.addSiteNavigationMenu(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(),
 				SiteNavigationConstants.TYPE_DEFAULT, true, _serviceContext);
 
 		return _siteNavigationMenuItemLocalService.addSiteNavigationMenuItem(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			siteNavigationMenu.getSiteNavigationMenuId(), 0,
 			SiteNavigationMenuItemTypeConstants.ASSET_VOCABULARY,
 			UnicodePropertiesBuilder.create(

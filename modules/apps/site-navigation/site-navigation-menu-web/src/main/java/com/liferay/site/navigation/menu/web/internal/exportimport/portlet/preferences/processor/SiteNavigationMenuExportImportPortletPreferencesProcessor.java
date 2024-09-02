@@ -12,6 +12,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.portlet.preferences.processor.Capability;
 import com.liferay.exportimport.portlet.preferences.processor.ExportImportPortletPreferencesProcessor;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.PortletPreferenceValueLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
@@ -19,13 +20,14 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.xml.Element;
 import com.liferay.site.navigation.constants.SiteNavigationConstants;
 import com.liferay.site.navigation.constants.SiteNavigationMenuPortletKeys;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.service.SiteNavigationMenuLocalService;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.portlet.PortletPreferences;
 import javax.portlet.ReadOnlyException;
@@ -76,28 +78,21 @@ public class SiteNavigationMenuExportImportPortletPreferencesProcessor
 				"Unable to export portlet permissions", portalException);
 		}
 
-		long siteNavigationMenuId = GetterUtil.getLong(
-			portletPreferences.getValue("siteNavigationMenuId", null));
+		String siteNavigationMenuExternalReferenceCode =
+			portletPreferences.getValue(
+				"siteNavigationMenuExternalReferenceCode", null);
 
-		if (siteNavigationMenuId > 0) {
+		if (Validator.isNotNull(siteNavigationMenuExternalReferenceCode)) {
 			SiteNavigationMenu siteNavigationMenu =
-				_siteNavigationMenuLocalService.fetchSiteNavigationMenu(
-					siteNavigationMenuId);
+				_siteNavigationMenuLocalService.
+					fetchSiteNavigationMenuByExternalReferenceCode(
+						siteNavigationMenuExternalReferenceCode,
+						portletDataContext.getScopeGroupId());
 
 			if (siteNavigationMenu != null) {
-				String siteNavigationMenuUuid = siteNavigationMenu.getUuid();
-
-				SiteNavigationMenu siteNavigationMenuToExport =
-					_siteNavigationMenuLocalService.
-						fetchSiteNavigationMenuByUuidAndGroupId(
-							siteNavigationMenuUuid,
-							portletDataContext.getScopeGroupId());
-
-				if (siteNavigationMenuToExport != null) {
-					StagedModelDataHandlerUtil.exportReferenceStagedModel(
-						portletDataContext, portletDataContext.getPortletId(),
-						siteNavigationMenuToExport);
-				}
+				StagedModelDataHandlerUtil.exportReferenceStagedModel(
+					portletDataContext, portletDataContext.getPortletId(),
+					siteNavigationMenu);
 			}
 		}
 
@@ -124,7 +119,7 @@ public class SiteNavigationMenuExportImportPortletPreferencesProcessor
 				PortletDataHandlerKeys.PORTLET_DATA) &&
 			MergeLayoutPrototypesThreadLocal.isInProgress()) {
 
-			long siteNavigationMenuId = 0;
+			String siteNavigationMenuExternalReferenceCode = StringPool.BLANK;
 
 			long originalPlid = MapUtil.getLong(
 				portletDataContext.getParameterMap(), "portletPreferencePlid");
@@ -160,16 +155,17 @@ public class SiteNavigationMenuExportImportPortletPreferencesProcessor
 						_portletPreferenceValueLocalService.getPreferences(
 							serviceBuilderPortletPreferences);
 
-					siteNavigationMenuId = GetterUtil.getLong(
+					siteNavigationMenuExternalReferenceCode =
 						originalPortletPreferences.getValue(
-							"siteNavigationMenuId", "0"));
+							"siteNavigationMenuExternalReferenceCode",
+							StringPool.BLANK);
 				}
 			}
 
 			try {
 				portletPreferences.setValue(
-					"siteNavigationMenuId",
-					String.valueOf(siteNavigationMenuId));
+					"siteNavigationMenuExternalReferenceCode",
+					String.valueOf(siteNavigationMenuExternalReferenceCode));
 			}
 			catch (ReadOnlyException readOnlyException) {
 				PortletDataException portletDataException =
@@ -181,44 +177,45 @@ public class SiteNavigationMenuExportImportPortletPreferencesProcessor
 			return portletPreferences;
 		}
 
-		long importedSiteNavigationMenuId = GetterUtil.getLong(
-			portletPreferences.getValue("siteNavigationMenuId", null));
-
-		try {
-			if (importedSiteNavigationMenuId > 0) {
-				StagedModelDataHandlerUtil.importReferenceStagedModel(
-					portletDataContext, SiteNavigationMenu.class,
-					importedSiteNavigationMenuId);
-
-				Map<Long, Long> siteNavigationMenuIds =
-					(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
-						SiteNavigationMenu.class);
-
-				long siteNavigationMenuId = MapUtil.getLong(
-					siteNavigationMenuIds, importedSiteNavigationMenuId,
-					importedSiteNavigationMenuId);
-
-				if (siteNavigationMenuId > 0) {
-					portletPreferences.setValue(
-						"siteNavigationMenuId",
-						String.valueOf(siteNavigationMenuId));
-				}
-			}
-		}
-		catch (ReadOnlyException readOnlyException) {
-			PortletDataException portletDataException =
-				new PortletDataException(readOnlyException);
-
-			throw portletDataException;
-		}
+		_importSiteNavigationMenuReference(portletDataContext);
 
 		return portletPreferences;
 	}
 
-	@Reference(target = "(name=PortletDisplayTemplateExporter)")
+	private void _importSiteNavigationMenuReference(
+			PortletDataContext portletDataContext)
+		throws PortletDataException {
+
+		Element importDataRootElement =
+			portletDataContext.getImportDataRootElement();
+
+		Element referencesElement = importDataRootElement.element("references");
+
+		if (referencesElement == null) {
+			return;
+		}
+
+		List<Element> referenceElements = referencesElement.elements();
+
+		for (Element referenceElement : referenceElements) {
+			String className = referenceElement.attributeValue("class-name");
+
+			if (!className.equals(SiteNavigationMenu.class.getName())) {
+				continue;
+			}
+
+			long classPK = GetterUtil.getLong(
+				referenceElement.attributeValue("class-pk"));
+
+			StagedModelDataHandlerUtil.importReferenceStagedModel(
+				portletDataContext, className, Long.valueOf(classPK));
+		}
+	}
+
+	@Reference(target = "(name=CommonPortletDisplayTemplateExportCapability)")
 	private Capability _exportCapability;
 
-	@Reference(target = "(name=PortletDisplayTemplateImporter)")
+	@Reference(target = "(name=CommonPortletDisplayTemplateImportCapability)")
 	private Capability _importCapability;
 
 	@Reference(unbind = "-")

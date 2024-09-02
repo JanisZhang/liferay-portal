@@ -12,10 +12,10 @@ createJar {
 	dependsOn downloadSrc
 	dependsOn unzip
 
-	from "$buildDir/src/daisydiff/tags/v1.2/src/java"
-
-	destinationDir = file("$buildDir")
 	archiveFileName = 'com-liferay-daisydiff-1.2-sources.jar'
+	destinationDirectory = file("$buildDir")
+
+	from "$buildDir/src/daisydiff/tags/v1.2/src/java"
 }
 
 dependencies {
@@ -28,6 +28,10 @@ dependencies {
 downloadSrc {
 	from FileUtil.get(project, "https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/daisydiff/source-archive.zip")
 	into new File("$buildDir")
+}
+
+jarSources {
+	mustRunAfter patch
 }
 
 patch {

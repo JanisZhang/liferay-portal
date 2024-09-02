@@ -46,10 +46,11 @@ import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManager;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -70,6 +71,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -89,6 +91,7 @@ import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.upload.UploadRequestSizeException;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -111,6 +114,8 @@ import com.liferay.upload.UploadResponseHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -394,18 +399,11 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 		User user = _userLocalService.getUser(themeDisplay.getUserId());
 
-		Date displayDate = _getDisplayDate(
-			uploadPortletRequest, neverExpireDefaultValue, user.getTimeZone());
-		Date expirationDate = _getExpirationDate(
-			uploadPortletRequest, neverExpireDefaultValue, user.getTimeZone());
-		Date reviewDate = _getReviewDate(
-			uploadPortletRequest, neverExpireDefaultValue, user.getTimeZone());
-
 		for (String selectedFileName : selectedFileNames) {
 			_addMultipleFileEntries(
 				portletConfig, actionRequest, selectedFileName,
-				validFileNameKVPs, invalidFileNameKVPs, displayDate,
-				expirationDate, reviewDate, serviceContext);
+				validFileNameKVPs, invalidFileNameKVPs, neverExpireDefaultValue,
+				user, uploadPortletRequest, serviceContext);
 		}
 
 		JSONArray jsonArray = _jsonFactory.createJSONArray();
@@ -444,8 +442,10 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 	private void _addMultipleFileEntries(
 			PortletConfig portletConfig, ActionRequest actionRequest,
 			String selectedFileName, List<KeyValuePair> validFileNameKVPs,
-			List<KeyValuePair> invalidFileNameKVPs, Date displayDate,
-			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
+			List<KeyValuePair> invalidFileNameKVPs,
+			Boolean neverExpireDefaultValue, User user,
+			UploadPortletRequest uploadPortletRequest,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
@@ -475,12 +475,22 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				tempFileEntry.getGroupId(), folderId,
 				FileUtil.stripExtension(originalSelectedFileName));
 
+			Date displayDate = _getDisplayDate(
+				uploadPortletRequest, neverExpireDefaultValue,
+				user.getTimeZone());
+
 			_dlAppService.addFileEntry(
 				null, repositoryId, folderId, uniqueFileName,
 				tempFileEntry.getMimeType(), uniqueFileTitle, StringPool.BLANK,
 				description, changeLog, tempFileEntry.getContentStream(),
-				tempFileEntry.getSize(), displayDate, expirationDate,
-				reviewDate, serviceContext);
+				tempFileEntry.getSize(), displayDate,
+				_getExpirationDate(
+					uploadPortletRequest, displayDate, neverExpireDefaultValue,
+					user.getTimeZone()),
+				_getReviewDate(
+					uploadPortletRequest, neverExpireDefaultValue,
+					user.getTimeZone()),
+				serviceContext);
 
 			validFileNameKVPs.add(
 				new KeyValuePair(uniqueFileName, selectedFileName));
@@ -502,6 +512,44 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 					tempFileEntry.getFileEntryId());
 			}
 		}
+	}
+
+	private void _addPublishedDocumentMessage(
+		ActionRequest actionRequest, FileVersion fileVersion,
+		ThemeDisplay themeDisplay) {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-10701") ||
+			!fileVersion.isScheduled()) {
+
+			String portletResource = ParamUtil.getString(
+				actionRequest, "portletResource");
+
+			if (Validator.isNotNull(portletResource)) {
+				MultiSessionMessages.add(
+					actionRequest, portletResource + "requestProcessed");
+			}
+
+			return;
+		}
+
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
+			actionRequest);
+
+		Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(
+			themeDisplay.getLocale(), themeDisplay.getTimeZone());
+
+		SessionMessages.add(
+			httpServletRequest, "scheduledDocumentRequestProcessedSuccess",
+			_language.format(
+				_portal.getHttpServletRequest(actionRequest),
+				"x-will-be-published-on-x",
+				new Object[] {
+					"<strong>" + HtmlUtil.escape(fileVersion.getTitle()) +
+						"</strong>",
+					dateTimeFormat.format(fileVersion.getDisplayDate())
+				}));
+
+		hideDefaultSuccessMessage(actionRequest);
 	}
 
 	private void _addTempFileEntry(
@@ -839,6 +887,21 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				"the-folder-you-selected-already-has-an-entry-with-this-" +
 					"name.-please-select-a-different-folder");
 		}
+		else if (exception instanceof FileEntryDisplayDateException) {
+			errorMessage = _language.get(
+				_portal.getHttpServletRequest(actionRequest),
+				"please-enter-a-valid-publish-date");
+		}
+		else if (exception instanceof FileEntryExpirationDateException) {
+			errorMessage = _language.get(
+				_portal.getHttpServletRequest(actionRequest),
+				"please-enter-a-valid-expiration-date");
+		}
+		else if (exception instanceof FileEntryReviewDateException) {
+			errorMessage = _language.get(
+				_portal.getHttpServletRequest(actionRequest),
+				"please-enter-a-valid-review-date");
+		}
 		else if (exception instanceof FileExtensionException) {
 			errorMessage = _language.format(
 				themeDisplay.getLocale(),
@@ -934,7 +997,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		throws PortalException {
 
 		if (addDynamic || !PropsValues.SCHEDULER_ENABLED ||
-			!_featureFlagManager.isEnabled("LPD-10701")) {
+			!FeatureFlagManagerUtil.isEnabled("LPD-10701")) {
 
 			return null;
 		}
@@ -962,7 +1025,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 	}
 
 	private Date _getExpirationDate(
-			UploadPortletRequest uploadPortletRequest,
+			UploadPortletRequest uploadPortletRequest, Date displayDate,
 			boolean neverExpireDefaultValue, TimeZone timeZone)
 		throws PortalException {
 
@@ -998,6 +1061,15 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		if ((expirationDate != null) && expirationDate.before(new Date())) {
 			throw new FileEntryExpirationDateException(
 				"Expiration date " + expirationDate + " is in the past");
+		}
+
+		if ((displayDate != null) && (expirationDate != null) &&
+			displayDate.after(expirationDate)) {
+
+			throw new FileEntryExpirationDateException(
+				StringBundler.concat(
+					"Expiration date ", expirationDate,
+					" is prior to display date ", displayDate));
 		}
 
 		return expirationDate;
@@ -1353,8 +1425,11 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 			Date displayDate = _getDisplayDate(
 				uploadPortletRequest, addDynamic, user.getTimeZone());
+
 			Date expirationDate = _getExpirationDate(
-				uploadPortletRequest, addDynamic, user.getTimeZone());
+				uploadPortletRequest, displayDate, addDynamic,
+				user.getTimeZone());
+
 			Date reviewDate = _getReviewDate(
 				uploadPortletRequest, addDynamic, user.getTimeZone());
 
@@ -1401,7 +1476,17 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			else {
 				fileEntry = _dlAppService.getFileEntry(fileEntryId);
 
-				_validateFileName(sourceFileName, fileEntry.getExtension());
+				if (Validator.isNotNull(
+						uploadPortletRequest.getFileName("file"))) {
+
+					_validateFileName(
+						sourceFileName,
+						FileUtil.getExtension(
+							uploadPortletRequest.getFileName("file")));
+				}
+				else {
+					_validateFileName(sourceFileName, fileEntry.getExtension());
+				}
 
 				if (cmd.equals(Constants.UPDATE_AND_CHECKIN)) {
 
@@ -1425,13 +1510,8 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				}
 			}
 
-			String portletResource = ParamUtil.getString(
-				actionRequest, "portletResource");
-
-			if (Validator.isNotNull(portletResource)) {
-				MultiSessionMessages.add(
-					actionRequest, portletResource + "requestProcessed");
-			}
+			_addPublishedDocumentMessage(
+				actionRequest, fileEntry.getLatestFileVersion(), themeDisplay);
 
 			if (Validator.isNotNull(urlTitle)) {
 				_addUrlTitleChangedMessage(
@@ -1443,7 +1523,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 	}
 
 	private void _validateFileName(String sourceFileName, String extension)
-		throws FileNameExtensionException {
+		throws PortalException {
 
 		if (Validator.isNotNull(extension) &&
 			(Validator.isNull(sourceFileName) ||
@@ -1451,6 +1531,12 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 			throw new FileNameExtensionException(
 				"The file name cannot be empty or without extension");
+		}
+
+		if (Validator.isNotNull(extension) &&
+			!extension.equals(FileUtil.getExtension(sourceFileName))) {
+
+			throw new FileExtensionException.MismatchExtension();
 		}
 	}
 
@@ -1478,9 +1564,6 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private DLTrashService _dlTrashService;
-
-	@Reference
-	private FeatureFlagManager _featureFlagManager;
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;

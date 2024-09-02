@@ -5,8 +5,8 @@
 
 package com.liferay.customer;
 
-import com.liferay.customer.object.model.TicketAttachment;
-import com.liferay.customer.object.service.TicketAttachmentWebService;
+import com.liferay.customer.model.TicketAttachment;
+import com.liferay.customer.service.TicketAttachmentWebService;
 import com.liferay.osb.spring.boot.client.zendesk.model.ZendeskUser;
 import com.liferay.osb.spring.boot.client.zendesk.service.ZendeskWebService;
 import com.liferay.petra.string.CharPool;
@@ -93,7 +93,7 @@ public class TicketAttachmentsCompleteUploadRestController
 			return new ResponseEntity<>(HttpStatus.OK);
 		}
 		catch (Exception exception) {
-			_log.error(exception);
+			_log.error(exception, exception);
 
 			return new ResponseEntity(
 				exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

@@ -52,6 +52,7 @@ request.setAttribute("edit_role_permissions.jsp-portletResource", portletResourc
 if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 	portletDisplay.setShowBackIcon(true);
 	portletDisplay.setURLBack(backURL);
+	portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
 	renderResponse.setTitle(role.getTitle(locale));
 }
@@ -213,9 +214,8 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 					var value = checkbox.val();
 
 					if (checkbox.get('checked')) {
-						var unselectedTargetIndex = unselectedTargets.indexOf(
-							value
-						);
+						var unselectedTargetIndex =
+							unselectedTargets.indexOf(value);
 
 						if (unselectedTargetIndex != -1) {
 							unselectedTargets.splice(unselectedTargetIndex, 1);

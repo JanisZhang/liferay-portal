@@ -6,11 +6,16 @@
 package com.liferay.jethr0.event.jrp;
 
 import com.liferay.jethr0.bui1d.repository.BuildEntityRepository;
-import com.liferay.jethr0.event.EventHandlerContext;
 import com.liferay.jethr0.jenkins.repository.JenkinsCohortEntityRepository;
 import com.liferay.jethr0.job.JobEntity;
 import com.liferay.jethr0.job.repository.JobEntityRepository;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
 import com.liferay.jethr0.util.StringUtil;
+
+import java.util.Date;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,16 +27,23 @@ public class CreateJobEventHandler extends BaseJRPEventHandler {
 
 	@Override
 	public String process() throws InvalidJSONException {
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				"Creating job from JRP at " + StringUtil.toString(new Date()));
+		}
+
 		JSONObject jobJSONObject = getJobJSONObject();
 
-		JobEntityRepository jobEntityRepository = getJobEntityRepository();
+		JobEntityRepository jobEntityRepository =
+			Jethr0ContextUtil.getJobEntityRepository();
 
 		JobEntity jobEntity = jobEntityRepository.create(jobJSONObject);
 
 		JSONArray buildsJSONArray = jobJSONObject.optJSONArray("builds");
 
 		if ((buildsJSONArray != null) && !buildsJSONArray.isEmpty()) {
-			BuildEntityRepository buildEntityRepository = getBuildRepository();
+			BuildEntityRepository buildEntityRepository =
+				Jethr0ContextUtil.getBuildEntityRepository();
 
 			for (int i = 0; i < buildsJSONArray.length(); i++) {
 				JSONObject buildJSONObject = buildsJSONArray.getJSONObject(i);
@@ -47,7 +59,7 @@ public class CreateJobEventHandler extends BaseJRPEventHandler {
 			!jenkinsCohortsJSONArray.isEmpty()) {
 
 			JenkinsCohortEntityRepository jenkinsCohortEntityRepository =
-				getJenkinsCohortEntityRepository();
+				Jethr0ContextUtil.getJenkinsCohortEntityRepository();
 
 			for (int i = 0; i < jenkinsCohortsJSONArray.length(); i++) {
 				JSONObject jenkinsCohortJSONObject =
@@ -76,13 +88,21 @@ public class CreateJobEventHandler extends BaseJRPEventHandler {
 
 		jobEntityRepository.update(jobEntity);
 
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringUtil.combine(
+					"Created job ", jobEntity.getEntityURL(), " from JRP at ",
+					StringUtil.toString(new Date())));
+		}
+
 		return jobEntity.toString();
 	}
 
-	protected CreateJobEventHandler(
-		EventHandlerContext eventHandlerContext, JSONObject messageJSONObject) {
-
-		super(eventHandlerContext, messageJSONObject);
+	protected CreateJobEventHandler(JSONObject messageJSONObject) {
+		super(messageJSONObject);
 	}
+
+	private static final Log _log = LogFactory.getLog(
+		CreateJobEventHandler.class);
 
 }

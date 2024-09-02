@@ -12,6 +12,8 @@ import com.liferay.layout.utility.page.service.base.LayoutUtilityPageEntryLocalS
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
+import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.ColorScheme;
@@ -226,6 +228,16 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 	}
 
 	@Override
+	public LayoutUtilityPageEntry deleteLayoutUtilityPageEntry(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return layoutUtilityPageEntryLocalService.deleteLayoutUtilityPageEntry(
+			getLayoutUtilityPageEntryByExternalReferenceCode(
+				externalReferenceCode, groupId));
+	}
+
+	@Override
 	public LayoutUtilityPageEntry fetchDefaultLayoutUtilityPageEntry(
 		long groupId, String type) {
 
@@ -281,8 +293,42 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 	}
 
 	@Override
+	public List<LayoutUtilityPageEntry> getLayoutUtilityPageEntries(
+		long groupId, String keyword, String[] types, int start, int end,
+		OrderByComparator<LayoutUtilityPageEntry> orderByComparator) {
+
+		return layoutUtilityPageEntryPersistence.findByG_LikeN_T(
+			groupId,
+			_customSQL.keywords(keyword, false, WildcardMode.SURROUND)[0],
+			types, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<LayoutUtilityPageEntry> getLayoutUtilityPageEntries(
+		long groupId, String[] types, int start, int end,
+		OrderByComparator<LayoutUtilityPageEntry> orderByComparator) {
+
+		return layoutUtilityPageEntryPersistence.findByG_T(
+			groupId, types, start, end, orderByComparator);
+	}
+
+	@Override
 	public int getLayoutUtilityPageEntriesCount(long groupId) {
 		return layoutUtilityPageEntryPersistence.countByGroupId(groupId);
+	}
+
+	@Override
+	public int getLayoutUtilityPageEntriesCount(
+		long groupId, String keyword, String[] types) {
+
+		return layoutUtilityPageEntryPersistence.filterCountByG_LikeN_T(
+			groupId, keyword, types);
+	}
+
+	@Override
+	public int getLayoutUtilityPageEntriesCount(long groupId, String[] types) {
+		return layoutUtilityPageEntryPersistence.filterCountByG_T(
+			groupId, types);
 	}
 
 	@Override
@@ -416,8 +462,8 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 			"layout.instanceable.allowed", Boolean.TRUE);
 
 		Layout layout = _layoutLocalService.addLayout(
-			userId, groupId, true, 0, 0, 0, titleMap, titleMap, null, null,
-			null, LayoutConstants.TYPE_CONTENT, typeSettings, true, true,
+			null, userId, groupId, false, 0, 0, 0, titleMap, titleMap, null,
+			null, null, LayoutConstants.TYPE_UTILITY, typeSettings, true, true,
 			new HashMap<>(), masterLayoutPlid, serviceContext);
 
 		Layout draftLayout = layout.fetchDraftLayout();
@@ -432,11 +478,11 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 				layout.getCompanyId(), themeId);
 
 			_layoutLocalService.updateLookAndFeel(
-				groupId, true, draftLayout.getLayoutId(), themeId,
+				groupId, false, draftLayout.getLayoutId(), themeId,
 				colorSchemeId, StringPool.BLANK);
 
 			layout = _layoutLocalService.updateLookAndFeel(
-				groupId, true, layout.getLayoutId(), themeId, colorSchemeId,
+				groupId, false, layout.getLayoutId(), themeId, colorSchemeId,
 				StringPool.BLANK);
 		}
 
@@ -566,6 +612,9 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 		';', '/', '?', ':', '@', '=', '&', '\"', '<', '>', '#', '%', '{', '}',
 		'|', '\\', '^', '~', '[', ']', '`'
 	};
+
+	@Reference
+	private CustomSQL _customSQL;
 
 	@Reference
 	private File _file;

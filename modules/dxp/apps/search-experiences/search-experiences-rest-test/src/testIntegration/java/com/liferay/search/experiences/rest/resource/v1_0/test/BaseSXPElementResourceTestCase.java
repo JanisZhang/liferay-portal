@@ -30,11 +30,13 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.search.experiences.rest.client.dto.v1_0.Field;
 import com.liferay.search.experiences.rest.client.dto.v1_0.SXPElement;
@@ -62,8 +64,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -104,7 +104,7 @@ public abstract class BaseSXPElementResourceTestCase {
 		SXPElementResource.Builder builder = SXPElementResource.builder();
 
 		sxpElementResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -118,7 +118,32 @@ public abstract class BaseSXPElementResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		SXPElement sxpElement1 = randomSXPElement();
+
+		String json = objectMapper.writeValueAsString(sxpElement1);
+
+		SXPElement sxpElement2 = SXPElementSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(sxpElement1, sxpElement2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		SXPElement sxpElement = randomSXPElement();
+
+		String json1 = objectMapper.writeValueAsString(sxpElement);
+		String json2 = SXPElementSerDes.toJSON(sxpElement);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -133,40 +158,6 @@ public abstract class BaseSXPElementResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		SXPElement sxpElement1 = randomSXPElement();
-
-		String json = objectMapper.writeValueAsString(sxpElement1);
-
-		SXPElement sxpElement2 = SXPElementSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(sxpElement1, sxpElement2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		SXPElement sxpElement = randomSXPElement();
-
-		String json1 = objectMapper.writeValueAsString(sxpElement);
-		String json2 = SXPElementSerDes.toJSON(sxpElement);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -403,7 +394,7 @@ public abstract class BaseSXPElementResourceTestCase {
 			(entityField, sxpElement1, sxpElement2) -> {
 				BeanTestUtil.setProperty(
 					sxpElement1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -577,6 +568,8 @@ public abstract class BaseSXPElementResourceTestCase {
 		SXPElement sxpElement =
 			testGraphQLGetSXPElementByExternalReferenceCode_addSXPElement();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				sxpElement,
@@ -598,6 +591,32 @@ public abstract class BaseSXPElementResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/sXPElementByExternalReferenceCode"))));
+
+		// Using the namespace searchExperiences_v1_0
+
+		Assert.assertTrue(
+			equals(
+				sxpElement,
+				SXPElementSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"searchExperiences_v1_0",
+								new GraphQLField(
+									"sXPElementByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													sxpElement.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/searchExperiences_v1_0",
+						"Object/sXPElementByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -606,6 +625,8 @@ public abstract class BaseSXPElementResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -621,6 +642,27 @@ public abstract class BaseSXPElementResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace searchExperiences_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"searchExperiences_v1_0",
+						new GraphQLField(
+							"sXPElementByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -750,7 +792,10 @@ public abstract class BaseSXPElementResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteSXPElement() throws Exception {
-		SXPElement sxpElement = testGraphQLDeleteSXPElement_addSXPElement();
+
+		// No namespace
+
+		SXPElement sxpElement1 = testGraphQLDeleteSXPElement_addSXPElement();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -759,23 +804,59 @@ public abstract class BaseSXPElementResourceTestCase {
 						"deleteSXPElement",
 						new HashMap<String, Object>() {
 							{
-								put("sxpElementId", sxpElement.getId());
+								put("sxpElementId", sxpElement1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteSXPElement"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"sXPElement",
 					new HashMap<String, Object>() {
 						{
-							put("sxpElementId", sxpElement.getId());
+							put("sxpElementId", sxpElement1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace searchExperiences_v1_0
+
+		SXPElement sxpElement2 = testGraphQLDeleteSXPElement_addSXPElement();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"searchExperiences_v1_0",
+						new GraphQLField(
+							"deleteSXPElement",
+							new HashMap<String, Object>() {
+								{
+									put("sxpElementId", sxpElement2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/searchExperiences_v1_0",
+				"Object/deleteSXPElement"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"searchExperiences_v1_0",
+					new GraphQLField(
+						"sXPElement",
+						new HashMap<String, Object>() {
+							{
+								put("sxpElementId", sxpElement2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected SXPElement testGraphQLDeleteSXPElement_addSXPElement()
@@ -804,6 +885,8 @@ public abstract class BaseSXPElementResourceTestCase {
 	public void testGraphQLGetSXPElement() throws Exception {
 		SXPElement sxpElement = testGraphQLGetSXPElement_addSXPElement();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				sxpElement,
@@ -819,11 +902,36 @@ public abstract class BaseSXPElementResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/sXPElement"))));
+
+		// Using the namespace searchExperiences_v1_0
+
+		Assert.assertTrue(
+			equals(
+				sxpElement,
+				SXPElementSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"searchExperiences_v1_0",
+								new GraphQLField(
+									"sXPElement",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"sxpElementId",
+												sxpElement.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/searchExperiences_v1_0",
+						"Object/sXPElement"))));
 	}
 
 	@Test
 	public void testGraphQLGetSXPElementNotFound() throws Exception {
 		Long irrelevantSxpElementId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -837,6 +945,25 @@ public abstract class BaseSXPElementResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace searchExperiences_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"searchExperiences_v1_0",
+						new GraphQLField(
+							"sXPElement",
+							new HashMap<String, Object>() {
+								{
+									put("sxpElementId", irrelevantSxpElementId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1579,20 +1706,20 @@ public abstract class BaseSXPElementResourceTestCase {
 
 		if (entityFieldName.equals("createDate")) {
 			if (operator.equals("between")) {
+				Date date = sxpElement.getCreateDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(sxpElement.getCreateDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(sxpElement.getCreateDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1814,21 +1941,20 @@ public abstract class BaseSXPElementResourceTestCase {
 
 		if (entityFieldName.equals("modifiedDate")) {
 			if (operator.equals("between")) {
+				Date date = sxpElement.getModifiedDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							sxpElement.getModifiedDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(sxpElement.getModifiedDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2058,7 +2184,8 @@ public abstract class BaseSXPElementResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -2132,12 +2259,12 @@ public abstract class BaseSXPElementResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2146,11 +2273,16 @@ public abstract class BaseSXPElementResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2182,6 +2314,24 @@ public abstract class BaseSXPElementResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2203,16 +2353,6 @@ public abstract class BaseSXPElementResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

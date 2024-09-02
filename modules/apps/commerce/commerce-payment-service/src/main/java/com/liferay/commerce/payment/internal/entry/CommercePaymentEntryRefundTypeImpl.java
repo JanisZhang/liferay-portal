@@ -81,6 +81,11 @@ public class CommercePaymentEntryRefundTypeImpl
 		return _commercePaymentEntryRefundTypeConfiguration.priority();
 	}
 
+	@Override
+	public boolean isEnabled() {
+		return _commercePaymentEntryRefundTypeConfiguration.enabled();
+	}
+
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {

@@ -63,7 +63,7 @@ definition {
 		}
 
 		task ("Then the order date and time is shown") {
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yyyy K", "UTC");
+			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yy K", "UTC");
 
 			AssertTextEquals.assertPartialText(
 				key_orderId = "",
@@ -131,7 +131,7 @@ definition {
 		}
 
 		task ("Then the order date is shown without the time") {
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yyyy", "UTC");
+			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yy", "UTC");
 
 			AssertTextEquals(
 				key_orderId = "",
@@ -173,7 +173,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -233,7 +233,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -328,7 +328,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -396,7 +396,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -450,7 +450,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -487,126 +487,6 @@ definition {
 				key_entry = "Commerce Account",
 				key_orderType = "Test Order Type 2",
 				locator1 = "CommerceOrders#PLACED_ORDERS_LIST_ORDER_TYPE");
-		}
-	}
-
-	@description = "This is a test for COMMERCE-9450. If a product in the open order is removed from the account visibility, the buyer cannot checkout with the product, can be redirected to the catalog page by viewing the product in both order detail and mini-cart, and no other can be added to the cart"
-	@priority = 3
-	test CanManageOpenOrderCorrectlyIfAccountVisibilityForAProductIsRemoved {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-		property portal.acceptance = "false";
-
-		task ("Given an account with a buyer user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And an Account Group is created and contains Commerce Account") {
-			JSONAccountGroup.addAccountGroup(accountGroupName = "AG1");
-
-			AccountGroups.openAccountGroupsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "AG1");
-
-			AccountGroups.addAssignee(
-				accountGroupName = "AG1",
-				assigneeNames = "Commerce Account");
-		}
-
-		task ("And U-Joint's Account Groups visibility is added for AG1") {
-			CommerceProducts.openProductsAdmin();
-
-			CommerceProducts.searchAndGoToProductEntry(entryProductName = "U-Joint");
-
-			CommerceDiagram.setVisibility(
-				checkboxName = "AG1",
-				name = "Account Groups",
-				webContentTitle = "Add Account Group Relation to U-Joint");
-		}
-
-		task ("And the buyer adds U-Joint to the cart") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-		}
-
-		task ("When the admin removes Commerce Account in AG1") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
-
-			AccountGroups.openAccountGroupsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "AG1");
-
-			AccountGroups.removeAccount(accountGroupName = "Commerce Account");
-		}
-
-		task ("Then the buyer can be redirected to the catalog page by viewing the open order's U-Joint item") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "buyer@liferay.com",
-				userLoginFullName = "Buyer User");
-
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
-
-			Button.click(button = "View");
-
-			Click(
-				key_productName = "U-Joint",
-				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
-
-			AssertLocation.assertPartialLocation(value1 = "web/minium/catalog");
-		}
-
-		task ("And the buyer can be redirected to the catalog page by viewing the mini-cart's U-Joint item") {
-			CommerceNavigator.gotoMiniCart();
-
-			Click(
-				key_cartItemName = "U-Joint",
-				locator1 = "CommerceAccelerators#MINI_CART_ITEM_NAME");
-
-			AssertLocation.assertPartialLocation(value1 = "web/minium/catalog");
-		}
-
-		task ("And the buyer can just save the order, cannot checkout") {
-			CommerceCheckout.gotoCheckoutViaMiniCart();
-
-			AssertElementPresent(
-				key_text = "Save",
-				locator1 = "Button#ANY");
-
-			AssertElementNotPresent(
-				key_text = "Checkout",
-				locator1 = "Button#ANY");
-		}
-
-		task ("And there is an error alert 'One or more products are no longer available' is shown if the buyer tries to add another product to the cart") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
-
-			Click(
-				key_productName = "Mount",
-				locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON");
-
-			AssertElementPresent(
-				key_itemCount = 1,
-				locator1 = "CommerceAccelerators#MINI_CART_BUTTON_DATA_BADGE_COUNT");
-
-			Alert.viewErrorMessage(errorMessage = "Danger:One or more products are no longer available.");
 		}
 	}
 
@@ -665,7 +545,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -693,18 +573,18 @@ definition {
 		}
 	}
 
-	@description = "COMMERCE-9877. A user can search orders by account name"
-	@priority = 5
-	test CanReturnOrdersBySearchForAccountName {
+	@description = "This is a test for COMMERCE-11254 and COMMERCE-11174. Order manager can manage orders' workflow on Save/Approve/Reject status"
+	@priority = 3
+	test CanOrderManagerManageOrderWorkflow {
 		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
+		property test.name.skip.portal.instance = "SFCommerceOrders#CanOrderManagerManageOrderWorkflow";
 
-		task ("Given 2 accounts associated with a buyer user") {
+		task ("Given a buyer user and an order manager are created and associated with Minium site") {
 			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account 1",
-				accountType = "Business",
+				accountName = "Commerce Account",
 				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
+				createNewAccount = "false",
 				requireReset = "false",
 				userEmailAddress = "buyer@liferay.com",
 				userFirstName = "Buyer",
@@ -714,77 +594,121 @@ definition {
 				userSiteMembership = "Minium");
 
 			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account 2",
-				accountType = "Business",
-				createNewAccount = "true",
-				existingUser = "true",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
+				accountName = "Commerce Account",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "false",
+				requireReset = "false",
+				userEmailAddress = "ordermanager@liferay.com",
+				userFirstName = "Order",
+				userLastName = "Manager",
+				userRole = "Order Manager",
+				userScreenName = "ordermanager",
 				userSiteMembership = "Minium");
 		}
 
-		task ("And an order created by the user from the first account") {
+		task ("And the admin enabled the 'Buyer Order Approval Workflow' for Minium Portal") {
+			CommerceChannels.openChannelsAdmin();
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
+
+			Workflow.setWorkflowToMiniumChannel(workflowDefinition = "Single Approver (Version 1)");
+		}
+
+		task ("When the buyer adds a product to the cart on Minium") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
 				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckout();
-
-			CommerceCheckout.checkout(
-				newAddressAddress = "Test Address",
-				newAddressCity = "Test City",
-				newAddressCountry = "United States",
-				newAddressName = "Address Name",
-				newAddressZipCode = "Test Zip Code",
-				shippingMethod = "Standard");
 		}
 
-		task ("And an order created by the user from the second account") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
-
-			CommerceAcceleratorsInitializer.selectAccountFromAccountSelector(accountName = "Commerce Account 2");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "U-Joint",
-				productQuantity = 1);
-
-			CommerceCheckout.gotoCheckout();
-
-			CommerceCheckout.checkout(
-				newAddressAddress = "Test Address",
-				newAddressCity = "Test City",
-				newAddressCountry = "United States",
-				newAddressName = "Address Name",
-				newAddressZipCode = "Test Zip Code",
-				shippingMethod = "Standard");
-		}
-
-		task ("When the buyer user navigates to Placed Orders on the Minium sidebar") {
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
-		}
-
-		task ("Then the search of orders by account works properly") {
-			var searchAccount1 = '''"Commerce Account 1"''';
-
-			CommerceNavigator.searchEntry(entryName = ${searchAccount1});
-
+		task ("Then the order status is Draft") {
 			AssertElementPresent(
-				key_orderAccount = "Commerce Account 1",
-				locator1 = "CommerceOrders#PLACED_ORDERS_LIST_ACCOUNT");
+				key_status = "Draft",
+				locator1 = "CommerceEntry#WORKFLOW_STATUS");
+		}
 
-			AssertElementNotPresent(
-				key_orderAccount = "Commerce Account 2",
-				locator1 = "CommerceOrders#PLACED_ORDERS_LIST_ACCOUNT");
+		task ("When the buyer reviews this order") {
+			CommerceNavigator.gotoMiniCart();
+
+			Button.click(button = "Review Order");
+
+			Button.click(button = "Submit");
+		}
+
+		task ("Then the order status is Pending") {
+			AssertElementPresent(
+				key_status = "Pending",
+				locator1 = "CommerceEntry#WORKFLOW_STATUS");
+		}
+
+		task ("When the order manager goes to view this order in Pending Orders page") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "ordermanager@liferay.com",
+				userLoginFullName = "Order Manager");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
+
+			Button.click(button = "View");
+		}
+
+		task ("Then the order manager can view the Save/Approve/Reject workflow status of the order") {
+			for (var workflowStatus : list "Save,Approve,Reject") {
+				AssertElementPresent(
+					key_text = ${workflowStatus},
+					locator1 = "Button#ANY");
+			}
+		}
+
+		task ("When the order manager rejects the order") {
+			Button.click(button = "Reject");
+
+			Button.clickDone();
+		}
+
+		task ("Then the order status is Pending") {
+			AssertElementPresent(
+				key_status = "Pending",
+				locator1 = "CommerceEntry#WORKFLOW_STATUS");
+		}
+
+		task ("But if the buyer resubmits the order") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "buyer@liferay.com",
+				userLoginFullName = "Buyer User");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
+
+			Button.click(button = "View");
+
+			Button.click(button = "Resubmit");
+
+			Button.clickDone();
+		}
+
+		task ("And the order manager approves the order") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "ordermanager@liferay.com",
+				userLoginFullName = "Order Manager");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
+
+			Button.click(button = "View");
+
+			Button.click(button = "Approve");
+
+			Button.clickDone();
+		}
+
+		task ("Then the order status is Approved") {
+			AssertElementPresent(
+				key_status = "Approved",
+				locator1 = "CommerceEntry#WORKFLOW_STATUS");
 		}
 	}
 
@@ -862,7 +786,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -885,9 +809,7 @@ definition {
 		}
 
 		task ("When deleting that product from the products page in the admin control panel") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "test test");
+			User.logoutAndLoginPG();
 
 			CommerceProducts.openProductsAdmin();
 
@@ -944,7 +866,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1211,7 +1133,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1238,7 +1160,7 @@ definition {
 		}
 
 		task ("Then the order date and time is shown") {
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yyyy K", "UTC");
+			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yy K", "UTC");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "CommerceOrders#ORDER_DETAILS_DATE",
@@ -1246,9 +1168,7 @@ definition {
 		}
 
 		task ("Given the Show Order Creation Time checkbox is unchecked in global settings") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			SystemSettings.openSystemSettingsAdmin();
 
@@ -1270,7 +1190,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1280,7 +1200,7 @@ definition {
 		}
 
 		task ("Then the order date is shown without the time") {
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yyyy", "UTC");
+			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yy", "UTC");
 
 			AssertTextEquals(
 				locator1 = "CommerceOrders#ORDER_DETAILS_DATE",
@@ -1319,7 +1239,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1415,8 +1335,8 @@ definition {
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/placed-orders");
 		}
 
-		task ("Then the order date is shown in MMM d, yyyy format") {
-			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yyyy", "UTC");
+		task ("Then the order date is shown in MMM d, yy format") {
+			var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yy", "UTC");
 
 			AssertTextEquals(
 				key_orderId = "",
@@ -1428,65 +1348,11 @@ definition {
 			Button.click(button = "View");
 		}
 
-		task ("Then the order date is shown in MMM d, yyyy format") {
+		task ("Then the order date is shown in MMM d, yy format") {
 			AssertTextEquals(
 				locator1 = "CommerceOrders#ORDER_DETAILS_DATE",
 				value1 = ${currentDate});
 		}
-	}
-
-	@description = "COMMERCE-6383. As a buyer, I want to be able to Reorder the Placed Order by clicking on 'Reorder' button"
-	@priority = 5
-	test ReorderFromPlacedOrdersDetailsPage {
-		property portal.acceptance = "true";
-
-		// TODO Review
-
-		ApplicationsMenu.gotoSite(site = "Minium");
-
-		FrontStore.addInitializerProductToCart(
-			productName = "U-Joint",
-			productQuantity = 1);
-
-		CommerceCheckout.gotoCheckout();
-
-		CommerceCheckout.initializersCheckout(
-			newAddressAddress = "Test Address",
-			newAddressCity = "Test City",
-			newAddressCountry = "United States",
-			newAddressName = "Address Name",
-			newAddressZipCode = "Test Zip Code",
-			productName = "U-Joint",
-			productQuantity = 1,
-			productUnitPrice = 24,
-			shippingMethod = "Standard");
-
-		Click(
-			key_text = "Go to Order Details",
-			locator1 = "Button#ANY");
-
-		Click(
-			key_text = "Reorder",
-			locator1 = "Button#ANY");
-
-		Button.click(button = "Checkout");
-
-		for (var iterator : list "1,2,3,4,5") {
-			if (${iterator} == 2) {
-				Click(
-					key_radioOption = "Standard",
-					locator1 = "CommerceEntry#RADIO_BUTTON");
-			}
-			else {
-				Click(locator1 = "Button#CONTINUE");
-			}
-		}
-
-		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
-
-		AssertTextEquals(
-			locator1 = "CommerceEntry#PAGINATION_RESULTS",
-			value1 = "Showing 1 to 2 of 2 entries.");
 	}
 
 	@description = "COMMERCE-6375. As a buyer, I want to be able to search for one pending order using the search bar"
@@ -1523,12 +1389,12 @@ definition {
 		CommerceNavigator.searchEntry(entryName = ${firstOrderId});
 
 		AssertElementPresent(
-			key_errorMessage = ${firstOrderId},
-			locator1 = "WorkflowMetricsSLA#SLA_ERROR_MESSAGE");
+			key_entryName = ${firstOrderId},
+			locator1 = "CommerceEntry#TABLE_LIST_TITLE");
 
 		AssertElementNotPresent(
-			key_errorMessage = ${secondOrderId},
-			locator1 = "WorkflowMetricsSLA#SLA_ERROR_MESSAGE");
+			key_entryName = ${secondOrderId},
+			locator1 = "CommerceEntry#TABLE_LIST_TITLE");
 	}
 
 	@description = "COMMERCE-6381. As a buyer, I want to be able to search for one placed order using the search bar"

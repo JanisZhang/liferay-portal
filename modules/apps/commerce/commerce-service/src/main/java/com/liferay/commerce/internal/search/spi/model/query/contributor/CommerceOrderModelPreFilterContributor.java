@@ -12,6 +12,7 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.MissingFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.search.spi.model.query.contributor.ModelPreFilterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchSettings;
@@ -49,13 +50,25 @@ public class CommerceOrderModelPreFilterContributor
 		}
 
 		BooleanFilter commerceAccountIdBooleanFilter = new BooleanFilter();
+		BooleanFilter nestedBooleanFilter = new BooleanFilter();
 
-		for (long commerceAccountId : commerceAccountIds) {
+		for (int i = 0; i < commerceAccountIds.length; i++) {
 			Filter termFilter = new TermFilter(
-				"commerceAccountId", String.valueOf(commerceAccountId));
+				"commerceAccountId", String.valueOf(commerceAccountIds[i]));
 
+			nestedBooleanFilter.add(termFilter, BooleanClauseOccur.SHOULD);
+
+			if (((i + 1) % _MAX_CLAUSES_COUNT) == 0) {
+				commerceAccountIdBooleanFilter.add(
+					nestedBooleanFilter, BooleanClauseOccur.SHOULD);
+
+				nestedBooleanFilter = new BooleanFilter();
+			}
+		}
+
+		if (nestedBooleanFilter.hasClauses()) {
 			commerceAccountIdBooleanFilter.add(
-				termFilter, BooleanClauseOccur.SHOULD);
+				nestedBooleanFilter, BooleanClauseOccur.SHOULD);
 		}
 
 		commerceAccountIdBooleanFilter.add(
@@ -68,9 +81,7 @@ public class CommerceOrderModelPreFilterContributor
 	private void _filterByGroupIds(
 		BooleanFilter booleanFilter, SearchContext searchContext) {
 
-		long[] groupIds = searchContext.getGroupIds();
-
-		if ((groupIds == null) || (groupIds.length == 0)) {
+		if (ArrayUtil.isEmpty(searchContext.getGroupIds())) {
 			booleanFilter.addTerm(
 				Field.GROUP_ID, "-1", BooleanClauseOccur.MUST);
 		}
@@ -110,5 +121,7 @@ public class CommerceOrderModelPreFilterContributor
 				orderStatusesBooleanFilter, BooleanClauseOccur.MUST);
 		}
 	}
+
+	private static final int _MAX_CLAUSES_COUNT = 1024;
 
 }

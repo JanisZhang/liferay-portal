@@ -400,6 +400,7 @@ public class DB2DB extends BaseDB {
 		runSQL(connection, sb.toString());
 	}
 
+	@Override
 	protected String getCopyTableStructureSQL(
 		String tableName, String newTableName) {
 
@@ -461,6 +462,7 @@ public class DB2DB extends BaseDB {
 		return reorgTableRequired;
 	}
 
+	@Override
 	protected boolean isSupportsDuplicatedIndexName() {
 		return false;
 	}
@@ -512,6 +514,10 @@ public class DB2DB extends BaseDB {
 
 	@Override
 	protected String reword(String data) throws IOException, SQLException {
+		if (Validator.isNull(data)) {
+			return null;
+		}
+
 		try (UnsyncBufferedReader unsyncBufferedReader =
 				new UnsyncBufferedReader(new UnsyncStringReader(data))) {
 

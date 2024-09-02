@@ -8,18 +8,26 @@ package com.liferay.headless.builder.model.listener.test;
 import com.liferay.headless.builder.test.BaseTestCase;
 import com.liferay.headless.builder.test.util.ObjectDefinitionTestUtil;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.rest.test.util.ObjectFieldTestUtil;
+import com.liferay.object.rest.test.util.ObjectRelationshipTestUtil;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.Inject;
 
 import java.util.Arrays;
 
@@ -38,6 +46,7 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 	extends BaseTestCase {
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
@@ -114,6 +123,43 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 		Assert.assertEquals("BAD_REQUEST", jsonObject.get("status"));
 		Assert.assertEquals(
 			"An API property must be related to an API schema.",
+			jsonObject.get("title"));
+
+		ObjectDefinition userSystemObjectDefinition =
+			_objectDefinitionLocalService.fetchSystemObjectDefinition("User");
+
+		ObjectRelationship objectRelationship =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				_objectDefinition, userSystemObjectDefinition,
+				TestPropsValues.getUserId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		ObjectField userSystemObjectField =
+			ObjectFieldTestUtil.addCustomObjectField(
+				TestPropsValues.getUserId(),
+				ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+				ObjectFieldConstants.DB_TYPE_STRING, userSystemObjectDefinition,
+				"x" + RandomTestUtil.randomString());
+
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"description", RandomTestUtil.randomString()
+			).put(
+				"name", RandomTestUtil.randomString()
+			).put(
+				"objectFieldERC",
+				userSystemObjectField.getExternalReferenceCode()
+			).put(
+				"objectRelationshipNames", objectRelationship.getName()
+			).put(
+				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				apiSchemaJSONObject.get("id")
+			).toString(),
+			"headless-builder/properties", Http.Method.POST);
+
+		Assert.assertEquals("BAD_REQUEST", jsonObject.get("status"));
+		Assert.assertEquals(
+			"An API property must belong to a modifiable object definition.",
 			jsonObject.get("title"));
 
 		jsonObject = HTTPTestUtil.invokeToJSONObject(
@@ -433,27 +479,6 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 			"A related API property must belong to the same API schema.",
 			jsonObject.get("title"));
 
-		jsonObject = HTTPTestUtil.invokeToJSONObject(
-			JSONUtil.put(
-				"description", RandomTestUtil.randomString()
-			).put(
-				"name", RandomTestUtil.randomString()
-			).put(
-				"objectFieldERC", _objectField1.getExternalReferenceCode()
-			).put(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId",
-				apiApplicationJSONObject.getLong("id")
-			).put(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId",
-				apiSchemaJSONObject1.get("id")
-			).toString(),
-			"headless-builder/properties", Http.Method.POST);
-
-		Assert.assertEquals("BAD_REQUEST", jsonObject.get("status"));
-		Assert.assertEquals(
-			"An API property must be related to an API property.",
-			jsonObject.get("title"));
-
 		String name = RandomTestUtil.randomString();
 
 		JSONObject recordAPIPropertyJSONObject =
@@ -505,6 +530,28 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 		Assert.assertEquals("BAD_REQUEST", jsonObject.get("status"));
 		Assert.assertEquals(
 			"API property name must be unique.", jsonObject.get("title"));
+
+		jsonObject = HTTPTestUtil.invokeToJSONObject(
+			JSONUtil.put(
+				"description", RandomTestUtil.randomString()
+			).put(
+				"name", RandomTestUtil.randomString()
+			).put(
+				"objectFieldERC", _objectField1.getExternalReferenceCode()
+			).put(
+				"r_apiPropertyToAPIProperties_c_apiPropertyId",
+				apiApplicationJSONObject.getLong("id")
+			).put(
+				"r_apiSchemaToAPIProperties_c_apiSchemaId",
+				apiSchemaJSONObject1.get("id")
+			).toString(),
+			"headless-builder/properties", Http.Method.POST);
+
+		Assert.assertEquals("BAD_REQUEST", jsonObject.get("status"));
+		Assert.assertEquals(
+			"The value is invalid for object field " +
+				"\"r_apiPropertyToAPIProperties_c_apiPropertyId\"",
+			jsonObject.get("title"));
 
 		apiPropertyJSONObject1 = HTTPTestUtil.invokeToJSONObject(
 			JSONUtil.put(
@@ -635,6 +682,9 @@ public class APIPropertyRelevantObjectEntryModelListenerTest
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition;
+
+	@Inject
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@DeleteAfterTestRun
 	private ObjectField _objectField1;

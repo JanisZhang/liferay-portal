@@ -5,11 +5,6 @@
 
 package com.liferay.jenkins.results.parser.testray;
 
-import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.json.JSONObject;
 
 /**
@@ -17,29 +12,16 @@ import org.json.JSONObject;
  */
 public class TestrayProductVersion {
 
-	public TestrayProductVersion(
-		TestrayProject testrayProject, JSONObject jsonObject) {
-
-		_testrayProject = testrayProject;
-		_jsonObject = jsonObject;
-
-		_testrayServer = testrayProject.getTestrayServer();
-
-		String urlString = JenkinsResultsParserUtil.combine(
-			String.valueOf(_testrayServer.getURL()),
-			"/home/-/testray/product_versions?testrayProjectId=",
-			String.valueOf(testrayProject.getID()));
-
-		try {
-			_url = new URL(urlString);
-		}
-		catch (MalformedURLException malformedURLException) {
-			throw new RuntimeException(malformedURLException);
-		}
-	}
+	public static final String[] FIELD_NAMES = {
+		"dateCreated", "dateModified", "id", "name"
+	};
 
 	public long getID() {
-		return _jsonObject.getLong("testrayProductVersionId");
+		return _jsonObject.getLong("id");
+	}
+
+	public JSONObject getJSONObject() {
+		return _jsonObject;
 	}
 
 	public String getName() {
@@ -54,13 +36,18 @@ public class TestrayProductVersion {
 		return _testrayServer;
 	}
 
-	public URL getURL() {
-		return _url;
+	protected TestrayProductVersion(
+		TestrayProject testrayProject, JSONObject jsonObject) {
+
+		_testrayProject = testrayProject;
+
+		_testrayServer = testrayProject.getTestrayServer();
+
+		_jsonObject = jsonObject;
 	}
 
 	private final JSONObject _jsonObject;
 	private final TestrayProject _testrayProject;
 	private final TestrayServer _testrayServer;
-	private final URL _url;
 
 }

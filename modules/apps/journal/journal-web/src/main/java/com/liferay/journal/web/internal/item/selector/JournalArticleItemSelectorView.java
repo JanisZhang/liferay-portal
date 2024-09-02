@@ -19,6 +19,9 @@ import com.liferay.journal.web.internal.constants.JournalWebConstants;
 import com.liferay.journal.web.internal.display.context.JournalArticleItemSelectorViewDisplayContext;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.staging.StagingGroupHelper;
 
 import java.io.IOException;
@@ -104,7 +107,8 @@ public class JournalArticleItemSelectorView
 				new JournalArticleItemSelectorViewDisplayContext(
 					(HttpServletRequest)servletRequest,
 					infoItemItemSelectorCriterion, itemSelectedEventName, this,
-					_journalWebConfiguration, portletURL, search,
+					_journalWebConfiguration, _portal, portletURL,
+					_resourcePermissionLocalService, _roleLocalService, search,
 					_stagingGroupHelper);
 
 		servletRequest.setAttribute(
@@ -133,6 +137,15 @@ public class JournalArticleItemSelectorView
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 	@Reference(target = "(osgi.web.symbolicname=com.liferay.journal.web)")
 	private ServletContext _servletContext;

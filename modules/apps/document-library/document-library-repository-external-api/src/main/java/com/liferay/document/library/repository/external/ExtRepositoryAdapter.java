@@ -100,8 +100,8 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 
 	@Override
 	public FileShortcut addFileShortcut(
-		long userId, long folderId, long toFileEntryId,
-		ServiceContext serviceContext) {
+		String externalReferenceCode, long userId, long folderId,
+		long toFileEntryId, ServiceContext serviceContext) {
 
 		throw new UnsupportedOperationException();
 	}
@@ -669,6 +669,13 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	}
 
 	@Override
+	public List<FileShortcut> getRepositoryFileShortcuts(long groupId)
+		throws PortalException {
+
+		return Collections.emptyList();
+	}
+
+	@Override
 	public void getSubfolderIds(List<Long> folderIds, long folderId)
 		throws PortalException {
 
@@ -679,12 +686,12 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	public List<Long> getSubfolderIds(long folderId, boolean recurse)
 		throws PortalException {
 
+		List<Long> subfolderIds = new ArrayList<>();
+
 		String extRepositoryFolderKey = getExtRepositoryObjectKey(folderId);
 
 		List<String> extRepositorySubfolderKeys =
 			_extRepository.getSubfolderKeys(extRepositoryFolderKey, recurse);
-
-		List<Long> subfolderIds = new ArrayList<>();
 
 		for (String extRepositorySubfolderKey : extRepositorySubfolderKeys) {
 			RepositoryEntry repositoryEntry = getRepositoryEntry(

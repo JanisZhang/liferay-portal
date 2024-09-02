@@ -5,11 +5,11 @@
 
 package com.liferay.portal.kernel.db.partition;
 
+import com.liferay.counter.kernel.model.Counter;
 import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.PropsUtil;
 
 /**
@@ -18,8 +18,9 @@ import com.liferay.portal.kernel.util.PropsUtil;
 public class DBPartition {
 
 	public static boolean isPartitionedModel(Class<?> clazz) {
-		if (isPartitionEnabled() &&
+		if (_DATABASE_PARTITION_ENABLED &&
 			(ClassName.class.isAssignableFrom(clazz) ||
+			 Counter.class.isAssignableFrom(clazz) ||
 			 ResourceAction.class.isAssignableFrom(clazz) ||
 			 ShardedModel.class.isAssignableFrom(clazz))) {
 
@@ -30,11 +31,6 @@ public class DBPartition {
 	}
 
 	public static boolean isPartitionEnabled() {
-		if (PortalRunMode.isTestMode()) {
-			return GetterUtil.getBoolean(
-				PropsUtil.get("database.partition.enabled"));
-		}
-
 		return _DATABASE_PARTITION_ENABLED;
 	}
 

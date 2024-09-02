@@ -122,6 +122,19 @@ definition {
 				MenuItem.viewNotPresent(menuItem = ${unavailableLanguage});
 			}
 		}
+		else if (${displayTemplate} == "Icon Menu Partial Match") {
+			Click(
+				key_portletName = "LanguagePortlet",
+				locator1 = "Language#DROPDOWN");
+
+			for (var availableLanguage : list ${availableLanguageList}) {
+				MenuItem.viewPresentPartialMatch(menuItem = ${availableLanguage});
+			}
+
+			for (var unavailableLanguage : list ${unavailableLanguageList}) {
+				MenuItem.viewNotPresentPartialMatch(menuItem = ${unavailableLanguage});
+			}
+		}
 		else if (${displayTemplate} == "Long Text") {
 			for (var availableLanguage : list ${availableLanguageList}) {
 				AssertTextEquals(
@@ -141,14 +154,14 @@ definition {
 				AssertElementPresent(
 					locator1 = "Select#SELECT_VALUE_ID",
 					option = ${availableLanguage},
-					selectFieldId = "LanguagePortlet");
+					selectFieldId = "languageIdfm");
 			}
 
 			for (var unavailableLanguage : list ${unavailableLanguageList}) {
 				AssertElementNotPresent(
 					locator1 = "Select#SELECT_VALUE_ID",
 					option = ${unavailableLanguage},
-					selectFieldId = "LanguagePortlet");
+					selectFieldId = "languageIdfm");
 			}
 		}
 		else if (${displayTemplate} == "Short Text") {

@@ -30,7 +30,7 @@ renderResponse.setTitle(article.getTitle(locale));
 
 <clay:management-toolbar
 	managementToolbarDisplayContext="<%= journalHistoryManagementToolbarDisplayContext %>"
-	propsTransformer="js/ArticleHistoryManagementToolbarPropsTransformer"
+	propsTransformer="{ArticleHistoryManagementToolbarPropsTransformer} from journal-web"
 />
 
 <aui:form action="<%= journalHistoryDisplayContext.getPortletURL() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
@@ -77,9 +77,9 @@ renderResponse.setTitle(article.getTitle(locale));
 							<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(articleVersion.getStatusByUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
 						</div>
 
-						<h5>
+						<div class="h5">
 							<%= HtmlUtil.escape(articleVersion.getTitle(locale)) %>
-						</h5>
+						</div>
 
 						<div class="h6 text-default">
 							<liferay-portal-workflow:status
@@ -99,13 +99,19 @@ renderResponse.setTitle(article.getTitle(locale));
 							%>'
 							aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 							dropdownItems="<%= journalDisplayContext.getArticleHistoryActionDropdownItems(articleVersion) %>"
-							propsTransformer="js/ElementsDefaultPropsTransformer"
+							propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 						/>
 					</liferay-ui:search-container-column-text>
 				</c:when>
 				<c:when test='<%= Objects.equals(journalHistoryDisplayContext.getDisplayStyle(), "icon") %>'>
 					<liferay-ui:search-container-column-text>
 						<clay:vertical-card
+							additionalProps='<%=
+								HashMapBuilder.<String, Object>put(
+									"trashEnabled", componentContext.get("trashEnabled")
+								).build()
+							%>'
+							propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 							verticalCard="<%= new JournalArticleHistoryVerticalCard(articleVersion, renderRequest, renderResponse, searchContainer.getRowChecker(), assetDisplayPageFriendlyURLProvider, trashHelper) %>"
 						/>
 					</liferay-ui:search-container-column-text>
@@ -163,7 +169,7 @@ renderResponse.setTitle(article.getTitle(locale));
 							%>'
 							aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 							dropdownItems="<%= journalDisplayContext.getArticleHistoryActionDropdownItems(articleVersion) %>"
-							propsTransformer="js/ElementsDefaultPropsTransformer"
+							propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 						/>
 					</liferay-ui:search-container-column-text>
 				</c:when>

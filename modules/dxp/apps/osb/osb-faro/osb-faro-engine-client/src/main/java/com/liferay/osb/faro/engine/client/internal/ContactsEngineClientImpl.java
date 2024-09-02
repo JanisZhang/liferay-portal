@@ -1662,6 +1662,21 @@ public class ContactsEngineClientImpl
 	}
 
 	@Override
+	public long getIdentitiesCount(FaroProject faroProject) {
+		RestTemplate restTemplate = getRestTemplate(faroProject);
+
+		ResponseEntity<Long> responseEntity = restTemplate.exchange(
+			getTemplatedURL(faroProject, Rels.IDENTITIES_COUNT), HttpMethod.GET,
+			HttpEntity.EMPTY, Long.class, getUriVariables(faroProject));
+
+		if (Validator.isNotNull(responseEntity.getBody())) {
+			return responseEntity.getBody();
+		}
+
+		return 0L;
+	}
+
+	@Override
 	public Individual getIndividual(
 			FaroProject faroProject, String id, String channelId)
 		throws FaroEngineClientException {
@@ -1905,24 +1920,26 @@ public class ContactsEngineClientImpl
 	}
 
 	@Override
-	public long getIndividualsCount(
-		FaroProject faroProject, boolean includeAnonymousUsers) {
+	public long getIndividualsCreatedBetweenCount(
+		FaroProject faroProject, Date endDate, Date startDate) {
 
 		Map<String, Object> uriVariables = getUriVariables(faroProject);
 
-		uriVariables.put("includeAnonymousUsers", includeAnonymousUsers);
+		uriVariables.put("endDate", endDate);
+		uriVariables.put("startDate", startDate);
 
 		RestTemplate restTemplate = getRestTemplate(faroProject);
 
 		ResponseEntity<Long> responseEntity = restTemplate.exchange(
-			getTemplatedURL(faroProject, Rels.INDIVIDUALS_COUNT),
+			getTemplatedURL(
+				faroProject, Rels.INDIVIDUALS_CREATED_BETWEEN_COUNT),
 			HttpMethod.GET, HttpEntity.EMPTY, Long.class, uriVariables);
 
-		if (Validator.isNotNull(responseEntity.getBody())) {
-			return responseEntity.getBody();
+		if (responseEntity.getBody() == null) {
+			return 0L;
 		}
 
-		return 0L;
+		return responseEntity.getBody();
 	}
 
 	@Override
@@ -2236,6 +2253,13 @@ public class ContactsEngineClientImpl
 	}
 
 	@Override
+	public Date getLastSeenDate(FaroProject faroProject) {
+		return get(
+			faroProject, Rels.PROJECTS_LAST_SEEN_DATE,
+			faroProject.getProjectId(), Date.class);
+	}
+
+	@Override
 	public Results<PageVisited> getPagesVisited(
 		FaroProject faroProject, String channelId, String ownerId,
 		String ownerType, String query, String interestName, Date startDate,
@@ -2276,6 +2300,17 @@ public class ContactsEngineClientImpl
 	}
 
 	@Override
+	public long getReportsExportCSVCount(
+			FaroProject faroProject, String path,
+			Map<String, List<String>> queryParameters)
+		throws Exception {
+
+		return get(
+			faroProject, Collections.emptyMap(), path, queryParameters,
+			Long.class);
+	}
+
+	@Override
 	public Results<String> getSessionValues(
 		FaroProject faroProject, String channelId, String fieldName,
 		String filter, String query, int cur, int delta) {
@@ -2312,6 +2347,25 @@ public class ContactsEngineClientImpl
 		List<OrderByField> orderByFields) {
 
 		return new Results<>();
+	}
+
+	@Override
+	public long getSyncedIndividualsCount(FaroProject faroProject) {
+		RestTemplate restTemplate = getRestTemplate(faroProject);
+
+		Map<String, Object> uriVariables = getUriVariables(faroProject);
+
+		uriVariables.put("includeSuppressed", true);
+
+		ResponseEntity<Long> responseEntity = restTemplate.exchange(
+			getTemplatedURL(faroProject, Rels.INDIVIDUALS_COUNT),
+			HttpMethod.GET, HttpEntity.EMPTY, Long.class, uriVariables);
+
+		if (responseEntity.getBody() == null) {
+			return 0L;
+		}
+
+		return responseEntity.getBody();
 	}
 
 	@Override
@@ -2369,20 +2423,6 @@ public class ContactsEngineClientImpl
 			uriVariables);
 
 		return pagedModel.getResults();
-	}
-
-	public long getUsersCount(FaroProject faroProject) {
-		RestTemplate restTemplate = getRestTemplate(faroProject);
-
-		ResponseEntity<Long> responseEntity = restTemplate.exchange(
-			getTemplatedURL(faroProject, Rels.USERS_COUNT), HttpMethod.GET,
-			HttpEntity.EMPTY, Long.class, getUriVariables(faroProject));
-
-		if (responseEntity.getBody() == null) {
-			return 0L;
-		}
-
-		return responseEntity.getBody();
 	}
 
 	@Override

@@ -6,6 +6,8 @@
 package com.liferay.fragment.internal.renderer;
 
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.fragment.cache.FragmentEntryLinkCache;
+import com.liferay.fragment.configuration.FragmentJavascriptConfiguration;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.input.template.parser.FragmentEntryInputTemplateNodeContextHelper;
 import com.liferay.fragment.input.template.parser.InputTemplateNode;
@@ -26,17 +28,21 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.cache.MultiVMPool;
-import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.taglib.util.OutputData;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -186,7 +192,8 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 		FragmentEntryLink fragmentEntryLink,
 		FragmentRendererContext fragmentRendererContext) {
 
-		if (fragmentEntryLink.isTypeInput() ||
+		if (!CTCollectionThreadLocal.isProductionMode() ||
+			fragmentEntryLink.isTypeInput() ||
 			!fragmentRendererContext.isViewMode() ||
 			(fragmentRendererContext.getPreviewClassPK() > 0) ||
 			!fragmentRendererContext.isUseCachedContent()) {
@@ -227,12 +234,34 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 		return fragmentEntry.isCacheable();
 	}
 
+	private boolean _isJavascriptModuleEnabled(
+		HttpServletRequest httpServletRequest) {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		try {
+			FragmentJavascriptConfiguration fragmentJavascriptConfiguration =
+				_configurationProvider.getCompanyConfiguration(
+					FragmentJavascriptConfiguration.class,
+					themeDisplay.getCompanyId());
+
+			return fragmentJavascriptConfiguration.javascriptModuleEnabled();
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(configurationException);
+
+			return true;
+		}
+	}
+
 	private String _renderFragmentEntry(
 		String configuration, String css,
 		FragmentRendererContext fragmentRendererContext, String html,
 		HttpServletRequest httpServletRequest) {
 
-		StringBundler sb = new StringBundler(26);
+		StringBundler sb = new StringBundler(27);
 
 		sb.append("<div id=\"");
 
@@ -296,11 +325,21 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 		}
 
 		if (Validator.isNotNull(fragmentEntryLink.getJs())) {
-			sb.append("<script type=\"module\"");
-			sb.append(
-				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
-					httpServletRequest));
-			sb.append(">const configuration = ");
+			boolean javascriptModuleEnabled = _isJavascriptModuleEnabled(
+				httpServletRequest);
+
+			if (javascriptModuleEnabled) {
+				sb.append("<script type=\"module\"");
+				sb.append(
+					ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+						httpServletRequest));
+				sb.append(StringPool.GREATER_THAN);
+			}
+			else {
+				sb.append("<script>(function() {");
+			}
+
+			sb.append("const configuration = ");
 			sb.append(configuration);
 			sb.append("; const fragmentElement = document.querySelector('#");
 			sb.append(fragmentRendererContext.getFragmentElementId());
@@ -328,7 +367,13 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 						"p_l_mode", Constants.VIEW)));
 			sb.append("';");
 			sb.append(fragmentEntryLink.getJs());
-			sb.append(";</script>");
+
+			if (javascriptModuleEnabled) {
+				sb.append(";</script>");
+			}
+			else {
+				sb.append(";}());</script>");
+			}
 		}
 
 		return sb.toString();
@@ -340,25 +385,14 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 			HttpServletResponse httpServletResponse)
 		throws PortalException {
 
-		PortalCache<String, String> portalCache =
-			(PortalCache<String, String>)_multiVMPool.getPortalCache(
-				FragmentEntryLink.class.getName());
-
 		FragmentEntryLink fragmentEntryLink = _getFragmentEntryLink(
 			fragmentRendererContext);
-
-		StringBundler portalCacheKeySB = new StringBundler(5);
-
-		portalCacheKeySB.append(fragmentEntryLink.getFragmentEntryLinkId());
-		portalCacheKeySB.append(StringPool.DASH);
-		portalCacheKeySB.append(fragmentRendererContext.getLocale());
-		portalCacheKeySB.append(StringPool.DASH);
-		portalCacheKeySB.append(fragmentEntryLink.getSegmentsExperienceId());
 
 		String content = StringPool.BLANK;
 
 		if (_isCacheable(fragmentEntryLink, fragmentRendererContext)) {
-			content = portalCache.get(portalCacheKeySB.toString());
+			content = _fragmentEntryLinkCache.getFragmentEntryLinkContent(
+				fragmentEntryLink, fragmentRendererContext.getLocale());
 
 			if (Validator.isNotNull(content)) {
 				return content;
@@ -426,7 +460,9 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 			html, httpServletRequest);
 
 		if (_isCacheable(fragmentEntryLink, fragmentRendererContext)) {
-			portalCache.put(portalCacheKeySB.toString(), content);
+			_fragmentEntryLinkCache.putFragmentEntryLinkContent(
+				content, fragmentEntryLink,
+				fragmentRendererContext.getLocale());
 		}
 
 		return content;
@@ -449,6 +485,12 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 		return unsyncStringWriter.toString();
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentEntryFragmentRenderer.class);
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
+
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
 
@@ -458,6 +500,9 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
+	private FragmentEntryLinkCache _fragmentEntryLinkCache;
 
 	@Reference
 	private FragmentEntryLocalService _fragmentEntryLocalService;
@@ -479,9 +524,6 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
-
-	@Reference
-	private MultiVMPool _multiVMPool;
 
 	@Reference
 	private Portal _portal;

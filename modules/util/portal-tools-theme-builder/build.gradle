@@ -3,6 +3,9 @@ apply plugin: "com.liferay.maven.plugin.builder"
 task writeParentThemeDependencies
 task writeTestThemeDependencies
 
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
 buildPluginDescriptor {
 	configurationScopeMapping "mavenCompile", "compile"
 
@@ -23,6 +26,10 @@ configurations {
 	mavenDistribution
 	parentThemes
 	testThemes
+}
+
+copyCSS {
+	mustRunAfter buildPluginDescriptor
 }
 
 dependencies {
@@ -73,7 +80,7 @@ test {
 	systemProperty "maven.debug", System.properties["maven.debug"]
 	systemProperty "maven.repo.local", System.properties["maven.repo.local"]
 	systemProperty "repository.url", System.properties["repository.url"]
-	systemProperty "theme.builder.version", jar.version
+	systemProperty "theme.builder.version", jar.archiveVersion.get()
 }
 
 updateFileVersions {

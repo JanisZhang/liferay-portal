@@ -26,6 +26,7 @@ import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.exportimport.kernel.staging.StagingURLHelperUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
+import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.CharPool;
@@ -35,7 +36,12 @@ import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
+import com.liferay.portal.kernel.cluster.ClusterExecutorUtil;
+import com.liferay.portal.kernel.cluster.ClusterRequest;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.dao.orm.SQLQuery;
+import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.dao.orm.Type;
 import com.liferay.portal.kernel.exception.DataLimitExceededException;
 import com.liferay.portal.kernel.exception.DuplicateGroupException;
 import com.liferay.portal.kernel.exception.GroupFriendlyURLException;
@@ -43,6 +49,7 @@ import com.liferay.portal.kernel.exception.GroupInheritContentException;
 import com.liferay.portal.kernel.exception.GroupKeyException;
 import com.liferay.portal.kernel.exception.GroupParentException;
 import com.liferay.portal.kernel.exception.LocaleException;
+import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.NoSuchCompanyException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutSetException;
@@ -51,10 +58,12 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RemoteOptionsException;
 import com.liferay.portal.kernel.exception.RequiredGroupException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
+import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -64,6 +73,7 @@ import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
+import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.ResourceAction;
@@ -77,6 +87,7 @@ import com.liferay.portal.kernel.model.UserPersonalSite;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.module.service.Snapshot;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
 import com.liferay.portal.kernel.scheduler.StorageType;
 import com.liferay.portal.kernel.search.reindexer.ReindexerBridge;
@@ -114,6 +125,7 @@ import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.http.TunnelUtil;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.persistence.CompanyPersistence;
+import com.liferay.portal.kernel.service.persistence.GroupUtil;
 import com.liferay.portal.kernel.service.persistence.LayoutPersistence;
 import com.liferay.portal.kernel.service.persistence.OrganizationPersistence;
 import com.liferay.portal.kernel.service.persistence.ResourcePermissionPersistence;
@@ -144,6 +156,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -158,6 +171,7 @@ import com.liferay.portal.theme.ThemeLoader;
 import com.liferay.portal.theme.ThemeLoaderFactory;
 import com.liferay.portal.util.PortalInstances;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.site.initializer.kernel.util.SiteInitializerThreadLocal;
 import com.liferay.social.kernel.service.SocialActivityLocalService;
 import com.liferay.social.kernel.service.SocialActivitySettingLocalService;
 import com.liferay.social.kernel.service.SocialRequestLocalService;
@@ -181,6 +195,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * Provides the local service for accessing, adding, deleting, and updating
@@ -430,6 +448,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		if (className.equals(Group.class.getName())) {
 			if (!site && (liveGroupId == 0) &&
 				!(StringUtil.startsWith(groupKey, GroupConstants.APP) ||
+				  groupKey.equals(GroupConstants.CMS) ||
 				  groupKey.equals(GroupConstants.CONTROL_PANEL) ||
 				  groupKey.equals(GroupConstants.FORMS))) {
 
@@ -747,6 +766,18 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		return true;
 	}
 
+	@Override
+	public void afterPropertiesSet() {
+		super.afterPropertiesSet();
+
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		_serviceRegistration = bundleContext.registerService(
+			ModelListener.class, new GroupModelListener(),
+			MapUtil.singletonDictionary(
+				"persistence.test.rule.aware", Boolean.TRUE));
+	}
+
 	/**
 	 * Adds a company group if it does not exist. This method is typically used
 	 * when a virtual host is added.
@@ -816,6 +847,12 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		long guestUserId = _userLocalService.getGuestUserId(companyId);
 
 		for (String groupKey : systemGroups) {
+			if (groupKey.equals(GroupConstants.CMS) &&
+				!FeatureFlagManagerUtil.isEnabled("LPD-17809")) {
+
+				continue;
+			}
+
 			String groupCacheKey = companyIdHexString.concat(groupKey);
 
 			Group group = _systemGroupsMap.get(groupCacheKey);
@@ -826,8 +863,14 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				int type = GroupConstants.TYPE_SITE_RESTRICTED;
 				String friendlyURL = null;
 				boolean site = true;
+				UnicodeProperties typeSettingsUnicodeProperties = null;
 
-				if (groupKey.equals(GroupConstants.CONTROL_PANEL)) {
+				if (groupKey.equals(GroupConstants.CMS)) {
+					type = GroupConstants.TYPE_SITE_PRIVATE;
+					friendlyURL = GroupConstants.CMS_FRIENDLY_URL;
+					site = false;
+				}
+				else if (groupKey.equals(GroupConstants.CONTROL_PANEL)) {
 					type = GroupConstants.TYPE_SITE_PRIVATE;
 					friendlyURL = GroupConstants.CONTROL_PANEL_FRIENDLY_URL;
 					site = false;
@@ -839,6 +882,13 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				}
 				else if (groupKey.equals(GroupConstants.GUEST)) {
 					friendlyURL = "/guest";
+					typeSettingsUnicodeProperties =
+						UnicodePropertiesBuilder.create(
+							true
+						).put(
+							"siteInitializerKey",
+							SiteInitializerThreadLocal.getKey()
+						).build();
 				}
 				else if (groupKey.equals(GroupConstants.USER_PERSONAL_SITE)) {
 					className = UserPersonalSite.class.getName();
@@ -855,6 +905,16 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 					getLocalizationMap(groupKey), null, type, true,
 					GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, friendlyURL,
 					site, true, null);
+
+				if (typeSettingsUnicodeProperties != null) {
+					group.setTypeSettingsProperties(
+						typeSettingsUnicodeProperties);
+				}
+
+				group.setExternalReferenceCode(
+					"L_" + TextFormatter.format(groupKey, TextFormatter.A));
+
+				group = groupPersistence.update(group);
 
 				if (groupKey.equals(GroupConstants.USER_PERSONAL_SITE)) {
 					initUserPersonalSitePermissions(group);
@@ -1350,6 +1410,13 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	}
 
 	@Override
+	public void destroy() {
+		super.destroy();
+
+		_serviceRegistration.unregister();
+	}
+
+	@Override
 	public synchronized void disableStaging(long groupId)
 		throws PortalException {
 
@@ -1469,7 +1536,27 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 	@Override
 	public Group fetchStagingGroup(long liveGroupId) {
-		return groupPersistence.fetchByLiveGroupId(liveGroupId);
+		if (_stagingGroupsInMemoryFilterLimit <= 0) {
+			return GroupUtil.fetchByLiveGroupId(liveGroupId);
+		}
+
+		Map<Long, Long> stagingGroupIds =
+			_stagingGroupIdsDCLSingleton.getSingleton(
+				this::_getStagingGroupIds);
+
+		if (stagingGroupIds.size() > _stagingGroupsInMemoryFilterLimit) {
+			_stagingGroupsInMemoryFilterLimit = 0;
+
+			_stagingGroupIdsDCLSingleton.destroy(null);
+		}
+
+		Long stagingGroupId = stagingGroupIds.get(liveGroupId);
+
+		if (stagingGroupId == null) {
+			return null;
+		}
+
+		return groupPersistence.fetchByPrimaryKey(stagingGroupId);
 	}
 
 	@Override
@@ -2579,7 +2666,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 					return groupPersistence.findByGtG_C_C_P(
 						previousId, companyId, classNameId, parentPrimaryKey,
-						QueryUtil.ALL_POS, size, new GroupIdComparator(true));
+						QueryUtil.ALL_POS, size,
+						GroupIdComparator.getInstance(true));
 				}
 
 			});
@@ -4061,7 +4149,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			"layout.instanceable.allowed", Boolean.TRUE);
 
 		_layoutLocalService.addLayout(
-			guestUserId, group.getGroupId(), true,
+			null, guestUserId, group.getGroupId(), true,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			PropsValues.CONTROL_PANEL_LAYOUT_NAME, StringPool.BLANK,
 			StringPool.BLANK, LayoutConstants.TYPE_CONTROL_PANEL, false,
@@ -4458,14 +4546,15 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	}
 
 	protected long[] getClassNameIds() {
-		if (_classNameIds == null) {
-			_classNameIds = new long[] {
-				_classNameLocalService.getClassNameId(Group.class),
-				_classNameLocalService.getClassNameId(Organization.class)
-			};
+		if (_classNameIdsSupplier == null) {
+			_classNameIdsSupplier =
+				_classNameLocalService.getClassNameIdsSupplier(
+					new String[] {
+						Group.class.getName(), Organization.class.getName()
+					});
 		}
 
-		return _classNameIds;
+		return _classNameIdsSupplier.get();
 	}
 
 	protected String getFriendlyURL(
@@ -4693,25 +4782,16 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			return true;
 		}
 
-		if (_complexSQLClassNameIds == null) {
-			String[] complexSQLClassNames =
-				PropsValues.GROUPS_COMPLEX_SQL_CLASS_NAMES;
-
-			long[] complexSQLClassNameIds =
-				new long[complexSQLClassNames.length];
-
-			for (int i = 0; i < complexSQLClassNames.length; i++) {
-				String complexSQLClassName = complexSQLClassNames[i];
-
-				complexSQLClassNameIds[i] =
-					_classNameLocalService.getClassNameId(complexSQLClassName);
-			}
-
-			_complexSQLClassNameIds = complexSQLClassNameIds;
+		if (_complexSQLClassNameIdsSupplier == null) {
+			_complexSQLClassNameIdsSupplier =
+				_classNameLocalService.getClassNameIdsSupplier(
+					PropsValues.GROUPS_COMPLEX_SQL_CLASS_NAMES);
 		}
 
 		for (long classNameId : classNameIds) {
-			if (ArrayUtil.contains(_complexSQLClassNameIds, classNameId)) {
+			if (ArrayUtil.contains(
+					_complexSQLClassNameIdsSupplier.get(), classNameId)) {
+
 				return true;
 			}
 		}
@@ -5158,15 +5238,11 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			// the same company as the remote user
 
 			try {
-				MethodKey methodKey = new MethodKey(
-					GroupServiceUtil.class, "checkRemoteStagingGroup",
-					_CHECK_REMOTE_STAGING_GROUP_PARAMETER_TYPES);
-
-				MethodHandler methodHandler = new MethodHandler(
-					methodKey, remoteGroupId);
-
 				try {
-					TunnelUtil.invoke(httpPrincipal, methodHandler);
+					TunnelUtil.invoke(
+						httpPrincipal,
+						new MethodHandler(
+							_checkRemoteStagingGroupMethodKey, remoteGroupId));
 				}
 				catch (Exception exception) {
 					if (exception instanceof PortalException) {
@@ -5296,6 +5372,27 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 	protected File publicLARFile;
 
+	private static void _clearStagingGroupIds() {
+		_stagingGroupIdsDCLSingleton.destroy(null);
+
+		if (!ClusterExecutorUtil.isEnabled()) {
+			return;
+		}
+
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				ClusterRequest clusterRequest =
+					ClusterRequest.createMulticastRequest(
+						_clearStagingGroupIdsMethodHandler, true);
+
+				clusterRequest.setFireAndForget(true);
+
+				ClusterExecutorUtil.execute(clusterRequest);
+
+				return null;
+			});
+	}
+
 	private Collection<Group> _filterGroups(
 		String actionId, Collection<Group> groups) {
 
@@ -5338,6 +5435,41 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		groupKey = groupKey.concat(suffix);
 
 		return groupKey;
+	}
+
+	private Map<Long, Long> _getStagingGroupIds() {
+		Session session = null;
+
+		try {
+			session = groupPersistence.openSession();
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(
+				"select liveGroupId, groupId from Group_ where liveGroupId " +
+					"!= 0");
+
+			sqlQuery.addScalar("liveGroupId", Type.LONG);
+			sqlQuery.addScalar("groupId", Type.LONG);
+
+			List<Object[]> results = sqlQuery.list(false, false);
+
+			if (results.isEmpty()) {
+				return Collections.emptyMap();
+			}
+
+			Map<Long, Long> stagingGroupIds = new HashMap<>();
+
+			for (Object[] result : results) {
+				stagingGroupIds.put((Long)result[0], (Long)result[1]);
+			}
+
+			return stagingGroupIds;
+		}
+		catch (Exception exception) {
+			throw new SystemException(exception);
+		}
+		finally {
+			groupPersistence.closeSession(session);
+		}
 	}
 
 	private Map<Locale, String> _normalizeNameMap(Map<Locale, String> nameMap) {
@@ -5389,16 +5521,23 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		}
 	}
 
-	private static final Class<?>[]
-		_CHECK_REMOTE_STAGING_GROUP_PARAMETER_TYPES = new Class<?>[] {
-			long.class
-		};
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		GroupLocalServiceImpl.class);
 
+	private static final MethodKey _checkRemoteStagingGroupMethodKey =
+		new MethodKey(
+			GroupServiceUtil.class, "checkRemoteStagingGroup",
+			new Class<?>[] {long.class});
+	private static final MethodHandler _clearStagingGroupIdsMethodHandler =
+		new MethodHandler(
+			new MethodKey(
+				GroupLocalServiceImpl.class, "_clearStagingGroupIds"));
 	private static final Snapshot<ReindexerBridge> _reindexerBridgeSnapshot =
 		new Snapshot<>(GroupLocalServiceImpl.class, ReindexerBridge.class);
+	private static final DCLSingleton<Map<Long, Long>>
+		_stagingGroupIdsDCLSingleton = new DCLSingleton<>();
+	private static volatile int _stagingGroupsInMemoryFilterLimit =
+		PropsValues.STAGING_GROUPS_IN_MEMORY_FILTER_LIMIT;
 
 	@BeanReference(type = AssetEntryLocalService.class)
 	private AssetEntryLocalService _assetEntryLocalService;
@@ -5412,7 +5551,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	@BeanReference(type = AssetVocabularyLocalService.class)
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
 
-	private volatile long[] _classNameIds;
+	private volatile Supplier<long[]> _classNameIdsSupplier;
 
 	@BeanReference(type = ClassNameLocalService.class)
 	private ClassNameLocalService _classNameLocalService;
@@ -5423,7 +5562,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	@BeanReference(type = CompanyPersistence.class)
 	private CompanyPersistence _companyPersistence;
 
-	private volatile long[] _complexSQLClassNameIds;
+	private volatile Supplier<long[]> _complexSQLClassNameIdsSupplier;
 
 	@BeanReference(type = DLAppLocalService.class)
 	private DLAppLocalService _dlAppLocalService;
@@ -5483,6 +5622,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	@BeanReference(type = RolePersistence.class)
 	private RolePersistence _rolePersistence;
 
+	private ServiceRegistration<?> _serviceRegistration;
+
 	@BeanReference(type = SocialActivityLocalService.class)
 	private SocialActivityLocalService _socialActivityLocalService;
 
@@ -5525,5 +5666,35 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	@BeanReference(type = WorkflowDefinitionLinkLocalService.class)
 	private WorkflowDefinitionLinkLocalService
 		_workflowDefinitionLinkLocalService;
+
+	private static class GroupModelListener extends BaseModelListener<Group> {
+
+		@Override
+		public Class<?> getModelClass() {
+			return Group.class;
+		}
+
+		@Override
+		public void onBeforeCreate(Group group) throws ModelListenerException {
+			if (group.getLiveGroupId() != 0) {
+				_clearStagingGroupIds();
+			}
+		}
+
+		@Override
+		public void onBeforeRemove(Group group) throws ModelListenerException {
+			if (group.getLiveGroupId() != 0) {
+				_clearStagingGroupIds();
+			}
+		}
+
+		@Override
+		public void onBeforeUpdate(Group originalGroup, Group group) {
+			if (originalGroup.getLiveGroupId() != group.getLiveGroupId()) {
+				_clearStagingGroupIds();
+			}
+		}
+
+	}
 
 }

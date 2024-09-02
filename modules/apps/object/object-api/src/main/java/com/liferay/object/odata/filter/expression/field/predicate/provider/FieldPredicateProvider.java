@@ -12,9 +12,12 @@ import com.liferay.portal.odata.filter.expression.BinaryExpression;
 import java.util.List;
 import java.util.function.Function;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Alejandro Tardín
  */
+@ProviderType
 public interface FieldPredicateProvider {
 
 	public Predicate getBinaryExpressionPredicate(
@@ -24,14 +27,18 @@ public interface FieldPredicateProvider {
 
 	public Predicate getContainsPredicate(
 		Function<String, Column<?, ?>> objectDefinitionColumnSupplier,
-		Object fieldValue);
+		String fieldName, Object fieldValue);
 
 	public Predicate getInPredicate(
 		Function<String, Column<?, ?>> objectDefinitionColumnSupplier,
-		List<Object> rights);
+		Object left, List<Object> rights);
+
+	public Predicate getIsNotEmptyPredicate(
+		String fieldName,
+		Function<String, Column<?, ?>> objectDefinitionColumnSupplier);
 
 	public Predicate getStartsWithPredicate(
 		Function<String, Column<?, ?>> objectDefinitionColumnSupplier,
-		Object fieldValue);
+		String fieldName, Object fieldValue);
 
 }

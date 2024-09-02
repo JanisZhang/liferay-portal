@@ -10,7 +10,7 @@ import ClayLayout from '@clayui/layout';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
-import {SelectLayoutTree} from './SelectLayoutTree';
+import SelectLayoutTree from './SelectLayoutTree';
 
 /**
  * SelectLayout
@@ -76,10 +76,10 @@ const SelectLayout = ({
 									{selectedItemsCount > 1
 										? `${selectedItemsCount} ${Liferay.Language.get(
 												'items-selected'
-										  )}`
+											)}`
 										: `${selectedItemsCount} ${Liferay.Language.get(
 												'item-selected'
-										  )}`}
+											)}`}
 								</p>
 							</div>
 						</ClayLayout.Container>
@@ -110,7 +110,7 @@ const EmptyState = () => {
 			<ClayEmptyState
 				className="mt-0"
 				description={Liferay.Language.get('there-are-no-pages')}
-				imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.gif`}
+				imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.svg`}
 				title={Liferay.Language.get('no-results-found')}
 			/>
 		</ClayLayout.Sheet>

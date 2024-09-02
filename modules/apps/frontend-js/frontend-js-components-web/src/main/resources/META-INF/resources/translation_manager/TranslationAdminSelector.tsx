@@ -21,7 +21,7 @@ const DISPLAY_TYPE = {
 	HORIZONTAL: 'HORIZONTAL',
 } as const;
 
-type DisplayType = typeof DISPLAY_TYPE[keyof typeof DISPLAY_TYPE];
+type DisplayType = (typeof DISPLAY_TYPE)[keyof typeof DISPLAY_TYPE];
 
 interface IProps extends Translations {
 	adminMode?: boolean;
@@ -83,11 +83,12 @@ const TriggerButton = React.forwardRef(
 			<ClayButton
 				{...props}
 				aria-label={ariaLabelButton}
+				className="btn-block"
 				displayType="secondary"
 				monospaced
 				ref={ref}
 				size={small ? 'sm' : undefined}
-				title={Liferay.Language.get('select-translation-language')}
+				title={Liferay.Language.get('select-a-language')}
 			>
 				<span className="inline-item">
 					<ClayIcon symbol={selectedItem.symbol} />
@@ -122,14 +123,12 @@ export default function TranslationAdminSelector({
 	const [activeLanguageIds, setActiveLanguageIds] = useState<
 		Liferay.Language.Locale[]
 	>(initialActiveLanguageIds);
-	const [selectedLanguageId, setSelectedLanguageId] = useState<
-		Liferay.Language.Locale
-	>(initialSelectedLanguageId);
+	const [selectedLanguageId, setSelectedLanguageId] =
+		useState<Liferay.Language.Locale>(initialSelectedLanguageId);
 	const [selectorDropdownActive, setSelectorDropdownActive] = useState(false);
 	const selectorId = useId();
-	const [translationModalVisible, setTranslationModalVisible] = useState(
-		false
-	);
+	const [translationModalVisible, setTranslationModalVisible] =
+		useState(false);
 	const triggerRef = useRef<HTMLButtonElement | null>(null);
 
 	const handleCloseTranslationModal = (
@@ -232,7 +231,7 @@ export default function TranslationAdminSelector({
 			<ClayDropDown
 				active={selectorDropdownActive}
 				hasLeftSymbols
-				onActiveChange={(active: any) => {
+				onActiveChange={(active: boolean) => {
 					if (active) {
 						onSelectorActiveChange();
 					}

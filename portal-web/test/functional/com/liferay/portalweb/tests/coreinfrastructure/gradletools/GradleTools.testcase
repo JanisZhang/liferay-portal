@@ -1,10 +1,10 @@
-@component-name = "portal-gradle-tools"
+@component-name = "portal-developer-tools"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Gradle Tools";
+	property testray.main.component.name = "Deployment";
 
 	setUp {
 		TestCase.setUpPortalInstance();

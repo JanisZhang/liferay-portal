@@ -49,6 +49,7 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -386,7 +387,9 @@ public class JournalTestUtil {
 
 		DDMTemplate ddmTemplate = DDMTemplateTestUtil.addTemplate(
 			ddmGroupId, ddmStructure.getStructureId(),
-			PortalUtil.getClassNameId(JournalArticle.class));
+			PortalUtil.getClassNameId(JournalArticle.class),
+			TemplateConstants.LANG_TYPE_FTL, "${name.getData()}",
+			LocaleUtil.getSiteDefault());
 
 		boolean neverExpire = true;
 
@@ -832,12 +835,11 @@ public class JournalTestUtil {
 			DataDefinitionResource.Factory dataDefinitionResourceFactory,
 			DDMFormField ddmFormField,
 			DDMFormValuesToFieldsConverter ddmFormValuesToFieldsConverter,
-			String fieldValue, long groupId, JournalConverter journalConverter)
+			Locale defaultLocale, String fieldValue, long groupId,
+			JournalConverter journalConverter)
 		throws Exception {
 
-		Locale locale = PortalUtil.getSiteDefaultLocale(groupId);
-
-		String languageId = LocaleUtil.toLanguageId(locale);
+		String languageId = LocaleUtil.toLanguageId(defaultLocale);
 
 		DataDefinition dataDefinition =
 			DataDefinitionTestUtil.addDataDefinition(
@@ -865,14 +867,28 @@ public class JournalTestUtil {
 			ddmStructure,
 			_createDDMFormValues(
 				ddmStructure.getDDMForm(),
-				_getDDMFormFieldValue(ddmFormField, fieldValue, locale),
-				locale));
+				_getDDMFormFieldValue(ddmFormField, fieldValue, defaultLocale),
+				defaultLocale));
 
 		String content = journalConverter.getContent(
 			ddmStructure, fields, groupId);
 
 		return addArticleWithXMLContent(
 			groupId, content, dataDefinition.getDataDefinitionKey(), null);
+	}
+
+	public static JournalArticle addJournalArticle(
+			DataDefinitionResource.Factory dataDefinitionResourceFactory,
+			DDMFormField ddmFormField,
+			DDMFormValuesToFieldsConverter ddmFormValuesToFieldsConverter,
+			String fieldValue, long groupId, JournalConverter journalConverter)
+		throws Exception {
+
+		return addJournalArticle(
+			dataDefinitionResourceFactory, ddmFormField,
+			ddmFormValuesToFieldsConverter,
+			PortalUtil.getSiteDefaultLocale(groupId), fieldValue, groupId,
+			journalConverter);
 	}
 
 	public static void expireArticle(long groupId, JournalArticle article)
@@ -967,6 +983,21 @@ public class JournalTestUtil {
 		return updateArticle(
 			article, _getLocalizedMap(title), content, workflowEnabled,
 			approved, serviceContext);
+	}
+
+	public static JournalArticle updateArticle(
+			long userId, JournalArticle article, Map<Locale, String> titleMap,
+			Map<Locale, String> contentMap, Locale defaultLocale,
+			boolean workflowEnabled, boolean approved,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		String content = DDMStructureTestUtil.getSampleStructuredContent(
+			contentMap, LocaleUtil.toLanguageId(defaultLocale));
+
+		return updateArticle(
+			userId, article, titleMap, content, null, workflowEnabled, approved,
+			serviceContext);
 	}
 
 	public static JournalArticle updateArticle(

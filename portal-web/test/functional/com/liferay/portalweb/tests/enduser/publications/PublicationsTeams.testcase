@@ -121,7 +121,7 @@ definition {
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		PublicationsChanges.viewChangesInRelationships(changeTitle = "Team & User Group (1 Added)");
+		PublicationsChanges.viewChangesInRelationships(changeTitle = "User Group & Team (1 Added)");
 
 		Publications.publishPublication(publicationName = "Publication Name");
 
@@ -173,6 +173,13 @@ definition {
 		Team.deleteCP(
 			teamDescription = "Team Description",
 			teamName = "Team Name");
+
+		task ("Add new Document") {
+			JSONDocument.addFile(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "DM Document Title",
+				groupName = "Site Name");
+		}
 
 		PublicationsNavigator.gotoReviewChanges();
 

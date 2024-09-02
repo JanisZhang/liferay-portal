@@ -9,7 +9,11 @@ import ReactDOM from 'react-dom';
 import App from './js/App.es';
 
 /* Bug with SwaggerUI: https://github.com/agoncal/swagger-ui-angular6/issues/2 */
+
 /* eslint-disable-next-line no-undef */
 window.Buffer = window.Buffer || require('buffer').Buffer;
+
+/* We need to define `global` due to esbuild not polyfilling it (see LPD-31939) */
+window.global = window;
 
 ReactDOM.render(<App />, document.getElementById('container'));

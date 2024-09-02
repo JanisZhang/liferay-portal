@@ -205,6 +205,33 @@ public class LayoutPermissionImpl implements LayoutPermission {
 	}
 
 	@Override
+	public boolean containsLayoutPreviewDraftPermission(
+			PermissionChecker permissionChecker, Layout layout)
+		throws PortalException {
+
+		if (!layout.isTypeAssetDisplay() && !layout.isTypeContent()) {
+			return false;
+		}
+
+		if (containsLayoutUpdatePermission(permissionChecker, layout) ||
+			contains(permissionChecker, layout, ActionKeys.PREVIEW_DRAFT)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean containsLayoutPreviewDraftPermission(
+			PermissionChecker permissionChecker, long plid)
+		throws PortalException {
+
+		return containsLayoutPreviewDraftPermission(
+			permissionChecker, LayoutLocalServiceUtil.getLayout(plid));
+	}
+
+	@Override
 	public boolean containsLayoutRestrictedUpdatePermission(
 			PermissionChecker permissionChecker, Layout layout)
 		throws PortalException {

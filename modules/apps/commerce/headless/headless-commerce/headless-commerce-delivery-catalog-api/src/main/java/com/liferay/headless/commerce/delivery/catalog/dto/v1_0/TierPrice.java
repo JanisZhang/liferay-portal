@@ -176,6 +176,92 @@ public class TierPrice implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _priceFormattedSupplier;
 
+	@Schema
+	public Double getPricingQuantityPrice() {
+		if (_pricingQuantityPriceSupplier != null) {
+			pricingQuantityPrice = _pricingQuantityPriceSupplier.get();
+
+			_pricingQuantityPriceSupplier = null;
+		}
+
+		return pricingQuantityPrice;
+	}
+
+	public void setPricingQuantityPrice(Double pricingQuantityPrice) {
+		this.pricingQuantityPrice = pricingQuantityPrice;
+
+		_pricingQuantityPriceSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPricingQuantityPrice(
+		UnsafeSupplier<Double, Exception> pricingQuantityPriceUnsafeSupplier) {
+
+		_pricingQuantityPriceSupplier = () -> {
+			try {
+				return pricingQuantityPriceUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Double pricingQuantityPrice;
+
+	@JsonIgnore
+	private Supplier<Double> _pricingQuantityPriceSupplier;
+
+	@Schema
+	public String getPricingQuantityPriceFormatted() {
+		if (_pricingQuantityPriceFormattedSupplier != null) {
+			pricingQuantityPriceFormatted =
+				_pricingQuantityPriceFormattedSupplier.get();
+
+			_pricingQuantityPriceFormattedSupplier = null;
+		}
+
+		return pricingQuantityPriceFormatted;
+	}
+
+	public void setPricingQuantityPriceFormatted(
+		String pricingQuantityPriceFormatted) {
+
+		this.pricingQuantityPriceFormatted = pricingQuantityPriceFormatted;
+
+		_pricingQuantityPriceFormattedSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPricingQuantityPriceFormatted(
+		UnsafeSupplier<String, Exception>
+			pricingQuantityPriceFormattedUnsafeSupplier) {
+
+		_pricingQuantityPriceFormattedSupplier = () -> {
+			try {
+				return pricingQuantityPriceFormattedUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String pricingQuantityPriceFormatted;
+
+	@JsonIgnore
+	private Supplier<String> _pricingQuantityPriceFormattedSupplier;
+
 	@DecimalMin("0")
 	@Schema(example = "202.1")
 	@Valid
@@ -290,6 +376,35 @@ public class TierPrice implements Serializable {
 			sb.append("\"");
 		}
 
+		Double pricingQuantityPrice = getPricingQuantityPrice();
+
+		if (pricingQuantityPrice != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pricingQuantityPrice\": ");
+
+			sb.append(pricingQuantityPrice);
+		}
+
+		String pricingQuantityPriceFormatted =
+			getPricingQuantityPriceFormatted();
+
+		if (pricingQuantityPriceFormatted != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pricingQuantityPriceFormatted\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(pricingQuantityPriceFormatted));
+
+			sb.append("\"");
+		}
+
 		BigDecimal quantity = getQuantity();
 
 		if (quantity != null) {
@@ -354,7 +469,10 @@ public class TierPrice implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

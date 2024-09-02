@@ -56,8 +56,16 @@ public class UpgradeCatchAllCheck extends BaseFileCheck {
 
 			Set<String> keys = jsonObject.keySet();
 
+			boolean skipValidation = false;
+
+			if (jsonObject.getBoolean("skipParametersValidation") ||
+				from.startsWith("regex:")) {
+
+				skipValidation = true;
+			}
+
 			if ((from.contains(StringPool.OPEN_PARENTHESIS) &&
-				 !jsonObject.getBoolean("skipParametersValidation")) ||
+				 !skipValidation) ||
 				!keys.contains("to")) {
 
 				expectedMessages.add(_getMessage(jsonObject));
@@ -140,19 +148,25 @@ public class UpgradeCatchAllCheck extends BaseFileCheck {
 
 		for (String newParameterName : newParameterNames) {
 			if (newParameterName.contains(prefix)) {
-				int index = GetterUtil.getInteger(
-					newParameterName.substring(
-						newParameterName.indexOf(CharPool.POUND) + 1,
-						newParameterName.lastIndexOf(CharPool.POUND)));
+				List<Integer> indexes = new ArrayList<>();
 
-				interpolatedNewParameterNames.add(
-					StringUtil.replace(
+				Matcher matcher = _parameterNamePattern.matcher(
+					newParameterName);
+
+				while (matcher.find()) {
+					int index = GetterUtil.getInteger(matcher.group(1));
+
+					indexes.add(index);
+				}
+
+				for (int index : indexes) {
+					newParameterName = StringUtil.replace(
 						newParameterName, prefix + index + CharPool.POUND,
-						parameterNames.get(index)));
+						parameterNames.get(index));
+				}
 			}
-			else {
-				interpolatedNewParameterNames.add(newParameterName);
-			}
+
+			interpolatedNewParameterNames.add(newParameterName);
 		}
 
 		return interpolatedNewParameterNames;
@@ -196,8 +210,8 @@ public class UpgradeCatchAllCheck extends BaseFileCheck {
 
 		String regex = StringBundler.concat("\\b", from, "\\b");
 
-		if (from.contains("::")) {
-			return Pattern.compile(regex);
+		if (from.startsWith("regex:")) {
+			return Pattern.compile(from.replaceFirst("regex:", ""));
 		}
 		else if (regex.contains(StringPool.SLASH)) {
 			return Pattern.compile(
@@ -239,7 +253,9 @@ public class UpgradeCatchAllCheck extends BaseFileCheck {
 				StringUtil.replace(regex, CharPool.PERIOD, "\\.\\s*"));
 		}
 
-		if (Character.isUpperCase(from.charAt(0))) {
+		if (Character.isUpperCase(from.charAt(0)) ||
+			StringUtil.startsWith(from, "new")) {
+
 			String[] classNames = JSONUtil.toStringArray(
 				jsonObject.getJSONArray("classNames"));
 
@@ -424,7 +440,10 @@ public class UpgradeCatchAllCheck extends BaseFileCheck {
 				String from = jsonObject.getString("from");
 				String to = jsonObject.getString("to");
 
-				if (from.contains(StringPool.OPEN_PARENTHESIS)) {
+				if (from.startsWith("regex:")) {
+					newContent = newContent.replaceAll(pattern.toString(), to);
+				}
+				else if (from.contains(StringPool.OPEN_PARENTHESIS)) {
 					newContent = _formatMethodCall(
 						fileName, from, javaContent, jsonObject, matcher,
 						newContent, to);
@@ -645,8 +664,11 @@ public class UpgradeCatchAllCheck extends BaseFileCheck {
 		return true;
 	}
 
-	private static final String _CONSTRUCTOR_REGEX = "(:?[A-Z][a-z]+)+\\(.*\\)";
+	private static final String _CONSTRUCTOR_REGEX =
+		"n?e?w? ?(:?[A-Z][a-z]*)+\\(.*\\)";
 
+	private static final Pattern _parameterNamePattern = Pattern.compile(
+		"\\w+#(\\d+)#");
 	private static boolean _testMode;
 
 	private boolean _newMessage;

@@ -15,6 +15,35 @@ export const PLAN_TYPES = {
 	['Liferay Analytics Cloud Enterprise']: 'enterprise',
 	['Liferay Analytics Cloud Enterprise Contacts']: INDIVIDUALS,
 	['Liferay Analytics Cloud Enterprise Tracked Pages']: PAGEVIEWS,
+	['Liferay SaaS - Business Plan']: 'lxcBusiness',
+	['Liferay SaaS - CSP - Custom User Tier']: 'lxcCspCustomUserTier',
+	['Liferay SaaS - CSP - Custom User Tier - Extra User']:
+		'lxcCspCustomUserTierExtraUser',
+	['Liferay SaaS - CSP - Up to 100 Users']: 'lxcCspUpTo100Users',
+	['Liferay SaaS - CSP - Up to 100 Users - Extra User']:
+		'lxcCspUpTo100UsersExtraUser',
+	['Liferay SaaS - CSP - Up to 10K Users']: 'lxcCspUpTo10kUsers',
+	['Liferay SaaS - CSP - Up to 10K Users - Extra User']:
+		'lxcCspUpTo10kUsersExtraUser',
+	['Liferay SaaS - CSP - Up to 1K Users']: 'lxcCspUpTo1kUsers',
+	['Liferay SaaS - CSP - Up to 1K Users - Extra User']:
+		'lxcCspUpTo1kUsersExtraUser',
+	['Liferay SaaS - CSP - Up to 20K Users']: 'lxcCspUpTo20kUsers',
+	['Liferay SaaS - CSP - Up to 20K Users - Extra User']:
+		'lxcCspUpTo20kUsersExtraUser',
+	['Liferay SaaS - CSP - Up to 500 Users']: 'lxcCspUpTo500Users',
+	['Liferay SaaS - CSP - Up to 500 Users - Extra User']:
+		'lxcCspUpTo500UsersExtraUser',
+	['Liferay SaaS - CSP - Up to 5K Users']: 'lxcCspUpTo5kUsers',
+	['Liferay SaaS - CSP - Up to 5K Users - Extra User']:
+		'lxcCspUpTo5kUsersExtraUser',
+	['Liferay SaaS - Enterprise Plan']: 'lxcEnterprise',
+	['Liferay SaaS - Pro Plan']: 'lxcPro',
+	['Liferay SaaS Subscription - Engage Site']: 'lxcSubscriptionEngageSite',
+	['Liferay SaaS Subscription - Support Site']: 'lxcSubscriptionSupportSite',
+	['Liferay SaaS Subscription - Transact Site']:
+		'lxcSubscriptionTransactSite',
+	['LXC - Business Plan']: 'lxcBusiness',
 	['LXC - CSP - Custom User Tier']: 'lxcCspCustomUserTier',
 	['LXC - CSP - Custom User Tier - Extra User']:
 		'lxcCspCustomUserTierExtraUser',
@@ -30,9 +59,8 @@ export const PLAN_TYPES = {
 	['LXC - CSP - Up to 500 Users - Extra User']: 'lxcCspUpTo500UsersExtraUser',
 	['LXC - CSP - Up to 5K Users']: 'lxcCspUpTo5kUsers',
 	['LXC - CSP - Up to 5K Users - Extra User']: 'lxcCspUpTo5kUsersExtraUser',
-	['LXC Business']: 'lxcBusiness',
-	['LXC Enterprise']: 'lxcEnterprise',
-	['LXC Pro']: 'lxcPro',
+	['LXC - Enterprise Plan']: 'lxcEnterprise',
+	['LXC - Pro Plan']: 'lxcPro',
 	['LXC Subscription - Engage Site']: 'lxcSubscriptionEngageSite',
 	['LXC Subscription - Support Site']: 'lxcSubscriptionSupportSite',
 	['LXC Subscription - Transact Site']: 'lxcSubscriptionTransactSite'
@@ -110,12 +138,24 @@ export const DEFAULT_ADDONS = {
 
 export function getPlanAddOns(currentPlan) {
 	if (isBasicPlan(currentPlan)) {
-		return [];
+		return {};
 	}
 
 	const planType = PLAN_TYPES[currentPlan.name];
 
-	return [ADD_ONS[INDIVIDUALS][planType], ADD_ONS[PAGEVIEWS][planType]];
+	return [ADD_ONS[INDIVIDUALS][planType], ADD_ONS[PAGEVIEWS][planType]]
+		.filter(Boolean)
+		.reduce((acc, plan) => {
+			const name = PLAN_TYPES[plan.name];
+			const quantity = currentPlan.getIn(['addOns', name, 'quantity']);
+			const limit = plan.limits[name];
+			const totalLimit = quantity ? limit * quantity : null;
+
+			return {
+				...acc,
+				[name]: totalLimit ? totalLimit.toLocaleString() : '-'
+			};
+		}, {});
 }
 
 export function getPlanLabel(name) {
@@ -252,6 +292,8 @@ export function formatPlanData(subscriptionIMap) {
 		subscriptionIMap = new Map();
 	}
 
+	const basicPlan = isBasicPlan({name: subscriptionIMap.get('name')});
+
 	return new Plan(
 		fromJS({
 			addOns: {
@@ -263,13 +305,10 @@ export function formatPlanData(subscriptionIMap) {
 					}, {})
 			},
 			endDate: subscriptionIMap.get('endDate'),
-			lastAnniversaryDate: subscriptionIMap.get('lastAnniversaryDate'),
 			metrics: {
 				individuals: new Metric({
 					count: subscriptionIMap.get(
-						PLAN_TYPES[subscriptionIMap.get('name')] === 'basic'
-							? 'individualsCount'
-							: 'individualsCountSinceLastAnniversary',
+						'individualsCountSinceLastAnniversary',
 						0
 					),
 					limit: subscriptionIMap.get('individualsLimit', 0),
@@ -280,9 +319,7 @@ export function formatPlanData(subscriptionIMap) {
 				}),
 				pageViews: new Metric({
 					count: subscriptionIMap.get(
-						PLAN_TYPES[subscriptionIMap.get('name')] === 'basic'
-							? 'pageViewsCount'
-							: 'pageViewsCountSinceLastAnniversary',
+						'pageViewsCountSinceLastAnniversary',
 						0
 					),
 					limit: subscriptionIMap.get('pageViewsLimit', 0),
@@ -290,10 +327,15 @@ export function formatPlanData(subscriptionIMap) {
 						'pageViewsStatus',
 						SubscriptionStatuses.Ok
 					)
-				})
+				}),
+				syncedIndividualsCount: subscriptionIMap.get(
+					'syncedIndividualsCount'
+				)
 			},
 			name: subscriptionIMap.get('name'),
-			startDate: subscriptionIMap.get('startDate')
+			startDate: basicPlan
+				? subscriptionIMap.get('startDate')
+				: subscriptionIMap.get('lastAnniversaryDate')
 		})
 	);
 }

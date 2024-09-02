@@ -75,9 +75,8 @@ export function BasicInfoTab({
 		AggregationFilters[]
 	>([]);
 
-	const [creationLanguageId2, setCreationLanguageId2] = useState<
-		Liferay.Language.Locale
-	>();
+	const [creationLanguageId2, setCreationLanguageId2] =
+		useState<Liferay.Language.Locale>();
 
 	const [
 		objectDefinitionExternalReferenceCode2,
@@ -117,27 +116,26 @@ export function BasicInfoTab({
 				/>
 			</ContainerWrapper>
 
-			{Liferay.FeatureFlags['LPS-196724'] &&
-				values.businessType === 'AutoIncrement' && (
-					<ContainerWrapper
-						collapsable
-						defaultExpanded
-						displayTitle={Liferay.Language.get(
-							'increment-configuration'
-						)}
-						displayType="unstyled"
-						title={Liferay.Language.get('increment-configuration')}
-					>
-						<AutoIncrementFormBase
-							disabled={isApproved}
-							errors={errors}
-							modelBuilder={modelBuilder}
-							onSubmit={onSubmit}
-							setValues={setValues}
-							values={values}
-						/>
-					</ContainerWrapper>
-				)}
+			{values.businessType === 'AutoIncrement' && (
+				<ContainerWrapper
+					collapsable
+					defaultExpanded
+					displayTitle={Liferay.Language.get(
+						'increment-configuration'
+					)}
+					displayType="unstyled"
+					title={Liferay.Language.get('increment-configuration')}
+				>
+					<AutoIncrementFormBase
+						disabled={isApproved}
+						errors={errors}
+						modelBuilder={modelBuilder}
+						onSubmit={onSubmit}
+						setValues={setValues}
+						values={values}
+					/>
+				</ContainerWrapper>
+			)}
 
 			{values.businessType === 'Aggregation' &&
 				objectDefinition?.externalReferenceCode !==
@@ -228,7 +226,8 @@ export function BasicInfoTab({
 				>
 					<Input
 						className={classNames({
-							'lfr-objects__edit-object-field-model-builder-panel': modelBuilder,
+							'lfr-objects__edit-object-field-model-builder-panel':
+								modelBuilder,
 						})}
 						label={Liferay.Language.get('external-reference-code')}
 						name="externalReferenceCode"

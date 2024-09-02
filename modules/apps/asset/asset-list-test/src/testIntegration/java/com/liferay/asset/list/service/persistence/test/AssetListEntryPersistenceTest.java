@@ -6,6 +6,7 @@
 package com.liferay.asset.list.service.persistence.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.list.exception.DuplicateAssetListEntryExternalReferenceCodeException;
 import com.liferay.asset.list.exception.NoSuchEntryException;
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.service.AssetListEntryLocalServiceUtil;
@@ -18,14 +19,18 @@ import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.Time;
+import com.liferay.portal.security.permission.SimplePermissionChecker;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
@@ -121,6 +126,9 @@ public class AssetListEntryPersistenceTest {
 
 		newAssetListEntry.setUuid(RandomTestUtil.randomString());
 
+		newAssetListEntry.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
 		newAssetListEntry.setGroupId(RandomTestUtil.nextLong());
 
 		newAssetListEntry.setCompanyId(RandomTestUtil.nextLong());
@@ -159,6 +167,9 @@ public class AssetListEntryPersistenceTest {
 		Assert.assertEquals(
 			existingAssetListEntry.getUuid(), newAssetListEntry.getUuid());
 		Assert.assertEquals(
+			existingAssetListEntry.getExternalReferenceCode(),
+			newAssetListEntry.getExternalReferenceCode());
+		Assert.assertEquals(
 			existingAssetListEntry.getAssetListEntryId(),
 			newAssetListEntry.getAssetListEntryId());
 		Assert.assertEquals(
@@ -194,6 +205,28 @@ public class AssetListEntryPersistenceTest {
 		Assert.assertEquals(
 			Time.getShortTimestamp(existingAssetListEntry.getLastPublishDate()),
 			Time.getShortTimestamp(newAssetListEntry.getLastPublishDate()));
+	}
+
+	@Test(
+		expected = DuplicateAssetListEntryExternalReferenceCodeException.class
+	)
+	public void testUpdateWithExistingExternalReferenceCode() throws Exception {
+		AssetListEntry assetListEntry = addAssetListEntry();
+
+		AssetListEntry newAssetListEntry = addAssetListEntry();
+
+		newAssetListEntry.setGroupId(assetListEntry.getGroupId());
+
+		newAssetListEntry = _persistence.update(newAssetListEntry);
+
+		Session session = _persistence.getCurrentSession();
+
+		session.evict(newAssetListEntry);
+
+		newAssetListEntry.setExternalReferenceCode(
+			assetListEntry.getExternalReferenceCode());
+
+		_persistence.update(newAssetListEntry);
 	}
 
 	@Test
@@ -350,6 +383,15 @@ public class AssetListEntryPersistenceTest {
 	}
 
 	@Test
+	public void testCountByERC_G() throws Exception {
+		_persistence.countByERC_G("", RandomTestUtil.nextLong());
+
+		_persistence.countByERC_G("null", 0L);
+
+		_persistence.countByERC_G((String)null, 0L);
+	}
+
+	@Test
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		AssetListEntry newAssetListEntry = addAssetListEntry();
 
@@ -374,6 +416,24 @@ public class AssetListEntryPersistenceTest {
 
 	@Test
 	public void testFilterFindByGroupId() throws Exception {
+		PermissionThreadLocal.setPermissionChecker(
+			new SimplePermissionChecker() {
+				{
+					init(TestPropsValues.getUser());
+				}
+
+				@Override
+				public boolean isCompanyAdmin(long companyId) {
+					return false;
+				}
+
+			});
+
+		Assert.assertTrue(InlineSQLHelperUtil.isEnabled(0));
+
+		_persistence.filterFindByGroupId(
+			0, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
 		_persistence.filterFindByGroupId(
 			0, QueryUtil.ALL_POS, QueryUtil.ALL_POS, getOrderByComparator());
 	}
@@ -381,11 +441,12 @@ public class AssetListEntryPersistenceTest {
 	protected OrderByComparator<AssetListEntry> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
 			"AssetListEntry", "mvccVersion", true, "ctCollectionId", true,
-			"uuid", true, "assetListEntryId", true, "groupId", true,
-			"companyId", true, "userId", true, "userName", true, "createDate",
-			true, "modifiedDate", true, "assetListEntryKey", true, "title",
-			true, "type", true, "assetEntrySubtype", true, "assetEntryType",
-			true, "lastPublishDate", true);
+			"uuid", true, "externalReferenceCode", true, "assetListEntryId",
+			true, "groupId", true, "companyId", true, "userId", true,
+			"userName", true, "createDate", true, "modifiedDate", true,
+			"assetListEntryKey", true, "title", true, "type", true,
+			"assetEntrySubtype", true, "assetEntryType", true,
+			"lastPublishDate", true);
 	}
 
 	@Test
@@ -685,6 +746,17 @@ public class AssetListEntryPersistenceTest {
 			ReflectionTestUtil.invoke(
 				assetListEntry, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "title"));
+
+		Assert.assertEquals(
+			assetListEntry.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				assetListEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
+		Assert.assertEquals(
+			Long.valueOf(assetListEntry.getGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				assetListEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
 	}
 
 	protected AssetListEntry addAssetListEntry() throws Exception {
@@ -697,6 +769,8 @@ public class AssetListEntryPersistenceTest {
 		assetListEntry.setCtCollectionId(RandomTestUtil.nextLong());
 
 		assetListEntry.setUuid(RandomTestUtil.randomString());
+
+		assetListEntry.setExternalReferenceCode(RandomTestUtil.randomString());
 
 		assetListEntry.setGroupId(RandomTestUtil.nextLong());
 

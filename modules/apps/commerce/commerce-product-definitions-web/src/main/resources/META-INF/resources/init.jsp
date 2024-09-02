@@ -18,6 +18,7 @@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/frontend-data-set" prefix="frontend-data-set" %><%@
 taglib uri="http://liferay.com/tld/item-selector" prefix="liferay-item-selector" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
@@ -79,6 +80,7 @@ page import="com.liferay.commerce.product.exception.CPInstanceUnitOfMeasureRateE
 page import="com.liferay.commerce.product.exception.DuplicateCPAttachmentFileEntryException" %><%@
 page import="com.liferay.commerce.product.exception.DuplicateCPInstanceException" %><%@
 page import="com.liferay.commerce.product.exception.DuplicateCPInstanceUnitOfMeasureKeyException" %><%@
+page import="com.liferay.commerce.product.exception.DuplicateCProductExternalReferenceCodeException" %><%@
 page import="com.liferay.commerce.product.exception.NoSuchCPAttachmentFileEntryException" %><%@
 page import="com.liferay.commerce.product.exception.NoSuchCPDefinitionException" %><%@
 page import="com.liferay.commerce.product.exception.NoSuchCPDefinitionLinkException" %><%@
@@ -111,9 +113,11 @@ page import="com.liferay.commerce.util.CommerceUtil" %><%@
 page import="com.liferay.document.library.kernel.exception.NoSuchFileEntryException" %><%@
 page import="com.liferay.friendly.url.exception.FriendlyURLLengthException" %><%@
 page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem" %><%@
+page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.SelectOption" %><%@
 page import="com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
+page import="com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Layout" %><%@
 page import="com.liferay.portal.kernel.model.Portlet" %><%@
@@ -142,7 +146,8 @@ page import="java.util.Arrays" %><%@
 page import="java.util.Calendar" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
-page import="java.util.StringJoiner" %>
+page import="java.util.StringJoiner" %><%@
+page import="java.util.TimeZone" %>
 
 <%@ page import="javax.portlet.PortletURL" %>
 

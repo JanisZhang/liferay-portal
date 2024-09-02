@@ -2,7 +2,7 @@
 	"dependencies": {
 		"@clayui/icon": "3.111.0",
 		"@clayui/layout": "3.111.0",
-		"@clayui/popover": "3.111.0",
+		"@clayui/popover": "3.116.1",
 		"@clayui/sticker": "3.111.0",
 		"classnames": "2.3.1",
 		"frontend-js-web": "*",
@@ -12,9 +12,9 @@
 	"main": "discussion/js/index.js",
 	"name": "@liferay/comment-taglib",
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
-	"version": "4.0.53"
+	"version": "4.1.1"
 }

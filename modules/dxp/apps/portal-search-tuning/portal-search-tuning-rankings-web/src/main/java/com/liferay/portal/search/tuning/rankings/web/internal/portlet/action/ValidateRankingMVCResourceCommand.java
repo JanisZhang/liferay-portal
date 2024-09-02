@@ -19,13 +19,16 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.tuning.rankings.constants.ResultRankingsConstants;
 import com.liferay.portal.search.tuning.rankings.helper.RankingHelper;
 import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexName;
 import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexNameBuilder;
 import com.liferay.portal.search.tuning.rankings.web.internal.constants.ResultRankingsPortletKeys;
+import com.liferay.portal.search.tuning.rankings.web.internal.index.Criteria;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.DuplicateQueryStringsDetector;
 
 import java.io.IOException;
@@ -38,6 +41,7 @@ import java.util.Objects;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -69,6 +73,12 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 
 			throw runtimeException;
 		}
+	}
+
+	@Activate
+	protected void activate() {
+		_duplicateQueryStringsDetector = new DuplicateQueryStringsDetector(
+			_queries, _searchEngineAdapter);
 	}
 
 	protected JSONObject getJSONObject(ResourceRequest resourceRequest) {
@@ -115,9 +125,6 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 	}
 
 	@Reference
-	protected DuplicateQueryStringsDetector duplicateQueryStringsDetector;
-
-	@Reference
 	protected IndexNameBuilder indexNameBuilder;
 
 	@Reference
@@ -145,8 +152,8 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 		ResourceRequest resourceRequest,
 		ValidateRankingMVCResourceRequest validateRankingMVCResourceRequest) {
 
-		return duplicateQueryStringsDetector.detect(
-			duplicateQueryStringsDetector.builder(
+		return _duplicateQueryStringsDetector.detect(
+			new Criteria.Builder(
 			).index(
 				_getIndexName(resourceRequest)
 			).groupExternalReferenceCode(
@@ -186,6 +193,8 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 	private static final Log _log = LogFactoryUtil.getLog(
 		ValidateRankingMVCResourceCommand.class);
 
+	private DuplicateQueryStringsDetector _duplicateQueryStringsDetector;
+
 	@Reference
 	private JSONFactory _jsonFactory;
 
@@ -193,7 +202,13 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 	private Language _language;
 
 	@Reference
+	private Queries _queries;
+
+	@Reference
 	private RankingHelper _rankingHelper;
+
+	@Reference
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	private class ValidateRankingMVCResourceRequest {
 

@@ -15,7 +15,7 @@ BookmarksFolder folder = (BookmarksFolder)row.getObject();
 folder = folder.toEscapedModel();
 %>
 
-<h4>
+<div class="h4">
 	<aui:a
 		href='<%=
 			PortletURLBuilder.createRenderURL(
@@ -31,11 +31,11 @@ folder = folder.toEscapedModel();
 	>
 		<%= folder.getName() %>
 	</aui:a>
-</h4>
+</div>
 
-<h5 class="text-default">
+<div class="h5 text-default">
 	<%= folder.getDescription() %>
-</h5>
+</div>
 
 <%
 int entriesCount = BookmarksEntryServiceUtil.getEntriesCount(scopeGroupId, folder.getFolderId());

@@ -74,7 +74,7 @@ function flipThirdPartyCookie(type) {
 
 			switch (element.tagName) {
 				case 'SCRIPT': {
-					const newScript = element.cloneNode();
+					const newScript = element.cloneNode(true);
 
 					newScript.type = 'text/javascript';
 
@@ -108,6 +108,7 @@ function flipThirdPartyCookie(type) {
 					break;
 				}
 				default:
+
 					// eslint-disable-next-line no-console
 					console.warn(
 						'3rd Party Cookies: ',

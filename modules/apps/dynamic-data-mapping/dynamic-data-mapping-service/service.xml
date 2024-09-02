@@ -3,7 +3,7 @@
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" change-tracking-enabled="true" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.dynamic.data.mapping">
 	<namespace>DDM</namespace>
-	<entity deprecated="true" local-service="true" name="DDMContent" remote-service="false" uuid="true">
+	<entity local-service="true" name="DDMContent" remote-service="false" uuid="true">
 
 		<!-- PK fields -->
 
@@ -35,10 +35,6 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-
-		<!-- References -->
-
-		<reference entity="User" package-path="com.liferay.portal" />
 	</entity>
 	<entity local-service="true" name="DDMDataProviderInstance" remote-service="true" uuid="true">
 
@@ -444,8 +440,8 @@
 		<!-- Audit fields -->
 
 		<column name="companyId" type="long" />
-		<column name="userId" type="long" />
-		<column name="userName" type="String" />
+		<column change-tracking-resolution-type="merge" name="userId" type="long" />
+		<column change-tracking-resolution-type="merge" name="userName" type="String" />
 		<column name="versionUserId" type="long" />
 		<column name="versionUserName" type="String" />
 		<column name="createDate" type="Date" />
@@ -458,8 +454,8 @@
 		<column name="structureKey" type="String" />
 		<column name="version" type="String" />
 		<column localized="true" name="name" type="String" />
-		<column localized="true" name="description" type="String" />
-		<column name="definition" type="String" />
+		<column change-tracking-resolution-type="merge" localized="true" name="description" type="String" />
+		<column change-tracking-resolution-type="merge" name="definition" type="String" />
 		<column name="storageType" type="String" />
 		<column name="type" type="int" />
 		<column name="lastPublishDate" type="Date" />
@@ -634,7 +630,7 @@
 			<finder-column name="status" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="DDMTemplate" remote-service="true" uuid="true">
+	<entity external-reference-code="group" local-service="true" name="DDMTemplate" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 

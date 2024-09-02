@@ -1,4 +1,5 @@
 {
+	"enableIndexSearch": false,
 	"label": {
 		"en_US": "Testray Task"
 	},
@@ -16,17 +17,6 @@
 			"type": "String"
 		},
 		{
-			"DBType": "Long",
-			"indexed": true,
-			"indexedAsKeyword": false,
-			"label": {
-				"en_US": "Dispatch Trigger ID"
-			},
-			"name": "dispatchTriggerId",
-			"required": false,
-			"type": "Long"
-		},
-		{
 			"DBType": "String",
 			"businessType": "Picklist",
 			"indexed": true,
@@ -40,15 +30,21 @@
 			"type": "String"
 		},
 		{
-			"DBType": "Date",
+			"DBType": "DateTime",
 			"indexed": false,
 			"indexedAsKeyword": false,
 			"label": {
 				"en_US": "Status Update Date"
 			},
 			"name": "statusUpdateDate",
+			"objectFieldSettings": [
+				{
+					"name": "timeStorage",
+					"value": "convertToUTC"
+				}
+			],
 			"required": false,
-			"type": "Date"
+			"type": "DateTime"
 		}
 	],
 	"pluralLabel": {

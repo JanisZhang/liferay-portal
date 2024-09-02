@@ -50,21 +50,21 @@ export default {
 
 	addFragmentComposition({
 		description,
+		fileEntryId,
 		fragmentCollectionId,
 		itemId,
 		name,
 		onNetworkStatus,
-		previewImageURL,
 		saveInlineContent,
 		saveMappingConfiguration,
 		segmentsExperienceId,
 	}: {
 		description: string;
+		fileEntryId?: string;
 		fragmentCollectionId: string;
 		itemId: string;
 		name: string;
 		onNetworkStatus: OnNetworkStatus;
-		previewImageURL?: string;
 		saveInlineContent: boolean;
 		saveMappingConfiguration: boolean;
 		segmentsExperienceId: string;
@@ -77,10 +77,10 @@ export default {
 			{
 				body: {
 					description,
+					fileEntryId,
 					fragmentCollectionId,
 					itemId,
 					name,
-					previewImageURL,
 					saveInlineContent,
 					saveMappingConfiguration,
 					segmentsExperienceId,
@@ -173,24 +173,24 @@ export default {
 	},
 
 	duplicateItem({
-		itemId,
+		itemIds,
 		onNetworkStatus,
 		segmentsExperienceId,
 	}: {
-		itemId: string;
+		itemIds: string[];
 		onNetworkStatus: OnNetworkStatus;
 		segmentsExperienceId: string;
 	}) {
 		return draftServiceFetch<{
 			duplicatedFragmentEntryLinks: FragmentEntryLink[];
-			duplicatedItemId: string;
+			duplicatedItemIds: string[];
 			layoutData: LayoutData;
 			restrictedItemIds: string[];
 		}>(
 			config.duplicateItemURL,
 			{
 				body: {
-					itemId,
+					itemIds,
 					segmentsExperienceId,
 				},
 			},
@@ -222,46 +222,36 @@ export default {
 		);
 	},
 
-	renderFragmentEntryLinkContent({
-		fragmentEntryLinkId,
-		itemClassName,
-		itemClassPK,
-		itemExternalReferenceCode,
+	renderFragmentEntryLinksContent({
+		data,
 		languageId,
 		segmentsExperienceId,
 	}: {
-		fragmentEntryLinkId: string;
-		itemClassName: string;
-		itemClassPK?: string | null;
-		itemExternalReferenceCode?: string | null;
-		languageId: Liferay.Language.Locale;
+		data: Array<{
+			fragmentEntryLinkId: string;
+			itemClassName?: string | null;
+			itemClassPK?: string | null;
+			itemExternalReferenceCode?: string | null;
+		}>;
+		languageId: string;
 		segmentsExperienceId: string;
 	}) {
 		const body: {
-			fragmentEntryLinkId: string;
-			itemClassName: string;
-			itemClassPK?: string;
-			itemExternalReferenceCode?: string;
-			languageId: Liferay.Language.Locale;
+			data: string;
+			languageId: string;
 			segmentsExperienceId: string;
 		} = {
-			fragmentEntryLinkId,
-			itemClassName,
+			data: JSON.stringify(data),
 			languageId,
 			segmentsExperienceId,
 		};
 
-		if (itemClassPK) {
-			body.itemClassPK = itemClassPK;
-		}
-
-		if (itemExternalReferenceCode) {
-			body.itemExternalReferenceCode = itemExternalReferenceCode;
-		}
-
-		return serviceFetch<{content: string}>(config.renderFragmentEntryURL, {
-			body,
-		});
+		return serviceFetch<[{content: string; fragmentEntryLinkId: string}]>(
+			config.renderFragmentEntriesURL,
+			{
+				body,
+			}
+		);
 	},
 
 	toggleFragmentHighlighted({

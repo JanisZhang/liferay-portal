@@ -179,7 +179,6 @@ public class CommerceTierPriceEntryLocalServiceImpl
 		commerceTierPriceEntry.setDiscountLevel4(discountLevel4);
 		commerceTierPriceEntry.setMinQuantity(
 			_normalizeMinQuantity(commercePriceEntry, minQuantity));
-		commerceTierPriceEntry.setExpandoBridgeAttributes(serviceContext);
 		commerceTierPriceEntry.setDisplayDate(displayDate);
 
 		if ((expirationDate == null) || expirationDate.after(date)) {
@@ -193,6 +192,7 @@ public class CommerceTierPriceEntryLocalServiceImpl
 		commerceTierPriceEntry.setStatusByUserId(user.getUserId());
 		commerceTierPriceEntry.setStatusDate(
 			serviceContext.getModifiedDate(date));
+		commerceTierPriceEntry.setExpandoBridgeAttributes(serviceContext);
 
 		commerceTierPriceEntry = commerceTierPriceEntryPersistence.update(
 			commerceTierPriceEntry);
@@ -531,44 +531,33 @@ public class CommerceTierPriceEntryLocalServiceImpl
 	}
 
 	@Override
-	public List<CommerceTierPriceEntry> fetchCommerceTierPriceEntries(
-		long companyId, int start, int end) {
-
-		return commerceTierPriceEntryPersistence.findByCompanyId(
-			companyId, start, end);
-	}
-
-	@Override
-	public CommerceTierPriceEntry findClosestCommerceTierPriceEntry(
+	public CommerceTierPriceEntry fetchClosestCommerceTierPriceEntry(
 		long commercePriceEntryId, BigDecimal minQuantity) {
 
-		CommerceTierPriceEntry commerceTierPriceEntry = null;
-
-		try {
-			commerceTierPriceEntry =
-				commerceTierPriceEntryPersistence.findByC_LteM_S_First(
-					commercePriceEntryId, minQuantity,
-					WorkflowConstants.STATUS_APPROVED,
-					new CommerceTierPriceEntryMinQuantityComparator(false));
-		}
-		catch (NoSuchTierPriceEntryException noSuchTierPriceEntryException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchTierPriceEntryException);
-			}
-		}
-
-		return commerceTierPriceEntry;
+		return commerceTierPriceEntryPersistence.fetchByC_LteM_S_First(
+			commercePriceEntryId, minQuantity,
+			WorkflowConstants.STATUS_APPROVED,
+			CommerceTierPriceEntryMinQuantityComparator.getInstance(false));
 	}
 
 	@Override
-	public List<CommerceTierPriceEntry> findCommerceTierPriceEntries(
+	public List<CommerceTierPriceEntry> getCommerceTierPriceEntries(
 		long commercePriceEntryId, BigDecimal minQuantity) {
 
 		return commerceTierPriceEntryPersistence.findByC_LteM_S(
 			commercePriceEntryId, minQuantity,
 			WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS,
-			new CommerceTierPriceEntryMinQuantityComparator(true));
+			CommerceTierPriceEntryMinQuantityComparator.getInstance(true));
+	}
+
+	@Override
+	public List<CommerceTierPriceEntry> getCommerceTierPriceEntries(
+		long commercePriceEntryId, int status) {
+
+		return commerceTierPriceEntryPersistence.findByC_S(
+			commercePriceEntryId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			CommerceTierPriceEntryMinQuantityComparator.getInstance(true));
 	}
 
 	@Override
@@ -685,14 +674,13 @@ public class CommerceTierPriceEntryLocalServiceImpl
 
 		commerceTierPriceEntry.setPrice(price);
 		commerceTierPriceEntry.setPromoPrice(promoPrice);
-		commerceTierPriceEntry.setMinQuantity(
-			_normalizeMinQuantity(commercePriceEntry, minQuantity));
-		commerceTierPriceEntry.setExpandoBridgeAttributes(serviceContext);
 		commerceTierPriceEntry.setDiscountDiscovery(discountDiscovery);
 		commerceTierPriceEntry.setDiscountLevel1(discountLevel1);
 		commerceTierPriceEntry.setDiscountLevel2(discountLevel2);
 		commerceTierPriceEntry.setDiscountLevel3(discountLevel3);
 		commerceTierPriceEntry.setDiscountLevel4(discountLevel4);
+		commerceTierPriceEntry.setMinQuantity(
+			_normalizeMinQuantity(commercePriceEntry, minQuantity));
 		commerceTierPriceEntry.setDisplayDate(displayDate);
 
 		if ((expirationDate == null) || expirationDate.after(date)) {
@@ -706,6 +694,7 @@ public class CommerceTierPriceEntryLocalServiceImpl
 		commerceTierPriceEntry.setStatusByUserId(user.getUserId());
 		commerceTierPriceEntry.setStatusDate(
 			serviceContext.getModifiedDate(date));
+		commerceTierPriceEntry.setExpandoBridgeAttributes(serviceContext);
 
 		// Commerce price entry
 

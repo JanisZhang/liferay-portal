@@ -4,15 +4,11 @@
  */
 
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-import {
-	SingleSelect,
-	getLocalizableLabel,
-	onActionDropdownItemClick,
-	openToast,
-} from '@liferay/object-js-components-web';
+import {SingleSelect, stringUtils} from '@liferay/object-js-components-web';
 import {createResourceURL, fetch} from 'frontend-js-web';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useMemo, useState} from 'react';
 
+import copyTerm from '../../util/copyTerm';
 import RelationshipSection from './RelationshipSection';
 
 interface DefinitionOfTermsProps {
@@ -48,7 +44,11 @@ export function DefinitionOfTerms({
 	const objectDefinitionItems = useMemo(() => {
 		return objectDefinitions.map(
 			({defaultLanguageId, id, label, name}) => ({
-				label: getLocalizableLabel(defaultLanguageId, label, name),
+				label: stringUtils.getLocalizableLabel(
+					defaultLanguageId,
+					label,
+					name
+				),
 				value: id,
 			})
 		) as LabelValueObject<number>[];
@@ -63,36 +63,18 @@ export function DefinitionOfTerms({
 			}).toString()
 		);
 
-		const {
-			relationshipSections,
-			terms,
-		} = (await response.json()) as TermsResponse;
+		const {relationshipSections, terms} =
+			(await response.json()) as TermsResponse;
 
 		setObjectFieldTerms(terms);
 		setRelationshipSections(relationshipSections);
 	};
 
-	const copyObjectFieldTerm = ({itemData}: {itemData: Item}) => {
-		navigator.clipboard.writeText(itemData.termName);
-
-		openToast({
-			message: Liferay.Language.get('term-copied-successfully'),
-			type: 'success',
-		});
-	};
-
-	useEffect(() => {
-		Liferay.on('copyObjectFieldTerm', copyObjectFieldTerm);
-
-		return () => {
-			Liferay.detach('copyObjectFieldTerm');
-		};
-	}, []);
-
 	return (
 		<>
 			<>
 				<SingleSelect
+					id="definitionOfTermsEntity"
 					items={objectDefinitionItems}
 					label={Liferay.Language.get('entity')}
 					onSelectionChange={(value) => {
@@ -108,13 +90,13 @@ export function DefinitionOfTerms({
 						items={entityFields}
 						itemsActions={[
 							{
-								href: 'copyObjectFieldTerm',
-								id: 'copyObjectFieldTerm',
+								href: 'copyTerm',
+								id: 'copyTerm',
 								label: Liferay.Language.get('copy'),
+								onClick: copyTerm,
 								target: 'event',
 							},
 						]}
-						onActionDropdownItemClick={onActionDropdownItemClick}
 						selectedItemsKey="termName"
 						showManagementBar={false}
 						showPagination={false}

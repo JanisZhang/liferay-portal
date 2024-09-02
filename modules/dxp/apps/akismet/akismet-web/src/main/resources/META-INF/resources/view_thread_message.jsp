@@ -66,17 +66,17 @@ if (messageId > 0) {
 					String userDisplayText = LanguageUtil.format(request, "x-modified-x-ago", new Object[] {messageUserName, modifiedDateDescription});
 					%>
 
-					<h5 class="message-user-display text-default" title="<%= HtmlUtil.escapeAttribute(userDisplayText) %>">
+					<div class="h5 message-user-display text-default" title="<%= HtmlUtil.escapeAttribute(userDisplayText) %>">
 						<%= HtmlUtil.escape(userDisplayText) %>
-					</h5>
+					</div>
 
-					<h4 title="<%= HtmlUtil.escape(message.getSubject()) %>">
+					<div class="h4" title="<%= HtmlUtil.escape(message.getSubject()) %>">
 						<%= HtmlUtil.escape(message.getSubject()) %>
 
 						<c:if test="<%= message.isAnswer() %>">
 							(<liferay-ui:message key="answer[noun]" />)
 						</c:if>
-					</h4>
+					</div>
 
 					<%
 					User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());

@@ -38,7 +38,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -291,8 +291,9 @@ public class AccountEntryServiceWhenSearchingAccountEntriesTest {
 
 	private Role _addOrganizationRole() throws Exception {
 		return _roleLocalService.addRole(
-			TestPropsValues.getUserId(), null, 0, RandomTestUtil.randomString(),
-			null, null, RoleConstants.TYPE_ORGANIZATION, null, null);
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(), null, 0,
+			RandomTestUtil.randomString(), null, null,
+			RoleConstants.TYPE_ORGANIZATION, null, null);
 	}
 
 	private void _assertSearch(AccountEntry... expectedAccountEntries)

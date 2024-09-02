@@ -251,10 +251,6 @@ public class ObjectEntryModelDocumentContributor
 			new Field(
 				Field.getSortableFieldName(Field.ENTRY_CLASS_PK),
 				document.get(Field.ENTRY_CLASS_PK)));
-		document.add(
-			new Field(
-				Field.getSortableFieldName("externalReferenceCode"),
-				objectEntry.getExternalReferenceCode()));
 
 		FieldArray fieldArray = (FieldArray)document.getField(
 			"nestedFieldArray");
@@ -275,8 +271,7 @@ public class ObjectEntryModelDocumentContributor
 		document.addKeyword(
 			"objectDefinitionName", objectDefinition.getShortName());
 
-		Map<String, Serializable> values = _objectEntryLocalService.getValues(
-			objectEntry.getObjectEntryId());
+		Map<String, Serializable> values = objectEntry.getValues();
 
 		List<ObjectField> objectFields =
 			_objectFieldLocalService.getObjectFields(

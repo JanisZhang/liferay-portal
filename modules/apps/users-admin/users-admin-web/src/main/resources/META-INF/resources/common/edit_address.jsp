@@ -25,7 +25,6 @@ if (editContactInformationDisplayContext.getPrimaryKey() > 0) {
 }
 
 PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "addresses"), editContactInformationDisplayContext.getRedirect());
-
 PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayContext.getSheetTitle(), null);
 %>
 
@@ -183,8 +182,9 @@ PortalUtil.addPortletBreadcrumbEntry(request, editContactInformationDisplayConte
 		var addressZipRequiredWrapper = document.getElementById(
 			'<portlet:namespace />addressZipRequiredWrapper'
 		);
-		var formValidator = Liferay.Form.get('<portlet:namespace />fm')
-			.formValidator;
+		var formValidator = Liferay.Form.get(
+			'<portlet:namespace />fm'
+		).formValidator;
 
 		var rules = formValidator._getAttr('rules');
 

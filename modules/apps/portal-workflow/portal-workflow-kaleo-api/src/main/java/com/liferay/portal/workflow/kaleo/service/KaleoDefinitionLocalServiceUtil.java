@@ -9,6 +9,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 
@@ -304,6 +305,12 @@ public class KaleoDefinitionLocalServiceUtil {
 	}
 
 	public static List<KaleoDefinition> getKaleoDefinitions(
+		boolean active, int start, int end) {
+
+		return getService().getKaleoDefinitions(active, start, end);
+	}
+
+	public static List<KaleoDefinition> getKaleoDefinitions(
 		boolean active, int start, int end,
 		OrderByComparator<KaleoDefinition> orderByComparator,
 		com.liferay.portal.kernel.service.ServiceContext serviceContext) {
@@ -454,13 +461,12 @@ public class KaleoDefinitionLocalServiceUtil {
 	}
 
 	public static KaleoDefinitionLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(KaleoDefinitionLocalService service) {
-		_service = service;
-	}
-
-	private static volatile KaleoDefinitionLocalService _service;
+	private static final Snapshot<KaleoDefinitionLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			KaleoDefinitionLocalServiceUtil.class,
+			KaleoDefinitionLocalService.class);
 
 }

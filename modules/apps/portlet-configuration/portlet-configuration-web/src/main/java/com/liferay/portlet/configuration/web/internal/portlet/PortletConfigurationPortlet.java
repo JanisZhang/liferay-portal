@@ -13,7 +13,6 @@ import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -113,6 +112,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -280,15 +280,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		Portlet portlet = ActionUtil.getPortlet(actionRequest);
-
-		PortletPreferences portletPreferences =
-			ActionUtil.getLayoutPortletSetup(actionRequest, portlet);
-
-		actionRequest = ActionUtil.getWrappedActionRequest(
-			actionRequest, portletPreferences);
-
-		_updateScope(actionRequest, portlet);
+		_updateScope(actionRequest);
 
 		if (!SessionErrors.isEmpty(actionRequest)) {
 			return;
@@ -617,9 +609,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			ServiceContextFactory.getInstance(actionRequest),
 			themeDisplay.getUserId());
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-196847") &&
-			(resourcePrimKeys.length > 1)) {
-
+		if (resourcePrimKeys.length > 1) {
 			SessionMessages.add(
 				actionRequest, "requestProcessed",
 				_language.format(
@@ -641,6 +631,11 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 
 				emitter.emit(modelClass.getName());
 			});
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerMap.close();
 	}
 
 	@Override
@@ -950,7 +945,8 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			WebKeys.THEME_DISPLAY);
 
 		String portletTitle = PortletConfigurationUtil.getPortletTitle(
-			portletPreferences, themeDisplay.getLanguageId());
+			portlet.getPortletId(), portletPreferences,
+			themeDisplay.getLanguageId());
 
 		if (Validator.isNull(portletTitle)) {
 			ServletContext servletContext =
@@ -1064,12 +1060,20 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			String.valueOf(netvibesShowAddAppLink));
 	}
 
-	private void _updateScope(ActionRequest actionRequest, Portlet portlet)
-		throws Exception {
+	private void _updateScope(ActionRequest actionRequest) throws Exception {
+		Portlet portlet = ActionUtil.getPortlet(actionRequest);
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		PortletPreferences portletPreferences =
+			themeDisplay.getStrictLayoutPortletSetup(
+				themeDisplay.getLayout(), portlet.getPortletId());
+
+		actionRequest = ActionUtil.getWrappedActionRequest(
+			actionRequest, portletPreferences);
 
 		String oldScopeName = _getOldScopeName(actionRequest);
-
-		PortletPreferences portletPreferences = actionRequest.getPreferences();
 
 		String[] scopes = StringUtil.split(
 			ParamUtil.getString(actionRequest, "scope"));
@@ -1097,9 +1101,6 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			portletTitle, oldScopeName, newScopeName);
 
 		if (!newPortletTitle.equals(portletTitle)) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
-
 			portletPreferences.setValue(
 				"portletSetupTitle_" + themeDisplay.getLanguageId(),
 				newPortletTitle);

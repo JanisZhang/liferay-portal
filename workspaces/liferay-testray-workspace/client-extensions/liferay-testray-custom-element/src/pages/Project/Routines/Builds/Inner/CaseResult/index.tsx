@@ -36,12 +36,8 @@ type OutletContext = {
 };
 
 const CaseResult = () => {
-	const {
-		caseResult,
-		mbMessage,
-		mutateCaseResult,
-		projectId,
-	}: OutletContext = useOutletContext();
+	const {caseResult, mbMessage, mutateCaseResult, projectId}: OutletContext =
+		useOutletContext();
 
 	const attachments = useMemo(
 		() => safeJSONParse(caseResult.attachments, []) as TestrayAttachment[],
@@ -66,6 +62,18 @@ const CaseResult = () => {
 					>
 						<QATable
 							items={[
+								{
+									title: (
+										<ClayIcon
+											className="tr-qa-table__flaky-icon"
+											symbol="flag-full"
+										/>
+									),
+									value: i18n.translate(
+										'this-is-a-possible-flaky-test'
+									),
+									visible: !!caseResult.case?.flaky,
+								},
 								{
 									title: i18n.translate('status'),
 									value: (
@@ -106,7 +114,7 @@ const CaseResult = () => {
 											{attachments.map(
 												(attachment, index) => (
 													<a
-														className="mt-2"
+														className="case-results-attachments-box mt-2"
 														href={attachment.url}
 														key={index}
 														rel="noopener noreferrer"
@@ -169,7 +177,10 @@ const CaseResult = () => {
 								},
 								{
 									title: i18n.translate('description'),
-									value: caseResult.case?.description,
+									value:
+										caseResult.case?.description === 'null'
+											? ''
+											: caseResult.case?.description,
 								},
 								{
 									title: i18n.translate('steps'),
@@ -203,9 +214,7 @@ const CaseResult = () => {
 								{
 									divider: true,
 									title: i18n.translate('execution-date'),
-									value: getTimeFromNow(
-										caseResult.dateModified
-									),
+									value: getTimeFromNow(caseResult.startDate),
 								},
 								{
 									divider: true,
@@ -232,16 +241,12 @@ const CaseResult = () => {
 								{
 									divider: true,
 									title: i18n.translate('issues'),
-									value: caseResult.issues.length
-										? caseResult.issues.map(
-												(caseResultIssue, index) => (
-													<JiraLink
-														issue={caseResultIssue}
-														key={index}
-													/>
-												)
-										  )
-										: '-',
+									value: (
+										<JiraLink
+											displayViewInJira={false}
+											issue={caseResult.issues}
+										/>
+									),
 								},
 								{
 									title: i18n.translate('comment'),

@@ -49,6 +49,8 @@ import com.liferay.dynamic.data.mapping.internal.upgrade.v5_2_0.DDMFacetTemplate
 import com.liferay.dynamic.data.mapping.internal.upgrade.v5_2_1.WorkflowDefinitionLinkUpgradeProcess;
 import com.liferay.dynamic.data.mapping.internal.upgrade.v5_2_2.DLFileEntryDDMFormInstanceRecordUpgradeProcess;
 import com.liferay.dynamic.data.mapping.internal.upgrade.v5_3_3.BrowserSnifferTemplateUpgradeProcess;
+import com.liferay.dynamic.data.mapping.internal.upgrade.v5_4_5.DDMTemplateLinkUpgradeProcess;
+import com.liferay.dynamic.data.mapping.internal.upgrade.v5_5_1.DDMFieldAttributeUpgradeProcess;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
@@ -71,6 +73,7 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
@@ -363,8 +366,10 @@ public class DDMServiceUpgradeStepRegistrator
 
 		registry.register(
 			"3.7.3", "3.7.4",
-			new com.liferay.dynamic.data.mapping.internal.upgrade.v3_7_4.
-				DDMTemplateUpgradeProcess());
+			UpgradeProcessFactory.runSQL(
+				"update DDMTemplate set templateKey = " +
+					"CONCAT(CAST_TEXT(templateId), '_key') where templateKey " +
+						"is null or templateKey = ''"));
 
 		registry.register(
 			"3.7.4", "3.8.0",
@@ -557,6 +562,27 @@ public class DDMServiceUpgradeStepRegistrator
 				DDMStructureUpgradeProcess(
 					_jsonDDMFormDeserializer, _jsonDDMFormSerializer,
 					_spiDDMFormRuleConverter));
+
+		registry.register(
+			"5.4.4", "5.4.5",
+			new DDMTemplateLinkUpgradeProcess(_classNameLocalService));
+
+		registry.register(
+			"5.4.5", "5.5.0",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {{"DDMTemplate", "templateId"}};
+				}
+
+			});
+
+		registry.register(
+			"5.5.0", "5.5.1",
+			new com.liferay.dynamic.data.mapping.internal.upgrade.v5_5_1.
+				DDMFieldUpgradeProcess(),
+			new DDMFieldAttributeUpgradeProcess());
 	}
 
 	@Activate

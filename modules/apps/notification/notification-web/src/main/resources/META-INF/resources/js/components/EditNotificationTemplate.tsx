@@ -7,21 +7,25 @@ import ClayForm from '@clayui/form';
 import {
 	API,
 	ManagementToolbar,
-	REQUIRED_MSG,
+	MultiSelectItem,
+	constantsUtils,
 	invalidateRequired,
 	openToast,
 	useForm,
 } from '@liferay/object-js-components-web';
+import classNames from 'classnames';
+import {ILearnResourceContext} from 'frontend-js-components-web';
 import {fetch} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import {defaultLanguageId} from '../util/constants';
-
-import './EditNotificationTemplate.scss';
 import {BasicInfoContainer} from './BasicInfoContainer/BasicInfoContainer';
 import ContentContainer from './ContentContainer/ContentContainer';
 import DefinitionOfTermsContainer from './DefinitionOfTermsContainer/DefinitionOfTermsContainer';
 import {SettingsContainer} from './SettingsContainer/SettingsContainer';
+import {getEmailNotificationRoles} from './SettingsContainer/rolesUtil';
+
+import './EditNotificationTemplate.scss';
 
 const HEADERS = new Headers({
 	'Accept': 'application/json',
@@ -46,9 +50,44 @@ interface EditNotificationTemplateProps {
 	baseResourceURL: string;
 	editorConfig: object;
 	externalReferenceCode: string;
+	learnResources: ILearnResourceContext;
 	notificationTemplateId: number;
-	notificationTemplateType: string;
+	notificationTemplateType: 'email' | 'userNotification' | '';
 	portletNamespace: string;
+}
+
+export function validate(values: NotificationTemplate) {
+	const errors: NotificationTemplateError = {};
+
+	if (!values.name) {
+		errors.name = constantsUtils.REQUIRED_MSG;
+	}
+
+	if (!values.subject[defaultLanguageId]) {
+		errors.subject = Liferay.Language.get('required');
+	}
+
+	if (values.type === 'email') {
+		const [recipient] = values.recipients as EmailRecipients[];
+
+		if (!recipient.from) {
+			errors.from = constantsUtils.REQUIRED_MSG;
+		}
+
+		if (!recipient.fromName[defaultLanguageId]) {
+			errors.fromName = constantsUtils.REQUIRED_MSG;
+		}
+
+		if (!Array.isArray(recipient.to) && !recipient.to[defaultLanguageId]) {
+			errors.to = constantsUtils.REQUIRED_MSG;
+		}
+
+		if (Array.isArray(recipient.to) && !recipient.to.length) {
+			errors.to = constantsUtils.REQUIRED_MSG;
+		}
+	}
+
+	return errors;
 }
 
 export default function EditNotificationTemplate({
@@ -56,6 +95,7 @@ export default function EditNotificationTemplate({
 	baseResourceURL,
 	editorConfig,
 	externalReferenceCode,
+	learnResources,
 	notificationTemplateId = 0,
 	notificationTemplateType,
 	portletNamespace,
@@ -74,38 +114,16 @@ export default function EditNotificationTemplate({
 
 	const [templateTitle, setTemplateTitle] = useState<string>('');
 
-	const validate = (values: any) => {
-		const errors: NotificationTemplateError = {};
-
-		if (!values.name) {
-			errors.name = REQUIRED_MSG;
-		}
-
-		if (!values.subject[defaultLanguageId]) {
-			errors.subject = Liferay.Language.get('required');
-		}
-
-		if (notificationTemplateType === 'email' || values.type === 'email') {
-			if (!values.recipients[0].from) {
-				errors.from = REQUIRED_MSG;
-			}
-
-			if (!values.recipients[0].fromName[defaultLanguageId]) {
-				errors.fromName = REQUIRED_MSG;
-			}
-
-			if (!values.recipients[0].to[defaultLanguageId]) {
-				errors.to = REQUIRED_MSG;
-			}
-		}
-
-		return errors;
-	};
+	const [emailNotificationRoles, setEmailNotificationRoles] = useState<
+		MultiSelectItem[]
+	>([]);
 
 	const onSubmit = async (notification: NotificationTemplate) => {
 		if (isSubmitted) {
 			return;
 		}
+
+		const notificationValue = {...notification};
 
 		setIsSubmitted(true);
 
@@ -114,7 +132,7 @@ export default function EditNotificationTemplate({
 				? `/o/notification/v1.0/notification-templates/${notificationTemplateId}`
 				: '/o/notification/v1.0/notification-templates',
 			{
-				body: JSON.stringify(notification),
+				body: JSON.stringify(notificationValue),
 				headers: HEADERS,
 				method: notificationTemplateId !== 0 ? 'PUT' : 'POST',
 			}
@@ -157,7 +175,9 @@ export default function EditNotificationTemplate({
 		recipientInitialValue = [
 			{
 				bcc: '',
+				bccType: 'email',
 				cc: '',
+				ccType: 'email',
 				from: '',
 				fromName: {
 					[defaultLanguageId]: '',
@@ -166,6 +186,7 @@ export default function EditNotificationTemplate({
 				to: {
 					[defaultLanguageId]: '',
 				},
+				toType: 'email',
 			} as EmailRecipients,
 		];
 	}
@@ -221,6 +242,21 @@ export default function EditNotificationTemplate({
 					notificationTemplateId
 				);
 
+				let newRecipients = recipients;
+
+				if (type === 'email') {
+					newRecipients = [
+						{
+							...recipients[0],
+							bcc: recipients[0].bcc ?? '',
+							bccType: recipients[0].bccType ?? 'email',
+							cc: recipients[0].cc ?? '',
+							ccType: recipients[0].ccType ?? 'email',
+							toType: recipients[0].toType ?? 'email',
+						},
+					];
+				}
+
 				setValues({
 					...values,
 					attachmentObjectFieldIds,
@@ -232,7 +268,7 @@ export default function EditNotificationTemplate({
 					objectDefinitionExternalReferenceCode,
 					objectDefinitionId,
 					recipientType,
-					recipients,
+					recipients: newRecipients,
 					subject,
 					system,
 					type,
@@ -245,12 +281,23 @@ export default function EditNotificationTemplate({
 					Liferay.Language.get('untitled-notification-template')
 				);
 			}
+
+			if (
+				notificationTemplateType === '' ||
+				notificationTemplateType === 'email'
+			) {
+				setEmailNotificationRoles(
+					await getEmailNotificationRoles(baseResourceURL)
+				);
+			}
+
 			const objectDefinitionsItems = await API.getObjectDefinitions();
 
 			setObjectDefinitions(objectDefinitionsItems);
 		};
 
 		makeFetch();
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [notificationTemplateId]);
 
@@ -294,8 +341,25 @@ export default function EditNotificationTemplate({
 
 			<div className="lfr__notification-template-container">
 				<div className="lfr__notification-template-cards">
-					<div className="row">
-						<div className="col-lg-6 lfr__notification-template-card">
+					<div
+						className={classNames(
+							{
+								row: !(values.type === 'email'),
+							},
+							{
+								'lfr__notification-template-basic-info':
+									values.type === 'email',
+							}
+						)}
+					>
+						<div
+							className={classNames(
+								{
+									'col-lg-6': !(values.type === 'email'),
+								},
+								'lfr__notification-template-card'
+							)}
+						>
 							<BasicInfoContainer
 								errors={errors}
 								setValues={setValues}
@@ -303,9 +367,17 @@ export default function EditNotificationTemplate({
 							/>
 						</div>
 
-						<div className="col-lg-6 lfr__notification-template-card">
+						<div
+							className={classNames({
+								'col-lg-6 lfr__notification-template-card': !(
+									values.type === 'email'
+								),
+							})}
+						>
 							<SettingsContainer
+								emailNotificationRoles={emailNotificationRoles}
 								errors={errors}
+								learnResources={learnResources}
 								selectedLocale={selectedLocale}
 								setValues={setValues}
 								values={values}

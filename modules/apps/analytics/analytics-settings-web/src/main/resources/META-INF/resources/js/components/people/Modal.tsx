@@ -82,6 +82,7 @@ const Modal: React.FC<IModalProps> = ({
 					}}
 					onItemsChange={setItems}
 					requestFn={requestFn}
+					type="people"
 				/>
 			</ClayModal.Body>
 
@@ -97,17 +98,18 @@ const Modal: React.FC<IModalProps> = ({
 
 						<ClayButton
 							onClick={async () => {
-								const {
-									ok,
-								} = await updateAttributesConfiguration({
-									...syncedIds,
-									[name]: getIds(
-										items,
-										syncedIds[name].map((id) => Number(id))
-									),
-									syncAllAccounts,
-									syncAllContacts,
-								});
+								const {ok} =
+									await updateAttributesConfiguration({
+										...syncedIds,
+										[name]: getIds(
+											items,
+											syncedIds[name].map((id) =>
+												Number(id)
+											)
+										),
+										syncAllAccounts,
+										syncAllContacts,
+									});
 
 								if (ok) {
 									Liferay.Util.openToast({

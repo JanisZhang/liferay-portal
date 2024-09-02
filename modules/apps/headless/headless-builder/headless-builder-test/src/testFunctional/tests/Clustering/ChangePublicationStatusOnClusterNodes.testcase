@@ -9,8 +9,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 	property timeout.explicit.wait = "180";
 
 	setUp {
@@ -22,19 +21,19 @@ definition {
 			Page.assertNodePortPG(nodePort = 8080);
 
 			User.logoutPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			User.loginPG(
 				nodePort = 9080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			Page.assertNodePortPG(nodePort = 9080);
 
 			User.logoutPG(
 				nodePort = 9080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -58,7 +57,7 @@ definition {
 
 		JSONObject.deleteAllCustomObjects(
 			userEmailAddress = "test@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
@@ -118,7 +117,7 @@ definition {
 		task ("And Then api application present in API Builder of second node") {
 			User.loginPG(
 				nodePort = 9080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			ApplicationsMenu.gotoPortlet(
@@ -185,7 +184,7 @@ definition {
 		task ("And Then api application present in API Builder of the default node") {
 			User.loginPG(
 				nodePort = 8080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			ApplicationsMenu.gotoPortlet(

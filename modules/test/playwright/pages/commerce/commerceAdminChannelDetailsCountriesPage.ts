@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-// @ts-ignore
-
 import {FrameLocator, Locator, Page} from '@playwright/test';
 
 import {ApplicationsMenuPage} from '../product-navigation-applications-menu/ApplicationsMenuPage';
-import {searchTableRowByValue} from './commerceAdminOrdersPage';
+import {searchTableRowByValue} from './commerceDNDTablePage';
 
 export class CommerceAdminChannelDetailsCountriesPage {
 	readonly addCountryAddButton: Locator;

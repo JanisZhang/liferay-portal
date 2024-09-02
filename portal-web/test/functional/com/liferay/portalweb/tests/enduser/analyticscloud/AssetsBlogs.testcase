@@ -45,7 +45,7 @@ definition {
 		task ("View the blog") {
 			ACUtils.navigateToSitePage(
 				actionType = "View Blog",
-				documentTitleList = "Blogs AC Title",
+				documentTitleList = "Blogs AC Title,Blogs AC Title,Blogs AC Title,Blogs AC Title",
 				pageName = "AC Page",
 				siteName = "Site Name");
 		}
@@ -79,6 +79,7 @@ definition {
 			ACAssets.viewAssetAppearsOnMetric(
 				canonicalURL = "${portalURL}/web/site-name/ac-page/-/blogs/blogs-ac-title",
 				cardTitle = "Asset Appears On",
+				metricTitle = "Views",
 				pageName = "Blogs AC Title - Site Name - ${dataSourceName}");
 		}
 	}
@@ -157,10 +158,12 @@ definition {
 
 		ACUtils.navigateToSitePageWithUser(
 			actionType = "View Blog",
-			documentTitleList = "Blogs AC Title",
+			documentTitleList = "Blogs AC Title,Blogs AC Title,Blogs AC Title,Blogs AC Title",
 			emailList = ${emailList},
 			pageName = "AC Page",
 			siteName = "Site Name");
+
+		ACUtils.closeAllSessionsAndWait();
 
 		User.logoutPG();
 
@@ -168,7 +171,7 @@ definition {
 
 		ACUtils.navigateToSitePage(
 			actionType = "View Blog",
-			documentTitleList = "Blogs AC Title",
+			documentTitleList = "Blogs AC Title,Blogs AC Title,Blogs AC Title,Blogs AC Title",
 			pageName = "AC Page",
 			siteName = "Site Name");
 
@@ -198,15 +201,10 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8375 | Test Summary: Blogs audience card shows expected amount of segmented and unsegmented individuals"
-	@ignore = "true"
 	@priority = 5
 	test AudienceCardShowsExpectedAmountSegmentedAndUnsegmentedInBlogs {
-
-		// AC Refactor: Data doesn't appear on time
-		// AC Refactor ticket: LRAC-14011
-
-		var usernameList = "ac,liferay";
-		var emailList = "ac@liferay.com,liferay@liferay.com";
+		var usernameList = "ac,liferay,dxp";
+		var emailList = "ac@liferay.com,liferay@liferay.com,dxp@liferay.com";
 
 		for (var name : list ${usernameList}) {
 			JSONUser.addUser(
@@ -214,22 +212,19 @@ definition {
 				userFirstName = ${name},
 				userLastName = ${name},
 				userScreenName = ${name});
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "${name}@liferay.com");
 		}
 
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 
 		ACUtils.navigateToSitePageWithUser(
 			actionType = "View Blog",
-			documentTitleList = "Blogs AC Title",
+			documentTitleList = "Blogs AC Title,Blogs AC Title,Blogs AC Title,Blogs AC Title,Blogs AC Title",
 			emailList = ${emailList},
-			pageName = "AC Page",
-			siteName = "Site Name");
-
-		User.logoutPG();
-
-		ACUtils.navigateToSitePage(
-			actionType = "View Blog",
-			documentTitleList = "Blogs AC Title",
 			pageName = "AC Page",
 			siteName = "Site Name");
 
@@ -237,7 +232,7 @@ definition {
 
 		ACUtils.launchAC();
 
-		ACProperties.switchProperty(propertyName = ${propertyName});
+		ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 		ACNavigation.goToSegments();
 
@@ -248,18 +243,6 @@ definition {
 		ACSegments.addStaticMember(tableMember = "ac ac");
 
 		ACSegments.saveSegment();
-
-		ACUtils.launchDXP(userEmailAddress = "ac@liferay.com");
-
-		ACUtils.navigateToSitePage(
-			actionType = "View Blog",
-			documentTitleList = "Blogs AC Title",
-			pageName = "AC Page",
-			siteName = "Site Name");
-
-		ACUtils.closeAllSessionsAndWait();
-
-		ACUtils.launchAC();
 
 		ACNavigation.goToAssets();
 
@@ -274,75 +257,8 @@ definition {
 		ACUtils.assertAudienceCard(
 			index = 2,
 			percentageList = "66.67%,33.33%");
-	}
 
-	@description = "Feature ID: Legacy | Automation ID: LRAC-8378 | Test Summary: Blogs location card shows views by the expected location"
-	@ignore = "true"
-	@priority = 5
-	test BlogsLocationCardShowsViewsByExpectedLocation {
-
-		// AC Refactor: The location data should show the name of the country but it's actually showing "Local network"
-		// AC Refactor: Personas
-		// AC Refactor ticket: LRAC-9395
-
-		task ("Connect the DXP to AC") {
-			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
-		}
-
-		task ("View the blogs entry") {
-			ACUtils.navigateToSitePage(
-				actionType = "View Blog",
-				documentTitleList = "Blogs AC Title",
-				pageName = "AC Page",
-				siteName = "Site Name");
-		}
-
-		task ("Get the ip country") {
-			var country = ACUtils.getIPCountry();
-		}
-
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
-
-		task ("Switch to new property in AC") {
-			ACUtils.launchAC();
-
-			ACProperties.switchProperty(propertyName = ${propertyName});
-		}
-
-		task ("Navigate to Blogs tab in Asset dashboard") {
-			ACNavigation.goToAssets();
-
-			ACNavigation.switchTab(tabName = "Blogs");
-		}
-
-		task ("Change the time filter to Last 24 hours") {
-			ACTimeFilter.clickTimeFilterButton();
-
-			ACTimeFilter.setLast24Hours();
-		}
-
-		task ("Navigate to the Overview tab in blogs report entry") {
-			ACNavigation.openItem(itemName = "Blogs AC Title");
-		}
-
-		task ("View the time filter of Views by Location map is Last 24 Hours") {
-			ACTimeFilter.assertCurrentTimeFilterRange(
-				cardName = "Views by Location",
-				timeFilterRange = "Last 24 hours");
-		}
-
-		task ("View the views by location info shown in geomap") {
-			ACUtils.viewNoResultsMessageNotPresent(noResultMessage = "There are no views on any location on the selected period.");
-
-			ACCards.viewGeomapContainer(cardTitle = "Views by Location");
-
-			ACCards.viewGeomapTableText(
-				cardTitle = "Views by Location",
-				leftText = ${country},
-				rightText = "1 100%");
-		}
+		ACUtils.assertViewerSegmentsCard(segmentNameList = "Static Segment Test");
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8386 | Test Summary: Blogs views by technology card shows views by the expected browser"
@@ -718,7 +634,7 @@ definition {
 
 		ACUtils.navigateToSitePageWithUser(
 			actionType = "View Blog",
-			documentTitleList = "Blogs AC Title",
+			documentTitleList = "Blogs AC Title,Blogs AC Title,Blogs AC Title,Blogs AC Title",
 			emailList = ${emailList},
 			pageName = "AC Page",
 			siteName = "Site Name");
@@ -731,7 +647,7 @@ definition {
 
 		ACUtils.navigateToSitePageWithUser(
 			actionType = "View Blog",
-			documentTitleList = "Blogs AC Title",
+			documentTitleList = "Blogs AC Title,Blogs AC Title,Blogs AC Title,Blogs AC Title",
 			emailList = "userac@liferay.com",
 			pageName = "AC Page",
 			siteName = "Site Name");

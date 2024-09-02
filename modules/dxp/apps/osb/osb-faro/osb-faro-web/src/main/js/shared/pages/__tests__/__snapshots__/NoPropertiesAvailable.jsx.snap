@@ -66,22 +66,23 @@ exports[`NoPropertiesAvailable should render 1`] = `
                 />
               </svg>
             </div>
-            <h4
-              class="no-results-title"
+            <div
+              class="h4 no-results-title"
             >
               You are Almost There
-            </h4>
+            </div>
             <div
               class="no-results-description"
             >
               <p>
                 First, complete the onboarding to get your workspace set up.
               </p>
-              <a
+              <button
                 class="button-root btn btn-primary"
+                type="button"
               >
                 Start
-              </a>
+              </button>
             </div>
           </div>
         </div>

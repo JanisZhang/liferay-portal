@@ -15,10 +15,12 @@ ObjectValidationRule objectValidationRule = (ObjectValidationRule)request.getAtt
 <liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" var="baseResourceURL" />
 
 <react:component
-	module="js/components/ObjectValidation/EditObjectValidation"
+	module="{EditObjectValidation} from object-web"
 	props='<%=
 		HashMapBuilder.<String, Object>put(
 			"baseResourceURL", String.valueOf(baseResourceURL)
+		).put(
+			"scriptManagementConfigurationPortletURL", objectDefinitionsValidationsDisplayContext.getScriptManagementConfigurationPortletURL()
 		).putAll(
 			objectDefinitionsValidationsDisplayContext.getProps(objectValidationRule)
 		).build()

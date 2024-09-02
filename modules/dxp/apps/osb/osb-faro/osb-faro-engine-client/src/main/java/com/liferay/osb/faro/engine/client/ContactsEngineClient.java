@@ -316,6 +316,8 @@ public interface ContactsEngineClient {
 		FaroProject faroProject, Long channelId, String query,
 		String fieldMappingFieldName, int cur, int delta);
 
+	public long getIdentitiesCount(FaroProject faroProject);
+
 	public Individual getIndividual(
 			FaroProject faroProject, String id, String channelId)
 		throws FaroEngineClientException;
@@ -356,8 +358,8 @@ public interface ContactsEngineClient {
 		String query, List<String> fields, boolean includeAnonymousUsers,
 		int cur, int delta, List<OrderByField> orderByFields);
 
-	public long getIndividualsCount(
-		FaroProject faroProject, boolean includeAnonymousUsers);
+	public long getIndividualsCreatedBetweenCount(
+		FaroProject faroProject, Date endDate, Date startDate);
 
 	public long getIndividualsCreatedSinceCount(
 		FaroProject faroProject, Date startDate);
@@ -408,6 +410,8 @@ public interface ContactsEngineClient {
 		String ownerType, String name, String query, String expand, int cur,
 		int delta, List<OrderByField> orderByFields);
 
+	public Date getLastSeenDate(FaroProject faroProject);
+
 	public Results<PageVisited> getPagesVisited(
 		FaroProject faroProject, String channelId, String ownerId,
 		String ownerType, String query, String interestName, Date startDate,
@@ -415,6 +419,11 @@ public interface ContactsEngineClient {
 		List<OrderByField> orderByFields);
 
 	public PageVisited getPageVisited(FaroProject faroProject, String id);
+
+	public long getReportsExportCSVCount(
+			FaroProject faroProject, String path,
+			Map<String, List<String>> queryParameters)
+		throws Exception;
 
 	public Results<String> getSessionValues(
 		FaroProject faroProject, String channelId, String fieldName,
@@ -425,6 +434,8 @@ public interface ContactsEngineClient {
 		List<String> fields, int cur, int delta,
 		List<OrderByField> orderByFields);
 
+	public long getSyncedIndividualsCount(FaroProject faroProject);
+
 	public void getToOutputStream(
 			FaroProject faroProject, Map<String, String> headers, String path,
 			Map<String, List<String>> queryParameters,
@@ -434,8 +445,6 @@ public interface ContactsEngineClient {
 	public Results<IndividualSegment> getUnassignedIndividualSegments(
 		FaroProject faroProject, int cur, int delta,
 		List<OrderByField> orderByFields);
-
-	public long getUsersCount(FaroProject faroProject);
 
 	public Channel patchChannel(
 		FaroProject faroProject, String id, String name);

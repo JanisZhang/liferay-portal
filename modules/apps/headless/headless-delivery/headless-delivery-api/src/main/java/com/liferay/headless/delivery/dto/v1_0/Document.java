@@ -456,6 +456,47 @@ public class Document implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _dateCreatedSupplier;
 
+	@Schema(description = "The expiration date of the document.")
+	public Date getDateExpired() {
+		if (_dateExpiredSupplier != null) {
+			dateExpired = _dateExpiredSupplier.get();
+
+			_dateExpiredSupplier = null;
+		}
+
+		return dateExpired;
+	}
+
+	public void setDateExpired(Date dateExpired) {
+		this.dateExpired = dateExpired;
+
+		_dateExpiredSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDateExpired(
+		UnsafeSupplier<Date, Exception> dateExpiredUnsafeSupplier) {
+
+		_dateExpiredSupplier = () -> {
+			try {
+				return dateExpiredUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The expiration date of the document.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Date dateExpired;
+
+	@JsonIgnore
+	private Supplier<Date> _dateExpiredSupplier;
+
 	@Schema(description = "The last time a field of the document changed.")
 	public Date getDateModified() {
 		if (_dateModifiedSupplier != null) {
@@ -498,6 +539,47 @@ public class Document implements Serializable {
 
 	@JsonIgnore
 	private Supplier<Date> _dateModifiedSupplier;
+
+	@Schema(description = "The document's most recent publication date.")
+	public Date getDatePublished() {
+		if (_datePublishedSupplier != null) {
+			datePublished = _datePublishedSupplier.get();
+
+			_datePublishedSupplier = null;
+		}
+
+		return datePublished;
+	}
+
+	public void setDatePublished(Date datePublished) {
+		this.datePublished = datePublished;
+
+		_datePublishedSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDatePublished(
+		UnsafeSupplier<Date, Exception> datePublishedUnsafeSupplier) {
+
+		_datePublishedSupplier = () -> {
+			try {
+				return datePublishedUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The document's most recent publication date.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Date datePublished;
+
+	@JsonIgnore
+	private Supplier<Date> _datePublishedSupplier;
 
 	@Schema(description = "The document's description.")
 	public String getDescription() {
@@ -794,6 +876,47 @@ public class Document implements Serializable {
 
 	@JsonIgnore
 	private Supplier<String> _fileNameSupplier;
+
+	@Schema(description = "The document's file relative URL.")
+	public String getFriendlyUrlPath() {
+		if (_friendlyUrlPathSupplier != null) {
+			friendlyUrlPath = _friendlyUrlPathSupplier.get();
+
+			_friendlyUrlPathSupplier = null;
+		}
+
+		return friendlyUrlPath;
+	}
+
+	public void setFriendlyUrlPath(String friendlyUrlPath) {
+		this.friendlyUrlPath = friendlyUrlPath;
+
+		_friendlyUrlPathSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFriendlyUrlPath(
+		UnsafeSupplier<String, Exception> friendlyUrlPathUnsafeSupplier) {
+
+		_friendlyUrlPathSupplier = () -> {
+			try {
+				return friendlyUrlPathUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The document's file relative URL.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String friendlyUrlPath;
+
+	@JsonIgnore
+	private Supplier<String> _friendlyUrlPathSupplier;
 
 	@Schema(description = "The document's ID.")
 	public Long getId() {
@@ -1455,6 +1578,22 @@ public class Document implements Serializable {
 			sb.append("\"");
 		}
 
+		Date dateExpired = getDateExpired();
+
+		if (dateExpired != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dateExpired\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(dateExpired));
+
+			sb.append("\"");
+		}
+
 		Date dateModified = getDateModified();
 
 		if (dateModified != null) {
@@ -1467,6 +1606,22 @@ public class Document implements Serializable {
 			sb.append("\"");
 
 			sb.append(liferayToJSONDateFormat.format(dateModified));
+
+			sb.append("\"");
+		}
+
+		Date datePublished = getDatePublished();
+
+		if (datePublished != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"datePublished\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(datePublished));
 
 			sb.append("\"");
 		}
@@ -1571,6 +1726,22 @@ public class Document implements Serializable {
 			sb.append("\"");
 
 			sb.append(_escape(fileName));
+
+			sb.append("\"");
+		}
+
+		String friendlyUrlPath = getFriendlyUrlPath();
+
+		if (friendlyUrlPath != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyUrlPath\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(friendlyUrlPath));
 
 			sb.append("\"");
 		}
@@ -1860,7 +2031,10 @@ public class Document implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

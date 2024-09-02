@@ -49,6 +49,13 @@ export function getToControlsId(collectionId, index, toControlsId) {
 			return null;
 		}
 
+		// If the itemId correspond to a collectionId ignore it,
+		// that id is only applied to the children not to the collection itself.
+
+		if (collectionId === itemId) {
+			return itemId;
+		}
+
 		return toControlsId(
 			`${getCollectionPrefix(collectionId, index)}${itemId}`
 		);
@@ -56,15 +63,23 @@ export function getToControlsId(collectionId, index, toControlsId) {
 }
 
 export function fromControlsId(controlsItemId) {
+	const getItemIdFromControlsId = (id) => {
+		const splits = id.split(COLLECTION_ID_DIVIDER);
+
+		const itemId = splits.pop();
+
+		return itemId || id;
+	};
+
 	if (!controlsItemId) {
 		return null;
 	}
-
-	const splits = controlsItemId.split(COLLECTION_ID_DIVIDER);
-
-	const itemId = splits.pop();
-
-	return itemId || controlsItemId;
+	else if (Array.isArray(controlsItemId)) {
+		return controlsItemId.map(getItemIdFromControlsId);
+	}
+	else {
+		return getItemIdFromControlsId(controlsItemId);
+	}
 }
 
 const NotCollectionSelectedMessage = () => (
@@ -241,6 +256,7 @@ const ItemContext = ({
 	const contextValue = useMemo(
 		() => ({
 			collectionConfig,
+			collectionId,
 			collectionItem,
 			collectionItemIndex: index,
 			customCollectionSelectorURL,
@@ -393,7 +409,7 @@ const Collection = React.memo(
 											itemType: nextItemType,
 										},
 									},
-									itemId: item.itemId,
+									itemIds: [item.itemId],
 								})
 							);
 						}
@@ -541,7 +557,7 @@ function getNumberOfItems(collection, collectionConfig) {
 			: Math.min(
 					collectionConfig.numberOfPages * itemsPerPage,
 					collection.totalNumberOfItems
-			  );
+				);
 	}
 
 	return collectionConfig.displayAllItems
@@ -549,7 +565,7 @@ function getNumberOfItems(collection, collectionConfig) {
 		: Math.min(
 				collectionConfig.numberOfItems,
 				collection.totalNumberOfItems
-		  );
+			);
 }
 
 function getNumberOfPages(collection, collectionConfig) {
@@ -563,7 +579,7 @@ function getNumberOfPages(collection, collectionConfig) {
 		: Math.min(
 				Math.ceil(collection.totalNumberOfItems / itemsPerPage),
 				collectionConfig.numberOfPages
-		  );
+			);
 }
 
 export default Collection;

@@ -48,13 +48,23 @@ public class NotificationUtil {
 
 		sendEmail(
 			senderEmailAddress, senderName, recipientEmailAddress, subject,
-			body, null);
+			body, null, null);
 	}
 
 	public static void sendEmail(
 		String senderEmailAddress, String senderName,
 		String recipientEmailAddress, String subject, String body,
 		String attachmentFileName) {
+
+		sendEmail(
+			senderEmailAddress, senderName, recipientEmailAddress, subject,
+			body, attachmentFileName, null);
+	}
+
+	public static void sendEmail(
+		String senderEmailAddress, String senderName,
+		String recipientEmailAddress, String subject, String body,
+		String attachmentFileName, String mimeType) {
 
 		body = JenkinsResultsParserUtil.redact(body);
 		subject = JenkinsResultsParserUtil.redact(subject);
@@ -70,6 +80,10 @@ public class NotificationUtil {
 
 		MimeMessage mimeMessage = new MimeMessage(session);
 
+		if (mimeType == null) {
+			mimeType = "text/plain";
+		}
+
 		try {
 			mimeMessage.setFrom(
 				new InternetAddress(senderEmailAddress, senderName));
@@ -81,7 +95,7 @@ public class NotificationUtil {
 
 			BodyPart messageBodyPart = new MimeBodyPart();
 
-			messageBodyPart.setContent(body, "text/plain");
+			messageBodyPart.setContent(body, mimeType);
 
 			multipart.addBodyPart(messageBodyPart);
 

@@ -16,6 +16,9 @@ public class CommerceOrderFDSNames {
 	public static final String BILLING_ADDRESSES =
 		CommercePortletKeys.COMMERCE_ORDER_CONTENT + "-billingAddress";
 
+	public static final String DRAFT_RETURN_ITEMS =
+		CommercePortletKeys.COMMERCE_RETURN_CONTENT + "-draftReturnItems";
+
 	public static final String IMPORT_ORDERS =
 		CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT + "-importOrders";
 
@@ -33,6 +36,18 @@ public class CommerceOrderFDSNames {
 
 	public static final String PREVIEW_ORDER_ITEMS =
 		CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT + "-previewOrderItems";
+
+	public static final String REFUND_ITEMS =
+		CommercePortletKeys.COMMERCE_RETURN_CONTENT + "-refundItems";
+
+	public static final String RETURN_ITEMS =
+		CommercePortletKeys.COMMERCE_RETURN_CONTENT + "-returnItems";
+
+	public static final String RETURNABLE_ORDER_ITEMS =
+		CommercePortletKeys.COMMERCE_ORDER_CONTENT + "-returnableOrderItems";
+
+	public static final String RETURNS =
+		CommercePortletKeys.COMMERCE_RETURN_CONTENT + "-returns";
 
 	public static final String SHIPMENTS =
 		CommercePortletKeys.COMMERCE_ORDER_CONTENT + "-shipments";

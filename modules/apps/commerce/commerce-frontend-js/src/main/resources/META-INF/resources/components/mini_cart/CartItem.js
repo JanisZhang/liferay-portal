@@ -178,8 +178,7 @@ function CartItem({
 	return (
 		<div
 			className={classnames('mini-cart-item', {
-				'align-items-start':
-					Liferay.FeatureFlags['COMMERCE-9599'] && hasChildItems,
+				'align-items-start': hasChildItems,
 				'is-removed': isRemoved,
 			})}
 		>
@@ -283,9 +282,7 @@ function CartItem({
 			</div>
 
 			<div className={getClassName('mini-cart-item-actions')}>
-				{(Liferay.FeatureFlags['COMMERCE-9599'] &&
-					hasOptions(rawOptions)) ||
-				hasSkuUnitOfMeasure ? (
+				{hasOptions(rawOptions) || hasSkuUnitOfMeasure ? (
 					<ClayDropDown
 						closeOnClick
 						trigger={
@@ -295,7 +292,7 @@ function CartItem({
 									name
 								)}
 								className="d-inline-flex"
-								data-qa-id="cart-item-actions"
+								data-qa-id="cartItemActions"
 								displayType="unstyled"
 								symbol="ellipsis-v"
 								title={sub(

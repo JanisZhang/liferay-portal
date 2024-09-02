@@ -6,7 +6,10 @@
 package com.liferay.layout.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
@@ -42,6 +45,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
@@ -82,6 +86,210 @@ public class LayoutPermissionTest {
 	}
 
 	@Test
+	public void testContainsGuestWithoutPreviewDraftPermission()
+		throws Exception {
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				PermissionCheckerFactoryUtil.create(
+					_userLocalService.getGuestUser(_group.getCompanyId())),
+				LayoutTestUtil.addTypeContentLayout(_group)));
+	}
+
+	@Test
+	public void testContainsGuestWithPreviewDraftPermission() throws Exception {
+		Role role = _roleLocalService.getRole(
+			_group.getCompanyId(), RoleConstants.GUEST);
+
+		try {
+			Assert.assertTrue(
+				_layoutPermission.containsLayoutPreviewDraftPermission(
+					_getPermissionChecker(ActionKeys.PREVIEW_DRAFT, role),
+					LayoutTestUtil.addTypeContentLayout(_group)));
+		}
+		finally {
+			_resourcePermissionLocalService.removeResourcePermission(
+				_group.getCompanyId(), Layout.class.getName(),
+				ResourceConstants.SCOPE_COMPANY,
+				String.valueOf(_group.getCompanyId()), role.getRoleId(),
+				ActionKeys.PREVIEW_DRAFT);
+		}
+	}
+
+	@Test
+	public void testContainsPortalContentReviewerWithoutPreviewDraftPermission()
+		throws Exception {
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(
+					_roleLocalService.getRole(
+						TestPropsValues.getCompanyId(),
+						RoleConstants.PORTAL_CONTENT_REVIEWER),
+					UserTestUtil.addUser()),
+				LayoutTestUtil.addTypeContentLayout(_group)));
+	}
+
+	@Test
+	public void testContainsPortalContentReviewerWithPreviewDraftPermission()
+		throws Exception {
+
+		Role role = _roleLocalService.getRole(
+			_group.getCompanyId(), RoleConstants.PORTAL_CONTENT_REVIEWER);
+
+		try {
+			Assert.assertTrue(
+				_layoutPermission.containsLayoutPreviewDraftPermission(
+					_getPermissionChecker(ActionKeys.PREVIEW_DRAFT, role),
+					LayoutTestUtil.addTypeContentLayout(_group)));
+		}
+		finally {
+			_resourcePermissionLocalService.removeResourcePermission(
+				_group.getCompanyId(), Layout.class.getName(),
+				ResourceConstants.SCOPE_COMPANY,
+				String.valueOf(_group.getCompanyId()), role.getRoleId(),
+				ActionKeys.PREVIEW_DRAFT);
+		}
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithPreviewDraftPermission()
+		throws Exception {
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.PREVIEW_DRAFT),
+				_addDisplayPageTemplateLayout()));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithRestrictedUpdatePermission()
+		throws Exception {
+
+		Layout layout = _addDisplayPageTemplateLayout();
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_BASIC), layout));
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_CONTENT),
+				layout));
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_LIMITED),
+				layout));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithUpdatePermission()
+		throws Exception {
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE),
+				_addDisplayPageTemplateLayout()));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithViewPermission()
+		throws Exception {
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.VIEW),
+				_addDisplayPageTemplateLayout()));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithPreviewDraftPermission()
+		throws Exception {
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.PREVIEW_DRAFT),
+				LayoutTestUtil.addTypePortletLayout(_group)));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithRestrictedUpdatePermission()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_BASIC), layout));
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_CONTENT),
+				layout));
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_LIMITED),
+				layout));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithUpdatePermission()
+		throws Exception {
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE),
+				LayoutTestUtil.addTypePortletLayout(_group)));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionWithPreviewDraftPermission()
+		throws Exception {
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.PREVIEW_DRAFT),
+				LayoutTestUtil.addTypeContentLayout(_group)));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionWithRestrictedUpdatePermission()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_BASIC), layout));
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_CONTENT),
+				layout));
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_LIMITED),
+				layout));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionWithUpdatePermission()
+		throws Exception {
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE),
+				LayoutTestUtil.addTypeContentLayout(_group)));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionWithViewPermission()
+		throws Exception {
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.VIEW),
+				LayoutTestUtil.addTypeContentLayout(_group)));
+	}
+
+	@Test
 	public void testContainsWithoutViewPermissionOnApprovedLayout()
 		throws Exception {
 
@@ -109,7 +317,6 @@ public class LayoutPermissionTest {
 
 			Assert.assertEquals(
 				WorkflowConstants.STATUS_PENDING, layout.getStatus());
-
 			Assert.assertFalse(
 				_layoutPermission.contains(
 					_getGuestPermissionChecker(), layout, ActionKeys.VIEW));
@@ -273,13 +480,37 @@ public class LayoutPermissionTest {
 		}
 	}
 
+	private Layout _addDisplayPageTemplateLayout() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group, TestPropsValues.getUserId());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
+				null, _group.getGroupId(), 0,
+				_portal.getClassNameId(AssetCategory.class.getName()), 0,
+				RandomTestUtil.randomString(), 0,
+				WorkflowConstants.STATUS_DRAFT, serviceContext);
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		Assert.assertNotNull(draftLayout);
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		return _layoutLocalService.getLayout(layout.getPlid());
+	}
+
 	private Layout _addTypeContentLayout(boolean publish) throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
 		Layout layout = _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
 			LayoutConstants.TYPE_CONTENT, false, StringPool.BLANK,
@@ -331,22 +562,31 @@ public class LayoutPermissionTest {
 		return mockHttpServletRequest;
 	}
 
-	private PermissionChecker _getPermissionChecker(String actionId)
+	private PermissionChecker _getPermissionChecker(Role role, User user)
 		throws Exception {
-
-		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
-
-		RoleTestUtil.addResourcePermission(
-			role, Layout.class.getName(), ResourceConstants.SCOPE_COMPANY,
-			String.valueOf(_group.getCompanyId()), actionId);
-
-		User user = UserTestUtil.addUser();
 
 		_roleLocalService.clearUserRoles(user.getUserId());
 
 		_roleLocalService.addUserRole(user.getUserId(), role);
 
 		return PermissionCheckerFactoryUtil.create(user);
+	}
+
+	private PermissionChecker _getPermissionChecker(String actionId)
+		throws Exception {
+
+		return _getPermissionChecker(
+			actionId, RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR));
+	}
+
+	private PermissionChecker _getPermissionChecker(String actionId, Role role)
+		throws Exception {
+
+		RoleTestUtil.addResourcePermission(
+			role, Layout.class.getName(), ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(_group.getCompanyId()), actionId);
+
+		return _getPermissionChecker(role, UserTestUtil.addUser());
 	}
 
 	private void _removeGuestViewPermission(Layout layout) throws Exception {
@@ -414,7 +654,13 @@ public class LayoutPermissionTest {
 	private LayoutLocalService _layoutLocalService;
 
 	@Inject
+	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+
+	@Inject
 	private LayoutPermission _layoutPermission;
+
+	@Inject
+	private Portal _portal;
 
 	@Inject
 	private ResourcePermissionLocalService _resourcePermissionLocalService;

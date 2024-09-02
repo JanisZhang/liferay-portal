@@ -9,16 +9,13 @@ import com.liferay.petra.io.ProtectedClassLoaderObjectInputStream;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
-import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.scheduler.SchedulerEngine;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.InputStream;
 
@@ -44,13 +41,6 @@ public class QuartzUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		if (DBPartition.isPartitionEnabled() &&
-			(PortalUtil.getDefaultCompanyId() !=
-				CompanyThreadLocal.getCompanyId())) {
-
-			return;
-		}
-
 		Map<String, Long> companyIds = new HashMap<>();
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(

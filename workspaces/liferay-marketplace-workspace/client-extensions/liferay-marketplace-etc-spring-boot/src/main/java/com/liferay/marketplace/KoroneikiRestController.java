@@ -5,6 +5,7 @@
 
 package com.liferay.marketplace;
 
+import com.liferay.client.extension.util.spring.boot.LiferayOAuth2AccessTokenManager;
 import com.liferay.headless.admin.user.client.dto.v1_0.Account;
 import com.liferay.headless.admin.user.client.dto.v1_0.CustomField;
 import com.liferay.headless.admin.user.client.dto.v1_0.PostalAddress;
@@ -34,14 +35,11 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.net.URL;
 
-import java.nio.charset.Charset;
-
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -50,19 +48,11 @@ import java.util.Objects;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -130,10 +120,10 @@ public class KoroneikiRestController extends BaseRestController {
 				continue;
 			}
 
-			String endDate = null;
+			String endDateString = null;
 
 			if (!productPurchase.getPerpetual()) {
-				endDate = ZonedDateTime.ofInstant(
+				endDateString = ZonedDateTime.ofInstant(
 					productPurchase.getEndDate(
 					).toInstant(),
 					ZoneOffset.UTC
@@ -153,13 +143,12 @@ public class KoroneikiRestController extends BaseRestController {
 			for (ProductConsumption productConsumption :
 					productPurchaseView.getProductConsumptions()) {
 
+				Date endDate = productConsumption.getEndDate();
+
 				if (Objects.equals(
 						productConsumption.getProductPurchaseKey(),
 						productPurchase.getKey()) &&
-					(productConsumption.getEndDate(
-					).after(
-						new Date()
-					) ||
+					(((endDate != null) && endDate.after(new Date())) ||
 					 productPurchase.getPerpetual())) {
 
 					provisionedCount++;
@@ -175,7 +164,7 @@ public class KoroneikiRestController extends BaseRestController {
 			jsonArray.put(
 				new JSONObject(
 				).put(
-					"endDate", endDate
+					"endDate", endDateString
 				).put(
 					"name", name
 				).put(
@@ -277,16 +266,20 @@ public class KoroneikiRestController extends BaseRestController {
 				}
 			}
 
-			sku.setExternalReferenceCode(koroneikiProduct.getKey());
+			sku.setExternalReferenceCode(koroneikiProduct::getKey);
 
 			_skuResource.patchSku(sku.getId(), sku);
 		}
 	}
 
-	@PostMapping("product-purchase")
+	@PostMapping("product/purchase")
 	public void postProductPurchase(
 			@AuthenticationPrincipal Jwt jwt, @RequestBody String json)
 		throws Exception {
+
+		if (_log.isInfoEnabled()) {
+			_log.info("POST product purchase " + json);
+		}
 
 		JSONObject jsonObject = new JSONObject(json);
 
@@ -324,7 +317,13 @@ public class KoroneikiRestController extends BaseRestController {
 			return;
 		}
 
-		order.setOrderStatus(_COMMERCE_ORDER_STATUS_PROCESSING);
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				"Updating status for order " +
+					commerceOrderJSONObject.getLong("id") + " to processing");
+		}
+
+		order.setOrderStatus(() -> _COMMERCE_ORDER_STATUS_PROCESSING);
 
 		_orderResource.patchOrder(commerceOrderJSONObject.getLong("id"), order);
 
@@ -349,7 +348,14 @@ public class KoroneikiRestController extends BaseRestController {
 		if (Objects.equals(
 				productSpecificationsMap.get("price-model"), "Free")) {
 
-			order.setOrderStatus(_COMMERCE_ORDER_STATUS_COMPLETED);
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Updating status for free order " +
+						commerceOrderJSONObject.getLong("id") +
+							" to completed");
+			}
+
+			order.setOrderStatus(() -> _COMMERCE_ORDER_STATUS_COMPLETED);
 
 			_orderResource.patchOrder(
 				commerceOrderJSONObject.getLong("id"), order);
@@ -366,7 +372,7 @@ public class KoroneikiRestController extends BaseRestController {
 			)) {
 
 			account.setExternalReferenceCode(
-				_postKoroneikiAccount(
+				() -> _postKoroneikiAccount(
 					account, jwt
 				).getKey());
 
@@ -379,7 +385,14 @@ public class KoroneikiRestController extends BaseRestController {
 					account, jwt, orderItem, productSpecificationsMap);
 			}
 
-			order.setOrderStatus(_COMMERCE_ORDER_STATUS_COMPLETED);
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Updating status for paid order " +
+						commerceOrderJSONObject.getLong("id") +
+							" to completed");
+			}
+
+			order.setOrderStatus(() -> _COMMERCE_ORDER_STATUS_COMPLETED);
 
 			_orderResource.patchOrder(
 				commerceOrderJSONObject.getLong("id"), order);
@@ -425,56 +438,6 @@ public class KoroneikiRestController extends BaseRestController {
 		}
 
 		return null;
-	}
-
-	private String _getOAuthAccessToken() throws Exception {
-		if ((_oauthAccessToken != null) &&
-			(System.currentTimeMillis() < (_oauthExpirationMillis - 15000))) {
-
-			return _oauthAccessToken;
-		}
-
-		HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-
-		HttpPost httpPost = new HttpPost(
-			new URL(lxcDXPServerProtocol + "://" + lxcDXPMainDomain) +
-				"/o/oauth2/token");
-
-		httpPost.setEntity(
-			new UrlEncodedFormEntity(
-				Arrays.asList(
-					new BasicNameValuePair("client_id", _dxpAuthClientId),
-					new BasicNameValuePair(
-						"client_secret", _dxpAuthClientSecret),
-					new BasicNameValuePair(
-						"grant_type", "client_credentials"))));
-		httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
-
-		try (CloseableHttpClient closeableHttpClient =
-				httpClientBuilder.build();
-			CloseableHttpResponse closeableHttpResponse =
-				closeableHttpClient.execute(httpPost)) {
-
-			StatusLine statusLine = closeableHttpResponse.getStatusLine();
-
-			if (statusLine.getStatusCode() != HttpStatus.SC_OK) {
-				throw new Exception("Unable to get OAuth access token");
-			}
-
-			JSONObject jsonObject = new JSONObject(
-				EntityUtils.toString(
-					closeableHttpResponse.getEntity(),
-					Charset.defaultCharset()));
-
-			_oauthAccessToken =
-				jsonObject.getString("token_type") + " " +
-					jsonObject.getString("access_token");
-			_oauthExpirationMillis =
-				(jsonObject.getLong("expires_in") * 1000) +
-					System.currentTimeMillis();
-
-			return _oauthAccessToken;
-		}
 	}
 
 	private Map<String, String> _getProductSpecificationsMap(
@@ -523,14 +486,17 @@ public class KoroneikiRestController extends BaseRestController {
 	}
 
 	private void _initResourceBuilders() throws Exception {
-		String oAuthAccessToken = _getOAuthAccessToken();
+		String authorization =
+			_liferayOAuth2AccessTokenManager.getAuthorization(
+				"liferay-marketplace-etc-spring-boot-oauth-application-" +
+					"headless-server");
 
 		URL liferayDXPURL = new URL(
 			lxcDXPServerProtocol + "://" + lxcDXPMainDomain);
 
 		_accountResource = AccountResource.builder(
 		).header(
-			HttpHeaders.AUTHORIZATION, oAuthAccessToken
+			HttpHeaders.AUTHORIZATION, authorization
 		).endpoint(
 			liferayDXPURL
 		).build();
@@ -557,28 +523,28 @@ public class KoroneikiRestController extends BaseRestController {
 
 		_orderItemResource = OrderItemResource.builder(
 		).header(
-			HttpHeaders.AUTHORIZATION, oAuthAccessToken
+			HttpHeaders.AUTHORIZATION, authorization
 		).endpoint(
 			liferayDXPURL
 		).build();
 
 		_orderResource = OrderResource.builder(
 		).header(
-			HttpHeaders.AUTHORIZATION, oAuthAccessToken
+			HttpHeaders.AUTHORIZATION, authorization
 		).endpoint(
 			liferayDXPURL
 		).build();
 
 		_postalAddressResource = PostalAddressResource.builder(
 		).header(
-			HttpHeaders.AUTHORIZATION, oAuthAccessToken
+			HttpHeaders.AUTHORIZATION, authorization
 		).endpoint(
 			liferayDXPURL
 		).build();
 
 		_productResource = ProductResource.builder(
 		).header(
-			HttpHeaders.AUTHORIZATION, oAuthAccessToken
+			HttpHeaders.AUTHORIZATION, authorization
 		).endpoint(
 			liferayDXPURL
 		).build();
@@ -599,14 +565,14 @@ public class KoroneikiRestController extends BaseRestController {
 
 		_productSpecificationResource = ProductSpecificationResource.builder(
 		).header(
-			HttpHeaders.AUTHORIZATION, oAuthAccessToken
+			HttpHeaders.AUTHORIZATION, authorization
 		).endpoint(
 			liferayDXPURL
 		).build();
 
 		_skuResource = SkuResource.builder(
 		).header(
-			HttpHeaders.AUTHORIZATION, oAuthAccessToken
+			HttpHeaders.AUTHORIZATION, authorization
 		).endpoint(
 			liferayDXPURL
 		).build();
@@ -617,24 +583,32 @@ public class KoroneikiRestController extends BaseRestController {
 			Map<String, String> productSpecificationsMap)
 		throws Exception {
 
-		ProductPurchase productPurchase = new ProductPurchase();
-
 		ZonedDateTime zonedDateTime = ZonedDateTime.now();
 
+		ProductPurchase productPurchase = new ProductPurchase();
+
+		productPurchase.setPerpetual(
+			Objects.equals(
+				productSpecificationsMap.get("license-type"), "Perpetual"));
+
 		if (Objects.equals(
-				productSpecificationsMap.get("license-type"), "Subscription")) {
+				_getDXPLicenseUsageType(orderItem.getOptions()), "trial")) {
+
+			productPurchase.setEndDate(
+				Date.from(
+					zonedDateTime.plusMonths(
+						1
+					).toInstant()));
+
+			productPurchase.setPerpetual(false);
+		}
+		else if (Objects.equals(
+					productSpecificationsMap.get("license-type"),
+					"Subscription")) {
 
 			Instant instant = zonedDateTime.plusYears(
 				1
 			).toInstant();
-
-			if (Objects.equals(
-					_getDXPLicenseUsageType(orderItem.getOptions()), "trial")) {
-
-				instant = zonedDateTime.plusMonths(
-					1
-				).toInstant();
-			}
 
 			productPurchase.setEndDate(Date.from(instant));
 		}
@@ -647,9 +621,6 @@ public class KoroneikiRestController extends BaseRestController {
 
 		productPurchase.setExternalLinks(new ExternalLink[] {externalLink});
 
-		productPurchase.setPerpetual(
-			Objects.equals(
-				productSpecificationsMap.get("license-type"), "Perpetual"));
 		productPurchase.setProductKey(orderItem.getSkuExternalReferenceCode());
 		productPurchase.setQuantity(
 			orderItem.getQuantity(
@@ -763,13 +734,6 @@ public class KoroneikiRestController extends BaseRestController {
 		KoroneikiRestController.class);
 
 	private AccountResource _accountResource;
-
-	@Value("${liferay.marketplace.dxp.auth.client.id}")
-	private String _dxpAuthClientId;
-
-	@Value("${liferay.marketplace.dxp.auth.client.secret}")
-	private String _dxpAuthClientSecret;
-
 	private
 		com.liferay.osb.koroneiki.phloem.rest.client.resource.v1_0.
 			AccountResource _koroneikiAccountResource;
@@ -783,8 +747,10 @@ public class KoroneikiRestController extends BaseRestController {
 	private
 		com.liferay.osb.koroneiki.phloem.rest.client.resource.v1_0.
 			ProductResource _koroneikiProductResource;
-	private String _oauthAccessToken;
-	private long _oauthExpirationMillis;
+
+	@Autowired
+	private LiferayOAuth2AccessTokenManager _liferayOAuth2AccessTokenManager;
+
 	private OrderItemResource _orderItemResource;
 	private OrderResource _orderResource;
 	private PostalAddressResource _postalAddressResource;

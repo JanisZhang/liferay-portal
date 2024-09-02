@@ -49,7 +49,6 @@ function appendXMLActions(
 	buffer,
 	actions,
 	notifications,
-	exporting,
 	assignments,
 	wrapperNodeName,
 	actionNodeName,
@@ -131,21 +130,11 @@ function appendXMLActions(
 	}
 
 	if (hasNotification) {
-		appendXMLNotifications(
-			buffer,
-			notifications,
-			notificationNodeName,
-			exporting
-		);
+		appendXMLNotifications(buffer, notifications, notificationNodeName);
 	}
 
 	if (hasAssignment) {
-		appendXMLAssignments(
-			buffer,
-			assignments,
-			exporting,
-			assignmentNodeName
-		);
+		appendXMLAssignments(buffer, assignments, assignmentNodeName);
 	}
 
 	if (hasAction || hasNotification || hasAssignment) {
@@ -156,7 +145,6 @@ function appendXMLActions(
 function appendXMLAssignments(
 	buffer,
 	dataAssignments,
-	exporting,
 	wrapperNodeName,
 	wrapperNodeAttrs
 ) {
@@ -219,14 +207,14 @@ function appendXMLAssignments(
 			const xmlRole = XMLUtil.createObj('role');
 
 			dataAssignments.roleType.forEach((item, index) => {
-				const roleKey = dataAssignments.roleKey[index];
+				const roleName = dataAssignments.roleName[index];
 				const roleType = dataAssignments.roleType[index];
 
-				if (roleKey) {
+				if (roleName) {
 					buffer.push(
 						xmlRole.open,
 						createTagWithEscapedContent('roleType', roleType),
-						createTagWithEscapedContent('name', roleKey)
+						createTagWithEscapedContent('name', roleName)
 					);
 
 					let autoCreate = dataAssignments.autoCreate?.[index];
@@ -254,9 +242,8 @@ function appendXMLAssignments(
 			assignmentType === 'scriptedAssignment' &&
 			dataAssignments.script?.length
 		) {
-			const xmlScriptedAssignment = XMLUtil.createObj(
-				'scriptedAssignment'
-			);
+			const xmlScriptedAssignment =
+				XMLUtil.createObj('scriptedAssignment');
 
 			dataAssignments.script.forEach((item) => {
 				buffer.push(
@@ -363,7 +350,7 @@ function appendXMLAssignments(
 	}
 }
 
-function appendXMLRecipients(buffer, exporting, recipients) {
+function appendXMLRecipients(buffer, recipients) {
 	const recipientsAttrs = {};
 
 	if (
@@ -374,17 +361,11 @@ function appendXMLRecipients(buffer, exporting, recipients) {
 	}
 
 	if (isObject(recipients) && !isObjectEmpty(recipients)) {
-		appendXMLAssignments(
-			buffer,
-			recipients,
-			exporting,
-			'recipients',
-			recipientsAttrs
-		);
+		appendXMLAssignments(buffer, recipients, 'recipients', recipientsAttrs);
 	}
 }
 
-function appendXMLNotifications(buffer, notifications, nodeName, exporting) {
+function appendXMLNotifications(buffer, notifications, nodeName) {
 	if (notifications && notifications.name && !!notifications.name.length) {
 		const {
 			description,
@@ -446,17 +427,12 @@ function appendXMLNotifications(buffer, notifications, nodeName, exporting) {
 				for (const recipientsIndex in currentRecipients[index]) {
 					appendXMLRecipients(
 						buffer,
-						exporting,
 						currentRecipients[index][recipientsIndex]
 					);
 				}
 			}
 			else {
-				appendXMLRecipients(
-					buffer,
-					exporting,
-					currentRecipients[index]
-				);
+				appendXMLRecipients(buffer, currentRecipients[index]);
 			}
 
 			if (executionType) {
@@ -473,7 +449,7 @@ function appendXMLNotifications(buffer, notifications, nodeName, exporting) {
 	}
 }
 
-function appendXMLTaskTimers(buffer, taskTimers, exporting) {
+function appendXMLTaskTimers(buffer, taskTimers) {
 	if (taskTimers && taskTimers.name && !!taskTimers.name.length) {
 		const xmlTaskTimers = XMLUtil.createObj('task-timers');
 
@@ -552,7 +528,6 @@ function appendXMLTaskTimers(buffer, taskTimers, exporting) {
 				buffer,
 				timerActions[index],
 				timerNotifications[index],
-				exporting,
 				reassignments[index],
 				'timer-actions',
 				'timer-action',
@@ -609,13 +584,7 @@ function appendXMLTransitions(buffer, transitions) {
 	}
 }
 
-function serializeDefinition(
-	xmlNamespace,
-	metadata,
-	nodes,
-	transitions,
-	exporting
-) {
+function serializeDefinition(xmlNamespace, metadata, nodes, transitions) {
 	const description = metadata.description;
 	const name = metadata.name;
 	const version = parseInt(metadata.version, 10);
@@ -689,14 +658,9 @@ function serializeDefinition(
 
 		buffer.push(XMLUtil.create('metadata', cdata(jsonStringify(metadata))));
 
-		appendXMLActions(
-			buffer,
-			item.data.actions,
-			item.data.notifications,
-			exporting
-		);
+		appendXMLActions(buffer, item.data.actions, item.data.notifications);
 
-		appendXMLAssignments(buffer, item.data.assignments, exporting);
+		appendXMLAssignments(buffer, item.data.assignments);
 
 		if (initial) {
 			buffer.push(createTagWithEscapedContent('initial', initial));
@@ -717,7 +681,7 @@ function serializeDefinition(
 
 		buffer.push(xmlLabels.close);
 
-		appendXMLTaskTimers(buffer, item.data.taskTimers, exporting);
+		appendXMLTaskTimers(buffer, item.data.taskTimers);
 
 		if (script) {
 			buffer.push(XMLUtil.create('script', cdata(script)));

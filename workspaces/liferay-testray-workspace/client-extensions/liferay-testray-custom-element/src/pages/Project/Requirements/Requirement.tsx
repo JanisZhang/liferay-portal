@@ -26,9 +26,8 @@ import useRequirementCaseActions from './useRequirementCaseActions';
 
 const Requirement = () => {
 	const {projectId} = useParams();
-	const {
-		testrayRequirement,
-	}: {testrayRequirement: TestrayRequirement} = useOutletContext();
+	const {testrayRequirement}: {testrayRequirement: TestrayRequirement} =
+		useOutletContext();
 	const {actions, formModal} = useRequirementCaseActions(testrayRequirement);
 
 	return (
@@ -98,6 +97,7 @@ const Requirement = () => {
 				<ListView
 					forceRefetch={formModal.forceRefetch}
 					managementToolbarProps={{
+						applyFilters: true,
 						buttons: (
 							<ClayManagementToolbar.Item>
 								<Button

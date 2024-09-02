@@ -71,7 +71,7 @@ definition {
 				widgetName = "Documents and Media");
 
 			User.loginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			Navigator.openSitePage(
@@ -141,7 +141,7 @@ definition {
 				documentId = ${documentId},
 				ratingValue = 1,
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		echo(${response});

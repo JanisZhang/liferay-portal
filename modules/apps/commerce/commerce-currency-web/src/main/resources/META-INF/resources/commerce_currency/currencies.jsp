@@ -14,7 +14,7 @@ CommerceCurrenciesDisplayContext commerceCurrenciesDisplayContext = (CommerceCur
 <c:if test="<%= commerceCurrenciesDisplayContext.hasManageCommerceCurrencyPermission() %>">
 	<clay:management-toolbar
 		managementToolbarDisplayContext="<%= new CommerceCurrenciesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, commerceCurrenciesDisplayContext.getSearchContainer()) %>"
-		propsTransformer="js/CommerceCurrenciesManagementToolbarPropsTransformer"
+		propsTransformer="{CommerceCurrenciesManagementToolbarPropsTransformer} from commerce-currency-web"
 	/>
 
 	<portlet:actionURL name="/commerce_currency/edit_commerce_currency" var="editCommerceCurrencyActionURL" />
@@ -64,10 +64,9 @@ CommerceCurrenciesDisplayContext commerceCurrenciesDisplayContext = (CommerceCur
 					name="primary"
 				>
 					<c:if test="<%= commerceCurrency.isPrimary() %>">
-						<liferay-ui:icon
-							cssClass="commerce-admin-icon-check"
-							icon="check"
-							markupView="lexicon"
+						<clay:icon
+							cssClass="text-success"
+							symbol="check"
 						/>
 					</c:if>
 				</liferay-ui:search-container-column-text>
@@ -77,17 +76,15 @@ CommerceCurrenciesDisplayContext commerceCurrenciesDisplayContext = (CommerceCur
 				>
 					<c:choose>
 						<c:when test="<%= commerceCurrency.isActive() %>">
-							<liferay-ui:icon
-								cssClass="commerce-admin-icon-check"
-								icon="check"
-								markupView="lexicon"
+							<clay:icon
+								cssClass="text-success"
+								symbol="check"
 							/>
 						</c:when>
 						<c:otherwise>
-							<liferay-ui:icon
-								cssClass="commerce-admin-icon-times"
-								icon="times"
-								markupView="lexicon"
+							<clay:icon
+								cssClass="text-danger"
+								symbol="times"
 							/>
 						</c:otherwise>
 					</c:choose>
@@ -120,12 +117,11 @@ CommerceCurrenciesDisplayContext commerceCurrenciesDisplayContext = (CommerceCur
 
 						form['<portlet:namespace /><%= Constants.CMD %>'].value =
 							'<%= Constants.DELETE %>';
-						form[
-							'<portlet:namespace />deleteCommerceCurrencyIds'
-						].value = Liferay.Util.getCheckedCheckboxes(
-							form,
-							'<portlet:namespace />allRowIds'
-						);
+						form['<portlet:namespace />deleteCommerceCurrencyIds'].value =
+							Liferay.Util.getCheckedCheckboxes(
+								form,
+								'<portlet:namespace />allRowIds'
+							);
 
 						submitForm(form);
 					}

@@ -25,7 +25,9 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import javax.annotation.Generated;
 
@@ -129,7 +131,9 @@ public class HttpInvoker {
 	}
 
 	public HttpInvoker path(String name, Object value) {
-		_path = _path.replaceFirst("\\{" + name + "\\}", String.valueOf(value));
+		_path = _path.replaceFirst(
+			"\\{" + name + "\\}",
+			Matcher.quoteReplacement(String.valueOf(value)));
 
 		return this;
 	}
@@ -255,6 +259,38 @@ public class HttpInvoker {
 		return fileName;
 	}
 
+	private HttpURLConnection _getHttpURLConnection(
+			HttpMethod httpMethod, String urlString)
+		throws IOException {
+
+		URL url = new URL(urlString);
+
+		HttpURLConnection httpURLConnection =
+			(HttpURLConnection)url.openConnection();
+
+		try {
+			HttpURLConnection methodHttpURLConnection = httpURLConnection;
+
+			if (Objects.equals(url.getProtocol(), "https")) {
+				Class<?> clazz = httpURLConnection.getClass();
+
+				Field field = clazz.getDeclaredField("delegate");
+
+				field.setAccessible(true);
+
+				methodHttpURLConnection = (HttpURLConnection)field.get(
+					httpURLConnection);
+			}
+
+			_methodField.set(methodHttpURLConnection, httpMethod.name());
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new IOException(reflectiveOperationException);
+		}
+
+		return httpURLConnection;
+	}
+
 	private String _getQueryString() throws IOException {
 		StringBuilder sb = new StringBuilder();
 
@@ -304,17 +340,8 @@ public class HttpInvoker {
 			urlString += queryString;
 		}
 
-		URL url = new URL(urlString);
-
-		HttpURLConnection httpURLConnection =
-			(HttpURLConnection)url.openConnection();
-
-		try {
-			_methodField.set(httpURLConnection, _httpMethod.name());
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new IOException(reflectiveOperationException);
-		}
+		HttpURLConnection httpURLConnection = _getHttpURLConnection(
+			_httpMethod, urlString);
 
 		if (_encodedUserNameAndPassword != null) {
 			httpURLConnection.setRequestProperty(

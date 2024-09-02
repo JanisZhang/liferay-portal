@@ -5,6 +5,8 @@
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
 
+import com.liferay.commerce.exception.NoSuchOrderException;
+import com.liferay.commerce.exception.NoSuchOrderNoteException;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderNote;
 import com.liferay.commerce.service.CommerceOrderNoteService;
@@ -44,8 +46,70 @@ public class CartCommentResourceImpl extends BaseCartCommentResourceImpl {
 	}
 
 	@Override
+	public void deleteCartCommentByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception {
+
+		CommerceOrderNote commerceOrderNote =
+			_commerceOrderNoteService.fetchByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceOrderNote == null) {
+			throw new NoSuchOrderNoteException(
+				"Unable to find order note with external reference code " +
+					externalReferenceCode);
+		}
+
+		deleteCartComment(commerceOrderNote.getCommerceOrderNoteId());
+	}
+
+	@Override
+	public Page<CartComment> getCartByExternalReferenceCodeCommentsPage(
+			String externalReferenceCode, Pagination pagination)
+		throws Exception {
+
+		CommerceOrder commerceOrder =
+			_commerceOrderService.fetchByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceOrder == null) {
+			throw new NoSuchOrderException(
+				"Unable to find order with external reference code " +
+					externalReferenceCode);
+		}
+
+		return Page.of(
+			_toOrderNotes(
+				_commerceOrderNoteService.getCommerceOrderNotes(
+					commerceOrder.getCommerceOrderId(), false,
+					pagination.getStartPosition(),
+					pagination.getEndPosition())),
+			pagination,
+			_commerceOrderNoteService.getCommerceOrderNotesCount(
+				commerceOrder.getCommerceOrderId(), false));
+	}
+
+	@Override
 	public CartComment getCartComment(Long commentId) throws Exception {
 		return _toOrderNote(GetterUtil.getLong(commentId));
+	}
+
+	@Override
+	public CartComment getCartCommentByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception {
+
+		CommerceOrderNote commerceOrderNote =
+			_commerceOrderNoteService.fetchByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceOrderNote == null) {
+			throw new NoSuchOrderNoteException(
+				"Unable to find order note with external reference code " +
+					externalReferenceCode);
+		}
+
+		return getCartComment(commerceOrderNote.getCommerceOrderNoteId());
 	}
 
 	@NestedField(parentClass = Cart.class, value = "notes")
@@ -54,15 +118,32 @@ public class CartCommentResourceImpl extends BaseCartCommentResourceImpl {
 			@NestedFieldId("id") Long cartId, Pagination pagination)
 		throws Exception {
 
-		int totalItems = _commerceOrderNoteService.getCommerceOrderNotesCount(
-			cartId, false);
-
 		return Page.of(
 			_toOrderNotes(
 				_commerceOrderNoteService.getCommerceOrderNotes(
 					cartId, false, pagination.getStartPosition(),
 					pagination.getEndPosition())),
-			pagination, totalItems);
+			pagination,
+			_commerceOrderNoteService.getCommerceOrderNotesCount(
+				cartId, false));
+	}
+
+	@Override
+	public CartComment postCartByExternalReferenceCodeComment(
+			String externalReferenceCode, CartComment cartComment)
+		throws Exception {
+
+		CommerceOrder commerceOrder =
+			_commerceOrderService.fetchByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceOrder == null) {
+			throw new NoSuchOrderException(
+				"Unable to find order with external reference code " +
+					externalReferenceCode);
+		}
+
+		return _addOrUpdateOrderNote(commerceOrder, cartComment);
 	}
 
 	@Override
@@ -83,9 +164,28 @@ public class CartCommentResourceImpl extends BaseCartCommentResourceImpl {
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			commerceOrderNote.getCommerceOrderId());
 
-		cartComment.setId(commentId);
+		cartComment.setId(() -> commentId);
 
 		return _addOrUpdateOrderNote(commerceOrder, cartComment);
+	}
+
+	@Override
+	public CartComment putCartCommentByExternalReferenceCode(
+			String externalReferenceCode, CartComment cartComment)
+		throws Exception {
+
+		CommerceOrderNote commerceOrderNote =
+			_commerceOrderNoteService.fetchByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceOrderNote == null) {
+			throw new NoSuchOrderNoteException(
+				"Unable to find order note with external reference code " +
+					externalReferenceCode);
+		}
+
+		return putCartComment(
+			commerceOrderNote.getCommerceOrderNoteId(), cartComment);
 	}
 
 	private CartComment _addOrUpdateOrderNote(

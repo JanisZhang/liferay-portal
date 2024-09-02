@@ -85,8 +85,9 @@ public interface DLFileShortcutLocalService
 	public DLFileShortcut addDLFileShortcut(DLFileShortcut dlFileShortcut);
 
 	public DLFileShortcut addFileShortcut(
-			long userId, long groupId, long repositoryId, long folderId,
-			long toFileEntryId, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long repositoryId, long folderId, long toFileEntryId,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public void addFileShortcutResources(
@@ -155,6 +156,9 @@ public interface DLFileShortcutLocalService
 		throws PortalException;
 
 	public void deleteFileShortcut(long fileShortcutId) throws PortalException;
+
+	public void deleteFileShortcut(String externalReferenceCode, long groupId)
+		throws PortalException;
 
 	public void deleteFileShortcuts(long toFileEntryId) throws PortalException;
 
@@ -254,6 +258,10 @@ public interface DLFileShortcutLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileShortcut fetchDLFileShortcut(long fileShortcutId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileShortcut fetchDLFileShortcutByExternalReferenceCode(
+		String externalReferenceCode, long groupId);
+
 	/**
 	 * Returns the document library file shortcut matching the UUID and group.
 	 *
@@ -277,6 +285,11 @@ public interface DLFileShortcutLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileShortcut getDLFileShortcut(long fileShortcutId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileShortcut getDLFileShortcutByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	/**
@@ -362,6 +375,9 @@ public interface DLFileShortcutLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getFileShortcutsCount(
 		long groupId, long folderId, boolean active, int status);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DLFileShortcut> getGroupFileShortcuts(long groupId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();

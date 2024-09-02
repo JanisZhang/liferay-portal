@@ -22,14 +22,14 @@
 		<initial>true</initial>
 		<labels>
 			<label language-id="en_US">
-				created
+				Created
 			</label>
 		</labels>
 		<transitions>
 			<transition>
 				<labels>
 					<label language-id="en_US">
-						review
+						Review
 					</label>
 				</labels>
 				<id>created_review_review</id>
@@ -54,21 +54,13 @@
 		<actions>
 			<action>
 				<name>approve</name>
-				<script>
-					<![CDATA[
-						import com.liferay.portal.kernel.workflow.WorkflowConstants;
-						import com.liferay.portal.kernel.workflow.WorkflowStatusManagerUtil;
-
-						WorkflowStatusManagerUtil.updateStatus(WorkflowConstants.getLabelStatus("approved"), workflowContext);
-					]]>
-				</script>
-				<script-language>groovy</script-language>
+				<status>0</status>
 				<execution-type>onEntry</execution-type>
 			</action>
 		</actions>
 		<labels>
 			<label language-id="en_US">
-				approved
+				Approved
 			</label>
 		</labels>
 	</state>
@@ -87,17 +79,15 @@
 		</metadata>
 		<actions>
 			<action>
-				<name>reject</name>
-				<script>
-					<![CDATA[
-						import com.liferay.portal.kernel.workflow.WorkflowConstants;
-						import com.liferay.portal.kernel.workflow.WorkflowStatusManagerUtil;
-
-						WorkflowStatusManagerUtil.updateStatus(WorkflowConstants.getLabelStatus("denied"), workflowContext);
-						WorkflowStatusManagerUtil.updateStatus(WorkflowConstants.getLabelStatus("pending"), workflowContext);
-					]]>
-				</script>
-				<script-language>groovy</script-language>
+				<name>deny</name>
+				<status>4</status>
+				<priority>1</priority>
+				<execution-type>onAssignment</execution-type>
+			</action>
+			<action>
+				<name>pending</name>
+				<status>1</status>
+				<priority>2</priority>
 				<execution-type>onAssignment</execution-type>
 			</action>
 		</actions>
@@ -106,14 +96,14 @@
 		</assignments>
 		<labels>
 			<label language-id="en_US">
-				update2
+				Update2
 			</label>
 		</labels>
 		<transitions>
 			<transition>
 				<labels>
 					<label language-id="en_US">
-						resubmit
+						Resubmit
 					</label>
 				</labels>
 				<id>resubmit</id>
@@ -220,14 +210,14 @@
 		</assignments>
 		<labels>
 			<label language-id="en_US">
-				review2
+				Review2
 			</label>
 		</labels>
 		<transitions>
 			<transition>
 				<labels>
 					<label language-id="en_US">
-						approve
+						Approve
 					</label>
 				</labels>
 				<id>approve</id>
@@ -237,7 +227,7 @@
 			<transition>
 				<labels>
 					<label language-id="en_US">
-						reject
+						Reject
 					</label>
 				</labels>
 				<id>reject</id>

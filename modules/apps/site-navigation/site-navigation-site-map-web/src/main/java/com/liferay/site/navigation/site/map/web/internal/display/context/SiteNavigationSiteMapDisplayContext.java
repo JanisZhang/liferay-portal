@@ -5,6 +5,9 @@
 
 package com.liferay.site.navigation.site.map.web.internal.display.context;
 
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
@@ -13,6 +16,8 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutType;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
@@ -22,11 +27,11 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.LayoutDescription;
-import com.liferay.portal.util.LayoutListUtil;
 import com.liferay.site.navigation.site.map.web.internal.configuration.SiteNavigationSiteMapPortletInstanceConfiguration;
 
 import java.util.List;
+
+import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -36,10 +41,15 @@ import javax.servlet.http.HttpServletRequest;
 public class SiteNavigationSiteMapDisplayContext {
 
 	public SiteNavigationSiteMapDisplayContext(
-			HttpServletRequest httpServletRequest)
+			HttpServletRequest httpServletRequest,
+			RenderResponse renderResponse)
 		throws ConfigurationException {
 
 		_httpServletRequest = httpServletRequest;
+		_renderResponse = renderResponse;
+
+		_itemSelector = (ItemSelector)httpServletRequest.getAttribute(
+			ItemSelector.class.getName());
 
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -67,33 +77,76 @@ public class SiteNavigationSiteMapDisplayContext {
 		return sb.toString();
 	}
 
-	public Long getDisplayStyleGroupId() {
-		if (_displayStyleGroupId != null) {
-			return _displayStyleGroupId;
+	public long getDisplayStyleGroupId() {
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		String displayStyleGroupKey = getDisplayStyleGroupKey();
+
+		if (Validator.isNotNull(displayStyleGroupKey)) {
+			Group group = GroupLocalServiceUtil.fetchGroup(
+				themeDisplay.getCompanyId(), displayStyleGroupKey);
+
+			if (group != null) {
+				return group.getGroupId();
+			}
 		}
 
-		_displayStyleGroupId =
+		return themeDisplay.getScopeGroupId();
+	}
+
+	public String getDisplayStyleGroupKey() {
+		if (Validator.isNotNull(_displayStyleGroupKey)) {
+			return _displayStyleGroupKey;
+		}
+
+		String displayStyleGroupKey =
+			_siteNavigationSiteMapPortletInstanceConfiguration.
+				displayStyleGroupKey();
+
+		if (Validator.isNotNull(displayStyleGroupKey)) {
+			_displayStyleGroupKey = displayStyleGroupKey;
+
+			return _displayStyleGroupKey;
+		}
+
+		long displayStyleGroupId =
 			_siteNavigationSiteMapPortletInstanceConfiguration.
 				displayStyleGroupId();
 
-		Group displayStyleGroup = GroupLocalServiceUtil.fetchGroup(
-			_displayStyleGroupId);
+		if (displayStyleGroupId <= 0) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)_httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
-		if (displayStyleGroup == null) {
-			_displayStyleGroupId = _themeDisplay.getSiteGroupId();
+			displayStyleGroupId = themeDisplay.getScopeGroupId();
 		}
 
-		return _displayStyleGroupId;
+		Group group = GroupLocalServiceUtil.fetchGroup(displayStyleGroupId);
+
+		if (group != null) {
+			_displayStyleGroupKey = group.getGroupKey();
+		}
+
+		return _displayStyleGroupKey;
 	}
 
-	public List<LayoutDescription> getLayoutDescriptions() {
-		Layout layout = _themeDisplay.getLayout();
+	public String getItemSelectorURL() {
+		LayoutItemSelectorCriterion layoutItemSelectorCriterion =
+			new LayoutItemSelectorCriterion();
 
-		String rootNodeName = StringPool.BLANK;
+		layoutItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new UUIDItemSelectorReturnType());
+		layoutItemSelectorCriterion.setShowBreadcrumb(false);
+		layoutItemSelectorCriterion.setMultiSelection(false);
 
-		return LayoutListUtil.getLayoutDescriptions(
-			layout.getGroupId(), layout.isPrivateLayout(), rootNodeName,
-			_themeDisplay.getLocale());
+		return PortletURLBuilder.create(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(_httpServletRequest),
+				_renderResponse.getNamespace() + "selectLayout",
+				layoutItemSelectorCriterion)
+		).buildString();
 	}
 
 	public Layout getRootLayout() {
@@ -288,9 +341,11 @@ public class SiteNavigationSiteMapDisplayContext {
 		sb.append("</ul>");
 	}
 
-	private Long _displayStyleGroupId;
+	private String _displayStyleGroupKey;
 	private final HttpServletRequest _httpServletRequest;
 	private Boolean _includeRootInTree;
+	private final ItemSelector _itemSelector;
+	private final RenderResponse _renderResponse;
 	private Layout _rootLayout;
 	private Long _rootLayoutId;
 	private final SiteNavigationSiteMapPortletInstanceConfiguration

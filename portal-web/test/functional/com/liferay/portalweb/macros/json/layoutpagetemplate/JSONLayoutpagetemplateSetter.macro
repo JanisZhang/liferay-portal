@@ -87,6 +87,21 @@ definition {
 	}
 
 	@summary = "Default summary"
+	macro setGroupIdByName(groupName = null) {
+		Variables.assertDefined(parameterList = ${groupName});
+
+		if (!(isSet(site))) {
+			var site = "true";
+		}
+
+		var groupId = JSONGroupAPI._getGroupIdByName(
+			groupName = ${groupName},
+			site = ${site});
+
+		return ${groupId};
+	}
+
+	@summary = "Default summary"
 	macro setLayoutPageTemplateCollectionId(layoutPageTemplateType = null, layoutPageTemplateCollectionName = null, groupId = null) {
 		Variables.assertDefined(parameterList = "${groupId},${layoutPageTemplateCollectionName}");
 

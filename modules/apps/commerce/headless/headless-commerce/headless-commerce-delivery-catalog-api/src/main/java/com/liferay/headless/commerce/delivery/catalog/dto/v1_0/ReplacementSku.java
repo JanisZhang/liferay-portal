@@ -175,6 +175,48 @@ public class ReplacementSku implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _skuSupplier;
 
+	@Schema(example = "SKU0111")
+	public String getSkuExternalReferenceCode() {
+		if (_skuExternalReferenceCodeSupplier != null) {
+			skuExternalReferenceCode = _skuExternalReferenceCodeSupplier.get();
+
+			_skuExternalReferenceCodeSupplier = null;
+		}
+
+		return skuExternalReferenceCode;
+	}
+
+	public void setSkuExternalReferenceCode(String skuExternalReferenceCode) {
+		this.skuExternalReferenceCode = skuExternalReferenceCode;
+
+		_skuExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSkuExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			skuExternalReferenceCodeUnsafeSupplier) {
+
+		_skuExternalReferenceCodeSupplier = () -> {
+			try {
+				return skuExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String skuExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _skuExternalReferenceCodeSupplier;
+
 	@DecimalMin("0")
 	@Schema(example = "33135")
 	public Long getSkuId() {
@@ -411,6 +453,22 @@ public class ReplacementSku implements Serializable {
 			sb.append("\"");
 		}
 
+		String skuExternalReferenceCode = getSkuExternalReferenceCode();
+
+		if (skuExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(skuExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		Long skuId = getSkuId();
 
 		if (skuId != null) {
@@ -531,7 +589,10 @@ public class ReplacementSku implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

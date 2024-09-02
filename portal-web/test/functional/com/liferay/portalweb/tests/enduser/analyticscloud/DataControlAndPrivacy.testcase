@@ -54,8 +54,8 @@ definition {
 
 		task ("Assert Retetion Period Presence") {
 			AssertElementPresent(
-				key_nameTableChannels = "Retention Period",
-				locator1 = "CommerceEntry#SEARCH_TABLES_CHANNELS");
+				key_messageValue = "Retention Period",
+				locator1 = "ACSettings#PROPERTIES_DEFAULT_SECONDARY_DESCRIPTION");
 		}
 
 		task ("Change Retention Period to 7 Months") {
@@ -101,9 +101,11 @@ definition {
 		}
 
 		task ("Go to the Home Page") {
-			Navigator.openURL();
-
-			ACUtils.waitForSendingRequest();
+			ACUtils.navigateToSitePage(
+				actionType = "View WC",
+				documentTitleList = "1,2,3,4,5",
+				pageName = "Home",
+				siteName = "guest");
 		}
 
 		task ("Close sessions") {
@@ -112,6 +114,14 @@ definition {
 
 		task ("Go to AC") {
 			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+
+			ACNavigation.goToIndividuals();
+
+			ACIndividualsDashboard.goToKnownIndividualsTab();
+
+			ACUtils.viewNameList(nameList = "${userName} ${userName}");
 		}
 
 		task ("Create Access Request") {
@@ -169,9 +179,11 @@ definition {
 		}
 
 		task ("Go to the Home Page") {
-			Navigator.openURL();
-
-			ACUtils.waitForSendingRequest();
+			ACUtils.navigateToSitePage(
+				actionType = "View WC",
+				documentTitleList = "1,2,3,4,5",
+				pageName = "Home",
+				siteName = "guest");
 		}
 
 		task ("Close sessions") {
@@ -180,6 +192,14 @@ definition {
 
 		task ("Go to AC") {
 			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+
+			ACNavigation.goToIndividuals();
+
+			ACIndividualsDashboard.goToKnownIndividualsTab();
+
+			ACUtils.viewNameList(nameList = "${userName} ${userName}");
 		}
 
 		task ("Create Delete Request") {
@@ -206,33 +226,59 @@ definition {
 	}
 
 	@description = "Automation ID: LRAC-8109 | Test Summary: Create Suppress Request"
-	@ignore = "true"
 	@priority = 5
 	test CanCreateSuppressRequest {
-
-		// The Suppressed User card was hidden after this ticket: LRAC-13620
-
 		property test.run.type = "single";
 
 		var userEmail = "dcp3@liferay.com";
 		var userName = "dcp3";
 
-		JSONUser.addUser(
-			userEmailAddress = ${userEmail},
-			userFirstName = ${userName},
-			userLastName = ${userName},
-			userScreenName = ${userName});
+		task ("Add a new user") {
+			JSONUser.addUser(
+				userEmailAddress = ${userEmail},
+				userFirstName = ${userName},
+				userLastName = ${userName},
+				userScreenName = ${userName});
 
-		JSONUser.setFirstPassword(
-			agreeToTermsAndAnswerReminderQuery = "true",
-			requireReset = "false",
-			userEmailAddress = ${userEmail});
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = ${userEmail});
+		}
 
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud();
+		task ("Connect the DXP to AC") {
+			ACDXPSettings.connectDXPtoAnalyticsCloud();
+		}
 
-		ACUtils.launchAC();
+		task ("Sign in as new user") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = ${userEmail},
+				userLoginFullName = ${userName});
+		}
 
-		task ("Go to settings and create a suppress request") {
+		task ("Go to Site Page") {
+			ACUtils.navigateToSitePage(
+				actionType = "View WC",
+				documentTitleList = "1,2,3,4,5",
+				pageName = "Home",
+				siteName = "guest");
+		}
+
+		task ("Close sessions") {
+			ACUtils.closeAllSessionsAndWait();
+		}
+
+		task ("Go to AC > Settings > Create a suppress request") {
+			ACUtils.launchAC();
+
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
+
+			ACNavigation.goToIndividuals();
+
+			ACIndividualsDashboard.goToKnownIndividualsTab();
+
+			ACUtils.viewNameList(nameList = "${userName} ${userName}");
+
 			ACNavigation.goToSettings();
 
 			ACSettings.createRequestLogByEmail(
@@ -252,134 +298,6 @@ definition {
 			ACSettings.assertRequestLog(
 				key_emailAdress = ${userEmail},
 				key_jobType = "Suppress");
-		}
-	}
-
-	@description = "Automation ID: LRAC-8893 | Test Summary: Able to unsuppress user"
-	@ignore = "true"
-	@priority = 3
-	test CanUnsuppressUser {
-
-		// AC Refactor: Timing issues may happen on this test case
-		// AC Refactor ticket: LRAC-9439
-		// The Suppressed User card was hidden after this ticket: LRAC-13620
-
-		var userEmail = "dcp4@liferay.com";
-		var userName = "dcp4";
-
-		JSONUser.addUser(
-			userEmailAddress = ${userEmail},
-			userFirstName = ${userName},
-			userLastName = ${userName},
-			userScreenName = ${userName});
-
-		JSONUser.setFirstPassword(
-			agreeToTermsAndAnswerReminderQuery = "true",
-			requireReset = "false",
-			userEmailAddress = ${userEmail});
-
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud();
-
-		ACUtils.launchAC();
-
-		task ("Go to settings and create a suppress request") {
-			ACNavigation.goToSettings();
-
-			ACSettings.createRequestLogByEmail(
-				email = ${userEmail},
-				jobType = "Suppress");
-		}
-
-		task ("Wait for the suppress request be completed") {
-			ACSettings.goToDataControlAndPrivacy();
-
-			ACSettings.navigateToRequestOrSuppressedOptions(
-				optionName = "Suppressed Users",
-				optionValue = "Manage");
-
-			while ((IsElementNotPresent(itemName = ${userEmail}, locator1 = "ACSettings#ITEM_ON_LIST")) && (maxIterations = "50")) {
-				ACUtils.searchBar(searchItem = ${userName});
-
-				ACUtils.clearSearchBar();
-			}
-		}
-
-		// Couldn't assert the list due to missing data.
-
-		task ("Unsuppress the user") {
-			Button.click(button = "Unsuppress");
-		}
-
-		task ("Assert that the user was unsuppressed") {
-			ACSettings.createRequestLogByEmail(
-				emailAdresses = ${userEmail},
-				jobType = "Access");
-
-			ACSettings.goToDataControlAndPrivacy();
-
-			ACSettings.navigateToRequestOrSuppressedOptions(
-				optionName = "Request Log",
-				optionValue = "Manage");
-
-			ACSettings.assertRequestLog(
-				key_emailAdress = ${userEmail},
-				key_jobType = "Unsuppress");
-
-			ACSettings.assertRequestLog(
-				key_emailAdress = ${userEmail},
-				key_jobType = "Access");
-		}
-	}
-
-	@description = "Automation ID: LRAC-8892 | Test Summary: Suppressed user appears in Suppressed User List"
-	@ignore = "true"
-	@priority = 5
-	test SuppressedUserAppearsInSuppressedUserList {
-
-		// AC Refactor: Timing issues may happen on this test case
-		// AC Refactor ticket: LRAC-9438
-		// The Suppressed User card was hidden after this ticket: LRAC-13620
-
-		var userEmail = "dcp5@liferay.com";
-		var userName = "dcp5";
-
-		JSONUser.addUser(
-			userEmailAddress = ${userEmail},
-			userFirstName = ${userName},
-			userLastName = ${userName},
-			userScreenName = ${userName});
-
-		JSONUser.setFirstPassword(
-			agreeToTermsAndAnswerReminderQuery = "true",
-			requireReset = "false",
-			userEmailAddress = ${userEmail});
-
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud();
-
-		ACUtils.launchAC();
-
-		task ("Go to settings and create a suppress request") {
-			ACNavigation.goToSettings();
-
-			ACSettings.createRequestLogByEmail(
-				emailAdresses = ${userEmail},
-				jobType = "Suppress");
-		}
-
-		task ("Assert that the user is in the suppressed user list") {
-			ACSettings.goToDataControlAndPrivacy();
-
-			ACSettings.navigateToRequestOrSuppressedOptions(
-				optionName = "Suppressed Users",
-				optionValue = "Manage");
-
-			while ((IsElementNotPresent(itemName = ${userEmail}, locator1 = "ACSettings#ITEM_ON_LIST")) && (maxIterations = "50")) {
-				Refresh();
-			}
-
-			// Couldn't assert the list due to missing data.
-
-			ACUtils.assertItemsName(itemList = ${userEmail});
 		}
 	}
 

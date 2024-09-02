@@ -83,7 +83,11 @@ definition {
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WebContentTitle");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocaleSummary(locale = "es-ES");
+
+		WaitForElementPresent(
+			key_text = "Contenidoweb",
+			locator1 = "CKEditor#BODY");
 
 		WebContent.viewCP(
 			upgradedFieldLabel = "true",
@@ -95,7 +99,7 @@ definition {
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title Side By Side");
 
-		PortletEntry.changeLocale(locale = "ja-JP");
+		PortletEntry.changeLocaleSummary(locale = "ja-JP");
 
 		WebContent.viewCP(
 			upgradedFieldLabel = "true",

@@ -4,11 +4,11 @@
  */
 
 import classnames from 'classnames';
-import Dropzone from 'react-dropzone';
-
-import documentIcon from '../../assets/icons/document_icon.svg';
+import Dropzone, {FileRejection} from 'react-dropzone';
 
 import './DropzoneUpload.scss';
+
+import ClayIcon from '@clayui/icon';
 
 interface DropzoneUploadProps {
 	acceptFileTypes: {
@@ -16,9 +16,11 @@ interface DropzoneUploadProps {
 	};
 	buttonText: string;
 	description: string;
+	disabled?: boolean;
 	maxFiles: number;
 	maxSize?: number;
 	multiple: boolean;
+	onDropRejected?: (files: FileRejection[]) => void;
 	onHandleUpload: (files: File[], versionName?: string) => void;
 	showDocumentIcon?: boolean;
 	title: string;
@@ -29,9 +31,11 @@ export function DropzoneUpload({
 	acceptFileTypes,
 	buttonText,
 	description,
+	disabled = false,
 	maxFiles,
 	maxSize,
 	multiple,
+	onDropRejected,
 	onHandleUpload,
 	showDocumentIcon = true,
 	title,
@@ -40,25 +44,29 @@ export function DropzoneUpload({
 	return (
 		<Dropzone
 			accept={acceptFileTypes}
+			disabled={disabled}
 			maxFiles={maxFiles}
 			maxSize={maxSize}
 			multiple={multiple}
 			onDropAccepted={(file) => onHandleUpload(file, versionName)}
+			onDropRejected={onDropRejected}
+			useFsAccessApi={false}
 		>
 			{({getInputProps, getRootProps, isDragActive, isDragReject}) => (
 				<div
 					className={classnames('dropzone-upload-container', {
 						'dropzone-upload-container-active': isDragActive,
+						'dropzone-upload-container-disabled': disabled,
 						'dropzone-upload-container-reject': isDragReject,
 					})}
 					{...getRootProps()}
 				>
 					{showDocumentIcon && (
 						<div className="dropzone-upload-document-container">
-							<img
-								alt="Document icon"
+							<ClayIcon
+								aria-label="Document icon"
 								className="dropzone-upload-document-icon"
-								src={documentIcon}
+								symbol="document-text"
 							/>
 						</div>
 					)}
@@ -66,7 +74,7 @@ export function DropzoneUpload({
 					<div className="dropzone-upload-text-container">
 						<span className="dropzone-upload-text">{title}</span>
 
-						<button className="dropzone-upload-button">
+						<button className="dropzone-upload-button ml-2">
 							<span className="dropzone-upload-button-text">
 								{buttonText}
 							</span>
@@ -77,7 +85,7 @@ export function DropzoneUpload({
 						{description}
 					</span>
 
-					<input {...getInputProps()} />
+					{!disabled && <input {...getInputProps()} />}
 				</div>
 			)}
 		</Dropzone>

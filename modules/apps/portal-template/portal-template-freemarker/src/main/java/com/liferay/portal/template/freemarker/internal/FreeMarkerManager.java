@@ -134,12 +134,9 @@ public class FreeMarkerManager extends BaseTemplateManager {
 	public class FreeMarkerTemplateResourceCache
 		extends BaseTemplateResourceCache {
 
-		public FreeMarkerTemplateResourceCache(
-			FreeMarkerEngineConfiguration freeMarkerEngineConfiguration) {
-
+		public FreeMarkerTemplateResourceCache() {
 			init(
-				freeMarkerEngineConfiguration.resourceModificationCheck(),
-				_portalCacheName,
+				Long.MIN_VALUE, _portalCacheName,
 				StringBundler.concat(
 					TemplateResource.class.getName(), StringPool.POUND,
 					TemplateConstants.LANG_TYPE_FTL));
@@ -147,13 +144,6 @@ public class FreeMarkerManager extends BaseTemplateManager {
 
 		public void destroy() {
 			super.destroy();
-		}
-
-		public void setModificationCheckInterval(
-			FreeMarkerEngineConfiguration freeMarkerEngineConfiguration) {
-
-			setModificationCheckInterval(
-				freeMarkerEngineConfiguration.resourceModificationCheck());
 		}
 
 		private final String _portalCacheName =
@@ -196,8 +186,8 @@ public class FreeMarkerManager extends BaseTemplateManager {
 			FreeMarkerEngineConfiguration.class,
 			componentContext.getProperties());
 
-		_freeMarkerTemplateResourceCache = new FreeMarkerTemplateResourceCache(
-			_freeMarkerEngineConfiguration);
+		_freeMarkerTemplateResourceCache =
+			new FreeMarkerTemplateResourceCache();
 
 		_freeMarkerTemplateResourceLoader =
 			new FreeMarkerTemplateResourceLoader(
@@ -333,9 +323,6 @@ public class FreeMarkerManager extends BaseTemplateManager {
 		_freeMarkerEngineConfiguration = ConfigurableUtil.createConfigurable(
 			FreeMarkerEngineConfiguration.class,
 			componentContext.getProperties());
-
-		_freeMarkerTemplateResourceCache.setModificationCheckInterval(
-			_freeMarkerEngineConfiguration);
 
 		_initAsyncRender(componentContext.getBundleContext());
 
@@ -520,9 +507,24 @@ public class FreeMarkerManager extends BaseTemplateManager {
 			return;
 		}
 
-		_configuration = new Configuration(Configuration.VERSION_2_3_30);
+		_configuration = new Configuration(Configuration.VERSION_2_3_32);
+
+		_configuration.setAttemptExceptionReporter(
+			(templateException, environment) -> {
+			});
+		_configuration.setDefaultEncoding(StringPool.UTF8);
+		_configuration.setLocalizedLookup(
+			_freeMarkerEngineConfiguration.localizedLookup());
+		_configuration.setNewBuiltinClassResolver(_templateClassResolver);
 
 		try {
+			_configuration.setLogTemplateExceptions(
+				_freeMarkerEngineConfiguration.logTemplateExceptions());
+			_configuration.setSetting("auto_import", _getMacroLibrary());
+			_configuration.setSetting(
+				"template_exception_handler",
+				_freeMarkerEngineConfiguration.templateExceptionHandler());
+
 			Field field = ReflectionUtil.getDeclaredField(
 				Configuration.class, "cache");
 
@@ -540,24 +542,6 @@ public class FreeMarkerManager extends BaseTemplateManager {
 				"loop-count-threshold",
 				new SimpleNumber(
 					_freeMarkerEngineConfiguration.loopCountThreshold()));
-		}
-		catch (Exception exception) {
-			throw new TemplateException(
-				"Unable to Initialize FreeMarker manager", exception);
-		}
-
-		_configuration.setDefaultEncoding(StringPool.UTF8);
-		_configuration.setLocalizedLookup(
-			_freeMarkerEngineConfiguration.localizedLookup());
-		_configuration.setNewBuiltinClassResolver(_templateClassResolver);
-
-		try {
-			_configuration.setLogTemplateExceptions(
-				_freeMarkerEngineConfiguration.logTemplateExceptions());
-			_configuration.setSetting("auto_import", _getMacroLibrary());
-			_configuration.setSetting(
-				"template_exception_handler",
-				_freeMarkerEngineConfiguration.templateExceptionHandler());
 		}
 		catch (Exception exception) {
 			throw new TemplateException(

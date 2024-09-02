@@ -13,6 +13,7 @@ import com.liferay.portal.odata.entity.DateTimeEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.entity.IdEntityField;
+import com.liferay.portal.odata.entity.IntegerEntityField;
 import com.liferay.portal.odata.entity.StringEntityField;
 
 import java.util.Map;
@@ -26,7 +27,7 @@ public class UserAccountEntityModel implements EntityModel {
 		_entityFieldsMap = EntityFieldsMapFactory.create(
 			new CollectionEntityField(
 				new StringEntityField(
-					"keywords", locale -> "assetTagNames.raw")),
+					"keywords", locale -> "assetTagNames.lowercase")),
 			new CollectionEntityField(
 				new StringEntityField("roleNames", locale -> "roleNames")),
 			new CollectionEntityField(
@@ -53,6 +54,7 @@ public class UserAccountEntityModel implements EntityModel {
 			new IdEntityField("roleIds", locale -> "roleIds", String::valueOf),
 			new IdEntityField(
 				"userGroupIds", locale -> "userGroupIds", String::valueOf),
+			new IntegerEntityField("status", locale -> Field.STATUS),
 			new StringEntityField(
 				"alternateName",
 				locale -> Field.getSortableFieldName("screenName")),

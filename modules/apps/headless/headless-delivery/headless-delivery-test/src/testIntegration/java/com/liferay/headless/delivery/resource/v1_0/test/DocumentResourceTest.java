@@ -7,22 +7,32 @@ package com.liferay.headless.delivery.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
+import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
+import com.liferay.document.library.kernel.model.DLFolder;
+import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
+import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
+import com.liferay.document.library.kernel.service.DLFolderLocalService;
+import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.dynamic.data.mapping.storage.StorageType;
 import com.liferay.headless.delivery.client.dto.v1_0.Creator;
 import com.liferay.headless.delivery.client.dto.v1_0.Document;
+import com.liferay.headless.delivery.client.dto.v1_0.DocumentType;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
 import com.liferay.headless.delivery.client.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.DocumentSerDes;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
-import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
-import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -31,24 +41,33 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
 import java.io.File;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -94,6 +113,7 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 				irrelevantDocument.getId()));
 	}
 
+	@FeatureFlags("LPD-10701")
 	@Override
 	@Test
 	public void testGetDocument() throws Exception {
@@ -103,6 +123,9 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 			testGroup.getGroupId(), randomDocument(), getMultipartFiles());
 
 		Assert.assertTrue(Validator.isNotNull(document1.getContentUrl()));
+		Assert.assertTrue(Validator.isNotNull(document1.getDateExpired()));
+		Assert.assertTrue(Validator.isNotNull(document1.getDatePublished()));
+		Assert.assertTrue(Validator.isNotNull(document1.getFriendlyUrlPath()));
 
 		Document document2 = documentResource.postSiteDocument(
 			testGroup.getGroupId(), randomDocument(),
@@ -111,6 +134,9 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 			).build());
 
 		Assert.assertTrue(Validator.isNull(document2.getContentUrl()));
+		Assert.assertTrue(Validator.isNotNull(document2.getDateExpired()));
+		Assert.assertTrue(Validator.isNotNull(document2.getDatePublished()));
+		Assert.assertTrue(Validator.isNotNull(document2.getFriendlyUrlPath()));
 
 		Role guestRole = _roleLocalService.getRole(
 			testCompany.getCompanyId(), RoleConstants.GUEST);
@@ -139,30 +165,15 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 		document1 = regularUserDocumentResource.getDocument(document1.getId());
 
 		Assert.assertTrue(Validator.isNull(document1.getContentUrl()));
+		Assert.assertTrue(Validator.isNotNull(document1.getDateExpired()));
+		Assert.assertTrue(Validator.isNotNull(document1.getDatePublished()));
+		Assert.assertTrue(Validator.isNotNull(document1.getFriendlyUrlPath()));
 	}
 
 	@Override
 	@Test
 	public void testGetDocumentRenderedContentByDisplayPageDisplayPageKey()
 		throws Exception {
-
-		Document document = testGetDocument_addDocument();
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				testGroup.getCreatorUserId(), testGroup.getGroupId(), 0,
-				_portal.getClassNameId(FileEntry.class.getName()), 0,
-				RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, false, 0,
-				0, 0, WorkflowConstants.STATUS_APPROVED,
-				ServiceContextTestUtil.getServiceContext(
-					testGroup.getGroupId()));
-
-		Assert.assertNotNull(
-			documentResource.
-				getDocumentRenderedContentByDisplayPageDisplayPageKey(
-					document.getId(),
-					layoutPageTemplateEntry.getLayoutPageTemplateEntryKey()));
 	}
 
 	@Override
@@ -197,6 +208,57 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 	}
 
 	@Override
+	@Test
+	public void testPostDocumentFolderDocument() throws Exception {
+		super.testPostDocumentFolderDocument();
+
+		_testPostDocumentFolderDocumentWithDLFileEntryType();
+		_testPostDocumentFolderDocumentWithExternalVideoShortcutDLFileEntryType();
+	}
+
+	@Override
+	@Test
+	public void testPostSiteDocument() throws Exception {
+		super.testPostSiteDocument();
+
+		_testPostSiteDocumentWithNoMultipartFiles();
+	}
+
+	@Override
+	@Test
+	public void testPutDocument() throws Exception {
+		super.testPutDocument();
+
+		_testPutSiteDocumentWithNoMultipartFiles();
+	}
+
+	@Override
+	@Test
+	public void testPutSiteDocumentByExternalReferenceCode() throws Exception {
+		super.testPutSiteDocumentByExternalReferenceCode();
+
+		DLFolder dlFolder = _dlFolderLocalService.addFolder(
+			null, TestPropsValues.getUserId(), testGroup.getGroupId(),
+			testGroup.getGroupId(), false,
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
+			ServiceContextTestUtil.getServiceContext(testGroup.getGroupId()));
+
+		Document randomDocument = randomDocument();
+
+		randomDocument.setDocumentFolderId(dlFolder.getFolderId());
+
+		Document putDocument =
+			documentResource.putSiteDocumentByExternalReferenceCode(
+				randomDocument.getSiteId(),
+				randomDocument.getExternalReferenceCode(), randomDocument,
+				getMultipartFiles());
+
+		Assert.assertEquals(
+			(Long)dlFolder.getFolderId(), putDocument.getDocumentFolderId());
+	}
+
+	@Override
 	protected void assertValid(
 			Document document, Map<String, File> multipartFiles)
 		throws Exception {
@@ -228,6 +290,8 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 	protected Document randomDocument() throws Exception {
 		Document document = super.randomDocument();
 
+		document.setDateExpired(
+			new Date(System.currentTimeMillis() + Time.YEAR));
 		document.setDocumentFolderId(0L);
 		document.setViewableBy(Document.ViewableBy.ANYONE);
 
@@ -362,24 +426,161 @@ public class DocumentResourceTest extends BaseDocumentResourceTestCase {
 			ServiceContextTestUtil.getServiceContext(testGroup.getGroupId()));
 	}
 
+	private DLFileEntryType _addFileEntryType(Group group) throws Exception {
+		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
+			group.getCreatorUserId(), group.getGroupId(),
+			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
+			PortalUtil.getClassNameId(DLFileEntryMetadata.class),
+			StringPool.BLANK,
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(),
+				DLFileEntryMetadata.class.getSimpleName()
+			).build(),
+			new HashMap<>(), StringPool.BLANK, StorageType.DEFAULT.toString(),
+			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
+
+		return _dlFileEntryTypeLocalService.addFileEntryType(
+			null, group.getCreatorUserId(), group.getGroupId(),
+			ddmStructure.getStructureId(), null,
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()
+			).build(),
+			new HashMap<>(),
+			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_SCOPE_DEFAULT,
+			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
+	}
+
+	private void _assertDocumentType(
+		DLFileEntryType dlFileEntryType, Document postDocument) {
+
+		DocumentType documentType = postDocument.getDocumentType();
+
+		Assert.assertNotNull(documentType);
+		Assert.assertEquals(
+			dlFileEntryType.getName(LocaleUtil.getDefault()),
+			documentType.getName());
+	}
+
+	private Document _getDLFileEntryTypePostDocument(
+			DLFileEntryType dlFileEntryType, Group group,
+			Map<String, File> multipartFiles)
+		throws Exception {
+
+		DLFolder dlFolder = _dlFolderLocalService.addFolder(
+			null, TestPropsValues.getUserId(), group.getGroupId(),
+			group.getGroupId(), false,
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
+			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
+
+		Document randomDocument = randomDocument();
+
+		randomDocument.setDocumentType(
+			new DocumentType() {
+				{
+					name = dlFileEntryType.getName(LocaleUtil.getDefault());
+				}
+			});
+		randomDocument.setSiteId(group.getGroupId());
+
+		return documentResource.postDocumentFolderDocument(
+			dlFolder.getFolderId(), randomDocument, multipartFiles);
+	}
+
 	private String _read(String url) throws Exception {
 		HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
 
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 		httpInvoker.path(url);
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
 		return httpResponse.getContent();
 	}
 
-	@Inject
-	private LayoutPageTemplateEntryLocalService
-		_layoutPageTemplateEntryLocalService;
+	private void _testPostDocumentFolderDocumentWithDLFileEntryType()
+		throws Exception {
+
+		DLFileEntryType dlFileEntryType = _addFileEntryType(testGroup);
+
+		Map<String, File> multipartFiles = getMultipartFiles();
+
+		Document postDocument = _getDLFileEntryTypePostDocument(
+			dlFileEntryType, testGroup, multipartFiles);
+
+		_assertDocumentType(dlFileEntryType, postDocument);
+
+		Group childGroup = GroupTestUtil.addGroup(testGroup.getGroupId());
+
+		postDocument = _getDLFileEntryTypePostDocument(
+			dlFileEntryType, childGroup, multipartFiles);
+
+		_assertDocumentType(dlFileEntryType, postDocument);
+
+		GroupTestUtil.deleteGroup(childGroup);
+	}
+
+	private void _testPostDocumentFolderDocumentWithExternalVideoShortcutDLFileEntryType()
+		throws Exception {
+
+		DLFileEntryType dlFileEntryType =
+			_dlFileEntryTypeLocalService.getFileEntryType(
+				testCompany.getGroupId(), "DL_VIDEO_EXTERNAL_SHORTCUT");
+
+		Document postDocument = _getDLFileEntryTypePostDocument(
+			dlFileEntryType, testGroup, new HashMap<>());
+
+		Assert.assertEquals(
+			ContentTypes.APPLICATION_VND_LIFERAY_VIDEO_EXTERNAL_SHORTCUT_HTML,
+			postDocument.getEncodingFormat());
+
+		_assertDocumentType(dlFileEntryType, postDocument);
+	}
+
+	private void _testPostSiteDocumentWithNoMultipartFiles() throws Exception {
+		Document randomDocument = randomDocument();
+
+		Document postDocument = testPostSiteDocument_addDocument(
+			randomDocument, new HashMap<>());
+
+		assertEquals(randomDocument, postDocument);
+		assertValid(postDocument);
+
+		Assert.assertEquals(StringPool.BLANK, postDocument.getContentUrl());
+		Assert.assertEquals(
+			0, GetterUtil.getLong(postDocument.getSizeInBytes()));
+	}
+
+	private void _testPutSiteDocumentWithNoMultipartFiles() throws Exception {
+		Document postDocument = testPutDocument_addDocument();
+
+		Document randomDocument = randomDocument();
+
+		Document putDocument = documentResource.putDocument(
+			postDocument.getId(), randomDocument, new HashMap<>());
+
+		assertEquals(randomDocument, putDocument);
+		assertValid(putDocument);
+
+		Assert.assertEquals(
+			"1.1",
+			HttpComponentsUtil.getParameter(
+				putDocument.getContentUrl(), "version", false));
+
+		Assert.assertEquals(
+			postDocument.getSizeInBytes(), putDocument.getSizeInBytes());
+	}
 
 	@Inject
-	private Portal _portal;
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Inject
+	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;
+
+	@Inject
+	private DLFolderLocalService _dlFolderLocalService;
 
 	@Inject
 	private RatingsEntryLocalService _ratingsEntryLocalService;

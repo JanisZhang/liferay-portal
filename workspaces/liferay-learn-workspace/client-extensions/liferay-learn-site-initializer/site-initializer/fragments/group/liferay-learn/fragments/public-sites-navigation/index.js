@@ -8,6 +8,10 @@
 const searchSubmitURL = fragmentElement.querySelector('.search-submit').href;
 
 window.addEventListener('load', () => {
+	if (navigation.default === null) {
+		return;
+	}
+
 	const searchInput = fragmentElement.querySelector('.search-input');
 
 	searchInput.value = '';
@@ -96,13 +100,8 @@ const seeAllResultsLink = fragmentElement.querySelector(
 
 const searchSubmitLink = fragmentElement.querySelector('.search-submit');
 
-const searchSuggestionItem = searchSuggestionItemTemplate.content.querySelector(
-	'a'
-);
-
-function changeFocus() {
-	document.getElementById('searchInput').focus();
-}
+const searchSuggestionItem =
+	searchSuggestionItemTemplate.content.querySelector('a');
 
 function updateSearch() {
 	searchSuggestions.innerHTML = '';
@@ -200,15 +199,14 @@ function performSearch(query) {
 							suggestion.attributes.assetSearchSummary;
 
 						if (suggestionContentTextValue) {
-							suggestionContentTextValue = suggestionContentTextValue.substring(
-								0,
-								500
-							);
+							suggestionContentTextValue =
+								suggestionContentTextValue.substring(0, 500);
 
-							suggestionContent.innerHTML = suggestionContentTextValue.replace(
-								searchTermRegExp,
-								`<b>$1</b>`
-							);
+							suggestionContent.innerHTML =
+								suggestionContentTextValue.replace(
+									searchTermRegExp,
+									`<b>$1</b>`
+								);
 						}
 
 						const suggestionURL = suggestionLink.querySelector(
@@ -289,6 +287,37 @@ function getBreadcrumbFromURL(url) {
 		.join(' ');
 }
 
+const inputElements = ['input', 'textarea'];
+const searchInput = document.getElementById('searchInput');
+const siteSearchWrapper = document.getElementById('siteSearchWrapper');
+
+function changeFocus() {
+	searchInput.focus();
+}
+
 document.getElementById('searchIcon').addEventListener('click', changeFocus);
 
-fragmentElement.querySelector('.public-sites-navigation').style.zIndex = '4';
+window.addEventListener('keyup', (event) => {
+	if (event.code === 'Escape' || event.key === 'Escape') {
+		if (!siteSearchWrapper.classList.contains('search-open')) {
+			return;
+		}
+
+		searchInput.blur();
+		siteSearchWrapper.classList.remove('search-open');
+	}
+
+	if (
+		(event.code === 'Slash' || event.key === '/') &&
+		inputElements.indexOf(document.activeElement.tagName.toLowerCase()) ===
+			-1
+	) {
+		searchInput.focus();
+
+		if (siteSearchWrapper.classList.contains('search-open')) {
+			return;
+		}
+
+		siteSearchWrapper.classList.add('search-open');
+	}
+});

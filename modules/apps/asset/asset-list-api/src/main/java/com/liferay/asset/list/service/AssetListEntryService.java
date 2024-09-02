@@ -57,17 +57,18 @@ public interface AssetListEntryService extends BaseService {
 		throws PortalException;
 
 	public AssetListEntry addAssetListEntry(
-			long groupId, String title, int type, ServiceContext serviceContext)
+			String externalReferenceCode, long groupId, String title, int type,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public AssetListEntry addDynamicAssetListEntry(
-			long groupId, String title, String typeSettings,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long groupId, String title,
+			String typeSettings, ServiceContext serviceContext)
 		throws PortalException;
 
 	public AssetListEntry addManualAssetListEntry(
-			long groupId, String title, long[] assetEntryIds,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long groupId, String title,
+			long[] assetEntryIds, ServiceContext serviceContext)
 		throws PortalException;
 
 	public void deleteAssetEntrySelection(
@@ -86,6 +87,11 @@ public interface AssetListEntryService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AssetListEntry fetchAssetListEntry(long assetListEntryId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetListEntry fetchAssetListEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -166,6 +172,11 @@ public interface AssetListEntryService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AssetListEntry getAssetListEntry(
 			long groupId, String assetListEntryKey)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetListEntry getAssetListEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

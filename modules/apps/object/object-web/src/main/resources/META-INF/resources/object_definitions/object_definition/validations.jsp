@@ -22,9 +22,11 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 
 <div>
 	<react:component
-		module="js/components/ObjectValidation/Validations"
+		module="{Validations} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
+				"allowScriptContentToBeExecutedOrIncluded", objectDefinitionsValidationsDisplayContext.isAllowScriptContentToBeExecutedOrIncluded()
+			).put(
 				"apiURL", objectDefinitionsValidationsDisplayContext.getAPIURL()
 			).put(
 				"creationMenu", objectDefinitionsValidationsDisplayContext.getCreationMenu()
@@ -49,12 +51,12 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 
 <div>
 	<react:component
-		module="js/components/ModalSelectObjectFields"
+		module="{ModalSelectObjectFields} from object-web"
 	/>
 </div>
 
 <div>
 	<react:component
-		module="js/components/ModalObjectFieldDeletionNotAllowed"
+		module="{ModalObjectFieldDeletionNotAllowed} from object-web"
 	/>
 </div>

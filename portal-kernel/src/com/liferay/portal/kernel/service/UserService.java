@@ -1124,6 +1124,10 @@ public interface UserService extends BaseService {
 			long userId, String externalReferenceCode)
 		throws PortalException;
 
+	public User updateExternalReferenceCode(
+			User user, String externalReferenceCode)
+		throws PortalException;
+
 	/**
 	 * Updates a user account that was automatically created when a guest user
 	 * participated in an action (e.g. posting a comment) and only provided his
@@ -1320,6 +1324,10 @@ public interface UserService extends BaseService {
 	 */
 	public User updateStatus(
 			long userId, int status, ServiceContext serviceContext)
+		throws PortalException;
+
+	public User updateStatus(
+			User user, int status, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**

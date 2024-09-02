@@ -36,11 +36,13 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -103,7 +103,7 @@ public abstract class BaseSpecificationResourceTestCase {
 		SpecificationResource.Builder builder = SpecificationResource.builder();
 
 		specificationResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +117,32 @@ public abstract class BaseSpecificationResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Specification specification1 = randomSpecification();
+
+		String json = objectMapper.writeValueAsString(specification1);
+
+		Specification specification2 = SpecificationSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(specification1, specification2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Specification specification = randomSpecification();
+
+		String json1 = objectMapper.writeValueAsString(specification);
+		String json2 = SpecificationSerDes.toJSON(specification);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +157,6 @@ public abstract class BaseSpecificationResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Specification specification1 = randomSpecification();
-
-		String json = objectMapper.writeValueAsString(specification1);
-
-		Specification specification2 = SpecificationSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(specification1, specification2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Specification specification = randomSpecification();
-
-		String json1 = objectMapper.writeValueAsString(specification);
-		String json2 = SpecificationSerDes.toJSON(specification);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -174,6 +165,7 @@ public abstract class BaseSpecificationResourceTestCase {
 
 		Specification specification = randomSpecification();
 
+		specification.setExternalReferenceCode(regex);
 		specification.setKey(regex);
 
 		String json = SpecificationSerDes.toJSON(specification);
@@ -182,6 +174,7 @@ public abstract class BaseSpecificationResourceTestCase {
 
 		specification = SpecificationSerDes.toDTO(json);
 
+		Assert.assertEquals(regex, specification.getExternalReferenceCode());
 		Assert.assertEquals(regex, specification.getKey());
 	}
 
@@ -411,7 +404,7 @@ public abstract class BaseSpecificationResourceTestCase {
 			(entityField, specification1, specification2) -> {
 				BeanTestUtil.setProperty(
 					specification1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -564,6 +557,8 @@ public abstract class BaseSpecificationResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject specificationsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/specifications");
@@ -577,6 +572,29 @@ public abstract class BaseSpecificationResourceTestCase {
 
 		specificationsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/specifications");
+
+		Assert.assertEquals(
+			totalCount + 2, specificationsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			specification1,
+			Arrays.asList(
+				SpecificationSerDes.toDTOs(
+					specificationsJSONObject.getString("items"))));
+		assertContains(
+			specification2,
+			Arrays.asList(
+				SpecificationSerDes.toDTOs(
+					specificationsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		specificationsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminCatalog_v1_0",
 			"JSONObject/specifications");
 
 		Assert.assertEquals(
@@ -620,6 +638,212 @@ public abstract class BaseSpecificationResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteSpecificationByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Specification specification =
+			testDeleteSpecificationByExternalReferenceCode_addSpecification();
+
+		assertHttpResponseStatusCode(
+			204,
+			specificationResource.
+				deleteSpecificationByExternalReferenceCodeHttpResponse(
+					specification.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			specificationResource.
+				getSpecificationByExternalReferenceCodeHttpResponse(
+					specification.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			specificationResource.
+				getSpecificationByExternalReferenceCodeHttpResponse(
+					specification.getExternalReferenceCode()));
+	}
+
+	protected Specification
+			testDeleteSpecificationByExternalReferenceCode_addSpecification()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetSpecificationByExternalReferenceCode() throws Exception {
+		Specification postSpecification =
+			testGetSpecificationByExternalReferenceCode_addSpecification();
+
+		Specification getSpecification =
+			specificationResource.getSpecificationByExternalReferenceCode(
+				postSpecification.getExternalReferenceCode());
+
+		assertEquals(postSpecification, getSpecification);
+		assertValid(getSpecification);
+	}
+
+	protected Specification
+			testGetSpecificationByExternalReferenceCode_addSpecification()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetSpecificationByExternalReferenceCode()
+		throws Exception {
+
+		Specification specification =
+			testGraphQLGetSpecificationByExternalReferenceCode_addSpecification();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				specification,
+				SpecificationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"specificationByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												specification.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/specificationByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				specification,
+				SpecificationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"specificationByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													specification.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/specificationByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetSpecificationByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"specificationByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"specificationByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Specification
+			testGraphQLGetSpecificationByExternalReferenceCode_addSpecification()
+		throws Exception {
+
+		return testGraphQLSpecification_addSpecification();
+	}
+
+	@Test
+	public void testPatchSpecificationByExternalReferenceCode()
+		throws Exception {
+
+		Specification postSpecification =
+			testPatchSpecificationByExternalReferenceCode_addSpecification();
+
+		Specification randomPatchSpecification = randomPatchSpecification();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Specification patchSpecification =
+			specificationResource.patchSpecificationByExternalReferenceCode(
+				postSpecification.getExternalReferenceCode(),
+				randomPatchSpecification);
+
+		Specification expectedPatchSpecification = postSpecification.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchSpecification, expectedPatchSpecification);
+
+		Specification getSpecification =
+			specificationResource.getSpecificationByExternalReferenceCode(
+				patchSpecification.getExternalReferenceCode());
+
+		assertEquals(expectedPatchSpecification, getSpecification);
+		assertValid(getSpecification);
+	}
+
+	protected Specification
+			testPatchSpecificationByExternalReferenceCode_addSpecification()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testDeleteSpecification() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Specification specification =
@@ -650,7 +874,10 @@ public abstract class BaseSpecificationResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteSpecification() throws Exception {
-		Specification specification =
+
+		// No namespace
+
+		Specification specification1 =
 			testGraphQLDeleteSpecification_addSpecification();
 
 		Assert.assertTrue(
@@ -660,23 +887,61 @@ public abstract class BaseSpecificationResourceTestCase {
 						"deleteSpecification",
 						new HashMap<String, Object>() {
 							{
-								put("id", specification.getId());
+								put("id", specification1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteSpecification"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"specification",
 					new HashMap<String, Object>() {
 						{
-							put("id", specification.getId());
+							put("id", specification1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Specification specification2 =
+			testGraphQLDeleteSpecification_addSpecification();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteSpecification",
+							new HashMap<String, Object>() {
+								{
+									put("id", specification2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteSpecification"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"specification",
+						new HashMap<String, Object>() {
+							{
+								put("id", specification2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Specification testGraphQLDeleteSpecification_addSpecification()
@@ -709,6 +974,8 @@ public abstract class BaseSpecificationResourceTestCase {
 		Specification specification =
 			testGraphQLGetSpecification_addSpecification();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				specification,
@@ -724,11 +991,35 @@ public abstract class BaseSpecificationResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/specification"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				specification,
+				SpecificationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"specification",
+									new HashMap<String, Object>() {
+										{
+											put("id", specification.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/specification"))));
 	}
 
 	@Test
 	public void testGraphQLGetSpecificationNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -744,6 +1035,25 @@ public abstract class BaseSpecificationResourceTestCase {
 						getGraphQLFields())),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"specification",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
 	}
 
 	protected Specification testGraphQLGetSpecification_addSpecification()
@@ -754,7 +1064,33 @@ public abstract class BaseSpecificationResourceTestCase {
 
 	@Test
 	public void testPatchSpecification() throws Exception {
-		Assert.assertTrue(false);
+		Specification postSpecification =
+			testPatchSpecification_addSpecification();
+
+		Specification randomPatchSpecification = randomPatchSpecification();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Specification patchSpecification =
+			specificationResource.patchSpecification(
+				postSpecification.getId(), randomPatchSpecification);
+
+		Specification expectedPatchSpecification = postSpecification.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchSpecification, expectedPatchSpecification);
+
+		Specification getSpecification = specificationResource.getSpecification(
+			patchSpecification.getId());
+
+		assertEquals(expectedPatchSpecification, getSpecification);
+		assertValid(getSpecification);
+	}
+
+	protected Specification testPatchSpecification_addSpecification()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Rule
@@ -855,6 +1191,16 @@ public abstract class BaseSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (specification.getExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("facetable", additionalAssertFieldName)) {
 				if (specification.getFacetable() == null) {
 					valid = false;
@@ -871,8 +1217,26 @@ public abstract class BaseSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"listTypeDefinitionId", additionalAssertFieldName)) {
+
+				if (specification.getListTypeDefinitionId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("optionCategory", additionalAssertFieldName)) {
 				if (specification.getOptionCategory() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("priority", additionalAssertFieldName)) {
+				if (specification.getPriority() == null) {
 					valid = false;
 				}
 
@@ -1017,6 +1381,19 @@ public abstract class BaseSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						specification1.getExternalReferenceCode(),
+						specification2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("facetable", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						specification1.getFacetable(),
@@ -1048,10 +1425,34 @@ public abstract class BaseSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"listTypeDefinitionId", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						specification1.getListTypeDefinitionId(),
+						specification2.getListTypeDefinitionId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("optionCategory", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						specification1.getOptionCategory(),
 						specification2.getOptionCategory())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("priority", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						specification1.getPriority(),
+						specification2.getPriority())) {
 
 					return false;
 				}
@@ -1182,6 +1583,52 @@ public abstract class BaseSpecificationResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("externalReferenceCode")) {
+			Object object = specification.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("facetable")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1238,9 +1685,20 @@ public abstract class BaseSpecificationResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("listTypeDefinitionId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("optionCategory")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("priority")) {
+			sb.append(String.valueOf(specification.getPriority()));
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("title")) {
@@ -1262,7 +1720,8 @@ public abstract class BaseSpecificationResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1292,9 +1751,13 @@ public abstract class BaseSpecificationResourceTestCase {
 	protected Specification randomSpecification() throws Exception {
 		return new Specification() {
 			{
+				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				facetable = RandomTestUtil.randomBoolean();
 				id = RandomTestUtil.randomLong();
 				key = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				listTypeDefinitionId = RandomTestUtil.randomLong();
+				priority = RandomTestUtil.randomDouble();
 			}
 		};
 	}
@@ -1319,12 +1782,12 @@ public abstract class BaseSpecificationResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1333,11 +1796,16 @@ public abstract class BaseSpecificationResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1369,6 +1837,24 @@ public abstract class BaseSpecificationResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1390,16 +1876,6 @@ public abstract class BaseSpecificationResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

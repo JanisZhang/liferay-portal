@@ -459,9 +459,8 @@ const openSelectionModal = ({
 
 	const select = () => {
 		if (multiple && !selectedItem) {
-			const searchContainer = iframeWindowObj.document.querySelector(
-				'.searchcontainer'
-			);
+			const searchContainer =
+				iframeWindowObj.document.querySelector('.searchcontainer');
 
 			if (searchContainer) {
 				iframeWindowObj.Liferay.componentReady(searchContainer.id).then(
@@ -470,7 +469,8 @@ const openSelectionModal = ({
 							? searchContainer.select.getAllSelectedElements()
 							: searchContainer.select._getAllElements(false);
 
-						const allSelectedNodes = allSelectedElements.getDOMNodes();
+						const allSelectedNodes =
+							allSelectedElements.getDOMNodes();
 
 						onSelect(
 							allSelectedNodes.map((node) => {
@@ -509,6 +509,42 @@ const openSelectionModal = ({
 		}
 	};
 
+	const iframeProps = {};
+
+	if (selectedData) {
+		const ercs = [];
+		const ids = [];
+		const labels = [];
+
+		selectedData.forEach((item) => {
+			const {externalReferenceCode, id, label} = item;
+
+			if (externalReferenceCode) {
+				ercs.push(externalReferenceCode);
+			}
+
+			if (id) {
+				ids.push(id);
+			}
+
+			if (label) {
+				labels.push(label);
+			}
+		});
+
+		if (ercs.length) {
+			iframeProps['data-selecteditemsercs'] = ercs.join(',');
+		}
+
+		if (ids.length) {
+			iframeProps['data-selecteditemsids'] = ids.join(',');
+		}
+
+		if (labels.length) {
+			iframeProps['data-selecteditemslabels'] = labels.join(',');
+		}
+	}
+
 	openModal({
 		buttons: multiple
 			? [
@@ -521,12 +557,13 @@ const openSelectionModal = ({
 						label: buttonAddLabel,
 						onClick: select,
 					},
-			  ]
+				]
 			: null,
 		containerProps,
 		height,
 		id: id || selectEventName,
 		iframeBodyCssClass,
+		iframeProps,
 		onClose: () => {
 			eventHandlers.forEach((eventHandler) => {
 				eventHandler.detach();
@@ -544,9 +581,8 @@ const openSelectionModal = ({
 
 			const iframeBody = iframeWindow.document.body;
 
-			const itemElements = iframeBody.querySelectorAll(
-				'.selector-button'
-			);
+			const itemElements =
+				iframeBody.querySelectorAll('.selector-button');
 
 			if (selectedData) {
 				const selectedDataSet = new Set(selectedData);
@@ -608,9 +644,8 @@ const openSelectionModal = ({
 
 				if (!customSelectEvent) {
 					iframeBody.addEventListener('click', (event) => {
-						const delegateTarget = event.target?.closest(
-							'.selector-button'
-						);
+						const delegateTarget =
+							event.target?.closest('.selector-button');
 
 						if (delegateTarget) {
 							Liferay.fire(

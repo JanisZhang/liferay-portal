@@ -32,6 +32,7 @@ import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
@@ -64,6 +65,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupServiceUtil;
@@ -103,6 +105,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.portlet.MimeResponse;
+import javax.portlet.PortletRequest;
 import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -395,7 +399,16 @@ public class JournalEditArticleDisplayContext {
 			"articleId", getArticleId()
 		).put(
 			"autoSaveDraftEnabled",
-			FeatureFlagManagerUtil.isEnabled("LPS-141392")
+			FeatureFlagManagerUtil.isEnabled("LPD-11228")
+		).put(
+			"autoSaveDraftURL",
+			ResourceURLBuilder.createResourceURL(
+				_liferayPortletResponse.createLiferayPortletURL(
+					JournalPortletKeys.JOURNAL, PortletRequest.RESOURCE_PHASE,
+					MimeResponse.Copy.PUBLIC)
+			).setResourceID(
+				"/journal/auto_save_article"
+			).buildString()
 		).put(
 			"availableLocales", _getAvailableLanguageIds()
 		).put(
@@ -1025,7 +1038,7 @@ public class JournalEditArticleDisplayContext {
 		return "save";
 	}
 
-	public Map<String, Object> getSaveButtonsContext() {
+	public Map<String, Object> getSaveButtonsContext() throws PortalException {
 		return HashMapBuilder.<String, Object>put(
 			"articleId", getArticleId()
 		).put(
@@ -1033,7 +1046,9 @@ public class JournalEditArticleDisplayContext {
 		).put(
 			"displayDate",
 			() -> {
-				if ((_article != null) && _article.isScheduled()) {
+				if ((_article != null) && (_article.getDisplayDate() != null) &&
+					(_article.isPending() || _article.isScheduled())) {
+
 					Format format =
 						FastDateFormatFactoryUtil.getSimpleDateFormat(
 							"yyyy-MM-dd HH:mm", _themeDisplay.getLocale(),
@@ -1057,6 +1072,8 @@ public class JournalEditArticleDisplayContext {
 			() -> LanguageUtil.get(_httpServletRequest, getSaveButtonLabel())
 		).put(
 			"selectedLanguageId", getSelectedLanguageId()
+		).put(
+			"showPublishModal", _isShowPublishModal()
 		).put(
 			"timeZone", getTimeZoneName()
 		).put(
@@ -1655,6 +1672,35 @@ public class JournalEditArticleDisplayContext {
 			_httpServletRequest, "showHeader", true);
 
 		return _showHeader;
+	}
+
+	private boolean _isShowPublishModal() throws PortalException {
+		if (_article == null) {
+			return true;
+		}
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-11228")) {
+
+			if (Validator.isNotNull(_article.getArticleId())) {
+				return false;
+			}
+
+			return true;
+		}
+
+		JournalArticle oldestArticle =
+			JournalArticleLocalServiceUtil.getOldestArticle(
+				_article.getGroupId(), _article.getArticleId());
+
+		if ((oldestArticle == null) ||
+			((oldestArticle.getStatus() == WorkflowConstants.STATUS_DRAFT) &&
+			 (oldestArticle.getVersion() == _article.getVersion()))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private boolean _isWorkflowEnabled() throws PortalException {

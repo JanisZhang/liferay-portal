@@ -7,6 +7,7 @@ package com.liferay.portal.workflow.kaleo.internal.runtime.integration.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -14,11 +15,14 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.kernel.workflow.WorkflowException;
+import com.liferay.portal.security.script.management.test.util.ScriptManagementConfigurationTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.workflow.kaleo.definition.exception.KaleoDefinitionValidationException;
 import com.liferay.portal.workflow.kaleo.definition.util.WorkflowDefinitionContentUtil;
 import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
+import java.io.Closeable;
 import java.io.InputStream;
 
 import org.junit.Assert;
@@ -50,6 +54,26 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 		_workflowDefinitionManager.getWorkflowDefinition(
 			TestPropsValues.getCompanyId(), workflowDefinition.getName(),
 			workflowDefinition.getVersion());
+	}
+
+	@Test
+	public void testDeployGroovyWorkflowDefinition() throws Exception {
+		String content = StringUtil.read(
+			getResourceInputStream(
+				"single-approver-site-member-workflow-definition.xml"));
+
+		try (Closeable closeable =
+				ScriptManagementConfigurationTestUtil.saveWithCloseable(
+					false)) {
+
+			AssertUtils.assertFailure(
+				KaleoDefinitionValidationException.NotAllowedScriptLanguage.
+					class,
+				"Groovy is not allowed",
+				() -> _workflowDefinitionManager.deployWorkflowDefinition(
+					TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+					StringPool.BLANK, "Single Approver", content.getBytes()));
+		}
 	}
 
 	@Test

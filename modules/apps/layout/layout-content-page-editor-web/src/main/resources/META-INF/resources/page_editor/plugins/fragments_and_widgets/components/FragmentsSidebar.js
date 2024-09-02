@@ -108,9 +108,8 @@ const normalizeCollection = (collection) => {
 	};
 
 	if (collection.categories?.length) {
-		normalizedElement.collections = collection.categories.map(
-			normalizeCollection
-		);
+		normalizedElement.collections =
+			collection.categories.map(normalizeCollection);
 	}
 
 	return normalizedElement;
@@ -118,6 +117,7 @@ const normalizeCollection = (collection) => {
 
 const normalizeFragmentEntry = (fragmentEntry) => ({
 	data: {
+		fieldTypes: fragmentEntry.fieldTypes,
 		fragmentEntryKey: fragmentEntry.fragmentEntryKey,
 		groupId: fragmentEntry.groupId,
 		type: fragmentEntry.type,
@@ -170,7 +170,7 @@ export default function FragmentsSidebar() {
 				collections: widgets
 					? widgets.map((collection) =>
 							normalizeCollection(collection)
-					  )
+						)
 					: [],
 				id: COLLECTION_IDS.widgets,
 				label: Liferay.Language.get('widgets'),
@@ -206,7 +206,7 @@ export default function FragmentsSidebar() {
 						tab.collections.flatMap(
 							(collection) => collection.children
 						)
-				  ).length,
+					).length,
 		[filteredTabs, searchValue]
 	);
 

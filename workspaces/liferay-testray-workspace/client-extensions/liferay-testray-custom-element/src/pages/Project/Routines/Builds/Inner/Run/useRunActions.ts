@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {Liferay} from '~/services/liferay';
+
 import useFormModal from '../../../../../../hooks/useFormModal';
 import useMutate from '../../../../../../hooks/useMutate';
 import useRuns from '../../../../../../hooks/useRuns';
@@ -24,10 +26,10 @@ const useRunActions = () => {
 			permission: 'UPDATE',
 		},
 		{
-			action: ({id}, mutate) =>
+			action: ({testrayRunId}, mutate) =>
 				testrayRunImpl
-					.removeResource(id)
-					?.then(() => removeItemFromList(mutate, id))
+					.removeResource(testrayRunId)
+					?.then(() => removeItemFromList(mutate, testrayRunId))
 					.then(modal.onSave)
 					.catch(modal.onError),
 			icon: 'trash',
@@ -35,12 +37,24 @@ const useRunActions = () => {
 			permission: 'DELETE',
 		},
 		{
-			action: ({id}) => setRunA(id),
+			action: ({testrayRunId}) => {
+				setRunA(testrayRunId);
+
+				return Liferay.Util.openToast({
+					message: i18n.translate('run-a-successfully-added'),
+				});
+			},
 			icon: 'select-from-list',
 			name: i18n.translate('select-run-a'),
 		},
 		{
-			action: ({id}) => setRunB(id),
+			action: ({testrayRunId}) => {
+				setRunB(testrayRunId);
+
+				return Liferay.Util.openToast({
+					message: i18n.translate('run-b-successfully-added'),
+				});
+			},
 			icon: 'select-from-list',
 			name: i18n.translate('select-run-b'),
 		},

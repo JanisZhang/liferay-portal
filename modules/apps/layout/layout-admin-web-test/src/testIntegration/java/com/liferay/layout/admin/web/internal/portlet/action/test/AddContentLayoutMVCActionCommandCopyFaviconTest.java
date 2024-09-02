@@ -17,10 +17,10 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -46,10 +46,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,18 +67,6 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
 
-	@BeforeClass
-	public static void setUpClass() throws Exception {
-		_originalName = PrincipalThreadLocal.getName();
-
-		PrincipalThreadLocal.setName(TestPropsValues.getUserId());
-	}
-
-	@AfterClass
-	public static void tearDownClass() throws Exception {
-		PrincipalThreadLocal.setName(_originalName);
-	}
-
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
@@ -89,7 +75,7 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 
 		_layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.BASIC, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -108,6 +94,7 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 	}
 
 	@Test
+	@TestInfo("LPS-153654")
 	public void testAddContentLayoutCopyFavicon() throws Exception {
 		_mvcActionCommand.processAction(
 			_getMockLiferayPortletActionRequest(),
@@ -135,11 +122,11 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 	}
 
 	private byte[] _getBytes(String favicon) throws Exception {
+		byte[] bytes = null;
+
 		URL url = new URL(_getPortalURL() + favicon);
 
 		URLConnection urlConnection = url.openConnection();
-
-		byte[] bytes;
 
 		try (InputStream inputStream = urlConnection.getInputStream()) {
 			bytes = FileUtil.getBytes(inputStream);
@@ -196,8 +183,6 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 
 		return themeDisplay;
 	}
-
-	private static String _originalName;
 
 	private Company _company;
 

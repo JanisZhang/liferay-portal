@@ -36,10 +36,11 @@ export default function ViewUsages({getUsagesURL}) {
 
 	useEffect(() => {
 		onUsagesLoad(1);
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	if (!items.length) {
+	if (!items.length && !loading) {
 		return (
 			<p className="text-secondary">
 				{Liferay.Language.get('there-are-no-usages')}

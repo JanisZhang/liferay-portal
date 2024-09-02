@@ -5,6 +5,7 @@
 
 import {fetch} from 'frontend-js-web';
 
+import {DEFAULT_FETCH_HEADERS} from '../constants';
 import getValueFromItem from './getValueFromItem';
 import createOdataFilter from './odata';
 
@@ -16,6 +17,7 @@ export function getData(apiURL, query) {
 	}
 
 	return fetch(url, {
+		headers: DEFAULT_FETCH_HEADERS,
 		method: 'GET',
 	}).then((data) => data.json());
 }
@@ -68,10 +70,6 @@ export function formatItemChanges(itemChanges) {
 	);
 
 	return formattedChanges;
-}
-
-export function getRandomId() {
-	return Math.random().toString(36).substr(2, 9);
 }
 
 export function createSortingString(values) {
@@ -150,6 +148,8 @@ export async function loadData(
 	}
 
 	if (sorts.length) {
+		url.searchParams.delete('sort');
+
 		url.searchParams.append(
 			'sort',
 			sorts.map((item) => `${item.key}:${item.direction}`).join(',')
@@ -157,11 +157,7 @@ export async function loadData(
 	}
 
 	const response = await fetch(url, {
-		headers: {
-			'Accept': 'application/json',
-			'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
-			'Content-Type': 'application/json',
-		},
+		headers: DEFAULT_FETCH_HEADERS,
 		method: 'GET',
 	});
 	const responseJSON = await response.json();

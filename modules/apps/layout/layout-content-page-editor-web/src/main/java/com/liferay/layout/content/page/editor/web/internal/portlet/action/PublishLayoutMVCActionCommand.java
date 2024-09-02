@@ -6,11 +6,12 @@
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
+import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.sites.kernel.util.Sites;
 
 import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -94,6 +97,25 @@ public class PublishLayoutMVCActionCommand
 		MultiSessionMessages.add(actionRequest, "layoutPublished");
 	}
 
+	private void _cleanWidgetLayoutTypeSettings(
+		UnicodeProperties typeSettingsUnicodeProperties) {
+
+		typeSettingsUnicodeProperties.remove(
+			LayoutConstants.CUSTOMIZABLE_LAYOUT);
+		typeSettingsUnicodeProperties.remove(
+			LayoutTypePortletConstants.LAYOUT_TEMPLATE_ID);
+
+		Set<Map.Entry<String, String>> entrySet =
+			typeSettingsUnicodeProperties.entrySet();
+
+		entrySet.removeIf(
+			entry -> {
+				String key = entry.getKey();
+
+				return key.startsWith("column-");
+			});
+	}
+
 	private void _publishLayout(
 			Layout draftLayout, Layout layout, ServiceContext serviceContext,
 			long userId)
@@ -114,7 +136,7 @@ public class PublishLayoutMVCActionCommand
 			UnicodeProperties originalTypeSettingsUnicodeProperties =
 				layout.getTypeSettingsProperties();
 
-			_layoutCopyHelper.copyLayoutContent(draftLayout, layout);
+			_layoutLocalService.copyLayoutContent(draftLayout, layout);
 
 			layout = _layoutLocalService.getLayout(layout.getPlid());
 
@@ -140,16 +162,45 @@ public class PublishLayoutMVCActionCommand
 				LayoutTypeSettingsConstants.KEY_PUBLISHED,
 				Boolean.TRUE.toString());
 
+			_cleanWidgetLayoutTypeSettings(typeSettingsUnicodeProperties);
+
 			draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
 
 			draftLayout = _layoutLocalService.updateLayout(draftLayout);
 
 			LayoutSet layoutSet = layout.getLayoutSet();
 
-			if (layoutSet.isLayoutSetPrototypeLinkActive()) {
-				UnicodeProperties updatedTypeSettingsUnicodeProperties =
-					layout.getTypeSettingsProperties();
+			UnicodeProperties updatedTypeSettingsUnicodeProperties =
+				layout.getTypeSettingsProperties();
 
+			if (originalTypeSettingsUnicodeProperties.containsKey(
+					LayoutTypePortletConstants.SITEMAP_CHANGEFREQ)) {
+
+				updatedTypeSettingsUnicodeProperties.put(
+					LayoutTypePortletConstants.SITEMAP_CHANGEFREQ,
+					originalTypeSettingsUnicodeProperties.get(
+						LayoutTypePortletConstants.SITEMAP_CHANGEFREQ));
+			}
+
+			if (originalTypeSettingsUnicodeProperties.containsKey(
+					LayoutTypePortletConstants.SITEMAP_INCLUDE)) {
+
+				updatedTypeSettingsUnicodeProperties.put(
+					LayoutTypePortletConstants.SITEMAP_INCLUDE,
+					originalTypeSettingsUnicodeProperties.get(
+						LayoutTypePortletConstants.SITEMAP_INCLUDE));
+			}
+
+			if (originalTypeSettingsUnicodeProperties.containsKey(
+					LayoutTypePortletConstants.SITEMAP_PRIORITY)) {
+
+				updatedTypeSettingsUnicodeProperties.put(
+					LayoutTypePortletConstants.SITEMAP_PRIORITY,
+					originalTypeSettingsUnicodeProperties.get(
+						LayoutTypePortletConstants.SITEMAP_PRIORITY));
+			}
+
+			if (layoutSet.isLayoutSetPrototypeLinkActive()) {
 				if (originalTypeSettingsUnicodeProperties.containsKey(
 						Sites.LAST_MERGE_LAYOUT_MODIFIED_TIME)) {
 
@@ -168,6 +219,9 @@ public class PublishLayoutMVCActionCommand
 							Sites.LAST_MERGE_TIME));
 				}
 			}
+
+			_cleanWidgetLayoutTypeSettings(
+				updatedTypeSettingsUnicodeProperties);
 
 			layout.setType(draftLayout.getType());
 			layout.setLayoutPrototypeUuid(null);
@@ -200,9 +254,6 @@ public class PublishLayoutMVCActionCommand
 			layoutRevision.getColorSchemeId(), layoutRevision.getCss(),
 			serviceContext);
 	}
-
-	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

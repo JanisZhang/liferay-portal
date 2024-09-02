@@ -166,7 +166,7 @@
 			<finder-column name="fileVersionId" />
 		</finder>
 	</entity>
-	<entity human-name="document library file entry type" local-service="true" name="DLFileEntryType" remote-service="true" uad-dir-path="../modules/apps/document-library/document-library-uad/src/main/java" uad-package-path="com.liferay.document.library" uuid="true">
+	<entity external-reference-code="group" human-name="document library file entry type" local-service="true" name="DLFileEntryType" remote-service="true" uad-dir-path="../modules/apps/document-library/document-library-uad/src/main/java" uad-package-path="com.liferay.document.library" uuid="true">
 
 		<!-- PK fields -->
 
@@ -211,7 +211,7 @@
 			<finder-column name="fileEntryTypeKey" />
 		</finder>
 	</entity>
-	<entity human-name="document library file shortcut" local-service="true" name="DLFileShortcut" remote-service="true" trash-enabled="true" uad-dir-path="../modules/apps/document-library/document-library-uad/src/main/java" uad-package-path="com.liferay.document.library" uuid="true">
+	<entity external-reference-code="group" human-name="document library file shortcut" local-service="true" name="DLFileShortcut" remote-service="true" trash-enabled="true" uad-dir-path="../modules/apps/document-library/document-library-uad/src/main/java" uad-package-path="com.liferay.document.library" uuid="true">
 
 		<!-- PK fields -->
 
@@ -244,6 +244,9 @@
 
 		<!-- Finder methods -->
 
+		<finder name="GroupId" return-type="Collection">
+			<finder-column name="groupId" />
+		</finder>
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
@@ -347,7 +350,7 @@
 		</finder>
 		<finder name="F_S" return-type="Collection">
 			<finder-column name="fileEntryId" />
-			<finder-column name="status" />
+			<finder-column arrayable-operator="OR" name="status" />
 		</finder>
 		<finder name="LtD_S" return-type="Collection">
 			<finder-column comparator="&lt;" name="displayDate" />
@@ -357,6 +360,11 @@
 			<finder-column name="groupId" />
 			<finder-column name="folderId" />
 			<finder-column name="status" />
+		</finder>
+		<finder name="C_E_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="expirationDate" />
+			<finder-column arrayable-operator="OR" name="status" />
 		</finder>
 		<finder name="G_F_T_V" return-type="Collection">
 			<finder-column name="groupId" />

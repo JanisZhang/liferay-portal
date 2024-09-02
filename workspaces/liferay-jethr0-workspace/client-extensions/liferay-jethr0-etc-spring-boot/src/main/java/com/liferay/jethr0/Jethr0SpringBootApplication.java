@@ -8,9 +8,7 @@ package com.liferay.jethr0;
 import com.liferay.client.extension.util.spring.boot.ClientExtensionUtilSpringBootComponentScan;
 import com.liferay.jethr0.bui1d.queue.BuildQueue;
 import com.liferay.jethr0.entity.EntityInitializer;
-import com.liferay.jethr0.event.EventHandlerContext;
 import com.liferay.jethr0.event.jenkins.JenkinsEventProcessor;
-import com.liferay.jethr0.event.jrp.JRPEventProcessor;
 import com.liferay.jethr0.jenkins.JenkinsQueue;
 import com.liferay.jethr0.job.queue.JobQueue;
 
@@ -18,6 +16,7 @@ import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,6 +27,10 @@ import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
 /**
  * @author Michael Hashimoto
@@ -39,15 +42,6 @@ public class Jethr0SpringBootApplication {
 	public static void main(String[] args) {
 		ConfigurableApplicationContext configurableApplicationContext =
 			SpringApplication.run(Jethr0SpringBootApplication.class, args);
-
-		EventHandlerContext eventHandlerContext =
-			configurableApplicationContext.getBean(EventHandlerContext.class);
-
-		eventHandlerContext.setJenkinsEventProcessor(
-			configurableApplicationContext.getBean(
-				JenkinsEventProcessor.class));
-		eventHandlerContext.setJRPEventProcessor(
-			configurableApplicationContext.getBean(JRPEventProcessor.class));
 
 		EntityInitializer entityInitializer =
 			configurableApplicationContext.getBean(EntityInitializer.class);
@@ -93,6 +87,43 @@ public class Jethr0SpringBootApplication {
 	}
 
 	@Bean
+	@Qualifier("extra")
+	public ClientRegistration getExtraClientRegistration() {
+		return ClientRegistration.withRegistrationId(
+			"extra"
+		).authorizationGrantType(
+			AuthorizationGrantType.CLIENT_CREDENTIALS
+		).clientId(
+			_extraOAuth2ClientId
+		).clientSecret(
+			_extraOAuth2ClientSecret
+		).scope(
+			_extraOAuth2Scope
+		).tokenUri(
+			_extraOAuth2TokenURL
+		).build();
+	}
+
+	@Bean
+	@Qualifier("extra")
+	public InMemoryClientRegistrationRepository
+		getInMemoryClientRegistrationRepository(
+			@Qualifier("extra") ClientRegistration clientRegistration) {
+
+		return new InMemoryClientRegistrationRepository(clientRegistration);
+	}
+
+	@Bean
+	@Qualifier("extra")
+	public InMemoryReactiveClientRegistrationRepository
+		getInMemoryReactiveClientRegistrationRepository(
+			@Qualifier("extra") ClientRegistration clientRegistration) {
+
+		return new InMemoryReactiveClientRegistrationRepository(
+			clientRegistration);
+	}
+
+	@Bean
 	public JmsListenerContainerFactory getJmsListenerContainerFactory(
 		ActiveMQConnectionFactory activeMQConnectionFactory) {
 
@@ -114,6 +145,20 @@ public class Jethr0SpringBootApplication {
 
 		return jmsTemplate;
 	}
+
+	@Value("${JETHR0_EXTRA_OAUTH2_CLIENT_ID:client_id}")
+	private String _extraOAuth2ClientId;
+
+	@Value("${JETHR0_EXTRA_OAUTH2_CLIENT_SECRET:client_secret}")
+	private String _extraOAuth2ClientSecret;
+
+	@Value("${JETHR0_EXTRA_OAUTH2_SCOPE:api}")
+	private String _extraOAuth2Scope;
+
+	@Value(
+		"${JETHR0_EXTRA_OAUTH2_TOKEN_URL:https://company.okta.com/oauth2/default/v1/token}"
+	)
+	private String _extraOAuth2TokenURL;
 
 	@Value("${JETHR0_JMS_BROKER_URL:tcp://localhost:61616}")
 	private String _jmsBrokerURL;

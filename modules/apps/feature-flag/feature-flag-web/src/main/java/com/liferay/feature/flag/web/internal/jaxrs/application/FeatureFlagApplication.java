@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -94,11 +95,8 @@ public class FeatureFlagApplication extends Application {
 			FeatureFlag featureFlag = featureFlagsBag.getFeatureFlag(key);
 
 			if (featureFlag == null) {
-				return Response.ok(
-					HashMapBuilder.<String, Object>put(
-						"error", "Feature flag \"" + key + "\" is not available"
-					).build(),
-					MediaType.APPLICATION_JSON
+				return Response.status(
+					Response.Status.NOT_FOUND
 				).build();
 			}
 
@@ -117,11 +115,10 @@ public class FeatureFlagApplication extends Application {
 			).build();
 		}
 		catch (Exception exception) {
-			return Response.ok(
-				HashMapBuilder.<String, Object>put(
-					"error", exception.toString()
-				).build(),
-				MediaType.APPLICATION_JSON
+			_log.error(exception);
+
+			return Response.status(
+				Response.Status.INTERNAL_SERVER_ERROR
 			).build();
 		}
 	}
@@ -134,8 +131,8 @@ public class FeatureFlagApplication extends Application {
 		if (featureFlag == null) {
 			_log.error(
 				StringBundler.concat(
-					"Feature flag ", key, " does not exist for company ",
-					companyId));
+					"Feature flag ", HtmlUtil.escape(key),
+					" does not exist for company ", companyId));
 
 			return new ArrayList<>();
 		}

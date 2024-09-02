@@ -1,13 +1,13 @@
 .dropzone-upload {
 	&-container {
 		align-items: center;
-		border: 2px dashed #b1b2b9;
+		border: 1.5px dashed #b1b2b9;
 		border-radius: 0.5rem;
 		display: flex;
 		flex-direction: column;
 		height: 15rem;
 		justify-content: center;
-		width: 37.5rem;
+		transition: border-color 0.3s;
 
 		&-active {
 			border-color: #78e5d5;
@@ -17,7 +17,13 @@
 			border-color: #e57878;
 		}
 
-		transition: border-color 0.3s;
+		&-disabled {
+			-ms-user-select: none;
+			-webkit-user-select: none;
+			filter: saturate(0) opacity(0.5);
+			pointer-events: none;
+			user-select: none;
+		}
 	}
 
 	&-document {
@@ -29,7 +35,7 @@
 			height: 5rem;
 			justify-content: center;
 			margin-bottom: 1.688rem;
-			width: 14.5rem;
+			width: 8.125rem;
 		}
 
 		&-icon {
@@ -41,14 +47,13 @@
 	}
 
 	&-text {
-		&-container {
-			margin-bottom: 0.813rem;
-		}
-
 		color: #282934;
 		font-size: 1rem;
 		font-weight: 400;
 		line-height: 1.5rem;
+		&-container {
+			margin-bottom: 0.813rem;
+		}
 	}
 
 	&-button {
@@ -56,13 +61,12 @@
 		border: none;
 		border-radius: 0.375rem;
 		height: 2rem;
+		transition: background-color 0.3s;
 		width: 5.813rem;
 
 		&:hover {
 			background-color: #edf3fe;
 		}
-
-		transition: background-color 0.3s;
 
 		&-text {
 			color: #0053f0;

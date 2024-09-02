@@ -166,6 +166,55 @@ public class JournalArticleLocalServiceTest {
 		_themeDisplay = _getThemeDisplay();
 	}
 
+	@Test(expected = DuplicateArticleExternalReferenceCodeException.class)
+	public void testAddArticleWithExistingExternalReferenceCode()
+		throws Exception {
+
+		JournalArticle article = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		JournalTestUtil.addArticle(
+			article.getExternalReferenceCode(), _group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			article.getArticleId(), true);
+	}
+
+	@Test
+	public void testAddArticleWithURLWithURLWithConsecutiveSlashes()
+		throws Exception {
+
+		JournalArticle article = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, "/test//////test",
+			"test");
+
+		Map<Locale, String> friendlyURLMap = article.getFriendlyURLMap();
+
+		Assert.assertFalse(friendlyURLMap.isEmpty());
+
+		for (Map.Entry<Locale, String> entry : friendlyURLMap.entrySet()) {
+			Assert.assertEquals("test/test", entry.getValue());
+		}
+	}
+
+	@Test
+	public void testAddArticleWithURLWithURLWithStartingSlash()
+		throws Exception {
+
+		JournalArticle article = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, "/test", "test");
+
+		Map<Locale, String> friendlyURLMap = article.getFriendlyURLMap();
+
+		Assert.assertFalse(friendlyURLMap.isEmpty());
+
+		for (Map.Entry<Locale, String> entry : friendlyURLMap.entrySet()) {
+			Assert.assertEquals("test", entry.getValue());
+		}
+	}
+
 	@Test
 	public void testArticleFriendlyURLValidation() throws Exception {
 		_assertArticleFriendlyURLMap(_group);
@@ -421,7 +470,7 @@ public class JournalArticleLocalServiceTest {
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			StringUtil.replace(
-				_readFileToString("journal_content_with_images.xml"),
+				_readFileToString("journal_article_content_with_images.xml"),
 				new String[] {"[$IMAGE_JSON_1$]", "[$IMAGE_JSON_2$]"},
 				new String[] {
 					_toJSON(_addTempFileEntry("test_01.jpg")),
@@ -455,7 +504,8 @@ public class JournalArticleLocalServiceTest {
 			JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			StringUtil.replace(
 				_readFileToString(
-					"journal_content_with_images_and_nested_fields.xml"),
+					"journal_article_content_with_images_and_nested_fields." +
+						"xml"),
 				new String[] {"[$IMAGE_JSON_1$]", "[$IMAGE_JSON_2$]"},
 				new String[] {
 					_toJSON(_addTempFileEntry("test_01.jpg")),
@@ -491,7 +541,8 @@ public class JournalArticleLocalServiceTest {
 			JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 			StringUtil.replace(
 				_readFileToString(
-					"journal_content_with_images_and_repeatable_fields.xml"),
+					"journal_article_content_with_images_and_repeatable_" +
+						"fields.xml"),
 				new String[] {
 					"[$IMAGE_JSON_1$]", "[$IMAGE_JSON_2$]", "[$IMAGE_JSON_3$]",
 					"[$IMAGE_JSON_4$]", "[$IMAGE_JSON_5$]", "[$IMAGE_JSON_6$]",
@@ -516,6 +567,44 @@ public class JournalArticleLocalServiceTest {
 		Assert.assertEquals(
 			oldArticle.getImagesFileEntriesCount(),
 			newArticle.getImagesFileEntriesCount());
+
+		_validateDDMFormValuesImages(newArticle);
+	}
+
+	@Test
+	public void testCopyArticleWithMultipleImages() throws Exception {
+		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			StringUtil.randomString(), ContentTypes.IMAGE_JPEG,
+			StringUtil.randomString(), "urltitle", StringUtil.randomString(),
+			StringUtil.randomString(), new byte[0], null, null, null,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		String fileEntryJSONString = _toJSON(fileEntry);
+
+		DataDefinition dataDefinition =
+			DataDefinitionTestUtil.addDataDefinition(
+				"journal", _dataDefinitionResourceFactory, _group.getGroupId(),
+				_readFileToString("ddm_form_with_multiple_images.json"),
+				TestPropsValues.getUser());
+
+		JournalArticle oldArticle = JournalTestUtil.addArticleWithXMLContent(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
+			StringUtil.replace(
+				_readFileToString(
+					"journal_article_content_with_multiple_images.xml"),
+				new String[] {"[$IMAGE_JSON_1$]", "[$IMAGE_JSON_2$]"},
+				new String[] {fileEntryJSONString, fileEntryJSONString}),
+			dataDefinition.getDataDefinitionKey(), null, LocaleUtil.US);
+
+		JournalArticle newArticle = _journalArticleLocalService.copyArticle(
+			oldArticle.getUserId(), oldArticle.getGroupId(),
+			oldArticle.getArticleId(), null, true, oldArticle.getVersion());
+
+		Assert.assertEquals(0, newArticle.getImagesFileEntriesCount());
 
 		_validateDDMFormValuesImages(newArticle);
 	}
@@ -1007,18 +1096,6 @@ public class JournalArticleLocalServiceTest {
 			article.getArticleId(), true);
 	}
 
-	@Test(expected = DuplicateArticleExternalReferenceCodeException.class)
-	public void testDuplicatedExternalReferenceCode() throws Exception {
-		JournalArticle article = JournalTestUtil.addArticle(
-			_group.getGroupId(),
-			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
-
-		JournalTestUtil.addArticle(
-			article.getExternalReferenceCode(), _group.getGroupId(),
-			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			article.getArticleId(), true);
-	}
-
 	@Test
 	public void testGetArticleDisplayFriendlyURLDisplayPageExists()
 		throws Exception {
@@ -1050,7 +1127,7 @@ public class JournalArticleLocalServiceTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				_group.getCreatorUserId(), _group.getGroupId(), 0,
+				null, _group.getCreatorUserId(), _group.getGroupId(), 0,
 				_portal.getClassNameId(JournalArticle.class.getName()),
 				ddmStructure.getStructureId(), RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
@@ -1131,7 +1208,7 @@ public class JournalArticleLocalServiceTest {
 				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 				JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 				StringUtil.replace(
-					_readFileToString("complex_journal_content.xml"),
+					_readFileToString("complex_journal_article_content.xml"),
 					"[$DOCUMENT_JSON$]", _toJSON(fileEntry)),
 				dataDefinition.getDataDefinitionKey(), null, LocaleUtil.SPAIN);
 
@@ -1186,7 +1263,8 @@ public class JournalArticleLocalServiceTest {
 				JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
 				StringUtil.replace(
 					_readFileToString(
-						"complex_with_translations_journal_content.xml"),
+						"complex_with_translations_journal_article_content." +
+							"xml"),
 					"[$DOCUMENT_JSON$]", _toJSON(fileEntry)),
 				dataDefinition.getDataDefinitionKey(), null, LocaleUtil.SPAIN);
 
@@ -1391,7 +1469,8 @@ public class JournalArticleLocalServiceTest {
 				LocaleUtil.US, "friendly-url"
 			).build(),
 			StringUtil.replace(
-				_readFileToString("journal_content_with_different_locales.xml"),
+				_readFileToString(
+					"journal_article_content_with_different_locales.xml"),
 				"[$DOCUMENT_JSON$]", _toJSON(fileEntry)),
 			ddmStructure.getStructureId(), null, null, 1, 1, 1965, 0, 0, 0, 0,
 			0, 0, 0, true, 0, 0, 0, 0, 0, true, true, false, 0, 0, null, null,
@@ -1465,7 +1544,8 @@ public class JournalArticleLocalServiceTest {
 			).build(),
 			StringUtil.replace(
 				_readFileToString(
-					"journal_content_nested_fields_with_different_locales.xml"),
+					"journal_article_content_nested_fields" +
+						"_with_different_locales.xml"),
 				"[$DOCUMENT_JSON$]", _toJSON(fileEntry)),
 			ddmStructure.getStructureId(), null, null, 1, 1, 1965, 0, 0, 0, 0,
 			0, 0, 0, true, 0, 0, 0, 0, 0, true, true, false, 0, 0, null, null,
@@ -1624,6 +1704,9 @@ public class JournalArticleLocalServiceTest {
 			serviceContext = ServiceContextTestUtil.getServiceContext(
 				_group.getCompanyId(), _group.getGroupId(),
 				nonownerPermissionChecker.getUserId());
+
+			serviceContext.setAddGroupPermissions(false);
+			serviceContext.setAddGuestPermissions(false);
 
 			Double originalArticleVersion = journalArticle.getVersion();
 
@@ -1866,7 +1949,7 @@ public class JournalArticleLocalServiceTest {
 			_companyLocalService.getCompany(_group.getCompanyId()));
 
 		Layout layout = _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			StringPool.BLANK, LayoutConstants.TYPE_PORTLET, false,

@@ -16,18 +16,23 @@ export function getDTOFromMDFRequest(
 		additionalOption: mdfRequest.additionalOption,
 		claimPercent: mdfRequest.claimPercent,
 		companyName: mdfRequest.company?.name,
+		convertedTotalCostOfExpense: mdfRequest.convertedTotalCostOfExpense,
+		convertedTotalMDFRequestAmount:
+			mdfRequest.convertedTotalMDFRequestAmount,
 		currency: mdfRequest.currency,
+		currencyExchangeRate: mdfRequest.currencyExchangeRate,
 		emailAddress: mdfRequest.id
 			? mdfRequest.emailAddress
 			: Liferay.ThemeDisplay.getUserEmailAddress(),
 		externalReferenceCode: externalReferenceCodeFromSF,
-		liferayBusinessSalesGoals: mdfRequest.liferayBusinessSalesGoals?.includes(
-			'Other - Please describe'
-		)
-			? mdfRequest.liferayBusinessSalesGoals
-					?.filter((item) => item !== 'Other - Please describe')
-					.join('; ')
-			: mdfRequest.liferayBusinessSalesGoals?.join('; '),
+		liferayBusinessSalesGoals:
+			mdfRequest.liferayBusinessSalesGoals?.includes(
+				'Other - Please describe'
+			)
+				? mdfRequest.liferayBusinessSalesGoals
+						?.filter((item) => item !== 'Other - Please describe')
+						.join('; ')
+				: mdfRequest.liferayBusinessSalesGoals?.join('; '),
 		liferayBusinessSalesGoalsOther:
 			mdfRequest?.liferayBusinessSalesGoalsOther,
 		liferaysUserIdSF: mdfRequest.id
@@ -38,7 +43,7 @@ export function getDTOFromMDFRequest(
 		minDateActivity: mdfRequest.minDateActivity,
 		overallCampaignDescription: mdfRequest.overallCampaignDescription,
 		overallCampaignName: mdfRequest.overallCampaignName,
-		partnerCountry: mdfRequest.partnerCountry,
+		partnerCountries: mdfRequest.partnerCountries,
 		r_accToMDFReqs_accountEntryERC:
 			mdfRequest.company?.externalReferenceCode,
 		r_accToMDFReqs_accountEntryId: mdfRequest.company?.id,

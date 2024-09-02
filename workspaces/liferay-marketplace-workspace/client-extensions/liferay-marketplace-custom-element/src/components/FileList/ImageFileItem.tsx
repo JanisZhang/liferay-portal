@@ -6,8 +6,6 @@
 import ClayButton from '@clayui/button';
 import {Text} from '@clayui/core';
 
-import arrowNorth from '../../assets/icons/arrow_north_icon.svg';
-import arrowSouth from '../../assets/icons/arrow_south_icon.svg';
 import {Tooltip} from '../Tooltip/Tooltip';
 import {UploadedFile} from './FileList';
 
@@ -17,16 +15,19 @@ import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
 
+import i18n from '../../i18n';
 import CircularProgress from '../CircularProgress';
 
 type ImageFileItemProps = {
 	index: number;
 	isProcessing: boolean;
 	onArrowClick: (index: number, direction: string) => void;
+	onChangeInput: (newImagesInputs: UploadedFile[]) => void;
 	onDelete: (id: string, versionName?: string) => void;
 	position: number;
 	tooltip?: string;
 	uploadedFile: UploadedFile;
+	uploadedImages: any;
 	versionName?: string;
 };
 
@@ -34,10 +35,12 @@ export function ImageFileItem({
 	index,
 	isProcessing,
 	onArrowClick,
+	onChangeInput,
 	onDelete,
 	position,
 	tooltip,
 	uploadedFile,
+	uploadedImages,
 	versionName,
 }: ImageFileItemProps) {
 	const showProgress =
@@ -47,26 +50,28 @@ export function ImageFileItem({
 		<div className="image-file-item-container">
 			<div className="image-file-item-arrow-container">
 				<ClayButton
+					aria-label={i18n.translate('move-up')}
 					disabled={isProcessing || index === 0}
 					displayType="unstyled"
 					onClick={() => onArrowClick(index, 'up')}
 				>
-					<img
-						alt="Arrow Up"
+					<ClayIcon
+						aria-label="Arrow Up"
 						className="image-file-item-arrow-icon"
-						src={arrowNorth}
+						symbol="order-arrow-up"
 					/>
 				</ClayButton>
 
 				<ClayButton
+					aria-label={i18n.translate('move-down')}
 					disabled={isProcessing || index === position - 1}
 					displayType="unstyled"
 					onClick={() => onArrowClick(index, 'down')}
 				>
-					<img
-						alt="Arrow South"
+					<ClayIcon
+						aria-label="Arrow South"
 						className="image-file-item-arrow-icon"
-						src={arrowSouth}
+						symbol="order-arrow-down"
 					/>
 				</ClayButton>
 			</div>
@@ -85,13 +90,14 @@ export function ImageFileItem({
 				) : (
 					<div className="d-flex">
 						<img
-							alt=""
+							alt="image"
 							className="image-file-item-uploaded-preview"
 							src={uploadedFile?.preview}
 						/>
 
 						{uploadedFile.uploaded && (
 							<ClayIcon
+								aria-label="image"
 								className={classNames(
 									'image-file-item-icon-check',
 									{
@@ -114,19 +120,31 @@ export function ImageFileItem({
 
 					{!isProcessing && (
 						<ClayButton
+							aria-label={i18n.translate('remove')}
 							displayType="secondary"
 							onClick={() =>
 								onDelete(uploadedFile.id, versionName)
 							}
 							size="sm"
 						>
-							Remove
+							{i18n.translate('remove')}
 						</ClayButton>
 					)}
 				</div>
 
 				<div className="align-items-center d-flex">
-					<ClayInput placeholder="Image description" />
+					<ClayInput
+						onChange={({target}) => {
+							uploadedImages[index].imageDescription =
+								target.value;
+
+							uploadedImages[index].changed = true;
+
+							onChangeInput(uploadedImages);
+						}}
+						placeholder="Image description"
+						value={uploadedImages[index].imageDescription}
+					/>
 
 					{tooltip && (
 						<div style={{marginLeft: '-40px'}}>

@@ -134,14 +134,7 @@ public class ObjectEntryEntityModelTest {
 				"keywords",
 				new CollectionEntityField(
 					new StringEntityField(
-						"keywords", locale -> "assetTagNames.raw"))
-			).put(
-				"objectDefinitionId",
-				new IntegerEntityField(
-					"objectDefinitionId", locale -> "objectDefinitionId")
-			).put(
-				"siteId",
-				new IntegerEntityField("siteId", locale -> Field.GROUP_ID)
+						"keywords", locale -> "assetTagNames.lowercase"))
 			).put(
 				"status",
 				new CollectionEntityField(
@@ -314,7 +307,7 @@ public class ObjectEntryEntityModelTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), 0, false, false, false,
+				TestPropsValues.getUserId(), 0, false, true, false, false,
 				LocalizedMapUtil.getLocalizedMap(objectDefinitionName),
 				objectDefinitionName, null, null,
 				LocalizedMapUtil.getLocalizedMap(objectDefinitionName), true,

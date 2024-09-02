@@ -40,9 +40,9 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.persistence.GroupPersistence;
 import com.liferay.portal.kernel.social.SocialActivityManagerUtil;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -666,8 +666,17 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		validate(
 			groupId, className, classPK, classTypeId, categoryIds, tagNames);
 
-		AssetEntry entry = assetEntryPersistence.fetchByC_C(
-			classNameId, classPK);
+		AssetEntry entry = null;
+
+		boolean strictAdd = false;
+
+		if (serviceContext != null) {
+			strictAdd = serviceContext.isStrictAdd();
+		}
+
+		if (!strictAdd) {
+			entry = assetEntryPersistence.fetchByC_C(classNameId, classPK);
+		}
 
 		long entryId = 0;
 
@@ -685,7 +694,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		// Tags
 
 		if ((tagNames != null) && ((entry != null) || (tagNames.length > 0))) {
-			Group siteGroup = _groupLocalService.getGroup(
+			Group siteGroup = _groupPersistence.findByPrimaryKey(
 				PortalUtil.getSiteGroupId(groupId));
 
 			List<AssetTag> tags = _assetTagLocalService.checkTags(
@@ -736,7 +745,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 		if (entry == null) {
 			entry = assetEntryPersistence.create(entryId);
 
-			Group group = _groupLocalService.getGroup(groupId);
+			Group group = _groupPersistence.findByPrimaryKey(groupId);
 
 			entry.setCompanyId(group.getCompanyId());
 
@@ -1315,8 +1324,8 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 	@BeanReference(type = ClassNameLocalService.class)
 	private ClassNameLocalService _classNameLocalService;
 
-	@BeanReference(type = GroupLocalService.class)
-	private GroupLocalService _groupLocalService;
+	@BeanReference(type = GroupPersistence.class)
+	private GroupPersistence _groupPersistence;
 
 	@BeanReference(type = SocialActivityCounterLocalService.class)
 	private SocialActivityCounterLocalService

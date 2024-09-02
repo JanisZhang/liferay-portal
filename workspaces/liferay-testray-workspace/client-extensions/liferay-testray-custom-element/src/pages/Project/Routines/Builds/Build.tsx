@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useParams, useSearchParams} from 'react-router-dom';
+import ClayIcon from '@clayui/icon';
+import {ClayTooltipProvider} from '@clayui/tooltip';
+import {useParams} from 'react-router-dom';
 import Avatar from '~/components/Avatar';
 import AssignToMe from '~/components/Avatar/AssignToMe/AssignToMe';
 import Code from '~/components/Code';
@@ -13,119 +15,102 @@ import ListView from '~/components/ListView';
 import StatusBadge from '~/components/StatusBadge';
 import {StatusBadgeType} from '~/components/StatusBadge/StatusBadge';
 import useMutate from '~/hooks/useMutate';
-import useSearchBuilder from '~/hooks/useSearchBuilder';
 import i18n from '~/i18n';
-import {
-	PickList,
-	TestrayCaseResult,
-	TestrayCaseResultIssue,
-	testrayCaseResultImpl,
-} from '~/services/rest';
+import {testrayCaseResultImpl} from '~/services/rest';
+import {getTruncateText} from '~/util/getTruncateText';
 
 import useBuildTestActions from './useBuildTestActions';
 
 const Build = () => {
-	const [searchParams] = useSearchParams();
 	const {actions, form} = useBuildTestActions();
 	const {buildId} = useParams();
 	const {updateItemFromList} = useMutate();
-
-	const runId = searchParams.get('runId');
-
-	const caseResultFilter = useSearchBuilder({useURIEncode: false});
-
-	const filter = runId
-		? caseResultFilter.eq('buildId', buildId as string).build()
-		: caseResultFilter.eq('buildId', buildId as string).build();
 
 	return (
 		<Container className="mt-4">
 			<ListView
 				initialContext={{
 					columns: {environment: false},
+					pageSize: 200,
 				}}
 				managementToolbarProps={{
+					applyFilters: true,
 					filterSchema: 'buildResults',
 					title: i18n.translate('tests'),
 				}}
-				resource={testrayCaseResultImpl.resource}
+				resource={`/testray-case-result/${buildId}`}
 				tableProps={{
 					actions,
 					columns: [
 						{
 							clickable: true,
-							key: 'caseType',
-							render: (
-								_,
-								{case: testrayCase}: TestrayCaseResult
-							) => testrayCase?.caseType?.name,
+							key: 'flaky',
+							render: (_, {flaky, testrayCaseName}) => (
+								<>
+									{flaky && (
+										<ClayTooltipProvider>
+											<span
+												className="tr-table__row__flaky-icon"
+												data-tooltip-align="top"
+												title={i18n.translate(
+													'this-is-a-possible-flaky-test'
+												)}
+											>
+												<ClayIcon symbol="flag-full" />
+											</span>
+										</ClayTooltipProvider>
+									)}
+									{testrayCaseName}
+								</>
+							),
+							size: 'md',
+							value: i18n.translate('case'),
+							width: '350',
+						},
+						{
+							clickable: true,
+							key: 'testrayCaseTypeName',
 							value: i18n.translate('case-type'),
 						},
 						{
 							clickable: true,
 							key: 'priority',
-							render: (
-								_,
-								{case: testrayCase}: TestrayCaseResult
-							) => testrayCase?.priority,
 							value: i18n.translate('priority'),
 						},
 						{
 							clickable: true,
-							key: 'team',
-							render: (_, testrayCaseResult: TestrayCaseResult) =>
-								testrayCaseResult.case?.component?.team?.name,
+							key: 'testrayTeamName',
 							value: i18n.translate('team'),
 						},
 						{
-							key: 'component',
-							render: (
-								_,
-								{case: testrayCase}: TestrayCaseResult
-							) => testrayCase?.component?.name,
+							clickable: true,
+							key: 'testrayComponentName',
 							value: i18n.translate('component'),
 						},
 						{
 							clickable: true,
-							key: 'name',
-							render: (
-								_,
-								{case: testrayCase}: TestrayCaseResult
-							) => testrayCase?.name,
-							size: 'xl',
-							value: i18n.translate('case'),
-						},
-						{
-							key: 'run',
-							render: (_, caseResult: TestrayCaseResult) =>
-								caseResult.run?.number
-									?.toString()
-									.padStart(2, '0'),
+							key: 'testrayRunNumber',
+							render: (testrayRunNumber) =>
+								testrayRunNumber?.toString().padStart(2, '0'),
 							value: i18n.translate('run'),
 						},
 						{
 							clickable: true,
-							key: 'environment',
-							render: (_, item: TestrayCaseResult) =>
-								item?.run?.name,
+							key: 'testrayRunName',
 							value: i18n.translate('environment'),
 							width: '250',
 						},
 						{
 							key: 'user',
-							render: (
-								_: any,
-								caseResult: TestrayCaseResult,
-								mutate
-							) => {
-								if (caseResult?.user) {
+							render: (_: any, caseResult, mutate) => {
+								if (caseResult.userName) {
 									return (
 										<Avatar
 											className="text-capitalize"
 											displayName
-											name={caseResult.user.name}
+											name={caseResult.userName}
 											size="sm"
-											url={caseResult.user.image}
+											url={caseResult.userPortraitUrl}
 										/>
 									);
 								}
@@ -156,49 +141,49 @@ const Build = () => {
 							width: '200',
 						},
 						{
-							key: 'dueStatus',
-							render: (dueStatus: PickList) => (
+							clickable: true,
+							key: 'status',
+							render: (dueStatus) => (
 								<StatusBadge
-									type={dueStatus.key as StatusBadgeType}
+									type={dueStatus as StatusBadgeType}
 								>
-									{dueStatus.name}
+									{dueStatus}
 								</StatusBadge>
 							),
 							value: i18n.translate('status'),
 						},
 						{
 							key: 'issues',
-							render: (issues: TestrayCaseResultIssue[]) =>
-								issues.map((caseResultIssue, index) => (
-									<JiraLink
-										issue={caseResultIssue}
-										key={index}
-									/>
-								)),
+							render: (issues: string) => (
+								<JiraLink
+									displayViewInJira={false}
+									issue={issues}
+								/>
+							),
 							value: i18n.translate('issues'),
 						},
 						{
-							key: 'errors',
+							key: 'error',
 							render: (errors: string) =>
-								errors && <Code>{errors}</Code>,
+								errors && (
+									<Code title={errors as string}>
+										{getTruncateText(errors)}
+									</Code>
+								),
 							size: 'xl',
-							truncate: true,
 							value: i18n.translate('errors'),
+							width: '400',
 						},
 						{
+							clickable: true,
 							key: 'comment',
 							size: 'lg',
 							value: i18n.translate('comment'),
 						},
 					],
-					navigateTo: ({id}) => `case-result/${id}`,
+					navigateTo: ({testrayCaseResultId}) =>
+						`case-result/${testrayCaseResultId}`,
 					rowWrap: true,
-				}}
-				transformData={(response) =>
-					testrayCaseResultImpl.transformDataFromList(response)
-				}
-				variables={{
-					filter,
 				}}
 			/>
 		</Container>

@@ -29,6 +29,11 @@
 			<property name="description" value="Checks that the `default` is after all the cases in a `switch` statement." />
 			<property name="documentationLocation" value="coding/defaultcomeslast.html" />
 		</module>
+		<module name="EqualsHashCodeCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks that classes that either override `equals()` or `hashCode()` also overrides the other." />
+			<property name="documentationLocation" value="coding/equalshashcode.html" />
+		</module>
 		<module name="JavadocStyleCheck">
 			<property name="category" value="Javadoc" />
 			<property name="checkFirstSentence" value="false" />
@@ -234,11 +239,22 @@
 			<property name="description" value="Checks for correct use of `com.liferay.arquillian.extension.junit.bridge.junit.Arquillian`." />
 			<message key="import.invalid" value="Use import ''com.liferay.arquillian.extension.junit.bridge.junit.Arquillian'' instead of ''org.jboss.arquillian.junit.Arquillian'', see LPS-68945" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ArrayUtilCheck">
+			<property name="category" value="Styling" />
+			<property name="description" value="Checks for utilization of class `ArrayUtil`." />
+			<property name="enabled" value="false" />
+			<message key="array.util.is.empty.use" value="Use ''ArrayUtil.isEmpty({0})'' to simplify code" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.AssertEqualsCheck">
 			<property name="category" value="Styling" />
 			<property name="description" value="Checks that additional information is provided when calling `Assert.assertEquals`." />
 			<message key="assert.add.information" value="Add ''{0}'' as extra parameter at the beginning of the ''Assert.assertEquals'' call to provide more information to the test. See LPS-70411." />
 			<message key="assert.use.boolean" value="Use ''Assert.assert{0}'' instead of ''Assert.assertEquals'' when assert boolean" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.AssertFailCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks that calls to `Assert.fail` can be only used inside a try block as the last statement." />
+			<message key="assert.fail.avoid" value="''Assert.fail'' can be only used inside a try block as the last statement" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.AssignAsUsedCheck">
 			<property name="category" value="Performance" />
@@ -266,9 +282,15 @@
 			<message key="chaining.required" value="Chaining on ''{0}'' is preferred" />
 			<message key="response.unsorted" value="Method calls between ''Response.status'' and ''Response.build'' should be sorted" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ClassNameIdCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Avoid caching noncompany scoped class name IDs." />
+			<property name="enabled" value="false" />
+			<message key="variable.name.avoid" value="Avoid using variable name ''{0}'', see LPD-29718" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.CompanyIterationCheck">
 			<property name="category" value="Bug Prevention" />
-			<property name="description" value="Checks that `CompanyLocalService.forEachCompany` or `CompanyLocalService.forEachCompanyId` is used when iterating over companies" />
+			<property name="description" value="Checks that `CompanyLocalService.forEachCompany` or `CompanyLocalService.forEachCompanyId` is used when iterating over companies." />
 			<property name="enabled" value="false" />
 			<message key="company.local.service.use.for.loop" value="Use ''CompanyLocalService.{0}'' when iterating over ''{1}''" />
 			<message key="company.local.service.use.sql" value="Use ''CompanyLocalService.forEachCompany'' instead of SQL" />
@@ -425,15 +447,19 @@
 			<property name="populateTypeNames" value="false" />
 			<message key="generic.type.parameterize" value="Parameterize the generic {0} for ''{1}'" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.InnerExceptionClassCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks that classes that should have either public constructors or inner classes." />
+			<property name="enabled" value="false" />
+			<message key="class.definition.incorrect" value="Exception class should have either public constructors or inner classes" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.InstanceInitializerCheck">
 			<property name="category" value="Styling" />
 			<property name="description" value="Performs several checks on class instance initializer." />
 			<property name="enabled" value="false" />
 			<message key="assign.move.before.method.call" value="The variable assignment for ''{0}'' should come before the method calling ''{1}''" />
 			<message key="assign.order.incorrect" value="The variable assignment for ''{0}'' should come before the variable assignment for ''{1}''" />
-			<message key="if.statement.inline" value="Use ''{0}({1})'' with inlined if-statement" />
 			<message key="method.call.order.incorrect" value="The method calling ''{0}'' should come before the method calling ''{1}''" />
-			<message key="set.method.use.instead" value="Use ''{0}({1})'' instead" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.InstanceofOrderCheck">
 			<property name="category" value="Styling" />
@@ -476,6 +502,11 @@
 			<property name="description" value="Checks if variable names follow naming conventions." />
 			<message key="variable.name.reserved" value="{0} name ending with ''{1}'' is reserved for object ''{2}''" />
 			<message key="variable.rename" value="Rename {0} ''{1}'' to ''{2}''" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.JSONPortletResponseUtilCheck">
+			<property name="category" value="Styling" />
+			<property name="description" value="Checks if `JSONPortletResponseUtil.writeJSON ` should come before method calling `hideDefaultSuccessMessage`." />
+			<message key="method.call.move.before.method.call" value="''JSONPortletResponseUtil.writeJSON'' should come before the method calling ''hideDefaultSuccessMessage''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.JSONUtilCheck">
 			<property name="category" value="Styling" />
@@ -602,7 +633,7 @@
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.NestedFieldAnnotationCheck">
 			<property name="category" value="Bug Prevention" />
-			<property name="description" value="Checks for `nested.field.support` in the `property` attribute of the `Component` annotation" />
+			<property name="description" value="Checks for `nested.field.support` in the `property` attribute of the `Component` annotation." />
 			<property name="enabled" value="false" />
 			<message key="nested.field.support.missing" value="Set ''nested.field.support=true'' in the ''property'' attribute of ''Component'' annotation as one of methods has a ''NestedField'' annotation" />
 			<message key="nested.field.support.unneeded" value="Remove ''nested.field.support'' in the ''property'' attribute of ''Component'' annotation as no method has a ''NestedField'' annotation" />
@@ -639,7 +670,7 @@
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.OSGiCommandsCheck">
 			<property name="category" value="Bug Prevention" />
-			<property name="description" value="Perform several checks on `*OSGiCommands` classes" />
+			<property name="description" value="Perform several checks on `*OSGiCommands` classes." />
 			<property name="enabled" value="false" />
 			<message key="bad.class.name" value="The names of clases that implement OSGi commands must end with ''OSGiCommands''" />
 			<message key="bad.osgi.reference" value="OSGi references to `*OSGiCommands` classes are not allowed" />
@@ -733,6 +764,20 @@
 			<property name="enabled" value="false" />
 			<message key="deprecated.get.instance.usage" value="Do not use ''{0}''. Use @Reference instead" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.RESTDTOSetCallCheck">
+			<property name="category" value="Performance" />
+			<property name="description" value="Ensures using set calls with `UnsafeSupplier` parameter for REST DTO." />
+			<property name="enabled" value="false" />
+			<message key="if.statement.inline" value="Use ''{0}(UnsafeSupplier)'' with inlined if-statement" />
+			<message key="set.method.use.instead" value="Use ''{0}(UnsafeSupplier)'' instead" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ReturnVariableDeclarationAsUsedCheck">
+			<property name="category" value="Miscellaneous" />
+			<property name="description" value="Finds cases where a variable declaration should be moved." />
+			<property name="enabled" value="false" />
+			<message key="empty.line.missing.after.variable.definition" value="There should be an empty line after variable definition on line ''{0}''" />
+			<message key="variable.declaration.move" value="Move the variable declaration for ''{0}'' on line ''{1}''" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.SelfReferenceCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Finds cases of unnecessary reference to its own class." />
@@ -808,7 +853,7 @@
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ThreadContextClassLoaderCheck">
 			<property name="category" value="Bug Prevention" />
-			<property name="description" value="Checks usage of `Thread.setContextClassLoader`" />
+			<property name="description" value="Checks usage of `Thread.setContextClassLoader`." />
 			<property name="enabled" value="false" />
 			<message key="thread.context.class.loader.util.use" value="Use ''ThreadContextClassLoaderUtil.swap()'' instead to swap the context class loader of the current thread" />
 		</module>
@@ -903,7 +948,7 @@
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.UpgradeDeprecatedAPICheck">
 			<property name="category" value="Upgrade" />
-			<property name="description" value="Finds calls to deprecated classes, constructors, fields or methods after an upgrade" />
+			<property name="description" value="Finds calls to deprecated classes, constructors, fields or methods after an upgrade." />
 			<message key="constructor.call.deprecated" value="Constructor ''{0}'' has been deprecated in version ''{1}''" />
 			<message key="field.call.deprecated" value="Field ''{0}'' has been deprecated in version ''{1}''" />
 			<message key="method.call.deprecated" value="Method ''{0}'' has been deprecated in version ''{1}''" />

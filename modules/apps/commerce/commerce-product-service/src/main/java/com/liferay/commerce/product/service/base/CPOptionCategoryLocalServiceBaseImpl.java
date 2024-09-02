@@ -7,7 +7,6 @@ package com.liferay.commerce.product.service.base;
 
 import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.service.CPOptionCategoryLocalService;
-import com.liferay.commerce.product.service.CPOptionCategoryLocalServiceUtil;
 import com.liferay.commerce.product.service.persistence.CPOptionCategoryPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
@@ -73,7 +72,7 @@ public abstract class CPOptionCategoryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CPOptionCategoryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CPOptionCategoryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CPOptionCategoryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.commerce.product.service.CPOptionCategoryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -265,6 +264,23 @@ public abstract class CPOptionCategoryLocalServiceBaseImpl
 
 		return cpOptionCategoryPersistence.fetchByUuid_C_First(
 			uuid, companyId, null);
+	}
+
+	@Override
+	public CPOptionCategory fetchCPOptionCategoryByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
+
+		return cpOptionCategoryPersistence.fetchByERC_C(
+			externalReferenceCode, companyId);
+	}
+
+	@Override
+	public CPOptionCategory getCPOptionCategoryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return cpOptionCategoryPersistence.findByERC_C(
+			externalReferenceCode, companyId);
 	}
 
 	/**
@@ -496,7 +512,6 @@ public abstract class CPOptionCategoryLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		CPOptionCategoryLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -510,9 +525,6 @@ public abstract class CPOptionCategoryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		cpOptionCategoryLocalService = (CPOptionCategoryLocalService)aopProxy;
-
-		CPOptionCategoryLocalServiceUtil.setService(
-			cpOptionCategoryLocalService);
 	}
 
 	/**

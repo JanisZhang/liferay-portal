@@ -6,6 +6,10 @@
 type Locale = Liferay.Language.Locale;
 type LocalizedValue<T> = Liferay.Language.LocalizedValue<T>;
 
+interface LabelNameObject {
+	label: string;
+	name: string;
+}
 interface LabelValueObject<T = string> {
 	label: string;
 	value: T;
@@ -14,12 +18,19 @@ interface LabelValueObject<T = string> {
 type EditorTypeOptions = 'freemarker' | 'richText';
 
 type EmailRecipients = {
-	bcc: string;
-	cc: string;
+	bcc: string | Partial<EmailNotificationRecipients>[];
+	bccType: string;
+	cc: string | Partial<EmailNotificationRecipients>[];
+	ccType: string;
 	from: string;
 	fromName: LocalizedValue<string>;
 	singleRecipient: boolean;
-	to: LocalizedValue<string>;
+	to: LocalizedValue<string> | EmailNotificationRecipients[];
+	toType: string;
+};
+
+type EmailNotificationRecipients = {
+	[key in 'roleName']?: string;
 };
 
 type UserNotificationRecipients = {

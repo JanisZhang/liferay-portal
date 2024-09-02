@@ -19,8 +19,12 @@ import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.item.ContentDashboardItemVersion;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.web.test.util.ContentDashboardTestUtil;
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
@@ -33,6 +37,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
@@ -56,14 +61,20 @@ import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.ByteArrayOutputStream;
 
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -105,15 +116,23 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 		_initCategoryAndVocabulary();
 	}
 
+	@FeatureFlags("LPD-30087")
 	@Test
-	public void testGetFileSpecificFields() throws Exception {
+	public void testGetFileEntrySpecificFields() throws Exception {
 		JSONObject jsonObject = _serveResource(
 			_createContentDashboardFileItem());
 
 		Assert.assertNotNull(jsonObject);
-		Assert.assertNotNull(jsonObject.getString("extension"));
-		Assert.assertNotNull(jsonObject.getString("file-name"));
-		Assert.assertNotNull(jsonObject.getString("size"));
+		_assertSpecificFieldsJSONArrayTitles(
+			Arrays.asList(
+				_language.get(LocaleUtil.US, "size"),
+				_language.get(LocaleUtil.US, "resolution"),
+				_language.get(LocaleUtil.US, "content-dashboard-aspect-ratio"),
+				_language.get(LocaleUtil.US, "extension"),
+				_language.get(LocaleUtil.US, "file-name"),
+				_language.get(LocaleUtil.US, "latest-version-url"),
+				_language.get(LocaleUtil.US, "web-dav-url")),
+			jsonObject.getJSONArray("specificFields"));
 	}
 
 	@Test
@@ -122,11 +141,15 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 			_createContentDashboardJournalArticleItem());
 
 		Assert.assertNotNull(jsonObject);
-		Assert.assertNotNull(jsonObject.getString("display-date"));
-		Assert.assertNotNull(jsonObject.getString("expiration-date"));
-		Assert.assertNotNull(jsonObject.getString("review-date"));
+		_assertSpecificFieldsJSONArrayTitles(
+			Arrays.asList(
+				_language.get(LocaleUtil.US, "display-date"),
+				_language.get(LocaleUtil.US, "expiration-date"),
+				_language.get(LocaleUtil.US, "review-date")),
+			jsonObject.getJSONArray("specificFields"));
 	}
 
+	@FeatureFlags("LPD-30087")
 	@Test
 	public void testServeResource() throws Exception {
 		ContentDashboardItem<?> contentDashboardItem =
@@ -205,18 +228,18 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 				contentDashboardItem.getSpecificInformationList(LocaleUtil.US);
 
 		Assert.assertEquals(
-			String.valueOf(specificInformationList), 5,
+			String.valueOf(specificInformationList), 7,
 			specificInformationList.size());
 
-		JSONObject specificFieldsJSONObject = jsonObject.getJSONObject(
+		JSONArray specificFieldsJSONArray = jsonObject.getJSONArray(
 			"specificFields");
 
-		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
-				specificInformationList) {
+		for (int i = 0; i < specificInformationList.size(); i++) {
+			ContentDashboardItem.SpecificInformation<?> specificInformation =
+				specificInformationList.get(i);
 
 			JSONObject specificFieldJSONObject =
-				specificFieldsJSONObject.getJSONObject(
-					specificInformation.getKey());
+				specificFieldsJSONArray.getJSONObject(i);
 
 			JSONObject specificInformationJSONObject =
 				specificInformation.toJSONObject(
@@ -317,18 +340,42 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 			contentDashboardItem.getLatestContentDashboardItemVersions(
 				LocaleUtil.US);
 
-		ContentDashboardItemVersion contentDashboardItemVersion =
-			contentDashboardItemVersions.get(0);
-
-		JSONObject expectedJSONObject =
-			contentDashboardItemVersion.toJSONObject();
-
 		JSONArray actualJSONArray = jsonObject.getJSONArray("latestVersions");
 
-		JSONObject actualJSONObject = actualJSONArray.getJSONObject(0);
+		for (int i = 0; i < actualJSONArray.length(); i++) {
+			JSONObject actualJSONObject = actualJSONArray.getJSONObject(i);
+
+			ContentDashboardItemVersion contentDashboardItemVersion =
+				contentDashboardItemVersions.get(i);
+
+			JSONObject expectedJSONObject =
+				contentDashboardItemVersion.toJSONObject();
+
+			Assert.assertEquals(
+				expectedJSONObject.getString("statusLabel"),
+				actualJSONObject.getString("statusLabel"));
+			Assert.assertEquals(
+				expectedJSONObject.getString("statusStyle"),
+				actualJSONObject.getString("statusStyle"));
+			Assert.assertEquals(
+				expectedJSONObject.getString("version"),
+				actualJSONObject.getString("version"));
+		}
+	}
+
+	private void _assertSpecificFieldsJSONArrayTitles(
+		List<String> expectedTitles, JSONArray specificFieldsJSONArray) {
 
 		Assert.assertEquals(
-			expectedJSONObject.toString(), actualJSONObject.toString());
+			expectedTitles.size(), specificFieldsJSONArray.length());
+
+		for (int i = 0; i < expectedTitles.size(); i++) {
+			JSONObject specificFieldJSONObject =
+				specificFieldsJSONArray.getJSONObject(i);
+
+			Assert.assertEquals(
+				expectedTitles.get(i), specificFieldJSONObject.get("title"));
+		}
 	}
 
 	private ContentDashboardItem<?> _createContentDashboardBlogItem()
@@ -352,8 +399,28 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 		FileEntry fileEntry = DLAppLocalServiceUtil.addFileEntry(
 			"Site", TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "fileName.pdf",
-			"application/pdf", new byte[0], new Date(150000), new Date(150000),
+			"application/pdf", new byte[0], new Date(150000),
+			new Date(System.currentTimeMillis() + Time.MINUTE),
 			new Date(150000), _serviceContext);
+
+		fileEntry = _dlAppLocalService.updateFileEntry(
+			fileEntry.getUserId(), fileEntry.getFileEntryId(),
+			fileEntry.getFileName(), fileEntry.getMimeType(),
+			fileEntry.getTitle(), StringUtil.randomString(),
+			fileEntry.getDescription(), RandomTestUtil.randomString(),
+			DLVersionNumberIncrease.MINOR, fileEntry.getContentStream(),
+			fileEntry.getSize(), fileEntry.getDisplayDate(),
+			fileEntry.getExpirationDate(), fileEntry.getReviewDate(),
+			_serviceContext);
+
+		DLFileEntry dlFileEntry = _dlFileEntryLocalService.getDLFileEntry(
+			fileEntry.getFileEntryId());
+
+		_dlFileEntryLocalService.updateStatus(
+			TestPropsValues.getUserId(), dlFileEntry,
+			dlFileEntry.getLatestFileVersion(true),
+			WorkflowConstants.STATUS_EXPIRED, _serviceContext,
+			Collections.emptyMap());
 
 		return _contentDashboardFileItemFactory.create(
 			fileEntry.getPrimaryKey());
@@ -474,8 +541,17 @@ public class GetContentDashboardItemInfoMVCResourceCommandTest {
 	)
 	private ContentDashboardItemFactory<?> _contentDashboardJournalItemFactory;
 
+	@Inject
+	private DLAppLocalService _dlAppLocalService;
+
+	@Inject
+	private DLFileEntryLocalService _dlFileEntryLocalService;
+
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private Language _language;
 
 	@Inject(
 		filter = "mvc.command.name=/content_dashboard/get_content_dashboard_item_info"

@@ -66,6 +66,39 @@ public class MySQLDB extends BaseDB {
 	}
 
 	@Override
+	public void alterTableDropColumn(
+			Connection connection, String tableName, String columnName)
+		throws Exception {
+
+		String[] primaryKeyColumnNames = getPrimaryKeyColumnNames(
+			connection, tableName);
+
+		boolean primaryKey = ArrayUtil.contains(
+			primaryKeyColumnNames, columnName);
+
+		if (primaryKey && (primaryKeyColumnNames.length > 1)) {
+			removePrimaryKey(connection, tableName);
+
+			addPrimaryKey(
+				connection, tableName,
+				ArrayUtil.remove(primaryKeyColumnNames, columnName));
+		}
+
+		List<IndexMetadata> indexMetadatas = getIndexes(
+			connection, tableName, columnName, false);
+
+		for (IndexMetadata indexMetadata : indexMetadatas) {
+			String[] columnNames = indexMetadata.getColumnNames();
+
+			if (columnNames.length > 1) {
+				runSQL(indexMetadata.getDropSQL());
+			}
+		}
+
+		super.alterTableDropColumn(connection, tableName, columnName);
+	}
+
+	@Override
 	public String buildSQL(String template) throws IOException {
 		template = replaceTemplate(template);
 
@@ -172,6 +205,10 @@ public class MySQLDB extends BaseDB {
 
 	@Override
 	protected String reword(String data) throws IOException {
+		if (Validator.isNull(data)) {
+			return null;
+		}
+
 		try (UnsyncBufferedReader unsyncBufferedReader =
 				new UnsyncBufferedReader(new UnsyncStringReader(data))) {
 

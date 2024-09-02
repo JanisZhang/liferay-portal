@@ -13,7 +13,7 @@ CollectionItemsDetailDisplayContext collectionItemsDetailDisplayContext = (Colle
 
 <li class="control-menu-nav-item">
 	<clay:button
-		cssClass="text-muted"
+		cssClass="control-menu-nav-link text-muted"
 		displayType="unstyled"
 		id='<%= collectionItemsDetailDisplayContext.getNamespace() + "viewCollectionItems" %>'
 		label='<%= "(" + LanguageUtil.format(resourceBundle, "x-items", collectionItemsDetailDisplayContext.getCollectionItemsCount(), false) + ")" %>'
@@ -27,11 +27,9 @@ CollectionItemsDetailDisplayContext collectionItemsDetailDisplayContext = (Colle
 
 	viewCollectionItems.addEventListener('click', (event) => {
 		Liferay.Util.openModal({
-			id:
-				'<%= collectionItemsDetailDisplayContext.getNamespace() %>viewCollectionItemsDialog',
+			id: '<%= collectionItemsDetailDisplayContext.getNamespace() %>viewCollectionItemsDialog',
 			title: '<liferay-ui:message key="collection-items" />',
-			url:
-				'<%= collectionItemsDetailDisplayContext.getViewCollectionItemsURL() %>',
+			url: '<%= collectionItemsDetailDisplayContext.getViewCollectionItemsURL() %>',
 		});
 	});
 

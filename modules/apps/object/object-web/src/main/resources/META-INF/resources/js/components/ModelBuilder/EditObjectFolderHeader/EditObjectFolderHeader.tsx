@@ -6,7 +6,7 @@
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import {ClayTooltipProvider} from '@clayui/tooltip';
-import {getLocalizableLabel} from '@liferay/object-js-components-web';
+import {stringUtils} from '@liferay/object-js-components-web';
 import classNames from 'classnames';
 import React from 'react';
 
@@ -25,10 +25,8 @@ export default function EditObjectFolderHeader({
 	hasDraftObjectDefinitions,
 	selectedObjectFolder,
 }: EditObjectFolderHeaderProps) {
-	const [
-		{showChangesSaved, showSidebars},
-		dispatch,
-	] = useObjectFolderContext();
+	const [{showChangesSaved, showSidebars}, dispatch] =
+		useObjectFolderContext();
 
 	return (
 		<div className="lfr-objects__model-builder-header">
@@ -38,7 +36,8 @@ export default function EditObjectFolderHeader({
 						className={classNames(
 							'lfr-objects__model-builder-header-object-folder-info-label',
 							{
-								'lfr-objects__model-builder-header-object-folder-info-label-changes-saved': showChangesSaved,
+								'lfr-objects__model-builder-header-object-folder-info-label-changes-saved':
+									showChangesSaved,
 							}
 						)}
 					>
@@ -48,14 +47,14 @@ export default function EditObjectFolderHeader({
 									Liferay.Language.get(
 										'object-folder-label'
 									) +
-									`: ${getLocalizableLabel(
+									`: ${stringUtils.getLocalizableLabel(
 										defaultLanguageId,
 										selectedObjectFolder.label,
 										selectedObjectFolder.name
 									)}`
 								}
 							>
-								{getLocalizableLabel(
+								{stringUtils.getLocalizableLabel(
 									defaultLanguageId,
 									selectedObjectFolder.label,
 									selectedObjectFolder.name
@@ -73,7 +72,8 @@ export default function EditObjectFolderHeader({
 							className={classNames(
 								'lfr-objects__model-builder-header-object-folder-info-erc-content',
 								{
-									'lfr-objects__model-builder-header-object-folder-info-erc-content-changes-saved': showChangesSaved,
+									'lfr-objects__model-builder-header-object-folder-info-erc-content-changes-saved':
+										showChangesSaved,
 								}
 							)}
 							title={
@@ -104,6 +104,7 @@ export default function EditObjectFolderHeader({
 									'edit-label-and-erc'
 								)}
 								displayType="unstyled"
+								name="editObjectFolderButton"
 								onClick={() =>
 									dispatch({
 										payload: {
@@ -111,8 +112,7 @@ export default function EditObjectFolderHeader({
 												editObjectFolder: true,
 											},
 										},
-										type:
-											TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+										type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
 									})
 								}
 								symbol="pencil"
@@ -154,8 +154,7 @@ export default function EditObjectFolderHeader({
 										publishObjectDefinitions: true,
 									},
 								},
-								type:
-									TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+								type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
 							});
 						}}
 						size="sm"

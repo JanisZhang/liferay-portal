@@ -7,7 +7,6 @@ package com.liferay.portal.search.rest.internal.resource.v1_0;
 
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -15,8 +14,6 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.servlet.ServletContextPool;
-import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
@@ -50,7 +47,7 @@ public abstract class BaseSuggestionResourceImpl implements SuggestionResource {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/portal-search-rest/v1.0/suggestions'  -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/search/v1.0/suggestions'  -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
@@ -63,6 +60,7 @@ public abstract class BaseSuggestionResourceImpl implements SuggestionResource {
 				name = "destinationFriendlyURL"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
+				deprecated = true,
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "groupId"
 			),
@@ -99,7 +97,7 @@ public abstract class BaseSuggestionResourceImpl implements SuggestionResource {
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("destinationFriendlyURL")
 			String destinationFriendlyURL,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@Deprecated @io.swagger.v3.oas.annotations.Parameter(hidden = true)
 			@javax.ws.rs.QueryParam("groupId")
 			Long groupId,
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
@@ -134,13 +132,6 @@ public abstract class BaseSuggestionResourceImpl implements SuggestionResource {
 
 	public void setContextHttpServletRequest(
 		HttpServletRequest contextHttpServletRequest) {
-
-		if ((contextHttpServletRequest != null) &&
-			(contextHttpServletRequest.getAttribute(WebKeys.CTX) == null)) {
-
-			contextHttpServletRequest.setAttribute(
-				WebKeys.CTX, ServletContextPool.get(StringPool.BLANK));
-		}
 
 		this.contextHttpServletRequest = contextHttpServletRequest;
 	}

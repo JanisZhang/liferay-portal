@@ -51,7 +51,7 @@ public class LayoutPageTemplateStructureRelModelListener
 		_layoutClassedModelUsageLocalService.deleteLayoutClassedModelUsages(
 			String.valueOf(
 				layoutPageTemplateStructure.getLayoutPageTemplateStructureId()),
-			_getLayoutPageTemplateStructureClassNameId(),
+			_portal.getClassNameId(LayoutPageTemplateStructure.class.getName()),
 			layoutPageTemplateStructure.getPlid());
 
 		Set<LayoutDisplayPageObjectProvider<?>>
@@ -66,6 +66,7 @@ public class LayoutPageTemplateStructureRelModelListener
 			LayoutClassedModelUsage layoutClassedModelUsage =
 				_layoutClassedModelUsageLocalService.
 					fetchLayoutClassedModelUsage(
+						layoutPageTemplateStructure.getGroupId(),
 						layoutDisplayPageObjectProvider.getClassNameId(),
 						layoutDisplayPageObjectProvider.getClassPK(),
 						layoutDisplayPageObjectProvider.
@@ -73,7 +74,8 @@ public class LayoutPageTemplateStructureRelModelListener
 						String.valueOf(
 							layoutPageTemplateStructure.
 								getLayoutPageTemplateStructureId()),
-						_getLayoutPageTemplateStructureClassNameId(),
+						_portal.getClassNameId(
+							LayoutPageTemplateStructure.class.getName()),
 						layoutPageTemplateStructure.getPlid());
 
 			if (layoutClassedModelUsage != null) {
@@ -95,20 +97,10 @@ public class LayoutPageTemplateStructureRelModelListener
 				String.valueOf(
 					layoutPageTemplateStructure.
 						getLayoutPageTemplateStructureId()),
-				_getLayoutPageTemplateStructureClassNameId(),
+				_portal.getClassNameId(
+					LayoutPageTemplateStructure.class.getName()),
 				layoutPageTemplateStructure.getPlid(), serviceContext);
 		}
-	}
-
-	private long _getLayoutPageTemplateStructureClassNameId() {
-		if (_layoutPageTemplateStructureNameId != null) {
-			return _layoutPageTemplateStructureNameId;
-		}
-
-		_layoutPageTemplateStructureNameId = _portal.getClassNameId(
-			LayoutPageTemplateStructure.class.getName());
-
-		return _layoutPageTemplateStructureNameId;
 	}
 
 	@Reference
@@ -121,8 +113,6 @@ public class LayoutPageTemplateStructureRelModelListener
 	@Reference
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
-
-	private Long _layoutPageTemplateStructureNameId;
 
 	@Reference
 	private Portal _portal;

@@ -6,6 +6,7 @@
 package com.liferay.dynamic.data.mapping.util;
 
 import com.liferay.dynamic.data.mapping.BaseDDMTestCase;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.internal.util.DDMFormValuesToFieldsConverterImpl;
 import com.liferay.dynamic.data.mapping.internal.util.DDMImpl;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
@@ -18,7 +19,10 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
+import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
+import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
@@ -65,46 +69,50 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 	public void testConversionWithBooleanField() throws Exception {
 		DDMForm ddmForm = createDDMForm();
 
-		DDMFormField booleanDDMFormField = new DDMFormField(
-			"Boolean", "checkbox");
+		DDMFormField ddmFormField = new DDMFormField(
+			"Boolean", DDMFormFieldTypeConstants.CHECKBOX);
 
-		booleanDDMFormField.setDataType("boolean");
+		ddmFormField.setDataType("boolean");
+		ddmFormField.setLabel(
+			DDMFormValuesTestUtil.createLocalizedValue(
+				RandomTestUtil.randomString(), LocaleUtil.US));
+		ddmFormField.setPredefinedValue(
+			DDMFormValuesTestUtil.createLocalizedValue(
+				StringPool.FALSE, LocaleUtil.US));
 
-		LocalizedValue localizedValue = booleanDDMFormField.getLabel();
+		addDDMFormFields(ddmForm, ddmFormField);
 
-		localizedValue.addString(LocaleUtil.US, "Boolean Field");
-
-		addDDMFormFields(ddmForm, booleanDDMFormField);
-
-		DDMStructure ddmStructure = createStructure("Test Structure", ddmForm);
+		DDMStructure ddmStructure = createStructure(
+			RandomTestUtil.randomString(), ddmForm);
 
 		DDMFormValues ddmFormValues = createDDMFormValues(
 			ddmForm, _availableLocales, LocaleUtil.US);
 
-		DDMFormFieldValue titleDDMFormFieldValue = createDDMFormFieldValue(
-			"rztm", "Boolean", new UnlocalizedValue("true"));
-
-		ddmFormValues.addDDMFormFieldValue(titleDDMFormFieldValue);
+		ddmFormValues.addDDMFormFieldValue(
+			createDDMFormFieldValue(
+				"rztm", "Boolean", new UnlocalizedValue(StringPool.TRUE)));
 
 		Fields fields = _ddmFormValuesToFieldsConverter.convert(
 			ddmStructure, ddmFormValues);
 
-		Assert.assertNotNull(fields);
-
-		Field field = fields.get("Boolean");
-
-		Serializable value = field.getValue();
-
-		Class<?> clazz = value.getClass();
-
-		Assert.assertTrue(clazz.isAssignableFrom(Boolean.class));
-
-		Assert.assertTrue((boolean)value);
+		_assertBooleanFieldValue(true, fields);
 
 		Field fieldsDisplayField = fields.get(DDMImpl.FIELDS_DISPLAY_NAME);
 
 		Assert.assertEquals(
 			"Boolean_INSTANCE_rztm", fieldsDisplayField.getValue());
+
+		ddmFormValues = createDDMFormValues(
+			ddmForm, _availableLocales, LocaleUtil.US);
+
+		ddmFormValues.addDDMFormFieldValue(
+			createDDMFormFieldValue(
+				"rztm", "Boolean", new LocalizedValue(LocaleUtil.US)));
+
+		_assertBooleanFieldValue(
+			false,
+			_ddmFormValuesToFieldsConverter.convert(
+				ddmStructure, ddmFormValues));
 	}
 
 	@Test
@@ -305,6 +313,38 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 		Assert.assertEquals(
 			"Name_INSTANCE_rztm,Name_INSTANCE_uayd,Name_INSTANCE_pamh",
 			fieldsDisplayField.getValue());
+	}
+
+	@Test
+	public void testConversionWithRepeatableFieldSet() throws Exception {
+		DDMForm ddmForm = createDDMForm();
+
+		DDMFormField ddmFormField = DDMFormTestUtil.createDDMFormField(
+			"fieldSet", RandomTestUtil.randomString(),
+			DDMFormFieldTypeConstants.FIELDSET, null, false, true, false);
+
+		ddmFormField.addNestedDDMFormField(
+			DDMFormTestUtil.createTextDDMFormField("text", true, false, false));
+
+		ddmForm.addDDMFormField(ddmFormField);
+
+		DDMFormValues ddmFormValues = DDMFormValuesTestUtil.createDDMFormValues(
+			ddmForm);
+
+		_addFieldSetDDMFormFieldValue(ddmFormValues, null);
+
+		String value = RandomTestUtil.randomString();
+
+		_addFieldSetDDMFormFieldValue(ddmFormValues, value);
+
+		Fields fields = _ddmFormValuesToFieldsConverter.convert(
+			createStructure(RandomTestUtil.randomString(), ddmForm),
+			ddmFormValues);
+
+		Field field = fields.get("text");
+
+		Assert.assertEquals(
+			createValuesList(null, value), field.getValues(LocaleUtil.US));
 	}
 
 	@Test
@@ -535,6 +575,49 @@ public class DDMFormValuesToFieldsConverterTest extends BaseDDMTestCase {
 		Assert.assertEquals(expectedEnValues, field.getValues(LocaleUtil.US));
 		Assert.assertEquals(
 			expectedPtValues, field.getValues(LocaleUtil.BRAZIL));
+	}
+
+	private void _addFieldSetDDMFormFieldValue(
+		DDMFormValues ddmFormValues, String value) {
+
+		DDMFormFieldValue ddmFormFieldValue =
+			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
+				"fieldSet", null);
+
+		DDMFormFieldValue nestedDDMFormFieldValue = new DDMFormFieldValue();
+
+		nestedDDMFormFieldValue.setFieldReference("text");
+		nestedDDMFormFieldValue.setInstanceId(RandomTestUtil.randomString());
+		nestedDDMFormFieldValue.setName("text");
+
+		if (value == null) {
+			nestedDDMFormFieldValue.setValue(new LocalizedValue(LocaleUtil.US));
+		}
+		else {
+			nestedDDMFormFieldValue.setValue(
+				DDMFormValuesTestUtil.createLocalizedValue(
+					value, LocaleUtil.US));
+		}
+
+		ddmFormFieldValue.addNestedDDMFormFieldValue(nestedDDMFormFieldValue);
+
+		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
+	}
+
+	private void _assertBooleanFieldValue(
+		boolean expectedValue, Fields fields) {
+
+		Assert.assertNotNull(fields);
+
+		Field field = fields.get("Boolean");
+
+		Serializable value = field.getValue();
+
+		Class<?> clazz = value.getClass();
+
+		Assert.assertTrue(clazz.isAssignableFrom(Boolean.class));
+
+		Assert.assertEquals(expectedValue, value);
 	}
 
 	private Set<Locale> _availableLocales;

@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -65,6 +66,17 @@ public class ObjectRelationshipLocalServiceUtil {
 			externalReferenceCode, userId, objectDefinitionId1,
 			objectDefinitionId2, parameterObjectFieldId, deletionType, labelMap,
 			name, system, type, objectField);
+	}
+
+	public static ObjectRelationship addObjectRelationship(
+			String externalReferenceCode, long userId, long objectDefinitionId1,
+			long objectDefinitionId2,
+			com.liferay.object.model.ObjectField objectField)
+		throws PortalException {
+
+		return getService().addObjectRelationship(
+			externalReferenceCode, userId, objectDefinitionId1,
+			objectDefinitionId2, objectField);
 	}
 
 	public static void addObjectRelationshipMappingTableValues(
@@ -183,6 +195,12 @@ public class ObjectRelationshipLocalServiceUtil {
 		return getService().deletePersistedModel(persistedModel);
 	}
 
+	public static void disableEdge(long objectDefinitionId2)
+		throws PortalException {
+
+		getService().disableEdge(objectDefinitionId2);
+	}
+
 	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
@@ -266,6 +284,13 @@ public class ObjectRelationshipLocalServiceUtil {
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
+	}
+
+	public static ObjectRelationship enableEdge(
+			long objectRelationshipId, boolean edge)
+		throws PortalException {
+
+		return getService().enableEdge(objectRelationshipId, edge);
 	}
 
 	public static ObjectRelationship fetchObjectRelationship(
@@ -395,7 +420,7 @@ public class ObjectRelationshipLocalServiceUtil {
 
 	public static ObjectRelationship getObjectRelationshipByObjectDefinitionId(
 			long objectDefinitionId, String name)
-		throws Exception {
+		throws PortalException {
 
 		return getService().getObjectRelationshipByObjectDefinitionId(
 			objectDefinitionId, name);
@@ -545,13 +570,12 @@ public class ObjectRelationshipLocalServiceUtil {
 	}
 
 	public static ObjectRelationshipLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(ObjectRelationshipLocalService service) {
-		_service = service;
-	}
-
-	private static volatile ObjectRelationshipLocalService _service;
+	private static final Snapshot<ObjectRelationshipLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			ObjectRelationshipLocalServiceUtil.class,
+			ObjectRelationshipLocalService.class);
 
 }

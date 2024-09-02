@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -490,6 +491,14 @@ public class CommercePriceEntryLocalServiceUtil {
 			cpInstanceUuid, priceListType, unitOfMeasureKey);
 	}
 
+	public static List<CommercePriceEntry> getInstanceCommercePriceEntries(
+		String cpInstanceUuid, int start, int end,
+		OrderByComparator<CommercePriceEntry> orderByComparator) {
+
+		return getService().getInstanceCommercePriceEntries(
+			cpInstanceUuid, start, end, orderByComparator);
+	}
+
 	public static int getInstanceCommercePriceEntriesCount(
 		String cpInstanceUuid) {
 
@@ -629,13 +638,12 @@ public class CommercePriceEntryLocalServiceUtil {
 	}
 
 	public static CommercePriceEntryLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommercePriceEntryLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CommercePriceEntryLocalService _service;
+	private static final Snapshot<CommercePriceEntryLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommercePriceEntryLocalServiceUtil.class,
+			CommercePriceEntryLocalService.class);
 
 }

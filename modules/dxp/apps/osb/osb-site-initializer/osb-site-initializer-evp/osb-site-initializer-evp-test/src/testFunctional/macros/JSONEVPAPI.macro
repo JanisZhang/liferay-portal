@@ -13,7 +13,7 @@ definition {
 		}
 
 		if (!(isSet(password))) {
-			var password = "test";
+			var password = PropsUtil.get("default.admin.password");
 		}
 
 		var portalURL = JSONCompany.getPortalURL();
@@ -24,25 +24,25 @@ definition {
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
-					"zip": "${zipCode}",
-					"country": "${country}",
-					"messageEVPManager": "${messageEVPManager}",
+					"accountOwnerName": "${accountOwnerName}",
 					"bankingInfo": "${bankingInfo}",
-					"organizationName": "${organizationName}",
 					"city": "${city}",
 					"contactEmail": "${contactEmail}",
 					"contactName": "${contactName}",
-					"smallDescription": "${smallDescription}",
+					"contactPhone": "${contactPhone}",
+					"country": "${country}",
+					"messageEVPManager": "${messageEVPManager}",
+					"organizationName": "${organizationName}",
+					"organizationSiteSocialMediaLink": "${organizationSite}",
 					"organizationStatus": {
 						"key": "${key_status}",
 						"name": "${status}"
 					},
-					"organizationSiteSocialMediaLink": "${organizationSite}",
+					"smallDescription": "${smallDescription}",
+					"state": "${state}",
 					"street": "${street}",
 					"taxId": "${taxId}",
-					"state": "${state}",
-					"accountOwnerName": "${accountOwnerName}",
-					"contactPhone": "${contactPhone}"
+					"zip": "${zipCode}"
 				}'
 		''';
 
@@ -66,7 +66,7 @@ definition {
 		}
 
 		if (!(isSet(password))) {
-			var password = "test";
+			var password = PropsUtil.get("default.admin.password");
 		}
 
 		if (${requestType} == "Grant") {
@@ -90,25 +90,10 @@ definition {
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
-					"r_organization_c_evpOrganizationId": "${organizationId}",
-					"requestType": {
-						"key": "${requestTypeKey}",
-						"name": "${requestType}"
-					},
+					"emailAddress": "${emailAddress}",
 					"endDate": "${endDate}",
 					"fullName": "${fullName}",
-					"requestBehalf": {
-						"key": "displacedDistressed",
-						"name": "Displaced/Distressed"
-					},
 					"grantAmount": "${grantAmount}",
-					"requestDescription": "${requestDescription}",
-					"requestPurposes": {
-						"key": "disasterRelief",
-						"name": "Disaster Relief"
-					},
-					"emailAddress": "${emailAddress}",
-					"phoneNumber": "${phoneNumber}",
 					"grantRequestType": {
 						"key": "${grantRequestTypeKey}",
 						"name": "${grantRequestType}"
@@ -117,12 +102,27 @@ definition {
 						"key": "liferayLatam",
 						"name": "Liferay Latam"
 					},
-					"totalHoursRequested": "${totalHoursRequested}",
+					"phoneNumber": "${phoneNumber}",
+					"r_organization_c_evpOrganizationId": "${organizationId}",
+					"requestBehalf": {
+						"key": "displacedDistressed",
+						"name": "Displaced/Distressed"
+					},
+					"requestDescription": "${requestDescription}",
+					"requestPurposes": {
+						"key": "disasterRelief",
+						"name": "Disaster Relief"
+					},
 					"requestStatus": {
 						"key": "${requestStatusKey}",
 						"name": "${requestStatus}"
 					},
-					"startDate": "${startDate}"
+					"requestType": {
+						"key": "${requestTypeKey}",
+						"name": "${requestType}"
+					},
+					"startDate": "${startDate}",
+					"totalHoursRequested": "${totalHoursRequested}"
 				}'
 		''';
 

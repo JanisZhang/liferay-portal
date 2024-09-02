@@ -1,4 +1,4 @@
-@component-name = "portal-document-management"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
@@ -450,7 +450,7 @@ definition {
 		User.logoutPG();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");

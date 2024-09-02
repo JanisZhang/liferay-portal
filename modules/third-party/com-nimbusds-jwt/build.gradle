@@ -2,7 +2,7 @@ task jarManifest
 task jarPatched(type: Zip)
 
 dependencies {
-	compileOnly group: "com.nimbusds", name: "nimbus-jose-jwt", transitive: false, version: "9.30.2"
+	compileOnly group: "com.nimbusds", name: "nimbus-jose-jwt", transitive: false, version: "9.40"
 }
 
 jar {
@@ -19,8 +19,8 @@ jarManifest {
 }
 
 jarPatched {
-	archiveName = jar.archiveName
-	destinationDir = jar.destinationDir
+	archiveFileName = jar.archiveFileName
+	destinationDirectory = jar.destinationDirectory
 	duplicatesStrategy = "exclude"
 
 	exclude "META-INF/versions/9/module-info.class"
@@ -30,4 +30,8 @@ jarPatched {
 	from {
 		zipTree(configurations.compileOnly.singleFile)
 	}
+
+	mustRunAfter compileJava
+	mustRunAfter generatePomFileForMavenPublication
+	mustRunAfter processResources
 }

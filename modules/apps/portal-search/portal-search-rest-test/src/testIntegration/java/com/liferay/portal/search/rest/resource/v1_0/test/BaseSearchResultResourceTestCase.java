@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
@@ -25,17 +26,22 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.rest.client.dto.v1_0.SearchResult;
 import com.liferay.portal.search.rest.client.http.HttpInvoker;
 import com.liferay.portal.search.rest.client.pagination.Page;
+import com.liferay.portal.search.rest.client.pagination.Pagination;
 import com.liferay.portal.search.rest.client.resource.v1_0.SearchResultResource;
 import com.liferay.portal.search.rest.client.serdes.v1_0.SearchResultSerDes;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -56,8 +62,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -98,7 +102,7 @@ public abstract class BaseSearchResultResourceTestCase {
 		SearchResultResource.Builder builder = SearchResultResource.builder();
 
 		searchResultResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -112,7 +116,32 @@ public abstract class BaseSearchResultResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		SearchResult searchResult1 = randomSearchResult();
+
+		String json = objectMapper.writeValueAsString(searchResult1);
+
+		SearchResult searchResult2 = SearchResultSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(searchResult1, searchResult2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		SearchResult searchResult = randomSearchResult();
+
+		String json1 = objectMapper.writeValueAsString(searchResult);
+		String json2 = SearchResultSerDes.toJSON(searchResult);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -127,40 +156,6 @@ public abstract class BaseSearchResultResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		SearchResult searchResult1 = randomSearchResult();
-
-		String json = objectMapper.writeValueAsString(searchResult1);
-
-		SearchResult searchResult2 = SearchResultSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(searchResult1, searchResult2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		SearchResult searchResult = randomSearchResult();
-
-		String json1 = objectMapper.writeValueAsString(searchResult);
-		String json2 = SearchResultSerDes.toJSON(searchResult);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -185,9 +180,350 @@ public abstract class BaseSearchResultResourceTestCase {
 	}
 
 	@Test
+	public void testGetSearchPage() throws Exception {
+		Page<SearchResult> page = searchResultResource.getSearchPage(
+			RandomTestUtil.randomString(), null, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), null, null, Pagination.of(1, 10),
+			null);
+
+		long totalCount = page.getTotalCount();
+
+		SearchResult searchResult1 = testGetSearchPage_addSearchResult(
+			randomSearchResult());
+
+		SearchResult searchResult2 = testGetSearchPage_addSearchResult(
+			randomSearchResult());
+
+		page = searchResultResource.getSearchPage(
+			null, null, null, null, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(searchResult1, (List<SearchResult>)page.getItems());
+		assertContains(searchResult2, (List<SearchResult>)page.getItems());
+		assertValid(page, testGetSearchPage_getExpectedActions());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSearchPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetSearchPageWithFilterDateTimeEquals() throws Exception {
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DATE_TIME);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		SearchResult searchResult1 = randomSearchResult();
+
+		searchResult1 = testGetSearchPage_addSearchResult(searchResult1);
+
+		for (EntityField entityField : entityFields) {
+			Page<SearchResult> page = searchResultResource.getSearchPage(
+				null, null, null, null, null,
+				getFilterString(entityField, "between", searchResult1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(searchResult1),
+				(List<SearchResult>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSearchPageWithFilterDoubleEquals() throws Exception {
+		testGetSearchPageWithFilter("eq", EntityField.Type.DOUBLE);
+	}
+
+	@Test
+	public void testGetSearchPageWithFilterStringContains() throws Exception {
+		testGetSearchPageWithFilter("contains", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSearchPageWithFilterStringEquals() throws Exception {
+		testGetSearchPageWithFilter("eq", EntityField.Type.STRING);
+	}
+
+	@Test
+	public void testGetSearchPageWithFilterStringStartsWith() throws Exception {
+		testGetSearchPageWithFilter("startswith", EntityField.Type.STRING);
+	}
+
+	protected void testGetSearchPageWithFilter(
+			String operator, EntityField.Type type)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		SearchResult searchResult1 = testGetSearchPage_addSearchResult(
+			randomSearchResult());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		SearchResult searchResult2 = testGetSearchPage_addSearchResult(
+			randomSearchResult());
+
+		for (EntityField entityField : entityFields) {
+			Page<SearchResult> page = searchResultResource.getSearchPage(
+				null, null, null, null, null,
+				getFilterString(entityField, operator, searchResult1),
+				Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(searchResult1),
+				(List<SearchResult>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSearchPageWithPagination() throws Exception {
+		Page<SearchResult> searchResultPage =
+			searchResultResource.getSearchPage(
+				null, null, null, null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			searchResultPage.getTotalCount());
+
+		SearchResult searchResult1 = testGetSearchPage_addSearchResult(
+			randomSearchResult());
+
+		SearchResult searchResult2 = testGetSearchPage_addSearchResult(
+			randomSearchResult());
+
+		SearchResult searchResult3 = testGetSearchPage_addSearchResult(
+			randomSearchResult());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<SearchResult> page1 = searchResultResource.getSearchPage(
+				null, null, null, null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(searchResult1, (List<SearchResult>)page1.getItems());
+
+			Page<SearchResult> page2 = searchResultResource.getSearchPage(
+				null, null, null, null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(searchResult2, (List<SearchResult>)page2.getItems());
+
+			Page<SearchResult> page3 = searchResultResource.getSearchPage(
+				null, null, null, null, null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
+
+			assertContains(searchResult3, (List<SearchResult>)page3.getItems());
+		}
+		else {
+			Page<SearchResult> page1 = searchResultResource.getSearchPage(
+				null, null, null, null, null, null,
+				Pagination.of(1, totalCount + 2), null);
+
+			List<SearchResult> searchResults1 =
+				(List<SearchResult>)page1.getItems();
+
+			Assert.assertEquals(
+				searchResults1.toString(), totalCount + 2,
+				searchResults1.size());
+
+			Page<SearchResult> page2 = searchResultResource.getSearchPage(
+				null, null, null, null, null, null,
+				Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<SearchResult> searchResults2 =
+				(List<SearchResult>)page2.getItems();
+
+			Assert.assertEquals(
+				searchResults2.toString(), 1, searchResults2.size());
+
+			Page<SearchResult> page3 = searchResultResource.getSearchPage(
+				null, null, null, null, null, null,
+				Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(searchResult1, (List<SearchResult>)page3.getItems());
+			assertContains(searchResult2, (List<SearchResult>)page3.getItems());
+			assertContains(searchResult3, (List<SearchResult>)page3.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSearchPageWithSortDateTime() throws Exception {
+		testGetSearchPageWithSort(
+			EntityField.Type.DATE_TIME,
+			(entityField, searchResult1, searchResult2) -> {
+				BeanTestUtil.setProperty(
+					searchResult1, entityField.getName(),
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
+			});
+	}
+
+	@Test
+	public void testGetSearchPageWithSortDouble() throws Exception {
+		testGetSearchPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, searchResult1, searchResult2) -> {
+				BeanTestUtil.setProperty(
+					searchResult1, entityField.getName(), 0.1);
+				BeanTestUtil.setProperty(
+					searchResult2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
+	public void testGetSearchPageWithSortInteger() throws Exception {
+		testGetSearchPageWithSort(
+			EntityField.Type.INTEGER,
+			(entityField, searchResult1, searchResult2) -> {
+				BeanTestUtil.setProperty(
+					searchResult1, entityField.getName(), 0);
+				BeanTestUtil.setProperty(
+					searchResult2, entityField.getName(), 1);
+			});
+	}
+
+	@Test
+	public void testGetSearchPageWithSortString() throws Exception {
+		testGetSearchPageWithSort(
+			EntityField.Type.STRING,
+			(entityField, searchResult1, searchResult2) -> {
+				Class<?> clazz = searchResult1.getClass();
+
+				String entityFieldName = entityField.getName();
+
+				Method method = clazz.getMethod(
+					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
+
+				Class<?> returnType = method.getReturnType();
+
+				if (returnType.isAssignableFrom(Map.class)) {
+					BeanTestUtil.setProperty(
+						searchResult1, entityFieldName,
+						Collections.singletonMap("Aaa", "Aaa"));
+					BeanTestUtil.setProperty(
+						searchResult2, entityFieldName,
+						Collections.singletonMap("Bbb", "Bbb"));
+				}
+				else if (entityFieldName.contains("email")) {
+					BeanTestUtil.setProperty(
+						searchResult1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+					BeanTestUtil.setProperty(
+						searchResult2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()) +
+									"@liferay.com");
+				}
+				else {
+					BeanTestUtil.setProperty(
+						searchResult1, entityFieldName,
+						"aaa" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+					BeanTestUtil.setProperty(
+						searchResult2, entityFieldName,
+						"bbb" +
+							StringUtil.toLowerCase(
+								RandomTestUtil.randomString()));
+				}
+			});
+	}
+
+	protected void testGetSearchPageWithSort(
+			EntityField.Type type,
+			UnsafeTriConsumer
+				<EntityField, SearchResult, SearchResult, Exception>
+					unsafeTriConsumer)
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(type);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		SearchResult searchResult1 = randomSearchResult();
+		SearchResult searchResult2 = randomSearchResult();
+
+		for (EntityField entityField : entityFields) {
+			unsafeTriConsumer.accept(entityField, searchResult1, searchResult2);
+		}
+
+		searchResult1 = testGetSearchPage_addSearchResult(searchResult1);
+
+		searchResult2 = testGetSearchPage_addSearchResult(searchResult2);
+
+		Page<SearchResult> page = searchResultResource.getSearchPage(
+			null, null, null, null, null, null, null, null);
+
+		for (EntityField entityField : entityFields) {
+			Page<SearchResult> ascPage = searchResultResource.getSearchPage(
+				null, null, null, null, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":asc");
+
+			assertContains(
+				searchResult1, (List<SearchResult>)ascPage.getItems());
+			assertContains(
+				searchResult2, (List<SearchResult>)ascPage.getItems());
+
+			Page<SearchResult> descPage = searchResultResource.getSearchPage(
+				null, null, null, null, null, null,
+				Pagination.of(1, (int)page.getTotalCount() + 1),
+				entityField.getName() + ":desc");
+
+			assertContains(
+				searchResult2, (List<SearchResult>)descPage.getItems());
+			assertContains(
+				searchResult1, (List<SearchResult>)descPage.getItems());
+		}
+	}
+
+	protected SearchResult testGetSearchPage_addSearchResult(
+			SearchResult searchResult)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostSearchPage() throws Exception {
 		Assert.assertTrue(false);
 	}
+
+	@Rule
+	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected void assertContains(
 		SearchResult searchResult, List<SearchResult> searchResults) {
@@ -259,6 +595,10 @@ public abstract class BaseSearchResultResourceTestCase {
 
 	protected void assertValid(SearchResult searchResult) throws Exception {
 		boolean valid = true;
+
+		if (searchResult.getDateCreated() == null) {
+			valid = false;
+		}
 
 		if (searchResult.getDateModified() == null) {
 			valid = false;
@@ -425,6 +765,17 @@ public abstract class BaseSearchResultResourceTestCase {
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
+
+			if (Objects.equals("dateCreated", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						searchResult1.getDateCreated(),
+						searchResult2.getDateCreated())) {
+
+					return false;
+				}
+
+				continue;
+			}
 
 			if (Objects.equals("dateModified", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
@@ -597,24 +948,53 @@ public abstract class BaseSearchResultResourceTestCase {
 		sb.append(operator);
 		sb.append(" ");
 
-		if (entityFieldName.equals("dateModified")) {
+		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = searchResult.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							searchResult.getDateModified(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							searchResult.getDateModified(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(")");
+			}
+			else {
+				sb.append(entityFieldName);
+
+				sb.append(" ");
+				sb.append(operator);
+				sb.append(" ");
+
+				sb.append(_dateFormat.format(searchResult.getDateCreated()));
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("dateModified")) {
+			if (operator.equals("between")) {
+				Date date = searchResult.getDateModified();
+
+				sb = new StringBundler();
+
+				sb.append("(");
+				sb.append(entityFieldName);
+				sb.append(" gt ");
+				sb.append(
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(" and ");
+				sb.append(entityFieldName);
+				sb.append(" lt ");
+				sb.append(
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -792,7 +1172,8 @@ public abstract class BaseSearchResultResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -822,6 +1203,7 @@ public abstract class BaseSearchResultResourceTestCase {
 	protected SearchResult randomSearchResult() throws Exception {
 		return new SearchResult() {
 			{
+				dateCreated = RandomTestUtil.nextDate();
 				dateModified = RandomTestUtil.nextDate();
 				description = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -851,12 +1233,12 @@ public abstract class BaseSearchResultResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -865,11 +1247,16 @@ public abstract class BaseSearchResultResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -901,6 +1288,24 @@ public abstract class BaseSearchResultResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -922,16 +1327,6 @@ public abstract class BaseSearchResultResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

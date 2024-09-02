@@ -68,7 +68,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -189,7 +189,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -337,7 +337,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -369,7 +369,7 @@ definition {
 
 						AssertElementPresent(
 							key_cartItemSku = "MIN55861",
-							key_messageError = "The specified quantity is not a multiple of 0.5",
+							key_messageError = "The specified quantity is not a multiple of 1.5",
 							locator1 = "CommerceAccelerators#MINI_CART_ITEM_GENERIC_ERROR");
 
 						AssertElementPresent(
@@ -466,7 +466,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -605,7 +605,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -737,7 +737,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -766,7 +766,7 @@ definition {
 
 						AssertTextEquals.assertPartialText(
 							locator1 = "Message#ERROR_DISMISSIBLE",
-							value1 = "The specified quantity is not a multiple of 0.5");
+							value1 = "The specified quantity is not a multiple of 1.5");
 
 						Click(
 							key_productName = "U-Joint",
@@ -850,7 +850,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -987,7 +987,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1111,7 +1111,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1140,7 +1140,7 @@ definition {
 
 						AssertTextEquals.assertPartialText(
 							locator1 = "Message#ERROR_DISMISSIBLE",
-							value1 = "The specified quantity is not a multiple of 0.5");
+							value1 = "The specified quantity is not a multiple of 1.5");
 
 						Click(locator1 = "CommerceAccelerators#PRODUCT_DETAILS_QUANTITY_SELECTOR_INPUT_FIELD");
 					}
@@ -1205,7 +1205,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1465,7 +1465,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1511,7 +1511,7 @@ definition {
 				orderAuthor = "Buyer User",
 				priceOnApplication = "true",
 				productName = "ABS Sensor",
-				productQuantity = "1.0",
+				productQuantity = 1,
 				productSku = "MIN93015",
 				uomKey = "UOM1KEY");
 		}
@@ -1519,10 +1519,7 @@ definition {
 		task ("When the admin logs in") {
 			User.logoutPG();
 
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "test@liferay.com");
+			CommerceLogin.miniumLogin(urlAppend = "web/minium");
 		}
 
 		task ("And navigates to the orders page") {
@@ -1541,7 +1538,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}

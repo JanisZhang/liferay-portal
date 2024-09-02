@@ -180,7 +180,7 @@ else {
 							<c:if test="<%= showLanguageSelector %>">
 								<div class="mt-2">
 									<react:component
-										module="document_library/js/LanguageSelector"
+										module="{LanguageSelector} from document-library-web"
 										props='<%=
 											HashMapBuilder.<String, Object>put(
 												"ddmStructureIds", DDMStructureUtil.getDDMStructureIds(ddmStructures)
@@ -219,6 +219,7 @@ else {
 										dataDefinitionId="<%= ddmStructure.getStructureId() %>"
 										dataRecordValues="<%= DataRecordValuesUtil.getDataRecordValues(ddmFormValues, ddmStructure) %>"
 										namespace="<%= liferayPortletResponse.getNamespace() + ddmStructure.getStructureId() + StringPool.UNDERLINE %>"
+										persistDefaultValues="<%= true %>"
 										persisted="<%= fileEntry != null %>"
 										submittable="<%= false %>"
 									/>
@@ -233,15 +234,13 @@ else {
 
 					</c:if>
 
-					<aui:script position="inline" require="frontend-js-web/index as frontendJsWeb">
-						var {delegate, runScriptsInElement} = frontendJsWeb;
-
+					<aui:script position="inline" sandbox="<%= true %>">
 						var documentTypeMenuList = document.querySelector(
 							'#<portlet:namespace />documentTypeSelector .lfr-menu-list'
 						);
 
 						if (documentTypeMenuList) {
-							delegate(documentTypeMenuList, 'click', 'li a', (event) => {
+							Liferay.Util.delegate(documentTypeMenuList, 'click', 'li a', (event) => {
 								event.preventDefault();
 
 								Liferay.Util.fetch(event.delegateTarget.getAttribute('href'))
@@ -256,7 +255,9 @@ else {
 										if (commonFileMetadataContainer) {
 											commonFileMetadataContainer.innerHTML = response;
 
-											runScriptsInElement(commonFileMetadataContainer);
+											Liferay.Util.runScriptsInElement(
+												commonFileMetadataContainer
+											);
 										}
 
 										var fileNodes = document.querySelectorAll(
@@ -374,14 +375,14 @@ else {
 			id="dlFileEntryExpirationDatePanel"
 			markupView="lexicon"
 			persistState="<%= true %>"
-			title="expiration-date"
+			title='<%= FeatureFlagManagerUtil.isEnabled(themeDisplay.getCompanyId(), "LPD-10701") ? "schedule" : "expiration-date" %>'
 		>
 			<aui:fieldset>
 				<liferay-ui:error exception="<%= FileEntryDisplayDateException.class %>" message="please-enter-a-valid-publish-date" />
 				<liferay-ui:error exception="<%= FileEntryExpirationDateException.class %>" message="please-enter-a-valid-expiration-date" />
 				<liferay-ui:error exception="<%= FileEntryReviewDateException.class %>" message="please-enter-a-valid-review-date" />
 
-				<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-10701") %>'>
+				<c:if test='<%= FeatureFlagManagerUtil.isEnabled(themeDisplay.getCompanyId(), "LPD-10701") %>'>
 					<p class="text-secondary">
 						<liferay-ui:message key="set-the-publication-date-and-time-for-your-document-to-be-published-automatically" />
 					</p>

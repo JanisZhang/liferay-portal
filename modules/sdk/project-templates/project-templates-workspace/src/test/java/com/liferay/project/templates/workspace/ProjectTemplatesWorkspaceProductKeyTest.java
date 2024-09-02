@@ -41,7 +41,8 @@ public class ProjectTemplatesWorkspaceProductKeyTest
 		return Arrays.asList(
 			new Object[][] {
 				{"dxp", "7.0.10.17"}, {"dxp", "7.1.10.7"}, {"dxp", "7.2.10.7"},
-				{"portal", "7.3.7"}, {"portal", "7.4.3.56"}
+				{"portal", "7.3.7"}, {"portal", "7.4.3.56"},
+				{"dxp", "2024.q1.1"}
 			});
 	}
 
@@ -95,7 +96,12 @@ public class ProjectTemplatesWorkspaceProductKeyTest
 					workspaceProjectDir, true, _gradleDistribution,
 					":modules:" + name + GRADLE_TASK_PATH_BUILD));
 
-			if (_liferayVersion.startsWith("7.0")) {
+			if (_liferayVersion.startsWith("20")) {
+				Assert.assertTrue(
+					gradleOutput.contains(
+						"release.dxp.bom:" + _liferayVersion));
+			}
+			else if (_liferayVersion.startsWith("7.0")) {
 				Assert.assertTrue(
 					gradleOutput.contains(
 						"release.dxp.bom:" + _liferayVersion));

@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.product.definitions.web.internal.portlet.action;
 
+import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.exception.CPDefinitionOptionValueRelCPInstanceException;
 import com.liferay.commerce.product.exception.CPDefinitionOptionValueRelKeyException;
@@ -14,7 +15,10 @@ import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelService;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
+import com.liferay.commerce.util.CommerceOrderItemQuantityFormatter;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -24,11 +28,13 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
-
-import java.math.BigDecimal;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
 import java.util.Map;
@@ -130,9 +136,37 @@ public class EditCPDefinitionOptionValueRelMVCActionCommand
 			actionRequest, "cpDefinitionOptionValueRelId");
 
 		String key = ParamUtil.getString(actionRequest, "key");
-		Map<Locale, String> nameMap = _localization.getLocalizationMap(
-			actionRequest, "name");
+		String label = ParamUtil.getString(actionRequest, "label");
+
+		Map<Locale, String> nameMap = null;
+
+		if (Validator.isNotNull(label)) {
+			nameMap = HashMapBuilder.put(
+				LocaleUtil.getDefault(), label
+			).build();
+		}
+		else {
+			nameMap = _localization.getLocalizationMap(actionRequest, "name");
+		}
+
 		double priority = ParamUtil.getDouble(actionRequest, "priority");
+
+		if (Validator.isNull(key)) {
+			String date = ParamUtil.getString(actionRequest, "date");
+			String duration = ParamUtil.getString(actionRequest, "duration");
+			String durationType = ParamUtil.getString(
+				actionRequest, "durationType");
+			String time = ParamUtil.getString(actionRequest, "time");
+			String timeZone = ParamUtil.getString(actionRequest, "timeZone");
+
+			key = StringUtil.replace(
+				_friendlyURLNormalizer.normalizeWithPeriodsAndSlashes(
+					StringBundler.concat(
+						date, StringPool.DASH, time, StringPool.DASH, duration,
+						StringPool.DASH, durationType, StringPool.DASH,
+						timeZone)),
+				'_', '-');
+		}
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CPDefinitionOptionValueRel.class.getName(), actionRequest);
@@ -176,18 +210,14 @@ public class EditCPDefinitionOptionValueRelMVCActionCommand
 			cpInstanceId = ParamUtil.getLong(actionRequest, "cpInstanceId");
 		}
 
-		boolean preselected = ParamUtil.getBoolean(
-			actionRequest, "preselected");
-		BigDecimal price = (BigDecimal)ParamUtil.getNumber(
-			actionRequest, "price", BigDecimal.ZERO);
-		BigDecimal quantity = (BigDecimal)ParamUtil.getNumber(
-			actionRequest, "quantity", BigDecimal.ZERO);
-
 		return _cpDefinitionOptionValueRelService.
 			updateCPDefinitionOptionValueRel(
 				cpDefinitionOptionValueRelId, cpInstanceId, key, nameMap,
-				preselected, price, priority, quantity, unitOfMeasureKey,
-				serviceContext);
+				ParamUtil.getBoolean(actionRequest, "preselected"),
+				_commercePriceFormatter.parse(actionRequest, "price"), priority,
+				_commerceOrderItemQuantityFormatter.parse(
+					actionRequest, "quantity"),
+				unitOfMeasureKey, serviceContext);
 	}
 
 	private CPDefinitionOptionValueRel _updatePreselected(
@@ -216,12 +246,22 @@ public class EditCPDefinitionOptionValueRelMVCActionCommand
 		EditCPDefinitionOptionValueRelMVCActionCommand.class);
 
 	@Reference
+	private CommerceOrderItemQuantityFormatter
+		_commerceOrderItemQuantityFormatter;
+
+	@Reference
+	private CommercePriceFormatter _commercePriceFormatter;
+
+	@Reference
 	private CPDefinitionOptionValueRelService
 		_cpDefinitionOptionValueRelService;
 
 	@Reference
 	private CPInstanceUnitOfMeasureLocalService
 		_cpInstanceUnitOfMeasureLocalService;
+
+	@Reference
+	private FriendlyURLNormalizer _friendlyURLNormalizer;
 
 	@Reference
 	private Localization _localization;

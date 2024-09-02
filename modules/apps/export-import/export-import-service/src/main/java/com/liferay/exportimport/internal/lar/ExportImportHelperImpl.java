@@ -399,9 +399,30 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 				parentLayouts = getMissingParentLayouts(layout, targetGroupId);
 			}
 
-			for (Layout parentLayout : parentLayouts) {
-				if (!layouts.contains(parentLayout)) {
-					layouts.add(parentLayout);
+			if (FeatureFlagManagerUtil.isEnabled("LPS-199086")) {
+				try {
+					StagingConfiguration stagingConfiguration =
+						_configurationProvider.getCompanyConfiguration(
+							StagingConfiguration.class,
+							CompanyThreadLocal.getCompanyId());
+
+					if (stagingConfiguration.publishParentLayoutsByDefault()) {
+						for (Layout parentLayout : parentLayouts) {
+							if (!layouts.contains(parentLayout)) {
+								layouts.add(parentLayout);
+							}
+						}
+					}
+				}
+				catch (Exception exception) {
+					_log.error(exception);
+				}
+			}
+			else {
+				for (Layout parentLayout : parentLayouts) {
+					if (!layouts.contains(parentLayout)) {
+						layouts.add(parentLayout);
+					}
 				}
 			}
 
@@ -495,11 +516,11 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			FileEntry fileEntry)
 		throws Exception {
 
+		ManifestSummary manifestSummary = null;
+
 		File file = FileUtil.createTempFile("lar");
 
 		ZipReader zipReader = null;
-
-		ManifestSummary manifestSummary = null;
 
 		try (InputStream inputStream = _dlFileEntryLocalService.getFileAsStream(
 				fileEntry.getFileEntryId(), fileEntry.getVersion(), false)) {
@@ -535,11 +556,12 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 			PortletDataContext portletDataContext)
 		throws Exception {
 
+		ManifestSummary manifestSummary = new ManifestSummary();
+
 		XMLReader xmlReader = SecureXMLFactoryProviderUtil.newXMLReader();
 
 		Group group = _groupLocalService.getGroup(
 			portletDataContext.getGroupId());
-		ManifestSummary manifestSummary = new ManifestSummary();
 
 		ElementHandler elementHandler = new ElementHandler(
 			new ManifestSummaryElementProcessor(group, manifestSummary),
@@ -741,6 +763,12 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 				 portletDataContext.getCompanyGroupId())) &&
 			(ExportImportThreadLocal.isLayoutExportInProcess() ||
 			 ExportImportThreadLocal.isLayoutStagingInProcess())) {
+
+			return false;
+		}
+
+		if (ExportImportThreadLocal.isLayoutStagingInProcess() &&
+			!_isStagedPortlet(portletDataContext)) {
 
 			return false;
 		}
@@ -1418,6 +1446,17 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 				PortletIdCodec.decodePortletName(portletId));
 	}
 
+	private boolean _isStagedPortlet(PortletDataContext portletDataContext) {
+		Group group = _groupLocalService.fetchGroup(
+			portletDataContext.getGroupId());
+
+		if (group == null) {
+			return false;
+		}
+
+		return group.isStagedPortlet(portletDataContext.getPortletId());
+	}
+
 	private boolean _populateLayoutsJSON(
 		JSONArray layoutsJSONArray, Layout layout, long[] selectedLayoutIds) {
 
@@ -1626,13 +1665,10 @@ public class ExportImportHelperImpl implements ExportImportHelper {
 				_manifestSummary.addModelAdditionCount(
 					manifestSummaryKey, modelAdditionCount);
 
-				if (FeatureFlagManagerUtil.isEnabled("LPS-165481")) {
-					String assetTitle = GetterUtil.getString(
-						element.attributeValue("asset-title"));
+				String assetTitle = GetterUtil.getString(
+					element.attributeValue("asset-title"));
 
-					_manifestSummary.addAssetTitle(
-						manifestSummaryKey, assetTitle);
-				}
+				_manifestSummary.addAssetTitle(manifestSummaryKey, assetTitle);
 
 				long modelDeletionCount = GetterUtil.getLong(
 					element.attributeValue("deletion-count"));

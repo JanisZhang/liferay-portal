@@ -34,9 +34,12 @@ const GoalsEntries = ({mdfRequest}: IProps) => (
 				},
 				{
 					title: 'Country',
-					value: mdfRequest.partnerCountry?.name,
+					value: mdfRequest.partnerCountries
+						.map((country) => country.name)
+						.join(', '),
 				},
 			]}
+			tableLayoutAuto
 		/>
 
 		<Table<Item>
@@ -60,8 +63,7 @@ const GoalsEntries = ({mdfRequest}: IProps) => (
 					value: mdfRequest.overallCampaignName,
 				},
 				{
-					title:
-						'Provide a short description of the overall campaign',
+					title: 'Provide a short description of the overall campaign',
 					value: mdfRequest.overallCampaignDescription,
 				},
 				{
@@ -70,8 +72,8 @@ const GoalsEntries = ({mdfRequest}: IProps) => (
 						'Other - Please describe'
 					)
 						? mdfRequest.liferayBusinessSalesGoalsOther +
-						  '; ' +
-						  mdfRequest.liferayBusinessSalesGoals
+							'; ' +
+							mdfRequest.liferayBusinessSalesGoals
 								?.filter(
 									(item) => item !== 'Other - Please describe'
 								)
@@ -79,6 +81,7 @@ const GoalsEntries = ({mdfRequest}: IProps) => (
 						: mdfRequest.liferayBusinessSalesGoals?.join('; '),
 				},
 			]}
+			tableLayoutAuto
 		/>
 
 		<Table<Item>
@@ -107,6 +110,7 @@ const GoalsEntries = ({mdfRequest}: IProps) => (
 					value: mdfRequest.targetAudienceRoles?.join('; '),
 				},
 			]}
+			tableLayoutAuto
 		/>
 	</div>
 );

@@ -9,6 +9,10 @@ import com.liferay.jethr0.event.github.GitHubFactory;
 import com.liferay.jethr0.event.github.client.GitHubClient;
 import com.liferay.jethr0.util.StringUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -25,6 +29,20 @@ public class GitHubCommit {
 		return _gitHubFactory.getGitHubClient();
 	}
 
+	public List<GitHubCommit> getParentGitHubCommits() {
+		List<GitHubCommit> parentGitHubCommits = new ArrayList<>();
+
+		JSONArray parentsJSONArray = _jsonObject.getJSONArray("parents");
+
+		for (int i = 0; i < parentsJSONArray.length(); i++) {
+			parentGitHubCommits.add(
+				_gitHubFactory.newGitHubCommit(
+					parentsJSONArray.getJSONObject(i)));
+		}
+
+		return parentGitHubCommits;
+	}
+
 	public String getSHA() {
 		String sha = _jsonObject.optString("sha");
 
@@ -33,6 +51,16 @@ public class GitHubCommit {
 		}
 
 		return sha;
+	}
+
+	public String getShortSHA() {
+		String sha = getSHA();
+
+		if (StringUtil.isNullOrEmpty(sha)) {
+			return null;
+		}
+
+		return sha.substring(0, 7);
 	}
 
 	private final GitHubFactory _gitHubFactory;

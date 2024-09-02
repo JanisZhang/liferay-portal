@@ -12,6 +12,7 @@
 		]
 	},
 	"dependencies": {
+		"@clayui/badge": "^3.111.0",
 		"@clayui/button": "^3.100.0",
 		"@clayui/card": "^3.104.0",
 		"@clayui/core": "^3.104.0",
@@ -20,6 +21,7 @@
 		"@clayui/layout": "^3.93.0",
 		"@clayui/link": "^3.88.0",
 		"@clayui/navigation-bar": "^3.104.0",
+		"@clayui/pagination-bar": "^3.114.0",
 		"@clayui/panel": "^3.104.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
@@ -39,5 +41,5 @@
 		"start": "react-scripts start",
 		"test": "react-scripts test --passWithNoTests --watchAll=false"
 	},
-	"version": "0.1.0"
+	"version": "0.0.0"
 }

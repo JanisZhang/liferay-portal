@@ -32,7 +32,7 @@ import {get, noop, upperFirst} from 'lodash';
 import {getDefaultChannel} from 'shared/components/channels-menu';
 import {Routes, toRoute} from 'shared/util/router';
 import {sub} from 'shared/util/lang';
-import {useInterval} from 'shared/hooks';
+import {useInterval} from 'shared/hooks/useInterval';
 import {useLazyQuery} from '@apollo/react-hooks';
 import {withHistory} from 'shared/hoc';
 
@@ -146,14 +146,6 @@ const ConnectDXP: React.FC<IConnectDXPWrapperProps & IConnectDXPProps> = ({
 						TIMEOUT_INTERVAL
 					);
 				} else {
-					analytics.track(
-						'Established connection w/ DXP - TEST',
-						null,
-						{
-							ip: '0'
-						}
-					);
-
 					if (onboarding) {
 						onDxpConnected(true);
 
@@ -465,10 +457,6 @@ const TokenInput: FC<ITokenInputProps> = ({token}) => {
 
 	const _inputRef = useRef<any>();
 	const selectAll = () => {
-		analytics.track('Clicked Copy Token Button - TEST', null, {
-			ip: '0'
-		});
-
 		_inputRef.current && _inputRef.current.selectAll();
 	};
 
@@ -500,12 +488,6 @@ const TokenInput: FC<ITokenInputProps> = ({token}) => {
 							displayType='unstyled'
 							onClick={() => {
 								setTokenCopied(true);
-
-								analytics.track(
-									'Clicked Copy Token Button - TEST',
-									null,
-									{ip: '0'}
-								);
 							}}
 							text={token}
 						/>

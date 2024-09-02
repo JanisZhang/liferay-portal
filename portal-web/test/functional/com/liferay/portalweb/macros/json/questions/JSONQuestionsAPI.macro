@@ -11,7 +11,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		if (!(isSet(encodingFormat))) {
@@ -23,9 +23,9 @@ definition {
 				-H 'Content-Type: application/json' \
 				-u '${userEmailAddress}:${userPassword}' \
 				-d '{
-					"headline": "${titleField}",
 					"articleBody": "${bodyField}",
 					"encodingFormat": "${encodingFormat}",
+					"headline": "${titleField}",
 					"viewableBy": "Anyone"
 				}'
 		''';
@@ -52,7 +52,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		var curl = '''
@@ -60,11 +60,11 @@ definition {
 				-H 'Content-Type: application/json' \
 				-u '${userEmailAddress}:${userPassword}' \
 				-d '{
+					"articleBody": "${bodyField}",
+					"headline": "${titleField}",
 					"keywords": [
 						"${tagField}"
 					],
-					"headline": "${titleField}",
-					"articleBody": "${bodyField}",
 					"viewableBy": "Anyone"
 				}'
 		''';

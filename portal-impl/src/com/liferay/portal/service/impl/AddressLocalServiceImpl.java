@@ -52,6 +52,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Brian Wing Shun Chan
@@ -216,6 +217,7 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 			classPK);
 	}
 
+	@Override
 	public List<Address> getListTypeAddresses(
 		long companyId, String className, long classPK, long[] listTypeIds) {
 
@@ -224,6 +226,7 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 			classPK, listTypeIds);
 	}
 
+	@Override
 	public List<Address> getListTypeAddresses(
 		long companyId, String className, long classPK, long[] listTypeIds,
 		int start, int end, OrderByComparator<Address> orderByComparator) {
@@ -308,6 +311,32 @@ public class AddressLocalServiceImpl extends AddressLocalServiceBaseImpl {
 		}
 
 		return address;
+	}
+
+	@Override
+	public Address updateExternalReferenceCode(
+			Address address, String externalReferenceCode)
+		throws PortalException {
+
+		if (Objects.equals(
+				address.getExternalReferenceCode(), externalReferenceCode)) {
+
+			return address;
+		}
+
+		address.setExternalReferenceCode(externalReferenceCode);
+
+		return addressPersistence.update(address);
+	}
+
+	@Override
+	public Address updateExternalReferenceCode(
+			long addressId, String externalReferenceCode)
+		throws PortalException {
+
+		return updateExternalReferenceCode(
+			addressPersistence.findByPrimaryKey(addressId),
+			externalReferenceCode);
 	}
 
 	protected SearchContext buildSearchContext(

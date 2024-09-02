@@ -28,7 +28,7 @@ export function parseActions(node) {
 export function parseAssignments(node) {
 	const assignments = {};
 	const autoCreateValues = [];
-	const roleKeys = [];
+	const roleNames = [];
 	const roleTypes = [];
 	const users = [];
 	const typeUser = Object.keys(node.assignments[0])[0];
@@ -47,7 +47,7 @@ export function parseAssignments(node) {
 		else if (itemKeys.includes('role-type')) {
 			assignments.assignmentType = ['roleType'];
 			autoCreateValues.push(item['auto-create']);
-			roleKeys.push(item.name);
+			roleNames.push(item.name);
 			roleTypes.push(item['role-type']);
 		}
 		else if (itemKeys.includes('script')) {
@@ -86,7 +86,7 @@ export function parseAssignments(node) {
 
 	if (assignments.assignmentType[0] === 'roleType') {
 		assignments.autoCreate = autoCreateValues[0];
-		assignments.roleKey = roleKeys[0];
+		assignments.roleName = roleNames[0];
 		assignments.roleType = roleTypes[0];
 	}
 
@@ -105,9 +105,22 @@ export function parseReassignments(node) {
 		else if (item['roles']) {
 			if (item['roles'][0]['role']?.['role-type']) {
 				assignments.assignmentType = ['roleType'];
-				assignments.autoCreate = [item['roles'][0]['auto-create']];
-				assignments.roleKey = [item['roles'][0]['role']['name']];
-				assignments.roleType = [item['roles'][0]['role']['role-type']];
+
+				assignments.autoCreate = [];
+				assignments.roleName = [];
+				assignments.roleType = [];
+
+				for (let index = 0; index < item['roles']?.length; index++) {
+					assignments.autoCreate.push(
+						item['roles'][index]?.['role']?.['auto-create']
+					);
+					assignments.roleName.push(
+						item['roles'][index]?.['role']?.['name']
+					);
+					assignments.roleType.push(
+						item['roles'][index]?.['role']?.['role-type']
+					);
+				}
 			}
 			else {
 				assignments.assignmentType = ['roleId'];
@@ -126,14 +139,34 @@ export function parseReassignments(node) {
 		else if (item['user'] !== undefined) {
 			assignments.assignmentType = ['user'];
 
-			if (item['user'][0]?.['email-address']) {
-				assignments.emailAddress = [item['user'][0]['email-address']];
+			const usersLength = item['user']?.length;
+
+			const emailAddress = [];
+			const screenName = [];
+			const userId = [];
+
+			for (let i = 0; i < usersLength; i++) {
+				if (item['user'][i]?.['email-address']) {
+					emailAddress.push(item['user'][i]?.['email-address']);
+				}
+				else if (item['user'][0]?.['screen-name']) {
+					screenName.push(item['user'][i]?.['screen-name']);
+				}
+				else if (item['user'][0]?.['user-id']) {
+					userId.push(item['user'][i]?.['user-id']);
+				}
 			}
-			else if (item['user'][0]?.['user-id']) {
-				assignments.userId = [item['user'][0]['user-id']];
+
+			if (emailAddress.length) {
+				assignments.emailAddress = emailAddress;
 			}
-			else if (item['user'][0]?.['screen-name']) {
-				assignments.screenName = [item['user'][0]['screen-name']];
+
+			if (screenName.length) {
+				assignments.screenName = screenName;
+			}
+
+			if (userId.length) {
+				assignments.userId = userId;
 			}
 		}
 	});
@@ -324,7 +357,7 @@ export function parseNotifications(node) {
 			const autoCreate =
 				item['auto-create'] ||
 				item['recipients'][0]['roles']['auto-create'];
-			const roleKey =
+			const roleName =
 				item['role-name'] || item['recipients'][0]['roles']['name'];
 			const roleType =
 				item['role-type'] ||
@@ -335,7 +368,7 @@ export function parseNotifications(node) {
 					assignmentType: ['roleType'],
 					autoCreate,
 					receptionType: [receptionType],
-					roleKey,
+					roleName,
 					roleType,
 				});
 			}
@@ -343,7 +376,7 @@ export function parseNotifications(node) {
 				notifications.recipients[index].push({
 					assignmentType: ['roleType'],
 					autoCreate,
-					roleKey,
+					roleName,
 					roleType,
 				});
 			}
@@ -358,7 +391,7 @@ export function parseNotifications(node) {
 			const roleId = item['role-id']
 				? item['role-id'][0]
 				: item['recipients'][0]['roles']['role'] ||
-				  item['recipients'][0]['roles']['role-id'];
+					item['recipients'][0]['roles']['role-id'];
 
 			if (receptionType) {
 				notifications.recipients[index].push({
@@ -459,14 +492,14 @@ export function parseTimers(node) {
 			node.taskTimers[index]['reassignments']
 				? parseReassignments({
 						assignments: node.taskTimers[index]['reassignments'],
-				  })
+					})
 				: {}
 		);
 		taskTimers.timerActions.push(
 			node.taskTimers[index]['timer-action']
 				? parseActions({
 						actions: node.taskTimers[index]['timer-action'],
-				  })
+					})
 				: {}
 		);
 		taskTimers.timerNotifications.push(
@@ -475,7 +508,7 @@ export function parseTimers(node) {
 						nodeName: 'timer-notification',
 						notifications:
 							node.taskTimers[index]['timer-notification'],
-				  })
+					})
 				: {}
 		);
 		taskTimers.name = parseProperty(taskTimers, item, 'name');

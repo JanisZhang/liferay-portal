@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 import com.liferay.portal.util.PropsValues;
 
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -219,11 +220,11 @@ public class I18nFilter extends BasePortalFilter {
 	protected String getRequestedLanguageId(
 		HttpServletRequest httpServletRequest, String userLanguageId) {
 
+		String requestedLanguageId = null;
+
 		HttpSession httpSession = httpServletRequest.getSession();
 
 		Locale locale = (Locale)httpSession.getAttribute(WebKeys.LOCALE);
-
-		String requestedLanguageId = null;
 
 		if (locale != null) {
 			requestedLanguageId = LocaleUtil.toLanguageId(locale);
@@ -242,6 +243,28 @@ public class I18nFilter extends BasePortalFilter {
 		if (Validator.isNull(requestedLanguageId)) {
 			requestedLanguageId = (String)httpServletRequest.getAttribute(
 				WebKeys.VIRTUAL_HOST_LANGUAGE_ID);
+		}
+
+		if (Validator.isNull(requestedLanguageId) &&
+			PropsValues.LOCALE_DEFAULT_REQUEST) {
+
+			Enumeration<Locale> enumeration = httpServletRequest.getLocales();
+
+			while (enumeration.hasMoreElements()) {
+				Locale requestLocale = enumeration.nextElement();
+
+				if (Validator.isNull(requestLocale.getCountry())) {
+					requestLocale = _language.getLocale(
+						requestLocale.getLanguage());
+				}
+
+				if (_language.isAvailableLocale(requestLocale)) {
+					requestedLanguageId = LocaleUtil.toLanguageId(
+						requestLocale);
+
+					break;
+				}
+			}
 		}
 
 		return requestedLanguageId;
@@ -324,11 +347,6 @@ public class I18nFilter extends BasePortalFilter {
 				defaultLanguageId, requestedLanguageId);
 		}
 		else if (prependFriendlyUrlStyle == 2) {
-			if (PropsValues.LOCALE_DEFAULT_REQUEST) {
-				return LocaleUtil.toLanguageId(
-					_portal.getLocale(httpServletRequest));
-			}
-
 			return requestedLanguageId;
 		}
 		else if (prependFriendlyUrlStyle == 3) {

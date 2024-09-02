@@ -7,7 +7,6 @@ package com.liferay.layout.page.template.internal.model.listener;
 
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
@@ -54,6 +53,16 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 			return;
 		}
 
+		if (layout.isTypeContent() && !layout.isTypeUtility()) {
+			_reindexLayout(layout);
+		}
+
+		if (ExportImportThreadLocal.isImportInProcess() ||
+			ExportImportThreadLocal.isStagingInProcess()) {
+
+			return;
+		}
+
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -71,35 +80,22 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 			throw new ModelListenerException(portalException);
 		}
 
-		if (!layout.isTypeContent()) {
-			return;
-		}
-
-		_reindexLayout(layout);
-
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_getLayoutPageTemplateEntry(layout);
 
-		if (ExportImportThreadLocal.isImportInProcess() ||
-			ExportImportThreadLocal.isStagingInProcess() ||
-			(layoutPageTemplateEntry == null)) {
-
-			return;
+		if (layoutPageTemplateEntry != null) {
+			TransactionCommitCallbackUtil.registerCallback(
+				() -> _copyStructure(layoutPageTemplateEntry, layout));
 		}
-
-		TransactionCommitCallbackUtil.registerCallback(
-			() -> _copyStructure(layoutPageTemplateEntry, layout));
 	}
 
 	@Override
 	public void onAfterUpdate(Layout originalLayout, Layout layout)
 		throws ModelListenerException {
 
-		if (!layout.isTypeContent()) {
-			return;
+		if (layout.isTypeContent() && !layout.isTypeUtility()) {
+			_reindexLayout(layout);
 		}
-
-		_reindexLayout(layout);
 	}
 
 	@Override
@@ -154,7 +150,7 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 		}
 
 		return _segmentsExperienceLocalService.addDefaultSegmentsExperience(
-			layout.getUserId(), layout.getPlid(), serviceContext);
+			null, layout.getUserId(), layout.getPlid(), serviceContext);
 	}
 
 	private void _copySiteNavigationMenuId(
@@ -197,7 +193,7 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 				layoutPageTemplateEntryLayout.getGroupId(),
 				layoutPageTemplateEntryLayout.getPlid());
 
-		draftLayout = _layoutCopyHelper.copyLayoutContent(
+		draftLayout = _layoutLocalService.copyLayoutContent(
 			layoutPageTemplateEntryLayout, draftLayout);
 
 		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
@@ -213,7 +209,7 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 
 		_layoutLocalService.updateLayout(draftLayout);
 
-		_layoutCopyHelper.copyLayoutContent(
+		_layoutLocalService.copyLayoutContent(
 			layoutPageTemplateEntryLayout, layout);
 
 		return null;
@@ -280,9 +276,6 @@ public class LayoutModelListener extends BaseModelListener<Layout> {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutModelListener.class);
-
-	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

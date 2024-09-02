@@ -29,7 +29,6 @@ import com.liferay.commerce.product.exception.CPDefinitionMetaKeywordsException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaTitleException;
 import com.liferay.commerce.product.exception.CPDefinitionProductTypeNameException;
 import com.liferay.commerce.product.exception.CPDefinitionSubscriptionLengthException;
-import com.liferay.commerce.product.exception.DuplicateCProductException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLink;
@@ -223,7 +222,6 @@ public class CPDefinitionLocalServiceImpl
 		_validate(
 			groupId, ddmStructureKey, metaTitleMap, metaDescriptionMap,
 			metaKeywordsMap, displayDate, expirationDate, productTypeName);
-		_validateCProduct(externalReferenceCode, user.getCompanyId());
 		_validateSubscriptionLength(subscriptionLength, "length");
 		_validateSubscriptionCycles(
 			maxSubscriptionCycles, "subscriptionCycles");
@@ -242,8 +240,8 @@ public class CPDefinitionLocalServiceImpl
 		CPDefinition cpDefinition = cpDefinitionPersistence.create(
 			cpDefinitionId);
 
-		CProduct cProduct = _cProductLocalService.createCProduct(
-			counterLocalService.increment());
+		CProduct cProduct = _cProductLocalService.addCProduct(
+			externalReferenceCode, groupId, userId, new ServiceContext());
 
 		cpDefinition.setGroupId(groupId);
 		cpDefinition.setCompanyId(user.getCompanyId());
@@ -306,17 +304,6 @@ public class CPDefinitionLocalServiceImpl
 		cpDefinition.setExpandoBridgeAttributes(serviceContext);
 
 		cpDefinition = cpDefinitionPersistence.update(cpDefinition);
-
-		// Commerce product
-
-		cProduct.setExternalReferenceCode(externalReferenceCode);
-		cProduct.setGroupId(groupId);
-		cProduct.setCompanyId(user.getCompanyId());
-		cProduct.setUserId(user.getUserId());
-		cProduct.setUserName(user.getFullName());
-		cProduct.setLatestVersion(1);
-
-		cProduct = _cProductLocalService.updateCProduct(cProduct);
 
 		// Commerce product definition localization
 
@@ -1341,7 +1328,8 @@ public class CPDefinitionLocalServiceImpl
 					cpDefinitionLocalService.getCProductCPDefinitions(
 						cProduct.getCProductId(),
 						WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS, new CPDefinitionVersionComparator());
+						QueryUtil.ALL_POS,
+						CPDefinitionVersionComparator.getInstance(false));
 
 				if (ListUtil.isEmpty(cpDefinitions)) {
 					_cProductLocalService.updatePublishedCPDefinitionId(
@@ -2520,24 +2508,26 @@ public class CPDefinitionLocalServiceImpl
 			status = WorkflowConstants.STATUS_SCHEDULED;
 		}
 
-		Date modifiedDate = serviceContext.getModifiedDate(date);
+		Date expirationDate = cpDefinition.getExpirationDate();
 
-		if (status == WorkflowConstants.STATUS_APPROVED) {
-			Date expirationDate = cpDefinition.getExpirationDate();
+		if ((status == WorkflowConstants.STATUS_APPROVED) &&
+			(expirationDate != null) && expirationDate.before(date)) {
 
-			if ((expirationDate != null) && expirationDate.before(date)) {
-				cpDefinition.setExpirationDate(null);
-			}
+			cpDefinition.setStatus(WorkflowConstants.STATUS_EXPIRED);
+
+			status = WorkflowConstants.STATUS_EXPIRED;
 		}
 
-		if (status == WorkflowConstants.STATUS_EXPIRED) {
+		if ((status == WorkflowConstants.STATUS_EXPIRED) &&
+			((expirationDate == null) || expirationDate.after(date))) {
+
 			cpDefinition.setExpirationDate(date);
 		}
 
 		cpDefinition.setStatus(status);
 		cpDefinition.setStatusByUserId(user.getUserId());
 		cpDefinition.setStatusByUserName(user.getFullName());
-		cpDefinition.setStatusDate(modifiedDate);
+		cpDefinition.setStatusDate(serviceContext.getModifiedDate(date));
 
 		cpDefinition = cpDefinitionPersistence.update(cpDefinition);
 
@@ -3207,35 +3197,18 @@ public class CPDefinitionLocalServiceImpl
 			}
 		}
 
-		if ((expirationDate != null) &&
-			(expirationDate.before(new Date()) ||
-			 ((displayDate != null) && expirationDate.before(displayDate)))) {
+		if ((expirationDate != null) && (displayDate != null) &&
+			expirationDate.before(displayDate)) {
 
 			throw new CPDefinitionExpirationDateException(
-				"Expiration date " + expirationDate + " is in the past");
+				"Expiration date " + expirationDate +
+					" is before display date");
 		}
 
 		CPType cpType = _cpTypeRegistry.getCPType(productTypeName);
 
 		if (cpType == null) {
 			throw new CPDefinitionProductTypeNameException();
-		}
-	}
-
-	private void _validateCProduct(String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		if (Validator.isNull(externalReferenceCode)) {
-			return;
-		}
-
-		CProduct cProduct = _cProductPersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
-
-		if (cProduct != null) {
-			throw new DuplicateCProductException(
-				"There is another commerce product with external reference " +
-					"code " + externalReferenceCode);
 		}
 	}
 

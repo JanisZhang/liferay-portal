@@ -18,9 +18,11 @@ const Review = ({
 	onCancel,
 	onPrevious,
 }: PRMFormikPageProps & DealRegistrationStepProps) => {
-	const {isSubmitting, status: submitted, values} = useFormikContext<
-		DealRegistration
-	>();
+	const {
+		isSubmitting,
+		status: submitted,
+		values,
+	} = useFormikContext<DealRegistration>();
 
 	return (
 		<>
@@ -51,6 +53,7 @@ const Review = ({
 							value: values.mdfActivityAssociated.name,
 						},
 					]}
+					tableLayoutAuto
 				/>
 
 				<Table
@@ -95,6 +98,7 @@ const Review = ({
 							value: values.prospect?.country?.name,
 						},
 					]}
+					tableLayoutAuto
 				/>
 
 				<Table
@@ -135,6 +139,7 @@ const Review = ({
 							value: values.primaryProspect?.jobRole?.name,
 						},
 					]}
+					tableLayoutAuto
 				/>
 
 				<Table
@@ -163,6 +168,7 @@ const Review = ({
 							value: values.additionalContact?.emailAddress,
 						},
 					]}
+					tableLayoutAuto
 				/>
 
 				<Table
@@ -180,10 +186,10 @@ const Review = ({
 					rows={[
 						{
 							title: 'Additional Information',
-							value:
-								values.additionalInformationAboutTheOpportunity,
+							value: values.additionalInformationAboutTheOpportunity,
 						},
 					]}
+					tableLayoutAuto
 				/>
 
 				<Table
@@ -208,6 +214,7 @@ const Review = ({
 							value: values.projectCategories.join(', '),
 						},
 					]}
+					tableLayoutAuto
 				/>
 
 				<Table
@@ -228,6 +235,7 @@ const Review = ({
 							value: values.projectTimeline,
 						},
 					]}
+					tableLayoutAuto
 				/>
 
 				<PRMForm.Footer>

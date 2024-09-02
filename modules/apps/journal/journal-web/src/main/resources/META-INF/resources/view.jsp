@@ -76,6 +76,7 @@ else {
 						).buildString()
 					%>'
 					label="<%= article.getTitle(locale) %>"
+					translated="<%= false %>"
 				/>
 			</liferay-util:buffer>
 
@@ -104,7 +105,7 @@ else {
 					"alertMessage", alertMessage
 				).build()
 			%>'
-			module="js/SuccessMessageWithLink"
+			module="{SuccessMessageWithLink} from journal-web"
 		/>
 	</c:if>
 </c:if>
@@ -122,7 +123,7 @@ else {
 
 <clay:management-toolbar
 	managementToolbarDisplayContext="<%= journalManagementToolbarDisplayContext %>"
-	propsTransformer="js/ManagementToolbarPropsTransformer"
+	propsTransformer="{ManagementToolbarPropsTransformer} from journal-web"
 />
 
 <div class="closed sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
@@ -148,7 +149,7 @@ else {
 		%>
 
 		<c:choose>
-			<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-194763") && ListUtil.isNotEmpty(ddmStructureVerticalNavItemList) %>'>
+			<c:when test="<%= ListUtil.isNotEmpty(ddmStructureVerticalNavItemList) %>">
 				<clay:row>
 					<clay:col
 						lg="3"

@@ -52,118 +52,152 @@ public class ${schemaName}SerDes {
 			return "null";
 		}
 
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("{");
-
 		<#assign
 			enumSchemas = freeMarkerTool.getDTOEnumSchemas(configYAML, openAPIYAML, schema)
 			properties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema, allSchemas)
+
+			dtoParentClassName = freeMarkerTool.getDTOParentClassName(openAPIYAML, schemaName)!
 		/>
 
-		<#list properties?keys as propertyName>
-			<#assign propertyType = properties[propertyName] />
+		<#if schema.discriminator?has_content>
+			<#assign propertyName = schema.discriminator.propertyName />
 
-			<#if stringUtil.equals(propertyType, "Date") || stringUtil.equals(propertyType, "Date[]")>
-				DateFormat liferayToJSONDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXX");
+			${schemaName}.${propertyName?cap_first} ${propertyName} = ${schemaVarName}.get${propertyName?cap_first}();
 
-				<#break>
+			if (${propertyName} != null) {
+				String ${propertyName}String = ${propertyName}.toString();
+
+				<#list schema.discriminator.mapping as mappingName, mappingSchema>
+					if (${propertyName}String.equals("${mappingName}")) {
+						return ${freeMarkerTool.getReferenceName(mappingSchema)}SerDes.toJSON((${freeMarkerTool.getReferenceName(mappingSchema)})${schemaVarName});
+					}
+				</#list>
+
+				throw new IllegalArgumentException("Unknown ${propertyName} " + ${propertyName}String);
+			}
+			else {
+				throw new IllegalArgumentException("Missing ${propertyName} parameter");
+			}
+		<#else>
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("{");
+
+			<#if dtoParentClassName?has_content>
+				<#assign
+					dtoParentSchema = allSchemas[dtoParentClassName]
+
+					enumSchemas = enumSchemas + freeMarkerTool.getDTOEnumSchemas(configYAML, openAPIYAML, dtoParentSchema)
+					properties = properties + freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, dtoParentSchema, allSchemas)
+				/>
 			</#if>
-		</#list>
 
-		<#list properties?keys as propertyName>
-			<#assign
-				capitalizedPropertyName = propertyName?cap_first
-				propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)
-			/>
-
-			<#if enumSchemas?keys?seq_contains(properties[propertyName])>
-				<#assign capitalizedPropertyName = properties[propertyName] />
-			</#if>
-
-			if (${schemaVarName}.get${capitalizedPropertyName}() != null) {
-				if (sb.length() > 1) {
-					sb.append(", ");
-				}
-
-				<#if propertySchema.name??>
-					<#assign key = propertySchema.name />
-				<#else>
-					<#assign key = propertyName />
-				</#if>
-
-				sb.append("\"${key}\": ");
-
+			<#list properties?keys as propertyName>
 				<#assign propertyType = properties[propertyName] />
 
-				<#if allSchemas[propertyType]??>
-					sb.append(String.valueOf(${schemaVarName}.get${capitalizedPropertyName}()));
-				<#elseif stringUtil.equals(propertyType, "Object")>
-					if (${schemaVarName}.get${capitalizedPropertyName}() instanceof String) {
-						sb.append("\"");
-						sb.append((String)${schemaVarName}.get${capitalizedPropertyName}());
-						sb.append("\"");
-					}
-					else {
-						sb.append(${schemaVarName}.get${capitalizedPropertyName}());
-					}
-				<#else>
-					<#if propertyType?contains("[]")>
-						sb.append("[");
+				<#if stringUtil.equals(propertyType, "Date") || stringUtil.equals(propertyType, "Date[]")>
+					DateFormat liferayToJSONDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXX");
 
-						for (int i = 0; i < ${schemaVarName}.get${capitalizedPropertyName}().length; i++) {
-							<#if stringUtil.equals(propertyType, "Date[]") || stringUtil.equals(propertyType, "Object[]") || stringUtil.equals(propertyType, "String[]") || enumSchemas?keys?seq_contains(propertyType)>
-								sb.append("\"");
+					<#break>
+				</#if>
+			</#list>
 
-								<#if stringUtil.equals(propertyType, "Date[]")>
-									sb.append(liferayToJSONDateFormat.format(${schemaVarName}.get${capitalizedPropertyName}()[i]));
-								<#elseif stringUtil.equals(propertyType, "Object[]") || stringUtil.equals(propertyType, "String[]")>
-									sb.append(_escape(${schemaVarName}.get${capitalizedPropertyName}()[i]));
+			<#list properties?keys as propertyName>
+				<#assign
+					capitalizedPropertyName = propertyName?cap_first
+					propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)!
+				/>
+
+				<#if enumSchemas?keys?seq_contains(properties[propertyName])>
+					<#assign capitalizedPropertyName = properties[propertyName] />
+				</#if>
+
+				<#if dtoParentClassName?has_content && !propertySchema?has_content>
+					<#assign propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, dtoParentSchema, allSchemas) />
+				</#if>
+
+				if (${schemaVarName}.get${capitalizedPropertyName}() != null) {
+					if (sb.length() > 1) {
+						sb.append(", ");
+					}
+
+					<#if propertySchema.name??>
+						<#assign key = propertySchema.name />
+					<#else>
+						<#assign key = propertyName />
+					</#if>
+
+					sb.append("\"${key}\": ");
+
+					<#assign propertyType = properties[propertyName] />
+
+					<#if allSchemas[propertyType]??>
+						sb.append(String.valueOf(${schemaVarName}.get${capitalizedPropertyName}()));
+					<#elseif stringUtil.equals(propertyType, "Object")>
+						if (${schemaVarName}.get${capitalizedPropertyName}() instanceof String) {
+							sb.append("\"");
+							sb.append((String)${schemaVarName}.get${capitalizedPropertyName}());
+							sb.append("\"");
+						}
+						else {
+							sb.append(${schemaVarName}.get${capitalizedPropertyName}());
+						}
+					<#else>
+						<#if propertyType?contains("[]")>
+							sb.append("[");
+
+							for (int i = 0; i < ${schemaVarName}.get${capitalizedPropertyName}().length; i++) {
+								<#if stringUtil.equals(propertyType, "Date[]") || enumSchemas?keys?seq_contains(propertyType)>
+									sb.append("\"");
+
+									<#if stringUtil.equals(propertyType, "Date[]")>
+										sb.append(liferayToJSONDateFormat.format(${schemaVarName}.get${capitalizedPropertyName}()[i]));
+									<#else>
+										sb.append(${schemaVarName}.get${capitalizedPropertyName}()[i]);
+									</#if>
+
+									sb.append("\"");
+								<#elseif stringUtil.startsWith(propertyType, "Map<") || stringUtil.equals(propertyType, "Object[]") || stringUtil.equals(propertyType, "String[]")>
+									sb.append(_toJSON(${schemaVarName}.get${capitalizedPropertyName}()[i]));
+								<#elseif allSchemas[propertyType?remove_ending("[]")]??>
+									sb.append(String.valueOf(${schemaVarName}.get${capitalizedPropertyName}()[i]));
 								<#else>
 									sb.append(${schemaVarName}.get${capitalizedPropertyName}()[i]);
 								</#if>
 
+								if ((i + 1) < ${schemaVarName}.get${capitalizedPropertyName}().length) {
+									sb.append(", ");
+								}
+							}
+
+							sb.append("]");
+						<#else>
+							<#if stringUtil.equals(propertyType, "Date") || stringUtil.equals(propertyType, "Object") || stringUtil.equals(propertyType, "String") || enumSchemas?keys?seq_contains(propertyType)>
+								sb.append("\"");
+
+								<#if stringUtil.equals(propertyType, "Date")>
+									sb.append(liferayToJSONDateFormat.format(${schemaVarName}.get${capitalizedPropertyName}()));
+								<#elseif stringUtil.equals(propertyType, "Object") || stringUtil.equals(propertyType, "String")>
+									sb.append(_escape(${schemaVarName}.get${capitalizedPropertyName}()));
+								<#else>
+									sb.append(${schemaVarName}.get${capitalizedPropertyName}());
+								</#if>
+
 								sb.append("\"");
 							<#elseif stringUtil.startsWith(propertyType, "Map<")>
-								sb.append(_toJSON(${schemaVarName}.get${capitalizedPropertyName}()[i]));
-							<#elseif allSchemas[propertyType?remove_ending("[]")]??>
-								sb.append(String.valueOf(${schemaVarName}.get${capitalizedPropertyName}()[i]));
-							<#else>
-								sb.append(${schemaVarName}.get${capitalizedPropertyName}()[i]);
-							</#if>
-
-							if ((i + 1) < ${schemaVarName}.get${capitalizedPropertyName}().length) {
-								sb.append(", ");
-							}
-						}
-
-						sb.append("]");
-					<#else>
-						<#if stringUtil.equals(propertyType, "Date") || stringUtil.equals(propertyType, "Object") || stringUtil.equals(propertyType, "String") || enumSchemas?keys?seq_contains(propertyType)>
-							sb.append("\"");
-
-							<#if stringUtil.equals(propertyType, "Date")>
-								sb.append(liferayToJSONDateFormat.format(${schemaVarName}.get${capitalizedPropertyName}()));
-							<#elseif stringUtil.equals(propertyType, "Object") || stringUtil.equals(propertyType, "String")>
-								sb.append(_escape(${schemaVarName}.get${capitalizedPropertyName}()));
+								sb.append(_toJSON(${schemaVarName}.get${capitalizedPropertyName}()));
 							<#else>
 								sb.append(${schemaVarName}.get${capitalizedPropertyName}());
 							</#if>
-
-							sb.append("\"");
-						<#elseif stringUtil.startsWith(propertyType, "Map<")>
-							sb.append(_toJSON(${schemaVarName}.get${capitalizedPropertyName}()));
-						<#else>
-							sb.append(${schemaVarName}.get${capitalizedPropertyName}());
 						</#if>
 					</#if>
-				</#if>
-			}
-		</#list>
+				}
+			</#list>
 
-		sb.append("}");
+			sb.append("}");
 
-		return sb.toString();
+			return sb.toString();
+		</#if>
 	}
 
 	public static Map<String, Object> toMap(String json) {
@@ -192,11 +226,15 @@ public class ${schemaName}SerDes {
 		<#list properties?keys as propertyName>
 			<#assign
 				capitalizedPropertyName = propertyName?cap_first
-				propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)
+				propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)!
 			/>
 
 			<#if enumSchemas?keys?seq_contains(properties[propertyName])>
 				<#assign capitalizedPropertyName = properties[propertyName] />
+			</#if>
+
+			<#if dtoParentClassName?has_content && !propertySchema?has_content>
+				<#assign propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, dtoParentSchema, allSchemas) />
 			</#if>
 
 			<#if propertySchema.name??>
@@ -226,7 +264,11 @@ public class ${schemaName}SerDes {
 
 		@Override
 		protected ${schemaName} createDTO() {
-			return new ${schemaName}();
+			<#if schema.discriminator?has_content>
+				return null;
+			<#else>
+				return new ${schemaName}();
+			</#if>
 		}
 
 		@Override
@@ -235,9 +277,72 @@ public class ${schemaName}SerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			<#list properties?keys as propertyName>
+				<#assign propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)! />
+
+				<#if dtoParentClassName?has_content && !propertySchema?has_content>
+					<#assign propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, dtoParentSchema, allSchemas) />
+				</#if>
+
+				<#if !propertyName?is_first>
+					else
+				</#if>
+
+				<#if propertySchema.name??>
+					<#assign fieldName = propertySchema.name />
+				<#else>
+					<#assign fieldName = propertyName />
+				</#if>
+
+				if (Objects.equals(jsonParserFieldName, "${fieldName}")) {
+					<#assign propertyType = properties[propertyName]?replace("com.liferay.portal.vulcan.permission.", "${configYAML.apiPackagePath}.client.permission.") />
+
+					<#if stringUtil.startsWith(propertyType, "Map<") || stringUtil.equals(propertyType, "Object[]")>
+						return true;
+					<#else>
+						return false;
+					</#if>
+				}
+			</#list>
+
+			return false;
+		}
+
+		<#if schema.discriminator?has_content>
+			<#assign propertyName = schema.discriminator.propertyName />
+
+			@Override
+			public ${schemaName} parseToDTO(String json) {
+				Map<String, Object> jsonMap = parseToMap(json);
+
+				Object ${propertyName} = jsonMap.get("${propertyName}");
+
+				if (${propertyName} != null) {
+					String ${propertyName}String = ${propertyName}.toString();
+
+					<#list schema.discriminator.mapping as mappingName, mappingSchema>
+						if (${propertyName}String.equals("${mappingName}")) {
+							return ${freeMarkerTool.getReferenceName(mappingSchema)}.toDTO(json);
+						}
+					</#list>
+
+					throw new IllegalArgumentException("Unknown ${propertyName} " + ${propertyName}String);
+				}
+				else {
+					throw new IllegalArgumentException("Missing ${propertyName} parameter");
+				}
+			}
+		</#if>
+
+		@Override
 		protected void setField(${schemaName} ${schemaVarName}, String jsonParserFieldName, Object jsonParserFieldValue) {
 			<#list properties?keys as propertyName>
-				<#assign propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas) />
+				<#assign propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, schema, allSchemas)! />
+
+				<#if dtoParentClassName?has_content && !propertySchema?has_content>
+					<#assign propertySchema = freeMarkerTool.getDTOPropertySchema(configYAML, propertyName, dtoParentSchema, allSchemas) />
+				</#if>
 
 				<#if !propertyName?is_first>
 					else
@@ -279,8 +384,6 @@ public class ${schemaName}SerDes {
 							${schemaVarName}.set${capitalizedPropertyName}(Long.valueOf((String)jsonParserFieldValue));
 						<#elseif stringUtil.equals(propertyType, "Long[]")>
 							${schemaVarName}.set${capitalizedPropertyName}(toLongs((Object[])jsonParserFieldValue));
-						<#elseif stringUtil.startsWith(propertyType, "Map<")>
-							${schemaVarName}.set${capitalizedPropertyName}((Map)${schemaName}SerDes.toMap((String)jsonParserFieldValue));
 						<#elseif stringUtil.equals(propertyType, "Number")>
 							${schemaVarName}.set${capitalizedPropertyName}(Integer.valueOf((String)jsonParserFieldValue));
 						<#elseif stringUtil.equals(propertyType, "Number[]")>
@@ -350,36 +453,7 @@ public class ${schemaName}SerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -389,6 +463,38 @@ public class ${schemaName}SerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

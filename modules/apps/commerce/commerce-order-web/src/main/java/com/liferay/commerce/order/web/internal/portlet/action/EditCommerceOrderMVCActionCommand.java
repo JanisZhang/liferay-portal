@@ -11,6 +11,7 @@ import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.inventory.constants.CommerceInventoryConstants;
 import com.liferay.commerce.inventory.model.CommerceInventoryBookedQuantity;
 import com.liferay.commerce.inventory.service.CommerceInventoryBookedQuantityLocalService;
@@ -44,8 +45,6 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
-
-import java.math.BigDecimal;
 
 import java.util.Calendar;
 
@@ -88,6 +87,9 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			}
 			else if (cmd.equals("customFields")) {
 				updateCustomFields(actionRequest);
+			}
+			else if (cmd.equals("name")) {
+				_updateName(actionRequest);
 			}
 			else if (cmd.equals("orderSummary")) {
 				_updateOrderSummary(actionRequest);
@@ -452,8 +454,31 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			_language.getLanguageId(actionRequest.getLocale()));
 	}
 
-	private void _updateOrderSummary(ActionRequest actionRequest)
+	private void _updateName(ActionRequest actionRequest)
 		throws PortalException {
+
+		long commerceOrderId = ParamUtil.getLong(
+			actionRequest, "commerceOrderId");
+		String name = ParamUtil.getString(actionRequest, "name");
+
+		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
+			commerceOrderId);
+
+		_commerceOrderService.updateCommerceOrder(
+			commerceOrder.getExternalReferenceCode(), commerceOrderId,
+			commerceOrder.getBillingAddressId(),
+			commerceOrder.getCommerceShippingMethodId(),
+			commerceOrder.getShippingAddressId(),
+			commerceOrder.getAdvanceStatus(),
+			commerceOrder.getCommercePaymentMethodKey(), name,
+			commerceOrder.getPurchaseOrderNumber(),
+			commerceOrder.getShippingAmount(),
+			commerceOrder.getShippingOptionName(), commerceOrder.getSubtotal(),
+			commerceOrder.getTotal());
+	}
+
+	private void _updateOrderSummary(ActionRequest actionRequest)
+		throws Exception {
 
 		long commerceOrderId = ParamUtil.getLong(
 			actionRequest, "commerceOrderId");
@@ -461,32 +486,25 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			commerceOrderId);
 
-		String subtotal = ParamUtil.getString(actionRequest, "subtotal");
-		String subtotalDiscountAmount = ParamUtil.getString(
-			actionRequest, "subtotalDiscountAmount");
-		String shippingAmount = ParamUtil.getString(
-			actionRequest, "shippingAmount");
-		String shippingDiscountAmount = ParamUtil.getString(
-			actionRequest, "shippingDiscountAmount");
-		String taxAmount = ParamUtil.getString(actionRequest, "taxAmount");
-		String total = ParamUtil.getString(actionRequest, "total");
-		String totalDiscountAmount = ParamUtil.getString(
-			actionRequest, "totalDiscountAmount");
-
 		_commerceOrderService.updateCommerceOrderPrices(
-			commerceOrder.getCommerceOrderId(), new BigDecimal(shippingAmount),
-			new BigDecimal(shippingDiscountAmount),
+			commerceOrder.getCommerceOrderId(),
+			_commercePriceFormatter.parse(actionRequest, "shippingAmount"),
+			_commercePriceFormatter.parse(
+				actionRequest, "shippingDiscountAmount"),
 			commerceOrder.getShippingDiscountPercentageLevel1(),
 			commerceOrder.getShippingDiscountPercentageLevel2(),
 			commerceOrder.getShippingDiscountPercentageLevel3(),
 			commerceOrder.getShippingDiscountPercentageLevel4(),
-			new BigDecimal(subtotal), new BigDecimal(subtotalDiscountAmount),
+			_commercePriceFormatter.parse(actionRequest, "subtotal"),
+			_commercePriceFormatter.parse(
+				actionRequest, "subtotalDiscountAmount"),
 			commerceOrder.getSubtotalDiscountPercentageLevel1(),
 			commerceOrder.getSubtotalDiscountPercentageLevel2(),
 			commerceOrder.getSubtotalDiscountPercentageLevel3(),
 			commerceOrder.getSubtotalDiscountPercentageLevel4(),
-			new BigDecimal(taxAmount), new BigDecimal(total),
-			new BigDecimal(totalDiscountAmount),
+			_commercePriceFormatter.parse(actionRequest, "taxAmount"),
+			_commercePriceFormatter.parse(actionRequest, "total"),
+			_commercePriceFormatter.parse(actionRequest, "totalDiscountAmount"),
 			commerceOrder.getTotalDiscountPercentageLevel1(),
 			commerceOrder.getTotalDiscountPercentageLevel2(),
 			commerceOrder.getTotalDiscountPercentageLevel3(),
@@ -633,19 +651,12 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			zip, regionId, countryId, phoneNumber, serviceContext);
 	}
 
-	private void _updateTotals(ActionRequest actionRequest)
-		throws PortalException {
-
+	private void _updateTotals(ActionRequest actionRequest) throws Exception {
 		long commerceOrderId = ParamUtil.getLong(
 			actionRequest, "commerceOrderId");
 
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			commerceOrderId);
-
-		String subtotal = ParamUtil.getString(actionRequest, "subtotal");
-		String shippingPrice = ParamUtil.getString(
-			actionRequest, "shippingPrice");
-		String total = ParamUtil.getString(actionRequest, "total");
 
 		CommerceContext commerceContext =
 			(CommerceContext)actionRequest.getAttribute(
@@ -659,12 +670,14 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			commerceOrder.getShippingAddressId(),
 			commerceOrder.getAdvanceStatus(),
 			commerceOrder.getCommercePaymentMethodKey(),
-			commerceOrder.getPurchaseOrderNumber(),
-			new BigDecimal(shippingPrice),
+			commerceOrder.getName(), commerceOrder.getPurchaseOrderNumber(),
+			_commercePriceFormatter.parse(actionRequest, "shippingPrice"),
 			commerceOrder.getShippingOptionName(),
-			commerceOrder.getShippingWithTaxAmount(), new BigDecimal(subtotal),
+			commerceOrder.getShippingWithTaxAmount(),
+			_commercePriceFormatter.parse(actionRequest, "subtotal"),
 			commerceOrder.getSubtotalWithTaxAmount(),
-			commerceOrder.getTaxAmount(), new BigDecimal(total),
+			commerceOrder.getTaxAmount(),
+			_commercePriceFormatter.parse(actionRequest, "total"),
 			commerceOrder.getTotalDiscountAmount(),
 			commerceOrder.getTotalWithTaxAmount(), commerceContext, false);
 	}
@@ -694,6 +707,9 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private CommercePaymentEngine _commercePaymentEngine;
+
+	@Reference
+	private CommercePriceFormatter _commercePriceFormatter;
 
 	@Reference
 	private CommerceShipmentService _commerceShipmentService;

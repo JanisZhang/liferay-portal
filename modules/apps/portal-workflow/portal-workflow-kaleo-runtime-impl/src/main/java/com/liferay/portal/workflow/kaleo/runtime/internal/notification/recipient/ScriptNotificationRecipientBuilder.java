@@ -100,6 +100,7 @@ public class ScriptNotificationRecipientBuilder
 	}
 
 	@Deactivate
+	@Override
 	protected void deactivate() {
 		_serviceTrackerMap.close();
 	}

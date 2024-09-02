@@ -390,6 +390,11 @@ public class CMISFileVersion extends BaseCMISModel implements FileVersion {
 	}
 
 	@Override
+	public boolean isScheduled() {
+		return false;
+	}
+
+	@Override
 	public void setCompanyId(long companyId) {
 		_cmisRepository.setCompanyId(companyId);
 	}

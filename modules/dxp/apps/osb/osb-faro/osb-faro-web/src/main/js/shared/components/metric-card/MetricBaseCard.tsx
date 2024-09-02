@@ -3,11 +3,12 @@ import Card from 'shared/components/Card';
 import MetricChart from './MetricChart';
 import MetricTabs from './MetricTabs';
 import React, {createContext, useContext, useReducer} from 'react';
-import {DocumentNode} from 'graphql';
+import {DocumentNode} from 'apollo-boost';
 import {getMetricsChartData} from './util';
 import {Interval, RangeSelectors, Router} from 'shared/types';
 import {Metric} from './metrics';
 import {RawFilters} from 'shared/util/filter';
+import {ReportContainer} from '../download-report/DownloadPDFReport';
 
 const initialState = {
 	activeItemIndex: 0,
@@ -30,14 +31,19 @@ const MetricContextActions = createContext({
 } as any);
 
 export interface ICommonMetricProps {
+	emptyDescription?: React.ReactNode;
+	emptyTitle?: string;
 	filters: RawFilters;
 	interval: Interval;
 	rangeSelectors: RangeSelectors;
 }
 
 export interface IGenericMetricBaseCardProps {
+	emptyDescription?: React.ReactNode;
+	emptyTitle?: string;
 	label: string;
 	legacyDropdownRangeKey?: boolean;
+	reportContainer?: ReportContainer;
 	showIntervals?: boolean;
 }
 
@@ -61,11 +67,14 @@ interface IMetricBaseCardProps<TChartData>
 
 function MetricBaseCard<TChartData>({
 	chartDataMapFn = getMetricsChartData,
+	emptyDescription,
+	emptyTitle,
 	label,
 	legacyDropdownRangeKey = false,
 	id,
 	metrics,
 	queries,
+	reportContainer,
 	showIntervals = false,
 	variables
 }: IMetricBaseCardProps<TChartData>): React.ReactElement {
@@ -103,10 +112,13 @@ function MetricBaseCard<TChartData>({
 					label={label}
 					legacyDropdownRangeKey={legacyDropdownRangeKey}
 					minHeight={605}
+					reportContainer={reportContainer}
 					showInterval={showIntervals}
 				>
 					{({filters, interval, rangeSelectors}) => {
 						const sharedProps: ICommonMetricProps = {
+							emptyDescription,
+							emptyTitle,
 							filters,
 							interval,
 							rangeSelectors

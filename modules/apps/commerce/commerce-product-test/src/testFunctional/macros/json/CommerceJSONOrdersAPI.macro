@@ -258,9 +258,11 @@ definition {
 			var userEmail = "test";
 		}
 
+		var userPassword = PropsUtil.get("default.admin.password");
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/orders/${orderId}/orderNotes \
-				-u ${userEmail}@liferay.com:test \
+				-u ${userEmail}@liferay.com:${userPassword} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{
@@ -475,11 +477,11 @@ definition {
 		}
 
 		if (!(isSet(email))) {
-			var email = "test@liferay.com";
+			var email = JSONUtil2.getDefaultUserEmail();
 		}
 
 		if (!(isSet(password))) {
-			var password = "test";
+			var password = JSONUtil2.getDefaultUserPassword();
 		}
 
 		var curl = '''
@@ -578,11 +580,11 @@ definition {
 		}
 
 		if (!(isSet(email))) {
-			var email = "test@liferay.com";
+			var email = JSONUtil2.getDefaultUserEmail();
 		}
 
 		if (!(isSet(password))) {
-			var password = "test";
+			var password = JSONUtil2.getDefaultUserPassword();
 		}
 
 		var curl = '''
@@ -616,11 +618,11 @@ definition {
 		}
 
 		if (!(isSet(email))) {
-			var email = "test@liferay.com";
+			var email = JSONUtil2.getDefaultUserEmail();
 		}
 
 		if (!(isSet(password))) {
-			var password = "test";
+			var password = JSONUtil2.getDefaultUserPassword();
 		}
 
 		var curl = '''
@@ -645,11 +647,11 @@ definition {
 		}
 
 		if (!(isSet(email))) {
-			var email = "test@liferay.com";
+			var email = JSONUtil2.getDefaultUserEmail();
 		}
 
 		if (!(isSet(password))) {
-			var password = "test";
+			var password = JSONUtil2.getDefaultUserPassword();
 		}
 
 		var curl = '''
@@ -720,6 +722,7 @@ definition {
 			var userEmail = "test";
 		}
 
+		var userPassword = PropsUtil.get("default.admin.password");
 		var fieldsList = ListUtil.toString(${fieldsList});
 
 		echo("Fieldlist: ${fieldsList}");
@@ -728,9 +731,11 @@ definition {
 
 		echo("payload: ${payload}");
 
+		var userPassword = PropsUtil.get("default.admin.password");
+
 		var curl = '''
 			${baseURL}/o/headless-commerce-admin-order/v1.0/orderNotes/${orderNoteId} \
-				-u ${userEmail}@liferay.com:test \
+				-u ${userEmail}@liferay.com:${userPassword} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
 				-d '{${payload}}'

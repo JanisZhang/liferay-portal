@@ -20,6 +20,7 @@ import {CustomValue} from 'shared/util/records';
 import {fromJS, Map} from 'immutable';
 import {generateGroupId, generateRowId, isCriterionGroup} from './utils';
 import {get, invert, isFinite, isNull, isString, isUndefined} from 'lodash';
+import {getPropertyValue, setPropertyValue} from './custom-inputs';
 import {filter as oDataFilterFn} from 'odata-v4-parser';
 
 const OPERATORS = {
@@ -90,6 +91,14 @@ const FARO_SPECIAL_CHARS = {
 		encoded: '_FARO_AT_',
 		raw: '@'
 	},
+	bracketLeft: {
+		encoded: '_FARO_LEFT_BRACKET_',
+		raw: '['
+	},
+	bracketRight: {
+		encoded: '_FARO_RIGHT_BRACKET_',
+		raw: ']'
+	},
 	dash: {
 		encoded: '_FARO_DASH_',
 		raw: '-'
@@ -98,9 +107,17 @@ const FARO_SPECIAL_CHARS = {
 		encoded: '_FARO_DOLLAR_',
 		raw: '$'
 	},
+	greaterThan: {
+		encoded: '_FARO_GREATER_THAN_',
+		raw: '>'
+	},
 	hash: {
 		encoded: '_FARO_HASH_',
 		raw: '#'
+	},
+	lessThan: {
+		encoded: '_FARO_LESS_THAN_',
+		raw: '<'
 	},
 	percent: {
 		encoded: '_FARO_PERCENT_',
@@ -265,50 +282,24 @@ const buildQueryString = (
  * Converts custom encodings back to original characters.
  */
 const decodeSpecialCharacters = (queryString: string): string => {
-	const {
-		ampersand,
-		at,
-		dash,
-		dollar,
-		hash,
-		percent,
-		plus,
-		question,
-		slash,
-		underscore
-	} = FARO_SPECIAL_CHARS;
+	const specialCharactersArr = Object.values(FARO_SPECIAL_CHARS);
 
-	const specialCharsEncoded = Object.values(FARO_SPECIAL_CHARS)
+	const specialCharsEncoded = specialCharactersArr
 		.map(({encoded}) => encoded)
 		.join('|');
 
 	const pattern = new RegExp(specialCharsEncoded, 'g');
 
 	return queryString.replace(pattern, match => {
-		switch (match) {
-			case ampersand.encoded:
-				return ampersand.raw;
-			case at.encoded:
-				return at.raw;
-			case dollar.encoded:
-				return dollar.raw;
-			case dash.encoded:
-				return dash.raw;
-			case hash.encoded:
-				return hash.raw;
-			case percent.encoded:
-				return percent.raw;
-			case plus.encoded:
-				return plus.raw;
-			case question.encoded:
-				return question.raw;
-			case slash.encoded:
-				return slash.raw;
-			case underscore.encoded:
-				return underscore.raw;
-			default:
-				return match;
+		const specialCharacter = specialCharactersArr.find(
+			({encoded}) => encoded === match
+		);
+
+		if (specialCharacter) {
+			return specialCharacter.raw;
 		}
+
+		return match;
 	});
 };
 
@@ -318,52 +309,25 @@ const encodeQuotes = (text: string): string => text.replace(/'/g, '%27');
  * Encode certain special characters with our own encoding.
  */
 const encodeSpecialCharacters = (queryString: string): string => {
-	const {
-		ampersand,
-		at,
-		dash,
-		dollar,
-		hash,
-		percent,
-		plus,
-		question,
-		slash,
-		underscore
-	} = FARO_SPECIAL_CHARS;
+	const charsNeedEscaped = ['+', '?', '$', '[', ']'];
+	const specialCharactersArr = Object.values(FARO_SPECIAL_CHARS);
 
-	const charsNeedEscaped = ['+', '?', '$'];
-
-	const specialCharsPattern = Object.values(FARO_SPECIAL_CHARS)
+	const specialCharsPattern = specialCharactersArr
 		.map(({raw}) => (charsNeedEscaped.includes(raw) ? `\\${raw}` : raw))
 		.join('|');
 
 	const pattern = new RegExp(specialCharsPattern, 'g');
 
 	return queryString.replace(pattern, match => {
-		switch (match) {
-			case ampersand.raw:
-				return ampersand.encoded;
-			case at.raw:
-				return at.encoded;
-			case dash.raw:
-				return dash.encoded;
-			case dollar.raw:
-				return dollar.encoded;
-			case hash.raw:
-				return hash.encoded;
-			case percent.raw:
-				return percent.encoded;
-			case plus.raw:
-				return plus.encoded;
-			case question.raw:
-				return question.encoded;
-			case slash.raw:
-				return slash.encoded;
-			case underscore.raw:
-				return underscore.encoded;
-			default:
-				return match;
+		const specialCharacter = specialCharactersArr.find(
+			({raw}) => raw === match
+		);
+
+		if (specialCharacter) {
+			return specialCharacter.encoded;
 		}
+
+		return match;
 	});
 };
 
@@ -377,6 +341,12 @@ export const escapeSingleQuotes = (text: string) => text.replace(/'/g, "''");
  */
 const decodeQuotesToOdataQuotes = (encodedText: string): string =>
 	encodedText.replace(/%27/g, "''");
+
+/**
+ * Encode all %22 decoded quotes.
+ */
+const encodeDoubleQuotesToOdataQuotes = (decodedText: string): string =>
+	decodedText.replaceAll('"', '%22');
 
 /**
  * Gets the internal name of a child expression from the oDataV4Parser name
@@ -565,57 +535,77 @@ export const convertBetweenToSubstring = (queryString: string): string =>
 		'substring'
 	);
 
+export const decodeValueFromCriteria = (criteria: Criteria) => {
+	const decodeValue = (value: string) => {
+		let decodedValue = value;
+
+		try {
+			decodedValue = decodeURIComponent(value);
+		} catch (e) {}
+
+		return decodedValue;
+	};
+
+	const formatCriteria = criteria => {
+		const newCriteria = {...criteria};
+
+		if (newCriteria.value) {
+			if (typeof newCriteria.value === 'string') {
+				newCriteria.value = decodeValue(newCriteria.value);
+			} else if (newCriteria.value?._map) {
+				newCriteria.value = setPropertyValue(
+					newCriteria.value,
+					'value',
+					0,
+					decodeValue(getPropertyValue(newCriteria.value, 'value', 0))
+				);
+			}
+		}
+
+		if (newCriteria.items) {
+			newCriteria.items = newCriteria.items.map(formatCriteria);
+		}
+
+		if (newCriteria.propertyName) {
+			newCriteria.propertyName = decodeValue(newCriteria.propertyName);
+		}
+
+		return newCriteria;
+	};
+
+	return formatCriteria(criteria);
+};
+
 /**
  * Converts an OData filter query string to an object that can be used by the
  * criteria builder
  */
-const translateQueryToCriteria = (initialQueryString: string): Criteria => {
+const translateQueryToCriteria = (queryString: string): Criteria => {
 	let criteria;
-
-	const regex = new RegExp(/\[*\]|\[*\[/);
-	const queryStringWithBrackets = regex.test(initialQueryString);
-
-	const queryString = queryStringWithBrackets
-		? initialQueryString.replaceAll('[', '').replaceAll(']', '')
-		: initialQueryString;
 
 	try {
 		if (queryString === '()') {
 			throw new Error('queryString is ()');
 		}
 
-		const oDataASTNode = JSON.parse(
-			decodeSpecialCharacters(
-				JSON.stringify(
-					oDataFilterFn(
-						convertBetweenToSubstring(
-							encodeSpecialCharacters(
-								trimSpacesBeforeParams(queryString)
-							)
-						)
-					)
-				)
-			)
-		);
+		const encodedQuotes = encodeDoubleQuotesToOdataQuotes(queryString);
+		const trimSpaces = trimSpacesBeforeParams(encodedQuotes);
+		const encodedSpecialCharacters = encodeSpecialCharacters(trimSpaces);
+		const substrings = convertBetweenToSubstring(encodedSpecialCharacters);
+		const token = oDataFilterFn(substrings);
+		const stringfied = JSON.stringify(token);
+		const decodedSpecialCharacters = decodeSpecialCharacters(stringfied);
 
+		const oDataASTNode = JSON.parse(decodedSpecialCharacters);
 		const criteriaArray = toCriteria({oDataASTNode});
 
 		criteria = isCriterionGroup(criteriaArray[0])
 			? criteriaArray[0]
 			: wrapInCriteriaGroup(criteriaArray);
+
+		criteria = decodeValueFromCriteria(criteria);
 	} catch (e) {
 		criteria = null;
-	}
-
-	if (queryStringWithBrackets) {
-		const initialValueList = initialQueryString.match(/'([^']*)'/g);
-
-		const items = criteria.items.map((item, index) => ({
-			...item,
-			value: initialValueList[index].slice(1, -1)
-		}));
-
-		return {...criteria, items};
 	}
 
 	return criteria;

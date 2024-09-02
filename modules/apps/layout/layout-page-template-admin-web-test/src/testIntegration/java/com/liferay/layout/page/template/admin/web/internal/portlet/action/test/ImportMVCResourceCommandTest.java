@@ -38,7 +38,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactory;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -98,7 +97,7 @@ public class ImportMVCResourceCommandTest {
 
 		_layoutPageTemplateCollectionLocalService.
 			addLayoutPageTemplateCollection(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				LayoutPageTemplateConstants.
 					PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 				"imported", StringPool.BLANK,
@@ -149,7 +148,7 @@ public class ImportMVCResourceCommandTest {
 
 		_layoutPageTemplateCollectionLocalService.
 			addLayoutPageTemplateCollection(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				LayoutPageTemplateConstants.
 					PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 				"imported", StringPool.BLANK,
@@ -162,7 +161,7 @@ public class ImportMVCResourceCommandTest {
 		Assert.assertNotNull(
 			_layoutPageTemplateCollectionLocalService.
 				fetchLayoutPageTemplateCollection(
-					_group.getGroupId(), "imported-(1)",
+					_group.getGroupId(), "imported-(copy)",
 					LayoutPageTemplateEntryTypeConstants.BASIC));
 	}
 
@@ -216,7 +215,6 @@ public class ImportMVCResourceCommandTest {
 			expectedLayout.getTypeSettings(), actualLayout.getTypeSettings());
 	}
 
-	@FeatureFlags("LPS-180328")
 	@Test
 	public void testImportFileWithOverwriteStrategyAndWithExistingLockedLayoutPageTemplateEntry()
 		throws Exception {
@@ -311,7 +309,7 @@ public class ImportMVCResourceCommandTest {
 		throws Exception {
 
 		return _layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(), 0,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 			"Existing Master Page",
 			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 			WorkflowConstants.STATUS_APPROVED,

@@ -12,15 +12,16 @@ import PRMFormikPageProps from '../../../common/components/PRMFormik/interfaces/
 import MDFClaim from '../../../common/interfaces/mdfClaim';
 
 interface IProps {
+	currencyExchangeRate?: number;
 	onClose: () => void;
 }
 
 export default function ClaimPaidModalContent({
+	currencyExchangeRate,
 	onClose,
 }: PRMFormikPageProps & IProps) {
-	const {dirty, isSubmitting, isValid, setFieldValue} = useFormikContext<
-		MDFClaim
-	>();
+	const {dirty, isSubmitting, isValid, setFieldValue} =
+		useFormikContext<MDFClaim>();
 
 	return (
 		<PRMForm name="MDF Claim" title="Status Change">
@@ -28,7 +29,13 @@ export default function ClaimPaidModalContent({
 				component={PRMForm.InputCurrency}
 				label="Amount Paid"
 				name="claimPaid"
-				onAccept={(value: number) => setFieldValue(`claimPaid`, value)}
+				onAccept={(value: number) => {
+					setFieldValue(
+						`convertedClaimPaid`,
+						currencyExchangeRate && value / currencyExchangeRate
+					);
+					setFieldValue(`claimPaid`, value);
+				}}
 				required
 			/>
 			<PRMFormik.Field

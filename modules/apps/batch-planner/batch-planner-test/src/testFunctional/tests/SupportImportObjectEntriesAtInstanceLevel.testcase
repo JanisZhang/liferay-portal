@@ -1,10 +1,10 @@
-@component-name = "portal-batch-planner"
+@component-name = "portal-headless"
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Import/Export";
+	property testray.main.component.name = "Data Migration Center";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -88,13 +88,13 @@ definition {
 	test CanCreateAndUpdateExistingObjectEntriesWithSameFile {
 		property portal.acceptance = "true";
 
-		task ("When importing .jsonl file as 'C_Student' Entity Type with default settings") {
+		task ("When importing .jsonl file as 'Student' Entity Type with default settings") {
 			ImportExport.replaceAttachmentIdAndHrefInFile(
 				en_US_plural_label = "students",
 				fileName = "multiple_objectEntries_import_create_update.jsonl");
 
 			ImportExport.importFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
+				entityType = "Student (v1.0 - Liferay Object REST)",
 				fileName = "multiple_objectEntries_import_create_update.jsonl");
 		}
 
@@ -129,13 +129,13 @@ definition {
 	test CanCreateObjectEntry {
 		property portal.acceptance = "true";
 
-		task ("When importing .json file as 'C_Student' Entity Type with default setting") {
+		task ("When importing .json file as 'Student' Entity Type with default setting") {
 			ImportExport.replaceAttachmentIdAndHrefInFile(
 				en_US_plural_label = "students",
 				fileName = "objectEntry_import_create.json");
 
 			ImportExport.importFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
+				entityType = "Student (v1.0 - Liferay Object REST)",
 				fileName = "objectEntry_import_create.json");
 		}
 
@@ -144,7 +144,7 @@ definition {
 			var actualValueList = ListUtil.newList();
 
 			for (var fieldNameList : list "name,r_subjectStudents_c_subjectERC,diploma.name") {
-				var actualValue = JSONUtil.getWithJSONPath(${response}, "$..items..[0]${fieldNameList}");
+				var actualValue = JSONUtil.getWithJSONPath(${response}, "$.items[*].${fieldNameList}");
 
 				ListUtil.add(${actualValueList}, ${actualValue});
 			}
@@ -161,13 +161,13 @@ definition {
 	test CanCreateObjectEntryFromFileContainingExistingAndNewWithUncheckedStopImportOnError {
 		property portal.acceptance = "true";
 
-		task ("When importing .jsonl file as 'C_Student' Entity Type with 'Only Add New Records Import Strategy', 'Stop the Import on Error' unchecked") {
+		task ("When importing .jsonl file as 'Student' Entity Type with 'Only Add New Records Import Strategy', 'Stop the Import on Error' unchecked") {
 			ImportExport.replaceAttachmentIdAndHrefInFile(
 				en_US_plural_label = "students",
 				fileName = "multiple_objectEntries_import_create.jsonl");
 
 			ImportExport.importFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
+				entityType = "Student (v1.0 - Liferay Object REST)",
 				fileName = "multiple_objectEntries_import_create.jsonl",
 				importStrategy = "Only Add New Records",
 				stopImportOnError = "false");
@@ -176,7 +176,7 @@ definition {
 		task ("Then one new Student item is created") {
 			var response = ObjectDefinitionAPI.getObjectEntries(en_US_plural_label = "students");
 
-			var actualValue = JSONUtil.getWithJSONPath(${response}, "$.items..[0]name");
+			var actualValue = JSONUtil.getWithJSONPath(${response}, "$.items[*].name");
 
 			TestUtils.assertEquals(
 				actual = ${actualValue},
@@ -188,9 +188,9 @@ definition {
 	test CannotCreateObjectEntryWithoutRequiredFields {
 		property portal.acceptance = "true";
 
-		task ("When importing .json file as 'C_Student' Entity Type with default setting") {
+		task ("When importing .json file as 'Student' Entity Type with default setting") {
 			ImportExport.importFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
+				entityType = "Student (v1.0 - Liferay Object REST)",
 				fileName = "objectEntry_import_without_required_fields.json",
 				noImport = "true");
 
@@ -208,9 +208,9 @@ definition {
 	test CanUpdateObjectEntry {
 		property portal.acceptance = "true";
 
-		task ("When importing .jsonl file as 'C_Student' Entity Type with default setting") {
+		task ("When importing .jsonl file as 'Student' Entity Type with default setting") {
 			ImportExport.importFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
+				entityType = "Student (v1.0 - Liferay Object REST)",
 				fileName = "objectEntry_import_update.jsonl");
 		}
 

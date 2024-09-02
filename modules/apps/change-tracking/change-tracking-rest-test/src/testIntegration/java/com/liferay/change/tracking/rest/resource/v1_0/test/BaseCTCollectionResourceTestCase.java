@@ -36,10 +36,12 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -60,8 +62,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -102,7 +102,7 @@ public abstract class BaseCTCollectionResourceTestCase {
 		CTCollectionResource.Builder builder = CTCollectionResource.builder();
 
 		ctCollectionResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,7 +116,32 @@ public abstract class BaseCTCollectionResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CTCollection ctCollection1 = randomCTCollection();
+
+		String json = objectMapper.writeValueAsString(ctCollection1);
+
+		CTCollection ctCollection2 = CTCollectionSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(ctCollection1, ctCollection2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CTCollection ctCollection = randomCTCollection();
+
+		String json1 = objectMapper.writeValueAsString(ctCollection);
+		String json2 = CTCollectionSerDes.toJSON(ctCollection);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,40 +156,6 @@ public abstract class BaseCTCollectionResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		CTCollection ctCollection1 = randomCTCollection();
-
-		String json = objectMapper.writeValueAsString(ctCollection1);
-
-		CTCollection ctCollection2 = CTCollectionSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(ctCollection1, ctCollection2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		CTCollection ctCollection = randomCTCollection();
-
-		String json1 = objectMapper.writeValueAsString(ctCollection);
-		String json2 = CTCollectionSerDes.toJSON(ctCollection);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -177,6 +168,7 @@ public abstract class BaseCTCollectionResourceTestCase {
 		ctCollection.setExternalReferenceCode(regex);
 		ctCollection.setName(regex);
 		ctCollection.setOwnerName(regex);
+		ctCollection.setStatusMessage(regex);
 
 		String json = CTCollectionSerDes.toJSON(ctCollection);
 
@@ -188,6 +180,7 @@ public abstract class BaseCTCollectionResourceTestCase {
 		Assert.assertEquals(regex, ctCollection.getExternalReferenceCode());
 		Assert.assertEquals(regex, ctCollection.getName());
 		Assert.assertEquals(regex, ctCollection.getOwnerName());
+		Assert.assertEquals(regex, ctCollection.getStatusMessage());
 	}
 
 	@Test
@@ -321,7 +314,7 @@ public abstract class BaseCTCollectionResourceTestCase {
 			(entityField, ctCollection1, ctCollection2) -> {
 				BeanTestUtil.setProperty(
 					ctCollection1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -540,6 +533,8 @@ public abstract class BaseCTCollectionResourceTestCase {
 		CTCollection ctCollection =
 			testGraphQLGetCTCollectionByExternalReferenceCode_addCTCollection();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				ctCollection,
@@ -561,6 +556,32 @@ public abstract class BaseCTCollectionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/cTCollectionByExternalReferenceCode"))));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertTrue(
+			equals(
+				ctCollection,
+				CTCollectionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"changeTracking_v1_0",
+								new GraphQLField(
+									"cTCollectionByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													ctCollection.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/changeTracking_v1_0",
+						"Object/cTCollectionByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -569,6 +590,8 @@ public abstract class BaseCTCollectionResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -584,6 +607,27 @@ public abstract class BaseCTCollectionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"cTCollectionByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -774,7 +818,10 @@ public abstract class BaseCTCollectionResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteCTCollection() throws Exception {
-		CTCollection ctCollection =
+
+		// No namespace
+
+		CTCollection ctCollection1 =
 			testGraphQLDeleteCTCollection_addCTCollection();
 
 		Assert.assertTrue(
@@ -784,23 +831,62 @@ public abstract class BaseCTCollectionResourceTestCase {
 						"deleteCTCollection",
 						new HashMap<String, Object>() {
 							{
-								put("ctCollectionId", ctCollection.getId());
+								put("ctCollectionId", ctCollection1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteCTCollection"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"cTCollection",
 					new HashMap<String, Object>() {
 						{
-							put("ctCollectionId", ctCollection.getId());
+							put("ctCollectionId", ctCollection1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace changeTracking_v1_0
+
+		CTCollection ctCollection2 =
+			testGraphQLDeleteCTCollection_addCTCollection();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"deleteCTCollection",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"ctCollectionId",
+										ctCollection2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/changeTracking_v1_0",
+				"Object/deleteCTCollection"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"changeTracking_v1_0",
+					new GraphQLField(
+						"cTCollection",
+						new HashMap<String, Object>() {
+							{
+								put("ctCollectionId", ctCollection2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected CTCollection testGraphQLDeleteCTCollection_addCTCollection()
@@ -832,6 +918,8 @@ public abstract class BaseCTCollectionResourceTestCase {
 		CTCollection ctCollection =
 			testGraphQLGetCTCollection_addCTCollection();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				ctCollection,
@@ -849,11 +937,36 @@ public abstract class BaseCTCollectionResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/cTCollection"))));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertTrue(
+			equals(
+				ctCollection,
+				CTCollectionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"changeTracking_v1_0",
+								new GraphQLField(
+									"cTCollection",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"ctCollectionId",
+												ctCollection.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/changeTracking_v1_0",
+						"Object/cTCollection"))));
 	}
 
 	@Test
 	public void testGraphQLGetCTCollectionNotFound() throws Exception {
 		Long irrelevantCtCollectionId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -867,6 +980,27 @@ public abstract class BaseCTCollectionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace changeTracking_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"changeTracking_v1_0",
+						new GraphQLField(
+							"cTCollection",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"ctCollectionId",
+										irrelevantCtCollectionId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1151,6 +1285,14 @@ public abstract class BaseCTCollectionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("statusMessage", additionalAssertFieldName)) {
+				if (ctCollection.getStatusMessage() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -1379,6 +1521,17 @@ public abstract class BaseCTCollectionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("statusMessage", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						ctCollection1.getStatusMessage(),
+						ctCollection2.getStatusMessage())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -1493,22 +1646,20 @@ public abstract class BaseCTCollectionResourceTestCase {
 
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = ctCollection.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							ctCollection.getDateCreated(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							ctCollection.getDateCreated(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1526,22 +1677,20 @@ public abstract class BaseCTCollectionResourceTestCase {
 
 		if (entityFieldName.equals("dateModified")) {
 			if (operator.equals("between")) {
+				Date date = ctCollection.getDateModified();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							ctCollection.getDateModified(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							ctCollection.getDateModified(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1559,22 +1708,20 @@ public abstract class BaseCTCollectionResourceTestCase {
 
 		if (entityFieldName.equals("dateScheduled")) {
 			if (operator.equals("between")) {
+				Date date = ctCollection.getDateScheduled();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							ctCollection.getDateScheduled(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							ctCollection.getDateScheduled(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1784,6 +1931,52 @@ public abstract class BaseCTCollectionResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("statusMessage")) {
+			Object object = ctCollection.getStatusMessage();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -1798,7 +1991,8 @@ public abstract class BaseCTCollectionResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1839,6 +2033,8 @@ public abstract class BaseCTCollectionResourceTestCase {
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				ownerName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				statusMessage = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 			}
 		};
 	}
@@ -1863,12 +2059,12 @@ public abstract class BaseCTCollectionResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1877,11 +2073,16 @@ public abstract class BaseCTCollectionResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1913,6 +2114,24 @@ public abstract class BaseCTCollectionResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1934,16 +2153,6 @@ public abstract class BaseCTCollectionResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

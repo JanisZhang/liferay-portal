@@ -7,6 +7,7 @@ package com.liferay.asset.list.service;
 
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -49,30 +50,34 @@ public class AssetListEntryServiceUtil {
 	}
 
 	public static AssetListEntry addAssetListEntry(
-			long groupId, String title, int type,
+			String externalReferenceCode, long groupId, String title, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addAssetListEntry(
-			groupId, title, type, serviceContext);
+			externalReferenceCode, groupId, title, type, serviceContext);
 	}
 
 	public static AssetListEntry addDynamicAssetListEntry(
-			long groupId, String title, String typeSettings,
+			String externalReferenceCode, long groupId, String title,
+			String typeSettings,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addDynamicAssetListEntry(
-			groupId, title, typeSettings, serviceContext);
+			externalReferenceCode, groupId, title, typeSettings,
+			serviceContext);
 	}
 
 	public static AssetListEntry addManualAssetListEntry(
-			long groupId, String title, long[] assetEntryIds,
+			String externalReferenceCode, long groupId, String title,
+			long[] assetEntryIds,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addManualAssetListEntry(
-			groupId, title, assetEntryIds, serviceContext);
+			externalReferenceCode, groupId, title, assetEntryIds,
+			serviceContext);
 	}
 
 	public static void deleteAssetEntrySelection(
@@ -106,6 +111,14 @@ public class AssetListEntryServiceUtil {
 		throws PortalException {
 
 		return getService().fetchAssetListEntry(assetListEntryId);
+	}
+
+	public static AssetListEntry fetchAssetListEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().fetchAssetListEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	public static List<AssetListEntry> getAssetListEntries(
@@ -233,6 +246,14 @@ public class AssetListEntryServiceUtil {
 		return getService().getAssetListEntry(groupId, assetListEntryKey);
 	}
 
+	public static AssetListEntry getAssetListEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getAssetListEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	public static AssetListEntry getAssetListEntryByUuidAndGroupId(
 			String uuid, long groupId)
 		throws PortalException {
@@ -283,13 +304,11 @@ public class AssetListEntryServiceUtil {
 	}
 
 	public static AssetListEntryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(AssetListEntryService service) {
-		_service = service;
-	}
-
-	private static volatile AssetListEntryService _service;
+	private static final Snapshot<AssetListEntryService> _serviceSnapshot =
+		new Snapshot<>(
+			AssetListEntryServiceUtil.class, AssetListEntryService.class);
 
 }

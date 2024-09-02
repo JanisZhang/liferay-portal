@@ -5,9 +5,8 @@
 
 package com.liferay.jethr0.event.jenkins;
 
-import com.liferay.jethr0.event.BaseEventHandlerFactory;
 import com.liferay.jethr0.event.EventHandler;
-import com.liferay.jethr0.event.EventHandlerContext;
+import com.liferay.jethr0.event.EventHandlerFactory;
 import com.liferay.jethr0.util.StringUtil;
 
 import org.json.JSONObject;
@@ -18,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Michael Hashimoto
  */
 @Configuration
-public class JenkinsEventHandlerFactory extends BaseEventHandlerFactory {
+public class JenkinsEventHandlerFactory implements EventHandlerFactory {
 
 	@Override
 	public EventHandler newEventHandler(JSONObject messageJSONObject)
@@ -31,28 +30,27 @@ public class JenkinsEventHandlerFactory extends BaseEventHandlerFactory {
 				"Missing \"eventType\" from message JSON");
 		}
 
-		EventHandlerContext eventHandlerContext = getEventHandlerContext();
-
 		if (eventType.equals("BUILD_COMPLETED")) {
-			return new BuildCompletedEventHandler(
-				eventHandlerContext, messageJSONObject);
+			return new BuildCompletedEventHandler(messageJSONObject);
 		}
 		else if (eventType.equals("BUILD_STARTED")) {
-			return new BuildStartedEventHandler(
-				eventHandlerContext, messageJSONObject);
+			return new BuildStartedEventHandler(messageJSONObject);
 		}
-		else if (eventType.equals("COMPUTER_BUSY") ||
-				 eventType.equals("COMPUTER_OFFLINE") ||
-				 eventType.equals("COMPUTER_ONLINE") ||
-				 eventType.equals("COMPUTER_TEMPORARILY_OFFLINE") ||
+		else if (eventType.equals("COMPUTER_BUSY")) {
+			return new ComputerBusyEventHandler(messageJSONObject);
+		}
+		else if (eventType.equals("COMPUTER_OFFLINE") ||
+				 eventType.equals("COMPUTER_TEMPORARILY_OFFLINE")) {
+
+			return new ComputerOfflineEventHandler(messageJSONObject);
+		}
+		else if (eventType.equals("COMPUTER_ONLINE") ||
 				 eventType.equals("COMPUTER_TEMPORARILY_ONLINE")) {
 
-			return new ComputerUpdateEventHandler(
-				eventHandlerContext, messageJSONObject);
+			return new ComputerOnlineEventHandler(messageJSONObject);
 		}
 		else if (eventType.equals("COMPUTER_IDLE")) {
-			return new ComputerIdleEventHandler(
-				eventHandlerContext, messageJSONObject);
+			return new ComputerIdleEventHandler(messageJSONObject);
 		}
 
 		throw new IllegalArgumentException(

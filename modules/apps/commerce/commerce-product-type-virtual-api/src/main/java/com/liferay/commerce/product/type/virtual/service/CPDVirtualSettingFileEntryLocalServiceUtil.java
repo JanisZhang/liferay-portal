@@ -10,8 +10,10 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
+import java.io.InputStream;
 import java.io.Serializable;
 
 import java.util.List;
@@ -63,6 +65,22 @@ public class CPDVirtualSettingFileEntryLocalServiceUtil {
 			version);
 	}
 
+	public static com.liferay.portal.kernel.repository.model.FileEntry
+			addFileEntry(
+				long userId, long groupId, String className, long classPK,
+				String serviceName, long folderId, InputStream inputStream,
+				String fileName, String mimeType)
+		throws PortalException {
+
+		return getService().addFileEntry(
+			userId, groupId, className, classPK, serviceName, folderId,
+			inputStream, fileName, mimeType);
+	}
+
+	public static int countByFileEntryId(long fileEntryId) {
+		return getService().countByFileEntryId(fileEntryId);
+	}
+
 	/**
 	 * Creates a new cpd virtual setting file entry with the primary key. Does not add the cpd virtual setting file entry to the database.
 	 *
@@ -84,6 +102,14 @@ public class CPDVirtualSettingFileEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().createPersistedModel(primaryKeyObj);
+	}
+
+	public static void deleteCPDVirtualSettingFileEntries(
+			long cpDefinitionVirtualSettingId)
+		throws PortalException {
+
+		getService().deleteCPDVirtualSettingFileEntries(
+			cpDefinitionVirtualSettingId);
 	}
 
 	/**
@@ -419,15 +445,12 @@ public class CPDVirtualSettingFileEntryLocalServiceUtil {
 	}
 
 	public static CPDVirtualSettingFileEntryLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CPDVirtualSettingFileEntryLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile CPDVirtualSettingFileEntryLocalService _service;
+	private static final Snapshot<CPDVirtualSettingFileEntryLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CPDVirtualSettingFileEntryLocalServiceUtil.class,
+			CPDVirtualSettingFileEntryLocalService.class);
 
 }

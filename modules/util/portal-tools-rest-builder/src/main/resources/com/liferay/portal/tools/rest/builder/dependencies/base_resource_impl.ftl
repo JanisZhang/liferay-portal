@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.PermissionServiceUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -63,7 +64,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.permission.ModelPermissionsUtil;
 import com.liferay.portal.vulcan.permission.Permission;
-import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.LocalDateTimeUtil;
@@ -240,7 +240,7 @@ public abstract class Base${schemaName}ResourceImpl
 					String resourceName = getPermissionCheckerResourceName(${schemaVarName}Id);
 					Long resourceId = getPermissionCheckerResourceId(${schemaVarName}Id);
 
-					PermissionUtil.checkPermission(ActionKeys.PERMISSIONS, groupLocalService, resourceName, resourceId, getPermissionCheckerGroupId(${schemaVarName}Id));
+					PermissionServiceUtil.checkPermission(getPermissionCheckerGroupId(${schemaVarName}Id), resourceName, resourceId);
 
 					return toPermissionPage(
 						<@getActions
@@ -257,7 +257,7 @@ public abstract class Base${schemaName}ResourceImpl
 
 				String portletName = getPermissionCheckerPortletName(assetLibraryId);
 
-				PermissionUtil.checkPermission(ActionKeys.PERMISSIONS, groupLocalService, portletName, assetLibraryId, assetLibraryId);
+				PermissionServiceUtil.checkPermission(assetLibraryId, portletName, assetLibraryId);
 
 				return toPermissionPage(
 					<@getActions
@@ -271,7 +271,7 @@ public abstract class Base${schemaName}ResourceImpl
 
 				String portletName = getPermissionCheckerPortletName(siteId);
 
-				PermissionUtil.checkPermission(ActionKeys.PERMISSIONS, groupLocalService, portletName, siteId, siteId);
+				PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
 
 				return toPermissionPage(
 					<@getActions
@@ -288,9 +288,9 @@ public abstract class Base${schemaName}ResourceImpl
 					Long resourceId = getPermissionCheckerResourceId(${schemaVarName}Id);
 
 					<@updateResourcePermissions
-						groupId="getPermissionCheckerGroupId(${schemaVarName}Id)"
-						resourceId="resourceId"
-						resourceName="resourceName"
+						groupId = "getPermissionCheckerGroupId(${schemaVarName}Id)"
+						resourceId = "resourceId"
+						resourceName = "resourceName"
 					>
 						<@getActions
 							resourceId="resourceId"
@@ -307,9 +307,9 @@ public abstract class Base${schemaName}ResourceImpl
 				String portletName = getPermissionCheckerPortletName(assetLibraryId);
 
 				<@updateResourcePermissions
-					groupId="assetLibraryId"
-					resourceId="assetLibraryId"
-					resourceName="portletName"
+					groupId = "assetLibraryId"
+					resourceId = "assetLibraryId"
+					resourceName = "portletName"
 				>
 					<@getActions
 						resourceId="assetLibraryId"
@@ -323,9 +323,9 @@ public abstract class Base${schemaName}ResourceImpl
 				String portletName = getPermissionCheckerPortletName(siteId);
 
 				<@updateResourcePermissions
-					groupId="siteId"
-					resourceId="siteId"
-					resourceName="portletName"
+					groupId = "siteId"
+					resourceId = "siteId"
+					resourceName = "portletName"
 				>
 					<@getActions
 						resourceId="siteId"
@@ -364,20 +364,29 @@ public abstract class Base${schemaName}ResourceImpl
 				<#assign
 					generatePatchMethods = true
 					javaMethodParameters = javaMethodSignature.javaMethodParameters[0..javaMethodSignature.javaMethodParameters?size-2]
-					javaMethodParameterName = ""
 				/>
 
 				<#if javaMethodSignature.methodName?contains("ByExternalReferenceCode")>
-					<#assign javaMethodParameterName = javaMethodSignature.methodName?replace("patch", "get") />
+					<#assign getJavaMethodSignature = freeMarkerTool.getJavaMethodSignature(javaMethodSignatures, javaMethodSignature.methodName?replace("patch", "get")) />
 				<#else>
-					<#assign javaMethodParameterName = "get" + schemaName />
+					<#assign getJavaMethodSignature = freeMarkerTool.getJavaMethodSignature(javaMethodSignatures, "get" + schemaName) />
 				</#if>
 
-				${javaDataType} existing${schemaName} = ${javaMethodParameterName}(
-					<#list javaMethodParameters as javaMethodParameter>
-						${javaMethodParameter.parameterName}
+				${javaDataType} existing${schemaName} = ${getJavaMethodSignature.methodName}(
+					<#assign firstParameter = true />
 
-						<#sep>, </#sep>
+					<#list javaMethodParameters as javaMethodParameter>
+						<#if !freeMarkerTool.hasParameter(getJavaMethodSignature, javaMethodParameter.parameterName)>
+							<#continue>
+						</#if>
+
+						<#if firstParameter>
+							<#assign firstParameter = false />
+						<#else>
+							,
+						</#if>
+
+						${javaMethodParameter.parameterName}
 					</#list>
 				);
 
@@ -421,7 +430,13 @@ public abstract class Base${schemaName}ResourceImpl
 					, existing${schemaName}
 				);
 			<#else>
-				return new ${javaMethodSignature.returnType}();
+				<#assign returnTypeSchema = allSchemas[javaMethodSignature.returnType?substring(javaMethodSignature.returnType?last_index_of('.') + 1)]! />
+
+				<#if returnTypeSchema.discriminator?has_content>
+			   		return null;
+				<#else>
+					return new ${javaMethodSignature.returnType}();
+				</#if>
 			</#if>
 		}
 	</#list>
@@ -457,8 +472,8 @@ public abstract class Base${schemaName}ResourceImpl
 						</#if>
 
 						<@getPOSTBatchJavaMethodParameters
-							javaMethodParameters=postBatchJavaMethodSignature.javaMethodParameters
-							schemaVarName=schemaVarName
+							javaMethodParameters = postBatchJavaMethodSignature.javaMethodParameters
+							schemaVarName = schemaVarName
 						/>
 
 						);
@@ -482,8 +497,8 @@ public abstract class Base${schemaName}ResourceImpl
 								</#if>
 
 								<@getPOSTBatchJavaMethodParameters
-									javaMethodParameters=postParentBatchJavaMethodSignature.javaMethodParameters
-									schemaVarName=schemaVarName
+									javaMethodParameters = postParentBatchJavaMethodSignature.javaMethodParameters
+									schemaVarName = schemaVarName
 								/>
 
 								);
@@ -517,8 +532,8 @@ public abstract class Base${schemaName}ResourceImpl
 								</#if>
 
 								<@getPOSTBatchJavaMethodParameters
-									javaMethodParameters=postParentByERCBatchJavaMethodSignature.javaMethodParameters
-									schemaVarName=schemaVarName
+									javaMethodParameters = postParentByERCBatchJavaMethodSignature.javaMethodParameters
+									schemaVarName = schemaVarName
 								/>
 
 								);
@@ -550,8 +565,8 @@ public abstract class Base${schemaName}ResourceImpl
 							</#if>
 
 							<@getPOSTBatchJavaMethodParameters
-								javaMethodParameters=postAssetLibraryBatchJavaMethodSignature.javaMethodParameters
-								schemaVarName=schemaVarName
+								javaMethodParameters = postAssetLibraryBatchJavaMethodSignature.javaMethodParameters
+								schemaVarName = schemaVarName
 							/>
 
 							);
@@ -578,8 +593,8 @@ public abstract class Base${schemaName}ResourceImpl
 							</#if>
 
 							<@getPOSTBatchJavaMethodParameters
-								javaMethodParameters=postSiteBatchJavaMethodSignature.javaMethodParameters
-								schemaVarName=schemaVarName
+								javaMethodParameters = postSiteBatchJavaMethodSignature.javaMethodParameters
+								schemaVarName = schemaVarName
 							/>
 
 							);
@@ -621,8 +636,8 @@ public abstract class Base${schemaName}ResourceImpl
 									</#if>
 
 									<@castParameters
-										type=javaMethodParameter.parameterType
-										value="${javaMethodParameter.parameterName}"
+										type = javaMethodParameter.parameterType
+										value = "${javaMethodParameter.parameterName}"
 									/>
 								<#elseif stringUtil.equals(javaMethodParameter.parameterName, schemaVarName)>
 									${schemaVarName}
@@ -659,8 +674,8 @@ public abstract class Base${schemaName}ResourceImpl
 											</#if>
 
 											<@castParameters
-												type=javaMethodParameter.parameterType
-												value="${javaMethodParameter.parameterName}"
+												type = javaMethodParameter.parameterType
+												value = "${javaMethodParameter.parameterName}"
 											/>
 										<#elseif stringUtil.equals(javaMethodParameter.parameterName, schemaVarName)>
 											${schemaVarName}
@@ -689,8 +704,8 @@ public abstract class Base${schemaName}ResourceImpl
 											</#if>
 
 											<@castParameters
-												type=javaMethodParameter.parameterType
-												value="${schemaVarName}Id"
+												type = javaMethodParameter.parameterType
+												value = "${schemaVarName}Id"
 											/>
 										<#elseif stringUtil.equals(javaMethodParameter.parameterName, "multipartBody")>
 											null
@@ -710,8 +725,8 @@ public abstract class Base${schemaName}ResourceImpl
 										persisted${schemaName} = ${postBatchJavaMethodSignature.methodName}(
 
 										<@getPOSTBatchJavaMethodParameters
-											javaMethodParameters=postBatchJavaMethodSignature.javaMethodParameters
-											schemaVarName=schemaVarName
+											javaMethodParameters = postBatchJavaMethodSignature.javaMethodParameters
+											schemaVarName = schemaVarName
 										/>
 
 										);
@@ -725,8 +740,8 @@ public abstract class Base${schemaName}ResourceImpl
 												persisted${schemaName} = ${postParentBatchJavaMethodSignature.methodName}(
 
 												<@getPOSTBatchJavaMethodParameters
-													javaMethodParameters=postParentBatchJavaMethodSignature.javaMethodParameters
-													schemaVarName=schemaVarName
+													javaMethodParameters = postParentBatchJavaMethodSignature.javaMethodParameters
+													schemaVarName = schemaVarName
 												/>
 
 												);
@@ -748,8 +763,8 @@ public abstract class Base${schemaName}ResourceImpl
 												persisted${schemaName} = ${postParentByERCBatchJavaMethodSignature.methodName}(
 
 												<@getPOSTBatchJavaMethodParameters
-													javaMethodParameters=postParentByERCBatchJavaMethodSignature.javaMethodParameters
-													schemaVarName=schemaVarName
+													javaMethodParameters = postParentByERCBatchJavaMethodSignature.javaMethodParameters
+													schemaVarName = schemaVarName
 												/>
 
 												);
@@ -764,8 +779,8 @@ public abstract class Base${schemaName}ResourceImpl
 												persisted${schemaName} = ${postBatchJavaMethodSignature.methodName}(
 
 												<@getPOSTBatchJavaMethodParameters
-													javaMethodParameters=postBatchJavaMethodSignature.javaMethodParameters
-													schemaVarName=schemaVarName
+													javaMethodParameters = postBatchJavaMethodSignature.javaMethodParameters
+													schemaVarName = schemaVarName
 												/>
 
 												);
@@ -784,8 +799,8 @@ public abstract class Base${schemaName}ResourceImpl
 											persisted${schemaName} = ${postAssetLibraryBatchJavaMethodSignature.methodName}(
 
 											<@getPOSTBatchJavaMethodParameters
-												javaMethodParameters=postAssetLibraryBatchJavaMethodSignature.javaMethodParameters
-												schemaVarName=schemaVarName
+												javaMethodParameters = postAssetLibraryBatchJavaMethodSignature.javaMethodParameters
+												schemaVarName = schemaVarName
 											/>
 
 											);
@@ -801,8 +816,8 @@ public abstract class Base${schemaName}ResourceImpl
 											persisted${schemaName} = ${postSiteBatchJavaMethodSignature.methodName}(
 
 											<@getPOSTBatchJavaMethodParameters
-												javaMethodParameters=postSiteBatchJavaMethodSignature.javaMethodParameters
-												schemaVarName=schemaVarName
+												javaMethodParameters = postSiteBatchJavaMethodSignature.javaMethodParameters
+												schemaVarName = schemaVarName
 											/>
 
 											);
@@ -885,6 +900,10 @@ public abstract class Base${schemaName}ResourceImpl
 			return null;
 		}
 
+		public String getResourceName() {
+			return "${schemaName}";
+		}
+
 		public String getVersion() {
 			return "${freeMarkerTool.getVersion(openAPIYAML)}";
 		}
@@ -899,7 +918,7 @@ public abstract class Base${schemaName}ResourceImpl
 
 					if (parameters.containsKey("assetLibraryId")) {
 						return ${getAssetLibraryBatchJavaMethodSignature.methodName}(
-							<@getGETBatchJavaMethodParameters javaMethodParameters=getAssetLibraryBatchJavaMethodSignature.javaMethodParameters />
+							<@getGETBatchJavaMethodParameters javaMethodParameters = getAssetLibraryBatchJavaMethodSignature.javaMethodParameters />
 						);
 					}
 					else
@@ -909,7 +928,7 @@ public abstract class Base${schemaName}ResourceImpl
 
 					if (parameters.containsKey("siteId")) {
 						return ${getSiteBatchJavaMethodSignature.methodName}(
-							<@getGETBatchJavaMethodParameters javaMethodParameters=getSiteBatchJavaMethodSignature.javaMethodParameters />
+							<@getGETBatchJavaMethodParameters javaMethodParameters = getSiteBatchJavaMethodSignature.javaMethodParameters />
 						);
 					}
 					else
@@ -923,7 +942,7 @@ public abstract class Base${schemaName}ResourceImpl
 
 						if (parameters.containsKey("${parentBatchJavaMethodSignature.parentSchemaName!?uncap_first + "Id"}")) {
 							return ${parentBatchJavaMethodSignature.methodName}(
-								<@getGETBatchJavaMethodParameters javaMethodParameters=parentBatchJavaMethodSignature.javaMethodParameters />
+								<@getGETBatchJavaMethodParameters javaMethodParameters = parentBatchJavaMethodSignature.javaMethodParameters />
 							);
 						}
 						else
@@ -936,7 +955,7 @@ public abstract class Base${schemaName}ResourceImpl
 					</#if>
 
 					return ${getBatchJavaMethodSignature.methodName}(
-						<@getGETBatchJavaMethodParameters javaMethodParameters=getBatchJavaMethodSignature.javaMethodParameters />
+						<@getGETBatchJavaMethodParameters javaMethodParameters = getBatchJavaMethodSignature.javaMethodParameters />
 					);
 
 					<#if getAssetLibraryBatchJavaMethodSignature?? || getSiteBatchJavaMethodSignature?? || getParentBatchJavaMethodSignatures?has_content>
@@ -1001,13 +1020,16 @@ public abstract class Base${schemaName}ResourceImpl
 							</#if>
 
 							<@castParameters
-								type=javaMethodParameter.parameterType
-								value="${schemaVarName}Id"
+								type = javaMethodParameter.parameterType
+								value = "${schemaVarName}Id"
 							/>
 						<#elseif stringUtil.equals(javaMethodParameter.parameterName, "multipartBody")>
 							null
 						<#else>
-							${javaMethodParameter.parameterName}
+							<@castParameters
+								type = javaMethodParameter.parameterType
+								value = javaMethodParameter.parameterName
+							/>
 						</#if>
 
 						<#sep>, </#sep>
@@ -1043,18 +1065,21 @@ public abstract class Base${schemaName}ResourceImpl
 							</#if>
 
 							<@castParameters
-								type=javaMethodParameter.parameterType
-								value="${schemaVarName}Id"
+								type = javaMethodParameter.parameterType
+								value = "${schemaVarName}Id"
 							/>
 						<#elseif putBatchJavaMethodSignature.parentSchemaName?? && stringUtil.equals(javaMethodParameter.parameterName, putBatchJavaMethodSignature.parentSchemaName?uncap_first + "Id")>
 							<@castParameters
-								type=javaMethodParameter.parameterType
-								value="${javaMethodSignature.parentSchemaName?uncap_first}Id"
+								type = javaMethodParameter.parameterType
+								value = "${javaMethodSignature.parentSchemaName?uncap_first}Id"
 							/>
 						<#elseif stringUtil.equals(javaMethodParameter.parameterName, "multipartBody")>
 							null
 						<#else>
-							${javaMethodParameter.parameterName}
+							<@castParameters
+								type = javaMethodParameter.parameterType
+								value = javaMethodParameter.parameterName
+							/>
 						</#if>
 
 						<#sep>, </#sep>
@@ -1138,6 +1163,9 @@ public abstract class Base${schemaName}ResourceImpl
 			return Page.of(actions, _getPermissions(contextCompany.getCompanyId(), resourceActions, id, resourceName, null));
 		}
 
+		/**
+	 	* @see com.liferay.portal.vulcan.permission.PermissionUtil#getPermissions(long, List, long, String, String[])
+	  	*/
 		private Collection<Permission> _getPermissions(long companyId, List<ResourceAction> resourceActions, long resourceId, String resourceName, String[] roleNames) throws Exception {
 			Map<String, Permission> permissions = new HashMap<>();
 
@@ -1220,9 +1248,11 @@ public abstract class Base${schemaName}ResourceImpl
 	}
 
 	public void setContextHttpServletRequest(HttpServletRequest contextHttpServletRequest) {
-		if ((contextHttpServletRequest != null) && (contextHttpServletRequest.getAttribute(WebKeys.CTX) == null)) {
-			contextHttpServletRequest.setAttribute(WebKeys.CTX, ServletContextPool.get(StringPool.BLANK));
-		}
+		<#if !freeMarkerTool.isVersionCompatible(configYAML, 6)>
+			if ((contextHttpServletRequest != null) && (contextHttpServletRequest.getAttribute(WebKeys.CTX) == null)) {
+				contextHttpServletRequest.setAttribute(WebKeys.CTX, ServletContextPool.get(StringPool.BLANK));
+			}
+		</#if>
 
 		this.contextHttpServletRequest = contextHttpServletRequest;
 	}
@@ -1551,8 +1581,8 @@ public abstract class Base${schemaName}ResourceImpl
 			${javaMethodParameter.parameterName}
 		<#else>
 			<@castParameters
-				type=javaMethodParameter.parameterType
-				value=javaMethodParameter.parameterName
+				type = javaMethodParameter.parameterType
+				value = javaMethodParameter.parameterName
 			/>
 		</#if>
 
@@ -1569,8 +1599,8 @@ public abstract class Base${schemaName}ResourceImpl
 			${schemaVarName}
 		<#else>
 			<@castParameters
-				type=javaMethodParameter.parameterType
-				value=javaMethodParameter.parameterName
+				type = javaMethodParameter.parameterType
+				value = javaMethodParameter.parameterName
 			/>
 		</#if>
 
@@ -1583,7 +1613,7 @@ public abstract class Base${schemaName}ResourceImpl
 	resourceId
 	resourceName
 >
-	PermissionUtil.checkPermission(ActionKeys.PERMISSIONS, groupLocalService, ${resourceName}, ${resourceId}, ${groupId});
+	PermissionServiceUtil.checkPermission(${groupId}, ${resourceName}, ${resourceId});
 
 	resourcePermissionLocalService.updateResourcePermissions(contextCompany.getCompanyId(), ${groupId}, ${resourceName}, String.valueOf(${resourceId}), ModelPermissionsUtil.toModelPermissions(contextCompany.getCompanyId(), permissions, ${resourceId}, ${resourceName}, resourceActionLocalService, resourcePermissionLocalService, roleLocalService));
 

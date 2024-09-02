@@ -42,12 +42,12 @@ public class CommerceAvalaraConnectorImpl implements CommerceAvalaraConnector {
 
 	@Override
 	public Map<String, String> getCompanyCodes() throws Exception {
+		Map<String, String> companyCodes = new HashMap<>();
+
 		AvaTaxClient avaTaxClient = _getAvaTaxClient();
 
 		FetchResult<CompanyModel> companyModelFetchResult =
 			avaTaxClient.queryCompanies(null, null, 0, 0, null);
-
-		Map<String, String> companyCodes = new HashMap<>();
 
 		for (CompanyModel companyModel : companyModelFetchResult.getValue()) {
 			companyCodes.put(
@@ -67,6 +67,7 @@ public class CommerceAvalaraConnectorImpl implements CommerceAvalaraConnector {
 		return taxCodeModelFetchResult.getValue();
 	}
 
+	@Override
 	public String getTaxRateByZipCode() throws Exception {
 		AvaTaxClient avaTaxClient = _getAvaTaxClient();
 

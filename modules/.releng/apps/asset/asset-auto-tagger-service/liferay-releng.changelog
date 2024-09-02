@@ -322,3 +322,23 @@ d7d8817843a5ba68dca2859175f0bd5de660ef97^..d4381a186f80d9477dfdf83ac1574e8c0ba34
 # Bundle Version 3.0.58
 #
 d4381a186f80d9477dfdf83ac1574e8c0ba34bfd^..4159d356b44d65c4e4d5f7884ed344bd03c09fbf=LPD-17228
+
+#
+# Bundle Version 3.0.59
+#
+4159d356b44d65c4e4d5f7884ed344bd03c09fbf^..c69eb95f931aca39c08bdbb33fc22f0d02cdd6cb=LPD-15904
+
+#
+# Bundle Version 3.0.60
+#
+c69eb95f931aca39c08bdbb33fc22f0d02cdd6cb^..2d0b1f1fe574bdec9ee17bc8f4dba160abba5ff3=LPD-24730 LPD-24745
+
+#
+# Bundle Version 3.0.61
+#
+2d0b1f1fe574bdec9ee17bc8f4dba160abba5ff3^..f7c1e2e4625f72163dde06f84a740914eac985e2=LRCI-4395
+
+#
+# Bundle Version 3.0.62
+#
+f7c1e2e4625f72163dde06f84a740914eac985e2^..8fcfc7cc9b5022a0f98a359d8b587828d1e8e742=LRCI-4502

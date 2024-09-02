@@ -146,8 +146,8 @@ public class CompanySampleDataGenerationTest {
 			// Add company
 
 			Company company = _companyLocalService.addCompany(
-				null, webId, webId, webId, 0, true, null, null, null, null,
-				null, null);
+				null, webId, webId, webId, 0, true, true, null, null, null,
+				null, null, null);
 
 			PortalInstances.initCompany(company);
 
@@ -215,15 +215,15 @@ public class CompanySampleDataGenerationTest {
 				new long[] {role.getRoleId()}, userGroupIds, sendEmail,
 				_getServiceContext(companyId));
 
+			user.setPasswordReset(false);
+			user.setReminderQueryQuestion("What is your screen name?");
+			user.setReminderQueryAnswer(screenName);
 			user.setLoginDate(new Date());
 			user.setLastLoginDate(new Date());
 			user.setLockoutDate(new Date());
 			user.setAgreedToTermsOfUse(true);
 			user.setEmailAddressVerified(true);
 			user.setPasswordModified(true);
-			user.setPasswordReset(false);
-			user.setReminderQueryQuestion("What is your screen name?");
-			user.setReminderQueryAnswer(screenName);
 
 			_userLocalService.updateUser(user);
 

@@ -386,7 +386,7 @@ if (portletTitleBasedNavigation) {
 										className="<%= WikiPage.class.getName() %>"
 										classPK="<%= wikiPage.getResourcePrimKey() %>"
 									>
-										<h5><liferay-ui:message key="tags" /></h5>
+										<div class="h5"><liferay-ui:message key="tags" /></div>
 
 										<liferay-asset:asset-tags-summary
 											className="<%= WikiPage.class.getName() %>"
@@ -470,9 +470,9 @@ if (portletTitleBasedNavigation) {
 		</div>
 
 		<c:if test="<%= Validator.isNotNull(formattedContent) && (followRedirect || (redirectPage == null)) && !childPages.isEmpty() %>">
-			<h4 class="text-default">
+			<div class="h4 text-default">
 				<liferay-ui:message arguments="<%= childPages.size() %>" key="child-pages-x" translateArguments="<%= false %>" />
-			</h4>
+			</div>
 
 			<div>
 				<ul class="list-group">

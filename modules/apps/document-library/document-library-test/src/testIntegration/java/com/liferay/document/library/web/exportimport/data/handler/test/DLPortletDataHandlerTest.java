@@ -507,7 +507,7 @@ public class DLPortletDataHandlerTest extends BasePortletDataHandlerTestCase {
 
 		DLFileEntryType dlFileEntryType =
 			DLFileEntryTypeLocalServiceUtil.addFileEntryType(
-				TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+				null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
 				ddmStructure.getStructureId(), null,
 				Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 				Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
@@ -524,7 +524,7 @@ public class DLPortletDataHandlerTest extends BasePortletDataHandlerTestCase {
 			null, null, serviceContext);
 
 		DLAppLocalServiceUtil.addFileShortcut(
-			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+			null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
 			folder.getFolderId(), fileEntry.getFileEntryId(), serviceContext);
 	}
 

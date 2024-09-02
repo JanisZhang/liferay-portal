@@ -6,16 +6,18 @@
 import React, {useCallback, useContext, useReducer} from 'react';
 
 import {fromControlsId} from '../components/layout_data_items/Collection';
-import {ITEM_ACTIVATION_ORIGINS} from '../config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../config/constants/itemTypes';
-import switchSidebarPanel from '../thunks/switchSidebarPanel';
+import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
+import {MULTI_SELECT_TYPES} from '../config/constants/multiSelectTypes';
 import {useToControlsId} from './CollectionItemContext';
-import {useDispatch, useSelector} from './StoreContext';
+import {useSelectorRef} from './StoreContext';
 
 const ACTIVE_INITIAL_STATE = {
 	activationOrigin: null,
-	activeItemId: null,
+	activeItemIds: [],
 	activeItemType: null,
+	multiSelect: null,
+	rangeLimitIds: [],
 };
 
 const HOVER_INITIAL_STATE = {
@@ -23,6 +25,7 @@ const HOVER_INITIAL_STATE = {
 };
 
 const HOVER_ITEM = 'HOVER_ITEM';
+const MULTI_SELECT = 'MULTI_SELECT';
 const SELECT_ITEM = 'SELECT_ITEM';
 
 const ActiveStateContext = React.createContext(ACTIVE_INITIAL_STATE);
@@ -31,8 +34,88 @@ const ActiveDispatchContext = React.createContext(() => {});
 const HoverStateContext = React.createContext(HOVER_INITIAL_STATE);
 const HoverDispatchContext = React.createContext(() => {});
 
+/**
+ * This method includes a new item in the active items. If this item is already
+ * belongs to the active items, it is removed.
+ *
+ * @param {array} activeItemIds Active item ids.
+ * @param {string} itemId Item id to be included in active items.
+ */
+
+function getActiveItemIds(activeItemIds, itemId) {
+	return activeItemIds.includes(itemId)
+		? activeItemIds.filter((activeItemId) => activeItemId !== itemId)
+		: [...activeItemIds, itemId];
+}
+
+/**
+ * This method gets all elements within a selection range
+ *
+ * First it looks for the item at the start of the range and enable a flag to mark
+ * all the elements iterated as included until the end of the range is found.
+ *
+ * @param {array} items Items to analyze if they are within the range.
+ * @param {object} layoutDataItems Layout data items.
+ * @param {array} rangeLimitIds This array contains the beginning and end of the range.
+ */
+
+export function getItemsWithinRange({itemIds, layoutDataItems, rangeLimitIds}) {
+	let activateSelection = false;
+	const selectedItems = [];
+
+	const findItemsWithinRange = ({
+		itemIds,
+		layoutDataItems,
+		rangeLimitIds,
+	}) => {
+		for (const childId of itemIds) {
+			const item = layoutDataItems[childId];
+
+			const isLimitId =
+				rangeLimitIds.start === childId ||
+				rangeLimitIds.end === childId;
+
+			if (isLimitId) {
+				activateSelection = !activateSelection;
+			}
+
+			if (
+				(isLimitId || activateSelection) &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.formStep &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.column &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.collectionItem &&
+				item.type !== LAYOUT_DATA_ITEM_TYPES.fragmentDropZone
+			) {
+				selectedItems.push(childId);
+			}
+
+			findItemsWithinRange({
+				itemIds: item.children,
+				layoutDataItems,
+				rangeLimitIds,
+			});
+		}
+	};
+
+	findItemsWithinRange({
+		itemIds,
+		layoutDataItems,
+		rangeLimitIds,
+	});
+
+	return selectedItems;
+}
+
 const reducer = (state, action) => {
-	const {itemId, itemType, origin, type} = action;
+	const {
+		activeItemIds,
+		itemId,
+		itemType,
+		layoutData,
+		multiSelect,
+		origin,
+		type,
+	} = action;
 	let nextState = state;
 
 	if (type === HOVER_ITEM && itemId !== nextState.hoveredItemId) {
@@ -43,12 +126,82 @@ const reducer = (state, action) => {
 			hoveredItemType: itemType,
 		};
 	}
-	else if (type === SELECT_ITEM && itemId !== nextState.activeItemId) {
+	else if (
+		type === SELECT_ITEM &&
+		(Liferay.FeatureFlags['LPD-18221'] ||
+			itemId !== nextState.activeItemIds[0])
+	) {
+		let rangeLimitIds = {};
+		let nextActiveItemIds = [itemId];
+
+		if (!Liferay.FeatureFlags['LPD-18221']) {
+			nextActiveItemIds = itemId ? [itemId] : [];
+		}
+		else if (!itemId) {
+			nextActiveItemIds = [];
+		}
+		else if (state.multiSelect === MULTI_SELECT_TYPES.simple) {
+			nextActiveItemIds = getActiveItemIds(
+				nextState.activeItemIds,
+				itemId
+			);
+		}
+		else if (state.multiSelect === MULTI_SELECT_TYPES.range) {
+			let initialActiveItemIds = state.activeItemIds;
+
+			// The last active item id is taken when the first item in the
+			// range is selected.
+
+			let startLimitId = [...state.activeItemIds].pop();
+
+			if (state.rangeLimitIds.end) {
+
+				// If a range selection has just been made, and another range
+				// selection is made immediately after, the first item id of
+				// the range is kept and the activeItemIds from the last range
+				// selection are removed.
+
+				startLimitId = state.rangeLimitIds.start;
+
+				initialActiveItemIds = state.activeItemIds.slice(
+					0,
+					Math.min(
+						state.activeItemIds.indexOf(startLimitId),
+						state.activeItemIds.indexOf(state.rangeLimitIds.end)
+					)
+				);
+			}
+
+			rangeLimitIds = {end: itemId, start: startLimitId};
+
+			const root =
+				state.layoutData.items[state.layoutData.rootItems.main];
+
+			nextActiveItemIds = getItemsWithinRange({
+				itemIds: root.children,
+				layoutDataItems: state.layoutData.items,
+				rangeLimitIds,
+			});
+
+			nextActiveItemIds = [
+				...new Set([...initialActiveItemIds, ...nextActiveItemIds]),
+			];
+		}
+
 		nextState = {
 			...nextState,
 			activationOrigin: origin,
-			activeItemId: itemId,
+			activeItemIds: nextActiveItemIds,
 			activeItemType: itemType,
+			rangeLimitIds,
+		};
+	}
+	else if (type === MULTI_SELECT) {
+		nextState = {
+			...state,
+			activeItemIds: activeItemIds || state.activeItemIds,
+			layoutData,
+			multiSelect,
 		};
 	}
 
@@ -96,8 +249,8 @@ const ControlsProvider = ({
 const useActivationOrigin = () =>
 	useContext(ActiveStateContext).activationOrigin;
 
-const useActiveItemId = () =>
-	fromControlsId(useContext(ActiveStateContext).activeItemId);
+const useActiveItemIds = () =>
+	fromControlsId(useContext(ActiveStateContext).activeItemIds);
 
 const useActiveItemType = () => useContext(ActiveStateContext).activeItemType;
 
@@ -115,10 +268,7 @@ const useHoverItem = () => {
 	return useCallback(
 		(
 			itemId,
-			{
-				itemType = ITEM_TYPES.layoutDataItem,
-				origin = ITEM_ACTIVATION_ORIGINS.pageEditor,
-			} = {
+			{itemType = ITEM_TYPES.layoutDataItem, origin = null} = {
 				itemType: ITEM_TYPES.layoutDataItem,
 			}
 		) =>
@@ -133,41 +283,33 @@ const useHoverItem = () => {
 };
 
 const useIsActive = () => {
-	const {activeItemId} = useContext(ActiveStateContext);
+	const {activeItemIds} = useContext(ActiveStateContext);
 	const toControlsId = useToControlsId();
 
-	return useCallback((itemId) => activeItemId === toControlsId(itemId), [
-		activeItemId,
-		toControlsId,
-	]);
+	return useCallback(
+		(itemId) => activeItemIds.includes(toControlsId(itemId)),
+		[activeItemIds, toControlsId]
+	);
 };
 
 const useIsHovered = () => {
 	const {hoveredItemId} = useContext(HoverStateContext);
 	const toControlsId = useToControlsId();
 
-	return useCallback((itemId) => hoveredItemId === toControlsId(itemId), [
-		hoveredItemId,
-		toControlsId,
-	]);
+	return useCallback(
+		(itemId) => hoveredItemId === toControlsId(itemId),
+		[hoveredItemId, toControlsId]
+	);
 };
 
 const useSelectItem = () => {
 	const activeDispatch = useContext(ActiveDispatchContext);
-	const sidebarPanelId = useSelector((state) =>
-		state.sidebar?.open ? state.sidebar?.panelId : null
-	);
-	const sidebarHidden = useSelector((state) => state.sidebar?.hidden);
-	const storeDispatch = useDispatch();
 	const toControlsId = useToControlsId();
 
 	return useCallback(
 		(
 			itemId,
-			{
-				itemType = ITEM_TYPES.layoutDataItem,
-				origin = ITEM_ACTIVATION_ORIGINS.pageEditor,
-			} = {
+			{itemType = ITEM_TYPES.layoutDataItem, origin = null} = {
 				itemType: ITEM_TYPES.layoutDataItem,
 			}
 		) => {
@@ -177,38 +319,53 @@ const useSelectItem = () => {
 				origin,
 				type: SELECT_ITEM,
 			});
-
-			if (
-				!sidebarHidden &&
-				itemId &&
-				sidebarPanelId &&
-				!['browser', 'comments', 'page_content'].includes(
-					sidebarPanelId
-				)
-			) {
-				storeDispatch(
-					switchSidebarPanel({
-						sidebarOpen: true,
-						sidebarPanelId: 'browser',
-					})
-				);
-			}
 		},
-		[
-			activeDispatch,
-			sidebarHidden,
-			sidebarPanelId,
-			storeDispatch,
-			toControlsId,
-		]
+		[activeDispatch, toControlsId]
 	);
 };
+
+const useActivateMultiSelect = () => {
+	const activeDispatch = useContext(ActiveDispatchContext);
+	const layoutDataRef = useSelectorRef((state) => state.layoutData);
+
+	return useCallback(
+		(multiSelect = null) => {
+			activeDispatch({
+				layoutData: layoutDataRef.current,
+				multiSelect,
+				type: MULTI_SELECT,
+			});
+		},
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[activeDispatch]
+	);
+};
+
+const useSelectMultipleItems = () => {
+	const activeDispatch = useContext(ActiveDispatchContext);
+
+	return useCallback(
+		(itemIds, {origin = null} = {}) => {
+			activeDispatch({
+				activeItemIds: itemIds || [],
+				origin,
+				type: MULTI_SELECT,
+			});
+		},
+		[activeDispatch]
+	);
+};
+
+const useMultiSelectIsActivated = () =>
+	useContext(ActiveStateContext).multiSelect;
 
 export {
 	ControlsProvider,
 	reducer,
+	useActivateMultiSelect,
 	useActivationOrigin,
-	useActiveItemId,
+	useActiveItemIds,
 	useActiveItemType,
 	useHoveredItemId,
 	useHoveredItemType,
@@ -216,5 +373,7 @@ export {
 	useHoverItem,
 	useIsActive,
 	useIsHovered,
+	useMultiSelectIsActivated,
 	useSelectItem,
+	useSelectMultipleItems,
 };

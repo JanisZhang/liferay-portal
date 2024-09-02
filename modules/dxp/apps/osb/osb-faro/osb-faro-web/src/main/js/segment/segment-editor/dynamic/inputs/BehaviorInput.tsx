@@ -29,7 +29,7 @@ import {
 } from '../utils/custom-inputs';
 import {isBoolean, isNil, isNull} from 'lodash';
 import {Modal} from 'shared/types/Modal';
-import {parseActivityKey} from '../utils/utils';
+import {parseActivityKey, parseReferencedEntityId} from '../utils/utils';
 
 export const AssetItem: React.FC<{
 	dataSourceAssetPK?: string;
@@ -101,7 +101,6 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 	componentDidUpdate() {
 		const {
 			id,
-			property: {entityName, type},
 			valid: {asset, dateFilter, occurenceCount}
 		} = this.props;
 
@@ -111,11 +110,6 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 
 		if (!id && valid && !this._completedAnalytics) {
 			this._completedAnalytics = true;
-
-			analytics.track('Dynamic Segment Creation - Completed Attribute', {
-				entityName,
-				type
-			});
 		}
 	}
 
@@ -150,9 +144,14 @@ export class BehaviorInput extends React.Component<IBehaviorInputProps> {
 			context: {referencedEntities}
 		} = this;
 
-		const id = this.getAssetId();
-
-		const reference = referencedEntities.getIn([EntityType.Assets, id]);
+		const reference = referencedEntities.getIn([
+			EntityType.Assets,
+			parseReferencedEntityId(
+				this.getAssetId(),
+				referencedEntities,
+				EntityType.Assets
+			)
+		]);
 
 		return reference && reference.toJS();
 	}

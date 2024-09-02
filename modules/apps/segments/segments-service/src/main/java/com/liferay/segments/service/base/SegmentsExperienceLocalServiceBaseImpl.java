@@ -42,7 +42,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
-import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 import com.liferay.segments.service.persistence.SegmentsExperiencePersistence;
 
 import java.io.Serializable;
@@ -73,7 +72,7 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SegmentsExperienceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SegmentsExperienceLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SegmentsExperienceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.segments.service.SegmentsExperienceLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -270,6 +269,23 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 		String uuid, long groupId) {
 
 		return segmentsExperiencePersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	@Override
+	public SegmentsExperience fetchSegmentsExperienceByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return segmentsExperiencePersistence.fetchByERC_G(
+			externalReferenceCode, groupId);
+	}
+
+	@Override
+	public SegmentsExperience getSegmentsExperienceByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return segmentsExperiencePersistence.findByERC_G(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -540,7 +556,6 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		SegmentsExperienceLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -555,9 +570,6 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		segmentsExperienceLocalService =
 			(SegmentsExperienceLocalService)aopProxy;
-
-		SegmentsExperienceLocalServiceUtil.setService(
-			segmentsExperienceLocalService);
 	}
 
 	/**

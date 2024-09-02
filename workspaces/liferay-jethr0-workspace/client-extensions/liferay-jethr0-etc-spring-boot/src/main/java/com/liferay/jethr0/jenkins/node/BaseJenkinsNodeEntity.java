@@ -7,6 +7,7 @@ package com.liferay.jethr0.jenkins.node;
 
 import com.liferay.jethr0.bui1d.BuildEntity;
 import com.liferay.jethr0.entity.BaseEntity;
+import com.liferay.jethr0.event.jenkins.client.JenkinsClient;
 import com.liferay.jethr0.jenkins.cohort.JenkinsCohortEntity;
 import com.liferay.jethr0.jenkins.server.JenkinsServerEntity;
 import com.liferay.jethr0.job.JobEntity;
@@ -16,12 +17,10 @@ import java.net.URL;
 
 import java.util.Set;
 
-import org.apache.tomcat.util.codec.binary.Base64;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONObject;
-
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * @author Michael Hashimoto
@@ -168,6 +167,21 @@ public class BaseJenkinsNodeEntity
 	}
 
 	@Override
+	public void setJSONObject(JSONObject jsonObject) {
+		super.setJSONObject(jsonObject);
+
+		_jenkinsServerId = jsonObject.optLong(
+			"r_jenkinsServerToJenkinsNodes_c_jenkinsServerId");
+		_goodBattery = jsonObject.getBoolean("goodBattery");
+		_primaryLabel = jsonObject.getString("primaryLabel");
+		_name = jsonObject.getString("name");
+		_nodeCount = jsonObject.getInt("nodeCount");
+		_nodeRAM = jsonObject.getInt("nodeRAM");
+		_type = Type.get(jsonObject.getJSONObject("type"));
+		_url = StringUtil.toURL(jsonObject.getString("url"));
+	}
+
+	@Override
 	public void setName(String name) {
 		_name = name;
 	}
@@ -203,41 +217,28 @@ public class BaseJenkinsNodeEntity
 		_offline = computerJSONObject.getBoolean("offline");
 	}
 
-	protected BaseJenkinsNodeEntity(JSONObject jsonObject) {
+	protected BaseJenkinsNodeEntity(
+		JenkinsClient jenkinsClient, JSONObject jsonObject) {
+
 		super(jsonObject);
 
-		_jenkinsServerId = jsonObject.optLong(
-			"r_jenkinsServerToJenkinsNodes_c_jenkinsServerId");
-		_goodBattery = jsonObject.getBoolean("goodBattery");
-		_primaryLabel = jsonObject.getString("primaryLabel");
-		_name = jsonObject.getString("name");
-		_nodeCount = jsonObject.getInt("nodeCount");
-		_nodeRAM = jsonObject.getInt("nodeRAM");
-		_type = Type.get(jsonObject.getJSONObject("type"));
-		_url = StringUtil.toURL(jsonObject.getString("url"));
+		_jenkinsClient = jenkinsClient;
 	}
 
 	private JSONObject _getComputerJSONObject() {
-		JenkinsServerEntity jenkinsServerEntity = getJenkinsServerEntity();
+		try {
+			return new JSONObject(
+				_jenkinsClient.requestGet(
+					StringUtil.toURL(
+						StringUtil.combine(getURL(), "/api/json"))));
+		}
+		catch (Exception exception) {
+			if (_log.isInfoEnabled()) {
+				_log.info(exception);
+			}
 
-		String basicAuthorization = StringUtil.combine(
-			jenkinsServerEntity.getJenkinsUserName(), ":",
-			jenkinsServerEntity.getJenkinsUserPassword());
-
-		String response = WebClient.create(
-			StringUtil.combine(getURL(), "/api/json")
-		).get(
-		).accept(
-			MediaType.APPLICATION_JSON
-		).header(
-			"Authorization",
-			"Basic " + Base64.encodeBase64String(basicAuthorization.getBytes())
-		).retrieve(
-		).bodyToMono(
-			String.class
-		).block();
-
-		return new JSONObject(response);
+			return null;
+		}
 	}
 
 	private boolean _hasCompatibleBattery(BuildEntity buildEntity) {
@@ -290,8 +291,12 @@ public class BaseJenkinsNodeEntity
 		return false;
 	}
 
+	private static final Log _log = LogFactory.getLog(
+		BaseJenkinsNodeEntity.class);
+
 	private boolean _goodBattery;
 	private boolean _idle;
+	private final JenkinsClient _jenkinsClient;
 	private JenkinsServerEntity _jenkinsServerEntity;
 	private long _jenkinsServerId;
 	private String _name;
@@ -299,7 +304,7 @@ public class BaseJenkinsNodeEntity
 	private int _nodeRAM;
 	private boolean _offline;
 	private String _primaryLabel;
-	private final Type _type;
+	private Type _type;
 	private URL _url;
 
 }

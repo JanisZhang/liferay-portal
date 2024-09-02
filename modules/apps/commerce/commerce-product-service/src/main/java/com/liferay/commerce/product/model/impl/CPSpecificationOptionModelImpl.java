@@ -73,12 +73,14 @@ public class CPSpecificationOptionModelImpl
 
 	public static final Object[][] TABLE_COLUMNS = {
 		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
-		{"uuid_", Types.VARCHAR}, {"CPSpecificationOptionId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP}, {"CPOptionCategoryId", Types.BIGINT},
-		{"title", Types.VARCHAR}, {"description", Types.VARCHAR},
-		{"facetable", Types.BOOLEAN}, {"key_", Types.VARCHAR},
+		{"uuid_", Types.VARCHAR}, {"externalReferenceCode", Types.VARCHAR},
+		{"CPSpecificationOptionId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
+		{"CPOptionCategoryId", Types.BIGINT},
+		{"listTypeDefinitionId", Types.BIGINT}, {"title", Types.VARCHAR},
+		{"description", Types.VARCHAR}, {"facetable", Types.BOOLEAN},
+		{"key_", Types.VARCHAR}, {"priority", Types.DOUBLE},
 		{"lastPublishDate", Types.TIMESTAMP}
 	};
 
@@ -89,6 +91,7 @@ public class CPSpecificationOptionModelImpl
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("CPSpecificationOptionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("userId", Types.BIGINT);
@@ -96,24 +99,29 @@ public class CPSpecificationOptionModelImpl
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("CPOptionCategoryId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("listTypeDefinitionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("title", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("description", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("facetable", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("key_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("priority", Types.DOUBLE);
 		TABLE_COLUMNS_MAP.put("lastPublishDate", Types.TIMESTAMP);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table CPSpecificationOption (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,CPSpecificationOptionId LONG not null,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,CPOptionCategoryId LONG,title STRING null,description STRING null,facetable BOOLEAN,key_ VARCHAR(75) null,lastPublishDate DATE null,primary key (CPSpecificationOptionId, ctCollectionId))";
+		"create table CPSpecificationOption (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,CPSpecificationOptionId LONG not null,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,CPOptionCategoryId LONG,listTypeDefinitionId LONG,title STRING null,description STRING null,facetable BOOLEAN,key_ VARCHAR(75) null,priority DOUBLE,lastPublishDate DATE null,primary key (CPSpecificationOptionId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table CPSpecificationOption";
 
 	public static final String ORDER_BY_JPQL =
-		" ORDER BY cpSpecificationOption.title ASC";
+		" ORDER BY cpSpecificationOption.priority DESC";
 
 	public static final String ORDER_BY_SQL =
-		" ORDER BY CPSpecificationOption.title ASC";
+		" ORDER BY CPSpecificationOption.priority DESC";
+
+	public static final String ORDER_BY_SQL_INLINE_DISTINCT =
+		" ORDER BY cpSpecificationOption.priority DESC";
 
 	public static final String DATA_SOURCE = "liferayDataSource";
 
@@ -137,20 +145,32 @@ public class CPSpecificationOptionModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long KEY_COLUMN_BITMASK = 4L;
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 8L;
+	public static final long KEY_COLUMN_BITMASK = 8L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long LISTTYPEDEFINITIONID_COLUMN_BITMASK = 16L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long TITLE_COLUMN_BITMASK = 16L;
+	public static final long PRIORITY_COLUMN_BITMASK = 64L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -271,6 +291,9 @@ public class CPSpecificationOptionModelImpl
 			attributeGetterFunctions.put(
 				"uuid", CPSpecificationOption::getUuid);
 			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				CPSpecificationOption::getExternalReferenceCode);
+			attributeGetterFunctions.put(
 				"CPSpecificationOptionId",
 				CPSpecificationOption::getCPSpecificationOptionId);
 			attributeGetterFunctions.put(
@@ -287,12 +310,17 @@ public class CPSpecificationOptionModelImpl
 				"CPOptionCategoryId",
 				CPSpecificationOption::getCPOptionCategoryId);
 			attributeGetterFunctions.put(
+				"listTypeDefinitionId",
+				CPSpecificationOption::getListTypeDefinitionId);
+			attributeGetterFunctions.put(
 				"title", CPSpecificationOption::getTitle);
 			attributeGetterFunctions.put(
 				"description", CPSpecificationOption::getDescription);
 			attributeGetterFunctions.put(
 				"facetable", CPSpecificationOption::getFacetable);
 			attributeGetterFunctions.put("key", CPSpecificationOption::getKey);
+			attributeGetterFunctions.put(
+				"priority", CPSpecificationOption::getPriority);
 			attributeGetterFunctions.put(
 				"lastPublishDate", CPSpecificationOption::getLastPublishDate);
 
@@ -327,6 +355,10 @@ public class CPSpecificationOptionModelImpl
 				(BiConsumer<CPSpecificationOption, String>)
 					CPSpecificationOption::setUuid);
 			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<CPSpecificationOption, String>)
+					CPSpecificationOption::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
 				"CPSpecificationOptionId",
 				(BiConsumer<CPSpecificationOption, Long>)
 					CPSpecificationOption::setCPSpecificationOptionId);
@@ -355,6 +387,10 @@ public class CPSpecificationOptionModelImpl
 				(BiConsumer<CPSpecificationOption, Long>)
 					CPSpecificationOption::setCPOptionCategoryId);
 			attributeSetterBiConsumers.put(
+				"listTypeDefinitionId",
+				(BiConsumer<CPSpecificationOption, Long>)
+					CPSpecificationOption::setListTypeDefinitionId);
+			attributeSetterBiConsumers.put(
 				"title",
 				(BiConsumer<CPSpecificationOption, String>)
 					CPSpecificationOption::setTitle);
@@ -370,6 +406,10 @@ public class CPSpecificationOptionModelImpl
 				"key",
 				(BiConsumer<CPSpecificationOption, String>)
 					CPSpecificationOption::setKey);
+			attributeSetterBiConsumers.put(
+				"priority",
+				(BiConsumer<CPSpecificationOption, Double>)
+					CPSpecificationOption::setPriority);
 			attributeSetterBiConsumers.put(
 				"lastPublishDate",
 				(BiConsumer<CPSpecificationOption, Date>)
@@ -438,6 +478,35 @@ public class CPSpecificationOptionModelImpl
 	@Deprecated
 	public String getOriginalUuid() {
 		return getColumnOriginalValue("uuid_");
+	}
+
+	@JSON
+	@Override
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _externalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_externalReferenceCode = externalReferenceCode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalExternalReferenceCode() {
+		return getColumnOriginalValue("externalReferenceCode");
 	}
 
 	@JSON
@@ -590,6 +659,31 @@ public class CPSpecificationOptionModelImpl
 	public long getOriginalCPOptionCategoryId() {
 		return GetterUtil.getLong(
 			this.<Long>getColumnOriginalValue("CPOptionCategoryId"));
+	}
+
+	@JSON
+	@Override
+	public long getListTypeDefinitionId() {
+		return _listTypeDefinitionId;
+	}
+
+	@Override
+	public void setListTypeDefinitionId(long listTypeDefinitionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_listTypeDefinitionId = listTypeDefinitionId;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public long getOriginalListTypeDefinitionId() {
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("listTypeDefinitionId"));
 	}
 
 	@JSON
@@ -865,6 +959,21 @@ public class CPSpecificationOptionModelImpl
 
 	@JSON
 	@Override
+	public double getPriority() {
+		return _priority;
+	}
+
+	@Override
+	public void setPriority(double priority) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_priority = priority;
+	}
+
+	@JSON
+	@Override
 	public Date getLastPublishDate() {
 		return _lastPublishDate;
 	}
@@ -1033,6 +1142,8 @@ public class CPSpecificationOptionModelImpl
 		cpSpecificationOptionImpl.setMvccVersion(getMvccVersion());
 		cpSpecificationOptionImpl.setCtCollectionId(getCtCollectionId());
 		cpSpecificationOptionImpl.setUuid(getUuid());
+		cpSpecificationOptionImpl.setExternalReferenceCode(
+			getExternalReferenceCode());
 		cpSpecificationOptionImpl.setCPSpecificationOptionId(
 			getCPSpecificationOptionId());
 		cpSpecificationOptionImpl.setCompanyId(getCompanyId());
@@ -1042,10 +1153,13 @@ public class CPSpecificationOptionModelImpl
 		cpSpecificationOptionImpl.setModifiedDate(getModifiedDate());
 		cpSpecificationOptionImpl.setCPOptionCategoryId(
 			getCPOptionCategoryId());
+		cpSpecificationOptionImpl.setListTypeDefinitionId(
+			getListTypeDefinitionId());
 		cpSpecificationOptionImpl.setTitle(getTitle());
 		cpSpecificationOptionImpl.setDescription(getDescription());
 		cpSpecificationOptionImpl.setFacetable(isFacetable());
 		cpSpecificationOptionImpl.setKey(getKey());
+		cpSpecificationOptionImpl.setPriority(getPriority());
 		cpSpecificationOptionImpl.setLastPublishDate(getLastPublishDate());
 
 		cpSpecificationOptionImpl.resetOriginalValues();
@@ -1064,6 +1178,8 @@ public class CPSpecificationOptionModelImpl
 			this.<Long>getColumnOriginalValue("ctCollectionId"));
 		cpSpecificationOptionImpl.setUuid(
 			this.<String>getColumnOriginalValue("uuid_"));
+		cpSpecificationOptionImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
 		cpSpecificationOptionImpl.setCPSpecificationOptionId(
 			this.<Long>getColumnOriginalValue("CPSpecificationOptionId"));
 		cpSpecificationOptionImpl.setCompanyId(
@@ -1078,6 +1194,8 @@ public class CPSpecificationOptionModelImpl
 			this.<Date>getColumnOriginalValue("modifiedDate"));
 		cpSpecificationOptionImpl.setCPOptionCategoryId(
 			this.<Long>getColumnOriginalValue("CPOptionCategoryId"));
+		cpSpecificationOptionImpl.setListTypeDefinitionId(
+			this.<Long>getColumnOriginalValue("listTypeDefinitionId"));
 		cpSpecificationOptionImpl.setTitle(
 			this.<String>getColumnOriginalValue("title"));
 		cpSpecificationOptionImpl.setDescription(
@@ -1086,6 +1204,8 @@ public class CPSpecificationOptionModelImpl
 			this.<Boolean>getColumnOriginalValue("facetable"));
 		cpSpecificationOptionImpl.setKey(
 			this.<String>getColumnOriginalValue("key_"));
+		cpSpecificationOptionImpl.setPriority(
+			this.<Double>getColumnOriginalValue("priority"));
 		cpSpecificationOptionImpl.setLastPublishDate(
 			this.<Date>getColumnOriginalValue("lastPublishDate"));
 
@@ -1096,7 +1216,17 @@ public class CPSpecificationOptionModelImpl
 	public int compareTo(CPSpecificationOption cpSpecificationOption) {
 		int value = 0;
 
-		value = getTitle().compareTo(cpSpecificationOption.getTitle());
+		if (getPriority() < cpSpecificationOption.getPriority()) {
+			value = -1;
+		}
+		else if (getPriority() > cpSpecificationOption.getPriority()) {
+			value = 1;
+		}
+		else {
+			value = 0;
+		}
+
+		value = value * -1;
 
 		if (value != 0) {
 			return value;
@@ -1177,6 +1307,18 @@ public class CPSpecificationOptionModelImpl
 			cpSpecificationOptionCacheModel.uuid = null;
 		}
 
+		cpSpecificationOptionCacheModel.externalReferenceCode =
+			getExternalReferenceCode();
+
+		String externalReferenceCode =
+			cpSpecificationOptionCacheModel.externalReferenceCode;
+
+		if ((externalReferenceCode != null) &&
+			(externalReferenceCode.length() == 0)) {
+
+			cpSpecificationOptionCacheModel.externalReferenceCode = null;
+		}
+
 		cpSpecificationOptionCacheModel.CPSpecificationOptionId =
 			getCPSpecificationOptionId();
 
@@ -1214,6 +1356,9 @@ public class CPSpecificationOptionModelImpl
 		cpSpecificationOptionCacheModel.CPOptionCategoryId =
 			getCPOptionCategoryId();
 
+		cpSpecificationOptionCacheModel.listTypeDefinitionId =
+			getListTypeDefinitionId();
+
 		cpSpecificationOptionCacheModel.title = getTitle();
 
 		String title = cpSpecificationOptionCacheModel.title;
@@ -1239,6 +1384,8 @@ public class CPSpecificationOptionModelImpl
 		if ((key != null) && (key.length() == 0)) {
 			cpSpecificationOptionCacheModel.key = null;
 		}
+
+		cpSpecificationOptionCacheModel.priority = getPriority();
 
 		Date lastPublishDate = getLastPublishDate();
 
@@ -1315,6 +1462,7 @@ public class CPSpecificationOptionModelImpl
 	private long _mvccVersion;
 	private long _ctCollectionId;
 	private String _uuid;
+	private String _externalReferenceCode;
 	private long _CPSpecificationOptionId;
 	private long _companyId;
 	private long _userId;
@@ -1323,12 +1471,14 @@ public class CPSpecificationOptionModelImpl
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private long _CPOptionCategoryId;
+	private long _listTypeDefinitionId;
 	private String _title;
 	private String _titleCurrentLanguageId;
 	private String _description;
 	private String _descriptionCurrentLanguageId;
 	private boolean _facetable;
 	private String _key;
+	private double _priority;
 	private Date _lastPublishDate;
 
 	public <T> T getColumnValue(String columnName) {
@@ -1365,6 +1515,8 @@ public class CPSpecificationOptionModelImpl
 		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
 		_columnOriginalValues.put("uuid_", _uuid);
 		_columnOriginalValues.put(
+			"externalReferenceCode", _externalReferenceCode);
+		_columnOriginalValues.put(
 			"CPSpecificationOptionId", _CPSpecificationOptionId);
 		_columnOriginalValues.put("companyId", _companyId);
 		_columnOriginalValues.put("userId", _userId);
@@ -1372,10 +1524,13 @@ public class CPSpecificationOptionModelImpl
 		_columnOriginalValues.put("createDate", _createDate);
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
 		_columnOriginalValues.put("CPOptionCategoryId", _CPOptionCategoryId);
+		_columnOriginalValues.put(
+			"listTypeDefinitionId", _listTypeDefinitionId);
 		_columnOriginalValues.put("title", _title);
 		_columnOriginalValues.put("description", _description);
 		_columnOriginalValues.put("facetable", _facetable);
 		_columnOriginalValues.put("key_", _key);
+		_columnOriginalValues.put("priority", _priority);
 		_columnOriginalValues.put("lastPublishDate", _lastPublishDate);
 	}
 
@@ -1407,29 +1562,35 @@ public class CPSpecificationOptionModelImpl
 
 		columnBitmasks.put("uuid_", 4L);
 
-		columnBitmasks.put("CPSpecificationOptionId", 8L);
+		columnBitmasks.put("externalReferenceCode", 8L);
 
-		columnBitmasks.put("companyId", 16L);
+		columnBitmasks.put("CPSpecificationOptionId", 16L);
 
-		columnBitmasks.put("userId", 32L);
+		columnBitmasks.put("companyId", 32L);
 
-		columnBitmasks.put("userName", 64L);
+		columnBitmasks.put("userId", 64L);
 
-		columnBitmasks.put("createDate", 128L);
+		columnBitmasks.put("userName", 128L);
 
-		columnBitmasks.put("modifiedDate", 256L);
+		columnBitmasks.put("createDate", 256L);
 
-		columnBitmasks.put("CPOptionCategoryId", 512L);
+		columnBitmasks.put("modifiedDate", 512L);
 
-		columnBitmasks.put("title", 1024L);
+		columnBitmasks.put("CPOptionCategoryId", 1024L);
 
-		columnBitmasks.put("description", 2048L);
+		columnBitmasks.put("listTypeDefinitionId", 2048L);
 
-		columnBitmasks.put("facetable", 4096L);
+		columnBitmasks.put("title", 4096L);
 
-		columnBitmasks.put("key_", 8192L);
+		columnBitmasks.put("description", 8192L);
 
-		columnBitmasks.put("lastPublishDate", 16384L);
+		columnBitmasks.put("facetable", 16384L);
+
+		columnBitmasks.put("key_", 32768L);
+
+		columnBitmasks.put("priority", 65536L);
+
+		columnBitmasks.put("lastPublishDate", 131072L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

@@ -7,7 +7,6 @@ package com.liferay.scim.rest.internal.resource.v1_0;
 
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -15,8 +14,6 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.servlet.ServletContextPool;
-import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
@@ -86,7 +83,7 @@ public abstract class BaseUserResourceImpl implements UserResource {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/scim/v1.0/v2/Users' -d $'{"active": ___, "addresses": ___, "displayName": ___, "emails": ___, "entitlements": ___, "externalId": ___, "groups": ___, "ims": ___, "locale": ___, "meta": ___, "name": ___, "nickName": ___, "password": ___, "phoneNumbers": ___, "photos": ___, "preferredLanguage": ___, "profileUrl": ___, "roles": ___, "schemas": ___, "timezone": ___, "title": ___, "userName": ___, "userType": ___, "x509Certificates": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'POST' 'http://localhost:8080/o/scim/v1.0/v2/Users' -d $'{"active": ___, "addresses": ___, "displayName": ___, "emails": ___, "entitlements": ___, "externalId": ___, "groups": ___, "ims": ___, "locale": ___, "meta": ___, "name": ___, "nickName": ___, "password": ___, "phoneNumbers": ___, "photos": ___, "preferredLanguage": ___, "profileUrl": ___, "roles": ___, "schemas": ___, "timezone": ___, "title": ___, "urn:ietf:params:scim:schemas:extension:liferay:2.0:User": ___, "userName": ___, "userType": ___, "x509Certificates": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(description = "Creates a user.")
 	@io.swagger.v3.oas.annotations.tags.Tags(
@@ -189,7 +186,7 @@ public abstract class BaseUserResourceImpl implements UserResource {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -X 'PUT' 'http://localhost:8080/o/scim/v1.0/v2/Users/{id}' -d $'{"active": ___, "addresses": ___, "displayName": ___, "emails": ___, "entitlements": ___, "externalId": ___, "groups": ___, "ims": ___, "locale": ___, "meta": ___, "name": ___, "nickName": ___, "password": ___, "phoneNumbers": ___, "photos": ___, "preferredLanguage": ___, "profileUrl": ___, "roles": ___, "schemas": ___, "timezone": ___, "title": ___, "userName": ___, "userType": ___, "x509Certificates": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 * curl -X 'PUT' 'http://localhost:8080/o/scim/v1.0/v2/Users/{id}' -d $'{"active": ___, "addresses": ___, "displayName": ___, "emails": ___, "entitlements": ___, "externalId": ___, "groups": ___, "ims": ___, "locale": ___, "meta": ___, "name": ___, "nickName": ___, "password": ___, "phoneNumbers": ___, "photos": ___, "preferredLanguage": ___, "profileUrl": ___, "roles": ___, "schemas": ___, "timezone": ___, "title": ___, "urn:ietf:params:scim:schemas:extension:liferay:2.0:User": ___, "userName": ___, "userType": ___, "x509Certificates": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
 	 */
 	@io.swagger.v3.oas.annotations.Operation(description = "Updates a user.")
 	@io.swagger.v3.oas.annotations.Parameters(
@@ -232,13 +229,6 @@ public abstract class BaseUserResourceImpl implements UserResource {
 
 	public void setContextHttpServletRequest(
 		HttpServletRequest contextHttpServletRequest) {
-
-		if ((contextHttpServletRequest != null) &&
-			(contextHttpServletRequest.getAttribute(WebKeys.CTX) == null)) {
-
-			contextHttpServletRequest.setAttribute(
-				WebKeys.CTX, ServletContextPool.get(StringPool.BLANK));
-		}
 
 		this.contextHttpServletRequest = contextHttpServletRequest;
 	}

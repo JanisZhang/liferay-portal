@@ -31,9 +31,9 @@ import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.Searcher;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.IndexedFieldsFixture;
-import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -170,6 +170,8 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 			BookmarksEntry bookmarksEntry)
 		throws Exception {
 
+		User user = _users.get(0);
+
 		Map<String, String> map = HashMapBuilder.put(
 			Field.ASSET_ENTRY_ID,
 			String.valueOf(_getAssetEntryId(bookmarksEntry))
@@ -203,9 +205,17 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 			"assetEntryId_sortable",
 			String.valueOf(_getAssetEntryId(bookmarksEntry))
 		).put(
+			"groupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
+			"scopeGroupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
+			"statusByUserExternalReferenceCode", user.getExternalReferenceCode()
+		).put(
 			"statusByUserId", String.valueOf(bookmarksEntry.getStatusByUserId())
 		).put(
 			"title_sortable", StringUtil.lowerCase(bookmarksEntry.getName())
+		).put(
+			"userExternalReferenceCode", user.getExternalReferenceCode()
 		).put(
 			"visible", "true"
 		).build();

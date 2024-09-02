@@ -13,7 +13,7 @@ import {Formik, FormikValues} from 'formik';
 import {NetworkStatus} from '@clayui/data-provider';
 import {paginationDefaults} from 'shared/util/pagination';
 import {sub} from 'shared/util/lang';
-import {useDebounce} from 'shared/hooks';
+import {useDebounce} from 'shared/hooks/useDebounce';
 
 const SAMPLE_CSV = 'user@example.com\nuser1@example.com\nuser2@example.com';
 
@@ -210,7 +210,9 @@ const NewRequestModal: React.FC<INewRequestModalProps> = ({
 							</p>
 
 							<Form.Group>
-								<h4>{Liferay.Language.get('job-type')}</h4>
+								<div className='h4'>
+									{Liferay.Language.get('job-type')}
+								</div>
 
 								<Form.GroupItem>
 									<Form.Checkbox
@@ -258,9 +260,9 @@ const NewRequestModal: React.FC<INewRequestModalProps> = ({
 							</Form.Group>
 
 							<Form.Group>
-								<h4>
+								<div className='h4'>
 									{Liferay.Language.get('data-subject-id')}
-								</h4>
+								</div>
 
 								<Form.GroupItem>
 									<Form.RadioGroup name='subjectIdType'>

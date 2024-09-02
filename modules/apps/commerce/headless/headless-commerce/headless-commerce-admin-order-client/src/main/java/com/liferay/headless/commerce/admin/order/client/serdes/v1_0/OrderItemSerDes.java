@@ -392,6 +392,20 @@ public class OrderItemSerDes {
 			sb.append("\"");
 		}
 
+		if (orderItem.getReplacedSkuExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacedSkuExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(orderItem.getReplacedSkuExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (orderItem.getReplacedSkuId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -436,6 +450,21 @@ public class OrderItemSerDes {
 			sb.append("\"shippingAddress\": ");
 
 			sb.append(String.valueOf(orderItem.getShippingAddress()));
+		}
+
+		if (orderItem.getShippingAddressExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"shippingAddressExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(orderItem.getShippingAddressExternalReferenceCode()));
+
+			sb.append("\"");
 		}
 
 		if (orderItem.getShippingAddressId() != null) {
@@ -554,11 +583,7 @@ public class OrderItemSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < orderItem.getVirtualItemURLs().length; i++) {
-				sb.append("\"");
-
-				sb.append(_escape(orderItem.getVirtualItemURLs()[i]));
-
-				sb.append("\"");
+				sb.append(_toJSON(orderItem.getVirtualItemURLs()[i]));
 
 				if ((i + 1) < orderItem.getVirtualItemURLs().length) {
 					sb.append(", ");
@@ -863,6 +888,16 @@ public class OrderItemSerDes {
 			map.put("replacedSku", String.valueOf(orderItem.getReplacedSku()));
 		}
 
+		if (orderItem.getReplacedSkuExternalReferenceCode() == null) {
+			map.put("replacedSkuExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"replacedSkuExternalReferenceCode",
+				String.valueOf(
+					orderItem.getReplacedSkuExternalReferenceCode()));
+		}
+
 		if (orderItem.getReplacedSkuId() == null) {
 			map.put("replacedSkuId", null);
 		}
@@ -897,6 +932,16 @@ public class OrderItemSerDes {
 			map.put(
 				"shippingAddress",
 				String.valueOf(orderItem.getShippingAddress()));
+		}
+
+		if (orderItem.getShippingAddressExternalReferenceCode() == null) {
+			map.put("shippingAddressExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"shippingAddressExternalReferenceCode",
+				String.valueOf(
+					orderItem.getShippingAddressExternalReferenceCode()));
 		}
 
 		if (orderItem.getShippingAddressId() == null) {
@@ -1002,6 +1047,199 @@ public class OrderItemSerDes {
 		@Override
 		protected OrderItem[] createDTOArray(int size) {
 			return new OrderItem[size];
+		}
+
+		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "bookedQuantityId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "decimalQuantity")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "deliveryGroup")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "discountAmount")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "discountManuallyAdjusted")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "discountPercentageLevel1")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"discountPercentageLevel1WithTaxAmount")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "discountPercentageLevel2")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"discountPercentageLevel2WithTaxAmount")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "discountPercentageLevel3")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"discountPercentageLevel3WithTaxAmount")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "discountPercentageLevel4")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"discountPercentageLevel4WithTaxAmount")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "discountWithTaxAmount")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "finalPrice")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "finalPriceWithTaxAmount")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "formattedQuantity")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "name")) {
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "options")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "orderExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderId")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "priceManuallyAdjusted")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "printedNote")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "promoPrice")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "promoPriceWithTaxAmount")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "quantity")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "replacedSku")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"replacedSkuExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "replacedSkuId")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "requestedDeliveryDate")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippedQuantity")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippingAddress")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"shippingAddressExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippingAddressId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "sku")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "skuExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "skuId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "subscription")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "unitOfMeasure")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "unitOfMeasureKey")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "unitPrice")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "unitPriceWithTaxAmount")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "virtualItemURLs")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "virtualItems")) {
+				return false;
+			}
+
+			return false;
 		}
 
 		@Override
@@ -1168,8 +1406,7 @@ public class OrderItemSerDes {
 			else if (Objects.equals(jsonParserFieldName, "name")) {
 				if (jsonParserFieldValue != null) {
 					orderItem.setName(
-						(Map)OrderItemSerDes.toMap(
-							(String)jsonParserFieldValue));
+						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "options")) {
@@ -1229,6 +1466,15 @@ public class OrderItemSerDes {
 					orderItem.setReplacedSku((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"replacedSkuExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					orderItem.setReplacedSkuExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "replacedSkuId")) {
 				if (jsonParserFieldValue != null) {
 					orderItem.setReplacedSkuId(
@@ -1254,6 +1500,15 @@ public class OrderItemSerDes {
 					orderItem.setShippingAddress(
 						ShippingAddressSerDes.toDTO(
 							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"shippingAddressExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					orderItem.setShippingAddressExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "shippingAddressId")) {
@@ -1364,36 +1619,7 @@ public class OrderItemSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -1403,6 +1629,38 @@ public class OrderItemSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

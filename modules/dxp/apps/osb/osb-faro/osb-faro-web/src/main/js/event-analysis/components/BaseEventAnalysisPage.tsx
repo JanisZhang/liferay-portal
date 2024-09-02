@@ -5,10 +5,8 @@ import EventAnalysisToolbar from '../components/EventAnalysisToolbar';
 import Form from 'shared/components/form';
 import NavigationWarning from 'shared/components/NavigationWarning';
 import React, {useContext, useMemo, useState} from 'react';
-import withCurrentUser from 'shared/hoc/WithCurrentUser';
 import {addAlert} from 'shared/actions/alerts';
 import {Alert, RangeSelectors} from 'shared/types';
-import {ApolloError} from 'apollo-client';
 import {AttributesContext} from '../components/event-analysis-editor/context/attributes';
 import {
 	Breakdowns,
@@ -26,26 +24,18 @@ import {
 	UpdateEventAnalysisMutation
 } from 'event-analysis/queries/EventAnalysisQuery';
 import {getSafeRangeSelectors} from 'shared/util/util';
-import {GraphQLError} from 'graphql';
 import {hasChanges} from 'shared/util/react';
 import {omit} from 'lodash';
 import {Routes, toRoute} from 'shared/util/router';
+import {useChannelContext} from 'shared/context/channel';
+import {useCurrentUser} from 'shared/hooks/useCurrentUser';
 import {useHistory, useParams} from 'react-router-dom';
 import {useMutation} from '@apollo/react-hooks';
-import {User} from 'shared/util/records';
 import {WithRangeKeyProps} from 'shared/hoc/WithRangeKey';
 
 enum MessageKeys {
 	NameCannotBeBlank = 'name-cannot-be-blank',
 	NameIsAlreadyUsed = 'name-is-already-used'
-}
-
-interface Error extends ApolloError {
-	graphQLErrors: ReadonlyArray<
-		GraphQLError & {
-			messageKey: keyof MessageKeys;
-		}
-	>;
 }
 
 const ERRORS = {
@@ -61,8 +51,6 @@ const ERRORS = {
 	}
 };
 
-const PAGE_NAME = 'Event Analysis Editor';
-
 const connector = connect(null, {
 	addAlert,
 	close,
@@ -77,7 +65,6 @@ interface IBaseEventAnalysisPageProps
 		React.HTMLAttributes<HTMLElement> {
 	breakdowns?: Breakdowns;
 	compareToPrevious?: boolean;
-	currentUser: User;
 	event?: Event;
 	filters?: Filters;
 	name?: string;
@@ -87,13 +74,15 @@ const BaseEventAnalysisPage: React.FC<IBaseEventAnalysisPageProps> = ({
 	addAlert,
 	close,
 	compareToPrevious: initialCompareToPrevious = false,
-	currentUser,
 	event: initialEvent = null,
 	name: initialName = '',
 	open,
 	rangeSelectors: initialRangeSelectors
 }) => {
 	const history = useHistory();
+
+	const {selectedChannel} = useChannelContext();
+
 	const {channelId, groupId, id: eventAnalysisId = null} = useParams();
 
 	const [compareToPrevious, setCompareToPrevious] = useState<boolean>(
@@ -105,6 +94,8 @@ const BaseEventAnalysisPage: React.FC<IBaseEventAnalysisPageProps> = ({
 	);
 	const [submitted, setSubmitted] = useState<boolean>(false);
 	const [type, setType] = useState<CalculationTypes>(CalculationTypes.Total);
+
+	const currentUser = useCurrentUser();
 
 	const {
 		breakdownOrder,
@@ -174,22 +165,28 @@ const BaseEventAnalysisPage: React.FC<IBaseEventAnalysisPageProps> = ({
 					)
 				});
 			})
-			.catch(({graphQLErrors}: Error) => {
-				setSubmitting(false);
-				setSubmitted(false);
+			.catch(
+				({
+					graphQLErrors
+				}: {
+					graphQLErrors: {messageKey: keyof MessageKeys}[];
+				}) => {
+					setSubmitting(false);
+					setSubmitted(false);
 
-				close();
+					close();
 
-				const {alertType, message} = ERRORS[
-					graphQLErrors[0].messageKey
-				];
+					const {alertType, message} = ERRORS[
+						graphQLErrors[0].messageKey
+					];
 
-				addAlert({
-					alertType,
-					message,
-					timeout: false
-				});
-			});
+					addAlert({
+						alertType,
+						message,
+						timeout: false
+					});
+				}
+			);
 	};
 
 	const compareToPreviousChanged: boolean =
@@ -214,40 +211,18 @@ const BaseEventAnalysisPage: React.FC<IBaseEventAnalysisPageProps> = ({
 
 	const onCompareToPreviousChange = (compareToPrevious: boolean) => {
 		setCompareToPrevious(compareToPrevious);
-
-		analytics.track(`${PAGE_NAME} - Compared to Previous`);
 	};
 
 	const onEventChange = (event: Event) => {
 		setEvent(event);
-
-		if (event) {
-			const {displayName, name, type} = event;
-
-			analytics.track(`${PAGE_NAME} - Selected an Event`, {
-				name: displayName || name,
-				type
-			});
-		}
 	};
 
 	const onRangeSelectorsChange = (rangeSelectors: RangeSelectors) => {
 		setRangeSelectors(rangeSelectors);
-
-		const {rangeEnd, rangeKey, rangeStart} = rangeSelectors;
-		analytics.track(`${PAGE_NAME} - Changed Event Time Period`, {
-			dateEnd: rangeEnd,
-			dateStart: rangeStart,
-			rangeKey
-		});
 	};
 
 	const onTypeChange = (type: CalculationTypes) => {
 		setType(type);
-
-		analytics.track(`${PAGE_NAME} - Changed Calculation Type`, {
-			type
-		});
 	};
 
 	return (
@@ -260,8 +235,9 @@ const BaseEventAnalysisPage: React.FC<IBaseEventAnalysisPageProps> = ({
 					breadcrumbs.getHome({
 						channelId,
 						groupId,
-						label: Liferay.Language.get('home')
-					})
+						label: selectedChannel?.name
+					}),
+					breadcrumbs.getEventAnalysis({channelId, groupId})
 				]}
 				groupId={groupId}
 			>
@@ -322,8 +298,4 @@ const BaseEventAnalysisPage: React.FC<IBaseEventAnalysisPageProps> = ({
 	);
 };
 
-export default compose<any>(
-	connector,
-	withCurrentUser,
-	withRangeKey
-)(BaseEventAnalysisPage);
+export default compose<any>(connector, withRangeKey)(BaseEventAnalysisPage);

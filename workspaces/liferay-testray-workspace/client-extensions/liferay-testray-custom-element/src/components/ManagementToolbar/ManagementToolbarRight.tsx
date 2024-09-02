@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
-import ClayIcon from '@clayui/icon';
+import {ClayButtonWithIcon} from '@clayui/button';
 import ClayManagementToolbar from '@clayui/management-toolbar';
-import ClayPopover from '@clayui/popover';
-import {ReactNode, useCallback, useContext, useState} from 'react';
+import {ReactNode, useCallback, useContext} from 'react';
 import {ListViewContext, ListViewTypes} from '~/context/ListViewContext';
 import {Liferay} from '~/services/liferay';
 
@@ -41,11 +39,12 @@ export type IItem = {
 };
 
 type ManagementToolbarRightProps = {
-	actions: any;
+	actions?: any;
 	addButton?: () => void;
 	applyFilters?: boolean;
 	buttons?: ReactNode | ((actions: any) => ReactNode);
-	columns: Column[];
+	columns?: Column[];
+	customFilterFields?: {[key: string]: string};
 	disabled: boolean;
 	display?: {
 		columns?: boolean;
@@ -59,11 +58,11 @@ const ManagementToolbarRight: React.FC<ManagementToolbarRightProps> = ({
 	applyFilters = true,
 	buttons,
 	columns,
+	customFilterFields,
 	display = {columns: true},
 	filterSchema,
 }) => {
 	const [{filters, pin}, dispatch] = useContext(ListViewContext);
-	const [columnsDropdownVisible, setColumnsDropdownVisible] = useState(false);
 
 	const hasAppliedFilters = !!filters.entries.length;
 
@@ -109,42 +108,13 @@ const ManagementToolbarRight: React.FC<ManagementToolbarRightProps> = ({
 
 					<ManagementToolbarFilter
 						applyFilters={applyFilters}
+						customFilterFields={customFilterFields}
 						filterSchema={filterSchema}
 					/>
 				</>
 			)}
 
-			{display.columns && (
-				<ClayPopover
-					alignPosition="bottom-right"
-					className="body-columns popover-management-toolbar"
-					closeOnClickOutside
-					onShowChange={setColumnsDropdownVisible}
-					show={columnsDropdownVisible}
-					trigger={
-						<ClayButton
-							className="d-flex management-toolbar-buttons nav-link"
-							displayType="unstyled"
-						>
-							<span className="navbar-breakpoint-down-d-none">
-								<ClayIcon
-									className="inline-item inline-item-after"
-									symbol="columns"
-								/>
-							</span>
-
-							<span className="navbar-breakpoint-d-none">
-								<ClayIcon symbol="columns" />
-							</span>
-						</ClayButton>
-					}
-				>
-					<ManagementToolbarColumns
-						columns={columns}
-						onClose={() => setColumnsDropdownVisible(false)}
-					/>
-				</ClayPopover>
-			)}
+			{display.columns && <ManagementToolbarColumns columns={columns} />}
 
 			{typeof buttons === 'function' ? buttons(actions) : buttons}
 

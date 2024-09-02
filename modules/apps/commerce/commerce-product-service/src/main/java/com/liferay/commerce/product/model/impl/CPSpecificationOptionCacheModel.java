@@ -69,7 +69,7 @@ public class CPSpecificationOptionCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(31);
+		StringBundler sb = new StringBundler(37);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -77,6 +77,8 @@ public class CPSpecificationOptionCacheModel
 		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
+		sb.append(", externalReferenceCode=");
+		sb.append(externalReferenceCode);
 		sb.append(", CPSpecificationOptionId=");
 		sb.append(CPSpecificationOptionId);
 		sb.append(", companyId=");
@@ -91,6 +93,8 @@ public class CPSpecificationOptionCacheModel
 		sb.append(modifiedDate);
 		sb.append(", CPOptionCategoryId=");
 		sb.append(CPOptionCategoryId);
+		sb.append(", listTypeDefinitionId=");
+		sb.append(listTypeDefinitionId);
 		sb.append(", title=");
 		sb.append(title);
 		sb.append(", description=");
@@ -99,6 +103,8 @@ public class CPSpecificationOptionCacheModel
 		sb.append(facetable);
 		sb.append(", key=");
 		sb.append(key);
+		sb.append(", priority=");
+		sb.append(priority);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append("}");
@@ -119,6 +125,14 @@ public class CPSpecificationOptionCacheModel
 		}
 		else {
 			cpSpecificationOptionImpl.setUuid(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			cpSpecificationOptionImpl.setExternalReferenceCode("");
+		}
+		else {
+			cpSpecificationOptionImpl.setExternalReferenceCode(
+				externalReferenceCode);
 		}
 
 		cpSpecificationOptionImpl.setCPSpecificationOptionId(
@@ -148,6 +162,7 @@ public class CPSpecificationOptionCacheModel
 		}
 
 		cpSpecificationOptionImpl.setCPOptionCategoryId(CPOptionCategoryId);
+		cpSpecificationOptionImpl.setListTypeDefinitionId(listTypeDefinitionId);
 
 		if (title == null) {
 			cpSpecificationOptionImpl.setTitle("");
@@ -172,6 +187,8 @@ public class CPSpecificationOptionCacheModel
 			cpSpecificationOptionImpl.setKey(key);
 		}
 
+		cpSpecificationOptionImpl.setPriority(priority);
+
 		if (lastPublishDate == Long.MIN_VALUE) {
 			cpSpecificationOptionImpl.setLastPublishDate(null);
 		}
@@ -191,6 +208,7 @@ public class CPSpecificationOptionCacheModel
 
 		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
+		externalReferenceCode = objectInput.readUTF();
 
 		CPSpecificationOptionId = objectInput.readLong();
 
@@ -202,11 +220,15 @@ public class CPSpecificationOptionCacheModel
 		modifiedDate = objectInput.readLong();
 
 		CPOptionCategoryId = objectInput.readLong();
+
+		listTypeDefinitionId = objectInput.readLong();
 		title = objectInput.readUTF();
 		description = objectInput.readUTF();
 
 		facetable = objectInput.readBoolean();
 		key = objectInput.readUTF();
+
+		priority = objectInput.readDouble();
 		lastPublishDate = objectInput.readLong();
 	}
 
@@ -221,6 +243,13 @@ public class CPSpecificationOptionCacheModel
 		}
 		else {
 			objectOutput.writeUTF(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(externalReferenceCode);
 		}
 
 		objectOutput.writeLong(CPSpecificationOptionId);
@@ -240,6 +269,8 @@ public class CPSpecificationOptionCacheModel
 		objectOutput.writeLong(modifiedDate);
 
 		objectOutput.writeLong(CPOptionCategoryId);
+
+		objectOutput.writeLong(listTypeDefinitionId);
 
 		if (title == null) {
 			objectOutput.writeUTF("");
@@ -264,12 +295,14 @@ public class CPSpecificationOptionCacheModel
 			objectOutput.writeUTF(key);
 		}
 
+		objectOutput.writeDouble(priority);
 		objectOutput.writeLong(lastPublishDate);
 	}
 
 	public long mvccVersion;
 	public long ctCollectionId;
 	public String uuid;
+	public String externalReferenceCode;
 	public long CPSpecificationOptionId;
 	public long companyId;
 	public long userId;
@@ -277,10 +310,12 @@ public class CPSpecificationOptionCacheModel
 	public long createDate;
 	public long modifiedDate;
 	public long CPOptionCategoryId;
+	public long listTypeDefinitionId;
 	public String title;
 	public String description;
 	public boolean facetable;
 	public String key;
+	public double priority;
 	public long lastPublishDate;
 
 }

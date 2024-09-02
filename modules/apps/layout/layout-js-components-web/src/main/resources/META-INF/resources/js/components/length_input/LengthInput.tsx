@@ -36,7 +36,7 @@ const REGEX = /^(-?(?:[\d]*\.?[\d]+))(px|em|vh|vw|rem|%)$/;
 
 const UNITS = ['px', '%', 'em', 'rem', 'vw', 'vh', CUSTOM] as const;
 
-type Unit = typeof UNITS[number];
+type Unit = (typeof UNITS)[number];
 type Value = {unit: Unit; value: number | string};
 
 const isUnit = (unit: string): unit is Unit => {
@@ -51,21 +51,31 @@ const getInitialValue = (value: string | undefined): Value => {
 	const match = value.toString().toLowerCase().match(REGEX);
 
 	if (match) {
-		const [, number, unit] = match;
+		const [, nextNumber, nextUnit] = match;
 
-		if (!isUnit(unit)) {
-			throw new Error(`Invalid unit "${unit}"`);
+		if (!isUnit(nextUnit)) {
+			throw new Error(`Invalid unit "${nextUnit}"`);
 		}
 
 		return {
-			unit,
-			value: number,
+			unit: nextUnit,
+			value: nextNumber,
 		};
 	}
 
 	return {
 		unit: CUSTOM,
 		value,
+	};
+};
+
+const getNextValue = (value: number | string | undefined, unit: Unit) => {
+	const [, nextNumber, nextUnit] =
+		value?.toString().toLowerCase().match(REGEX) || [];
+
+	return {
+		nextNumber: nextNumber || value || '',
+		nextUnit: isUnit(nextUnit) ? nextUnit : unit,
 	};
 };
 
@@ -86,68 +96,76 @@ export default function LengthInput({
 	onEnter,
 	onValueSelect,
 	showLabel = true,
-	value,
+	value: currentValue,
 }: Props) {
 	const [active, setActive] = useState(false);
 	const [error, setError] = useState(false);
 	const inputId = useId();
 	const inputRef = useRef<HTMLInputElement>(null);
 
-	const initialValue = useMemo(() => getInitialValue(value), [value]);
+	const initialValue = useMemo(
+		() => getInitialValue(currentValue),
+		[currentValue]
+	);
 
-	const [nextValue, setNextValue] = useControlledState(initialValue.value);
-	const [nextUnit, setNextUnit] = useState(initialValue.unit);
+	const [value, setValue] = useControlledState(initialValue.value);
+	const [unit, setUnit] = useState(initialValue.unit);
 	const triggerId = useId();
 
-	const handleUnitSelect = (unit: Unit) => {
+	const onSelectUnit = (selectedUnit: Unit) => {
 		setActive(false);
-		setNextUnit(unit);
+		setUnit(selectedUnit);
 
 		document.getElementById(triggerId)!.focus();
 
-		if (!nextValue || unit === nextUnit) {
+		if (!value || selectedUnit === unit) {
 			return;
 		}
 
-		let valueWithUnits = `${nextValue}${unit}`;
+		let valueWithUnits = `${value}${selectedUnit}`;
 
-		if (unit === CUSTOM) {
+		if (selectedUnit === CUSTOM) {
 			inputRef.current!.focus();
 
-			setNextValue('');
+			setValue('');
 
 			return;
 		}
-		else if (typeof nextValue !== 'number' || isNaN(nextValue)) {
+		else if (typeof value !== 'number' || isNaN(value)) {
 			valueWithUnits = '';
 
 			inputRef.current!.focus();
 
 			if (field.typeOptions?.showLengthField) {
-				setNextValue(valueWithUnits);
+				setValue(valueWithUnits);
 
 				return;
 			}
 		}
 
-		if (valueWithUnits !== value) {
+		if (valueWithUnits !== currentValue) {
 			onValueSelect(field.name, valueWithUnits);
 		}
 	};
 
 	const handleValueSelect = () => {
-		const match = nextValue.toString().toLowerCase().match(REGEX);
-		let valueWithUnits = nextValue;
+		if (value === currentValue && unit !== CUSTOM) {
+			return;
+		}
+
+		const match = value.toString().toLowerCase().match(REGEX);
+		let valueWithUnits = value;
 
 		if (match) {
-			const [, number, unit] = match;
+			const [, nextNumber, nextUnit] = match;
 
-			valueWithUnits = `${number}${unit}`;
+			valueWithUnits = `${nextNumber}${nextUnit}`;
 
-			setNextValue(number);
+			setValue(nextNumber);
+			setUnit(nextUnit as Unit);
 		}
-		else if (nextUnit !== CUSTOM && nextValue) {
-			valueWithUnits = `${nextValue}${nextUnit}`;
+		else if (unit !== CUSTOM && value) {
+			valueWithUnits = `${value}${unit}`;
 		}
 
 		if (
@@ -158,10 +176,10 @@ export default function LengthInput({
 					valueWithUnits.toString()
 				))
 		) {
-			const [, number, unit] = value?.toLowerCase().match(REGEX) || [];
+			const {nextNumber, nextUnit} = getNextValue(currentValue, unit);
 
-			setNextValue(number || value || '');
-			setNextUnit(isUnit(unit) ? unit : CUSTOM);
+			setValue(nextNumber);
+			setUnit(nextUnit);
 			setError(true);
 
 			setTimeout(() => setError(false), 1000);
@@ -169,13 +187,13 @@ export default function LengthInput({
 			return;
 		}
 
-		if (valueWithUnits !== value) {
+		if (valueWithUnits !== currentValue) {
 			onValueSelect(field.name, valueWithUnits.toString());
 		}
 	};
 
 	const handleKeyUp = (event: KeyboardEvent) => {
-		if (nextUnit !== CUSTOM && KEYS_NOT_ALLOWED.has(event.key)) {
+		if (unit !== CUSTOM && KEYS_NOT_ALLOWED.has(event.key)) {
 			event.preventDefault();
 		}
 
@@ -189,14 +207,16 @@ export default function LengthInput({
 	};
 
 	useEffect(() => {
-		if (!value) {
+		if (!currentValue) {
 			return;
 		}
 
-		const [, , unit] = value.toString().toLowerCase().match(REGEX) || [];
+		setUnit((previousUnit) => {
+			const {nextUnit} = getNextValue(currentValue, previousUnit);
 
-		setNextUnit(isUnit(unit) ? unit : CUSTOM);
-	}, [value]);
+			return nextUnit;
+		});
+	}, [currentValue]);
 
 	return (
 		<ClayForm.Group
@@ -215,23 +235,17 @@ export default function LengthInput({
 						aria-label={field.label}
 						id={inputId}
 						insetBefore={Boolean(field.icon)}
-						onBlur={() => {
-							if (nextValue !== value) {
-								handleValueSelect();
-							}
-						}}
+						onBlur={() => handleValueSelect()}
 						onChange={(event) => {
-							setNextValue(event.target.value);
+							setValue(event.target.value);
 						}}
 						onKeyUp={handleKeyUp}
 						ref={inputRef}
 						sizing="sm"
 						type={
-							!defaultUnit && nextUnit === CUSTOM
-								? 'text'
-								: 'number'
+							!defaultUnit && unit === CUSTOM ? 'text' : 'number'
 						}
-						value={nextValue}
+						value={value}
 					/>
 
 					{field.icon ? (
@@ -270,7 +284,7 @@ export default function LengthInput({
 								aria-haspopup="true"
 								aria-label={sub(
 									Liferay.Language.get('select-a-unit'),
-									nextUnit
+									unit
 								)}
 								className="layout__length-input__button p-1"
 								disabled={Boolean(defaultUnit)}
@@ -280,10 +294,10 @@ export default function LengthInput({
 								title={Liferay.Language.get('select-units')}
 							>
 								{defaultUnit ||
-									(nextUnit === CUSTOM ? (
+									(unit === CUSTOM ? (
 										<ClayIcon symbol="code" />
 									) : (
-										nextUnit.toUpperCase()
+										unit.toUpperCase()
 									))}
 							</ClayButton>
 						}
@@ -292,7 +306,7 @@ export default function LengthInput({
 							{UNITS.map((unit) => (
 								<ClayDropDown.Item
 									key={unit}
-									onClick={() => handleUnitSelect(unit)}
+									onClick={() => onSelectUnit(unit)}
 								>
 									{unit.toUpperCase()}
 								</ClayDropDown.Item>

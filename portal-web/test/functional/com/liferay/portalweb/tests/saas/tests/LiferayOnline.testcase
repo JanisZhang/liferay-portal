@@ -1,4 +1,4 @@
-@component-name = "portal-liferay-online"
+@component-name = "portal-site-management"
 definition {
 
 	property database.types = "mysql, postgresql";
@@ -88,6 +88,7 @@ definition {
 	@priority = 5
 	test AddVirtualInstanceWithDefaultInitializer {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.baker.com";
+		property database.partition.enabled = "true";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -115,6 +116,7 @@ definition {
 	@priority = 5
 	test AddVirtualInstanceWithInitializer {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+		property database.partition.enabled = "true";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -399,7 +401,7 @@ definition {
 			virtualHost = "www.able.com");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "test@liferay.com");
 
@@ -524,6 +526,25 @@ definition {
 				key_header = "Client Extensions",
 				locator1 = "WorkflowSubmissions#DETAIL_PAGE_HEADER");
 		}
+	}
+
+	@description = "This is a test for LPD-25509. Portal restart in Liferay Online"
+	@priority = 5
+	test VerifyRestartInLiferayOnline {
+		property portal.acceptance = "true";
+		property test.assert.warning.exceptions = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		SignOut.signOut();
+
+		Portlet.shutdownServer();
+
+		Portlet.startServer(
+			deleteLiferayHome = "false",
+			keepOsGiState = "true");
+
+		User.loginPG();
 	}
 
 }

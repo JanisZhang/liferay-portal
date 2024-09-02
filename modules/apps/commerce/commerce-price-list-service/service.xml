@@ -34,6 +34,7 @@
 		<column name="hasTierPrice" type="boolean" />
 		<column name="price" type="BigDecimal" />
 		<column name="priceOnApplication" type="boolean" />
+		<column name="pricingQuantity" type="BigDecimal" />
 		<column name="promoPrice" type="BigDecimal" />
 		<column name="quantity" type="BigDecimal" />
 		<column name="unitOfMeasureKey" type="String" />
@@ -417,6 +418,10 @@
 			<finder-column name="commercePriceEntryId" />
 			<finder-column comparator="&lt;=" name="minQuantity" />
 		</finder>
+		<finder name="C_S" return-type="Collection">
+			<finder-column name="commercePriceEntryId" />
+			<finder-column name="status" />
+		</finder>
 		<finder name="LtD_S" return-type="Collection">
 			<finder-column comparator="&lt;" name="displayDate" />
 			<finder-column name="status" />
@@ -441,6 +446,7 @@
 		<exception>CommercePriceListDisplayDate</exception>
 		<exception>CommercePriceListExpirationDate</exception>
 		<exception>CommercePriceListMaxPriceValue</exception>
+		<exception>CommercePriceListMinPriceValue</exception>
 		<exception>CommercePriceListParentPriceListGroupId</exception>
 		<exception>CommerceTierPriceEntryDisplayDate</exception>
 		<exception>CommerceTierPriceEntryExpirationDate</exception>

@@ -20,7 +20,7 @@ import {createOrderIOMap, NAME} from 'shared/util/pagination';
 import {formatUTCDateFromUnix} from 'shared/util/date';
 import {individualsListColumns} from 'shared/util/table-columns';
 import {sub} from 'shared/util/lang';
-import {useQueryPagination} from 'shared/hooks';
+import {useQueryPagination} from 'shared/hooks/useQueryPagination';
 
 const tabIds = {
 	INDIVIDUALS,
@@ -223,13 +223,13 @@ const BaseInterestDetails: React.FC<IBaseInterestDetailsProps> = ({
 						{navigationItems.map(({active, href, label}) => (
 							<ClayNavigationBar.Item active={active} key={label}>
 								<ClayLink href={href}>
-									<h4>{label}</h4>
+									<div className='h4'>{label}</div>
 								</ClayLink>
 							</ClayNavigationBar.Item>
 						))}
 					</ClayNavigationBar>
 
-					<h4 className='list-title'>
+					<div className='h4 list-title'>
 						{tabId === tabIds.INDIVIDUALS
 							? sub(
 									Liferay.Language.get(
@@ -248,7 +248,7 @@ const BaseInterestDetails: React.FC<IBaseInterestDetailsProps> = ({
 									),
 									[interestName]
 							  )}
-					</h4>
+					</div>
 				</Card.Header>
 
 				<InterestDetailsList

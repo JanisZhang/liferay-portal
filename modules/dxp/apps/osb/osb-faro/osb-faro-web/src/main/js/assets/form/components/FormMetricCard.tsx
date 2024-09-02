@@ -1,7 +1,9 @@
+import ClayLink from '@clayui/link';
 import MetricBaseCard, {
 	IGenericMetricBaseCardProps
 } from 'shared/components/metric-card/MetricBaseCard';
 import React from 'react';
+import URLConstants from 'shared/util/url-constants';
 import {
 	AbandonmentsMetric,
 	CompletionTimeMetric,
@@ -13,7 +15,7 @@ import {
 	AssetMetricQuery,
 	AssetTabsQuery
 } from 'shared/components/metric-card/queries';
-import {Containers} from 'shared/components/download-report/DownloadPDFReport';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {useAssetVariables} from 'shared/components/metric-card/hooks';
 
 const NAME = 'form';
@@ -31,13 +33,35 @@ const FormMetricCard: React.FC<IGenericMetricBaseCardProps> = props => {
 	return (
 		<MetricBaseCard
 			{...props}
-			id={Containers.VisitorsBehaviorCard}
+			emptyDescription={
+				<>
+					<span className='mr-1'>
+						{Liferay.Language.get(
+							'check-back-later-to-verify-if-data-has-been-received-from-your-data-sources'
+						)}
+					</span>
+
+					<ClayLink
+						href={URLConstants.VisitorBehaviorFormsLink}
+						key='DOCUMENTATION'
+						target='_blank'
+					>
+						{Liferay.Language.get(
+							'learn-more-about-visitor-behavior'
+						)}
+					</ClayLink>
+				</>
+			}
+			emptyTitle={Liferay.Language.get(
+				'there-are-no-visitors-data-found'
+			)}
 			metrics={metrics}
 			queries={{
 				MetricQuery: AssetMetricQuery(NAME),
 				name: NAME,
 				TabsQuery: AssetTabsQuery(metrics, NAME)
 			}}
+			reportContainer={ReportContainer.VisitorsBehaviorCard}
 			variables={variables}
 		/>
 	);

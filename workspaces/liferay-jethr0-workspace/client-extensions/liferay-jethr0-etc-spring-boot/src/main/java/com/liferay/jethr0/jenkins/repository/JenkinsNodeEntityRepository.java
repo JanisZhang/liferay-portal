@@ -11,7 +11,9 @@ import com.liferay.jethr0.jenkins.node.JenkinsNodeEntity;
 import com.liferay.jethr0.jenkins.server.JenkinsServerEntity;
 import com.liferay.jethr0.util.StringUtil;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,13 +37,30 @@ public class JenkinsNodeEntityRepository
 			"r_jenkinsServerToJenkinsNodes_c_jenkinsServerId",
 			jenkinsServerEntity.getId());
 
+		JenkinsNodeEntity jenkinsNodeEntity = getByName(
+			jenkinsServerEntity, nodeJSONObject.getString("name"));
+
+		if (jenkinsNodeEntity != null) {
+			update(jenkinsNodeEntity);
+
+			return jenkinsNodeEntity;
+		}
+
 		return create(nodeJSONObject);
 	}
 
 	public void createAll(JenkinsServerEntity jenkinsServerEntity) {
 		JSONObject jsonObject = jenkinsServerEntity.getComputerJSONObject();
 
-		JSONArray computerJSONArray = jsonObject.getJSONArray("computer");
+		if (jsonObject == null) {
+			return;
+		}
+
+		JSONArray computerJSONArray = jsonObject.optJSONArray("computer");
+
+		if (computerJSONArray == null) {
+			return;
+		}
 
 		for (int i = 0; i < computerJSONArray.length(); i++) {
 			JSONObject computerJSONObject = computerJSONArray.getJSONObject(i);
@@ -58,16 +77,24 @@ public class JenkinsNodeEntityRepository
 			JenkinsNodeEntity.Type type = JenkinsNodeEntity.Type.SLAVE;
 
 			int nodeCount = 2;
+			int nodeRAM = 12;
 
 			if (Objects.equals(
 					computerJSONObject.getString("_class"),
 					"hudson.model.Hudson$MasterComputer")) {
 
+				name = "master";
 				nodeCount = 1;
 				primaryLabel = "master";
 				type = JenkinsNodeEntity.Type.MASTER;
 				url = StringUtil.combine(
 					jenkinsServerEntity.getURL(), "/computer/(master)");
+			}
+
+			Matcher nodeNameMatcher = _nodeNamePattern.matcher(name);
+
+			if (nodeNameMatcher.find()) {
+				nodeRAM = 24;
 			}
 
 			nodeJSONObject.put(
@@ -77,7 +104,7 @@ public class JenkinsNodeEntityRepository
 			).put(
 				"nodeCount", nodeCount
 			).put(
-				"nodeRAM", 12
+				"nodeRAM", nodeRAM
 			).put(
 				"r_jenkinsServerToJenkinsNodes_c_jenkinsServerId",
 				jenkinsServerEntity.getId()
@@ -135,13 +162,60 @@ public class JenkinsNodeEntityRepository
 
 			nodeJSONObject.put("primaryLabel", primaryLabel);
 
-			create(nodeJSONObject);
+			create(jenkinsServerEntity, nodeJSONObject);
 		}
+	}
+
+	public Set<JenkinsNodeEntity> getAll(
+		JenkinsServerEntity jenkinsServerEntity) {
+
+		Set<JenkinsNodeEntity> jenkinsNodeEntities = new HashSet<>();
+
+		for (JenkinsNodeEntity jenkinsNodeEntity : getAll()) {
+			if (Objects.equals(
+					jenkinsServerEntity.getId(),
+					jenkinsNodeEntity.getJenkinsServerEntityId())) {
+
+				jenkinsNodeEntities.add(jenkinsNodeEntity);
+			}
+		}
+
+		return jenkinsNodeEntities;
+	}
+
+	public JenkinsNodeEntity getByName(
+		JenkinsServerEntity jenkinsServerEntity, String name) {
+
+		for (JenkinsNodeEntity jenkinsNodeEntity :
+				getAll(jenkinsServerEntity)) {
+
+			if (Objects.equals(name, jenkinsNodeEntity.getName())) {
+				return jenkinsNodeEntity;
+			}
+		}
+
+		JenkinsNodeEntity jenkinsNodeEntity = _jenkinsNodeEntityDALO.getByName(
+			jenkinsServerEntity, name);
+
+		if (jenkinsNodeEntity != null) {
+			add(jenkinsNodeEntity);
+		}
+
+		return jenkinsNodeEntity;
 	}
 
 	@Override
 	public JenkinsNodeEntityDALO getEntityDALO() {
 		return _jenkinsNodeEntityDALO;
+	}
+
+	@Override
+	public void initialize() {
+		for (JenkinsServerEntity jenkinsServerEntity :
+				_jenkinsServerEntityRepository.getAll()) {
+
+			createAll(jenkinsServerEntity);
+		}
 	}
 
 	@Override
@@ -170,6 +244,8 @@ public class JenkinsNodeEntityRepository
 		"goodBattery=(true|false)");
 	private static final Pattern _nodeCountPattern = Pattern.compile(
 		"nodeCount=(\\d+)");
+	private static final Pattern _nodeNamePattern = Pattern.compile(
+		"test-\\d+-\\d+");
 	private static final Pattern _nodeRAMPattern = Pattern.compile(
 		"nodeRAM=(\\d+)");
 

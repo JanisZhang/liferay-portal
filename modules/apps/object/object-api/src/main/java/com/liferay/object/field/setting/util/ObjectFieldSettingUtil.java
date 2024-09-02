@@ -31,21 +31,25 @@ import java.util.Objects;
 public class ObjectFieldSettingUtil {
 
 	public static String getDefaultValueAsString(
-		DDMExpressionFactory ddmExpressionFactory, long objectFieldId,
+		DDMExpressionFactory ddmExpressionFactory, ObjectField objectField,
 		ObjectFieldSettingLocalService objectFieldSettingLocalService,
 		Map<String, Object> values) {
 
+		List<ObjectFieldSetting> objectFieldSettings =
+			objectField.getObjectFieldSettings();
+
 		ObjectFieldSetting defaultValueObjectFieldSetting =
-			objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectFieldId, ObjectFieldSettingConstants.NAME_DEFAULT_VALUE);
+			_getObjectFieldSetting(
+				objectFieldSettings,
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE);
 
 		if (defaultValueObjectFieldSetting == null) {
 			return null;
 		}
 
 		ObjectFieldSetting defaultValueTypeObjectFieldSetting =
-			objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectFieldId,
+			_getObjectFieldSetting(
+				objectFieldSettings,
 				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE);
 
 		if ((defaultValueTypeObjectFieldSetting == null) ||
@@ -123,6 +127,18 @@ public class ObjectFieldSettingUtil {
 			getValue(
 				ObjectFieldSettingConstants.NAME_UNIQUE_VALUES,
 				objectFieldSetting));
+	}
+
+	private static ObjectFieldSetting _getObjectFieldSetting(
+		List<ObjectFieldSetting> objectFieldSettings, String name) {
+
+		for (ObjectFieldSetting objectFieldSetting : objectFieldSettings) {
+			if (Objects.equals(objectFieldSetting.getName(), name)) {
+				return objectFieldSetting;
+			}
+		}
+
+		return null;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

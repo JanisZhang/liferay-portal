@@ -8,6 +8,8 @@ package com.liferay.headless.site.resource.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.site.client.dto.v1_0.Site;
 import com.liferay.headless.site.client.problem.Problem;
+import com.liferay.headless.site.client.resource.v1_0.SiteResource;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
@@ -40,6 +42,7 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -128,6 +131,20 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 		}
 	}
 
+	@Test
+	public void testGetSiteByExternalReferenceCode() throws Exception {
+		super.testGetSiteByExternalReferenceCode();
+
+		_testGetSiteByExternalReferenceCodeWithDollar();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGetSiteByExternalReferenceCodeSiteInitializer()
+		throws Exception {
+	}
+
 	@Override
 	@Test
 	public void testPostSite() throws Exception {
@@ -147,6 +164,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 		_testPostSiteSuccessMembershipTypePrivate();
 		_testPostSiteSuccessSiteInitializer();
 		_testPostSiteSuccessSiteTemplate();
+		_testPostSiteWithoutAuthentication();
 	}
 
 	@Override
@@ -186,12 +204,30 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 	}
 
 	@Override
-	protected Site testPostSite_addSite(Site site) throws Exception {
-		Site postSite = siteResource.postSite(site);
+	protected Site testGetSiteByExternalReferenceCode_addSite()
+		throws Exception {
+
+		return testPutSiteByExternalReferenceCode_addSite();
+	}
+
+	@Override
+	protected Site testPostFormDataSite_addSite(
+			Site site, Map<String, File> multipartFiles)
+		throws Exception {
+
+		Site postSite = siteResource.postFormDataSite(site, multipartFiles);
 
 		_sites.add(postSite);
 
 		return postSite;
+	}
+
+	@Override
+	protected Site testPostSite_addSite(
+			Site site, Map<String, File> multipartFiles)
+		throws Exception {
+
+		return testPostFormDataSite_addSite(site, multipartFiles);
 	}
 
 	@Override
@@ -202,22 +238,26 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 			RandomTestUtil.randomString(), randomSite(), getMultipartFiles());
 	}
 
-	@Override
-	protected Site testPutSiteByExternalReferenceCode_getSite(
-		String externalReferenceCode) {
+	private void _testGetSiteByExternalReferenceCodeWithDollar()
+		throws Exception {
 
-		Group group = _groupLocalService.fetchGroupByExternalReferenceCode(
-			externalReferenceCode, testCompany.getCompanyId());
+		Site postSite = siteResource.putSiteByExternalReferenceCode(
+			RandomTestUtil.randomString() + StringPool.DOLLAR, randomSite(),
+			getMultipartFiles());
 
-		return new Site() {
-			{
-				externalReferenceCode = group.getExternalReferenceCode();
-				friendlyUrlPath = group.getFriendlyURL();
-				id = group.getGroupId();
-				key = group.getGroupKey();
-				name = group.getName(LocaleUtil.getDefault());
-			}
-		};
+		Site getSite = siteResource.getSiteByExternalReferenceCode(
+			postSite.getExternalReferenceCode());
+
+		assertEquals(postSite, getSite);
+		assertValid(getSite);
+	}
+
+	private Site _testPostSite_addSite(Site site) throws Exception {
+		Site postSite = siteResource.postSite(site);
+
+		_sites.add(postSite);
+
+		return postSite;
 	}
 
 	private void _testPostSiteFailureDuplicateName() throws Exception {
@@ -227,13 +267,13 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 			}
 		};
 
-		testPostSite_addSite(randomSite);
+		_testPostSite_addSite(randomSite);
 
 		try {
 			try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
 					_CLASS_NAME_EXCEPTION_MAPPER, LoggerTestUtil.ERROR)) {
 
-				testPostSite_addSite(randomSite);
+				_testPostSite_addSite(randomSite);
 			}
 
 			Assert.fail();
@@ -253,7 +293,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 		randomSite.setName("*");
 
 		try {
-			testPostSite_addSite(randomSite);
+			_testPostSite_addSite(randomSite);
 
 			Assert.fail();
 		}
@@ -271,7 +311,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 		randomSite.setName((String)null);
 
 		try {
-			testPostSite_addSite(randomSite);
+			_testPostSite_addSite(randomSite);
 
 			Assert.fail();
 		}
@@ -289,7 +329,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 			StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 		try {
-			testPostSite_addSite(randomSite);
+			_testPostSite_addSite(randomSite);
 
 			Assert.fail();
 		}
@@ -326,7 +366,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 		randomSite.setTemplateType(Site.TemplateType.SITE_INITIALIZER);
 
 		try {
-			testPostSite_addSite(randomSite);
+			_testPostSite_addSite(randomSite);
 
 			Assert.fail();
 		}
@@ -354,7 +394,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 		randomSite.setTemplateType(Site.TemplateType.SITE_INITIALIZER);
 
 		try {
-			testPostSite_addSite(randomSite);
+			_testPostSite_addSite(randomSite);
 
 			Assert.fail();
 		}
@@ -390,7 +430,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 			try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
 					_CLASS_NAME_EXCEPTION_MAPPER, LoggerTestUtil.ERROR)) {
 
-				testPostSite_addSite(randomSite);
+				_testPostSite_addSite(randomSite);
 			}
 
 			Assert.fail();
@@ -413,7 +453,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 		randomSite.setTemplateType(Site.TemplateType.SITE_TEMPLATE);
 
 		try {
-			testPostSite_addSite(randomSite);
+			_testPostSite_addSite(randomSite);
 
 			Assert.fail();
 		}
@@ -437,7 +477,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 			StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 		try {
-			testPostSite_addSite(randomSite);
+			_testPostSite_addSite(randomSite);
 
 			Assert.fail();
 		}
@@ -459,7 +499,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 		randomSite.setTemplateType(Site.TemplateType.SITE_INITIALIZER);
 
 		try {
-			testPostSite_addSite(randomSite);
+			_testPostSite_addSite(randomSite);
 
 			Assert.fail();
 		}
@@ -474,7 +514,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 	}
 
 	private Site _testPostSiteSuccess(Site site) throws Exception {
-		Site postSite = testPostSite_addSite(site);
+		Site postSite = _testPostSite_addSite(site);
 
 		assertEquals(site, postSite);
 		assertValid(postSite);
@@ -483,7 +523,7 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 	}
 
 	private void _testPostSiteSuccessChild() throws Exception {
-		Site parentSite = testPostSite_addSite(randomSite());
+		Site parentSite = _testPostSite_addSite(randomSite());
 
 		Site randomSite = randomSite();
 
@@ -545,6 +585,23 @@ public class SiteResourceTest extends BaseSiteResourceTestCase {
 		Assert.assertEquals(
 			layoutSetPrototype.getLayoutSetPrototypeId(),
 			publicLayoutSet.getLayoutSetPrototypeId());
+	}
+
+	private void _testPostSiteWithoutAuthentication() throws Exception {
+		SiteResource.Builder builder = SiteResource.builder();
+
+		SiteResource siteResource = builder.build();
+
+		try {
+			siteResource.postSite(randomSite());
+
+			Assert.fail();
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("403", problem.getStatus());
+		}
 	}
 
 	private static final String _CLASS_NAME_EXCEPTION_MAPPER =

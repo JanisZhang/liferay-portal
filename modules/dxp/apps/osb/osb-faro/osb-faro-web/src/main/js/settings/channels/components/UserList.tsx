@@ -3,6 +3,7 @@ import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import CrossPageSelect from 'shared/hoc/CrossPageSelect';
 import ErrorDisplay from 'shared/components/ErrorDisplay';
+import Loading from 'shared/components/Loading';
 import Nav from 'shared/components/Nav';
 import NoResultsDisplay from 'shared/components/NoResultsDisplay';
 import React from 'react';
@@ -22,8 +23,9 @@ import {OrderedMap} from 'immutable';
 import {RootState} from 'shared/store';
 import {SelectionProvider} from 'shared/context/selection';
 import {Sizes} from 'shared/util/constants';
-import {useQueryPagination, useRequest} from 'shared/hooks';
+import {useQueryPagination} from 'shared/hooks/useQueryPagination';
 import {User} from 'shared/util/records';
+import {useRequest} from 'shared/hooks/useRequest';
 import {usersListColumns} from 'shared/util/table-columns';
 import {withEmpty} from 'cerebro-shared/hocs/utils';
 
@@ -352,7 +354,9 @@ const UserList: React.FC<IUserListProps> = ({
 			total: get(data, 'total')
 		};
 
-		if (error) {
+		if (loading) {
+			return <Loading />;
+		} else if (error) {
 			return <ErrorDisplay onReload={refetch} spacer />;
 		} else if (authorized) {
 			return (

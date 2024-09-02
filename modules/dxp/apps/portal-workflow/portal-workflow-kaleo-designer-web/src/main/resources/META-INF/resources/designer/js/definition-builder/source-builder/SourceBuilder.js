@@ -9,34 +9,32 @@ import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayToolbar from '@clayui/toolbar';
-import {Editor} from 'frontend-editor-ckeditor-web';
+import {ClassicEditor} from 'frontend-editor-ckeditor-web';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {isEdge, isNode} from 'react-flow-renderer';
 
+import XMLUtil from '../../../js/definition-builder/source-builder/xmlUtil';
 import {DefinitionBuilderContext} from '../DefinitionBuilderContext';
 import {editorConfig} from '../constants';
 import {xmlNamespace} from './constants';
+import DeserializeUtil from './deserializeUtil';
 import {serializeDefinition} from './serializeUtil';
-
-const REGEX_ALERT = /alert\((.*?)\)/;
 
 export default function SourceBuilder() {
 	const {
+		blockingError,
 		currentEditor,
 		definitionDescription,
 		definitionName,
 		elements,
+		setBlockingError,
 		setCurrentEditor,
-		version,
+		workflowDefinitionVersions,
 	} = useContext(DefinitionBuilderContext);
 	const editorRef = useRef();
 	const [loading, setLoading] = useState(true);
-	const [showImportSuccessMessage, setShowImportSuccessMessage] = useState(
-		false
-	);
-	const [showInvalidContentMessage, setShowInvalidContentMessage] = useState(
-		false
-	);
+	const [showImportSuccessMessage, setShowImportSuccessMessage] =
+		useState(false);
 
 	useEffect(() => {
 		function loadXmlContent() {
@@ -44,33 +42,33 @@ export default function SourceBuilder() {
 				const metadata = {
 					description: definitionDescription,
 					name: definitionName,
-					version,
+					version: workflowDefinitionVersions.length,
 				};
+
+				const currentData = currentEditor.getData();
+				let currentElements;
+
+				if (currentData) {
+					const deserializeUtil = new DeserializeUtil();
+
+					deserializeUtil.updateXMLDefinition(
+						encodeURIComponent(currentData)
+					);
+
+					currentElements = deserializeUtil.getElements();
+				}
+				else {
+					currentElements = elements;
+				}
 
 				const xmlContent = serializeDefinition(
 					xmlNamespace,
 					metadata,
-					elements.filter(isNode),
-					elements.filter(isEdge)
+					currentElements.filter(isNode),
+					currentElements.filter(isEdge)
 				);
 
 				if (xmlContent) {
-					const codeEditor = document.querySelector(
-						'div.cke_contents'
-					);
-
-					codeEditor.addEventListener('keyup', () => {
-						if (currentEditor.getData() !== xmlContent) {
-							const newXmlContent = currentEditor.getData();
-							const sanitizedXmlContent = newXmlContent.replace(
-								REGEX_ALERT,
-								''
-							);
-
-							currentEditor.setData(sanitizedXmlContent);
-						}
-					});
-
 					currentEditor.setData(xmlContent);
 
 					setLoading(false);
@@ -93,32 +91,45 @@ export default function SourceBuilder() {
 		}, 1000);
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentEditor, definitionName, elements, version]);
+	}, [
+		currentEditor,
+		definitionName,
+		elements,
+		workflowDefinitionVersions.length,
+	]);
 
 	useEffect(() => {
-		if (showInvalidContentMessage) {
+		if (blockingError.errorType === 'invalidXML') {
 			document.addEventListener('keydown', () => {
-				setShowInvalidContentMessage(false);
+				setBlockingError({errorType: ''});
 			});
 
 			return () => {
 				document.removeEventListener('keydown', () => {
-					setShowInvalidContentMessage(false);
+					setBlockingError({errorType: ''});
 				});
 			};
 		}
-	}, [setShowInvalidContentMessage, showInvalidContentMessage]);
+	}, [blockingError, setBlockingError]);
 
 	const writeDefinitionMessage = Liferay.Language.get(
 		'write-your-definition-or-x'
 	).substring(0, 25);
 
-	const importFileMessage = Liferay.Language.get(
-		'import-a-file'
-	).toLowerCase();
+	const importFileMessage =
+		Liferay.Language.get('import-a-file').toLowerCase();
+
+	function handleInvalidXMLBlockingError() {
+		setBlockingError(() => ({
+			errorMessage: Liferay.Language.get(
+				'please-select-a-valid-xml-file'
+			),
+			errorType: 'invalidXML',
+		}));
+	}
 
 	function loadFile(event) {
-		setShowInvalidContentMessage(false);
+		setBlockingError({errorType: ''});
 
 		const files = event.target.files;
 
@@ -126,13 +137,11 @@ export default function SourceBuilder() {
 			const reader = new FileReader();
 
 			reader.onloadend = (event) => {
-				if (event.target.readyState === FileReader.DONE) {
-					const sanitizedData = event.target.result.replace(
-						REGEX_ALERT,
-						''
-					);
-
-					currentEditor.setData(sanitizedData);
+				if (
+					event.target.readyState === FileReader.DONE &&
+					XMLUtil.validateDefinition(event.target.result)
+				) {
+					currentEditor.setData(event.target.result);
 
 					const fileInput = document.querySelector('#fileInput');
 
@@ -140,12 +149,15 @@ export default function SourceBuilder() {
 
 					setShowImportSuccessMessage(true);
 				}
+				else {
+					handleInvalidXMLBlockingError();
+				}
 			};
 
 			reader.readAsText(files[0]);
 		}
 		else if (files[0].type !== 'text/xml') {
-			setShowInvalidContentMessage(true);
+			handleInvalidXMLBlockingError();
 		}
 	}
 
@@ -189,8 +201,17 @@ export default function SourceBuilder() {
 				/>
 			)}
 
-			<Editor
+			<ClassicEditor
 				config={editorConfig}
+				name="sourceBuilderEditor"
+				onBeforeDestroy={({editor}) => {
+					if (
+						editor.checkDirty() &&
+						!XMLUtil.validateDefinition(editor.getData())
+					) {
+						editor.setData('');
+					}
+				}}
 				onInstanceReady={({editor}) => {
 					editor.setMode('source');
 
@@ -214,12 +235,12 @@ export default function SourceBuilder() {
 				</ClayAlert.ToastContainer>
 			)}
 
-			{showInvalidContentMessage && (
+			{blockingError.errorType === 'invalidXML' && (
 				<ClayAlert.ToastContainer>
 					<ClayAlert
 						autoClose={5000}
 						displayType="danger"
-						onClose={() => showInvalidContentMessage(false)}
+						onClose={() => setBlockingError({errorType: ''})}
 						title={`${Liferay.Language.get('error')}:`}
 					>
 						{Liferay.Language.get('please-select-a-valid-xml-file')}

@@ -198,7 +198,8 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 	}
 
 	private Field[] _getExpandoColumnFields(
-		String className, String dataType, ExpandoColumn expandoColumn) {
+		String className, String dataType, String displayType,
+		ExpandoColumn expandoColumn) {
 
 		List<Field> fields = new ArrayList<Field>() {
 			{
@@ -223,6 +224,13 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 						{
 							setName(() -> "dataType");
 							setValue(() -> dataType);
+						}
+					});
+				add(
+					new Field() {
+						{
+							setName(() -> "displayType");
+							setValue(() -> displayType);
 						}
 					});
 				add(
@@ -329,7 +337,12 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 				dataType = ExpandoColumnConstants.DATA_TYPE_TEXT;
 			}
 
-			return _getExpandoColumnFields(className, dataType, expandoColumn);
+			return _getExpandoColumnFields(
+				className, dataType,
+				ExpandoColumnConstants.getDefaultDisplayTypeProperty(
+					expandoColumn.getType(),
+					expandoColumn.getTypeSettingsProperties()),
+				expandoColumn);
 		}
 
 		List<Field> fields = new ArrayList<>();
@@ -426,7 +439,7 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 				if (StringUtil.equals(field.getName(), "name")) {
 					Group group = (Group)baseModel;
 
-					field.setValue(group.getNameCurrentValue());
+					field.setValue(group::getNameCurrentValue);
 
 					break;
 				}
@@ -438,11 +451,11 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 
 			Field field = new Field();
 
-			field.setName("parentOrganizationName");
+			field.setName(() -> "parentOrganizationName");
 
 			Organization organization = (Organization)baseModel;
 
-			field.setValue(organization.getParentOrganizationName());
+			field.setValue(organization::getParentOrganizationName);
 
 			fields.add(field);
 		}
@@ -581,20 +594,25 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 
 		DXPEntity dxpEntity = new DXPEntity();
 
-		if (expandoFields == null) {
-			expandoFields = new ExpandoField[0];
-		}
+		dxpEntity.setExpandoFields(
+			() -> {
+				if (expandoFields != null) {
+					return expandoFields;
+				}
 
-		dxpEntity.setExpandoFields(expandoFields);
+				return new ExpandoField[0];
+			});
+		dxpEntity.setFields(
+			() -> {
+				if (fields != null) {
+					return fields;
+				}
 
-		if (fields == null) {
-			fields = new Field[0];
-		}
-
-		dxpEntity.setFields(fields);
-		dxpEntity.setId(id);
-		dxpEntity.setModifiedDate(modifiedDate);
-		dxpEntity.setType(type);
+				return new Field[0];
+			});
+		dxpEntity.setId(() -> id);
+		dxpEntity.setModifiedDate(() -> modifiedDate);
+		dxpEntity.setType(() -> type);
 
 		return dxpEntity;
 	}

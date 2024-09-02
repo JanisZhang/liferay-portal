@@ -48,6 +48,27 @@ public class Specification implements Cloneable, Serializable {
 
 	protected Map<String, String> description;
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
 	public Boolean getFacetable() {
 		return facetable;
 	}
@@ -107,6 +128,27 @@ public class Specification implements Cloneable, Serializable {
 
 	protected String key;
 
+	public Long getListTypeDefinitionId() {
+		return listTypeDefinitionId;
+	}
+
+	public void setListTypeDefinitionId(Long listTypeDefinitionId) {
+		this.listTypeDefinitionId = listTypeDefinitionId;
+	}
+
+	public void setListTypeDefinitionId(
+		UnsafeSupplier<Long, Exception> listTypeDefinitionIdUnsafeSupplier) {
+
+		try {
+			listTypeDefinitionId = listTypeDefinitionIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long listTypeDefinitionId;
+
 	public OptionCategory getOptionCategory() {
 		return optionCategory;
 	}
@@ -128,6 +170,27 @@ public class Specification implements Cloneable, Serializable {
 	}
 
 	protected OptionCategory optionCategory;
+
+	public Double getPriority() {
+		return priority;
+	}
+
+	public void setPriority(Double priority) {
+		this.priority = priority;
+	}
+
+	public void setPriority(
+		UnsafeSupplier<Double, Exception> priorityUnsafeSupplier) {
+
+		try {
+			priority = priorityUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Double priority;
 
 	public Map<String, String> getTitle() {
 		return title;

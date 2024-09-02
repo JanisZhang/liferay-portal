@@ -64,6 +64,7 @@ const ValueInput: React.FC<IValueInputProps> = ({
 							}
 						});
 					}}
+					placeholder={Liferay.Language.get('true')}
 				>
 					{({label, value}) => <Option key={value}>{label}</Option>}
 				</Picker>
@@ -122,6 +123,7 @@ const ValueInput: React.FC<IValueInputProps> = ({
 							});
 						}}
 						overlayAlignment='rightCenter'
+						showRetentionPeriod={false}
 						value={value}
 					/>
 				</Form.GroupItem>

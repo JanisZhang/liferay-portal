@@ -212,12 +212,21 @@ export default function propsTransformer({
 						if (selectedItem) {
 							const itemValue = JSON.parse(selectedItem.value);
 
+							const url = new URL(viewDDMStructureArticlesURL);
+
+							const resetCurParam = `_${url.searchParams.get(
+								'p_p_id'
+							)}_resetCur`;
+
+							url.searchParams.set(resetCurParam, 'true');
+
 							navigate(
 								addParams(
 									{
-										[`${portletNamespace}ddmStructureId`]: itemValue.ddmstructureid,
+										[`${portletNamespace}ddmStructureId`]:
+											itemValue.ddmstructureid,
 									},
-									viewDDMStructureArticlesURL
+									url.href
 								)
 							);
 						}
@@ -251,7 +260,8 @@ export default function propsTransformer({
 						navigate(
 							addParams(
 								{
-									[`${portletNamespace}ddmStructureId`]: selectedItem.ddmstructureid,
+									[`${portletNamespace}ddmStructureId`]:
+										selectedItem.ddmstructureid,
 								},
 								addArticleURL
 							)

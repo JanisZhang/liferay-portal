@@ -338,8 +338,14 @@ definition {
 			}
 		}
 
+		task ("Add a new site with a public widget page") {
+			ACUtils.addSiteAndPage();
+		}
+
 		task ("Connect to AC") {
-			ACDXPSettings.connectDXPtoAnalyticsCloud(contacts = "True");
+			ACDXPSettings.connectDXPtoAnalyticsCloud(
+				contacts = "True",
+				siteName = "Site Name");
 		}
 
 		task ("Go to the people page in the sidebar") {
@@ -360,9 +366,11 @@ definition {
 
 		task ("Interact with the user who belongs to the user group and the user who does not belong") {
 			ACUtils.navigateToSitePageWithUser(
+				actionType = "View WC",
+				documentTitleList = "1,2,3,4,5,6,7",
 				emailList = "dxp@liferay.com,lxc@liferay.com",
-				pageName = "Home",
-				siteName = "guest");
+				pageName = "AC Page",
+				siteName = "Site Name");
 		}
 
 		task ("Close sessions") {
@@ -519,8 +527,14 @@ definition {
 				userScreenName = "ac");
 		}
 
+		task ("Add a new site with a public widget page") {
+			ACUtils.addSiteAndPage();
+		}
+
 		task ("Connect to AC") {
-			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(userGroup = "User Group Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloud(
+				siteName = "Site Name",
+				userGroup = "User Group Name");
 		}
 
 		task ("Go to the people page in the sidebar") {
@@ -541,9 +555,11 @@ definition {
 
 		task ("Interact with the user who belongs to the user group and the user who does not belong") {
 			ACUtils.navigateToSitePageWithUser(
+				actionType = "View WC",
+				documentTitleList = "1,2,3,4,5",
 				emailList = "ac@liferay.com,userea@liferay.com",
-				pageName = "Home",
-				siteName = "guest");
+				pageName = "AC Page",
+				siteName = "Site Name");
 		}
 
 		task ("Close sessions") {
@@ -553,7 +569,7 @@ definition {
 		}
 
 		task ("Go to Known Individuals tab") {
-			ACProperties.switchProperty(propertyName = ${propertyName});
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToIndividuals();
 
@@ -614,8 +630,14 @@ definition {
 				userScreenName = "ac");
 		}
 
+		task ("Add a new site with a public widget page") {
+			ACUtils.addSiteAndPage();
+		}
+
 		task ("Connect to AC") {
-			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(orgName = "Organization Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloud(
+				orgName = "Organization Name",
+				siteName = "Site Name");
 		}
 
 		task ("Go to the people page in the sidebar") {
@@ -636,9 +658,11 @@ definition {
 
 		task ("Interact with the user who belongs to the organization and the user who does not belong") {
 			ACUtils.navigateToSitePageWithUser(
+				actionType = "View WC",
+				documentTitleList = "1,2,3,4,5,6,7",
 				emailList = "ac@liferay.com,userea@liferay.com",
-				pageName = "Home",
-				siteName = "guest");
+				pageName = "AC Page",
+				siteName = "Site Name");
 		}
 
 		task ("Close sessions") {
@@ -648,7 +672,7 @@ definition {
 		}
 
 		task ("Go to Known Individuals tab") {
-			ACProperties.switchProperty(propertyName = ${propertyName});
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToIndividuals();
 

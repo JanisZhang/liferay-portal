@@ -165,11 +165,7 @@ public class PlacedOrderSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < placedOrder.getErrorMessages().length; i++) {
-				sb.append("\"");
-
-				sb.append(_escape(placedOrder.getErrorMessages()[i]));
-
-				sb.append("\"");
+				sb.append(_toJSON(placedOrder.getErrorMessages()[i]));
 
 				if ((i + 1) < placedOrder.getErrorMessages().length) {
 					sb.append(", ");
@@ -177,6 +173,20 @@ public class PlacedOrderSerDes {
 			}
 
 			sb.append("]");
+		}
+
+		if (placedOrder.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrder.getExternalReferenceCode()));
+
+			sb.append("\"");
 		}
 
 		if (placedOrder.getId() != null) {
@@ -216,6 +226,20 @@ public class PlacedOrderSerDes {
 
 			sb.append(
 				liferayToJSONDateFormat.format(placedOrder.getModifiedDate()));
+
+			sb.append("\"");
+		}
+
+		if (placedOrder.getName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrder.getName()));
 
 			sb.append("\"");
 		}
@@ -616,6 +640,15 @@ public class PlacedOrderSerDes {
 				String.valueOf(placedOrder.getErrorMessages()));
 		}
 
+		if (placedOrder.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(placedOrder.getExternalReferenceCode()));
+		}
+
 		if (placedOrder.getId() == null) {
 			map.put("id", null);
 		}
@@ -640,6 +673,13 @@ public class PlacedOrderSerDes {
 			map.put(
 				"modifiedDate",
 				liferayToJSONDateFormat.format(placedOrder.getModifiedDate()));
+		}
+
+		if (placedOrder.getName() == null) {
+			map.put("name", null);
+		}
+		else {
+			map.put("name", String.valueOf(placedOrder.getName()));
 		}
 
 		if (placedOrder.getOrderStatusInfo() == null) {
@@ -865,6 +905,151 @@ public class PlacedOrderSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "account")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "accountId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "author")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "channelId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "couponCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "createDate")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "currencyCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "errorMessages")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "lastPriceUpdateDate")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "modifiedDate")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "name")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderStatusInfo")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"orderTypeExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderTypeId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderUUID")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "paymentMethod")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "paymentMethodLabel")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "paymentStatus")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "paymentStatusInfo")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "paymentStatusLabel")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderBillingAddress")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderBillingAddressId")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderComments")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "placedOrderItems")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderShippingAddress")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderShippingAddressId")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "printedNote")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "purchaseOrderNumber")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippingMethod")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippingOption")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "summary")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "useAsBilling")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "valid")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "workflowStatusInfo")) {
+
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			PlacedOrder placedOrder, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -910,14 +1095,21 @@ public class PlacedOrderSerDes {
 			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setCustomFields(
-						(Map)PlacedOrderSerDes.toMap(
-							(String)jsonParserFieldValue));
+						(Map<String, ?>)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "errorMessages")) {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setErrorMessages(
 						toStrings((Object[])jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					placedOrder.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -938,6 +1130,11 @@ public class PlacedOrderSerDes {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setModifiedDate(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "name")) {
+				if (jsonParserFieldValue != null) {
+					placedOrder.setName((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "orderStatusInfo")) {
@@ -1153,36 +1350,7 @@ public class PlacedOrderSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -1192,6 +1360,38 @@ public class PlacedOrderSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

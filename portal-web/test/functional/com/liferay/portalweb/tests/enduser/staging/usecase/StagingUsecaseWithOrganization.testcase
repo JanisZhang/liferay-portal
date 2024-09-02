@@ -1,4 +1,4 @@
-@component-name = "portal-staging"
+@component-name = "portal-headless"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -75,7 +75,7 @@ definition {
 			User.logoutPG();
 
 			User.loginUserPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 
 			JSONStaging.enableLocalStaging(

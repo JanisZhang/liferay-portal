@@ -15,10 +15,15 @@ ViewObjectDefinitionsDisplayContext viewObjectDefinitionsDisplayContext = (ViewO
 
 <div>
 	<react:component
-		module="js/components/ViewObjectDefinitions/ViewObjectDefinitions"
+		module="{ViewObjectDefinitions} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
-				"baseResourceURL", String.valueOf(baseResourceURL)
+				"baseResourceURL",
+				URLBuilder.create(
+					String.valueOf(baseResourceURL)
+				).setParameter(
+					"objectFolderName", "Default"
+				).build()
 			).put(
 				"editObjectDefinitionURL", viewObjectDefinitionsDisplayContext.getEditObjectDefinitionURL()
 			).put(

@@ -6,13 +6,14 @@
 import ClayAutocomplete from '@clayui/autocomplete';
 import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
-import Autocomplete from 'commerce-frontend-js/components/autocomplete/Autocomplete';
+import {AutocompleteComponent as Autocomplete} from 'commerce-frontend-js';
 import {ManagementToolbar} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useRef} from 'react';
 
 import ChartContext from '../ChartContext';
 import {MODEL_TYPE_MAP} from '../utils/constants';
+import RootOrganizationFilter from './RootOrganizationFilter';
 
 function ManagementBar({onSearchSelected}) {
 	const {chartInstanceRef} = useContext(ChartContext);
@@ -22,83 +23,80 @@ function ManagementBar({onSearchSelected}) {
 	return (
 		<ManagementToolbar.Container className="org-chart-management-toolbar">
 			<ManagementToolbar.ItemList>
-				{Liferay.FeatureFlags['COMMERCE-12192'] && (
-					<ManagementToolbar.Item className="search">
-						<Autocomplete
-							apiUrl={[
-								'/o/headless-admin-user/v1.0/accounts',
-								'/o/headless-admin-user/v1.0/organizations?flatten=true',
-								'/o/headless-admin-user/v1.0/user-accounts',
-							]}
-							autoload={false}
-							customView={CustomAutocompleteRenderer}
-							customViewInsideDropDown={true}
-							fetchDataDebounce={300}
-							infiniteScrollMode={true}
-							initialLabel={
-								searchSelectedItemRef.current
-									? searchSelectedItemRef.current.name
-									: ''
-							}
-							initialValue={
-								searchSelectedItemRef.current
-									? searchSelectedItemRef.current.id
-									: ''
-							}
-							inputName="search"
-							itemsKey="id"
-							itemsLabel="name"
-							onValueUpdated={(currentValue, selectedItem) => {
-								let type;
+				<ManagementToolbar.Item className="root-org-filter">
+					<RootOrganizationFilter />
+				</ManagementToolbar.Item>
 
-								if (currentValue) {
-									if (
-										(searchSelectedItemRef.current &&
-											String(
-												searchSelectedItemRef.current.id
-											) === String(currentValue) &&
-											String(
-												searchSelectedItemRef.current
-													.randomId
-											) ===
-												String(
-													selectedItem.randomId
-												)) ||
-										!selectedItem.randomId
-									) {
-										return;
-									}
+				<ManagementToolbar.Item className="search">
+					<Autocomplete
+						apiUrl={[
+							'/o/headless-admin-user/v1.0/accounts',
+							'/o/headless-admin-user/v1.0/organizations?flatten=true',
+							'/o/headless-admin-user/v1.0/user-accounts',
+						]}
+						autoload={false}
+						customView={CustomAutocompleteRenderer}
+						customViewInsideDropDown={true}
+						fetchDataDebounce={300}
+						infiniteScrollMode={true}
+						initialLabel={
+							searchSelectedItemRef.current
+								? searchSelectedItemRef.current.name
+								: ''
+						}
+						initialValue={
+							searchSelectedItemRef.current
+								? searchSelectedItemRef.current.id
+								: ''
+						}
+						inputName="search"
+						itemsKey="id"
+						itemsLabel="name"
+						onValueUpdated={(currentValue, selectedItem) => {
+							let type;
 
-									searchSelectedItemRef.current = selectedItem;
-
-									if ('accountBriefs' in selectedItem) {
-										type = MODEL_TYPE_MAP.user;
-									}
-									else if (
-										'numberOfOrganizations' in selectedItem
-									) {
-										type = MODEL_TYPE_MAP.organization;
-									}
-									else if (
-										'parentAccountId' in selectedItem
-									) {
-										type = MODEL_TYPE_MAP.account;
-									}
-
-									onSearchSelected(
-										currentValue,
-										selectedItem.name,
-										type
-									);
+							if (currentValue) {
+								if (
+									(searchSelectedItemRef.current &&
+										String(
+											searchSelectedItemRef.current.id
+										) === String(currentValue) &&
+										String(
+											searchSelectedItemRef.current
+												.randomId
+										) === String(selectedItem.randomId)) ||
+									!selectedItem.randomId
+								) {
+									return;
 								}
-								else {
-									onSearchSelected(null, null, null);
+
+								searchSelectedItemRef.current = selectedItem;
+
+								if ('accountBriefs' in selectedItem) {
+									type = MODEL_TYPE_MAP.user;
 								}
-							}}
-							pageSize={10}
-						/>
-					</ManagementToolbar.Item>
-				)}
+								else if (
+									'numberOfOrganizations' in selectedItem
+								) {
+									type = MODEL_TYPE_MAP.organization;
+								}
+								else if ('parentAccountId' in selectedItem) {
+									type = MODEL_TYPE_MAP.account;
+								}
+
+								onSearchSelected(
+									currentValue,
+									selectedItem.name,
+									type
+								);
+							}
+							else {
+								onSearchSelected(null, null, null);
+							}
+						}}
+						pageSize={10}
+					/>
+				</ManagementToolbar.Item>
 
 				<ManagementToolbar.Item>
 					<ClayButton
@@ -106,6 +104,7 @@ function ManagementBar({onSearchSelected}) {
 						onClick={() =>
 							chartInstanceRef.current.collapseAllNodes()
 						}
+						size="sm"
 					>
 						{Liferay.Language.get('collapse-all')}
 					</ClayButton>

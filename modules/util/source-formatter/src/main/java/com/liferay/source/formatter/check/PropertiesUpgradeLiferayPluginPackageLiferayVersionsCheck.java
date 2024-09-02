@@ -21,9 +21,10 @@ public class PropertiesUpgradeLiferayPluginPackageLiferayVersionsCheck
 		return false;
 	}
 
+	@Override
 	protected String getLiferayVersion(String absolutePath) {
 		String upgradeToVersion = getAttributeValue(
-			SourceFormatterUtil.UPGRADE_TO_VERSION, absolutePath);
+			SourceFormatterUtil.UPGRADE_TO_LIFERAY_VERSION, absolutePath);
 
 		String[] upgradeToVersionParts = StringUtil.split(
 			upgradeToVersion, StringPool.PERIOD);
@@ -45,7 +46,7 @@ public class PropertiesUpgradeLiferayPluginPackageLiferayVersionsCheck
 		}
 
 		String upgradeToVersion = getAttributeValue(
-			SourceFormatterUtil.UPGRADE_TO_VERSION, absolutePath);
+			SourceFormatterUtil.UPGRADE_TO_LIFERAY_VERSION, absolutePath);
 
 		if (upgradeToVersion == null) {
 			return true;

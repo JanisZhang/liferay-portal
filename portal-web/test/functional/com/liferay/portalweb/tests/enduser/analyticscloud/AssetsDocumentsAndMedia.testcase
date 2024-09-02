@@ -46,19 +46,14 @@ definition {
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8419 | Test Summary: Document asset appears on list shows pages that the document exists on"
-	@ignore = "true"
 	@priority = 5
 	test AssertAppearsOnListShowsPagesDocumentsExists {
-
-		// AC Refactor: This test fails because of timing issues.
-		// AC Refactor ticket: LRAC-9343
-
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 
 		task ("Visit the document") {
 			ACUtils.navigateToSitePage(
 				actionType = "View DM",
-				documentTitleList = "DM AC Title",
+				documentTitleList = "DM AC Title,DM AC Title,DM AC Title,DM AC Title",
 				pageName = "AC Page",
 				siteName = "Site Name");
 		}
@@ -70,7 +65,7 @@ definition {
 		task ("Switch to new property in AC and go to DM tab") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = ${propertyName});
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToAssets();
 
@@ -90,16 +85,22 @@ definition {
 				dmDocumentTitle = "DM AC Title",
 				groupName = "Site Name");
 			var portalURL = PropsUtil.get("portal.url");
-			var siteName = TestCase.getSiteName(siteName = ${siteName});
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			ACAssets.viewAssetAppearsOnMetric(
 				canonicalURL = "${portalURL}/web/site-name/ac-page/-/document_library",
 				canonicalURLSuffix = "/view_file/${fileEntryId}",
 				cardTitle = "Asset Appears On",
-				pageName = "AC Page - Site Name - ${siteName}");
+				metricTitle = "Downloads",
+				pageName = "AC Page - Site Name - ${dataSourceName}");
 
-			// Can't assert this information because the asset takes too long to appear
-
+			ACAssets.viewAssetAppearsOnMetric(
+				canonicalURL = "${portalURL}/web/site-name/ac-page/-/document_library",
+				canonicalURLSuffix = "/view_file/${fileEntryId}",
+				cardTitle = "Asset Appears On",
+				index = 2,
+				metricTitle = "Previews",
+				pageName = "AC Page - Site Name - ${dataSourceName}");
 		}
 	}
 
@@ -211,12 +212,6 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8403 | Test Summary: Documents audience card shows expected amount of segmented and unsegmented individuals"
 	@priority = 5
 	test AudienceCardShowsExpectedAmountSegmentedAndUnsegmentedInDM {
-
-		// AC Quarantine reason: The percentage of the downloads does not match the correct one
-		// AC Quarantine ticket: LRAC-9806
-
-		property portal.upstream = "quarantine";
-
 		var userNames = "ac,ac2,ac3";
 		var emailList = "ac@liferay.com,ac2@liferay.com,ac3@liferay.com";
 
@@ -229,22 +224,26 @@ definition {
 					userScreenName = ${name});
 			}
 
-			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 		}
 
 		task ("Logout and login the AC") {
 			ACUtils.navigateToSitePageWithUser(
 				actionType = "Download DM",
-				documentTitleList = "DM AC Title",
+				documentTitleList = "DM AC Title,DM AC Title,DM AC Title,DM AC Title",
 				emailList = ${emailList},
 				pageName = "AC Page",
 				siteName = "Site Name");
 		}
 
+		task ("Close sessions") {
+			ACUtils.closeAllSessionsAndWait();
+		}
+
 		task ("Create segment") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = ${propertyName});
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToSegments();
 
@@ -257,27 +256,7 @@ definition {
 			ACSegments.saveSegment();
 		}
 
-		task ("Go to DXP") {
-			ACUtils.launchDXP(userEmailAddress = "ac@liferay.com");
-		}
-
-		task ("Login and download the document") {
-			ACUtils.navigateToSitePage(
-				actionType = "Download DM",
-				documentTitleList = "DM AC Title",
-				pageName = "AC Page",
-				siteName = "Site Name");
-		}
-
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-
-			ACUtils.launchAC();
-		}
-
-		task ("Assert segmented and unsegmented in documents and media") {
-			ACProperties.switchProperty(propertyName = ${propertyName});
-
+		task ("Go to Assets > Go to Documents and Media") {
 			ACNavigation.goToAssets();
 
 			ACNavigation.switchTab(tabName = "Documents and Media");
@@ -289,10 +268,12 @@ definition {
 			ACNavigation.openItem(itemName = "DM AC Title");
 		}
 
-		task ("Assert views by download number of know and anoymous users") {
+		task ("Assert views by download number of segmented and unsegmented users") {
 			ACUtils.assertAudienceCard(
 				index = 2,
 				percentageList = "66.67%,33.33%");
+
+			ACUtils.assertViewerSegmentsCard(segmentNameList = "Static Segment Test");
 		}
 	}
 
@@ -381,65 +362,6 @@ definition {
 			ACUtils.searchBar(searchItem = "Should not be here");
 
 			ACUtils.viewNoResultsMessage(noResultMessage = "There are no results found.");
-		}
-	}
-
-	@description = "Feature ID: Legacy | Automation ID: LRAC-8116 | Test Summary: Assert clicking a document in the documents and media list navigates to the documents overview page"
-	@priority = 5
-	test CanNavigatesToDocumentsOverviewPage {
-		property portal.upstream = "quarantine";
-
-		// AC Quarantine Reason: Test fix sites created twice
-		// AC Quarantine Ticket: LRAC-13677
-
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
-
-		JSONUser.addUser(
-			userEmailAddress = "ac@liferay.com",
-			userFirstName = "ac",
-			userLastName = "ac",
-			userScreenName = "ac");
-
-		ACDXPSettings.syncNewContactData();
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "ac@liferay.com",
-			userLoginFullName = "ac ac");
-
-		ACUtils.navigateToSitePage(
-			actionType = "Download DM",
-			documentTitleList = "DM AC Title,DM AC Title,DM AC Title",
-			pageName = "AC Page",
-			siteName = "Site Name");
-
-		ACUtils.closeAllSessionsAndWait();
-
-		ACUtils.launchAC();
-
-		ACProperties.switchProperty(propertyName = ${propertyName});
-
-		ACNavigation.goToAssets();
-
-		ACNavigation.switchTab(tabName = "Documents and Media");
-
-		ACTimeFilter.clickTimeFilterButton();
-
-		ACTimeFilter.setLast24Hours();
-
-		ACNavigation.openItem(itemName = "DM AC Title");
-
-		ACIndividualsDashboard.goToOverviewTab();
-
-		ACNavigation.viewActiveSwitchTab(tabName = "Overview");
-
-		for (var cardTitle : list "Visitors Behavior,Audience,Downloads by Location,Downloads by Technology,Asset Appears On") {
-			ACCards.viewCards(cardTitle = ${cardTitle});
-		}
-
-		for (var metric : list "Previews,Downloads") {
-			ACAssets.viewVisitorsBehaviorMetric(
-				metricTitle = ${metric},
-				metricValue = 3);
 		}
 	}
 
@@ -641,75 +563,6 @@ definition {
 		}
 	}
 
-	@description = "Feature ID: Legacy | Automation ID: LRAC-8412 | Test Summary: Documents location card shows downloads by the expected location"
-	@ignore = "true"
-	@priority = 5
-	test DocumentsLocationCardShowsDownloadsByExpectedLocation {
-
-		// AC Refactor: The location data should show the name of the country but it's actually showing "Local network"
-		// AC Refactor: Personas
-		// AC Refactor ticket: LRAC-9398
-
-		task ("Connect the DXP to AC") {
-			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
-		}
-
-		task ("Download the document") {
-			ACUtils.navigateToSitePage(
-				actionType = "Download DM",
-				documentTitleList = "DM AC Title",
-				pageName = "AC Page",
-				siteName = "Site Name");
-		}
-
-		task ("Get the ip country") {
-			var country = ACUtils.getIPCountry();
-		}
-
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
-
-		task ("Switch to new property in AC") {
-			ACUtils.launchAC();
-
-			ACProperties.switchProperty(propertyName = ${propertyName});
-		}
-
-		task ("Navigate to Documents and Media tab in Asset dashboard") {
-			ACNavigation.goToAssets();
-
-			ACNavigation.switchTab(tabName = "Documents and Media");
-		}
-
-		task ("Change the time filter to Last 24 hours") {
-			ACTimeFilter.clickTimeFilterButton();
-
-			ACTimeFilter.setLast24Hours();
-		}
-
-		task ("Navigate to the Overview tab in document report entry") {
-			ACNavigation.openItem(itemName = "DM AC Title");
-		}
-
-		task ("View the time filter of Downloads by Location map is Last 24 Hours") {
-			ACTimeFilter.assertCurrentTimeFilterRange(
-				cardName = "Downloads by Location",
-				timeFilterRange = "Last 24 hours");
-		}
-
-		task ("View the Downloads by location info shown in geomap") {
-			ACUtils.viewNoResultsMessageNotPresent(noResultMessage = "There are no downloads on any location on the selected period.");
-
-			ACCards.viewGeomapContainer(cardTitle = "Downloads by Location");
-
-			ACCards.viewGeomapTableText(
-				cardTitle = "Downloads by Location",
-				leftText = ${country},
-				rightText = "1 100%");
-		}
-	}
-
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8415 | Test Summary: Documents downloads by technology card shows downloads by the expected browser"
 	@priority = 5
 	test DocumentsTechnologyCardShowsViewsByExpectedBrowser {
@@ -806,13 +659,8 @@ definition {
 	}
 
 	@description = "Bug: ACP-274 | Automation ID: LRAC-10672 | Test Summary: Download a document by download button (enabled through show actions portlet configuration)"
-	@ignore = "true"
 	@priority = 4
 	test DownloadDocumentByDownloadButton {
-
-		// AC Refactor: Data doesn't appear on time
-		// AC Refactor ticket: LRAC-13994
-
 		task ("Connect the DXP to AC") {
 			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 		}
@@ -830,7 +678,7 @@ definition {
 		task ("Download the documents and media") {
 			PortletEntry.selectAll();
 
-			Click.clickNoMouseOver(locator1 = "Icon#DOWNLOAD");
+			Click.clickNoMouseOver(locator1 = "Button#DOWNLOAD_BUTTON_ON_PORTLET");
 		}
 
 		task ("Close sessions") {
@@ -1001,7 +849,7 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8118 | Test Summary: Document known individuals list shows the individuals who have viewed the documents"
 	@priority = 5
 	test KnownIndividualsListShowsIndividualsWhoHaveViewedDocuments {
-		var usernameList = "ac,liferay";
+		var usernameList = "ac,liferay,userac";
 		var emailList = "ac@liferay.com,liferay@liferay.com";
 		var nameList = "ac ac,liferay liferay";
 
@@ -1013,24 +861,18 @@ definition {
 				userScreenName = ${name});
 		}
 
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
+		ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 
 		ACUtils.navigateToSitePageWithUser(
 			actionType = "Download DM",
-			documentTitleList = "DM AC Title",
+			documentTitleList = "DM AC Title,DM AC Title,DM AC Title",
 			emailList = ${emailList},
 			pageName = "AC Page",
 			siteName = "Site Name");
 
-		JSONUser.addUser(
-			userEmailAddress = "userac@liferay.com",
-			userFirstName = "userac",
-			userLastName = "userac",
-			userScreenName = "userac");
-
 		ACUtils.navigateToSitePageWithUser(
-			actionType = "Download DM",
-			documentTitleList = "DM AC Title",
+			actionType = "View DM",
+			documentTitleList = "DM AC Title,DM AC Title,DM AC Title",
 			emailList = "userac@liferay.com",
 			pageName = "AC Page",
 			siteName = "Site Name");
@@ -1039,7 +881,7 @@ definition {
 
 		ACUtils.launchAC();
 
-		ACProperties.switchProperty(propertyName = ${propertyName});
+		ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 		ACNavigation.goToAssets();
 

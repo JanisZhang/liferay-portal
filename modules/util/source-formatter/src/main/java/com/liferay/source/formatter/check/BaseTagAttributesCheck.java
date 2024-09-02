@@ -41,7 +41,7 @@ public abstract class BaseTagAttributesCheck extends BaseFileCheck {
 				continue;
 			}
 
-			String s = stripQuotes(matcher.group(3));
+			String s = SourceUtil.stripQuotes(matcher.group(3));
 
 			if (s.contains(">")) {
 				continue;
@@ -556,7 +556,7 @@ public abstract class BaseTagAttributesCheck extends BaseFileCheck {
 	}
 
 	private static final Pattern _attributeNamePattern = Pattern.compile(
-		"[a-zA-Z][\\.-:\\w]*");
+		"[a-zA-Z][-\\.:\\w]*");
 	private static final Pattern _incorrectLineBreakPattern = Pattern.compile(
 		"\n(\t*)(<\\w[-_:\\w]*) (.*)([\"']|%=)\n[\\s\\S]*?>\n");
 	private static final Pattern _jspTaglibPattern = Pattern.compile(

@@ -64,7 +64,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								%>'
 								aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 								dropdownItems="<%= journalDisplayContext.getFolderInfoPanelDropdownItems(folder) %>"
-								propsTransformer="js/ElementsDefaultPropsTransformer"
+								propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 							/>
 						</li>
 					</ul>
@@ -142,7 +142,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								%>'
 								aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 								dropdownItems="<%= journalDisplayContext.getArticleInfoPanelDropdownItems(article) %>"
-								propsTransformer="js/ElementsDefaultPropsTransformer"
+								propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 							/>
 						</li>
 					</ul>
@@ -272,7 +272,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 				<ul class="list-group sidebar-list-group">
 
 					<%
-					for (JournalArticle articleVersion : JournalArticleServiceUtil.getArticlesByArticleId(article.getGroupId(), article.getArticleId(), 0, 10, new ArticleVersionComparator())) {
+					for (JournalArticle articleVersion : JournalArticleServiceUtil.getArticlesByArticleId(article.getGroupId(), article.getArticleId(), 0, 10, ArticleVersionComparator.getInstance(false))) {
 					%>
 
 						<li class="list-group-item list-group-item-flex p-0">
@@ -304,7 +304,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 									%>'
 									aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 									dropdownItems="<%= journalVersionTabDisplayContext.getArticleHistoryActionDropdownItems(articleVersion) %>"
-									propsTransformer="js/ElementsDefaultPropsTransformer"
+									propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 								/>
 							</clay:content-col>
 						</li>

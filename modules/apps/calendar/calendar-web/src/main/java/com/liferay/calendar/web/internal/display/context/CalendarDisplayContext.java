@@ -496,7 +496,7 @@ public class CalendarDisplayContext {
 		}
 
 		calendarResourceSearch.setOrderByComparator(
-			new CalendarResourceNameComparator(orderByAsc));
+			CalendarResourceNameComparator.getInstance(orderByAsc));
 		calendarResourceSearch.setOrderByType(getOrderByType());
 
 		CalendarResourceDisplayTerms displayTerms =
@@ -568,7 +568,7 @@ public class CalendarDisplayContext {
 		}
 
 		_userSearchContainer.setOrderByComparator(
-			new UserScreenNameComparator(orderByAsc));
+			UserScreenNameComparator.getInstance(orderByAsc));
 		_userSearchContainer.setOrderByType(getOrderByType());
 		_userSearchContainer.setResultsAndTotal(
 			() -> UserLocalServiceUtil.search(

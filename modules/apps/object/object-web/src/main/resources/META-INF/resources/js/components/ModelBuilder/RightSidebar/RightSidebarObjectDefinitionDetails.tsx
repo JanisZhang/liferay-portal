@@ -3,11 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {
-	API,
-	getLocalizableLabel,
-	openToast,
-} from '@liferay/object-js-components-web';
+import {API, openToast, stringUtils} from '@liferay/object-js-components-web';
 import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 import {useStore} from 'react-flow-renderer';
@@ -62,31 +58,24 @@ export function RightSidebarObjectDefinitionDetails({
 		setNonRelationshipObjectFieldsInfo,
 	] = useState<nonRelationshipObjectFieldsInfo[]>();
 
-	const [
-		{selectedObjectDefinitionNode, selectedObjectFolder},
-		dispatch,
-	] = useObjectFolderContext();
+	const [{selectedObjectDefinitionNode, selectedObjectFolder}, dispatch] =
+		useObjectFolderContext();
 
 	const store = useStore();
 
-	const {
-		errors,
-		handleChange,
-		handleValidate,
-		setValues,
-		values,
-	} = useObjectDetailsForm({
-		initialValues: {
-			defaultLanguageId: 'en_US',
-			externalReferenceCode: '',
-			id: 0,
-			label: {},
-			name: '',
-			pluralLabel: {},
-			titleObjectFieldName: '',
-		},
-		onSubmit: () => {},
-	});
+	const {errors, handleChange, handleValidate, setValues, values} =
+		useObjectDetailsForm({
+			initialValues: {
+				defaultLanguageId: 'en_US',
+				externalReferenceCode: '',
+				id: 0,
+				label: {},
+				name: '',
+				pluralLabel: {},
+				titleObjectFieldName: '',
+			},
+			onSubmit: () => {},
+		});
 
 	const isRootDescendantNode =
 		!!values.rootObjectDefinitionExternalReferenceCode &&
@@ -96,20 +85,22 @@ export function RightSidebarObjectDefinitionDetails({
 	useEffect(() => {
 		const makeFetch = async () => {
 			if (selectedObjectDefinitionNode) {
-				const selectedObjectDefinition = await API.getObjectDefinitionByExternalReferenceCode(
-					selectedObjectDefinitionNode.data
-						?.externalReferenceCode as string
-				);
+				const selectedObjectDefinition =
+					await API.getObjectDefinitionByExternalReferenceCode(
+						selectedObjectDefinitionNode.data
+							?.externalReferenceCode as string
+					);
 
-				const newNonRelationshipObjectFieldsInfo = selectedObjectDefinition.objectFields
-					.filter(
-						(objectField) =>
-							objectField.businessType !== 'Relationship'
-					)
-					.map((objectField) => ({
-						label: objectField.label,
-						name: objectField.name,
-					})) as nonRelationshipObjectFieldsInfo[];
+				const newNonRelationshipObjectFieldsInfo =
+					selectedObjectDefinition.objectFields
+						.filter(
+							(objectField) =>
+								objectField.businessType !== 'Relationship'
+						)
+						.map((objectField) => ({
+							label: objectField.label,
+							name: objectField.name,
+						})) as nonRelationshipObjectFieldsInfo[];
 
 				setNonRelationshipObjectFieldsInfo(
 					newNonRelationshipObjectFieldsInfo
@@ -119,6 +110,7 @@ export function RightSidebarObjectDefinitionDetails({
 		};
 
 		makeFetch();
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedObjectDefinitionNode?.id]);
 
@@ -138,17 +130,16 @@ export function RightSidebarObjectDefinitionDetails({
 			delete objectDefinition.objectViews;
 
 			if (objectDefinition.accountEntryRestricted) {
-				objectDefinition = setAccountRelationshipFieldMandatory(
-					objectDefinition
-				);
+				objectDefinition =
+					setAccountRelationshipFieldMandatory(objectDefinition);
 			}
 
 			try {
-				const updatedObjectDefinitionResponse = await API.patchObjectDefinitionById(
-					objectDefinition
-				);
+				const updatedObjectDefinitionResponse =
+					await API.patchObjectDefinitionById(objectDefinition);
 
-				const updatedObjectDefinition = (await updatedObjectDefinitionResponse.json()) as ObjectDefinition;
+				const updatedObjectDefinition =
+					(await updatedObjectDefinitionResponse.json()) as ObjectDefinition;
 
 				const {edges, nodes} = store.getState();
 
@@ -179,7 +170,7 @@ export function RightSidebarObjectDefinitionDetails({
 
 	const objectDefinitionNodeDetailsTitle = sub(
 		Liferay.Language.get('x-details'),
-		getLocalizableLabel(
+		stringUtils.getLocalizableLabel(
 			values.defaultLanguageId as Liferay.Language.Locale,
 			values?.label,
 			values?.name

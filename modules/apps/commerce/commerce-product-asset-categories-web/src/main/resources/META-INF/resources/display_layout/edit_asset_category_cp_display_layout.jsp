@@ -43,7 +43,7 @@ String layoutBreadcrumb = categoryCPDisplayLayoutDisplayContext.getLayoutBreadcr
 				<aui:fieldset>
 					<liferay-asset:asset-categories-error />
 
-					<h4><liferay-ui:message key="select-categories" /></h4>
+					<div class="h4"><liferay-ui:message key="select-categories" /></div>
 
 					<div id="<portlet:namespace />categoriesContainer"></div>
 
@@ -94,5 +94,5 @@ String layoutBreadcrumb = categoryCPDisplayLayoutDisplayContext.getLayoutBreadcr
 			"title", (assetCategory == null) ? null : assetCategory.getTitle(locale)
 		).build()
 	%>'
-	module="js/EditAssetCategoryCPDisplayLayout"
+	module="{EditAssetCategoryCPDisplayLayout} from commerce-product-asset-categories-web"
 />

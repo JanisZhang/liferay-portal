@@ -8,7 +8,13 @@
 <%@ include file="/init.jsp" %>
 
 <%
-DisplayPageDisplayContext displayPageDisplayContext = new DisplayPageDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
+DisplayPageDisplayContext displayPageDisplayContext = (DisplayPageDisplayContext)request.getAttribute(DisplayPageDisplayContext.class.getName());
+
+if (displayPageDisplayContext == null) {
+	InfoItemServiceRegistry infoItemServiceRegistry = (InfoItemServiceRegistry)request.getAttribute(InfoItemServiceRegistry.class.getName());
+
+	displayPageDisplayContext = new DisplayPageDisplayContext(request, infoItemServiceRegistry, liferayPortletRequest, liferayPortletResponse);
+}
 %>
 
 <clay:navigation-bar
@@ -33,7 +39,7 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 
 		<liferay-frontend:sidebar-panel
 			resourceURL="<%= sidebarPanelURL %>"
-			searchContainerId="displayPages"
+			searchContainerId="<%= displayPageManagementToolbarDisplayContext.getSearchContainerId() %>"
 			title='<%= LanguageUtil.get(request, "info-panel") %>'
 		>
 			<liferay-util:include page="/info_panel.jsp" servletContext="<%= application %>" />
@@ -62,7 +68,6 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 		</c:if>
 
 		<liferay-ui:search-container
-			id="displayPages"
 			searchContainer="<%= displayPageDisplayContext.getDisplayPagesSearchContainer() %>"
 		>
 			<liferay-ui:search-container-row
@@ -141,11 +146,21 @@ DisplayPageManagementToolbarDisplayContext displayPageManagementToolbarDisplayCo
 	</div>
 </c:if>
 
-	<portlet:actionURL name="/layout_page_template_admin/update_layout_page_template_entry_preview" var="updateLayoutPageTemplateEntryPreviewURL">
-		<portlet:param name="redirect" value="<%= currentURL %>" />
-	</portlet:actionURL>
+<portlet:actionURL name="/layout_page_template_admin/move_layout_page_template_entries_and_layout_page_template_collections" var="moveEntriesURL">
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:actionURL>
 
-	<aui:form action="<%= updateLayoutPageTemplateEntryPreviewURL %>" name="layoutPageTemplateEntryPreviewFm">
-		<aui:input name="layoutPageTemplateEntryId" type="hidden" />
-		<aui:input name="fileEntryId" type="hidden" />
-	</aui:form>
+<aui:form action="<%= moveEntriesURL %>" name="actionEntriesFm">
+	<aui:input name="layoutPageTemplateCollectionsIds" type="hidden" />
+	<aui:input name="layoutPageTemplateEntriesIds" type="hidden" />
+	<aui:input name="targetLayoutPageTemplateCollectionId" type="hidden" />
+</aui:form>
+
+<portlet:actionURL name="/layout_page_template_admin/update_layout_page_template_entry_preview" var="updateLayoutPageTemplateEntryPreviewURL">
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:actionURL>
+
+<aui:form action="<%= updateLayoutPageTemplateEntryPreviewURL %>" name="layoutPageTemplateEntryPreviewFm">
+	<aui:input name="layoutPageTemplateEntryId" type="hidden" />
+	<aui:input name="fileEntryId" type="hidden" />
+</aui:form>

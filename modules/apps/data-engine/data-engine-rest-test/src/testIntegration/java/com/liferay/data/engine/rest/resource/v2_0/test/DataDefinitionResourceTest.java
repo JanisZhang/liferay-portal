@@ -29,8 +29,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
-import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -39,17 +40,20 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -75,9 +79,8 @@ public class DataDefinitionResourceTest
 	}
 
 	@AfterClass
-	public static void tearDownClass() {
-		ModelResourceActionTestUtil.deleteModelResourceAction(
-			_resourceActionLocalService, _resourceActions);
+	public static void tearDownClass() throws Exception {
+		ModelResourceActionTestUtil.deleteModelResourceAction(_resourceActions);
 	}
 
 	@Override
@@ -495,7 +498,8 @@ public class DataDefinitionResourceTest
 			dataDefinitionResource.postDataDefinitionByContentType(
 				"INVALID",
 				DataDefinition.toDTO(
-					DataDefinitionTestUtil.read("data-definition.json")));
+					DataDefinitionTestUtil.read(
+						"localized-data-definition.json")));
 
 			Assert.fail("An exception must be thrown");
 		}
@@ -622,6 +626,60 @@ public class DataDefinitionResourceTest
 	@Override
 	@Test
 	public void testPutDataDefinition() throws Exception {
+		String originalName = PrincipalThreadLocal.getName();
+
+		try {
+			PrincipalThreadLocal.setName(TestPropsValues.getUserId());
+
+			Queue<Long> queue = new LinkedList<>();
+
+			ReflectionTestUtil.setFieldValue(
+				_dataDefinitionResource, "_ddmStructureLocalService",
+				ProxyUtil.newProxyInstance(
+					DDMStructureLocalService.class.getClassLoader(),
+					new Class<?>[] {DDMStructureLocalService.class},
+					(proxy, method, arguments) -> {
+						if (Objects.equals(
+								method.getName(), "updateStructure")) {
+
+							queue.add((Long)arguments[1]);
+						}
+
+						return method.invoke(
+							_ddmStructureLocalService, arguments);
+					}));
+
+			DataDefinition dataDefinition =
+				dataDefinitionResource.postSiteDataDefinitionByContentType(
+					testGroup.getGroupId(), _CONTENT_TYPE,
+					DataDefinition.toDTO(
+						DataDefinitionTestUtil.read("data-definition-1.json")));
+
+			dataDefinitionResource.postSiteDataDefinitionByContentType(
+				testGroup.getGroupId(), _CONTENT_TYPE,
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read(
+						"data-definition-2-linked-to-data-definition-1.json")));
+
+			dataDefinitionResource.postSiteDataDefinitionByContentType(
+				testGroup.getGroupId(), _CONTENT_TYPE,
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read(
+						"data-definition-3-linked-to-data-definition-2.json")));
+
+			_dataDefinitionResource.setContextUser(TestPropsValues.getUser());
+
+			_dataDefinitionResource.putDataDefinition(
+				dataDefinition.getId(),
+				com.liferay.data.engine.rest.dto.v2_0.DataDefinition.toDTO(
+					dataDefinition.toString()));
+
+			Assert.assertEquals(3, queue.size());
+		}
+		finally {
+			PrincipalThreadLocal.setName(originalName);
+		}
+
 		DataDefinition postDataDefinition =
 			testPutDataDefinition_addDataDefinition();
 
@@ -966,10 +1024,10 @@ public class DataDefinitionResourceTest
 	private static final String _CONTENT_TYPE = "test";
 
 	@Inject
-	private static ResourceActionLocalService _resourceActionLocalService;
+	private static ResourceActions _resourceActions;
 
 	@Inject
-	private static ResourceActions _resourceActions;
+	private DataDefinitionResource _dataDefinitionResource;
 
 	@Inject
 	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;

@@ -13,9 +13,9 @@ import './InputLocalized.scss';
 
 interface InputLocalizedProps {
 	className?: string;
-	disableFlag?: boolean;
 	disabled?: boolean;
 	error?: string;
+	helpMessage?: string;
 	id?: string;
 	label: string;
 	name?: string;
@@ -68,9 +68,9 @@ export function translationsNormalizer(
 }
 
 export default function InputLocalized({
-	disableFlag,
 	disabled,
 	error,
+	helpMessage,
 	id,
 	label,
 	name,
@@ -89,25 +89,18 @@ export default function InputLocalized({
 	const translations = translationsNormalizer(initialTranslations);
 
 	useEffect(() => {
-		if (disableFlag) {
-			const localizationButton = document.querySelector(
-				'.dropdown-toggle'
-			);
-
-			localizationButton?.setAttribute('disabled', 'true');
-		}
-
 		const locale =
 			availableLocales.find(({label}) => label === selectedLocale)! ??
 			availableLocales[0];
 		setLocale(locale);
-	}, [disableFlag, selectedLocale]);
+	}, [selectedLocale]);
 
 	return (
 		<FieldBase
 			className="input-localized"
 			disabled={disabled}
 			errorMessage={error}
+			helpMessage={helpMessage}
 			id={id}
 			label={label}
 			required={required}

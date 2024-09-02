@@ -111,6 +111,32 @@ public class Cart implements Cloneable, Serializable {
 
 	protected Address billingAddress;
 
+	public String getBillingAddressExternalReferenceCode() {
+		return billingAddressExternalReferenceCode;
+	}
+
+	public void setBillingAddressExternalReferenceCode(
+		String billingAddressExternalReferenceCode) {
+
+		this.billingAddressExternalReferenceCode =
+			billingAddressExternalReferenceCode;
+	}
+
+	public void setBillingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			billingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			billingAddressExternalReferenceCode =
+				billingAddressExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String billingAddressExternalReferenceCode;
+
 	public Long getBillingAddressId() {
 		return billingAddressId;
 	}
@@ -279,6 +305,27 @@ public class Cart implements Cloneable, Serializable {
 
 	protected String[] errorMessages;
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
 	public Long getId() {
 		return id;
 	}
@@ -339,6 +386,25 @@ public class Cart implements Cloneable, Serializable {
 	}
 
 	protected Date modifiedDate;
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
+		try {
+			name = nameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String name;
 
 	public CartComment[] getNotes() {
 		return notes;
@@ -616,6 +682,32 @@ public class Cart implements Cloneable, Serializable {
 	}
 
 	protected Address shippingAddress;
+
+	public String getShippingAddressExternalReferenceCode() {
+		return shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		String shippingAddressExternalReferenceCode) {
+
+		this.shippingAddressExternalReferenceCode =
+			shippingAddressExternalReferenceCode;
+	}
+
+	public void setShippingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			shippingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			shippingAddressExternalReferenceCode =
+				shippingAddressExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String shippingAddressExternalReferenceCode;
 
 	public Long getShippingAddressId() {
 		return shippingAddressId;

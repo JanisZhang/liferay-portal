@@ -3,22 +3,59 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-// @ts-ignore
-
-import {expect, mergeTests} from '@playwright/test';
+import {Page, expect, mergeTests} from '@playwright/test';
+import fs from 'fs/promises';
 import * as path from 'path';
+import {getComparator} from 'playwright-core/lib/utils';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {applicationsMenuPageTest} from '../../fixtures/applicationsMenuPageTest';
+import {dataApiHelpersTest} from '../../fixtures/dataApiHelpersTest';
 import {documentLibraryPagesTest} from '../../fixtures/documentLibraryPages.fixtures';
-import {exportImportPagesTest} from '../../fixtures/exportImportPages.fixtures';
 import {loginTest} from '../../fixtures/loginTest';
+import {productMenuPageTest} from '../../fixtures/productMenuPageTest';
+import getRandomString from '../../utils/getRandomString';
+import {getTempDir} from '../../utils/temp';
+import {exportImportPagesTest} from './fixtures/exportImportPagesTest';
+import {stagingPageTest} from './fixtures/stagingPageTest';
 
 export const test = mergeTests(
 	apiHelpersTest,
+	applicationsMenuPageTest,
+	dataApiHelpersTest,
 	documentLibraryPagesTest,
+	productMenuPageTest,
 	exportImportPagesTest,
+	stagingPageTest,
 	loginTest()
 );
+
+async function getSiteHomePageScreenshot(
+	page: Page,
+	siteKey: string,
+	{staging}: {staging: boolean}
+) {
+	await page.goto(`/web/${siteKey}${staging ? '-staging' : ''}`);
+
+	const url = page.url();
+
+	await page.goto(`${url}?p_l_mode=preview`, {waitUntil: 'load'});
+
+	await page.waitForFunction(() => document.fonts.ready);
+
+	const screenshot = await page.screenshot({
+		fullPage: true,
+		mask: [page.getByTestId('notificationsCount')],
+		path: path.join(
+			getTempDir(),
+			`${siteKey}-${staging ? 'staging' : 'live'}.png`
+		),
+	});
+
+	await page.goto(url);
+
+	return screenshot;
+}
 
 test('can import a folder with document type restrictions and workflow', async ({
 	apiHelpers,
@@ -42,4 +79,72 @@ test('can import a folder with document type restrictions and workflow', async (
 	await apiHelpers.headlessDelivery.deleteSiteDocumentsFolderByExternalReferenceCode(
 		'LPS-205933'
 	);
+});
+
+test('can import a lar file selecting some items to import', async ({
+	exportImportPage,
+}) => {
+	await exportImportPage.goToExport();
+
+	const exportName = 'MyExport-' + getRandomString();
+
+	await exportImportPage.createNewExportProcess(exportName);
+
+	await expect(
+		exportImportPage.page
+			.getByText(exportName)
+			.locator('../..')
+			.getByText('Successful')
+	).toBeVisible();
+
+	const exportFilePath =
+		await exportImportPage.downloadExportProcess(exportName);
+
+	await exportImportPage.goToImport();
+
+	await exportImportPage.createNewImportProcess(exportFilePath);
+
+	await expect(
+		exportImportPage.page
+			.getByText(exportName)
+			.locator('../../..')
+			.getByText('Successful')
+	).toBeVisible();
+});
+
+[{name: 'com.liferay.site.initializer.welcome'}].forEach(({name}) => {
+	test(`site initializer ${name} can be exported and imported`, async ({
+		apiHelpers,
+		page,
+		stagingPage,
+	}) => {
+		const site = await apiHelpers.headlessSite.createSite({
+			name,
+			templateKey: name,
+			templateType: 'site-initializer',
+		});
+
+		expect(site.name).toBeDefined();
+
+		apiHelpers.data.push({id: site.id, type: 'site'});
+
+		await stagingPage.goto(site.name);
+
+		await stagingPage.enableLocalStaging();
+
+		const comparator = getComparator('image/png');
+
+		const buffer = comparator(
+			await getSiteHomePageScreenshot(page, site.name, {staging: false}),
+			await getSiteHomePageScreenshot(page, site.name, {staging: true})
+		);
+
+		if (buffer !== null && buffer.diff !== undefined) {
+			const diffPath = path.join(getTempDir(), `${site.name}-diff.png`);
+			await fs.writeFile(diffPath, buffer.diff);
+			throw new Error(
+				`The live and staging pages differ. Check the screenshot diff at "${diffPath}".`
+			);
+		}
+	});
 });

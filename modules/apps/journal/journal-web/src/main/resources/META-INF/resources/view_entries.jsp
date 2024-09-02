@@ -102,6 +102,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 											href="<%= editURL %>"
 											label="<%= title %>"
 											title="<%= HtmlUtil.escape(title) %>"
+											translated="<%= false %>"
 										/>
 									</c:when>
 									<c:otherwise>
@@ -110,6 +111,15 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 										</span>
 									</c:otherwise>
 								</c:choose>
+
+								<c:if test="<%= !journalDisplayContext.hasGuestViewPermission(curArticle) %>">
+									<clay:icon
+										aria-label='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
+										cssClass="c-ml-2 c-mt-1 lfr-portal-tooltip text-4 text-secondary"
+										data-title='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
+										symbol="password-policies"
+									/>
+								</c:if>
 							</div>
 
 							<span class="c-pb-1 c-pt-1 text-secondary">
@@ -152,11 +162,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								String scheduledArticleMessage = journalDisplayContext.getScheduledArticleMessage(curArticle);
 								%>
 
-									<span
-										aria-label='<%= scheduledArticleMessage %>'
-										class="icon-tooltip lfr-portal-tooltip"
-										title='<%= scheduledArticleMessage %>'
-									>
+									<span aria-label="<%= scheduledArticleMessage %>" class="icon-tooltip lfr-portal-tooltip" title="<%= scheduledArticleMessage %>">
 										<clay:icon
 											cssClass="mt-0"
 											symbol="question-circle-full"
@@ -174,7 +180,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								%>'
 								aria-label='<%= LanguageUtil.format(request, "actions-for-x", HtmlUtil.escape(title), false) %>'
 								dropdownItems="<%= journalDisplayContext.getArticleActionDropdownItems(curArticle) %>"
-								propsTransformer="js/ElementsDefaultPropsTransformer"
+								propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>
@@ -186,7 +192,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 										"trashEnabled", componentContext.get("trashEnabled")
 									).build()
 								%>'
-								propsTransformer="js/ElementsDefaultPropsTransformer"
+								propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 								verticalCard="<%= new JournalArticleVerticalCard(curArticle, renderRequest, renderResponse, searchContainer.getRowChecker(), assetDisplayPageFriendlyURLProvider, trashHelper, journalDisplayContext) %>"
 							/>
 						</liferay-ui:search-container-column-text>
@@ -217,13 +223,23 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 										<clay:link
 											href="<%= editURL %>"
 											label="<%= title %>"
+											translated="<%= false %>"
 										/>
+
+										<c:if test="<%= !journalDisplayContext.hasGuestViewPermission(curArticle) %>">
+											<clay:icon
+												aria-label='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
+												cssClass="c-ml-1 c-mt-0 lfr-portal-tooltip text-4 text-secondary"
+												data-title='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
+												symbol="password-policies"
+											/>
+										</c:if>
 									</div>
 								</div>
 							</div>
 						</liferay-ui:search-container-column-text>
 
-						<c:if test='<%= !FeatureFlagManagerUtil.isEnabled("LPS-194763") %>'>
+						<c:if test="<%= !journalDisplayContext.hasHighlightedDDMStructure() %>">
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand table-cell-minw-200 text-truncate"
 								name="description"
@@ -276,81 +292,36 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							/>
 						</liferay-ui:search-container-column-text>
 
-						<c:choose>
-							<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPS-194763") %>'>
-								<c:if test="<%= !journalDisplayContext.isHighlightedDDMStructure() %>">
+						<c:if test="<%= !journalDisplayContext.isHighlightedDDMStructure() %>">
 
-									<%
-									DDMStructure ddmStructure = curArticle.getDDMStructure();
-									%>
+							<%
+							DDMStructure ddmStructure = curArticle.getDDMStructure();
+							%>
 
-									<liferay-ui:search-container-column-text
-										cssClass="table-cell-expand-smallest table-cell-minw-100"
-										name="type"
-										value="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
-									/>
-								</c:if>
+							<liferay-ui:search-container-column-text
+								cssClass="table-cell-expand-smallest table-cell-minw-100"
+								name="type"
+								value="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
+							/>
+						</c:if>
 
-								<liferay-ui:search-container-column-date
-									cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-									name="modified-date"
-									value="<%= curArticle.getModifiedDate() %>"
-								/>
+						<liferay-ui:search-container-column-date
+							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+							name="modified-date"
+							value="<%= curArticle.getModifiedDate() %>"
+						/>
 
-								<liferay-ui:search-container-column-date
-									cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-									name="display-date"
-									value="<%= curArticle.getDisplayDate() %>"
-								/>
+						<liferay-ui:search-container-column-date
+							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+							name="display-date"
+							value="<%= curArticle.getDisplayDate() %>"
+						/>
 
-								<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPS-202534") %>'>
-									<liferay-ui:search-container-column-date
-										cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-										name="create-date"
-										value="<%= curArticle.getCreateDate() %>"
-									/>
-								</c:if>
-							</c:when>
-							<c:otherwise>
-								<liferay-ui:search-container-column-text
-									cssClass="table-cell-expand-smallest"
-									name="modified"
-								>
-
-									<%
-									Date modifiedDate = curArticle.getModifiedDate();
-
-									String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true);
-									%>
-
-									<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription, HtmlUtil.escape(curArticle.getStatusByUserName())} %>" key="modified-x-ago-by-x" />
-								</liferay-ui:search-container-column-text>
-
-								<liferay-ui:search-container-column-date
-									cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-									name="display-date"
-									value="<%= curArticle.getDisplayDate() %>"
-								/>
-
-								<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPS-202534") %>'>
-									<liferay-ui:search-container-column-date
-										cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-										name="create-date"
-										value="<%= curArticle.getCreateDate() %>"
-									/>
-								</c:if>
-
-								<%
-								DDMStructure ddmStructure = curArticle.getDDMStructure();
-								%>
-
-								<liferay-ui:search-container-column-text
-									cssClass="table-cell-expand-smallest table-cell-minw-100"
-									name="type"
-									value="<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>"
-								/>
-							</c:otherwise>
-						</c:choose>
+							<liferay-ui:search-container-column-date
+								cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+								name="create-date"
+								value="<%= curArticle.getCreateDate() %>"
+							/>
 
 						<liferay-ui:search-container-column-text>
 							<clay:dropdown-actions
@@ -361,7 +332,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								%>'
 								aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 								dropdownItems="<%= journalDisplayContext.getArticleActionDropdownItems(curArticle) %>"
-								propsTransformer="js/ElementsDefaultPropsTransformer"
+								propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:otherwise>
@@ -405,13 +376,6 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 						<liferay-ui:search-container-column-text
 							colspan="<%= 2 %>"
 						>
-
-							<%
-							Date createDate = curFolder.getCreateDate();
-
-							String createDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
-							%>
-
 							<div class="d-flex">
 								<c:choose>
 									<c:when test="<%= rowURL.toString() != StringPool.BLANK %>">
@@ -420,6 +384,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 											href="<%= rowURL.toString() %>"
 											label="<%= HtmlUtil.escape(curFolder.getName()) %>"
 											title="<%= HtmlUtil.escape(curFolder.getName()) %>"
+											translated="<%= false %>"
 										/>
 									</c:when>
 									<c:otherwise>
@@ -431,7 +396,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							</div>
 
 							<span class="c-pt-1 text-secondary">
-								<liferay-ui:message arguments="<%= new String[] {createDateDescription, HtmlUtil.escape(curFolder.getUserName())} %>" key="modified-x-ago-by-x" />
+								<%= journalDisplayContext.getFolderSubtitle(curFolder) %>
 							</span>
 
 							<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
@@ -451,7 +416,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								%>'
 								aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 								dropdownItems="<%= journalDisplayContext.getFolderActionDropdownItems(curFolder) %>"
-								propsTransformer="js/ElementsDefaultPropsTransformer"
+								propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>
@@ -471,7 +436,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 									).build()
 								%>'
 								horizontalCard="<%= new JournalFolderHorizontalCard(curFolder, journalDisplayContext.getDisplayStyle(), renderRequest, renderResponse, searchContainer.getRowChecker(), trashHelper) %>"
-								propsTransformer="js/ElementsDefaultPropsTransformer"
+								propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:when>
@@ -501,17 +466,12 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 										<clay:link
 											href="<%= rowURL.toString() %>"
 											label="<%= HtmlUtil.escape(curFolder.getName()) %>"
+											translated="<%= false %>"
 										/>
 									</div>
 								</div>
 							</div>
 						</liferay-ui:search-container-column-text>
-
-						<liferay-ui:search-container-column-text
-							cssClass="table-cell-expand table-cell-minw-200 text-truncate"
-							name="description"
-							value="<%= HtmlUtil.escape(curFolder.getDescription()) %>"
-						/>
 
 						<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
 							<liferay-ui:search-container-column-text
@@ -536,6 +496,14 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							value="--"
 						/>
 
+						<c:if test="<%= !journalDisplayContext.isHighlightedDDMStructure() %>">
+							<liferay-ui:search-container-column-text
+								cssClass="table-cell-expand-smallest table-cell-minw-150"
+								name="type"
+								value='<%= LanguageUtil.get(request, "folder") %>'
+							/>
+						</c:if>
+
 						<liferay-ui:search-container-column-date
 							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
 							name="modified-date"
@@ -548,18 +516,10 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							value="--"
 						/>
 
-						<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPS-202534") %>'>
-							<liferay-ui:search-container-column-date
-								cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
-								name="create-date"
-								value="<%= curFolder.getCreateDate() %>"
-							/>
-						</c:if>
-
-						<liferay-ui:search-container-column-text
-							cssClass="table-cell-expand-smallest table-cell-minw-150"
-							name="type"
-							value='<%= LanguageUtil.get(request, "folder") %>'
+						<liferay-ui:search-container-column-date
+							cssClass="table-cell-expand-smallest table-cell-ws-nowrap"
+							name="create-date"
+							value="<%= curFolder.getCreateDate() %>"
 						/>
 
 						<liferay-ui:search-container-column-text>
@@ -571,7 +531,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 								%>'
 								aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 								dropdownItems="<%= journalDisplayContext.getFolderActionDropdownItems(curFolder) %>"
-								propsTransformer="js/ElementsDefaultPropsTransformer"
+								propsTransformer="{ElementsDefaultPropsTransformer} from journal-web"
 							/>
 						</liferay-ui:search-container-column-text>
 					</c:otherwise>
@@ -605,6 +565,6 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 			"searchContainerId", "articles"
 		).build()
 	%>'
-	module="js/Navigation"
+	module="{Navigation} from journal-web"
 	servletContext="<%= application %>"
 />

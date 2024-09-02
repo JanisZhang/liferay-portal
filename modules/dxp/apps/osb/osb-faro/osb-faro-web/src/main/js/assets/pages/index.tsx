@@ -8,14 +8,14 @@ import React, {lazy, Suspense} from 'react';
 import RouteNotFound from 'shared/components/RouteNotFound';
 import StatesRenderer from 'shared/components/states-renderer/StatesRenderer';
 import URLConstants from 'shared/util/url-constants';
+import {CSVType} from 'shared/components/download-report/utils';
 import {getMatchedRoute, Routes, toRoute} from 'shared/util/router';
 import {Router} from 'shared/types';
-import {sub} from 'shared/util/lang';
 import {Switch, useParams} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
-import {useDataSource} from 'shared/hooks';
+import {useCurrentUser} from 'shared/hooks/useCurrentUser';
+import {useDataSource} from 'shared/hooks/useDataSource';
 import {User} from 'shared/util/records';
-import {withCurrentUser} from 'shared/hoc';
 
 const BlogsList = lazy(
 	() => import(/* webpackChunkName: "BlogsList" */ './BlogsList')
@@ -73,10 +73,11 @@ interface IAssetsProps extends React.HTMLAttributes<HTMLElement> {
 	router: Router;
 }
 
-const Assets: React.FC<IAssetsProps> = ({className, currentUser, router}) => {
+const Assets: React.FC<IAssetsProps> = ({className, router}) => {
 	const {channelId, groupId} = useParams();
 	const dataSourceStates = useDataSource();
 	const {selectedChannel} = useChannelContext();
+	const currentUser = useCurrentUser();
 
 	const authorized = currentUser.isAdmin();
 
@@ -109,15 +110,8 @@ const Assets: React.FC<IAssetsProps> = ({className, currentUser, router}) => {
 					<div className='d-flex justify-content-end w-100'>
 						<DownloadCSVReport
 							disabled={dataSourceStates.empty}
-							infoMessage={
-								sub(
-									Liferay.Language.get(
-										'the-x-list-will-be-downloaded-respecting-the-current-ordering,-filter,-and-search-results.-please-verify-if-the-desired-changes-are-applied'
-									),
-									[Liferay.Language.get('blogs')]
-								) as string
-							}
-							type='blog'
+							type={CSVType.Blog}
+							typeLang={Liferay.Language.get('blogs')}
 						/>
 					</div>
 				</BasePage.SubHeader>
@@ -128,19 +122,10 @@ const Assets: React.FC<IAssetsProps> = ({className, currentUser, router}) => {
 					<div className='d-flex justify-content-end w-100'>
 						<DownloadCSVReport
 							disabled={dataSourceStates.empty}
-							infoMessage={
-								sub(
-									Liferay.Language.get(
-										'the-x-list-will-be-downloaded-respecting-the-current-ordering,-filter,-and-search-results.-please-verify-if-the-desired-changes-are-applied'
-									),
-									[
-										Liferay.Language.get(
-											'documents-and-media'
-										)
-									]
-								) as string
-							}
-							type='document'
+							type={CSVType.Document}
+							typeLang={Liferay.Language.get(
+								'documents-and-media'
+							)}
 						/>
 					</div>
 				</BasePage.SubHeader>
@@ -150,15 +135,8 @@ const Assets: React.FC<IAssetsProps> = ({className, currentUser, router}) => {
 					<div className='d-flex justify-content-end w-100'>
 						<DownloadCSVReport
 							disabled={dataSourceStates.empty}
-							infoMessage={
-								sub(
-									Liferay.Language.get(
-										'the-x-list-will-be-downloaded-respecting-the-current-ordering,-filter,-and-search-results.-please-verify-if-the-desired-changes-are-applied'
-									),
-									[Liferay.Language.get('forms')]
-								) as string
-							}
-							type='form'
+							type={CSVType.Form}
+							typeLang={Liferay.Language.get('forms')}
 						/>
 					</div>
 				</BasePage.SubHeader>
@@ -168,15 +146,8 @@ const Assets: React.FC<IAssetsProps> = ({className, currentUser, router}) => {
 					<div className='d-flex justify-content-end w-100'>
 						<DownloadCSVReport
 							disabled={dataSourceStates.empty}
-							infoMessage={
-								sub(
-									Liferay.Language.get(
-										'the-x-list-will-be-downloaded-respecting-the-current-ordering,-filter,-and-search-results.-please-verify-if-the-desired-changes-are-applied'
-									),
-									[Liferay.Language.get('web-content')]
-								) as string
-							}
-							type='journal'
+							type={CSVType.Journal}
+							typeLang={Liferay.Language.get('web-content')}
 						/>
 					</div>
 				</BasePage.SubHeader>
@@ -283,4 +254,4 @@ const Assets: React.FC<IAssetsProps> = ({className, currentUser, router}) => {
 	);
 };
 
-export default withCurrentUser(Assets);
+export default Assets;

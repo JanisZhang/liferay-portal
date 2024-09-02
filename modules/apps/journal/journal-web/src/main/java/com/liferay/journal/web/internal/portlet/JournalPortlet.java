@@ -57,6 +57,9 @@ import com.liferay.journal.util.JournalContent;
 import com.liferay.journal.util.JournalConverter;
 import com.liferay.journal.util.JournalHelper;
 import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
+import com.liferay.journal.web.internal.display.context.JournalDisplayContext;
+import com.liferay.journal.web.internal.display.context.JournalEditDDMStructuresDisplayContext;
+import com.liferay.journal.web.internal.display.context.JournalEditDDMTemplateDisplayContext;
 import com.liferay.journal.web.internal.helper.JournalDDMTemplateHelper;
 import com.liferay.journal.web.internal.portlet.action.ActionUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -71,6 +74,8 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.LiferayFileItemException;
@@ -146,18 +151,6 @@ public class JournalPortlet extends MVCPortlet {
 			AssetVocabularyLocalService.class.getName(),
 			_assetVocabularyLocalService);
 		renderRequest.setAttribute(TrashWebKeys.TRASH_HELPER, _trashHelper);
-
-		if (Objects.equals(
-				getPath(renderRequest, renderResponse),
-				"/edit_ddm_template.jsp")) {
-
-			renderRequest.setAttribute(
-				DDMTemplateHelper.class.getName(), _ddmTemplateHelper);
-			renderRequest.setAttribute(
-				JournalDDMTemplateHelper.class.getName(),
-				_journalDDMTemplateHelper);
-		}
-
 		renderRequest.setAttribute(
 			DDMFormValuesFactory.class.getName(), _ddmFormValuesFactory);
 		renderRequest.setAttribute(
@@ -190,10 +183,43 @@ public class JournalPortlet extends MVCPortlet {
 				JournalFileUploadsConfiguration.class.getName(),
 				_configurationProvider.getSystemConfiguration(
 					JournalFileUploadsConfiguration.class));
+
+			JournalWebConfiguration journalWebConfiguration =
+				_configurationProvider.getSystemConfiguration(
+					JournalWebConfiguration.class);
+
 			renderRequest.setAttribute(
 				JournalWebConfiguration.class.getName(),
-				_configurationProvider.getSystemConfiguration(
-					JournalWebConfiguration.class));
+				journalWebConfiguration);
+
+			renderRequest.setAttribute(
+				JournalDisplayContext.class.getName(),
+				JournalDisplayContext.create(
+					_assetDisplayPageFriendlyURLProvider, _itemSelector,
+					_journalHelper, journalWebConfiguration, renderRequest,
+					renderResponse, _resourcePermissionLocalService,
+					_roleLocalService, _trashHelper));
+
+			String path = getPath(renderRequest, renderResponse);
+
+			if (Objects.equals(path, "/data_engine/basic_info.jsp") ||
+				Objects.equals(path, "/edit_data_definition.jsp")) {
+
+				renderRequest.setAttribute(
+					JournalEditDDMStructuresDisplayContext.class.getName(),
+					new JournalEditDDMStructuresDisplayContext(
+						_portal, renderRequest, renderResponse));
+			}
+			else if (Objects.equals(
+						path, "/ddm_template/edit_properties.jsp") ||
+					 Objects.equals(path, "/edit_ddm_template.jsp")) {
+
+				renderRequest.setAttribute(
+					JournalEditDDMTemplateDisplayContext.class.getName(),
+					new JournalEditDDMTemplateDisplayContext(
+						_ddmTemplateHelper, _journalDDMTemplateHelper, _portal,
+						renderRequest, renderResponse));
+			}
 		}
 		catch (ConfigurationException configurationException) {
 			throw new PortletException(configurationException);
@@ -207,6 +233,17 @@ public class JournalPortlet extends MVCPortlet {
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws IOException, PortletException {
 
+		JournalWebConfiguration journalWebConfiguration = null;
+
+		try {
+			journalWebConfiguration =
+				_configurationProvider.getSystemConfiguration(
+					JournalWebConfiguration.class);
+		}
+		catch (ConfigurationException configurationException) {
+			throw new PortletException(configurationException);
+		}
+
 		resourceRequest.setAttribute(
 			AssetDisplayPageFriendlyURLProvider.class.getName(),
 			_assetDisplayPageFriendlyURLProvider);
@@ -215,22 +252,21 @@ public class JournalPortlet extends MVCPortlet {
 		resourceRequest.setAttribute(
 			ItemSelector.class.getName(), _itemSelector);
 		resourceRequest.setAttribute(
+			JournalDisplayContext.class.getName(),
+			JournalDisplayContext.create(
+				_assetDisplayPageFriendlyURLProvider, _itemSelector,
+				_journalHelper, journalWebConfiguration, resourceRequest,
+				resourceResponse, _resourcePermissionLocalService,
+				_roleLocalService, _trashHelper));
+		resourceRequest.setAttribute(
 			JournalHelper.class.getName(), _journalHelper);
+		resourceRequest.setAttribute(
+			JournalWebConfiguration.class.getName(), journalWebConfiguration);
 		resourceRequest.setAttribute(
 			TranslationPermission.class.getName(), _translationPermission);
 		resourceRequest.setAttribute(
 			TranslationURLProvider.class.getName(), _translationURLProvider);
 		resourceRequest.setAttribute(TrashWebKeys.TRASH_HELPER, _trashHelper);
-
-		try {
-			resourceRequest.setAttribute(
-				JournalWebConfiguration.class.getName(),
-				_configurationProvider.getSystemConfiguration(
-					JournalWebConfiguration.class));
-		}
-		catch (ConfigurationException configurationException) {
-			throw new PortletException(configurationException);
-		}
 
 		super.serveResource(resourceRequest, resourceResponse);
 	}
@@ -407,6 +443,12 @@ public class JournalPortlet extends MVCPortlet {
 		target = "(&(release.bundle.symbolic.name=com.liferay.journal.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
 	)
 	private Release _release;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 	@Reference
 	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;

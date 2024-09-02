@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-site-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -79,7 +79,7 @@ definition {
 				virtualHost = "www.able.com");
 
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com",
 				virtualHostsURL = "http://www.able.com:8080");
 		}
@@ -97,7 +97,6 @@ definition {
 	@priority = 5
 	test ExportImportSiteWithEmbeddedWCDInFragment {
 		property portal.acceptance = "true";
-		property testray.component.names = "Content Pages,Sites Administration";
 
 		task ("Add a fragment collection in site") {
 			JSONFragment.addFragmentCollection(
@@ -500,7 +499,7 @@ definition {
 
 			AssertVisible(
 				id = "image-square",
-				key_image = "document_1-jpg",
+				key_image = "Document_1",
 				key_imageDescription = "",
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_EDITABLE_FIELD_IMAGE_PROPERTIES");
 		}

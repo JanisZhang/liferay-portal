@@ -10,7 +10,9 @@ import com.liferay.asset.kernel.service.AssetCategoryServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyServiceUtil;
 import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.service.DLFileVersionLocalServiceUtil;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.util.DLURLHelperUtil;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
@@ -23,7 +25,11 @@ import com.liferay.document.library.web.internal.security.permission.resource.DL
 import com.liferay.document.library.web.internal.security.permission.resource.DLFolderPermission;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -34,12 +40,16 @@ import com.liferay.portal.kernel.repository.model.RepositoryEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
+import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.servlet.BrowserSnifferUtil;
 import com.liferay.portal.util.RepositoryUtil;
 
@@ -266,8 +276,9 @@ public class DLViewEntriesDisplayContext {
 	}
 
 	public String getThumbnailSrc(FileVersion fileVersion) throws Exception {
-		return DLURLHelperUtil.getThumbnailSrc(
-			fileVersion.getFileEntry(), fileVersion, _themeDisplay);
+		return _addDoAsUserIdParameter(
+			DLURLHelperUtil.getThumbnailSrc(
+				fileVersion.getFileEntry(), fileVersion, _themeDisplay));
 	}
 
 	public String getViewFileEntryURL(FileEntry fileEntry) {
@@ -282,6 +293,39 @@ public class DLViewEntriesDisplayContext {
 		).setParameter(
 			"fileEntryId", fileEntry.getFileEntryId()
 		).buildString();
+	}
+
+	public boolean hasApprovedVersion(long fileEntryId) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-10701")) {
+
+			return false;
+		}
+
+		DLFileVersion dlFileVersion =
+			DLFileVersionLocalServiceUtil.fetchLatestFileVersion(
+				fileEntryId, false, WorkflowConstants.STATUS_APPROVED);
+
+		if (dlFileVersion == null) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public boolean hasGuestViewPermission(FileEntry fileEntry)
+		throws PortalException {
+
+		if (_guestRole == null) {
+			_guestRole = RoleLocalServiceUtil.getRole(
+				fileEntry.getCompanyId(), RoleConstants.GUEST);
+		}
+
+		return ResourcePermissionLocalServiceUtil.hasResourcePermission(
+			fileEntry.getCompanyId(), DLFileEntry.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(fileEntry.getFileEntryId()), _guestRole.getRoleId(),
+			ActionKeys.VIEW);
 	}
 
 	public boolean isDescriptiveDisplayStyle() {
@@ -344,6 +388,17 @@ public class DLViewEntriesDisplayContext {
 
 	public boolean isVersioningStrategyOverridable() {
 		return _dlAdminDisplayContext.isVersioningStrategyOverridable();
+	}
+
+	private String _addDoAsUserIdParameter(String url) {
+		if (Validator.isNull(_themeDisplay.getDoAsUserId()) ||
+			Validator.isNull(url)) {
+
+			return url;
+		}
+
+		return HttpComponentsUtil.setParameter(
+			url, "doAsUserId", _themeDisplay.getDoAsUserId());
 	}
 
 	private long _getRepositoryId() {
@@ -424,6 +479,7 @@ public class DLViewEntriesDisplayContext {
 		_dlPortletInstanceSettingsHelper;
 	private final DLRequestHelper _dlRequestHelper;
 	private final DLTrashHelper _dlTrashHelper;
+	private Role _guestRole;
 	private Boolean _hasValidAssetVocabularies;
 	private final HttpServletRequest _httpServletRequest;
 	private final LiferayPortletRequest _liferayPortletRequest;

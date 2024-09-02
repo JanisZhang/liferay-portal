@@ -95,7 +95,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {shipmentByExternalReferenceCode(externalReferenceCode: ___){accountId, actions, carrier, createDate, customFields, expectedDate, externalReferenceCode, id, modifiedDate, orderId, shipmentItems, shippingAddress, shippingAddressId, shippingDate, shippingMethodId, shippingOptionName, status, trackingNumber, trackingURL, userName}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {shipmentByExternalReferenceCode(externalReferenceCode: ___){accountId, actions, carrier, createDate, customFields, expectedDate, externalReferenceCode, id, modifiedDate, orderExternalReferenceCode, orderId, shipmentItems, shippingAddress, shippingAddressId, shippingDate, shippingMethodId, shippingOptionName, status, trackingNumber, trackingURL, userName}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrive information of the given Shipment.")
 	public Shipment shipmentByExternalReferenceCode(
@@ -113,7 +113,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {shipment(shipmentId: ___){accountId, actions, carrier, createDate, customFields, expectedDate, externalReferenceCode, id, modifiedDate, orderId, shipmentItems, shippingAddress, shippingAddressId, shippingDate, shippingMethodId, shippingOptionName, status, trackingNumber, trackingURL, userName}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {shipment(shipmentId: ___){accountId, actions, carrier, createDate, customFields, expectedDate, externalReferenceCode, id, modifiedDate, orderExternalReferenceCode, orderId, shipmentItems, shippingAddress, shippingAddressId, shippingDate, shippingMethodId, shippingOptionName, status, trackingNumber, trackingURL, userName}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public Shipment shipment(@GraphQLName("shipmentId") Long shipmentId)
@@ -128,7 +128,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {shipmentByExternalReferenceCodeItem(externalReferenceCode: ___){actions, createDate, externalReferenceCode, id, modifiedDate, orderItemId, quantity, shipmentExternalReferenceCode, shipmentId, unitOfMeasureKey, userName, validateInventory, warehouseId}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {shipmentByExternalReferenceCodeItem(externalReferenceCode: ___){actions, createDate, externalReferenceCode, id, modifiedDate, orderItemExternalReferenceCode, orderItemId, quantity, shipmentExternalReferenceCode, shipmentId, unitOfMeasureKey, userName, validateInventory, warehouseExternalReferenceCode, warehouseId}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ShipmentItem shipmentByExternalReferenceCodeItem(
@@ -146,7 +146,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {shipmentItem(shipmentItemId: ___){actions, createDate, externalReferenceCode, id, modifiedDate, orderItemId, quantity, shipmentExternalReferenceCode, shipmentId, unitOfMeasureKey, userName, validateInventory, warehouseId}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {shipmentItem(shipmentItemId: ___){actions, createDate, externalReferenceCode, id, modifiedDate, orderItemExternalReferenceCode, orderItemId, quantity, shipmentExternalReferenceCode, shipmentId, unitOfMeasureKey, userName, validateInventory, warehouseExternalReferenceCode, warehouseId}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ShipmentItem shipmentItem(

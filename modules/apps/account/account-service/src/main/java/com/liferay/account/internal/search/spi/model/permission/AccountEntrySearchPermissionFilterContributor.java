@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.search.spi.model.permission.SearchPermissionFilterContributor;
+import com.liferay.portal.search.spi.model.permission.contributor.SearchPermissionFilterContributor;
 
 import java.util.HashSet;
 import java.util.List;
@@ -90,6 +90,9 @@ public class AccountEntrySearchPermissionFilterContributor
 				}
 
 				if (hasManageAvailableAccountsPermission ||
+					OrganizationPermissionUtil.contains(
+						permissionChecker, organization,
+						AccountActionKeys.EDIT_SUBORGANIZATIONS_ACCOUNTS) ||
 					OrganizationPermissionUtil.contains(
 						permissionChecker, organization,
 						AccountActionKeys.MANAGE_SUBORGANIZATIONS_ACCOUNTS)) {

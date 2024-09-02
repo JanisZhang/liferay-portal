@@ -52,7 +52,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -153,7 +153,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -181,7 +181,7 @@ definition {
 		task ("Given a simple replacement product with a SKU") {
 			CommerceJSONProductsAPI._addCommerceProduct(
 				catalogName = "Master",
-				productName = "Test Simple Product Replacement",
+				productName = "Test Simple Replacement Product",
 				productType = "Simple",
 				sku = "SKU1001");
 		}

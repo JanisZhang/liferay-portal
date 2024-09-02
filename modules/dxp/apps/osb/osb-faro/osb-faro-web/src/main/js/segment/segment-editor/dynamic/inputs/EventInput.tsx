@@ -1,13 +1,12 @@
 import AttributeConjunctionInput from './components/attribute-conjunction-input';
 import DateFilterConjunctionInput from './components/DateFilterConjunctionInput';
-import EventAttributeDefinitionsQuery, {
-	EventAttributeDefinitionsData,
-	EventAttributeDefinitionsVariables
-} from 'event-analysis/queries/EventAttributeDefinitionsQuery';
+import EventPropertiesQuery, {
+	EventPropertiesData,
+	EventPropertiesVariables
+} from '../queries/EventPropertiesQuery';
 import Form from 'shared/components/form';
 import OccurenceConjunctionInput from './components/OccurenceConjunctionInput';
-import React, {useEffect} from 'react';
-import {AttributeTypes} from 'event-analysis/utils/types';
+import React from 'react';
 import {Criterion, ISegmentEditorCustomInputBase} from '../utils/types';
 import {CustomValue} from 'shared/util/records';
 import {fromJS, Map} from 'immutable';
@@ -43,50 +42,14 @@ interface IEventInputProps extends ISegmentEditorCustomInputBase {
 
 const EventInput: React.FC<IEventInputProps> = ({
 	displayValue,
-	id,
 	onChange,
 	operatorRenderer: OperatorDropdown,
-	property: {entityName, id: eventDefinitionId, type},
+	property,
 	touched,
 	valid,
 	value: valueIMap
 }) => {
-	let _completedAnalytics = false;
-
-	useEffect(() => {
-		const {attributeValue, dateFilter, occurenceCount} = valid;
-
-		const inputsValid =
-			(isNil(attributeValue) || attributeValue) &&
-			(isNil(dateFilter) || dateFilter) &&
-			(isNil(occurenceCount) || occurenceCount);
-
-		if (!id && inputsValid && !_completedAnalytics) {
-			_completedAnalytics = true;
-
-			analytics.track('Dynamic Segment Creation - Completed Attribute', {
-				entityName,
-				type
-			});
-		}
-	}, [valid]);
-
-	const result = useQuery<
-		EventAttributeDefinitionsData,
-		EventAttributeDefinitionsVariables
-	>(EventAttributeDefinitionsQuery, {
-		variables: {
-			eventDefinitionId,
-			keyword: '',
-			page: 0,
-			size: 25,
-			sort: {
-				column: NAME,
-				type: OrderByDirections.Ascending
-			},
-			type: AttributeTypes.Global
-		}
-	});
+	const {id: eventId, options} = property;
 
 	const getConjunctionDateFilterIMap = value => {
 		const conjunctionDateFilterIndex = getIndexFromPropertyName(
@@ -180,17 +143,53 @@ const EventInput: React.FC<IEventInputProps> = ({
 		getConjunctionDateFilterIMap(valueIMap) || Map({propertyName: 'day'})
 	).toJS();
 
+	if (
+		options.length &&
+		options.some(option => option.label === 'hidden' && option.value)
+	) {
+		return (
+			<div className='criteria-statement'>
+				<b className='non-existent-property-message'>
+					{Liferay.Language.get('custom-event-no-longer-exists')}
+				</b>
+			</div>
+		);
+	}
+
+	const result = useQuery<EventPropertiesData, EventPropertiesVariables>(
+		EventPropertiesQuery,
+		{
+			variables: {
+				eventId,
+				keyword: '',
+				page: 0,
+				size: 25,
+				sort: {
+					column: NAME,
+					type: OrderByDirections.Ascending
+				}
+			}
+		}
+	);
+
 	return (
 		<div className='criteria-statement'>
 			<SafeResults {...result} page={false} pageDisplay={false}>
 				{data => {
 					const attributes =
-						data?.eventAttributeDefinitions
-							?.eventAttributeDefinitions || [];
+						data?.eventProperties?.eventProperties || [];
 
 					return (
 						<>
 							<Form.Group autoFit>
+								<Form.GroupItem
+									className='font-weight-semibold text-secondary'
+									label
+									shrink
+								>
+									{Liferay.Language.get('individual')}
+								</Form.GroupItem>
+
 								<OperatorDropdown />
 
 								<Form.GroupItem
@@ -230,32 +229,39 @@ const EventInput: React.FC<IEventInputProps> = ({
 								/>
 							</Form.Group>
 
-							<Form.Group autoFit>
-								<Form.GroupItem
-									className='conjunction'
-									label
-									shrink
-								>
-									{Liferay.Language.get('where-fragment')}
-								</Form.GroupItem>
+							{!!attributes.length && (
+								<Form.Group autoFit>
+									<Form.GroupItem
+										className='conjunction'
+										label
+										shrink
+									>
+										{Liferay.Language.get(
+											'where-attribute-fragment'
+										)}
+									</Form.GroupItem>
 
-								<AttributeConjunctionInput
-									attributes={attributes}
-									conjunctionCriterion={getFilterCriterionIMap(
-										valueIMap,
-										1
-									).toJS()}
-									onChange={handleAttributeConjunctionChange}
-									touched={{
-										attribute: touched.attribute,
-										attributeValue: touched.attributeValue
-									}}
-									valid={{
-										attribute: valid.attribute,
-										attributeValue: valid.attributeValue
-									}}
-								/>
-							</Form.Group>
+									<AttributeConjunctionInput
+										attributes={attributes}
+										conjunctionCriterion={getFilterCriterionIMap(
+											valueIMap,
+											1
+										).toJS()}
+										onChange={
+											handleAttributeConjunctionChange
+										}
+										touched={{
+											attribute: touched.attribute,
+											attributeValue:
+												touched.attributeValue
+										}}
+										valid={{
+											attribute: valid.attribute,
+											attributeValue: valid.attributeValue
+										}}
+									/>
+								</Form.Group>
+							)}
 						</>
 					);
 				}}

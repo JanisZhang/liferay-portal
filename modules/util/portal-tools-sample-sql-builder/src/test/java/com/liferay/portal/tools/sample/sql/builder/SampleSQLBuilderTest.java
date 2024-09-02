@@ -161,6 +161,8 @@ public class SampleSQLBuilderTest {
 		properties.put(BenchmarksPropsKeys.MAX_JOURNAL_ARTICLE_SIZE, "1");
 		properties.put(
 			BenchmarksPropsKeys.MAX_JOURNAL_ARTICLE_VERSION_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_LIST_TYPE_DEFINITION_COUNT, "1");
+		properties.put(BenchmarksPropsKeys.MAX_LIST_TYPE_ENTRY_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_MB_CATEGORY_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_MB_MESSAGE_COUNT, "1");
 		properties.put(BenchmarksPropsKeys.MAX_MB_THREAD_COUNT, "1");
@@ -205,7 +207,7 @@ public class SampleSQLBuilderTest {
 			sb.append(StringPool.NEW_LINE);
 		}
 
-		db.runSQLTemplateString(connection, sb.toString(), true);
+		db.runSQLTemplate(connection, sb.toString(), true);
 	}
 
 	private void _loadHypersonic(String outputDir) throws Exception {

@@ -27,10 +27,12 @@ const TextWithProvider = (props) => (
 );
 
 describe('Field Text', () => {
+
 	// eslint-disable-next-line no-console
 	const originalWarn = console.warn;
 
 	beforeAll(() => {
+
 		// eslint-disable-next-line no-console
 		console.warn = (...args) => {
 			if (/DataProvider: Trying/.test(args[0])) {
@@ -45,6 +47,7 @@ describe('Field Text', () => {
 	});
 
 	afterAll(() => {
+
 		// eslint-disable-next-line no-console
 		console.warn = originalWarn;
 
@@ -173,6 +176,35 @@ describe('Field Text', () => {
 		});
 
 		expect(container).toMatchSnapshot();
+	});
+
+	it('does not render html autocomplete attribute', () => {
+		const {container} = render(<TextWithProvider {...defaultTextConfig} />);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		const textInputTag = container.querySelector('.ddm-field-text');
+
+		expect(textInputTag.hasAttribute('autocomplete')).toBe(false);
+	});
+
+	it('renders html autocomplete attribute', () => {
+		const {container} = render(
+			<TextWithProvider
+				{...defaultTextConfig}
+				htmlAutocompleteAttribute="name"
+			/>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		const textInputTag = container.querySelector('.ddm-field-text');
+
+		expect(textInputTag.getAttribute('autocomplete')).toBe('name');
 	});
 
 	it('renders autocomplete dropdown menu', () => {
@@ -373,10 +405,6 @@ describe('Field Text', () => {
 			},
 		});
 
-		act(() => {
-			jest.runAllTimers();
-		});
-
 		expect(input.value).toEqual('FieldReference');
 	});
 
@@ -398,10 +426,6 @@ describe('Field Text', () => {
 			target: {
 				value: '+9 (129) 993-9999',
 			},
-		});
-
-		act(() => {
-			jest.runAllTimers();
 		});
 
 		expect(input.value).toEqual('+9 (9) 99-9999');

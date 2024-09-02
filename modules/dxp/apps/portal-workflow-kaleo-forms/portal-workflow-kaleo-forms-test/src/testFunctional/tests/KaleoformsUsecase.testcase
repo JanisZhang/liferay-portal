@@ -1,4 +1,4 @@
-@component-name = "portal-workflow-ee"
+@component-name = "portal-bpm-ee"
 definition {
 
 	property portal.release = "true";
@@ -132,6 +132,7 @@ definition {
 
 	@priority = 3
 	test AssertEditFormNotUsedAsCreateForm {
+		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -238,6 +239,8 @@ definition {
 	@description = "This is a use case for LPS-26982."
 	@priority = 4
 	test AssertFieldValuesNotLostDuringReviewTask {
+		property portal.upstream = "quarantine";
+
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
 			portlet = "Kaleo Forms Admin");
@@ -521,7 +524,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
-		JSONRole.addRegularRole(roleTitle = "KaleoRegRole Name");
+		JSONRole.addRegularRole(roleKey = "KaleoRegRole Name");
 
 		JSONRole.assignRoleToUser(
 			roleTitle = "KaleoRegRole Name",
@@ -1048,7 +1051,7 @@ definition {
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		JSONRole.addRegularRole(roleTitle = "KaleoRegRole Name");
+		JSONRole.addRegularRole(roleKey = "KaleoRegRole Name");
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
@@ -1198,7 +1201,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
-		JSONRole.addRegularRole(roleTitle = "KaleoRegRole Name");
+		JSONRole.addRegularRole(roleKey = "KaleoRegRole Name");
 
 		JSONRole.assignRoleToUser(
 			roleTitle = "KaleoRegRole Name",
@@ -1408,6 +1411,8 @@ definition {
 
 	@priority = 3
 	test CompleteProcessAndAssertFieldOrder {
+		property portal.upstream = "quarantine";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(

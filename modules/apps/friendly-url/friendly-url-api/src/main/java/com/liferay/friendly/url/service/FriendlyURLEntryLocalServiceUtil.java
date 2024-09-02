@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -572,6 +573,17 @@ public class FriendlyURLEntryLocalServiceUtil {
 			urlTitleMap);
 	}
 
+	public static FriendlyURLEntry updateFriendlyURLEntry(
+			long friendlyURLEntryId, long classNameId, long classPK,
+			String defaultLanguageId, Map<String, String> urlTitleMap,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateFriendlyURLEntry(
+			friendlyURLEntryId, classNameId, classPK, defaultLanguageId,
+			urlTitleMap, serviceContext);
+	}
+
 	public static com.liferay.friendly.url.model.FriendlyURLEntryLocalization
 			updateFriendlyURLEntryLocalization(
 				FriendlyURLEntry friendlyURLEntry, String languageId,
@@ -642,13 +654,12 @@ public class FriendlyURLEntryLocalServiceUtil {
 	}
 
 	public static FriendlyURLEntryLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(FriendlyURLEntryLocalService service) {
-		_service = service;
-	}
-
-	private static volatile FriendlyURLEntryLocalService _service;
+	private static final Snapshot<FriendlyURLEntryLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			FriendlyURLEntryLocalServiceUtil.class,
+			FriendlyURLEntryLocalService.class);
 
 }

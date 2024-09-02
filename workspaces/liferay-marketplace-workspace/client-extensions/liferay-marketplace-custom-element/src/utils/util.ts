@@ -7,8 +7,8 @@ import accountPlaceholder from '../assets/images/account_placeholder.png';
 import appPlaceholder from '../assets/images/app_placeholder.png';
 import {
 	createProductSpecification,
+	getProductSpecifications,
 	getSiteStructuredContentByKey,
-	getSpecifications,
 	updateProductSpecification,
 } from './api';
 
@@ -224,63 +224,33 @@ export function removeProtocolURL(url: string) {
 	return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').split('/')[0];
 }
 
-async function submitSpecification(
-	appId: string,
+export async function submitSpecification(
 	productId: number,
-	productSpecificationId: number,
-	key: string,
-	title: string,
-	value: string
-): Promise<number> {
-	const specifications = await getSpecifications();
-
-	const specification = specifications.items.map(
-		({specificationKey}: {specificationKey: string}) =>
-			specificationKey === key
-	);
-
-	if (productSpecificationId) {
-		updateProductSpecification({
-			body: {
-				specificationKey: key,
-				value: {en_US: value},
-			},
-			id: productSpecificationId,
-		});
-
-		return -1;
-	}
-	else {
-		const {id} = await createProductSpecification({
-			body: {
-				productId,
-				specificationId: specification.id,
-				specificationKey: key,
-				value: {en_US: value},
-			},
-			id: appId,
-		});
-
-		return id;
-	}
-}
-
-export async function saveSpecification(
-	appId: string,
-	productId: number,
-	productSpecificationId: number,
-	key: string,
-	title: string,
-	value: string
+	productSpecifications: {specificationKey: string; value: string}[]
 ) {
-	return await submitSpecification(
-		appId,
-		productId,
-		productSpecificationId,
-		key,
-		title,
-		value
-	);
+	const dataSpecificationList = await getProductSpecifications({
+		appProductId: productId as number,
+	});
+
+	for (const productSpecification of productSpecifications) {
+		const dataSpecification = dataSpecificationList?.find(
+			(specification) =>
+				specification?.specificationKey ===
+				productSpecification.specificationKey
+		);
+
+		const fn = dataSpecification?.id
+			? updateProductSpecification
+			: createProductSpecification;
+
+		await fn({
+			body: {
+				specificationKey: productSpecification.specificationKey,
+				value: {en_US: productSpecification.value},
+			},
+			id: dataSpecification?.id || productId,
+		});
+	}
 }
 
 export async function submitFile({
@@ -318,8 +288,8 @@ export async function submitBase64EncodedFile({
 	title,
 }: FileRequest) {
 	return new Promise((resolve, reject) => {
-		let attachmentId;
 		const reader = new FileReader();
+
 		reader.addEventListener(
 			'load',
 			async () => {
@@ -357,12 +327,31 @@ export async function submitBase64EncodedFile({
 						reject(error);
 					});
 
-					attachmentId = response?.id;
-					resolve(attachmentId);
+					resolve(response);
 				}
 			},
 			false
 		);
 		reader.readAsDataURL(file as File);
 	});
+}
+
+export function safeJSONParse<T = any>(
+	value: string | null,
+	defaultValue: unknown = null
+): T {
+	if (defaultValue && typeof value !== 'string') {
+		return defaultValue as T;
+	}
+
+	try {
+		return JSON.parse(value as string);
+	}
+	catch (error) {
+		return defaultValue as T;
+	}
+}
+
+export function isCloudEnvironment() {
+	return window.location.protocol === 'https:';
 }

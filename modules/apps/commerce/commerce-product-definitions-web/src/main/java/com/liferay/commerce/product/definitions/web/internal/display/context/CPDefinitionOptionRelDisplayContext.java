@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import javax.portlet.PortletURL;
 
@@ -130,7 +131,11 @@ public class CPDefinitionOptionRelDisplayContext
 				new SystemSettingsLocator(CPConstants.SERVICE_NAME_CP_OPTION));
 
 		return StringUtil.merge(
-			cpOptionConfiguration.allowedCommerceOptionTypes(),
+			ArrayUtil.filter(
+				cpOptionConfiguration.allowedCommerceOptionTypes(),
+				commerceOptionType -> !Objects.equals(
+					CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
+					commerceOptionType)),
 			StringPool.COMMA);
 	}
 

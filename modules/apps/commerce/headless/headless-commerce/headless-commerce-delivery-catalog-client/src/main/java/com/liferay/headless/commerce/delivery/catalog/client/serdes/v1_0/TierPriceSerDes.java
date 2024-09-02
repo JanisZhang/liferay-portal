@@ -84,6 +84,30 @@ public class TierPriceSerDes {
 			sb.append("\"");
 		}
 
+		if (tierPrice.getPricingQuantityPrice() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pricingQuantityPrice\": ");
+
+			sb.append(tierPrice.getPricingQuantityPrice());
+		}
+
+		if (tierPrice.getPricingQuantityPriceFormatted() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pricingQuantityPriceFormatted\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(tierPrice.getPricingQuantityPriceFormatted()));
+
+			sb.append("\"");
+		}
+
 		if (tierPrice.getQuantity() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -135,6 +159,24 @@ public class TierPriceSerDes {
 				String.valueOf(tierPrice.getPriceFormatted()));
 		}
 
+		if (tierPrice.getPricingQuantityPrice() == null) {
+			map.put("pricingQuantityPrice", null);
+		}
+		else {
+			map.put(
+				"pricingQuantityPrice",
+				String.valueOf(tierPrice.getPricingQuantityPrice()));
+		}
+
+		if (tierPrice.getPricingQuantityPriceFormatted() == null) {
+			map.put("pricingQuantityPriceFormatted", null);
+		}
+		else {
+			map.put(
+				"pricingQuantityPriceFormatted",
+				String.valueOf(tierPrice.getPricingQuantityPriceFormatted()));
+		}
+
 		if (tierPrice.getQuantity() == null) {
 			map.put("quantity", null);
 		}
@@ -158,6 +200,34 @@ public class TierPriceSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "currency")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "price")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "priceFormatted")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "pricingQuantityPrice")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "pricingQuantityPriceFormatted")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "quantity")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			TierPrice tierPrice, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -176,6 +246,22 @@ public class TierPriceSerDes {
 			else if (Objects.equals(jsonParserFieldName, "priceFormatted")) {
 				if (jsonParserFieldValue != null) {
 					tierPrice.setPriceFormatted((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "pricingQuantityPrice")) {
+
+				if (jsonParserFieldValue != null) {
+					tierPrice.setPricingQuantityPrice(
+						Double.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "pricingQuantityPriceFormatted")) {
+
+				if (jsonParserFieldValue != null) {
+					tierPrice.setPricingQuantityPriceFormatted(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "quantity")) {
@@ -216,36 +302,7 @@ public class TierPriceSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -255,6 +312,38 @@ public class TierPriceSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

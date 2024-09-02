@@ -47,7 +47,7 @@ public class CommercePaymentEntryServiceImpl
 	public CommercePaymentEntry addCommercePaymentEntry(
 			long classNameId, long classPK, long commerceChannelId,
 			BigDecimal amount, String callbackURL, String cancelURL,
-			String currencyCode, String languageId, String note,
+			String currencyCode, String languageId, String note, String payload,
 			String paymentIntegrationKey, int paymentIntegrationType,
 			String reasonKey, String transactionCode, int type,
 			ServiceContext serviceContext)
@@ -64,7 +64,7 @@ public class CommercePaymentEntryServiceImpl
 
 		return commercePaymentEntryLocalService.addCommercePaymentEntry(
 			getUserId(), classNameId, classPK, commerceChannelId, amount,
-			callbackURL, cancelURL, currencyCode, languageId, note,
+			callbackURL, cancelURL, currencyCode, languageId, note, payload,
 			paymentIntegrationKey, paymentIntegrationType, reasonKey,
 			transactionCode, type, serviceContext);
 	}
@@ -74,10 +74,10 @@ public class CommercePaymentEntryServiceImpl
 			String externalReferenceCode, long classNameId, long classPK,
 			long commerceChannelId, BigDecimal amount, String callbackURL,
 			String cancelURL, String currencyCode, String errorMessages,
-			String languageId, String note, String paymentIntegrationKey,
-			int paymentIntegrationType, int paymentStatus, String reasonKey,
-			String redirectURL, String transactionCode, int type,
-			ServiceContext serviceContext)
+			String languageId, String note, String payload,
+			String paymentIntegrationKey, int paymentIntegrationType,
+			int paymentStatus, String reasonKey, String redirectURL,
+			String transactionCode, int type, ServiceContext serviceContext)
 		throws PortalException {
 
 		CommercePaymentEntry commercePaymentEntry =
@@ -105,7 +105,7 @@ public class CommercePaymentEntryServiceImpl
 		return commercePaymentEntryLocalService.addOrUpdateCommercePaymentEntry(
 			externalReferenceCode, getUserId(), classNameId, classPK,
 			commerceChannelId, amount, callbackURL, cancelURL, currencyCode,
-			errorMessages, languageId, note, paymentIntegrationKey,
+			errorMessages, languageId, note, payload, paymentIntegrationKey,
 			paymentIntegrationType, paymentStatus, reasonKey, redirectURL,
 			transactionCode, type, serviceContext);
 	}
@@ -202,6 +202,26 @@ public class CommercePaymentEntryServiceImpl
 	}
 
 	@Override
+	public int getCommercePaymentEntriesCount(
+			long companyId, long classNameId, long classPK, int type)
+		throws PortalException {
+
+		PermissionChecker permissionChecker = getPermissionChecker();
+
+		if (!permissionChecker.hasPermission(
+				null, CommercePaymentEntry.class.getName(), companyId,
+				ActionKeys.VIEW)) {
+
+			throw new PrincipalException.MustHavePermission(
+				permissionChecker, CommercePaymentEntry.class.getName(), 0,
+				ActionKeys.VIEW);
+		}
+
+		return commercePaymentEntryLocalService.getCommercePaymentEntriesCount(
+			companyId, classNameId, classPK, type);
+	}
+
+	@Override
 	public CommercePaymentEntry getCommercePaymentEntry(
 			long commercePaymentEntryId)
 		throws PortalException {
@@ -249,9 +269,10 @@ public class CommercePaymentEntryServiceImpl
 			String externalReferenceCode, long commercePaymentEntryId,
 			long commerceChannelId, BigDecimal amount, String callbackURL,
 			String cancelURL, String currencyCode, String errorMessages,
-			String languageId, String note, String paymentIntegrationKey,
-			int paymentIntegrationType, int paymentStatus, String reasonKey,
-			String redirectURL, String transactionCode, int type)
+			String languageId, String note, String payload,
+			String paymentIntegrationKey, int paymentIntegrationType,
+			int paymentStatus, String reasonKey, String redirectURL,
+			String transactionCode, int type)
 		throws PortalException {
 
 		_commercePaymentEntryModelResourcePermission.check(
@@ -260,8 +281,9 @@ public class CommercePaymentEntryServiceImpl
 		return commercePaymentEntryLocalService.updateCommercePaymentEntry(
 			externalReferenceCode, commercePaymentEntryId, commerceChannelId,
 			amount, callbackURL, cancelURL, currencyCode, errorMessages,
-			languageId, note, paymentIntegrationKey, paymentIntegrationType,
-			paymentStatus, reasonKey, redirectURL, transactionCode, type);
+			languageId, note, payload, paymentIntegrationKey,
+			paymentIntegrationType, paymentStatus, reasonKey, redirectURL,
+			transactionCode, type);
 	}
 
 	@Override

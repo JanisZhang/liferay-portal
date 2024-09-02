@@ -71,11 +71,6 @@ export default function ObjectDefinitionNodeHeader({
 
 					<ClayDropDownWithItems
 						items={dropDownItems}
-						menuElementAttrs={{
-							style: {
-								zIndex: 1034,
-							},
-						}}
 						trigger={
 							<ClayButtonWithIcon
 								aria-label={Liferay.Language.get(
@@ -102,16 +97,16 @@ export default function ObjectDefinitionNodeHeader({
 							status?.label === 'approved'
 								? 'success'
 								: status?.label === 'pending'
-								? 'info'
-								: 'secondary'
+									? 'info'
+									: 'secondary'
 						}
 					>
 						{Liferay.Language.get(
 							status?.label === 'approved'
 								? 'approved'
 								: status?.label === 'pending'
-								? 'pending'
-								: 'draft'
+									? 'pending'
+									: 'draft'
 						)}
 					</ClayLabel>
 				</div>

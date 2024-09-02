@@ -15,11 +15,13 @@ import com.liferay.commerce.product.exception.NoSuchCProductException;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
+import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
+import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.util.CommerceAccountHelper;
@@ -67,6 +69,56 @@ import org.osgi.service.component.annotations.ServiceScope;
 public class SkuResourceImpl extends BaseSkuResourceImpl {
 
 	@Override
+	public Sku
+			getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode,
+				String skuExternalReferenceCode, Long accountId)
+		throws Exception {
+
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.
+				getCommerceChannelByExternalReferenceCode(
+					channelExternalReferenceCode,
+					contextCompany.getCompanyId());
+
+		CProduct cProduct =
+			_cProductLocalService.getCProductByExternalReferenceCode(
+				productExternalReferenceCode, contextCompany.getCompanyId());
+
+		CPInstance cpInstance =
+			_cpInstanceLocalService.getCPInstanceByExternalReferenceCode(
+				skuExternalReferenceCode, contextCompany.getCompanyId());
+
+		return getChannelProductSku(
+			commerceChannel.getCommerceChannelId(), cProduct.getCProductId(),
+			cpInstance.getCPInstanceId(), accountId);
+	}
+
+	@Override
+	public Page<Sku>
+			getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode, Long accountId,
+				Pagination pagination)
+		throws Exception {
+
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.
+				getCommerceChannelByExternalReferenceCode(
+					channelExternalReferenceCode,
+					contextCompany.getCompanyId());
+
+		CProduct cProduct =
+			_cProductLocalService.getCProductByExternalReferenceCode(
+				productExternalReferenceCode, contextCompany.getCompanyId());
+
+		return getChannelProductSkusPage(
+			commerceChannel.getCommerceChannelId(), cProduct.getCProductId(),
+			accountId, pagination);
+	}
+
+	@Override
 	public Sku getChannelProductSku(
 			Long channelId, Long productId, Long skuId, Long accountId)
 		throws Exception {
@@ -101,7 +153,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 			new SkuDTOConverterContext(
 				commerceContext, contextCompany.getCompanyId(), cpDefinition,
 				contextAcceptLanguage.getPreferredLocale(), BigDecimal.ONE,
-				cpInstance.getCPInstanceId(),
+				cpInstance.getCPInstanceId(), null,
 				_getDefaultUnitOfMeasureKey(cpInstance.getCPInstanceId()),
 				contextUriInfo, contextUser));
 	}
@@ -171,9 +223,34 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 	}
 
 	@Override
+	public Sku
+			postChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuBySkuOption(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode, Long accountId,
+				BigDecimal quantity, String skuUnitOfMeasureKey,
+				SkuOption[] skuOptions)
+		throws Exception {
+
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.
+				getCommerceChannelByExternalReferenceCode(
+					channelExternalReferenceCode,
+					contextCompany.getCompanyId());
+
+		CProduct cProduct =
+			_cProductLocalService.getCProductByExternalReferenceCode(
+				productExternalReferenceCode, contextCompany.getCompanyId());
+
+		return postChannelProductSkuBySkuOption(
+			commerceChannel.getCommerceChannelId(), cProduct.getCProductId(),
+			accountId, quantity, skuUnitOfMeasureKey, skuOptions);
+	}
+
+	@Override
 	public Sku postChannelProductSku(
-		Long channelId, Long productId, Long accountId, BigDecimal quantity,
-		DDMOption[] ddmOptions) {
+			Long channelId, Long productId, Long accountId, BigDecimal quantity,
+			DDMOption[] ddmOptions)
+		throws Exception {
 
 		throw new UnsupportedOperationException();
 	}
@@ -225,8 +302,8 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 				commerceContext, contextCompany.getCompanyId(), cpDefinition,
 				contextAcceptLanguage.getPreferredLocale(),
 				BigDecimalUtil.get(quantity, BigDecimal.ONE),
-				cpInstance.getCPInstanceId(), skuUnitOfMeasureKey,
-				contextUriInfo, contextUser));
+				cpInstance.getCPInstanceId(), skuOptionJSONArray,
+				skuUnitOfMeasureKey, contextUriInfo, contextUser));
 	}
 
 	private CommerceContext _getCommerceContext(
@@ -296,7 +373,7 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 						_getCommerceContext(accountId, commerceChannel),
 						contextCompany.getCompanyId(), cpDefinition,
 						contextAcceptLanguage.getPreferredLocale(),
-						BigDecimal.ONE, cpInstance.getCPInstanceId(),
+						BigDecimal.ONE, cpInstance.getCPInstanceId(), null,
 						_getDefaultUnitOfMeasureKey(
 							cpInstance.getCPInstanceId()),
 						contextUriInfo, contextUser)));
@@ -332,6 +409,9 @@ public class SkuResourceImpl extends BaseSkuResourceImpl {
 	@Reference
 	private CPInstanceUnitOfMeasureLocalService
 		_cpInstanceUnitOfMeasureLocalService;
+
+	@Reference
+	private CProductLocalService _cProductLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;

@@ -30,22 +30,35 @@ import {isIdDuplicated} from './components/sidebar/utils';
 import edgeTypes from './components/transitions/Edge';
 import FloatingConnectionLine from './components/transitions/FloatingConnectionLine';
 import getCollidingElements from './util/collisionDetection';
+import {detectGroovyOrJavaScript} from './util/detectGroovyOrJavaScript';
 import populateAssignmentsData from './util/populateAssignmentsData';
 import populateNotificationsData from './util/populateNotificationsData';
+
+let ReactFlowDefault = ReactFlow;
+
+// `react-flow-renderer` provides both a commonjs and ESM version.
+// We need this logic here so that both work. Unit tests rely on commonjs and
+// our DXP runtime uses ESM.
+
+if (ReactFlowDefault.default) {
+	ReactFlowDefault = ReactFlowDefault.default;
+}
 
 const deserializeUtil = new DeserializeUtil();
 
 export default function DiagramBuilder() {
 	const {
 		accountEntryId,
+		allowScriptContentToBeExecutedOrIncluded,
 		currentEditor,
 		definitionName,
 		deserialize,
 		elements,
 		functionActionExecutors,
+		hadGroovyOrJavaScriptBefore,
 		selectedLanguageId,
 		setActive,
-		setBlockingErrors,
+		setBlockingError,
 		setDefinitionDescription,
 		setDefinitionInfo,
 		setDefinitionName,
@@ -53,9 +66,11 @@ export default function DiagramBuilder() {
 		setDefinitionTitleTranslations,
 		setDeserialize,
 		setElements,
+		setHadGroovyOrJavaScriptBefore,
+		setHasGroovyOrJavaScript,
 		setShowDefinitionInfo,
 		statuses,
-		version,
+		workflowDefinitionVersions,
 	} = useContext(DefinitionBuilderContext);
 	const reactFlowWrapperRef = useRef(null);
 	const [collidingElements, setCollidingElements] = useState(null);
@@ -64,6 +79,8 @@ export default function DiagramBuilder() {
 	const [selectedItem, setSelectedItem] = useState(null);
 	const [selectedItemNewId, setSelectedItemNewId] = useState(null);
 	const [defaultPosition, setDefaultPosition] = useState(null);
+	const [scriptedReassignmentTimerIndex, setScriptedReassignmentTimerIndex] =
+		useState(null);
 
 	const onConnect = (params) => {
 		if (
@@ -90,9 +107,8 @@ export default function DiagramBuilder() {
 			data: {
 				defaultEdge,
 				label: {
-					[defaultLanguageId]: Liferay.Language.get(
-						'transition-label'
-					),
+					[defaultLanguageId]:
+						Liferay.Language.get('transition-label'),
 				},
 			},
 			id: uuidv4(),
@@ -112,7 +128,8 @@ export default function DiagramBuilder() {
 	};
 
 	const onDragOver = (event) => {
-		const reactFlowBounds = reactFlowWrapperRef.current.getBoundingClientRect();
+		const reactFlowBounds =
+			reactFlowWrapperRef.current.getBoundingClientRect();
 
 		const position = reactFlowInstance.project({
 			x:
@@ -136,7 +153,8 @@ export default function DiagramBuilder() {
 
 	const onDrop = useCallback(
 		(event) => {
-			const reactFlowBounds = reactFlowWrapperRef.current.getBoundingClientRect();
+			const reactFlowBounds =
+				reactFlowWrapperRef.current.getBoundingClientRect();
 
 			const position = reactFlowInstance.project({
 				x:
@@ -182,7 +200,8 @@ export default function DiagramBuilder() {
 
 	const onNodeDragStart = (event) => {
 		const elementRectangle = event.currentTarget.getBoundingClientRect();
-		const reactFlowBounds = reactFlowWrapperRef.current.getBoundingClientRect();
+		const reactFlowBounds =
+			reactFlowWrapperRef.current.getBoundingClientRect();
 
 		const position = reactFlowInstance.project({
 			x: elementRectangle.left - reactFlowBounds.left,
@@ -200,7 +219,8 @@ export default function DiagramBuilder() {
 	};
 
 	const onNodeDragStop = (event, node) => {
-		const reactFlowBounds = reactFlowWrapperRef.current.getBoundingClientRect();
+		const reactFlowBounds =
+			reactFlowWrapperRef.current.getBoundingClientRect();
 
 		const position = reactFlowInstance.project({
 			x:
@@ -327,21 +347,37 @@ export default function DiagramBuilder() {
 
 			setElements(elements);
 
+			if (!allowScriptContentToBeExecutedOrIncluded) {
+				const hasGroovyOrJavaScript = detectGroovyOrJavaScript(
+					elements,
+					setHasGroovyOrJavaScript
+				);
+
+				if (hasGroovyOrJavaScript && !hadGroovyOrJavaScriptBefore) {
+					setHadGroovyOrJavaScriptBefore(true);
+				}
+			}
+
 			populateAssignmentsData(
 				accountEntryId,
 				elements,
 				setElements,
-				setBlockingErrors
+				setBlockingError
 			);
 			populateNotificationsData(accountEntryId, elements, setElements);
 
 			setDeserialize(false);
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentEditor, deserialize, version]);
+	}, [currentEditor, deserialize, workflowDefinitionVersions]);
 
 	useEffect(() => {
-		if (definitionName && version !== 0 && !deserialize) {
+		if (
+			definitionName &&
+			workflowDefinitionVersions.length !== 0 &&
+			!deserialize
+		) {
 			retrieveDefinitionRequest(definitionName)
 				.then((response) => response.json())
 				.then(
@@ -375,6 +411,21 @@ export default function DiagramBuilder() {
 
 						setElements(elements);
 
+						if (!allowScriptContentToBeExecutedOrIncluded) {
+							const hasGroovyOrJavaScript =
+								detectGroovyOrJavaScript(
+									elements,
+									setHasGroovyOrJavaScript
+								);
+
+							if (
+								hasGroovyOrJavaScript &&
+								!hadGroovyOrJavaScriptBefore
+							) {
+								setHadGroovyOrJavaScriptBefore(true);
+							}
+						}
+
 						populateAssignmentsData(
 							accountEntryId,
 							elements,
@@ -390,16 +441,18 @@ export default function DiagramBuilder() {
 		}
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [definitionName, version]);
+	}, [definitionName, workflowDefinitionVersions]);
 
 	const contextProps = {
 		collidingElements,
 		elementRectangle,
 		functionActionExecutors,
+		scriptedReassignmentTimerIndex,
 		selectedItem,
 		selectedItemNewId,
 		setCollidingElements,
 		setElementRectangle,
+		setScriptedReassignmentTimerIndex,
 		setSelectedItem,
 		setSelectedItemNewId,
 		statuses,
@@ -409,7 +462,7 @@ export default function DiagramBuilder() {
 		<DiagramBuilderContextProvider {...contextProps}>
 			<div className="diagram-builder">
 				<div className="diagram-area" ref={reactFlowWrapperRef}>
-					<ReactFlow
+					<ReactFlowDefault
 						connectionLineComponent={FloatingConnectionLine}
 						edgeTypes={edgeTypes}
 						elements={elements}

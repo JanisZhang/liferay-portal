@@ -8,19 +8,21 @@ import {
 	Input,
 	RadioField,
 	SingleSelect,
-	Toggle,
-	getLocalizableLabel,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import {InputLocalized} from 'frontend-js-components-web';
 import React, {useMemo} from 'react';
 
 import {NAME_OUTPUT_OBJECT_FIELD_EXTERNAL_REFERENCE_CODE} from '../../utils/constants';
+import {DisabledGroovyScriptAlert} from '../DisabledGroovyScriptAlert';
+import {ObjectValidationActiveToggle} from './ObjectValidationActiveToggle';
 import {TabProps} from './useObjectValidationForm';
 
 export interface BasicInfoProps extends TabProps {
 	componentLabel: string;
 	creationLanguageId: Liferay.Language.Locale;
 	customObjectFields: ObjectField[];
+	disabledGroovyValidation: boolean;
 }
 
 const outputValidationTypeArray = [
@@ -46,7 +48,9 @@ export function BasicInfo({
 	creationLanguageId,
 	customObjectFields,
 	disabled,
+	disabledGroovyValidation,
 	errors,
+	scriptManagementConfigurationPortletURL,
 	selectedPartialValidationField,
 	setValues,
 	values,
@@ -54,7 +58,11 @@ export function BasicInfo({
 	const objectFieldsItems = useMemo(() => {
 		return customObjectFields.map(
 			({externalReferenceCode, label, name}) => ({
-				label: getLocalizableLabel(creationLanguageId, label, name),
+				label: stringUtils.getLocalizableLabel(
+					creationLanguageId,
+					label,
+					name
+				),
 				value: externalReferenceCode,
 			})
 		);
@@ -62,6 +70,14 @@ export function BasicInfo({
 
 	return (
 		<>
+			{disabledGroovyValidation && (
+				<DisabledGroovyScriptAlert
+					scriptManagementConfigurationPortletURL={
+						scriptManagementConfigurationPortletURL
+					}
+				/>
+			)}
+
 			<Card title={componentLabel}>
 				<InputLocalized
 					disabled={disabled}
@@ -80,11 +96,11 @@ export function BasicInfo({
 				/>
 
 				{values.engine !== 'compositeKey' && (
-					<Toggle
+					<ObjectValidationActiveToggle
 						disabled={disabled}
-						label={Liferay.Language.get('active-validation')}
-						onToggle={(active) => setValues({active})}
-						toggled={values.active}
+						disabledGroovyValidation={disabledGroovyValidation}
+						setValues={setValues}
+						values={values}
 					/>
 				)}
 			</Card>
@@ -98,7 +114,8 @@ export function BasicInfo({
 				/>
 			</Card>
 
-			{values.engine?.startsWith('function#') && (
+			{(values.engine?.startsWith('function#') ||
+				values.engine?.startsWith('javaDelegate#')) && (
 				<Card title={Liferay.Language.get('error-message')}>
 					<InputLocalized
 						disabled={disabled}
@@ -115,6 +132,7 @@ export function BasicInfo({
 					<>
 						<RadioField
 							defaultValue={values.outputType}
+							disabled={disabled}
 							inline={false}
 							label={Liferay.Language.get(
 								'output-validation-type'

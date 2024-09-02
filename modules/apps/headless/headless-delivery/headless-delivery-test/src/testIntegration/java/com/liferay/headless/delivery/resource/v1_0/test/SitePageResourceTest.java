@@ -65,7 +65,6 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocal
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalService;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.structure.LayoutStructure;
-import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -110,6 +109,7 @@ import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.model.SegmentsEntry;
@@ -157,7 +157,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		SitePageResource.Builder builder = SitePageResource.builder();
 
 		sitePageResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).header(
 			"X-Liferay-Accept-All-Languages", "true"
 		).locale(
@@ -324,7 +324,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		_testPostSiteSitePageFailurePagePermissionsActionKeyNonexisting();
 		_testPostSiteSitePageSuccessCustomFields();
 		_testPostSiteSitePageSuccessInvalidParentSitePage();
-		_testPostSiteSitePageSuccessKeywords(StringUtil::toLowerCase);
+		_testPostSiteSitePageSuccessKeywords();
 		_testPostSiteSitePageSuccessPageDefinition();
 		_testPostSiteSitePageSuccessPageDefinitionSettingsClientExtensionEntries();
 		_testPostSiteSitePageSuccessPageDefinitionSettingsFaviconFromClientExtensionEntry();
@@ -344,14 +344,6 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		_testPostSiteSitePageSuccessTaxonomyCategoryBriefSitePageSiteSiteKeyNull();
 		_testPostSiteSitePageSuccessTaxonomyCategoryBriefSitePageSiteSiteKeyNonnull();
 		_testPostSiteSitePageSuccessTaxonomyCategoryBriefNonsitePage();
-	}
-
-	@FeatureFlags("LPS-194362")
-	@Test
-	public void testPostSiteSitePageSuccessKeywordsWithCaseSensitiveTags()
-		throws Exception {
-
-		_testPostSiteSitePageSuccessKeywords(string -> string);
 	}
 
 	@Override
@@ -468,7 +460,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 
 		SegmentsExperience segmentsExperience =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), layout.getGroupId(),
+				null, TestPropsValues.getUserId(), layout.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(), layout.getPlid(),
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), RandomTestUtil.randomString()
@@ -865,10 +857,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		}
 	}
 
-	private void _testPostSiteSitePageSuccessKeywords(
-			UnsafeFunction<String, String, Exception> unsafeFunction)
-		throws Exception {
-
+	private void _testPostSiteSitePageSuccessKeywords() throws Exception {
 		SitePage randomSitePage = randomSitePage();
 
 		String[] keywords = {
@@ -892,8 +881,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		Assert.assertEquals(Arrays.toString(tags), 2, tags.length);
 
 		for (String keyword : keywords) {
-			Assert.assertTrue(
-				ArrayUtil.contains(tags, unsafeFunction.apply(keyword)));
+			Assert.assertTrue(ArrayUtil.contains(tags, keyword));
 		}
 	}
 
@@ -905,13 +893,13 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
-				testGroup.getCreatorUserId(), testGroup.getGroupId(),
+				null, testGroup.getCreatorUserId(), testGroup.getGroupId(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				serviceContext);
 
 		FragmentEntry fragmentEntry =
 			_fragmentEntryLocalService.addFragmentEntry(
-				TestPropsValues.getUserId(), testGroup.getGroupId(),
+				null, TestPropsValues.getUserId(), testGroup.getGroupId(),
 				fragmentCollection.getFragmentCollectionId(), null,
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				"<lfr-editable id=\"fragmentEditableId\" type=\"text\">" +
@@ -1256,7 +1244,6 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				}
 			}
 		};
-
 		PagePermission[] inputPagePermissions = {
 			new PagePermission() {
 				{
@@ -1282,10 +1269,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 	private void _testPostSiteSitePageSuccessPagePermissionsEmpty()
 		throws Exception {
 
-		PagePermission[] expectedPagePermissions = {
-			_PAGE_PERMISSIONS
-		};
-
+		PagePermission[] expectedPagePermissions = {_PAGE_PERMISSIONS};
 		PagePermission[] inputPagePermissions = {};
 
 		_testPostSiteSitePageSuccessPagePermissions(
@@ -1329,7 +1313,6 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				}
 			}
 		};
-
 		PagePermission[] inputPagePermissions = {
 			new PagePermission() {
 				{
@@ -1361,7 +1344,6 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				}
 			}
 		};
-
 		PagePermission[] inputPagePermissions = {
 			new PagePermission() {
 				{

@@ -25,6 +25,7 @@ import com.liferay.layout.util.structure.FormStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
+import com.liferay.layout.util.structure.LayoutStructureItemUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -37,8 +38,8 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
@@ -61,8 +62,10 @@ public class FormItemManager {
 	public List<FragmentEntryLink> addFragmentEntryLinks(
 			JSONObject errorJSONObject,
 			FormStyledLayoutStructureItem formStyledLayoutStructureItem,
-			Layout layout, LayoutStructure layoutStructure, Locale locale,
-			long segmentsExperienceId, ServiceContext serviceContext)
+			boolean includeSubmitButton, Layout layout,
+			LayoutStructure layoutStructure, Locale locale,
+			long segmentsExperienceId, ServiceContext serviceContext,
+			String[] uniqueInfoFieldIds)
 		throws PortalException {
 
 		FragmentCollectionContributor fragmentCollectionContributor =
@@ -93,7 +96,11 @@ public class FormItemManager {
 				_getInfoFields(
 					formStyledLayoutStructureItem, layout.getGroupId())) {
 
-			if (!infoField.isEditable()) {
+			if (!infoField.isEditable() ||
+				(ArrayUtil.isNotEmpty(uniqueInfoFieldIds) &&
+				 !ArrayUtil.contains(
+					 uniqueInfoFieldIds, infoField.getUniqueId()))) {
+
 				continue;
 			}
 
@@ -120,24 +127,26 @@ public class FormItemManager {
 					serviceContext));
 		}
 
-		FragmentEntry fragmentEntry = _getFragmentEntry(
-			layout.getCompanyId(), defaultInputFragmentEntryKeysJSONObject,
-			DefaultInputFragmentEntryConfigurationProvider.
-				FORM_INPUT_SUBMIT_BUTTON);
+		if (includeSubmitButton) {
+			FragmentEntry fragmentEntry = _getFragmentEntry(
+				layout.getCompanyId(), defaultInputFragmentEntryKeysJSONObject,
+				DefaultInputFragmentEntryConfigurationProvider.
+					FORM_INPUT_SUBMIT_BUTTON);
 
-		if ((fragmentEntry == null) ||
-			!_isAllowedFragmentEntryKey(
-				fragmentEntry.getFragmentEntryKey(),
-				masterDropZoneLayoutStructureItem)) {
+			if ((fragmentEntry == null) ||
+				!_isAllowedFragmentEntryKey(
+					fragmentEntry.getFragmentEntryKey(),
+					masterDropZoneLayoutStructureItem)) {
 
-			missingInputTypes.add(_language.get(locale, "submit-button"));
-		}
-		else {
-			addedFragmentEntryLinks.add(
-				_addFragmentEntryLink(
-					formStyledLayoutStructureItem.getItemId(), fragmentEntry,
-					null, layout, layoutStructure, segmentsExperienceId,
-					serviceContext));
+				missingInputTypes.add(_language.get(locale, "submit-button"));
+			}
+			else {
+				addedFragmentEntryLinks.add(
+					_addFragmentEntryLink(
+						formStyledLayoutStructureItem.getItemId(),
+						fragmentEntry, null, layout, layoutStructure,
+						segmentsExperienceId, serviceContext));
+			}
 		}
 
 		if (missingInputTypes.size() == 1) {
@@ -170,17 +179,24 @@ public class FormItemManager {
 
 	public JSONArray removeLayoutStructureItemsJSONArray(
 		FormStyledLayoutStructureItem formStyledLayoutStructureItem,
-		LayoutStructure layoutStructure) {
+		LayoutStructure layoutStructure, List<String> removedItemIds) {
 
 		JSONArray fragmentEntryLinkIdsJSONArray =
 			_jsonFactory.createJSONArray();
 
 		for (String itemId :
-				ListUtil.copy(
-					formStyledLayoutStructureItem.getChildrenItemIds())) {
+				LayoutStructureItemUtil.getChildrenItemIds(
+					formStyledLayoutStructureItem.getItemId(),
+					layoutStructure)) {
+
+			if (ListUtil.isNotEmpty(removedItemIds) &&
+				!removedItemIds.contains(itemId)) {
+
+				continue;
+			}
 
 			layoutStructure.markLayoutStructureItemForDeletion(
-				itemId, Collections.emptyList());
+				Collections.singletonList(itemId), Collections.emptyList());
 
 			LayoutStructureItem removedLayoutStructureItem =
 				layoutStructure.getLayoutStructureItem(itemId);
@@ -214,8 +230,9 @@ public class FormItemManager {
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkService.addFragmentEntryLink(
-				layout.getGroupId(), 0, fragmentEntry.getFragmentEntryId(),
-				segmentsExperienceId, layout.getPlid(), fragmentEntry.getCss(),
+				null, layout.getGroupId(), 0,
+				fragmentEntry.getFragmentEntryId(), segmentsExperienceId,
+				layout.getPlid(), fragmentEntry.getCss(),
 				fragmentEntry.getHtml(), fragmentEntry.getJs(),
 				fragmentEntry.getConfiguration(), null, StringPool.BLANK, 0,
 				fragmentEntry.getFragmentEntryKey(), fragmentEntry.getType(),
@@ -292,9 +309,14 @@ public class FormItemManager {
 			long groupId)
 		throws PortalException {
 
+		String className = formStyledLayoutStructureItem.getClassName();
+
+		if (Validator.isNull(className)) {
+			return Collections.emptyList();
+		}
+
 		String itemClassName = _infoSearchClassMapperRegistry.getClassName(
-			_portal.getClassName(
-				formStyledLayoutStructureItem.getClassNameId()));
+			className);
 
 		InfoItemFormProvider<?> infoItemFormProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
@@ -403,8 +425,5 @@ public class FormItemManager {
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private Portal _portal;
 
 }

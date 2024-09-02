@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -376,7 +376,7 @@ definition {
 			PageEditor.viewFragmentEditableImage(
 				id = "image-square",
 				imageDescription = "",
-				imageFileName = "document_1-png");
+				imageFileName = "document_1");
 
 			AssertTextEquals(
 				key_fieldLabel = "Image",
@@ -394,7 +394,7 @@ definition {
 			PageEditor.viewFragmentEditableImage(
 				id = "image-square",
 				imageDescription = "",
-				imageFileName = "document_1-png");
+				imageFileName = "Document_1");
 		}
 	}
 
@@ -488,6 +488,8 @@ definition {
 
 		task ("Select the body of Heading") {
 			PageEditor.clickConfigurableField(fragmentName = "Heading");
+
+			PageEditor.gotoTab(tabName = "Browser");
 		}
 
 		task ("Mouse over the editable field of Heading") {

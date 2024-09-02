@@ -14,9 +14,9 @@ String portletNamespace = PortalUtil.getPortletNamespace(ProductNavigationContro
 <li class="control-menu-nav-item">
 	<clay:button
 		aria-label='<%= LanguageUtil.get(request, "add") %>'
-		cssClass="lfr-portal-tooltip product-menu-toggle sidenav-toggler"
+		cssClass="control-menu-nav-link lfr-portal-tooltip product-menu-toggle sidenav-toggler"
 		data-content="body"
-		data-open-class="open-admin-panel open"
+		data-open-class="open open-admin-panel"
 		data-qa-id="add"
 		data-target='<%= "#" + portletNamespace + "addPanelId" %>'
 		data-title='<%= LanguageUtil.get(request, "add") %>'

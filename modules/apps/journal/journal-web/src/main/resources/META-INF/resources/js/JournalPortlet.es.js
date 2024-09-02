@@ -13,6 +13,7 @@ import {
 
 import {LocaleChangedHandler} from './LocaleChangedHandler.es';
 import initializeLock from './initializeLock';
+import removeAlert from './removeAlert';
 import showAlert from './showAlert';
 
 const AUTO_SAVE_DELAY = 1500;
@@ -20,6 +21,7 @@ const AUTO_SAVE_DELAY = 1500;
 export default function _JournalPortlet({
 	articleId: initialArticleId,
 	autoSaveDraftEnabled,
+	autoSaveDraftURL,
 	availableLocales: initialAvailableLocales,
 	classNameId,
 	contentTitle,
@@ -159,7 +161,7 @@ export default function _JournalPortlet({
 	};
 
 	const handleDDMFormError = (event) => {
-		lockHolder.lock?.unlock();
+		lockHolder.lock?.unlock(true);
 
 		if (event.error?.statusCode) {
 			showAlert(event.error.message);
@@ -175,7 +177,10 @@ export default function _JournalPortlet({
 			`${namespace}titleMapAsXML`
 		);
 
-		if (!titleInputComponent?.getValue(defaultLanguageId)) {
+		if (
+			!titleInputComponent?.getValue(defaultLanguageId) &&
+			!Liferay.FeatureFlags['LPS-114700']
+		) {
 			showAlert(
 				sub(
 					Liferay.Language.get(
@@ -217,35 +222,53 @@ export default function _JournalPortlet({
 
 			availableLocalesInput.value = availableLocales;
 
-			if (autoSaveDraftEnabled) {
-				submitAsyncForm(form, {redirectOnSave});
+			if (autoSaveDraftEnabled && !redirectOnSave) {
+				Liferay.componentReady(`${namespace}dataEngineLayoutRenderer`)
+					.then((dataEngineLayoutRenderer) => {
+						const dataEngineLayoutRendererRef =
+							dataEngineLayoutRenderer?.reactComponentRef;
+
+						return dataEngineLayoutRendererRef.current.validate();
+					})
+					.then((validForm) => {
+						if (validForm) {
+							removeAlert();
+							submitAsyncForm(form, {redirectOnSave});
+						}
+						else {
+							Liferay.fire('ddmFormError', {
+								formWrapperId: formId,
+							});
+						}
+					});
 			}
 			else {
 				form.submit();
 			}
 		}
-		else {
-			if (showErrors) {
-				showAlert(
-					sub(
-						Liferay.Language.get(
-							'please-enter-a-valid-title-for-the-default-language-x'
-						),
-						defaultLanguageId.replaceAll('_', '-')
-					)
-				);
-			}
+		else if (showErrors && !Liferay.FeatureFlags['LPS-114700']) {
+			showAlert(
+				sub(
+					Liferay.Language.get(
+						'please-enter-a-valid-title-for-the-default-language-x'
+					),
+					defaultLanguageId.replaceAll('_', '-')
+				)
+			);
 
-			lockHolder.lock?.unlock();
+			lockHolder.lock?.unlock(true);
+		}
+		else {
+			lockHolder.lock?.unlock(true);
 		}
 	};
 
 	const handlePublishButtonClick = (event) => {
-		if (Liferay.FeatureFlags['LPS-141392']) {
+		lockHolder.lock?.lock();
+
+		if (Liferay.FeatureFlags['LPD-11228']) {
 			return;
 		}
-
-		lockHolder.lock?.lock();
 
 		document
 			.querySelectorAll('.journal-alert-container')
@@ -339,11 +362,7 @@ export default function _JournalPortlet({
 		formElement,
 		{redirectOnSave} = {redirectOnSave: false}
 	) => {
-		if (autoSaveDraftEnabled) {
-			formDateInput.value = Date.now().toString();
-		}
-
-		return fetch(formElement.action, {
+		return fetch(autoSaveDraftURL, {
 			body: new FormData(formElement),
 			method: formElement.method,
 		})
@@ -355,22 +374,78 @@ export default function _JournalPortlet({
 							: window.location.href
 					);
 				}
-				else {
-					if (!articleId && response.url) {
-						const key = `${namespace}articleId`;
-						const url = new URL(response.url);
 
-						if (url.searchParams.has(key)) {
-							articleId = url.searchParams.get(key);
+				return response.json();
+			})
+			.then((data) => {
+				if (data.success) {
+					if (!articleId) {
+						articleId = data.articleId;
+						document.getElementById(`${namespace}articleId`).value =
+							articleId;
+
+						Liferay.fire('asyncFormSubmission', {articleId});
+
+						const friendlyUrlInputComponent = Liferay.component(
+							`${namespace}friendlyURL`
+						);
+
+						if (!friendlyUrlInputComponent.getValue()) {
+							const friendlyURL = data.friendlyURL;
+							friendlyUrlInputComponent.updateInputLanguage(
+								friendlyURL,
+								defaultLanguageId
+							);
+							friendlyUrlInputComponent.updateInput(friendlyURL);
+
+							Liferay.fire('journal:update-friendly-url', {
+								friendlyURL,
+							});
 						}
 					}
 
-					lockHolder.lock?.unlock();
+					const articleIdWrapper = document.getElementById(
+						`${namespace}articleIdWrapper`
+					);
+					const articleVersionInput = document.getElementById(
+						`${namespace}version`
+					);
+					const articleVersionStatusWrapper = document.getElementById(
+						`${namespace}articleVersionStatusWrapper`
+					);
+					const displayedArticleId = document.getElementById(
+						`${namespace}displayedArticleId`
+					);
+					const displayedVersion = document.getElementById(
+						`${namespace}displayedVersion`
+					);
+					const statusDraftLabel = document.getElementById(
+						`${namespace}statusDraftLabel`
+					);
+					const statusLabel = document.getElementById(
+						`${namespace}statusLabel`
+					);
+
+					if (statusLabel) {
+						statusLabel.classList.add('hide');
+					}
+
+					articleVersionStatusWrapper.classList.remove('hide');
+					statusDraftLabel.classList.remove('hide');
+
+					articleVersionInput.value = data.version;
+					displayedVersion.innerHTML = data.version;
+
+					articleIdWrapper.classList.remove('hide');
+					displayedArticleId.innerHTML = articleId;
 				}
+
+				formDateInput.value = data.modifiedDate;
+				lockHolder.lock?.unlock();
 			})
 			.catch((error) => {
 				console.error(error);
-				lockHolder.lock?.unlock();
+				lockHolder.lock?.unlock(true);
 			});
 	};
 
@@ -454,9 +529,10 @@ export default function _JournalPortlet({
 
 					handleDDMFormValid({
 						redirectOnSave: false,
-						showErrors: false,
+						showErrors: true,
 					});
-				}
+				},
+				namespace
 			)
 		);
 	}
@@ -480,7 +556,8 @@ function attachFormChangeListener(
 	form,
 	accentChangeEvent,
 	acceptMutationRecord,
-	callback
+	callback,
+	namespace
 ) {
 	const handleChange = debounce(() => {
 		callback();
@@ -489,7 +566,10 @@ function attachFormChangeListener(
 	const mutationObserver = new MutationObserver((mutationRecords) => {
 		const observedMutationRecords = mutationRecords
 			.filter((mutationRecord) => {
-				if (mutationRecord.type === 'attributes') {
+				if (mutationRecord.target.id === `${namespace}formDate`) {
+					return;
+				}
+				else if (mutationRecord.type === 'attributes') {
 					return (
 						mutationRecord.oldValue !== null &&
 						mutationRecord.target.value.trim() !==

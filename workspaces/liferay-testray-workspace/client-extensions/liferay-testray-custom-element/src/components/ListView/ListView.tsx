@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayLayout from '@clayui/layout';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import {
 	ReactNode,
@@ -15,7 +16,7 @@ import {
 } from 'react';
 import {useSearchParams} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
-import useQueryParams from '~/hooks/useQueryParams';
+import useUpdateUrlParams from '~/hooks/useUpdateUrlParams';
 
 import ListViewContextProvider, {
 	AppActions,
@@ -23,6 +24,7 @@ import ListViewContextProvider, {
 	ListViewContext,
 	ListViewContextProviderProps,
 	ListViewTypes,
+	Sort,
 } from '../../context/ListViewContext';
 import SearchBuilder from '../../core/SearchBuilder';
 import {useFetch} from '../../hooks/useFetch';
@@ -31,13 +33,14 @@ import {
 	FilterSchema as FilterSchemaType,
 	filterSchema as filterSchemas,
 } from '../../schema/filter';
-import {APIResponse} from '../../services/rest';
+import {APIResponse, Results} from '../../services/rest';
 import {SortDirection} from '../../types';
 import {PAGINATION} from '../../util/constants';
 import EmptyState from '../EmptyState';
 import Loading from '../Loading';
 import ManagementToolbar, {ManagementToolbarProps} from '../ManagementToolbar';
 import Table, {TableProps} from '../Table';
+import TableChart from '../TableChart';
 
 type ChildrenOptions = {
 	dispatch: React.Dispatch<AppActions>;
@@ -49,6 +52,7 @@ export type ListViewProps<T = any> = {
 	children?: (response: APIResponse, options: ChildrenOptions) => ReactNode;
 	forceRefetch?: number;
 	managementToolbarProps?: {
+		customFilterFields?: {[key: string]: string};
 		visible?: boolean;
 	} & Omit<
 		ManagementToolbarProps,
@@ -58,6 +62,7 @@ export type ListViewProps<T = any> = {
 		| 'onSelectAllRows'
 		| 'rowSelectable'
 	>;
+	matrixProps?: {title?: string};
 	normalizers?: {
 		onSelectRow?: (item: T) => number | number[];
 	};
@@ -66,7 +71,7 @@ export type ListViewProps<T = any> = {
 		displayTop?: boolean;
 	};
 	resource: string;
-	tableProps: Omit<
+	tableProps: {visible?: boolean} & Omit<
 		TableProps,
 		| 'items'
 		| 'mutate'
@@ -91,20 +96,29 @@ const ListView: React.FC<ListViewProps> = ({
 	children,
 	forceRefetch,
 	managementToolbarProps: {
+		customFilterFields,
 		visible: managementToolbarVisible = true,
 		...managementToolbarProps
 	} = {},
+	matrixProps: {title} = {},
 	normalizers = {onSelectRow: noop},
 	onContextChange,
 	pagination = {displayTop: true},
 	resource,
-	tableProps,
+	tableProps: {visible: tableVisible = true, ...tableProps},
 	transformData,
 	variables,
 }) => {
 	const [listViewContext, dispatch] = useContext(ListViewContext);
-	const {updateUrlParams} = useQueryParams();
+	const updateUrlParams = useUpdateUrlParams();
+
 	const [searchParams] = useSearchParams();
+
+	const currentPage = searchParams.get('page');
+
+	const currentPageSize = searchParams.get('pageSize');
+
+	let isRowSelectable = false;
 
 	const onSelectRowNormalizer = useMemo(
 		() => normalizers.onSelectRow ?? noop,
@@ -114,6 +128,7 @@ const ListView: React.FC<ListViewProps> = ({
 	const {
 		columns: columnsContext,
 		filters,
+		search,
 		selectedRows,
 		sort,
 	} = listViewContext;
@@ -139,37 +154,107 @@ const ListView: React.FC<ListViewProps> = ({
 			defaultFilter: variables?.filter,
 			filterSchema,
 		}),
-		[filters.filter, variables?.filter, filterSchema]
+		[filters, variables?.filter, filterSchema]
 	);
+
+	const buildSort = (sort: Sort | Sort[]) => {
+		if (Array.isArray(sort)) {
+			return sort
+				.reduce(
+					(prevSort, newSort) =>
+						prevSort +
+						`${newSort.key}:${newSort.direction.toLowerCase()},`,
+					''
+				)
+				.slice(0, -1);
+		}
+
+		return sort.key ? `${sort.key}:${sort.direction.toLowerCase()}` : '';
+	};
+
+	const filter = useMemo(() => {
+		const appliedFilters: {[key: string]: string} = {
+			...filterVariables.appliedFilter,
+		};
+
+		const filters: {[key: string]: string | undefined | boolean} = {};
+
+		Object.entries(appliedFilters).forEach(([key, value]) => {
+			const matchingField = filterSchema.fields.find(
+				(field) => field.name === key && field.isCustomFilter
+			);
+
+			if (matchingField) {
+				if (
+					value.includes(`No ${matchingField.label}`) &&
+					!matchingField.requestOperator
+				) {
+					const newKey = `no${key.charAt(0).toUpperCase() + key.slice(1)}`;
+
+					filters[newKey] = true;
+				}
+				else {
+					filters[key] = SearchBuilder.createCustomFilter(
+						matchingField,
+						value
+					);
+				}
+				delete appliedFilters[key];
+			}
+		});
+
+		const filterVariablesCopy = {
+			...filterVariables,
+			appliedFilter: {...appliedFilters},
+		};
+
+		const baseFilter = onApplyFilterMemo
+			? onApplyFilterMemo(filterVariablesCopy)
+			: SearchBuilder.createFilter(filterVariablesCopy) || '';
+
+		const filter = {filter: baseFilter, ...filters};
+
+		return filter;
+	}, [filterSchema?.fields, filterVariables, onApplyFilterMemo]);
 
 	const getURLSearchParams = useCallback(
 		() => ({
-			filter: onApplyFilterMemo
-				? onApplyFilterMemo(filterVariables)
-				: SearchBuilder.createFilter(filterVariables) || '',
+			...filter,
 			forceRefetch,
-			page: listViewContext.page,
-			pageSize: listViewContext.pageSize,
-			sort: sort.key ? `${sort.key}:${sort.direction.toLowerCase()}` : '',
+			page:
+				managementToolbarProps.applyFilters && currentPage
+					? Number(currentPage)
+					: listViewContext.page,
+			pageSize:
+				managementToolbarProps.applyFilters && currentPageSize
+					? Number(currentPageSize)
+					: listViewContext.pageSize,
+			search,
+			sort: buildSort(sort),
 		}),
 		[
-			onApplyFilterMemo,
-			filterVariables,
+			currentPage,
+			currentPageSize,
+			filter,
 			forceRefetch,
 			listViewContext.page,
 			listViewContext.pageSize,
-			sort.key,
-			sort.direction,
+			managementToolbarProps.applyFilters,
+			search,
+			sort,
 		]
 	);
 
-	const {data: response, error, isValidating, loading, mutate} = useFetch(
-		resource,
-		{
-			params: getURLSearchParams(),
-			transformData,
-		}
-	);
+	const {
+		data: response,
+		error,
+		isValidating,
+		loading,
+		mutate,
+	} = useFetch(resource, {
+		params: getURLSearchParams(),
+		transformData,
+	});
 
 	const {
 		actions = {},
@@ -177,14 +262,25 @@ const ListView: React.FC<ListViewProps> = ({
 		lastPage = 1,
 		page = 1,
 		pageSize,
+		results,
 		totalCount = 0,
 	} = response || {};
 
-	const itemsMemoized = useMemo(() => items, [items]);
+	const matrixData = useMemo(
+		() => (results && results[0][title as keyof Results]) || [],
+		[results, title]
+	);
+
+	const itemsMemoized = useMemo(
+		() => (results ? matrixData : items),
+		[items, matrixData, results]
+	);
+
+	const isCompareRunsMatrix = title === 'Runs';
 
 	const columns = useMemo(
 		() =>
-			tableProps.columns.filter(({key}) => {
+			tableProps.columns?.filter(({key}) => {
 				const columns = columnsContext || {};
 
 				if (columns[key] === undefined) {
@@ -241,21 +337,35 @@ const ListView: React.FC<ListViewProps> = ({
 	}, [listViewContextString]);
 
 	useEffect(() => {
-		if (tableProps.rowSelectable) {
+		if (customFilterFields) {
 			dispatch({
-				payload: itemsMemoized.every((item) =>
-					selectedRows.includes(onSelectRowNormalizer(item))
-				),
-				type: ListViewTypes.SET_CHECKED_ALL_ROWS,
+				payload: {customFilterFields},
+				type: ListViewTypes.SET_CUSTOM_FILTER_FIELDS,
 			});
 		}
-	}, [
-		dispatch,
-		itemsMemoized,
-		onSelectRowNormalizer,
-		selectedRows,
-		tableProps,
-	]);
+	}, [customFilterFields, dispatch]);
+
+	if (tableProps.rowSelectable) {
+		isRowSelectable = itemsMemoized.every((item) =>
+			selectedRows.includes(onSelectRowNormalizer(item))
+		);
+	}
+
+	useEffect(() => {
+		dispatch({
+			payload: isRowSelectable,
+			type: ListViewTypes.SET_CHECKED_ALL_ROWS,
+		});
+	}, [dispatch, isRowSelectable]);
+
+	useEffect(() => {
+		if (managementToolbarProps.applyFilters) {
+			dispatch({
+				payload: true,
+				type: ListViewTypes.SET_APPLY_FILTERS,
+			});
+		}
+	}, [dispatch, managementToolbarProps.applyFilters]);
 
 	if (loading || (isValidating && searchParams.get('filter'))) {
 		return <Loading />;
@@ -273,16 +383,20 @@ const ListView: React.FC<ListViewProps> = ({
 				selectPerPageItems: i18n.translate('x-items'),
 			}}
 			onDeltaChange={(delta) => {
-				updateUrlParams({pageSize: delta});
+				if (managementToolbarProps.applyFilters) {
+					updateUrlParams({pageSize: delta});
+				}
 
 				dispatch({payload: delta, type: ListViewTypes.SET_PAGE_SIZE});
 			}}
 			onPageChange={(page) => {
-				updateUrlParams({page});
+				if (managementToolbarProps.applyFilters) {
+					updateUrlParams({page});
+				}
 
 				dispatch({payload: page, type: ListViewTypes.SET_PAGE});
 			}}
-			totalItems={totalCount}
+			totalItems={totalCount || 0}
 		/>
 	);
 
@@ -292,17 +406,24 @@ const ListView: React.FC<ListViewProps> = ({
 				<ManagementToolbar
 					{...managementToolbarProps}
 					actions={actions}
+					customFilterFields={customFilterFields}
 					tableProps={tableProps}
-					totalItems={itemsMemoized.length}
+					totalItems={
+						matrixData && !isCompareRunsMatrix
+							? Object.keys(itemsMemoized).length
+							: itemsMemoized.length
+					}
 				/>
 			)}
 
-			{!itemsMemoized.length && (
-				<EmptyState
-					description={error?.message}
-					type={error ? 'EMPTY_SEARCH' : 'EMPTY_STATE'}
-				/>
-			)}
+			{!isCompareRunsMatrix &&
+				!Object.keys(itemsMemoized).length &&
+				!itemsMemoized.length && (
+					<EmptyState
+						description={error?.message}
+						type={error ? 'EMPTY_SEARCH' : 'EMPTY_STATE'}
+					/>
+				)}
 
 			{children &&
 				children(response as APIResponse, {
@@ -311,31 +432,56 @@ const ListView: React.FC<ListViewProps> = ({
 					mutate,
 				})}
 
-			{!!items.length && (
+			{!!items.length && !isCompareRunsMatrix ? (
 				<>
 					{pagination?.displayTop && (
 						<div className="mt-4">{Pagination}</div>
 					)}
 
-					<Table
-						{...tableProps}
-						allRowsChecked={listViewContext.checkAll}
-						columns={columns}
-						items={itemsMemoized}
-						mutate={mutate}
-						normalizers={{
-							onSelectRow: onSelectRowNormalizer,
-						}}
-						onSelectAllRows={onSelectAllRows}
-						onSelectRow={onSelectRow}
-						onSort={onSort}
-						selectedRows={selectedRows}
-						sort={sort}
-					/>
+					{tableVisible && (
+						<Table
+							{...tableProps}
+							allRowsChecked={listViewContext.checkAll}
+							columns={columns}
+							items={itemsMemoized}
+							mutate={mutate}
+							normalizers={{
+								onSelectRow: onSelectRowNormalizer,
+							}}
+							onSelectAllRows={onSelectAllRows}
+							onSelectRow={onSelectRow}
+							onSort={onSort}
+							selectedRows={selectedRows}
+							sort={sort}
+						/>
+					)}
 
 					{Pagination}
 				</>
-			)}
+			) : null}
+
+			{!items.length &&
+				(results && isCompareRunsMatrix ? (
+					<ClayLayout.Col lg={12} md={12}>
+						<TableChart matrixData={matrixData} title={title} />
+					</ClayLayout.Col>
+				) : (
+					<div className="d-flex flex-wrap">
+						{Object.entries(itemsMemoized)
+							.sort(([nameA], [nameB]) =>
+								nameA.localeCompare(nameB)
+							)
+							.map(([name, data], index) => (
+								<div className="my-4" key={index}>
+									<TableChart
+										fieldName={title}
+										matrixData={data}
+										title={name}
+									/>
+								</div>
+							))}
+					</div>
+				))}
 		</>
 	);
 };

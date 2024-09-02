@@ -10,6 +10,7 @@ import {SPACE_KEY_CODE} from '../config/constants/keyboardCodes';
 import {config} from '../config/index';
 
 const ENTER_KEYCODE = 13;
+const ESCAPE_KEYCODE = 27;
 const SHIFT_ENTER_KEYCODE = (window.CKEDITOR?.SHIFT ?? 0) + ENTER_KEYCODE;
 
 const defaultGetEditorWrapper = (element) => {
@@ -64,9 +65,8 @@ export default function getAlloyEditorProcessor(
 				return;
 			}
 
-			const {editorConfig} = config.defaultEditorConfigurations[
-				editorConfigurationName
-			];
+			const {editorConfig} =
+				config.defaultEditorConfigurations[editorConfigurationName];
 
 			_element = element;
 
@@ -95,20 +95,23 @@ export default function getAlloyEditorProcessor(
 					});
 				},
 
-				documentBrowseLinkUrl: editorConfig.documentBrowseLinkUrl.replace(
-					'_EDITOR_NAME_',
-					editorName
-				),
+				documentBrowseLinkUrl:
+					editorConfig.documentBrowseLinkUrl.replace(
+						'_EDITOR_NAME_',
+						editorName
+					),
 
-				filebrowserImageBrowseLinkUrl: editorConfig.filebrowserImageBrowseLinkUrl.replace(
-					'_EDITOR_NAME_',
-					editorName
-				),
+				filebrowserImageBrowseLinkUrl:
+					editorConfig.filebrowserImageBrowseLinkUrl.replace(
+						'_EDITOR_NAME_',
+						editorName
+					),
 
-				filebrowserImageBrowseUrl: editorConfig.filebrowserImageBrowseUrl.replace(
-					'_EDITOR_NAME_',
-					editorName
-				),
+				filebrowserImageBrowseUrl:
+					editorConfig.filebrowserImageBrowseUrl.replace(
+						'_EDITOR_NAME_',
+						editorName
+					),
 
 				title: '',
 			});
@@ -164,6 +167,9 @@ export default function getAlloyEditorProcessor(
 					) {
 						event.cancel();
 					}
+					else if (event.data.keyCode === ESCAPE_KEYCODE) {
+						onBlurEditor();
+					}
 				}),
 				nativeEditor.on('blur', () => {
 					if (_editor._mainUI.state.hidden) {
@@ -178,7 +184,15 @@ export default function getAlloyEditorProcessor(
 					}
 				}),
 
-				nativeEditor.on('instanceReady', () => {
+				nativeEditor.on('instanceReady', (event) => {
+					event.editor.dataProcessor.htmlFilter.addRules({
+						elements: {
+							img(element) {
+								element.attributes.alt = '';
+							},
+						},
+					});
+
 					nativeEditor.focus();
 
 					if (clickPosition) {

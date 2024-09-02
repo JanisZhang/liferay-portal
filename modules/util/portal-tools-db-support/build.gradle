@@ -1,5 +1,8 @@
 apply plugin: "com.liferay.maven.plugin.builder"
 
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
 String h2Version = "2.1.212"
 
 buildPluginDescriptor {
@@ -14,6 +17,10 @@ buildPluginDescriptor {
 
 configurations {
 	mavenDistribution
+}
+
+copyCSS {
+	mustRunAfter buildPluginDescriptor
 }
 
 dependencies {
@@ -45,7 +52,7 @@ test {
 		systemProperty "maven.distribution.file.name", configurations.mavenDistribution.singleFile
 	}
 
-	systemProperty "db.support.version", jar.version
+	systemProperty "db.support.version", jar.archiveVersion.get()
 	systemProperty "h2.version", h2Version
 	systemProperty "http.proxyHost", System.properties["http.proxyHost"]
 	systemProperty "http.proxyPort", System.properties["http.proxyPort"]

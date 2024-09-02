@@ -110,11 +110,11 @@ export function NavigationMenuConfiguration({
 			let uri = rootMenuItemSelectorURL;
 
 			uri = addParams(
-				`${itemSelectorNamespace}${selectSiteNavigationMenuTypeSelect.value}`,
+				`${itemSelectorNamespace}siteNavigationMenuType=${selectSiteNavigationMenuTypeSelect.value}`,
 				uri
 			);
 			uri = addParams(
-				`${itemSelectorNamespace}${siteNavigationMenuIdInput.value}`,
+				`${itemSelectorNamespace}siteNavigationMenuId=${siteNavigationMenuIdInput.value}`,
 				uri
 			);
 
@@ -231,9 +231,10 @@ export function NavigationMenuConfiguration({
 			selectSiteNavigationMenuTypeSelect.addEventListener(
 				'change',
 				() => {
-					const selectedSelectSiteNavigationMenuType = document.querySelector(
-						`${namespace}selectSiteNavigationMenuType option:checked`
-					);
+					const selectedSelectSiteNavigationMenuType =
+						document.querySelector(
+							`${namespace}selectSiteNavigationMenuType option:checked`
+						);
 
 					if (selectedSelectSiteNavigationMenuType) {
 						rootMenuItemNameSpan.innerText =

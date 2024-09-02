@@ -48,6 +48,8 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
+		IFrame.selectCategoryFrame();
+
 		PortletEntry.inputName(name = ${categoryName});
 
 		IFrame.selectTopFrame();
@@ -269,9 +271,7 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro viewNoTag() {
-		var tagName = StringUtil.lowerCase(${tagName});
-
+	macro viewNoTag(tagName = null) {
 		AssertElementNotPresent(
 			key_tagName = ${tagName},
 			locator1 = "AssetCategorization#TAG",
@@ -288,9 +288,7 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro viewTag() {
-		var tagName = StringUtil.lowerCase(${tagName});
-
+	macro viewTag(tagName = null) {
 		AssertTextEquals(
 			key_tagName = ${tagName},
 			locator1 = "AssetCategorization#TAG",

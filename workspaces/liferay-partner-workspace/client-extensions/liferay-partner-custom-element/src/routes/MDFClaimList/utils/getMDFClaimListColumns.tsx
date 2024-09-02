@@ -7,7 +7,7 @@ import {KeyedMutator, mutate} from 'swr';
 
 import Dropdown from '../../../common/components/Dropdown';
 import {DropdownOption} from '../../../common/components/Dropdown/Dropdown';
-import StatusBadge from '../../../common/components/StatusBadge';
+import StatusLabel from '../../../common/components/StatusLabel';
 import {MDFClaimColumnKey} from '../../../common/enums/mdfClaimColumnKey';
 import {MDFColumnKey} from '../../../common/enums/mdfColumnKey';
 import {PermissionActionType} from '../../../common/enums/permissionActionType';
@@ -22,6 +22,7 @@ import {ResourceName} from '../../../common/services/liferay/object/enum/resourc
 import {Status} from '../../../common/utils/constants/status';
 
 export default function getMDFClaimListColumns(
+	urlParams: URLSearchParams,
 	siteURL?: string,
 	actions?: PermissionActionType[],
 	mutated?: KeyedMutator<LiferayItems<MDFClaimDTO[]>>
@@ -30,12 +31,12 @@ export default function getMDFClaimListColumns(
 		const options = actions?.reduce<DropdownOption[]>(
 			(previousValue, currentValue) => {
 				const currentMDFClaimHasValidStatusToEdit =
-					row[MDFClaimColumnKey.STATUS] === Status.DRAFT.name ||
-					row[MDFClaimColumnKey.STATUS] ===
+					row[MDFClaimColumnKey.CLAIM_STATUS] === Status.DRAFT.name ||
+					row[MDFClaimColumnKey.CLAIM_STATUS] ===
 						Status.REQUEST_MORE_INFO.name;
 
 				const currentMDFClaimHasValidStatusToDelete =
-					row[MDFClaimColumnKey.STATUS] === Status.DRAFT.name;
+					row[MDFClaimColumnKey.CLAIM_STATUS] === Status.DRAFT.name;
 
 				if (currentValue === PermissionActionType.VIEW) {
 					previousValue.push({
@@ -46,7 +47,9 @@ export default function getMDFClaimListColumns(
 							Liferay.Util.navigate(
 								`${siteURL}/l/${
 									row[MDFClaimColumnKey.CLAIM_ID]
-								}?&returnurl=${Liferay.ThemeDisplay.getLayoutRelativeURL()}`
+								}?p_l_back_url=${encodeURIComponent(
+									Liferay.ThemeDisplay.getLayoutRelativeURL()
+								)}&${urlParams.toString()}`
 							),
 					});
 				}
@@ -139,14 +142,14 @@ export default function getMDFClaimListColumns(
 			render: (data: string | undefined, row: MDFClaimListItem) => (
 				<a
 					className="link"
-					onClick={() =>
-						Liferay.Util.navigate(
-							`${siteURL}/l/${
-								row[MDFClaimColumnKey.CLAIM_ID]
-							}?&returnurl=${Liferay.ThemeDisplay.getLayoutRelativeURL()}`
-						)
-					}
-				>{`Claim-${data}`}</a>
+					href={`${siteURL}/l/${
+						row[MDFClaimColumnKey.CLAIM_ID]
+					}?p_l_back_url=${encodeURIComponent(
+						Liferay.ThemeDisplay.getLayoutRelativeURL()
+					)}&${urlParams.toString()}`}
+				>
+					{data}
+				</a>
 			),
 		},
 		{
@@ -155,24 +158,25 @@ export default function getMDFClaimListColumns(
 			render: (data: string | undefined, row: MDFClaimListItem) => (
 				<a
 					className="link"
-					onClick={() =>
-						Liferay.Util.navigate(
-							`${siteURL}/l/${
-								row[MDFClaimColumnKey.REQUEST_ID]
-							}?&returnurl=${Liferay.ThemeDisplay.getLayoutRelativeURL()}`
-						)
-					}
-				>{`Request-${data}`}</a>
+					href={`${siteURL}/l/${
+						row[MDFClaimColumnKey.REQUEST_ID]
+					}?p_l_back_url=${encodeURIComponent(
+						Liferay.ThemeDisplay.getLayoutRelativeURL()
+					)}&${urlParams.toString()}`}
+				>
+					{data}
+				</a>
 			),
 		},
 		{
 			columnKey: MDFClaimColumnKey.PARTNER,
 			label: 'Partner',
+			size: 'md',
 		},
 		{
-			columnKey: MDFClaimColumnKey.STATUS,
+			columnKey: MDFClaimColumnKey.CLAIM_STATUS,
 			label: 'Status',
-			render: (data?: string) => <StatusBadge status={data as string} />,
+			render: (data?: string) => <StatusLabel status={data as string} />,
 		},
 		{
 			columnKey: MDFClaimColumnKey.TYPE,

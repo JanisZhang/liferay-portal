@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {getLocalizableLabel} from '@liferay/object-js-components-web';
+import {stringUtils} from '@liferay/object-js-components-web';
 import classNames from 'classnames';
 import React, {useRef} from 'react';
 import {Handle, NodeProps, Position, useStore} from 'react-flow-renderer';
@@ -11,9 +11,9 @@ import {Handle, NodeProps, Position, useStore} from 'react-flow-renderer';
 import {getObjectDefinitionNodeActions} from '../../ViewObjectDefinitions/objectDefinitionUtil';
 import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext';
 import {TYPES} from '../ModelBuilderContext/typesEnum';
+import {ObjectDefinitionNodeFields} from './ObjectDefinitionNodeFields';
 import ObjectDefinitionNodeFooter from './ObjectDefinitionNodeFooter';
 import ObjectDefinitionNodeHeader from './ObjectDefinitionNodeHeader';
-import ObjectDefinitionNodeFields from './ObjectDefinitionNodeObjectFields';
 
 import './NodeContainer.scss';
 
@@ -100,8 +100,10 @@ export function ObjectDefinitionNode({
 				className={classNames(
 					'lfr-objects__model-builder-node-container',
 					{
-						'lfr-objects__model-builder-node-container--link': linkedObjectDefinition,
-						'lfr-objects__model-builder-node-container--selected': selected,
+						'lfr-objects__model-builder-node-container--link':
+							linkedObjectDefinition,
+						'lfr-objects__model-builder-node-container--selected':
+							selected,
 					}
 				)}
 				onMouseEnter={() => {
@@ -129,7 +131,7 @@ export function ObjectDefinitionNode({
 						handleSelectObjectDefinitionNode
 					}
 					isLinkedObjectDefinition={linkedObjectDefinition}
-					objectDefinitionLabel={getLocalizableLabel(
+					objectDefinitionLabel={stringUtils.getLocalizableLabel(
 						defaultLanguageId,
 						label,
 						name

@@ -234,12 +234,21 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro addFieldOption(optionValue = null, fieldFieldLabel = null, index = null, optionFieldLabel = null) {
+	macro addFieldOption(optionValue = null, fieldFieldLabel = null, index = null, optionFieldLabel = null, gridOptionType = null) {
 		if (isSet(fieldFieldLabel)) {
 			AssertClick.assertPartialTextClickAt(
 				key_fieldFieldLabel = ${fieldFieldLabel},
 				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
 				value1 = ${fieldFieldLabel});
+		}
+
+		if (${index} != 1) {
+			if (isSet(gridOptionType)) {
+				FormFields.clickAddOptionButton(gridOptionType = ${gridOptionType});
+			}
+			else {
+				FormFields.clickAddOptionButton();
+			}
 		}
 
 		if (isSet(optionFieldLabel)) {
@@ -294,6 +303,10 @@ definition {
 						index = ${index},
 						optionFieldLabel = "Rows");
 
+					if (${index} != 2) {
+						FormFields.clickAddOptionButton(gridOptionType = "Rows");
+					}
+
 					var index = ${index} + 1;
 				}
 
@@ -310,6 +323,10 @@ definition {
 						index = ${index},
 						optionFieldLabel = "Columns");
 
+					if (${index} != " 2") {
+						FormFields.clickAddOptionButton(gridOptionType = "Columns");
+					}
+
 					var index = ${index} + 1;
 				}
 			}
@@ -323,6 +340,8 @@ definition {
 					fieldReferenceOfFieldOption = "First",
 					index = 1,
 					optionFieldLabel = "Options");
+
+				FormFields.clickAddOptionButton();
 
 				DataEngine.addFieldOption(
 					index = 2,
@@ -343,6 +362,8 @@ definition {
 					fieldReferenceOfFieldOption = "Value2",
 					index = 1);
 
+				FormFields.clickAddOptionButton();
+
 				DataEngine.addFieldOption(
 					index = 2,
 					optionValue = "Option 1");
@@ -359,6 +380,8 @@ definition {
 				DataEngine.editFieldReferenceOfFieldOption(
 					fieldReferenceOfFieldOption = "Value3",
 					index = 1);
+
+				FormFields.clickAddOptionButton();
 
 				DataEngine.addFieldOption(
 					index = 2,
@@ -476,6 +499,10 @@ definition {
 						index = ${index},
 						optionFieldLabel = "Rows");
 
+					if (${index} != 2) {
+						FormFields.clickAddOptionButton(gridOptionType = "Rows");
+					}
+
 					var index = ${index} + 1;
 				}
 
@@ -492,6 +519,10 @@ definition {
 						index = ${index},
 						optionFieldLabel = "Columns");
 
+					if (${index} != 2) {
+						FormFields.clickAddOptionButton(gridOptionType = "Columns");
+					}
+
 					var index = ${index} + 1;
 				}
 			}
@@ -505,6 +536,8 @@ definition {
 					fieldReferenceOfFieldOption = "First",
 					index = 1,
 					optionFieldLabel = "Options");
+
+				FormFields.clickAddOptionButton();
 
 				DataEngine.addFieldOption(
 					index = 2,
@@ -525,6 +558,8 @@ definition {
 					fieldReferenceOfFieldOption = "Value2",
 					index = 1);
 
+				FormFields.clickAddOptionButton();
+
 				DataEngine.addFieldOption(
 					index = 2,
 					optionValue = "Option 1");
@@ -541,6 +576,8 @@ definition {
 				DataEngine.editFieldReferenceOfFieldOption(
 					fieldReferenceOfFieldOption = "Value3",
 					index = 1);
+
+				FormFields.clickAddOptionButton();
 
 				DataEngine.addFieldOption(
 					index = 2,
@@ -1176,6 +1213,22 @@ definition {
 		Check.checkToggleSwitch(locator1 = "Checkbox#SWITCH");
 
 		Click(locator1 = "Sidebar#BACK");
+	}
+
+	@summary = "Default summary"
+	macro editFieldOption(optionValue = null, fieldFieldLabel = null, index = null, optionFieldLabel = null) {
+		if (isSet(fieldFieldLabel)) {
+			AssertClick.assertPartialTextClickAt(
+				key_fieldFieldLabel = ${fieldFieldLabel},
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+				value1 = ${fieldFieldLabel});
+		}
+
+		Type(
+			index = ${index},
+			key_optionFieldLabel = ${optionFieldLabel},
+			locator1 = "Sidebar#OPTION_INPUT",
+			value1 = ${optionValue});
 	}
 
 	@summary = "Default summary"

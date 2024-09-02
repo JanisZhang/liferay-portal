@@ -449,12 +449,12 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 
 			Navigator.openURL();
 
 			User.loginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			Audit.openAuditAdmin();
@@ -518,7 +518,7 @@ definition {
 				userEmailAddress = "test@www.able.com");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
@@ -694,7 +694,7 @@ definition {
 				virtualHost = "www.able.com");
 
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 
@@ -748,7 +748,7 @@ definition {
 				portalURL = "http://www.able.com:8080",
 				siteName = "Site Name",
 				userEmailAddress = "test@www.able.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			PagesAdmin.openPagesAdmin(
 				baseURL = "http://www.able.com:8080",
@@ -841,13 +841,13 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
 			JSONUser.addUser(
 				creatorEmailAddress = "test@www.able.com",
-				creatorPassword = "test",
+				creatorPassword = PropsUtil.get("default.admin.password"),
 				portalInstanceName = "www.able.com",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "userea@liferay.com",
@@ -883,10 +883,11 @@ definition {
 
 		task ("Then: Verify that the email address of impersonated user is not present in the server log") {
 			var companyId = JSONCompany.getCompanyId(portalInstanceName = "www.able.com");
+			var userPassword = PropsUtil.get("default.admin.password");
 
 			var curl = '''
 				http://www.able.com:8080/api/jsonws/user/get-user-by-email-address/company-id/${companyId}/email-address/userea@liferay.com \
-					-u test@www.able.com:test
+					-u test@www.able.com:${userPassword}
 			''';
 
 			var userId = JSONCurlUtil.get(${curl}, "$['userId']");
@@ -918,13 +919,13 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
 			JSONUser.addUser(
 				creatorEmailAddress = "test@www.able.com",
-				creatorPassword = "test",
+				creatorPassword = PropsUtil.get("default.admin.password"),
 				portalInstanceName = "www.able.com",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "userea@liferay.com",
@@ -945,22 +946,18 @@ definition {
 
 			UserNavigator.gotoDisplaySettings();
 
-			Select(
-				key_fieldLabel = "Time Zone",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "(UTC +01:00) Central European Time");
-
-			Click(locator1 = "Select#TIME_ZONE");
+			Click.clickNoMouseOver(locator1 = "//option[@value='Europe/Paris']");
 
 			PortletEntry.save();
 		}
 
 		task ("Then: Verify that the email address of impersonated user is present in the server log") {
 			var companyId = JSONCompany.getCompanyId(portalInstanceName = "www.able.com");
+			var userPassword = PropsUtil.get("default.admin.password");
 
 			var curl = '''
 				http://www.able.com:8080/api/jsonws/user/get-user-by-email-address/company-id/${companyId}/email-address/userea@liferay.com \
-					-u test@www.able.com:test
+					-u test@www.able.com:${userPassword}
 			''';
 
 			var userId = JSONCurlUtil.get(${curl}, "$['userId']");
@@ -992,14 +989,14 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
 			for (var userNum : list "1,2") {
 				JSONUser.addUser(
 					creatorEmailAddress = "test@www.able.com",
-					creatorPassword = "test",
+					creatorPassword = PropsUtil.get("default.admin.password"),
 					portalInstanceName = "www.able.com",
 					specificURL = "http://www.able.com:8080",
 					userEmailAddress = "userea${userNum}@liferay.com",
@@ -1012,7 +1009,7 @@ definition {
 
 			UserNavigator.gotoUser(userScreenName = "usersn1");
 
-			User.editPassword(newPassword = "test");
+			User.editPassword(newPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("When: Update all available information fields of user1") {
@@ -1057,7 +1054,7 @@ definition {
 				key_text = "Save",
 				locator1 = "Button#ANY");
 
-			User.confirmPassword(password = "test");
+			User.confirmPassword(password = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Then: Verify that the email address of impersonated user is present in the server log") {
@@ -1129,13 +1126,13 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
 			JSONUser.addUser(
 				creatorEmailAddress = "test@www.able.com",
-				creatorPassword = "test",
+				creatorPassword = PropsUtil.get("default.admin.password"),
 				portalInstanceName = "www.able.com",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "userea@liferay.com",
@@ -1147,7 +1144,7 @@ definition {
 
 			UserNavigator.gotoUser(userScreenName = "usersn");
 
-			User.editPassword(newPassword = "test");
+			User.editPassword(newPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("When: Modify the Password reminder question and change the Password") {
@@ -1188,17 +1185,18 @@ definition {
 
 		task ("Then: Verify that the email address of impersonated user is present in the server log") {
 			var companyId = JSONCompany.getCompanyId(portalInstanceName = "www.able.com");
+			var userPassword = PropsUtil.get("default.admin.password");
 
 			var curl = '''
 				http://www.able.com:8080/api/jsonws/user/get-user-by-email-address/company-id/${companyId}/email-address/userea@liferay.com \
-					-u test@www.able.com:test
+					-u test@www.able.com:${userPassword}
 			''';
 
 			var userId = JSONCurlUtil.get(${curl}, "$['userId']");
 
 			AssertConsoleTextPresent(value1 = "\"doAsUserEmailAddress\":\"userea@liferay.com\",\"doAsUserName\":\"userfn userln\",\"doAsUserId\":\"${userId}\",\"attributes\":\[\{\"newValue\":\"\",\"name\":\"password\"");
 
-			AssertConsoleTextPresent(value1 = "\"newValue\":\"test\",\"name\":\"reminderQueryAnswer\"");
+			AssertConsoleTextPresent(value1 = "\"newValue\":\"\",\"name\":\"reminderQueryAnswer\"");
 		}
 	}
 
@@ -1257,19 +1255,19 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "invalidAddress@liferay.com");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 		}
 
 		task ("Then: The sign in action LOGIN_DNE info audit event message is written out to the log with the reason of the failure") {
 			Navigator.openURL();
 
 			User.loginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			Audit.openAuditAdmin();
@@ -1320,12 +1318,12 @@ definition {
 
 			User.firstLoginUI(
 				authenticationMethod = "By Screen Name",
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userScreenName = "inavlidScreenName");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 		}
 
 		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
@@ -1333,7 +1331,7 @@ definition {
 
 			User.firstLoginUI(
 				authenticationMethod = "By Screen Name",
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userScreenName = "test");
 
 			Audit.openAuditAdmin();
@@ -1386,12 +1384,12 @@ definition {
 
 			User.firstLoginUI(
 				authenticationMethod = "By User ID",
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userId = "inavlidUserId");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 		}
 
 		task ("Then: The sign in action LOGIN_DNE info audit event message is written out to the log with the reason of the failure") {
@@ -1399,7 +1397,7 @@ definition {
 
 			User.firstLoginUI(
 				authenticationMethod = "By User ID",
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userId = ${userId});
 
 			Audit.openAuditAdmin();
@@ -1445,14 +1443,14 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 		}
 
 		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
 			Navigator.openURL();
 
 			User.loginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			Audit.openAuditAdmin();
@@ -1509,7 +1507,7 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 		}
 
 		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
@@ -1517,7 +1515,7 @@ definition {
 
 			User.firstLoginUI(
 				authenticationMethod = "By Screen Name",
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userScreenName = "test");
 
 			Audit.openAuditAdmin();
@@ -1576,7 +1574,7 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 		}
 
 		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
@@ -1584,7 +1582,7 @@ definition {
 
 			User.firstLoginUI(
 				authenticationMethod = "By User ID",
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userId = ${userId});
 
 			Audit.openAuditAdmin();
@@ -1647,14 +1645,14 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 		}
 
 		task ("Then: The sign in action LOGIN_FAILURE info audit event message is written out to the log with the reason of the failure") {
 			Navigator.openURL();
 
 			User.loginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			Audit.openAuditAdmin();

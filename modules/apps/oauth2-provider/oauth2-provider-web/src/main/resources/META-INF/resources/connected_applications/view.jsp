@@ -59,14 +59,14 @@ if (Validator.isNotNull(backURL)) {
 				<liferay-ui:search-container-column-text
 					colspan="<%= 2 %>"
 				>
-					<h4>
+					<div class="h4">
 						<aui:a href="<%= viewURL.toString() %>"><%= HtmlUtil.escape(oAuth2Application.getName()) %></aui:a>
-					</h4>
+					</div>
 
-					<h5 class="text-default">
+					<div class="h5 text-default">
 						<span><liferay-ui:message key="authorization" /></span>:
 						<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - oAuth2Authorization.getCreateDate().getTime(), true) %>" key="x-ago" translateArguments="<%= false %>" />
-					</h5>
+					</div>
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-jsp

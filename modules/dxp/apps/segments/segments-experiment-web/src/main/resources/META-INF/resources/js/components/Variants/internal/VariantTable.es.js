@@ -143,9 +143,10 @@ function VariantTable({
 										data-title={name}
 										displayType="unstyled"
 										onClick={() =>
-											navigateToExperience(
-												segmentsExperienceId
-											)
+											navigateToExperience({
+												experienceId:
+													segmentsExperienceId,
+											})
 										}
 									>
 										{control ? (
@@ -196,10 +197,12 @@ function VariantTable({
 												className="btn-monospaced"
 												displayType="secondary"
 												onClick={() =>
-													navigateToExperience(
-														segmentsExperienceId,
-														editVariantLayoutURL
-													)
+													navigateToExperience({
+														baseUrl:
+															editVariantLayoutURL,
+														experienceId:
+															segmentsExperienceId,
+													})
 												}
 											>
 												<ClayIcon symbol="pencil" />
@@ -226,7 +229,8 @@ function VariantTable({
 														onClick={() =>
 															onVariantEdition({
 																name,
-																variantId: segmentsExperimentRelId,
+																variantId:
+																	segmentsExperimentRelId,
 															})
 														}
 													>
@@ -245,7 +249,8 @@ function VariantTable({
 															setDeleteModalState(
 																{
 																	open: true,
-																	variantId: segmentsExperimentRelId,
+																	variantId:
+																		segmentsExperimentRelId,
 																}
 															);
 														}}
@@ -297,7 +302,8 @@ function VariantTable({
 											onClick={() => {
 												dispatch(
 													openPublishModal({
-														experienceId: segmentsExperienceId,
+														experienceId:
+															segmentsExperienceId,
 														experienceName: name,
 													})
 												);

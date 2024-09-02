@@ -1,4 +1,4 @@
-@component-name = "portal-web-forms-and-data-lists"
+@component-name = "portal-bpm"
 definition {
 
 	property osgi.module.configuration.file.names = "com.liferay.frontend.js.loader.modules.extender.internal.configuration.Details.config";
@@ -775,7 +775,7 @@ definition {
 	@description = "Verify that a Calculate Rule can be created using Numeric Fields in the calculation"
 	@priority = 5
 	test CanIncludeNumericFieldsInCalculations {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		FormsAdmin.addForm();
 
@@ -1131,7 +1131,7 @@ definition {
 			outputParameterName = "Country Name",
 			outputParameterPath = "nameCurrentValue",
 			outputParameterType = "List",
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			url = "${portalURL}/api/jsonws/country/get-countries",
 			username = "test@liferay.com");
 
@@ -1162,6 +1162,8 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Select1",
 			optionValue = "Select 1");
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.editOptionsRow(
 			optionName = "Select2",

@@ -5,6 +5,8 @@
 
 package com.liferay.jethr0.entity;
 
+import java.net.URL;
+
 import java.util.Date;
 import java.util.Set;
 
@@ -17,6 +19,8 @@ public interface Entity {
 
 	public Date getCreatedDate();
 
+	public URL getEntityURL();
+
 	public long getId();
 
 	public JSONObject getJSONObject();
@@ -28,6 +32,8 @@ public interface Entity {
 	public void setCreatedDate(Date createdDate);
 
 	public void setId(long id);
+
+	public void setJSONObject(JSONObject jsonObject);
 
 	public void setModifiedDate(Date modifiedDate);
 

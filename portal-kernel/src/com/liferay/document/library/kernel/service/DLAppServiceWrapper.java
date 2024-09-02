@@ -252,12 +252,14 @@ public class DLAppServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.repository.model.FileShortcut
 			addFileShortcut(
-				long repositoryId, long folderId, long toFileEntryId,
+				String externalReferenceCode, long repositoryId, long folderId,
+				long toFileEntryId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlAppService.addFileShortcut(
-			repositoryId, folderId, toFileEntryId, serviceContext);
+			externalReferenceCode, repositoryId, folderId, toFileEntryId,
+			serviceContext);
 	}
 
 	/**
@@ -585,6 +587,15 @@ public class DLAppServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_dlAppService.deleteFileEntry(fileEntryId);
+	}
+
+	@Override
+	public void deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_dlAppService.deleteFileEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -1022,11 +1033,11 @@ public class DLAppServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.repository.model.FileEntry
 			getFileEntryByExternalReferenceCode(
-				long groupId, String externalReferenceCode)
+				String externalReferenceCode, long groupId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlAppService.getFileEntryByExternalReferenceCode(
-			groupId, externalReferenceCode);
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -1794,6 +1805,15 @@ public class DLAppServiceWrapper
 
 		return _dlAppService.getGroupFileEntriesCount(
 			groupId, userId, rootFolderId, mimeTypes, status);
+	}
+
+	@Override
+	public java.util.List
+		<com.liferay.portal.kernel.repository.model.FileShortcut>
+				getGroupFileShortcuts(long groupId)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlAppService.getGroupFileShortcuts(groupId);
 	}
 
 	/**

@@ -36,11 +36,13 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -103,7 +103,7 @@ public abstract class BasePaymentResourceTestCase {
 		PaymentResource.Builder builder = PaymentResource.builder();
 
 		paymentResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +117,32 @@ public abstract class BasePaymentResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Payment payment1 = randomPayment();
+
+		String json = objectMapper.writeValueAsString(payment1);
+
+		Payment payment2 = PaymentSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(payment1, payment2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Payment payment = randomPayment();
+
+		String json1 = objectMapper.writeValueAsString(payment);
+		String json2 = PaymentSerDes.toJSON(payment);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +157,6 @@ public abstract class BasePaymentResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Payment payment1 = randomPayment();
-
-		String json = objectMapper.writeValueAsString(payment1);
-
-		Payment payment2 = PaymentSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(payment1, payment2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Payment payment = randomPayment();
-
-		String json1 = objectMapper.writeValueAsString(payment);
-		String json2 = PaymentSerDes.toJSON(payment);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -182,6 +173,7 @@ public abstract class BasePaymentResourceTestCase {
 		payment.setErrorMessages(regex);
 		payment.setExternalReferenceCode(regex);
 		payment.setLanguageId(regex);
+		payment.setPayload(regex);
 		payment.setPaymentIntegrationKey(regex);
 		payment.setReasonKey(regex);
 		payment.setRedirectURL(regex);
@@ -204,6 +196,7 @@ public abstract class BasePaymentResourceTestCase {
 		Assert.assertEquals(regex, payment.getErrorMessages());
 		Assert.assertEquals(regex, payment.getExternalReferenceCode());
 		Assert.assertEquals(regex, payment.getLanguageId());
+		Assert.assertEquals(regex, payment.getPayload());
 		Assert.assertEquals(regex, payment.getPaymentIntegrationKey());
 		Assert.assertEquals(regex, payment.getReasonKey());
 		Assert.assertEquals(regex, payment.getRedirectURL());
@@ -400,7 +393,7 @@ public abstract class BasePaymentResourceTestCase {
 			(entityField, payment1, payment2) -> {
 				BeanTestUtil.setProperty(
 					payment1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -538,6 +531,8 @@ public abstract class BasePaymentResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject paymentsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/payments");
@@ -549,6 +544,27 @@ public abstract class BasePaymentResourceTestCase {
 
 		paymentsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/payments");
+
+		Assert.assertEquals(
+			totalCount + 2, paymentsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			payment1,
+			Arrays.asList(
+				PaymentSerDes.toDTOs(paymentsJSONObject.getString("items"))));
+		assertContains(
+			payment2,
+			Arrays.asList(
+				PaymentSerDes.toDTOs(paymentsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminPayment_v1_0
+
+		paymentsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPayment_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminPayment_v1_0",
 			"JSONObject/payments");
 
 		Assert.assertEquals(
@@ -639,6 +655,8 @@ public abstract class BasePaymentResourceTestCase {
 		Payment payment =
 			testGraphQLGetPaymentByExternalReferenceCode_addPayment();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				payment,
@@ -660,6 +678,33 @@ public abstract class BasePaymentResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/paymentByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminPayment_v1_0
+
+		Assert.assertTrue(
+			equals(
+				payment,
+				PaymentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPayment_v1_0",
+								new GraphQLField(
+									"paymentByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													payment.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPayment_v1_0",
+						"Object/paymentByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -668,6 +713,8 @@ public abstract class BasePaymentResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -683,6 +730,27 @@ public abstract class BasePaymentResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPayment_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPayment_v1_0",
+						new GraphQLField(
+							"paymentByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -767,7 +835,10 @@ public abstract class BasePaymentResourceTestCase {
 
 	@Test
 	public void testGraphQLDeletePayment() throws Exception {
-		Payment payment = testGraphQLDeletePayment_addPayment();
+
+		// No namespace
+
+		Payment payment1 = testGraphQLDeletePayment_addPayment();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -776,23 +847,60 @@ public abstract class BasePaymentResourceTestCase {
 						"deletePayment",
 						new HashMap<String, Object>() {
 							{
-								put("id", payment.getId());
+								put("id", payment1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deletePayment"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"payment",
 					new HashMap<String, Object>() {
 						{
-							put("id", payment.getId());
+							put("id", payment1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPayment_v1_0
+
+		Payment payment2 = testGraphQLDeletePayment_addPayment();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPayment_v1_0",
+						new GraphQLField(
+							"deletePayment",
+							new HashMap<String, Object>() {
+								{
+									put("id", payment2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPayment_v1_0",
+				"Object/deletePayment"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPayment_v1_0",
+					new GraphQLField(
+						"payment",
+						new HashMap<String, Object>() {
+							{
+								put("id", payment2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Payment testGraphQLDeletePayment_addPayment() throws Exception {
@@ -818,6 +926,8 @@ public abstract class BasePaymentResourceTestCase {
 	public void testGraphQLGetPayment() throws Exception {
 		Payment payment = testGraphQLGetPayment_addPayment();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				payment,
@@ -833,11 +943,35 @@ public abstract class BasePaymentResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/payment"))));
+
+		// Using the namespace headlessCommerceAdminPayment_v1_0
+
+		Assert.assertTrue(
+			equals(
+				payment,
+				PaymentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPayment_v1_0",
+								new GraphQLField(
+									"payment",
+									new HashMap<String, Object>() {
+										{
+											put("id", payment.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPayment_v1_0",
+						"Object/payment"))));
 	}
 
 	@Test
 	public void testGraphQLGetPaymentNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -851,6 +985,25 @@ public abstract class BasePaymentResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPayment_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPayment_v1_0",
+						new GraphQLField(
+							"payment",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1073,6 +1226,14 @@ public abstract class BasePaymentResourceTestCase {
 
 			if (Objects.equals("languageId", additionalAssertFieldName)) {
 				if (payment.getLanguageId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("payload", additionalAssertFieldName)) {
+				if (payment.getPayload() == null) {
 					valid = false;
 				}
 
@@ -1435,6 +1596,16 @@ public abstract class BasePaymentResourceTestCase {
 			if (Objects.equals("languageId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						payment1.getLanguageId(), payment2.getLanguageId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("payload", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						payment1.getPayload(), payment2.getPayload())) {
 
 					return false;
 				}
@@ -1897,20 +2068,20 @@ public abstract class BasePaymentResourceTestCase {
 
 		if (entityFieldName.equals("createDate")) {
 			if (operator.equals("between")) {
+				Date date = payment.getCreateDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(payment.getCreateDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(payment.getCreateDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2071,6 +2242,52 @@ public abstract class BasePaymentResourceTestCase {
 
 		if (entityFieldName.equals("languageId")) {
 			Object object = payment.getLanguageId();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("payload")) {
+			Object object = payment.getPayload();
 
 			String value = String.valueOf(object);
 
@@ -2484,7 +2701,8 @@ public abstract class BasePaymentResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -2532,6 +2750,7 @@ public abstract class BasePaymentResourceTestCase {
 				id = RandomTestUtil.randomLong();
 				languageId = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				payload = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				paymentIntegrationKey = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				paymentIntegrationType = RandomTestUtil.randomInt();
@@ -2574,12 +2793,12 @@ public abstract class BasePaymentResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2588,11 +2807,16 @@ public abstract class BasePaymentResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2624,6 +2848,24 @@ public abstract class BasePaymentResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2645,16 +2887,6 @@ public abstract class BasePaymentResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

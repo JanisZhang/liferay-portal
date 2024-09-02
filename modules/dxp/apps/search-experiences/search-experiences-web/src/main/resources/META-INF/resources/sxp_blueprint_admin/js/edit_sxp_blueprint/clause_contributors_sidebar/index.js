@@ -18,6 +18,7 @@ import {
 	INACTIVE,
 } from '../../utils/constants';
 import removeDuplicates from '../../utils/functions/remove_duplicates';
+import {TEST_IDS} from '../../utils/testIds';
 import LearnMessage from './../../shared/LearnMessage';
 import ManagementToolbar from './ManagementToolbar';
 
@@ -159,9 +160,7 @@ export default function ({
 
 	const _handleEnableClauseContributors = (classNames) => {
 		onFrameworkConfigChange({
-			clauseContributorsExcludes: frameworkConfig.clauseContributorsExcludes.filter(
-				(clause) => !classNames.includes(clause)
-			),
+			clauseContributorsExcludes: [],
 			clauseContributorsIncludes: removeDuplicates([
 				...frameworkConfig.clauseContributorsIncludes,
 				...classNames,
@@ -171,13 +170,21 @@ export default function ({
 
 	const _handleDisableClauseContributors = (classNames) => {
 		onFrameworkConfigChange({
-			clauseContributorsExcludes: removeDuplicates([
-				...frameworkConfig.clauseContributorsExcludes,
-				...classNames,
-			]),
-			clauseContributorsIncludes: frameworkConfig.clauseContributorsIncludes.filter(
-				(clause) => !classNames.includes(clause)
-			),
+
+			// When clauseContributorsIncludes is empty, set
+			// clauseContributorsExcludes to ['*'] since it
+			// would essentially be like 'Disable All'.
+
+			clauseContributorsExcludes:
+				frameworkConfig.clauseContributorsIncludes.some(
+					(clause) => !classNames.includes(clause)
+				)
+					? []
+					: ['*'],
+			clauseContributorsIncludes:
+				frameworkConfig.clauseContributorsIncludes.filter(
+					(clause) => !classNames.includes(clause)
+				),
 		});
 	};
 
@@ -187,7 +194,7 @@ export default function ({
 				? selected.filter(
 						(preselectedClassName) =>
 							preselectedClassName !== className
-				  )
+					)
 				: [...selected, className]
 		);
 	};
@@ -282,11 +289,14 @@ export default function ({
 								{contributor.label}
 							</ClayList.Header>
 
-							{contributor.value.map((className) => (
+							{contributor.value.map((className, index) => (
 								<ClayList.Item
 									active={selected.includes(className)}
+									data-qa-id={
+										TEST_IDS.CLAUSE_CONTRIBUTORS_SIDEBAR_LIST_ITEM
+									}
 									flex
-									key={className}
+									key={`${className}-${index}`}
 								>
 									<ClayList.ItemField>
 										<ClayCheckbox
@@ -321,7 +331,7 @@ export default function ({
 													? Liferay.Language.get('on')
 													: Liferay.Language.get(
 															'off'
-													  )
+														)
 											}
 											onToggle={_handleToggleClauseContributor(
 												className

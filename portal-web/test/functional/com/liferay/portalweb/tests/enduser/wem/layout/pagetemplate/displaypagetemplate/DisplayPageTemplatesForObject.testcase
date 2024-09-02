@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -91,7 +91,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Purchase Orders",
 				fragmentName = "Button");
 
 			PageEditorEditableLink.gotoEditableFieldLink(
@@ -194,12 +194,12 @@ definition {
 			PageEditor.viewInputStyle(
 				label = "Count",
 				showLabel = "true",
-				type = "numeric-input");
+				type = "numeric");
 
 			PageEditor.viewFragmentEditableText(
 				className = "button",
 				editableText = "Submit",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				id = "submit-button");
 
 			PageEditor.gotoConfiguration(fragmentName = "Form Container");
@@ -439,7 +439,7 @@ definition {
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Content Display",
 				fragmentName = "Collection Display",
-				targetFragmentName = "Text Input");
+				targetFragmentName = "Text");
 
 			PageEditor.editCollectionDisplay(
 				fragmentName = "Collection Display",
@@ -447,7 +447,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Related Stories",
 				fragmentName = "Heading");
 
 			PageEditorMapping.mapEditableFieldToCollectionItems(
@@ -478,7 +478,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Purchase Orders",
 				fragmentName = "Button");
 
 			PageEditorEditableLink.gotoEditableFieldLink(
@@ -581,7 +581,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Related Stories",
 				fragmentName = "Heading");
 
 			PageEditorMapping.mapEditableFieldToCollectionItems(
@@ -612,7 +612,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Purchase Orders",
 				fragmentName = "Button");
 
 			PageEditorEditableLink.gotoEditableFieldLink(
@@ -694,7 +694,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Purchase Orders",
 				fragmentName = "Button");
 
 			PageEditorEditableLink.gotoEditableFieldLink(
@@ -817,7 +817,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Purchase Orders",
 				fragmentName = "Button");
 
 			PageEditorEditableLink.gotoEditableFieldLink(
@@ -953,7 +953,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Purchase Orders",
 				fragmentName = "Button");
 
 			PageEditorEditableLink.gotoEditableFieldLink(
@@ -981,7 +981,7 @@ definition {
 			AssertTextEquals(
 				index = 1,
 				locator1 = "Fragment#INPUT_FIELD",
-				type = "select-from-list",
+				type = "select",
 				value1 = "Apple");
 		}
 
@@ -989,7 +989,7 @@ definition {
 			Click(
 				index = 1,
 				locator1 = "Fragment#INPUT_TOGGLE",
-				type = "select-from-list");
+				type = "select");
 
 			MenuItem.click(menuItem = "Pineapple");
 
@@ -1123,7 +1123,7 @@ definition {
 
 			PageEditor.mapFormContainerToObject(contentType = "Purchase Order (Default)");
 
-			PageEditor.removeFragment(fragmentName = "Text Input");
+			PageEditor.removeFragment(fragmentName = "Text");
 
 			PageEditor.publish();
 
@@ -1148,7 +1148,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Purchase Orders",
 				fragmentName = "Button");
 
 			PageEditorEditableLink.gotoEditableFieldLink(
@@ -1240,7 +1240,7 @@ definition {
 
 			PageEditor.mapFormContainerToObject(contentType = "Purchase Order (Default)");
 
-			PageEditor.removeFragment(fragmentName = "Text Input");
+			PageEditor.removeFragment(fragmentName = "Text");
 
 			PageEditor.publish(objectName = "Purchase Order");
 
@@ -1265,7 +1265,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Purchase Orders",
 				fragmentName = "Button");
 
 			PageEditorEditableLink.gotoEditableFieldLink(
@@ -1396,7 +1396,7 @@ definition {
 
 			PageEditor.addFragmentToCollectionDisplay(
 				collectionName = "Basic Components",
-				entryTitle = "Sample Collection Item",
+				entryTitle = "Purchase Orders",
 				fragmentName = "Button");
 
 			PageEditorEditableLink.gotoEditableFieldLink(
@@ -1513,7 +1513,7 @@ definition {
 			PageEditor.viewInputStyle(
 				label = "Favorite Fruit",
 				showLabel = "true",
-				type = "multiselect-list");
+				type = "multiselect");
 		}
 	}
 
@@ -1656,7 +1656,7 @@ definition {
 
 			PageEditor.viewInputStyle(
 				placeholder = "Choose an Option",
-				type = "select-from-list");
+				type = "select");
 		}
 	}
 

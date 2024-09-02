@@ -115,11 +115,13 @@ const TokenList: React.FC<
 			<Card>
 				<Card.Body>
 					<div className='align-items-start d-flex flex-column justify-content-between'>
-						<h4 className='mb-4'>
+						<div className='h4 mb-4'>
 							{Liferay.Language.get('token-information')}
-						</h4>
+						</div>
 
-						<h5>{Liferay.Language.get('root-endpoint')}</h5>
+						<div className='h5'>
+							{Liferay.Language.get('root-endpoint')}
+						</div>
 
 						<span className='text-secondary'>
 							{window.location.origin + ApisPath}

@@ -593,6 +593,47 @@ public class Payment implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _languageIdSupplier;
 
+	@Schema
+	public String getPayload() {
+		if (_payloadSupplier != null) {
+			payload = _payloadSupplier.get();
+
+			_payloadSupplier = null;
+		}
+
+		return payload;
+	}
+
+	public void setPayload(String payload) {
+		this.payload = payload;
+
+		_payloadSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPayload(
+		UnsafeSupplier<String, Exception> payloadUnsafeSupplier) {
+
+		_payloadSupplier = () -> {
+			try {
+				return payloadUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String payload;
+
+	@JsonIgnore
+	private Supplier<String> _payloadSupplier;
+
 	@Schema(example = "money-order")
 	public String getPaymentIntegrationKey() {
 		if (_paymentIntegrationKeySupplier != null) {
@@ -1355,6 +1396,22 @@ public class Payment implements Serializable {
 			sb.append("\"");
 		}
 
+		String payload = getPayload();
+
+		if (payload != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"payload\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(payload));
+
+			sb.append("\"");
+		}
+
 		String paymentIntegrationKey = getPaymentIntegrationKey();
 
 		if (paymentIntegrationKey != null) {
@@ -1591,7 +1648,10 @@ public class Payment implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

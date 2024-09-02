@@ -16,7 +16,12 @@ import {testrayCaseResultImpl} from './TestrayCaseResult';
 import {testrayFactorRest} from './TestrayFactor';
 import {testrayRunImpl} from './TestrayRun';
 
-import type {APIResponse, TestrayBuild, TestrayRoutine} from './types';
+import type {
+	APIResponse,
+	TestrayBuild,
+	TestrayRoutine,
+	TestrayRun,
+} from './types';
 
 type Build = typeof yupSchema.build.__outputType & {projectId: number};
 
@@ -71,15 +76,15 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 		let runIndex = 1;
 
 		for (const run of runs) {
-			const factorOptions = (Object.values(
-				run
-			) as CategoryOptions[]).filter(Boolean);
+			const factorOptions = (
+				Object.values(run) as CategoryOptions[]
+			).filter(Boolean);
 
 			const factorOptionsList = factorOptions
 				.filter(({factorOption}) => Boolean(factorOption))
 				.map(({factorOption}) => factorOption);
 
-			const testrayRunName = factorOptionsList.join(' | ');
+			const testrayRunName = factorOptionsList.join('|');
 
 			if (!testrayRunName) {
 				continue;
@@ -99,7 +104,8 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 					factorOption.factorOptionId
 				) {
 					await testrayFactorRest.create({
-						factorCategoryId: factorOption.factorCategoryId?.toString(),
+						factorCategoryId:
+							factorOption.factorCategoryId?.toString(),
 						factorOptionId: factorOption.factorOptionId?.toString(),
 						name: '',
 						routineId: undefined,
@@ -122,6 +128,7 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 					caseId,
 					comment: undefined,
 					dueStatus: CaseResultStatuses.UNTESTED,
+					errors: undefined,
 					issues: undefined,
 					mbMessageId: 0,
 					mbThreadId: 0,
@@ -201,6 +208,14 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 		});
 	}
 
+	public async autofill(objectEntryId1: number, objectEntryId2: number) {
+		const response = await this.fetcher.post(
+			`/testray-build-autofill/${objectEntryId1}/${objectEntryId2}`
+		);
+
+		return response;
+	}
+
 	public async getCurrentCaseIds(buildId: string | number) {
 		const response = await this.fetcher(
 			`/buildscaseses?filter=${SearchBuilder.eq(
@@ -217,9 +232,61 @@ class TestrayBuildImpl extends Rest<Build, TestrayBuild> {
 		return caseIds;
 	}
 
+	public async updateBuild(
+		id: number,
+		data: Partial<Build>,
+		runItems: TestrayRun[]
+	): Promise<TestrayBuild> {
+		const getLastRunNumber = () => {
+			const runs = runItems?.map((item: TestrayRun) => item.number) || [];
+
+			return runs[runs?.length - 1];
+		};
+
+		let runNumber = getLastRunNumber() as unknown as number;
+
+		for (const run of data.runOptions) {
+			const runId = run?.runId;
+			const fieldId = run?.id;
+
+			const runName = Object.values(run)
+				.filter((key, _) => key !== runId && key !== id)
+				.join('|');
+
+			if (!runName) {
+				continue;
+			}
+
+			if (!runId) {
+				await testrayRunImpl.create({
+					buildId: id,
+					description: undefined,
+					environmentHash: runName,
+					name: runName,
+					number: runNumber + 1,
+				});
+
+				runNumber++;
+			}
+
+			if (fieldId && runId) {
+				await testrayRunImpl.update(runId, {
+					...run,
+					environmentHash: runName,
+					name: runName,
+				});
+			}
+		}
+
+		return this.update(id, data);
+	}
+
 	public async updateArchivedFlag(id: number, archived: boolean) {
+		const dateArchived = archived ? new Date().toISOString() : '';
+
 		await this.fetcher.patch(`/builds/${id}`, {
 			archived,
+			dateArchived,
 		});
 	}
 }

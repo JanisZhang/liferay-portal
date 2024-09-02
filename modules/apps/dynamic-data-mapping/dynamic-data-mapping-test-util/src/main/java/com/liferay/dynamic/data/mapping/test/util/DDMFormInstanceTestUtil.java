@@ -13,6 +13,7 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.StorageType;
 import com.liferay.dynamic.data.mapping.util.DDMFormFactory;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -88,6 +89,12 @@ public class DDMFormInstanceTestUtil {
 	}
 
 	public static DDMFormValues createSettingsDDMFormValues() {
+		return createSettingsDDMFormValues(true);
+	}
+
+	public static DDMFormValues createSettingsDDMFormValues(
+		boolean requireCaptcha) {
+
 		DDMForm ddmForm = DDMFormFactory.create(DDMFormInstanceSettings.class);
 
 		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
@@ -115,13 +122,13 @@ public class DDMFormInstanceTestUtil {
 				"published", "Joe Bloggs"));
 		ddmFormValues.addDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
-				"redirectURL", "http://www.google.com"));
+				"redirectURL", StringPool.BLANK));
 		ddmFormValues.addDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
 				"requireAuthentication", "false"));
 		ddmFormValues.addDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
-				"requireCaptcha", "true"));
+				"requireCaptcha", String.valueOf(requireCaptcha)));
 		ddmFormValues.addDDMFormFieldValue(
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
 				"sendEmailNotification", "false"));

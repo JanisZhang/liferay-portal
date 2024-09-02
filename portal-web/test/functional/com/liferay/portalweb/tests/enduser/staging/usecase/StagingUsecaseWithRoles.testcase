@@ -1,4 +1,4 @@
-@component-name = "portal-staging"
+@component-name = "portal-headless"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -581,6 +581,8 @@ definition {
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
+
+		User.firstLoginPG();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",

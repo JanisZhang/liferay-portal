@@ -40,7 +40,7 @@ public abstract class BaseLocalStagingTestCase {
 
 		liveGroup = GroupTestUtil.addGroup();
 
-		_enableLocalStaging();
+		enableLocalStaging();
 
 		stagingGroup = liveGroup.getStagingGroup();
 
@@ -53,12 +53,39 @@ public abstract class BaseLocalStagingTestCase {
 			stagingLayout.isPrivateLayout());
 	}
 
+	protected void enableLocalStaging() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(liveGroup.getGroupId());
+
+		Map<String, Serializable> attributes = serviceContext.getAttributes();
+
+		attributes.putAll(
+			ExportImportConfigurationParameterMapFactoryUtil.
+				buildParameterMap());
+
+		for (String portletId : getNotStagedPortletIds()) {
+			setPortletStagingEnabled(false, portletId, serviceContext);
+		}
+
+		StagingLocalServiceUtil.enableLocalStaging(
+			TestPropsValues.getUserId(), liveGroup, false, false,
+			serviceContext);
+	}
+
 	protected String[] getNotStagedPortletIds() {
 		return new String[0];
 	}
 
 	protected void publishLayouts() throws PortalException {
 		publishLayouts(
+			ExportImportConfigurationParameterMapFactoryUtil.
+				buildParameterMap());
+	}
+
+	protected void publishLayouts(long[] layoutIds) throws PortalException {
+		StagingUtil.publishLayouts(
+			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+			liveGroup.getGroupId(), false, layoutIds,
 			ExportImportConfigurationParameterMapFactoryUtil.
 				buildParameterMap());
 	}
@@ -96,24 +123,5 @@ public abstract class BaseLocalStagingTestCase {
 	protected Layout liveLayout;
 	protected Group stagingGroup;
 	protected Layout stagingLayout;
-
-	private void _enableLocalStaging() throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(liveGroup.getGroupId());
-
-		Map<String, Serializable> attributes = serviceContext.getAttributes();
-
-		attributes.putAll(
-			ExportImportConfigurationParameterMapFactoryUtil.
-				buildParameterMap());
-
-		for (String portletId : getNotStagedPortletIds()) {
-			setPortletStagingEnabled(false, portletId, serviceContext);
-		}
-
-		StagingLocalServiceUtil.enableLocalStaging(
-			TestPropsValues.getUserId(), liveGroup, false, false,
-			serviceContext);
-	}
 
 }

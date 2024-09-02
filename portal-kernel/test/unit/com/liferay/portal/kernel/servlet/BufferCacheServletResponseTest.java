@@ -5,12 +5,12 @@
 
 package com.liferay.portal.kernel.servlet;
 
+import com.liferay.petra.io.unsync.UnsyncPrintWriter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.DummyOutputStream;
 import com.liferay.portal.kernel.io.DummyWriter;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
-import com.liferay.portal.kernel.io.unsync.UnsyncPrintWriter;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringWriter;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
@@ -558,7 +558,7 @@ public class BufferCacheServletResponseTest {
 
 		sb = bufferCacheServletResponse.getStringBundler();
 
-		Assert.assertEquals(16, sb.capacity());
+		Assert.assertEquals(10, sb.capacity());
 		Assert.assertEquals(1, sb.index());
 		Assert.assertEquals(_TEST_STRING, sb.toString());
 

@@ -199,7 +199,6 @@ public class OpenAPIUtil {
 					if (schema.isMergeProperties() &&
 						ConfigUtil.isVersionCompatible(configYAML, 4)) {
 
-						schema.setAllOfSchemas(null);
 						schema.setPropertySchemas(propertySchemas);
 					}
 				}
@@ -208,7 +207,35 @@ public class OpenAPIUtil {
 				}
 
 				if (propertySchemas == null) {
-					continue;
+					List<Schema> allOfSchemas = schema.getAllOfSchemas();
+
+					if (allOfSchemas == null) {
+						continue;
+					}
+
+					boolean polymorphicChild = false;
+
+					for (Schema allOfSchema : allOfSchemas) {
+						if (allOfSchema.getReference() == null) {
+							continue;
+						}
+
+						Schema referenceSchema = allSchemas.get(
+							OpenAPIParserUtil.getReferenceName(
+								allOfSchema.getReference()));
+
+						if (referenceSchema.getDiscriminator() == null) {
+							continue;
+						}
+
+						polymorphicChild = true;
+
+						break;
+					}
+
+					if (!polymorphicChild) {
+						continue;
+					}
 				}
 
 				String schemaName = StringUtil.upperCaseFirstLetter(

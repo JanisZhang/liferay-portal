@@ -7,7 +7,6 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
-import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMTemplateFinder;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMTemplatePersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
@@ -75,7 +74,7 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMTemplateLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMTemplateLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMTemplateLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -259,6 +258,23 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 		String uuid, long groupId) {
 
 		return ddmTemplatePersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	@Override
+	public DDMTemplate fetchDDMTemplateByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return ddmTemplatePersistence.fetchByERC_G(
+			externalReferenceCode, groupId);
+	}
+
+	@Override
+	public DDMTemplate getDDMTemplateByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return ddmTemplatePersistence.findByERC_G(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -541,7 +557,6 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		DDMTemplateLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -555,8 +570,6 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ddmTemplateLocalService = (DDMTemplateLocalService)aopProxy;
-
-		DDMTemplateLocalServiceUtil.setService(ddmTemplateLocalService);
 	}
 
 	/**

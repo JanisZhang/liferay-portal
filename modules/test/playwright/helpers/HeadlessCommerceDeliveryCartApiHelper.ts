@@ -3,35 +3,74 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ApiHelpers} from './ApiHelpers';
+import {ApiHelpers, DataApiHelpers} from './ApiHelpers';
 
 type TCartItem = {
-	options: string;
+	options?: string;
 	quantity: number;
-	replacedSkuId: number;
+	replacedSkuId?: number;
 	skuId: number;
+	skuUnitOfMeasure?: TCartItemUOM;
+};
+
+type TCartItemUOM = {
+	key: string;
 };
 
 type TCart = {
 	accountId: number;
+	billingAddressId?: number;
 	cartItems?: TCartItem[];
 	currencyCode?: string;
 	id?: number;
+	paymentMethod?: string;
+	shippingAddressId?: number;
+	shippingMethod?: string;
 };
 
 export class HeadlessCommerceDeliveryCartApiHelper {
-	readonly apiHelpers: ApiHelpers;
+	readonly apiHelpers: ApiHelpers | DataApiHelpers;
 	readonly basePath: string;
 
-	constructor(apiHelpers: ApiHelpers) {
+	constructor(apiHelpers: ApiHelpers | DataApiHelpers) {
 		this.apiHelpers = apiHelpers;
 		this.basePath = 'headless-commerce-delivery-cart/v1.0/';
 	}
 
-	async postCart(cart: TCart, channelId: number): Promise<TCart> {
-		return await this.apiHelpers.post(
-			`${this.apiHelpers.baseUrl}${this.basePath}/channels/${channelId}/carts?nestedFields=cartItems`,
-			{accountId: 0, cartItems: [], currencyCode: 'USD', ...cart}
+	async checkoutCart(cartId: number) {
+		return this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/carts/${cartId}/checkout`
 		);
+	}
+
+	async deleteCart(cartId: number) {
+		return this.apiHelpers.delete(
+			`${this.apiHelpers.baseUrl}${this.basePath}/carts/${cartId}`
+		);
+	}
+
+	async patchCart(cart: TCart, id: number): Promise<TCart> {
+		const patchCart = await this.apiHelpers.patch(
+			`${this.apiHelpers.baseUrl}${this.basePath}/carts/${id}`,
+			cart
+		);
+
+		return patchCart;
+	}
+
+	async postCart(cart: TCart, channelId: number): Promise<TCart> {
+		const postCart = await this.apiHelpers.post(
+			`${this.apiHelpers.baseUrl}${this.basePath}/channels/${channelId}/carts?nestedFields=cartItems`,
+			{data: {accountId: 0, cartItems: [], currencyCode: 'USD', ...cart}}
+		);
+
+		if (this.apiHelpers instanceof DataApiHelpers) {
+			this.apiHelpers.data.push({
+				id: postCart.id,
+				type: 'order',
+			});
+		}
+
+		return postCart;
 	}
 }

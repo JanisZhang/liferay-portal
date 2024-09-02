@@ -26,15 +26,15 @@ else {
 entry = entry.toEscapedModel();
 %>
 
-<h4>
+<div class="h4">
 	<aui:a href='<%= themeDisplay.getPathMain() + "/bookmarks/open_entry?entryId=" + entry.getEntryId() %>'>
 		<%= entry.getName() %>
 	</aui:a>
-</h4>
+</div>
 
-<h5 class="text-default">
+<div class="h5 text-default">
 	<%= entry.getDescription() %>
-</h5>
+</div>
 
 <span class="h6">
 	<liferay-ui:message arguments="<%= entry.getVisits() %>" key='<%= (entry.getVisits() == 1) ? "x-visit" : "x-visits" %>' />

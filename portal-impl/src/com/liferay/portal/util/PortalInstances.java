@@ -5,6 +5,7 @@
 
 package com.liferay.portal.util;
 
+import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.events.EventsProcessorUtil;
@@ -19,7 +20,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutSet;
-import com.liferay.portal.kernel.model.PortletCategory;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.VirtualHost;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.site.initializer.kernel.util.SiteInitializerThreadLocal;
 
 import java.sql.SQLException;
 
@@ -53,6 +54,27 @@ import javax.servlet.http.HttpServletRequest;
  * @author Mika Koivisto
  */
 public class PortalInstances {
+
+	public static Company addCompany(
+			String siteInitializerKey,
+			UnsafeSupplier<Company, PortalException> unsafeSupplier)
+		throws PortalException {
+
+		try (SafeCloseable safeCloseable1 = SiteInitializerThreadLocal.setKey(
+				siteInitializerKey)) {
+
+			Company company = unsafeSupplier.get();
+
+			try (SafeCloseable safeCloseable2 =
+					CompanyThreadLocal.setWithSafeCloseable(
+						company.getCompanyId())) {
+
+				initCompany(company, true);
+			}
+
+			return company;
+		}
+	}
 
 	public static long getCompanyId(HttpServletRequest httpServletRequest) {
 		try {
@@ -189,6 +211,10 @@ public class PortalInstances {
 		return PortalInstancePool.getCompanyIds();
 	}
 
+	public static Long getCopyInProcessCompanyId() {
+		return _copyInProcessCompanyId;
+	}
+
 	/**
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
 	 *             PortalInstancePool#getDefaultCompanyId}
@@ -261,41 +287,6 @@ public class PortalInstances {
 
 			PrincipalThreadLocal.setName(principalName);
 
-			// Initialize display
-
-			if (_log.isDebugEnabled()) {
-				_log.debug("Initialize display");
-			}
-
-			try {
-				PortletCategory portletCategory =
-					(PortletCategory)WebAppPool.get(
-						company.getCompanyId(), WebKeys.PORTLET_CATEGORY);
-
-				if (portletCategory == null) {
-					portletCategory = new PortletCategory();
-				}
-
-				for (long currentCompanyId :
-						PortalInstancePool.getCompanyIds()) {
-
-					PortletCategory currentPortletCategory =
-						(PortletCategory)WebAppPool.get(
-							currentCompanyId, WebKeys.PORTLET_CATEGORY);
-
-					if (currentPortletCategory != null) {
-						portletCategory.merge(currentPortletCategory);
-					}
-				}
-
-				WebAppPool.put(
-					company.getCompanyId(), WebKeys.PORTLET_CATEGORY,
-					portletCategory);
-			}
-			catch (Exception exception) {
-				_log.error(exception);
-			}
-
 			// Process application startup events
 
 			if (_log.isDebugEnabled()) {
@@ -357,6 +348,14 @@ public class PortalInstances {
 		return false;
 	}
 
+	public static boolean isCompanyInCopyProcess() {
+		if (_copyInProcessCompanyId != null) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public static boolean isCompanyInDeletionProcess(long companyId) {
 		return _companyIdsInDeletionProcess.contains(companyId);
 	}
@@ -399,6 +398,17 @@ public class PortalInstances {
 		_companyIdsInDeletionProcess.add(companyId);
 
 		return () -> _companyIdsInDeletionProcess.remove(companyId);
+	}
+
+	public static SafeCloseable setCopyInProcessCompanyId(long companyId) {
+		if (_copyInProcessCompanyId != null) {
+			throw new UnsupportedOperationException(
+				"Company in process company ID is not null");
+		}
+
+		_copyInProcessCompanyId = companyId;
+
+		return () -> _copyInProcessCompanyId = null;
 	}
 
 	private static long _getCompanyIdByHost(
@@ -519,6 +529,7 @@ public class PortalInstances {
 	private static final Set<String> _autoLoginIgnorePaths;
 	private static final List<Long> _companyIdsInDeletionProcess =
 		new CopyOnWriteArrayList<>();
+	private static Long _copyInProcessCompanyId;
 	private static final Set<String> _virtualHostsIgnoreHosts;
 	private static final Set<String> _virtualHostsIgnorePaths;
 

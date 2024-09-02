@@ -6,8 +6,13 @@
 import ClayLabel from '@clayui/label';
 import React from 'react';
 
-const {default: CollapsibleSection} = require('./CollapsibleSection');
-const {default: ItemVocabularies} = require('./ItemVocabularies');
+// @ts-ignore
+
+import CollapsibleSection from './CollapsibleSection';
+
+// @ts-ignore
+
+import ItemVocabularies from './ItemVocabularies';
 import {
 	getCategoriesCountFromVocabularies,
 	groupVocabulariesBy,
@@ -20,13 +25,11 @@ const Categorization = ({tags, vocabularies}: IProps): JSX.Element | null => {
 		value: true,
 	});
 
-	const internalCategoriesCount = getCategoriesCountFromVocabularies(
-		internalVocabularies
-	);
+	const internalCategoriesCount =
+		getCategoriesCountFromVocabularies(internalVocabularies);
 
-	const publicCategoriesCount = getCategoriesCountFromVocabularies(
-		publicVocabularies
-	);
+	const publicCategoriesCount =
+		getCategoriesCountFromVocabularies(publicVocabularies);
 
 	const showTaxonomies =
 		!!internalCategoriesCount || !!publicCategoriesCount || !!tags?.length;

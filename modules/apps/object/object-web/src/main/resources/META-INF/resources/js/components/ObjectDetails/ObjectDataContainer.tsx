@@ -34,9 +34,8 @@ export function ObjectDataContainer({
 	setValues,
 	values,
 }: ObjectDataContainerProps) {
-	const [selectedLocale, setSelectedLocale] = useState<
-		Liferay.Language.Locale
-	>(defaultLanguageId);
+	const [selectedLocale, setSelectedLocale] =
+		useState<Liferay.Language.Locale>(defaultLanguageId);
 
 	const isReadOnly = !values.modifiable && values.system;
 
@@ -66,6 +65,7 @@ export function ObjectDataContainer({
 			<InputLocalized
 				disabled={isReadOnly || noPermissionOrLinked}
 				error={errors.label}
+				id="lfr-objects__object-data-container-label"
 				label={Liferay.Language.get('label')}
 				onBlur={(event) => {
 					event.stopPropagation();
@@ -84,6 +84,7 @@ export function ObjectDataContainer({
 			<InputLocalized
 				disabled={isReadOnly || noPermissionOrLinked}
 				error={errors.pluralLabel}
+				id="lfr-objects__object-data-container-plural-label"
 				label={Liferay.Language.get('plural-label')}
 				onBlur={(event) => {
 					event.stopPropagation();
@@ -101,6 +102,7 @@ export function ObjectDataContainer({
 
 			<Input
 				disabled
+				id="lfr-objects__object-data-container-table-name"
 				label={Liferay.Language.get('object-definition-table-name')}
 				name="name"
 				value={dbTableName}

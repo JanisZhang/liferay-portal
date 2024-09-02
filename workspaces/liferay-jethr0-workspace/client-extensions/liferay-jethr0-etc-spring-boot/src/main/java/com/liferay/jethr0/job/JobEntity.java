@@ -7,10 +7,12 @@ package com.liferay.jethr0.job;
 
 import com.liferay.jethr0.bui1d.BuildEntity;
 import com.liferay.jethr0.entity.Entity;
-import com.liferay.jethr0.git.branch.GitBranchEntity;
+import com.liferay.jethr0.git.commit.GitCommitEntity;
 import com.liferay.jethr0.jenkins.cohort.JenkinsCohortEntity;
+import com.liferay.jethr0.routine.RoutineEntity;
 import com.liferay.jethr0.task.TaskEntity;
 import com.liferay.jethr0.testsuite.TestSuiteEntity;
+import com.liferay.jethr0.util.EntityUtil;
 
 import java.net.URL;
 
@@ -31,10 +33,6 @@ public interface JobEntity extends Entity {
 
 	public void addBuildEntity(BuildEntity buildEntity);
 
-	public void addGitBranchEntities(Set<GitBranchEntity> gitBranchEntities);
-
-	public void addGitBranchEntity(GitBranchEntity gitBranchEntity);
-
 	public void addJenkinsCohortEntities(
 		Set<JenkinsCohortEntity> jenkinsCohortEntities);
 
@@ -48,9 +46,13 @@ public interface JobEntity extends Entity {
 
 	public void addTestSuiteEntity(TestSuiteEntity testSuiteEntity);
 
+	public boolean getBlessed();
+
 	public Set<BuildEntity> getBuildEntities();
 
-	public Set<GitBranchEntity> getGitBranchEntities();
+	public GitCommitEntity getGitCommitEntity();
+
+	public long getGitCommitEntityId();
 
 	public Set<BuildEntity> getInitialBuildEntities();
 
@@ -68,6 +70,10 @@ public interface JobEntity extends Entity {
 
 	public int getPriority();
 
+	public RoutineEntity getRoutineEntity();
+
+	public long getRoutineEntityId();
+
 	public Date getStartDate();
 
 	public State getState();
@@ -81,10 +87,6 @@ public interface JobEntity extends Entity {
 	public void removeBuildEntities(Set<BuildEntity> buildEntities);
 
 	public void removeBuildEntity(BuildEntity buildEntity);
-
-	public void removeGitBranchEntities(Set<GitBranchEntity> gitBranchEntities);
-
-	public void removeGitBranchEntity(GitBranchEntity gitBranchEntity);
 
 	public void removeJenkinsCohortEntities(
 		Set<JenkinsCohortEntity> jenkinsCohortEntities);
@@ -100,13 +102,21 @@ public interface JobEntity extends Entity {
 
 	public void removeTestSuiteEntity(TestSuiteEntity testSuiteEntity);
 
+	public void setBlessed(boolean blessed);
+
+	public void setGitCommitEntity(GitCommitEntity gitCommitEntity);
+
 	public void setJenkinsBranchURL(URL jenkinsGitHubURL);
 
 	public void setName(String name);
 
+	public void setParameters(Map<String, String> parameters);
+
 	public void setParameterValue(String name, String value);
 
 	public void setPriority(int priority);
+
+	public void setRoutineEntity(RoutineEntity routineEntity);
 
 	public void setStartDate(Date startDate);
 
@@ -118,12 +128,9 @@ public interface JobEntity extends Entity {
 		OPENED("opened", "Opened"), QUEUED("queued", "Queued"),
 		RUNNING("running", "Running");
 
-		public static State get(JSONObject jsonObject) {
-			return getByKey(jsonObject.getString("key"));
-		}
-
-		public static State getByKey(String key) {
-			return _states.get(key);
+		public static State get(Object picklistValue) {
+			return _states.get(
+				EntityUtil.getKeyFromPicklistValue(picklistValue));
 		}
 
 		public JSONObject getJSONObject() {
@@ -193,6 +200,8 @@ public interface JobEntity extends Entity {
 		MAINTENANCE_WEEKLY("maintenanceWeekly", "Maintenance Weekly"),
 		MAINTENANCE_WEEKLY_NODE(
 			"maintenanceWeeklyNode", "Maintenance Weekly Node"),
+		MERGE_CENTRAL_SUBREPOSITORY(
+			"mergeCentralSubrepository", "Merge Central Subrepository"),
 		MERGE_PORTAL_SUBREPOSITORY(
 			"mergePortalSubrepository", "Merge Portal Subrepository"),
 		MIRRORS_LOCAL_CACHE_PROPAGATOR(
@@ -214,6 +223,7 @@ public interface JobEntity extends Entity {
 		PORTAL_PULL_REQUEST("portalPullRequest", "Portal Pull Request"),
 		PORTAL_PULL_REQUEST_SF("portalPullRequestSF", "Portal Pull Request SF"),
 		PORTAL_RELEASE("portalRelease", "Portal Release"),
+		PORTAL_UPSTREAM("portalUpstream", "Portal Upstream"),
 		PORTAL_UPSTREAM_ACCEPTANCE(
 			"portalUpstreamAcceptance", "Portal Upstream Acceptance"),
 		PORTAL_UPSTREAM_TEST_SUITE(
@@ -231,17 +241,17 @@ public interface JobEntity extends Entity {
 		ROOT_CAUSE_ANALYSIS_TOOL(
 			"rootCauseAnalysisTool", "Root Cause Analysis Tool"),
 		SANITIZE_LANGUAGE("sanitizeLanguage", "Sanitize Language"),
+		SCANCODE_PIPELINES("scancodePipelines", "Scancode Pipelines"),
 		SUBREPOSITORY_PULL_REQUEST(
 			"subrepositoryPullRequest", "Subrepository Pull Request"),
 		VERIFICATION("verification", "Verification"),
-		VERIFICATION_NODE("verificationNode", "Verification Node");
+		VERIFICATION_NODE("verificationNode", "Verification Node"),
+		VERIFICATION_SERVERS_DAILY(
+			"verificationServersDaily", "verificationServersDaily");
 
-		public static Type get(JSONObject jsonObject) {
-			return getByKey(jsonObject.getString("key"));
-		}
-
-		public static Type getByKey(String key) {
-			return _types.get(key);
+		public static Type get(Object picklistValue) {
+			return _types.get(
+				EntityUtil.getKeyFromPicklistValue(picklistValue));
 		}
 
 		public static Set<String> getKeys() {

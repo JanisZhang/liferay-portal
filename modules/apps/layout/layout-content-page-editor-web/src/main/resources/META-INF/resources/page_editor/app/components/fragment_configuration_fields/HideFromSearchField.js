@@ -55,7 +55,7 @@ export function HideFromSearchField({item}) {
 					dispatch(
 						updateItemConfig({
 							itemConfig,
-							itemId: item.itemId,
+							itemIds: [item.itemId],
 						})
 					);
 				}}
@@ -63,7 +63,7 @@ export function HideFromSearchField({item}) {
 					hiddenAncestorId
 						? Liferay.Language.get(
 								'configuration-inherited-from-parent-fragment'
-						  )
+							)
 						: null
 				}
 				value={hiddenAncestorId || item.config.indexed === false}

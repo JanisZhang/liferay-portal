@@ -40,49 +40,34 @@ const FilterOrderControls = ({
 		},
 	];
 
+	const itemMapper = (item) => {
+		if (!item.items) {
+			return {
+				...item,
+				onClick: (event) =>
+					onFilterDropdownItemClick(event, {
+						item,
+					}),
+			};
+		}
+
+		return {
+			...item,
+			items: item.items.map(itemMapper),
+		};
+	};
+
 	return (
 		<>
 			{Boolean(filterDropdownItems?.length) && (
 				<ManagementToolbar.Item>
 					<ClayDropDownWithItems
 						items={addActiveIcons(
-							filterDropdownItems.map((item) =>
-								item.items
-									? {
-											...item,
-											items: item.items.map(
-												(childItem) => {
-													return {
-														...childItem,
-														onClick(event) {
-															onFilterDropdownItemClick(
-																event,
-																{
-																	item: childItem,
-																}
-															);
-														},
-													};
-												}
-											),
-									  }
-									: {
-											...item,
-											onClick: (event) =>
-												onFilterDropdownItemClick(
-													event,
-													{
-														item,
-													}
-												),
-									  }
-							)
+							filterDropdownItems.map(itemMapper)
 						)}
 						trigger={
 							<ClayButton
-								aria-label={Liferay.Language.get(
-									'filter-and-order'
-								)}
+								aria-label={Liferay.Language.get('filter')}
 								className="ml-2 mr-2 nav-link"
 								disabled={disabled}
 								displayType="unstyled"
@@ -137,6 +122,7 @@ const FilterOrderControls = ({
 						])}
 						trigger={
 							<ClayButton
+								aria-label={Liferay.Language.get('order[sort]')}
 								className="ml-2 mr-2 nav-link"
 								disabled={disabled}
 								displayType="unstyled"

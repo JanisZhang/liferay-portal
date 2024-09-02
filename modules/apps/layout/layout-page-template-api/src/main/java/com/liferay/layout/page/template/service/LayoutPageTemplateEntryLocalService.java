@@ -88,23 +88,24 @@ public interface LayoutPageTemplateEntryLocalService
 		throws PortalException;
 
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
-			long userId, long groupId, long layoutPageTemplateCollectionId,
-			long classNameId, long classTypeId, String name, int type,
-			long previewFileEntryId, boolean defaultTemplate,
-			long layoutPrototypeId, long plid, long masterLayoutPlid,
-			int status, ServiceContext serviceContext)
-		throws PortalException;
-
-	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
-			long userId, long groupId, long layoutPageTemplateCollectionId,
-			long classNameId, long classTypeId, String name, int type,
+			String externalReferenceCode, long userId, long groupId,
+			long layoutPageTemplateCollectionId, long classNameId,
+			long classTypeId, String name, int type, long previewFileEntryId,
+			boolean defaultTemplate, long layoutPrototypeId, long plid,
 			long masterLayoutPlid, int status, ServiceContext serviceContext)
 		throws PortalException;
 
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
-			long userId, long groupId, long layoutPageTemplateCollectionId,
-			String name, int type, long masterLayoutPlid, int status,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long layoutPageTemplateCollectionId, long classNameId,
+			long classTypeId, String name, int type, long masterLayoutPlid,
+			int status, ServiceContext serviceContext)
+		throws PortalException;
+
+	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
+			String externalReferenceCode, long userId, long groupId,
+			long layoutPageTemplateCollectionId, String name, int type,
+			long masterLayoutPlid, int status, ServiceContext serviceContext)
 		throws PortalException;
 
 	public LayoutPageTemplateEntry copyLayoutPageTemplateEntry(
@@ -160,6 +161,10 @@ public interface LayoutPageTemplateEntryLocalService
 	@Indexable(type = IndexableType.DELETE)
 	public LayoutPageTemplateEntry deleteLayoutPageTemplateEntry(
 			long layoutPageTemplateEntryId)
+		throws PortalException;
+
+	public LayoutPageTemplateEntry deleteLayoutPageTemplateEntry(
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	/**
@@ -255,11 +260,17 @@ public interface LayoutPageTemplateEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutPageTemplateEntry fetchLayoutPageTemplateEntry(
-		long groupId, String layoutPageTemplateEntryKey);
+		long groupId, long layoutPageTemplateCollectionId, String name,
+		int type);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutPageTemplateEntry fetchLayoutPageTemplateEntry(
-		long groupId, String name, int type);
+		long groupId, String layoutPageTemplateEntryKey);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public LayoutPageTemplateEntry
+		fetchLayoutPageTemplateEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutPageTemplateEntry fetchLayoutPageTemplateEntryByPlid(
@@ -304,6 +315,10 @@ public interface LayoutPageTemplateEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
 		long groupId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long groupId, int status);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
@@ -402,6 +417,12 @@ public interface LayoutPageTemplateEntryLocalService
 			long groupId, String layoutPageTemplateEntryKey)
 		throws NoSuchPageTemplateEntryException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public LayoutPageTemplateEntry
+			getLayoutPageTemplateEntryByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException;
+
 	/**
 	 * Returns the layout page template entry matching the UUID and group.
 	 *
@@ -432,7 +453,8 @@ public interface LayoutPageTemplateEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public String getUniqueLayoutPageTemplateEntryName(
-		long groupId, String name, int type);
+		long groupId, long layoutPageTemplateCollectionId, String name,
+		int type);
 
 	/**
 	 * Updates the layout page template entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.

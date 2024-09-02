@@ -943,12 +943,12 @@ mariadb.executable=${mariadb.executable}]]></echo>
 				</then>
 			</if>
 
+			<property name="test.batch.name" unless:set="test.batch.name" value="${env.TEST_BATCH_NAME}" />
+
 			<if>
 				<equals arg1="${suite.search.engine}" arg2="solr" />
 				<then>
 					<ant antfile="build-test-solr.xml" target="start-solr" />
-
-					<property name="test.batch.name" unless:set="test.batch.name" value="${env.TEST_BATCH_NAME}" />
 
 					<if>
 						<contains string="${test.batch.name}" substring="unit" />
@@ -2418,6 +2418,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 							<antcall target="prepare-portal-test-object-storage-salesforce-properties" />
 
+							<antcall target="prepare-portal-test-object-storage-sugarcrm-properties" />
+
 							<ant dir="portal-test" inheritAll="false" target="deploy" />
 
 							<setup-test-batch-testable-tomcat test.portal.bundle.version="@{test.portal.bundle.version}" />
@@ -2432,11 +2434,9 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 							<lstopwatch action="start" name="test.execution.duration" />
 
-							<run-modules-junit-test test.class.group="${test.class.group}" test.task="testIntegration">
-								<arg value="--continue" />
-								<arg value="-Dbuild.exclude.ant.plugin=true" />
-								<arg value="-Dtest.class.group.index=${axis.variable}" />
-							</run-modules-junit-test>
+							<property name="test.junit.args" value="--continue -Dbuild.exclude.ant.plugin=true -Dtest.class.group.index=${axis.variable}" />
+
+							<run-modules-junit-test test.class.group="${test.class.group}" test.junit.args="${test.junit.args}" test.task="testIntegration" />
 
 							<lstopwatch action="total" name="test.execution.duration" />
 
@@ -2612,9 +2612,8 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 	<macrodef name="run-modules-junit-test">
 		<attribute name="test.class.group" />
+		<attribute default="" name="test.junit.args" />
 		<attribute name="test.task" />
-
-		<element implicit="true" name="args" optional="true" />
 
 		<sequential>
 			<sequential>
@@ -2674,7 +2673,7 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 
 							parameters.put("test.class.name", testClassName);
 
-							AntUtil.callTarget(baseDir, "build-common.xml", "generate-backend-batch-junit-report-modules", parameters);
+							AntUtil.callMacrodef(project, "generate-backend-batch-junit-report-modules", parameters);
 						}
 
 						public static String getTestClassNameForTestResults(String testClass){
@@ -2748,26 +2747,23 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 						for (Map.Entry projectTestEntry : projectTestMap.entrySet()) {
 							Map parameters = new HashMap();
 
-							List projectTestList = projectTestEntry.getValue();
-
-							String projectName = projectTestEntry.getKey();
-
-							parameters.put("test.task", projectName + ":" + "@{test.task}");
+							parameters.put("dir", "modules");
+							parameters.put("gradle.jvm.args", "@{test.junit.args}");
 
 							StringBuilder sb = new StringBuilder();
-
 							int testCount = 1;
 
-							for (String test : projectTestList) {
+							for (String test : projectTestEntry.getValue()) {
 								sb.append("--tests ");
 								sb.append(test);
 								sb.append(" ");
+
 								testCount++;
 							}
 
 							parameters.put("test.name", sb.toString());
 
-							parameters.put("dir", "modules");
+							parameters.put("test.task", projectTestEntry.getKey() + ":" + "@{test.task}");
 
 							int timeout = Integer.parseInt(project.getProperty("test.class.timeout.minutes"));
 
@@ -2777,12 +2773,188 @@ ${poshi.runner.testsuite.testcase.name}</echo>
 								AntUtil.callTargetWithTimeout(projectDir, "build-common.xml", "gradle-execute-modules", parameters, timeout, true);
 							}
 							catch(Exception exception) {
-								throw new RuntimeException("Unable to run gradle execute modules target.");
+								throw new RuntimeException("Unable to run Gradle execute modules target.");
 							}
 						}
 					]]>
 				</beanshell>
 			</sequential>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="run-playwright-js-test">
+		<attribute default="tomcat" name="app.server.type" />
+		<attribute default="" name="test.build.fix.pack.zip.url" />
+		<attribute default="" name="test.fix.pack.base.url" />
+		<attribute default="" name="test.license.xml.url" />
+		<attribute default="" name="test.portal.bundle.dependencies.zip.url" />
+		<attribute default="" name="test.portal.bundle.elasticsearch.zip.url" />
+		<attribute default="" name="test.portal.bundle.osgi.zip.url" />
+		<attribute default="" name="test.portal.bundle.tools.zip.url" />
+		<attribute default="" name="test.portal.bundle.war.url" />
+		<attribute default="" name="test.portal.bundle.version" />
+		<attribute default="" name="test.portal.bundle.zip.url" />
+		<attribute default="" name="test.portal.lpkg.name" />
+		<attribute default="" name="test.sql.zip.url" />
+
+		<sequential>
+			<run-batch-test>
+				<test-action>
+					<database-test-run-test database.type="mysql" stop.app.server="true">
+						<test-action>
+							<delete dir="${liferay.home}/work" />
+
+							<antcall inheritAll="false" target="prepare-log4j-ext-xml" />
+
+							<generate-jdbc-properties properties.file="portal-impl/src/portal-ext.properties" />
+
+							<apply-portal-ext-properties />
+
+							<condition else="portal" property="playwright.project.name" value="${env.PLAYWRIGHT_PROJECT_NAME}">
+								<isset property="env.PLAYWRIGHT_PROJECT_NAME" />
+							</condition>
+
+							<trycatch property="exception.message">
+								<try>
+									<exec executable="/bin/bash">
+										<arg value="modules/test/playwright/env/set_up.sh" />
+										<env key="LIFERAY_HOME" value="${liferay.home}" />
+										<env key="LIFERAY_PORTAL_URL" value="http://${env.NODE_NAME}:8080" />
+										<env key="PLAYWRIGHT_PROJECT_NAME" value="${playwright.project.name}" />
+									</exec>
+
+									<start-docker-playwright />
+
+									<gradle-execute dir="${playwright.dir}" task="npmInstall" />
+
+									<local name="playwright.test.shard" />
+
+									<if>
+										<isset property="PLAYWRIGHT_ARGS_${axis.variable}" />
+										<then>
+											<propertycopy from="PLAYWRIGHT_ARGS_${axis.variable}" name="playwright.test.shard" />
+										</then>
+										<else>
+											<property name="playwright.test.shard" value="" />
+										</else>
+									</if>
+
+									<if>
+										<isset property="PLAYWRIGHT_PROJECT_NAME" />
+										<then>
+											<propertycopy from="PLAYWRIGHT_PROJECT_NAME" name="playwright.project.name" />
+										</then>
+										<else>
+											<property name="playwright.project.name" value="" />
+										</else>
+									</if>
+
+									<local name="playwright.command" />
+
+									<if>
+										<equals arg1="${playwright.project.name}" arg2="" />
+										<then>
+											<property name="playwright.command" value="npx playwright test ${playwright.test.shard}" />
+										</then>
+										<else>
+											<property name="playwright.command" value="npx playwright test --project ${playwright.project.name} ${playwright.test.shard}" />
+										</else>
+									</if>
+
+									<echo>Running "${playwright.command}" from ${playwright.dir}</echo>
+
+									<docker-execute container="${playwright.docker.host}">
+										cd ${playwright.dir}
+
+										${playwright.command}
+									</docker-execute>
+								</try>
+								<catch>
+									<echo>${exception.message}</echo>
+								</catch>
+								<finally>
+									<stop-docker-playwright />
+
+									<exec executable="/bin/bash">
+										<arg value="modules/test/playwright/env/tear_down.sh" />
+										<env key="LIFERAY_HOME" value="${liferay.home}" />
+										<env key="LIFERAY_PORTAL_URL" value="http://${env.HOSTNAME}:8080" />
+										<env key="PLAYWRIGHT_PROJECT_NAME" value="${playwright.project.name}" />
+									</exec>
+
+									<split-testsuites-junit-report test.suites.report.filepath="${playwright.dir}/test-results/TEST-playwright.xml" />
+
+									<print-docker-database-logs />
+								</finally>
+							</trycatch>
+						</test-action>
+					</database-test-run-test>
+				</test-action>
+
+				<test-set-up>
+					<if>
+						<and>
+							<or>
+								<matches pattern="(file|https?)://" string="@{test.portal.bundle.war.url}" />
+								<matches pattern="(file|https?)://" string="@{test.portal.bundle.zip.url}" />
+							</or>
+							<matches pattern="(file|https?)://" string="@{test.sql.zip.url}" />
+						</and>
+						<then>
+							<prepare-release-test-environment
+								app.server.type="@{app.server.type}"
+								test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+								test.fix.pack.base.url="${test.fix.pack.base.url}"
+								test.license.xml.url="${test.license.xml.url}"
+								test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
+								test.portal.bundle.elasticsearch.zip.url="${test.portal.bundle.elasticsearch.zip.url}"
+								test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
+								test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+								test.portal.bundle.war.url="${test.portal.bundle.war.url}"
+								test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+								test.sql.zip.url="${test.sql.zip.url}"
+							/>
+
+							<gradle-execute dir="modules/core" task="deploy">
+								<arg value="--parallel" />
+								<arg value="-Dbuild.profile=portal-pre" />
+								<arg value="-Pforced.deploy.dir=${project.dir}/tmp/lib-pre" />
+							</gradle-execute>
+
+							<ant dir="portal-kernel" inheritAll="false" target="install-portal-snapshot" />
+
+							<gradle-execute dir="modules/apps" task="deploy">
+								<arg value="--parallel" />
+								<arg value="-Dbuild.profile=portal-pre" />
+								<arg value="-Pforced.deploy.dir=${project.dir}/tmp/lib-pre" />
+							</gradle-execute>
+
+							<get-test-app-server-lib-portal-dir />
+
+							<unzip
+								dest="portal-impl/classes"
+								src="${test.app.server.lib.portal.dir}/portal-impl.jar"
+							/>
+
+							<ant dir="portal-test" inheritAll="false" target="jar" />
+
+							<local name="artifact.version" />
+
+							<property name="artifact.version" value="1.0.0-TEST_ARTIFACT" />
+
+							<copy-artifact-to-local-cache artifact.file="${test.app.server.lib.portal.dir}/portal-impl.jar" artifact.name="com.liferay.portal.impl" artifact.version="${artifact.version}" />
+							<copy-artifact-to-local-cache artifact.file="${test.app.server.lib.portal.dir}/portal-kernel.jar" artifact.name="com.liferay.portal.kernel" artifact.version="${artifact.version}" />
+							<copy-artifact-to-local-cache artifact.file="${project.dir}/portal-test/portal-test.jar" artifact.name="com.liferay.portal.test" artifact.version="${artifact.version}" />
+							<copy-artifact-to-local-cache artifact.file="${test.app.server.lib.portal.dir}/util-bridges.jar" artifact.name="com.liferay.util.bridges" artifact.version="${artifact.version}" />
+							<copy-artifact-to-local-cache artifact.file="${test.app.server.lib.portal.dir}/util-java.jar" artifact.name="com.liferay.util.java" artifact.version="${artifact.version}" />
+							<copy-artifact-to-local-cache artifact.file="${test.app.server.lib.portal.dir}/util-taglib.jar" artifact.name="com.liferay.util.taglib" artifact.version="${artifact.version}" />
+						</then>
+						<else>
+							<setup-test-environment />
+						</else>
+					</if>
+				</test-set-up>
+			</run-batch-test>
 		</sequential>
 	</macrodef>
 
@@ -3912,6 +4084,27 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
+	<target name="functional-bundle-orcllinux9-tomcat90-mysql57-jdk8">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-functional-test
+			app.server.type="tomcat"
+			database.type="mysql"
+			database.version="5.7"
+			setup.proxy="false"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.plugin.zip.url="${test.plugin.zip.url}"
+			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.portal.log.assert="true"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
 	<target name="functional-bundle-redhat8-tomcat90-mysql57-jdk8">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
@@ -4209,26 +4402,6 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="functional-bundle-tomcat-mysql57-jdk8_zulu">
-		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
-
-		<run-functional-test
-			app.server.type="tomcat"
-			database.type="mysql"
-			database.version="5.7"
-			setup.proxy="false"
-			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
-			test.fix.pack.base.url="${test.fix.pack.base.url}"
-			test.license.xml.url="${test.license.xml.url}"
-			test.plugin.zip.url="${test.plugin.zip.url}"
-			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
-			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.portal.lpkg.name="${test.portal.lpkg.name}"
-			test.sql.zip.url="${test.sql.zip.url}"
-		/>
-	</target>
-
 	<target name="functional-bundle-tomcat-mysql57-jdk11_open">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
@@ -4249,7 +4422,7 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="functional-bundle-tomcat-mysql57-jdk11_oracle">
+	<target name="functional-bundle-tomcat-mysql57-jdk17_open">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-functional-test
@@ -4269,7 +4442,7 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="functional-bundle-tomcat-mysql57-jdk11_zulu">
+	<target name="functional-bundle-tomcat-mysql57-jdk21_zulu">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-functional-test
@@ -4396,6 +4569,26 @@ information. Make sure to commit in all format-javadoc results.
 			app.server.type="tomcat"
 			database.type="postgresql"
 			database.version="15.3"
+			setup.proxy="false"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.plugin.zip.url="${test.plugin.zip.url}"
+			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
+	<target name="functional-bundle-tomcat-postgresql163-jdk8">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-functional-test
+			app.server.type="tomcat"
+			database.type="postgresql"
+			database.version="16.3"
 			setup.proxy="false"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
 			test.fix.pack.base.url="${test.fix.pack.base.url}"
@@ -4612,26 +4805,6 @@ information. Make sure to commit in all format-javadoc results.
 	<target name="functional-bundle-weblogic141-mysql57-jdk8">
 		<run-functional-test
 			app.server.type="weblogic"
-			database.type="mysql"
-			database.version="5.7"
-			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
-			test.fix.pack.base.url="${test.fix.pack.base.url}"
-			test.license.xml.url="${test.license.xml.url}"
-			test.plugin.zip.url="${test.plugin.zip.url}"
-			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
-			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
-			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
-			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
-			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.portal.lpkg.name="${test.portal.lpkg.name}"
-			test.sql.zip.url="${test.sql.zip.url}"
-		/>
-	</target>
-
-	<target name="functional-bundle-websphere-mysql57-jdk8">
-		<run-functional-test
-			app.server.type="websphere"
 			database.type="mysql"
 			database.version="5.7"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
@@ -4867,6 +5040,10 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
 	</target>
 
+	<target name="functional-orcllinux9-tomcat90-mysql57-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
+	</target>
+
 	<target name="functional-redhat8-tomcat90-mysql57-jdk8">
 		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
 	</target>
@@ -4988,6 +5165,10 @@ information. Make sure to commit in all format-javadoc results.
 		<antcall target="functional-bundle-tomcat-postgresql153-jdk8" />
 	</target>
 
+	<target name="functional-smoke-bundle-tomcat-postgresql163-jdk8">
+		<antcall target="functional-bundle-tomcat-postgresql163-jdk8" />
+	</target>
+
 	<target name="functional-smoke-bundle-weblogic122-mysql57-jdk8">
 		<run-functional-test
 			app.server.type="weblogic"
@@ -5013,28 +5194,6 @@ information. Make sure to commit in all format-javadoc results.
 	<target name="functional-smoke-bundle-weblogic141-mysql57-jdk8">
 		<run-functional-test
 			app.server.type="weblogic"
-			database.type="mysql"
-			database.version="5.7"
-			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
-			test.fix.pack.base.url="${test.fix.pack.base.url}"
-			test.license.xml.url="${test.license.xml.url}"
-			test.plugin.zip.url="${test.plugin.zip.url}"
-			test.plugins.war.zip.url="${test.plugins.war.zip.url}"
-			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
-			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
-			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
-			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
-			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.portal.log.assert="true"
-			test.portal.lpkg.name="${test.portal.lpkg.name}"
-			test.sql.zip.url="${test.sql.zip.url}"
-		/>
-	</target>
-
-	<target name="functional-smoke-bundle-websphere-mysql57-jdk8">
-		<run-functional-test
-			app.server.type="websphere"
 			database.type="mysql"
 			database.version="5.7"
 			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
@@ -5272,6 +5431,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.3" test.portal.log.assert="true" />
 	</target>
 
+	<target name="functional-smoke-tomcat90-postgresql163-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-smoke-tomcat90-postgresql163-jdk11_open">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" test.portal.log.assert="true" />
+	</target>
+
 	<target name="functional-smoke-tomcat90-sqlserver2017-jdk8">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2017" test.portal.log.assert="true" />
 	</target>
@@ -5320,10 +5487,6 @@ information. Make sure to commit in all format-javadoc results.
 		<set-app-server-version-number app.server.type="weblogic" app.server.version="14.1.1" />
 
 		<run-functional-test app.server.type="weblogic" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
-	</target>
-
-	<target name="functional-smoke-websphere90-mysql57-jdk8">
-		<run-functional-test app.server.type="websphere" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-smoke-wildfly180-mariadb104-jdk8">
@@ -5546,6 +5709,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.3" />
 	</target>
 
+	<target name="functional-tomcat90-postgresql163-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" />
+	</target>
+
+	<target name="functional-tomcat90-postgresql163-jdk11_open">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" />
+	</target>
+
 	<target name="functional-tomcat90-sqlserver2017-jdk8">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2017" />
 	</target>
@@ -5726,6 +5897,14 @@ information. Make sure to commit in all format-javadoc results.
 		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="15.3" />
 	</target>
 
+	<target name="functional-upgrade-tomcat90-postgresql163-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" />
+	</target>
+
+	<target name="functional-upgrade-tomcat90-postgresql163-jdk11_open">
+		<run-functional-test app.server.type="tomcat" database.type="postgresql" database.version="16.3" />
+	</target>
+
 	<target name="functional-upgrade-tomcat90-sqlserver2017-jdk8">
 		<run-functional-test app.server.type="tomcat" database.type="sqlserver" database.version="2017" />
 	</target>
@@ -5780,10 +5959,6 @@ information. Make sure to commit in all format-javadoc results.
 		<set-app-server-version-number app.server.type="weblogic" app.server.version="14.1.1" />
 
 		<run-functional-test app.server.type="weblogic" database.type="mysql" database.version="5.7" />
-	</target>
-
-	<target name="functional-upgrade-websphere90-mysql57-jdk8">
-		<run-functional-test app.server.type="websphere" database.type="mysql" database.version="5.7" />
 	</target>
 
 	<target name="functional-upgrade-wildfly180-mariadb104-jdk8">
@@ -5872,10 +6047,6 @@ information. Make sure to commit in all format-javadoc results.
 		<set-app-server-version-number app.server.type="weblogic" app.server.version="14.1.1" />
 
 		<run-functional-test app.server.type="weblogic" database.type="oracle" database.version="19.3.0.0.0" />
-	</target>
-
-	<target name="functional-websphere90-mysql57-jdk8">
-		<run-functional-test app.server.type="websphere" database.type="mysql" />
 	</target>
 
 	<target name="functional-wildfly180-mariadb104-jdk8">
@@ -6021,11 +6192,14 @@ information. Make sure to commit in all format-javadoc results.
 										<propertycopy from="gradle.plugins.test.excludes.globs[${gradle.plugin.dir.name}]" name="gradle.plugins.test.excludes.globs" override="true" />
 
 										<gradle-execute dir="@{gradle.plugin.dir}" forcedcacheenabled="false" task="gradleTest">
+											<arg value="-Dgradle.test.enabled=true" />
 											<arg value="-PtestExcludes=${gradle.plugins.test.excludes.globs}" />
 										</gradle-execute>
 									</then>
 									<else>
-										<gradle-execute dir="@{gradle.plugin.dir}" forcedcacheenabled="false" task="gradleTest" />
+										<gradle-execute dir="@{gradle.plugin.dir}" forcedcacheenabled="false" task="gradleTest">
+											<arg value="-Dgradle.test.enabled=true" />
+										</gradle-execute>
 									</else>
 								</if>
 							</then>
@@ -6068,10 +6242,22 @@ information. Make sure to commit in all format-javadoc results.
 	<target name="js-unit-jdk8">
 		<run-batch-test>
 			<test-action>
-				<gradle-execute dir="modules" task="packageRunTest">
-					<arg value="--continue" />
-					<arg value="--parallel" />
-				</gradle-execute>
+				<for delimiter=" " list="${modules.test.class.group}" param="modules.test.class" trim="true">
+					<sequential>
+						<echo>Executing Gradle tasks: @{modules.test.class}.</echo>
+
+						<trycatch property="gradle.failure">
+							<try>
+								<gradle-execute dir="modules" task="@{modules.test.class}">
+									<arg value="--continue" />
+								</gradle-execute>
+							</try>
+							<catch>
+								<echo>${gradle.failure}</echo>
+							</catch>
+						</trycatch>
+					</sequential>
+				</for>
 
 				<replace
 					dir="modules"
@@ -6351,7 +6537,7 @@ information. Make sure to commit in all format-javadoc results.
 		</trycatch>
 	</target>
 
-	<target name="modules-integration-bundle-db2111-jdk8">
+	<target name="modules-integration-bundle-db2111-jdk11_open">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-modules-integration-test
@@ -6369,7 +6555,7 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="modules-integration-bundle-db2111-jdk11_open">
+	<target name="modules-integration-bundle-db2111-jdk21_zulu">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-modules-integration-test
@@ -6425,24 +6611,6 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="modules-integration-bundle-hypersonic20-jdk8">
-		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
-
-		<run-modules-integration-test
-			database.type="hypersonic"
-			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
-			test.fix.pack.base.url="${test.fix.pack.base.url}"
-			test.license.xml.url="${test.license.xml.url}"
-			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
-			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
-			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
-			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
-			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.sql.zip.url="${test.sql.zip.url}"
-		/>
-	</target>
-
 	<target name="modules-integration-bundle-hypersonic20-jdk11_open">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
@@ -6461,7 +6629,25 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="modules-integration-bundle-mariadb102-jdk8">
+	<target name="modules-integration-bundle-hypersonic20-jdk21_zulu">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-modules-integration-test
+			database.type="hypersonic"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
+			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
+			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
+	<target name="modules-integration-bundle-mariadb102-jdk11_open">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-modules-integration-test
@@ -6479,7 +6665,7 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="modules-integration-bundle-mariadb102-jdk11_open">
+	<target name="modules-integration-bundle-mariadb102-jdk21_zulu">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-modules-integration-test
@@ -6588,7 +6774,26 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="modules-integration-bundle-mysql57-jdk11_open">
+	<target name="modules-integration-bundle-mysql57-jdk17_open">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-modules-integration-test
+			database.type="mysql"
+			database.version="5.7"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
+			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
+			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
+	<target name="modules-integration-bundle-mysql57-jdk21_zulu">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-modules-integration-test
@@ -6626,25 +6831,6 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="modules-integration-bundle-oracle193-jdk8">
-		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
-
-		<run-modules-integration-test
-			database.type="oracle"
-			database.version="19.3.0.0.0"
-			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
-			test.fix.pack.base.url="${test.fix.pack.base.url}"
-			test.license.xml.url="${test.license.xml.url}"
-			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
-			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
-			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
-			test.portal.bundle.version="${test.portal.bundle.version}"
-			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
-			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
-			test.sql.zip.url="${test.sql.zip.url}"
-		/>
-	</target>
-
 	<target name="modules-integration-bundle-oracle193-jdk11_open">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
@@ -6664,7 +6850,26 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="modules-integration-bundle-postgresql121-jdk8">
+	<target name="modules-integration-bundle-oracle193-jdk21_zulu">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-modules-integration-test
+			database.type="oracle"
+			database.version="19.3.0.0.0"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
+			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
+			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
+	<target name="modules-integration-bundle-postgresql121-jdk21_zulu">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-modules-integration-test
@@ -6740,7 +6945,26 @@ information. Make sure to commit in all format-javadoc results.
 		/>
 	</target>
 
-	<target name="modules-integration-bundle-sqlserver2017-jdk8">
+	<target name="modules-integration-bundle-postgresql163-jdk8">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-modules-integration-test
+			database.type="postgresql"
+			database.version="16.3"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.portal.bundle.dependencies.zip.url="${test.portal.bundle.dependencies.zip.url}"
+			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
+			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
+	<target name="modules-integration-bundle-sqlserver2017-jdk21_zulu">
 		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
 
 		<run-modules-integration-test
@@ -6846,6 +7070,14 @@ information. Make sure to commit in all format-javadoc results.
 			database.partition.enabled="true"
 			database.type="postgresql"
 			database.version="15.3"
+		/>
+	</target>
+
+	<target name="modules-integration-db-partition-postgresql163-jdk8">
+		<run-modules-integration-test
+			database.partition.enabled="true"
+			database.type="postgresql"
+			database.version="16.3"
 		/>
 	</target>
 
@@ -6969,8 +7201,46 @@ information. Make sure to commit in all format-javadoc results.
 		<run-modules-integration-test database.type="postgresql" database.version="15.3" />
 	</target>
 
+	<target name="modules-integration-postgresql163-jdk8">
+		<run-modules-integration-test database.type="postgresql" database.version="16.3" />
+	</target>
+
+	<target name="modules-integration-postgresql163-jdk11_open">
+		<run-modules-integration-test database.type="postgresql" database.version="16.3" />
+	</target>
+
 	<target name="modules-integration-project-templates-jdk8">
 		<antcall target="modules-unit-jdk8">
+			<param name="project.templates.test" value="true" />
+			<param name="project.templates.test.builds" value="true" />
+		</antcall>
+	</target>
+
+	<target name="modules-integration-project-templates-jdk17_open">
+		<get-java-jdk-home type="open" version="17" />
+
+		<echo append="true" file="build.${user.name}.properties">
+			junit.jvm.override=${java.jdk.home}/bin/java
+			junit.jvm.override.version=17</echo>
+
+		<antcall target="modules-unit-jdk8">
+			<param name="junit.jvm.override" value="${java.jdk.home}/bin/java" />
+			<param name="junit.jvm.override.version" value="17" />
+			<param name="project.templates.test" value="true" />
+			<param name="project.templates.test.builds" value="true" />
+		</antcall>
+	</target>
+
+	<target name="modules-integration-project-templates-jdk21_zulu">
+		<get-java-jdk-home type="zulu" version="21" />
+
+		<echo append="true" file="build.${user.name}.properties">
+			junit.jvm.override=${java.jdk.home}/bin/java
+			junit.jvm.override.version=21</echo>
+
+		<antcall target="modules-unit-jdk8">
+			<param name="junit.jvm.override" value="${java.jdk.home}/bin/java" />
+			<param name="junit.jvm.override.version" value="21" />
 			<param name="project.templates.test" value="true" />
 			<param name="project.templates.test.builds" value="true" />
 		</antcall>
@@ -7136,15 +7406,21 @@ information. Make sure to commit in all format-javadoc results.
 					</then>
 				</if>
 
-				<run-modules-junit-test test.class.group="${test.class.group}" test.task="test">
-					<arg value="--continue" />
-					<arg value="-Dbuild.exclude.ant.plugin=true" />
-					<arg if:true="${run.opensearch2.unit.tests}" value="-Dcom.liferay.portal.search.opensearch2.test.unit.enabled=true" />
-					<arg if:true="${run.solr.unit.tests}" value="-Dcom.liferay.portal.search.solr8.test.unit.started=true" />
-					<arg value="-Djunit.code.coverage=${test.batch.code.coverage}" />
-					<arg if:set="project.templates.test.builds" value="-Dproject.templates.test.builds=${project.templates.test.builds}" />
-					<arg value="-Dtest.class.group.index=${axis.variable}" />
-				</run-modules-junit-test>
+				<condition else="" property="test.arg.opensearch2.unit.tests" value="-Dcom.liferay.portal.search.opensearch2.test.unit.enabled=true">
+					<istrue value="${run.opensearch2.unit.tests}" />
+				</condition>
+
+				<condition else="" property="test.arg.project.templates" value="-Dproject.templates.test.builds=${project.templates.test.builds}">
+					<isset property="project.templates.test.builds" />
+				</condition>
+
+				<condition else="" property="test.arg.solr.unit.tests" value="-Dcom.liferay.portal.search.solr8.test.unit.started=true">
+					<istrue value="${run.solr.unit.tests}" />
+				</condition>
+
+				<property name="test.junit.args" value="--continue -Dbuild.exclude.ant.plugin=true ${test.arg.opensearch2.unit.tests} ${test.arg.project.templates} ${test.arg.solr.unit.tests} -Djunit.code.coverage=${test.batch.code.coverage} -Dtest.class.group.index=${axis.variable}" />
+
+				<run-modules-junit-test test.class.group="${test.class.group}" test.junit.args="${test.junit.args}" test.task="test" />
 
 				<lstopwatch action="total" name="test.execution.duration" />
 			</test-action>
@@ -7192,6 +7468,36 @@ junit.jvm.override.version=21</echo>
 
 	<target name="modules-unit-project-templates-jdk8">
 		<antcall target="modules-unit-jdk8">
+			<param name="project.templates.test" value="true" />
+			<param name="project.templates.test.builds" value="false" />
+		</antcall>
+	</target>
+
+	<target name="modules-unit-project-templates-jdk17_open">
+		<get-java-jdk-home type="open" version="17" />
+
+		<echo append="true" file="build.${user.name}.properties">
+			junit.jvm.override=${java.jdk.home}/bin/java
+			junit.jvm.override.version=17</echo>
+
+		<antcall target="modules-unit-jdk8">
+			<param name="junit.jvm.override" value="${java.jdk.home}/bin/java" />
+			<param name="junit.jvm.override.version" value="17" />
+			<param name="project.templates.test" value="true" />
+			<param name="project.templates.test.builds" value="false" />
+		</antcall>
+	</target>
+
+	<target name="modules-unit-project-templates-jdk21_zulu">
+		<get-java-jdk-home type="zulu" version="21" />
+
+		<echo append="true" file="build.${user.name}.properties">
+			junit.jvm.override=${java.jdk.home}/bin/java
+			junit.jvm.override.version=21</echo>
+
+		<antcall target="modules-unit-jdk8">
+			<param name="junit.jvm.override" value="${java.jdk.home}/bin/java" />
+			<param name="junit.jvm.override.version" value="21" />
 			<param name="project.templates.test" value="true" />
 			<param name="project.templates.test.builds" value="false" />
 		</antcall>
@@ -7300,101 +7606,57 @@ ${output.content}</echo>
 		</run-batch-test>
 	</target>
 
-	<target name="playwright-js-tomcat90-mysql57-jdk8">
+	<target name="playwright-compile-jdk8">
 		<run-batch-test>
 			<test-action>
-				<database-test-run-test database.type="mysql" stop.app.server="true">
-					<test-action>
-						<delete dir="${liferay.home}/work" />
+				<trycatch>
+					<try>
+						<start-docker-playwright />
 
-						<antcall inheritAll="false" target="prepare-log4j-ext-xml" />
+						<gradle-execute dir="${playwright.dir}" task="npmInstall" />
 
-						<generate-jdbc-properties properties.file="portal-impl/src/portal-ext.properties" />
+						<property name="playwright.command" value="npx playwright test --list" />
 
-						<apply-portal-ext-properties />
+						<echo>Running "${playwright.command}" from ${playwright.dir}</echo>
 
-						<condition else="portal" property="playwright.project.name" value="${env.PLAYWRIGHT_PROJECT_NAME}">
-							<isset property="env.PLAYWRIGHT_PROJECT_NAME" />
-						</condition>
+						<docker-execute container="${playwright.docker.host}">
+							cd ${playwright.dir}
 
-						<trycatch>
-							<try>
-								<exec executable="/bin/bash">
-									<arg value="modules/test/playwright/env/set_up.sh" />
-									<env key="LIFERAY_HOME" value="${liferay.home}" />
-									<env key="LIFERAY_PORTAL_URL" value="http://${env.HOSTNAME}:8080" />
-									<env key="PLAYWRIGHT_PROJECT_NAME" value="${playwright.project.name}" />
-								</exec>
-
-								<start-docker-playwright />
-
-								<gradle-execute dir="${playwright.dir}" task="npmInstall" />
-
-								<local name="playwright.test.shard" />
-
-								<if>
-									<isset property="PLAYWRIGHT_ARGS_${axis.variable}" />
-									<then>
-										<propertycopy from="PLAYWRIGHT_ARGS_${axis.variable}" name="playwright.test.shard" />
-									</then>
-									<else>
-										<property name="playwright.test.shard" value="" />
-									</else>
-								</if>
-
-								<if>
-									<isset property="PLAYWRIGHT_PROJECT_NAME" />
-									<then>
-										<propertycopy from="PLAYWRIGHT_PROJECT_NAME" name="playwright.project.name" />
-									</then>
-									<else>
-										<property name="playwright.project.name" value="" />
-									</else>
-								</if>
-
-								<local name="playwright.command" />
-
-								<if>
-									<equals arg1="${playwright.project.name}" arg2="" />
-									<then>
-										<property name="playwright.command" value="npx playwright test ${playwright.test.shard}" />
-									</then>
-									<else>
-										<property name="playwright.command" value="npx playwright test --project ${playwright.project.name} ${playwright.test.shard}" />
-									</else>
-								</if>
-
-								<echo>Running "${playwright.command}" from ${playwright.dir}</echo>
-
-								<docker-execute container="${playwright.docker.host}">
-									cd ${playwright.dir}
-
-									${playwright.command}
-								</docker-execute>
-							</try>
-							<finally>
-								<stop-docker-playwright />
-
-								<exec executable="/bin/bash">
-									<arg value="modules/test/playwright/env/tear_down.sh" />
-									<env key="LIFERAY_HOME" value="${liferay.home}" />
-									<env key="LIFERAY_PORTAL_URL" value="http://${env.HOSTNAME}:8080" />
-									<env key="PLAYWRIGHT_PROJECT_NAME" value="${playwright.project.name}" />
-								</exec>
-
-								<split-testsuites-junit-report test.suites.report.filepath="${playwright.dir}/test-results/TEST-playwright.xml" />
-
-								<print-docker-database-logs />
-							</finally>
-						</trycatch>
-					</test-action>
-				</database-test-run-test>
+							${playwright.command}
+						</docker-execute>
+					</try>
+					<finally>
+						<stop-docker-playwright />
+					</finally>
+				</trycatch>
 			</test-action>
 
 			<test-set-up>
 				<setup-test-environment />
 			</test-set-up>
 		</run-batch-test>
+	</target>
+
+	<target name="playwright-js-bundle-tomcat90-mysql57-jdk8">
+		<set-tomcat-version-number liferay.portal.bundle="${test.portal.bundle.version}" />
+
+		<run-playwright-js-test
+			app.server.type="tomcat"
+			test.build.fix.pack.zip.url="${test.build.fix.pack.zip.url}"
+			test.fix.pack.base.url="${test.fix.pack.base.url}"
+			test.license.xml.url="${test.license.xml.url}"
+			test.portal.bundle.osgi.zip.url="${test.portal.bundle.osgi.zip.url}"
+			test.portal.bundle.tools.zip.url="${test.portal.bundle.tools.zip.url}"
+			test.portal.bundle.version="${test.portal.bundle.version}"
+			test.portal.bundle.war.url="${test.portal.bundle.war.url}"
+			test.portal.bundle.zip.url="${test.portal.bundle.zip.url}"
+			test.portal.lpkg.name="${test.portal.lpkg.name}"
+			test.sql.zip.url="${test.sql.zip.url}"
+		/>
+	</target>
+
+	<target name="playwright-js-tomcat90-mysql57-jdk8">
+		<run-playwright-js-test />
 	</target>
 
 	<target name="playwright-js-tomcat90-mysql57-jdk8_stable">
@@ -8370,6 +8632,7 @@ information. Make sure to commit in all build services results.
 					<or>
 						<contains string="${git.diff}" substring="modules${file.separator}util${file.separator}source-formatter" />
 						<contains string="${git.diff}" substring="source-formatter.properties" />
+						<matches pattern="release-((\d{4})\.q([1-4])|(7\.[0-4]\.[0-9]?[0-9]\.\d+))" string="${liferay.portal.branch}" />
 					</or>
 					<then>
 						<antcall target="compile" />
@@ -8382,7 +8645,20 @@ information. Make sure to commit in all build services results.
 								<gradle-execute dir="modules/util/source-formatter" task="deploy" />
 							</then>
 						</if>
+					</then>
+					<else>
+						<antcall target="setup-sdk" />
 
+						<antcall target="setup-yarn" />
+					</else>
+				</if>
+
+				<if>
+					<or>
+						<contains string="${git.diff}" substring="modules${file.separator}util${file.separator}source-formatter" />
+						<contains string="${git.diff}" substring="source-formatter.properties" />
+					</or>
+					<then>
 						<ant dir="portal-impl" target="format-source-all">
 							<property name="source.auto.fix" value="false" />
 							<property name="source.fail.on.auto.fix" value="true" />
@@ -8393,10 +8669,6 @@ information. Make sure to commit in all build services results.
 						</ant>
 					</then>
 					<else>
-						<antcall target="setup-sdk" />
-
-						<antcall target="setup-yarn" />
-
 						<ant dir="portal-impl" target="format-source-current-branch">
 							<property name="check.vulnerabilities" value="true" />
 							<property name="source.auto.fix" value="false" />
@@ -8832,29 +9104,110 @@ junit.jvm.override.version=21</echo>
 	<target name="workspaces-compile-jdk8">
 		<run-batch-test>
 			<test-action>
-				<for list="${workspaces.names[workspaces-compile-jdk8]}" param="workspace.name">
+				<local name="workspace.names" />
+
+				<if>
+					<not>
+						<isset property="batch.jdk.version" />
+					</not>
+					<then>
+						<var name="batch.jdk.version" value="8" />
+					</then>
+				</if>
+
+				<propertycopy from="workspaces.names[workspaces-compile-jdk${batch.jdk.version}][${env.CI_TEST_SUITE}]" name="workspace.names" silent="true" />
+
+				<property name="workspace.names" value="${workspaces.names[workspaces-compile-jdk${batch.jdk.version}]}" />
+
+				<for list="${workspace.names}" param="workspace.name">
 					<sequential>
-						<local name="workspace.dir" />
+						<trycatch property="workspace.exception">
+							<try>
+								<local name="workspace.dir" />
 
-						<property name="workspace.dir" value="${project.dir}/workspaces/@{workspace.name}" />
+								<property name="workspace.dir" value="${project.dir}/workspaces/@{workspace.name}" />
 
-						<if>
-							<available file="${workspace.dir}" />
-							<then>
-								<echo></echo>
-								<echo>##</echo>
-								<echo>## @{workspace.name}</echo>
-								<echo>##</echo>
-								<echo></echo>
+								<if>
+									<available file="${workspace.dir}" />
+									<then>
+										<echo></echo>
+										<echo>##</echo>
+										<echo>## @{workspace.name}</echo>
+										<echo>##</echo>
+										<echo></echo>
 
-								<execute dir="${workspace.dir}">
-									./gradlew build
-								</execute>
-							</then>
-						</if>
+										<download-gradle-wrapper-binary workspace.dir="${workspace.dir}" />
+
+										<execute dir="${workspace.dir}">
+											./gradlew build
+										</execute>
+									</then>
+								</if>
+							</try>
+							<catch>
+								<echo>${workspace.exception}</echo>
+
+								<echo append="true" file="workspaces-failure">@{workspace.name},</echo>
+							</catch>
+						</trycatch>
 					</sequential>
 				</for>
+
+				<if>
+					<available file="workspaces-failure" />
+					<then>
+						<loadfile
+							property="failed.workspaces"
+							srcFile="workspaces-failure"
+						/>
+
+						<beanshell>
+							<![CDATA[
+								StringBuilder sb = new StringBuilder();
+
+								sb.append("\n");
+
+								String failedWorkspacesString = project.getProperty("failed.workspaces");
+
+								String[] failedWorkspaces = failedWorkspacesString.split(",");
+
+								sb.append(failedWorkspaces.length);
+
+								sb.append(" of ");
+
+								String workspaceNamesString = project.getProperty("workspace.names");
+
+								String[] workspaceNames = workspaceNamesString.split(",");
+
+								sb.append(workspaceNames.length);
+
+								sb.append(" workspace");
+
+								if (workspaceNames.length != 1) {
+									sb.append("s");
+								}
+
+								sb.append(" failed to compile:\n");
+
+								for (String failedWorkspace : failedWorkspaces) {
+									sb.append(failedWorkspace);
+									sb.append("\n");
+								}
+
+								project.setProperty("workspaces.failure.message", sb.toString());
+							]]>
+						</beanshell>
+
+						<fail message="${workspaces.failure.message}" />
+					</then>
+				</if>
 			</test-action>
 		</run-batch-test>
+	</target>
+
+	<target name="workspaces-compile-jdk11">
+		<antcall target="workspaces-compile-jdk8">
+			<param name="batch.jdk.version" value="11" />
+		</antcall>
 	</target>
 </project>

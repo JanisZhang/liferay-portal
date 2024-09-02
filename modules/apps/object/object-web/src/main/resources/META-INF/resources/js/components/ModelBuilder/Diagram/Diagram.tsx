@@ -33,6 +33,21 @@ import {getUnsupportedObjectRelationshipErrorMessage} from '../utils';
 
 import './Diagram.scss';
 
+let ReactFlowDefault = ReactFlow;
+
+// `react-flow-renderer` provides both a commonjs and ESM version.
+// We need this logic here so that both work. Unit tests rely on commonjs and
+// our DXP runtime uses ESM.
+
+// @ts-ignore
+
+if (ReactFlowDefault.default) {
+
+	// @ts-ignore
+
+	ReactFlowDefault = ReactFlowDefault.default;
+}
+
 const NODE_TYPES = {
 	objectDefinitionNode: ObjectDefinitionNode,
 };
@@ -56,10 +71,8 @@ function DiagramBuilder() {
 		dispatch,
 	] = useObjectFolderContext();
 
-	const [
-		showAddObjectRelationshipModal,
-		setShowAddObjectRelationshipModal,
-	] = useState(false);
+	const [showAddObjectRelationshipModal, setShowAddObjectRelationshipModal] =
+		useState(false);
 	const [
 		newObjectRelationshipSourceNodeProps,
 		setNewObjectRelationshipSourceNodeProps,
@@ -100,11 +113,12 @@ function DiagramBuilder() {
 				(node) => isNode(node) && node.id === connection.target
 			) as Node<ObjectDefinitionNodeData>;
 
-			const unsupportedObjectRelationship = getUnsupportedObjectRelationshipErrorMessage(
-				nodes,
-				sourceNode,
-				targetNode
-			);
+			const unsupportedObjectRelationship =
+				getUnsupportedObjectRelationshipErrorMessage(
+					nodes,
+					sourceNode,
+					targetNode
+				);
 
 			if (unsupportedObjectRelationship?.errorMessage) {
 				openToast({
@@ -146,8 +160,8 @@ function DiagramBuilder() {
 	);
 
 	const onNodeDragStop = async (node: Node<ObjectDefinitionNodeData>) => {
-		const updatedObjectFolderItems = selectedObjectFolder.objectFolderItems.map(
-			(objectFolderItem) => {
+		const updatedObjectFolderItems =
+			selectedObjectFolder.objectFolderItems.map((objectFolderItem) => {
 				if (
 					objectFolderItem.objectDefinitionExternalReferenceCode ===
 					node.data?.externalReferenceCode
@@ -160,8 +174,7 @@ function DiagramBuilder() {
 				}
 
 				return objectFolderItem;
-			}
-		);
+			});
 
 		const updatedObjectFolder = {
 			...selectedObjectFolder,
@@ -258,10 +271,11 @@ function DiagramBuilder() {
 				/>
 			)}
 
-			<ReactFlow
+			<ReactFlowDefault
 				connectionLineStyle={{stroke: '#0B5FFF'}}
 				connectionLineType={ConnectionLineType.SmoothStep}
 				connectionMode={ConnectionMode.Loose}
+				dir="ltr"
 				edgeTypes={EDGE_TYPES}
 				elements={elements}
 				minZoom={0.1}
@@ -310,7 +324,7 @@ function DiagramBuilder() {
 						/>
 					</div>
 				)}
-			</ReactFlow>
+			</ReactFlowDefault>
 		</div>
 	);
 }

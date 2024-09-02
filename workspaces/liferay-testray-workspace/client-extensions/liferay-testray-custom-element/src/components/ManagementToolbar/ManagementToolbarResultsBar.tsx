@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import {ClayResultsBar} from '@clayui/management-toolbar';
-import {useContext} from 'react';
+import {useContext, useEffect} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 
 import {ListViewContext, ListViewTypes} from '../../context/ListViewContext';
@@ -17,11 +16,14 @@ type ManagementToolbarResultsBarProps = {
 	totalItems: number;
 };
 
-const ManagementToolbarResultsBar: React.FC<ManagementToolbarResultsBarProps> = ({
-	totalItems,
-}) => {
+const ManagementToolbarResultsBar: React.FC<
+	ManagementToolbarResultsBarProps
+> = ({totalItems}) => {
 	const location = useLocation();
 	const navigate = useNavigate();
+	const searchParams = new URLSearchParams(location.search);
+
+	const filter = searchParams.get('filter');
 
 	const [
 		{
@@ -30,15 +32,7 @@ const ManagementToolbarResultsBar: React.FC<ManagementToolbarResultsBarProps> = 
 		dispatch,
 	] = useContext(ListViewContext);
 
-	const onClear = () => {
-		dispatch({payload: null, type: ListViewTypes.SET_CLEAR});
-	};
-
 	const handleRemoveItemFromFilter = (itemToRemove: string) => {
-		const searchParams = new URLSearchParams(location.search);
-
-		const filter = searchParams.get('filter');
-
 		if (filter) {
 			const filterJSON = JSON.parse(decodeURIComponent(filter));
 
@@ -47,6 +41,7 @@ const ManagementToolbarResultsBar: React.FC<ManagementToolbarResultsBarProps> = 
 			if (!Object.keys(filterJSON).length) {
 				searchParams.delete('filter');
 				searchParams.delete('filterSchema');
+				searchParams.delete('page');
 			}
 			else {
 				searchParams.set('filter', JSON.stringify(filterJSON));
@@ -62,6 +57,19 @@ const ManagementToolbarResultsBar: React.FC<ManagementToolbarResultsBarProps> = 
 		dispatch({payload: filterName, type: ListViewTypes.SET_REMOVE_FILTER});
 		handleRemoveItemFromFilter(filterName);
 	};
+
+	useEffect(() => {
+		if (!filter) {
+			entries
+				.filter(({value}) => value)
+				.forEach((entry) =>
+					dispatch({
+						payload: entry.name,
+						type: ListViewTypes.SET_REMOVE_FILTER,
+					})
+				);
+		}
+	}, [filter, entries, dispatch]);
 
 	return (
 		<ClayResultsBar>
@@ -117,16 +125,6 @@ const ManagementToolbarResultsBar: React.FC<ManagementToolbarResultsBarProps> = 
 						</ClayLabel>
 					</ClayResultsBar.Item>
 				))}
-
-			<ClayResultsBar.Item>
-				<ClayButton
-					className="component-link tbar-link"
-					displayType="unstyled"
-					onClick={onClear}
-				>
-					{i18n.translate('clear')}
-				</ClayButton>
-			</ClayResultsBar.Item>
 		</ClayResultsBar>
 	);
 };

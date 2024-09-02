@@ -897,7 +897,7 @@ public class Option implements Serializable {
 
 		CHECKBOX("checkbox"), CHECKBOX_MULTIPLE("checkbox_multiple"),
 		DATE("date"), NUMERIC("numeric"), RADIO("radio"), SELECT("select"),
-		TEXT("text");
+		SELECT_DATE("select_date"), TEXT("text");
 
 		@JsonCreator
 		public static FieldType create(String value) {
@@ -972,7 +972,10 @@ public class Option implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

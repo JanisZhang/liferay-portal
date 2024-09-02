@@ -11,9 +11,11 @@ import PropTypes from 'prop-types';
 import React, {useMemo, useState} from 'react';
 
 import {getLayoutDataItemPropTypes} from '../../../prop_types/index';
-import {FRAGMENT_ENTRY_TYPES} from '../../config/constants/fragmentEntryTypes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
-import {useSelectItem} from '../../contexts/ControlsContext';
+import {
+	useSelectItem,
+	useSelectMultipleItems,
+} from '../../contexts/ControlsContext';
 import {useDispatch, useSelector} from '../../contexts/StoreContext';
 import deleteItem from '../../thunks/deleteItem';
 import duplicateItem from '../../thunks/duplicateItem';
@@ -25,16 +27,22 @@ import {
 	getFormErrorDescription,
 } from '../../utils/getFormErrorDescription';
 import hideFragment from '../../utils/hideFragment';
+import isInputFragment from '../../utils/isInputFragment';
 import useHasRequiredChild from '../../utils/useHasRequiredChild';
 import SaveFragmentCompositionModal from '../SaveFragmentCompositionModal';
 import hasDropZoneChild from '../layout_data_items/hasDropZoneChild';
 
-export default function TopperItemActions({item}) {
+export default function TopperItemActions({disabled, item}) {
 	const [active, setActive] = useState(false);
 	const dispatch = useDispatch();
 	const hasRequiredChild = useHasRequiredChild(item.itemId);
 	const selectItem = useSelectItem();
+	const selectMultipleItems = useSelectMultipleItems();
 	const widgets = useSelector((state) => state.widgets);
+
+	const selectItems = Liferay.FeatureFlags['LPD-18221']
+		? selectMultipleItems
+		: selectItem;
 
 	const {fragmentEntryLinks, layoutData, selectedViewportSize} = useSelector(
 		(state) => state
@@ -42,18 +50,14 @@ export default function TopperItemActions({item}) {
 
 	const [openSaveModal, setOpenSaveModal] = useState(false);
 
-	const isInputFragment =
-		item.type === LAYOUT_DATA_ITEM_TYPES.fragment &&
-		fragmentEntryLinks[item.config.fragmentEntryLinkId]
-			.fragmentEntryType === FRAGMENT_ENTRY_TYPES.input;
-
 	const dropdownItems = useMemo(() => {
 		const items = [];
 
 		if (
 			item.type !== LAYOUT_DATA_ITEM_TYPES.dropZone &&
+			item.type !== LAYOUT_DATA_ITEM_TYPES.formStepContainer &&
 			!hasDropZoneChild(item, layoutData) &&
-			!isInputFragment
+			!isInputFragment(item, fragmentEntryLinks)
 		) {
 			items.push({
 				action: () => {
@@ -98,8 +102,8 @@ export default function TopperItemActions({item}) {
 				action: () =>
 					dispatch(
 						duplicateItem({
-							itemId: item.itemId,
-							selectItem,
+							itemIds: [item.itemId],
+							selectItems,
 						})
 					),
 				icon: 'copy',
@@ -116,8 +120,8 @@ export default function TopperItemActions({item}) {
 				action: () =>
 					dispatch(
 						deleteItem({
-							itemId: item.itemId,
-							selectItem,
+							itemIds: [item.itemId],
+							selectItems,
 						})
 					),
 				icon: 'trash',
@@ -130,11 +134,10 @@ export default function TopperItemActions({item}) {
 		dispatch,
 		fragmentEntryLinks,
 		hasRequiredChild,
-		isInputFragment,
 		item,
 		layoutData,
 		selectedViewportSize,
-		selectItem,
+		selectItems,
 		widgets,
 	]);
 
@@ -156,7 +159,9 @@ export default function TopperItemActions({item}) {
 				trigger={
 					<ClayButton
 						aria-label={Liferay.Language.get('options')}
+						disabled={disabled}
 						displayType="unstyled"
+						onClick={(event) => event.stopPropagation()}
 						size="sm"
 						title={Liferay.Language.get('options')}
 					>
@@ -176,7 +181,9 @@ export default function TopperItemActions({item}) {
 						) : (
 							<React.Fragment key={index}>
 								<ClayDropDown.Item
-									onClick={() => {
+									onClick={(event) => {
+										event.stopPropagation();
+
 										setActive(false);
 
 										dropdownItem.action();

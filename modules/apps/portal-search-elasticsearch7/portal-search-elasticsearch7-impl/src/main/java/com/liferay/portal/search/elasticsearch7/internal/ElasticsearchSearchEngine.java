@@ -30,7 +30,6 @@ import com.liferay.portal.search.ccr.CrossClusterReplicationHelper;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationObserver;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionManager;
-import com.liferay.portal.search.elasticsearch7.internal.index.IndexConfigurationDynamicUpdatesExecutor;
 import com.liferay.portal.search.elasticsearch7.internal.index.IndexFactory;
 import com.liferay.portal.search.engine.ConnectionInformation;
 import com.liferay.portal.search.engine.NodeInformation;
@@ -64,12 +63,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsRequest;
+import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
+import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.action.ingest.PutPipelineRequest;
+import org.elasticsearch.client.ClusterClient;
 import org.elasticsearch.client.IngestClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.bytes.BytesArray;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.xcontent.XContentType;
 
 import org.osgi.service.component.annotations.Activate;
@@ -163,16 +167,14 @@ public class ElasticsearchSearchEngine
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchConnectionManager.getRestHighLevelClient();
 
-		boolean created = _indexFactory.createIndices(
-			restHighLevelClient.indices(), companyId);
+		boolean created = _indexFactory.initializeIndex(
+			companyId, restHighLevelClient.indices());
 
 		_indexFactory.registerCompanyId(companyId);
 
 		if (created) {
 			_waitForYellowStatus();
 		}
-
-		_indexConfigurationDynamicUpdatesExecutor.execute(companyId);
 
 		CrossClusterReplicationHelper crossClusterReplicationHelper =
 			_crossClusterReplicationHelperSnapshot.get();
@@ -222,12 +224,13 @@ public class ElasticsearchSearchEngine
 				_indexNameBuilder.getIndexName(companyId));
 		}
 
+		setAutoCreateIndex(false);
+
 		try {
 			RestHighLevelClient restHighLevelClient =
 				_elasticsearchConnectionManager.getRestHighLevelClient();
 
-			_indexFactory.deleteIndices(
-				restHighLevelClient.indices(), companyId);
+			_indexFactory.deleteIndex(companyId, restHighLevelClient.indices());
 
 			_indexFactory.unregisterCompanyId(companyId);
 		}
@@ -269,6 +272,35 @@ public class ElasticsearchSearchEngine
 		_waitForYellowStatus();
 	}
 
+	public void setAutoCreateIndex(boolean enable) {
+		if (Validator.isBlank(_indexNameBuilder.getIndexNamePrefix())) {
+			return;
+		}
+
+		RestHighLevelClient restHighLevelClient =
+			_elasticsearchConnectionManager.getRestHighLevelClient();
+
+		ClusterClient clusterClient = restHighLevelClient.cluster();
+
+		ClusterUpdateSettingsRequest clusterUpdateSettingsRequest =
+			new ClusterUpdateSettingsRequest();
+
+		clusterUpdateSettingsRequest.persistentSettings(
+			Settings.builder(
+			).put(
+				"action.auto_create_index",
+				_createAutoCreateIndexSetting(enable)
+			));
+
+		try {
+			clusterClient.putSettings(
+				clusterUpdateSettingsRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
 	@Activate
 	protected void activate(Map<String, Object> properties) {
 		_elasticsearchConfigurationWrapper.register(this);
@@ -277,6 +309,8 @@ public class ElasticsearchSearchEngine
 				ElasticsearchSearchEngine.class.getClassLoader())) {
 
 			_checkNodeVersions();
+
+			setAutoCreateIndex(false);
 
 			if (StartupHelperUtil.isDBNew()) {
 				for (long companyId : _getIndexedCompanyIds()) {
@@ -333,10 +367,89 @@ public class ElasticsearchSearchEngine
 		}
 	}
 
+	private String _createAutoCreateIndexSetting(boolean enable) {
+		String currentValue = _getAutoCreateIndexSetting();
+		String disableAutoCreateLiferayIndexPattern = StringBundler.concat(
+			StringPool.MINUS, _indexNameBuilder.getIndexNamePrefix(),
+			StringPool.STAR);
+		String enableAutoCreateLiferayIndexPattern = StringBundler.concat(
+			StringPool.PLUS, _indexNameBuilder.getIndexNamePrefix(),
+			StringPool.STAR);
+
+		if (enable) {
+			if (Validator.isBlank(currentValue) ||
+				currentValue.equals(StringPool.STAR) ||
+				StringUtil.equalsIgnoreCase(currentValue, "true") ||
+				currentValue.contains(enableAutoCreateLiferayIndexPattern)) {
+
+				return currentValue;
+			}
+			else if (StringUtil.equalsIgnoreCase(currentValue, "false")) {
+				return enableAutoCreateLiferayIndexPattern;
+			}
+			else if (currentValue.contains(
+						disableAutoCreateLiferayIndexPattern)) {
+
+				return StringUtil.replace(
+					currentValue, disableAutoCreateLiferayIndexPattern,
+					enableAutoCreateLiferayIndexPattern);
+			}
+
+			return StringBundler.concat(
+				enableAutoCreateLiferayIndexPattern, StringPool.COMMA_AND_SPACE,
+				currentValue);
+		}
+
+		if (Validator.isBlank(currentValue) ||
+			currentValue.equals(StringPool.STAR) ||
+			StringUtil.equalsIgnoreCase(currentValue, "true")) {
+
+			return StringBundler.concat(
+				disableAutoCreateLiferayIndexPattern,
+				StringPool.COMMA_AND_SPACE, StringPool.STAR);
+		}
+		else if (StringUtil.equalsIgnoreCase(currentValue, "false") ||
+				 currentValue.contains(disableAutoCreateLiferayIndexPattern)) {
+
+			return currentValue;
+		}
+		else if (currentValue.contains(enableAutoCreateLiferayIndexPattern)) {
+			return StringUtil.replace(
+				currentValue, enableAutoCreateLiferayIndexPattern,
+				disableAutoCreateLiferayIndexPattern);
+		}
+
+		return StringBundler.concat(
+			disableAutoCreateLiferayIndexPattern, StringPool.COMMA_AND_SPACE,
+			currentValue);
+	}
+
+	private String _getAutoCreateIndexSetting() {
+		RestHighLevelClient restHighLevelClient =
+			_elasticsearchConnectionManager.getRestHighLevelClient();
+
+		ClusterClient clusterClient = restHighLevelClient.cluster();
+
+		try {
+			ClusterGetSettingsResponse clusterGetSettingsResponse =
+				clusterClient.getSettings(
+					new ClusterGetSettingsRequest(), RequestOptions.DEFAULT);
+
+			Settings settings =
+				clusterGetSettingsResponse.getPersistentSettings();
+
+			return settings.get("action.auto_create_index");
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
 	private Collection<Long> _getIndexedCompanyIds() {
 		Collection<Long> companyIds = new ArrayList<>();
 
-		String firstIndexName = _indexNameBuilder.getIndexName(0);
+		String firstIndexName = _indexNameBuilder.getIndexName(
+			CompanyConstants.SYSTEM);
 
 		String prefix = firstIndexName.substring(
 			0, firstIndexName.length() - 1);
@@ -377,7 +490,7 @@ public class ElasticsearchSearchEngine
 	}
 
 	private void _putTimestampPipeline() {
-		String source = JSONUtil.put(
+		String json = JSONUtil.put(
 			"description", "Adds timestamp to documents"
 		).put(
 			"processors",
@@ -392,8 +505,7 @@ public class ElasticsearchSearchEngine
 		).toString();
 
 		PutPipelineRequest putPipelineRequest = new PutPipelineRequest(
-			"timestamp",
-			new BytesArray(source.getBytes(StandardCharsets.UTF_8)),
+			"timestamp", new BytesArray(json.getBytes(StandardCharsets.UTF_8)),
 			XContentType.JSON);
 
 		RestHighLevelClient restHighLevelClient =
@@ -486,10 +598,6 @@ public class ElasticsearchSearchEngine
 
 	@Reference
 	private ElasticsearchConnectionManager _elasticsearchConnectionManager;
-
-	@Reference
-	private IndexConfigurationDynamicUpdatesExecutor
-		_indexConfigurationDynamicUpdatesExecutor;
 
 	@Reference
 	private IndexFactory _indexFactory;

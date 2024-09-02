@@ -7,8 +7,6 @@ package com.liferay.portal.cache.ehcache.internal;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.cache.AggregatedPortalCacheListener;
-import com.liferay.portal.cache.ehcache.internal.configurator.BaseEhcachePortalCacheManagerConfigurator;
-import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.cache.PortalCacheListener;
 import com.liferay.portal.kernel.cache.PortalCacheListenerScope;
 import com.liferay.portal.kernel.model.CompanyConstants;
@@ -76,21 +74,13 @@ public class ShardedEhcachePortalCacheTest {
 		_cacheManager = new CacheManager(configuration);
 
 		_baseEhcachePortalCacheManager = new BaseEhcachePortalCacheManager() {
-
-			@Override
-			protected BaseEhcachePortalCacheManagerConfigurator
-				getBaseEhcachePortalCacheManagerConfigurator() {
-
-				return null;
-			}
-
 		};
 
 		ReflectionTestUtil.setFieldValue(
 			_baseEhcachePortalCacheManager, "_cacheManager", _cacheManager);
 
-		_dbPartitionUtilMockedStatic.when(
-			DBPartitionUtil::getCurrentCompanyId
+		_companyThreadLocalMockedStatic.when(
+			CompanyThreadLocal::getNonsystemCompanyId
 		).thenAnswer(
 			(Answer<Long>)invocationOnMock -> {
 				long currentCompanyId = _companyIdThreadLocal.get();
@@ -127,7 +117,7 @@ public class ShardedEhcachePortalCacheTest {
 	@After
 	public void tearDown() {
 		_cacheManager.shutdown();
-		_dbPartitionUtilMockedStatic.close();
+		_companyThreadLocalMockedStatic.close();
 	}
 
 	@Test
@@ -689,8 +679,9 @@ public class ShardedEhcachePortalCacheTest {
 	private static CacheManager _cacheManager;
 	private static ThreadLocal<Long> _companyIdThreadLocal;
 
-	private final MockedStatic<DBPartitionUtil> _dbPartitionUtilMockedStatic =
-		Mockito.mockStatic(DBPartitionUtil.class);
+	private final MockedStatic<CompanyThreadLocal>
+		_companyThreadLocalMockedStatic = Mockito.mockStatic(
+			CompanyThreadLocal.class);
 	private ShardedEhcachePortalCache _shardedEhcachePortalCache;
 
 }

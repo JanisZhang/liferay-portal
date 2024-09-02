@@ -1,11 +1,10 @@
 {
-	"main": "index.js",
 	"name": "frontend-js-svg4everybody-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build:custom",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
-	"version": "2.0.19"
+	"version": "2.0.25"
 }

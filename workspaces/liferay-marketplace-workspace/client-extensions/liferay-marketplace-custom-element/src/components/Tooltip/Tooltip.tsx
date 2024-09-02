@@ -6,20 +6,26 @@
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
 
-import helpFillIcon from '../../assets/icons/help_fill_icon.svg';
-
 import './Tooltip.scss';
 
+import ClayIcon from '@clayui/icon';
+
 interface TooltipProps {
+	showTooltipBackground?: boolean;
 	tooltip?: string;
 	tooltipText?: string;
 }
 
-export function Tooltip({tooltip, tooltipText}: TooltipProps) {
+export function Tooltip({
+	showTooltipBackground = true,
+	tooltip,
+	tooltipText,
+}: TooltipProps) {
 	return (
 		<ClayTooltipProvider>
 			<div
-				className={classNames('tooltip-base', {
+				className={classNames({
+					'tooltip-base': showTooltipBackground,
 					'tooltip-base-auto': tooltipText,
 					'tooltip-base-container': !tooltipText,
 				})}
@@ -36,7 +42,11 @@ export function Tooltip({tooltip, tooltipText}: TooltipProps) {
 						</span>
 					)}
 
-					<img className="tooltip-icon" src={helpFillIcon} />
+					<ClayIcon
+						aria-label="tooltip"
+						className="tooltip-icon"
+						symbol="question-circle"
+					/>
 				</div>
 			</div>
 		</ClayTooltipProvider>

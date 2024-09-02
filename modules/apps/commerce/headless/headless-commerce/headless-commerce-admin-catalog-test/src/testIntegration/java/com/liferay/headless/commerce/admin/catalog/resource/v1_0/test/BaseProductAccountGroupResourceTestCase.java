@@ -39,6 +39,7 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -100,7 +101,7 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			ProductAccountGroupResource.builder();
 
 		productAccountGroupResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,7 +115,33 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductAccountGroup productAccountGroup1 = randomProductAccountGroup();
+
+		String json = objectMapper.writeValueAsString(productAccountGroup1);
+
+		ProductAccountGroup productAccountGroup2 =
+			ProductAccountGroupSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(productAccountGroup1, productAccountGroup2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductAccountGroup productAccountGroup = randomProductAccountGroup();
+
+		String json1 = objectMapper.writeValueAsString(productAccountGroup);
+		String json2 = ProductAccountGroupSerDes.toJSON(productAccountGroup);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -129,41 +156,6 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ProductAccountGroup productAccountGroup1 = randomProductAccountGroup();
-
-		String json = objectMapper.writeValueAsString(productAccountGroup1);
-
-		ProductAccountGroup productAccountGroup2 =
-			ProductAccountGroupSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(productAccountGroup1, productAccountGroup2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ProductAccountGroup productAccountGroup = randomProductAccountGroup();
-
-		String json1 = objectMapper.writeValueAsString(productAccountGroup);
-		String json2 = ProductAccountGroupSerDes.toJSON(productAccountGroup);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -218,7 +210,10 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteProductAccountGroup() throws Exception {
-		ProductAccountGroup productAccountGroup =
+
+		// No namespace
+
+		ProductAccountGroup productAccountGroup1 =
 			testGraphQLDeleteProductAccountGroup_addProductAccountGroup();
 
 		Assert.assertTrue(
@@ -228,23 +223,61 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 						"deleteProductAccountGroup",
 						new HashMap<String, Object>() {
 							{
-								put("id", productAccountGroup.getId());
+								put("id", productAccountGroup1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteProductAccountGroup"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"productAccountGroup",
 					new HashMap<String, Object>() {
 						{
-							put("id", productAccountGroup.getId());
+							put("id", productAccountGroup1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		ProductAccountGroup productAccountGroup2 =
+			testGraphQLDeleteProductAccountGroup_addProductAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteProductAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put("id", productAccountGroup2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteProductAccountGroup"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"productAccountGroup",
+						new HashMap<String, Object>() {
+							{
+								put("id", productAccountGroup2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ProductAccountGroup
@@ -280,6 +313,8 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		ProductAccountGroup productAccountGroup =
 			testGraphQLGetProductAccountGroup_addProductAccountGroup();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				productAccountGroup,
@@ -295,11 +330,37 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/productAccountGroup"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productAccountGroup,
+				ProductAccountGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productAccountGroup",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												productAccountGroup.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productAccountGroup"))));
 	}
 
 	@Test
 	public void testGraphQLGetProductAccountGroupNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -313,6 +374,25 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1267,7 +1347,8 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1331,12 +1412,12 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1345,11 +1426,16 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1381,6 +1467,24 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1402,16 +1506,6 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

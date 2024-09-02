@@ -243,6 +243,10 @@ public class DLAdminDisplayContext {
 		String orderByCol = ParamUtil.getString(
 			_httpServletRequest, "orderByCol");
 
+		if (Objects.equals(orderByCol, "relevance")) {
+			return "relevance";
+		}
+
 		if (orderByCol.equals("downloads") && (getFileEntryTypeId() >= 0)) {
 			orderByCol = "modifiedDate";
 		}
@@ -269,6 +273,10 @@ public class DLAdminDisplayContext {
 
 		if (isNavigationRecent()) {
 			return "desc";
+		}
+
+		if (Objects.equals(getOrderByCol(), "relevance")) {
+			return "asc";
 		}
 
 		String orderByType = ParamUtil.getString(
@@ -552,7 +560,7 @@ public class DLAdminDisplayContext {
 			}
 
 			if ((_folder != null) && (_folderId != _rootFolderId) &&
-				(_rootFolderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID)) {
+				!_isRepositoryRoot()) {
 
 				List<Long> ancestorFolderIds = _folder.getAncestorFolderIds();
 
@@ -567,6 +575,8 @@ public class DLAdminDisplayContext {
 	}
 
 	private void _computeRootFolder() {
+		_rootFolder = null;
+
 		_rootFolderId = _dlPortletInstanceSettings.getRootFolderId();
 		_rootFolderName = StringPool.BLANK;
 
@@ -577,26 +587,26 @@ public class DLAdminDisplayContext {
 		}
 
 		try {
-			Folder rootFolder = DLAppLocalServiceUtil.getFolder(_rootFolderId);
+			_rootFolder = DLAppLocalServiceUtil.getFolder(_rootFolderId);
 
-			_rootFolderName = rootFolder.getName();
+			_rootFolderName = _rootFolder.getName();
 
-			if (rootFolder.isRepositoryCapabilityProvided(
+			if (_rootFolder.isRepositoryCapabilityProvided(
 					TrashCapability.class)) {
 
 				TrashCapability trashCapability =
-					rootFolder.getRepositoryCapability(TrashCapability.class);
+					_rootFolder.getRepositoryCapability(TrashCapability.class);
 
-				_rootFolderInTrash = trashCapability.isInTrash(rootFolder);
+				_rootFolderInTrash = trashCapability.isInTrash(_rootFolder);
 
 				if (_rootFolderInTrash) {
 					_rootFolderName = _trashHelper.getOriginalTitle(
-						rootFolder.getName());
+						_rootFolder.getName());
 				}
 			}
 
 			DLFolderUtil.validateDepotFolder(
-				_rootFolderId, rootFolder.getGroupId(),
+				_rootFolderId, _rootFolder.getGroupId(),
 				_themeDisplay.getScopeGroupId());
 		}
 		catch (NoSuchFolderException noSuchFolderException) {
@@ -1127,6 +1137,9 @@ public class DLAdminDisplayContext {
 			fieldName = Field.MODIFIED_DATE;
 			type = Sort.LONG_TYPE;
 		}
+		else if (Objects.equals(orderByCol, "relevance")) {
+			type = Sort.SCORE_TYPE;
+		}
 		else if (Objects.equals(orderByCol, "size")) {
 			type = Sort.LONG_TYPE;
 		}
@@ -1194,6 +1207,16 @@ public class DLAdminDisplayContext {
 
 	private boolean _isExternalRepositorySearch() {
 		if (_getSearchRepositoryId() != _themeDisplay.getScopeGroupId()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isRepositoryRoot() {
+		if ((_rootFolderId == DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) ||
+			((_rootFolder != null) && _rootFolder.isRoot())) {
+
 			return true;
 		}
 
@@ -1288,6 +1311,7 @@ public class DLAdminDisplayContext {
 	private final PortalPreferences _portalPreferences;
 	private PortletPreferences _portletPreferences;
 	private long _repositoryId;
+	private Folder _rootFolder;
 	private long _rootFolderId;
 	private boolean _rootFolderInTrash;
 	private String _rootFolderName;

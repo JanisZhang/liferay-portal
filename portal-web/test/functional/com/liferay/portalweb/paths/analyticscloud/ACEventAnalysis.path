@@ -50,13 +50,13 @@
 <!-- EDIT_ATTRIBUTE -->
 
 <tr>
-	<td>FILTER_BUTTON</td>
-	<td>//*[text()='${key_attributeName}']/..//button[contains(@class,'options-button')]//*</td>
+	<td>FILTER_APPLY_BUTTON</td>
+	<td>//*[contains(@class,'show-overflow')]//*[contains(@class,'button-root')and text()='Apply']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>FILTER_DONE_BUTTON</td>
-	<td>//*[contains(@class,'show-overflow')]//*[contains(@class,'button-root')and text()='Done']</td>
+	<td>FILTER_BUTTON</td>
+	<td>//*[text()='${key_attributeName}']/..//button[contains(@class,'options-button')]//*</td>
 	<td></td>
 </tr>
 <tr>
@@ -66,7 +66,7 @@
 </tr>
 <tr>
 	<td>INPUT_CONDITION</td>
-	<td>//input[contains(@class,'input-root')]</td>
+	<td>//input[@aria-labelledby='clay-autocomplete-label-1'] | //input[contains(@class,'input-root')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -92,7 +92,7 @@
 
 <tr>
 	<td>VIEW_TOTAL_NUMBER_RELATED_COLUMN_INFORMATION</td>
-	<td>//span[text()='${key_columnInformationValue}']/ancestor::tr//span[text()='${key_totalEventsValue}']</td>
+	<td>//span[contains(text(),'${key_columnInformationValue}')]/ancestor::tr//span[text()='${key_totalEventsValue}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -102,7 +102,7 @@
 </tr>
 <tr>
 	<td>VIEW_ANALYSIS_INFORMATION</td>
-	<td>//tr//*[text()='${key_informationValue}']</td>
+	<td>//tr//*[contains(text(),'${key_informationValue}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -144,8 +144,8 @@
 <!-- EVENT ANALYSIS DROPDOWN -->
 
 <tr>
-	<td>DROPDOWN_BY_INDEX</td>
-	<td>//div[contains(@class,'show')]//li[${key_index}]</td>
+	<td>DROPDOWN_BY_OPTION</td>
+	<td>//*[contains(@class,'dropdown-item')and text()='${key_optionName}']</td>
 	<td></td>
 </tr>
 </tbody>

@@ -272,13 +272,14 @@ public class DLAppLocalServiceUtil {
 	 */
 	public static com.liferay.portal.kernel.repository.model.FileShortcut
 			addFileShortcut(
-				long userId, long repositoryId, long folderId,
-				long toFileEntryId,
+				String externalReferenceCode, long userId, long repositoryId,
+				long folderId, long toFileEntryId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFileShortcut(
-			userId, repositoryId, folderId, toFileEntryId, serviceContext);
+			externalReferenceCode, userId, repositoryId, folderId,
+			toFileEntryId, serviceContext);
 	}
 
 	/**
@@ -334,6 +335,14 @@ public class DLAppLocalServiceUtil {
 		throws PortalException {
 
 		getService().deleteFileEntry(fileEntryId);
+	}
+
+	public static void deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		getService().deleteFileEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -467,11 +476,11 @@ public class DLAppLocalServiceUtil {
 	 */
 	public static com.liferay.portal.kernel.repository.model.FileEntry
 			getFileEntryByExternalReferenceCode(
-				long groupId, String externalReferenceCode)
+				String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		return getService().getFileEntryByExternalReferenceCode(
-			groupId, externalReferenceCode);
+			externalReferenceCode, groupId);
 	}
 
 	/**

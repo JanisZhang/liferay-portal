@@ -183,163 +183,86 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 		</div>
 
 		<c:if test="<%= cpDefinition != null %>">
-			<div class="col-12">
-				<div id="item-finder-root"></div>
+			<c:choose>
+				<c:when test='<%= FeatureFlagManagerUtil.isEnabled("LPD-21636") %>'>
+					<div class="col-12">
+						<commerce-ui:panel
+							bodyClasses="p-0"
+							title='<%= LanguageUtil.get(request, "specifications") %>'
+						>
+							<frontend-data-set:classic-display
+								contextParams='<%=
+									HashMapBuilder.<String, String>put(
+										"cpDefinitionId", String.valueOf(cpDefinitionId)
+									).build()
+								%>'
+								creationMenu="<%= cpDefinitionsDisplayContext.getCPDefinitionSpecificationOptionValueCreationMenu() %>"
+								dataProviderKey="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
+								formName="fm"
+								id="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
+								itemsPerPage="<%= 10 %>"
+								selectedItemsKey="cpdefinitionSpecificationOptionValueId"
+								showManagementBar="<%= true %>"
+								showSearch="<%= true %>"
+							/>
+						</commerce-ui:panel>
+					</div>
+				</c:when>
+				<c:otherwise>
+					<div class="col-12">
+						<div id="item-finder-root"></div>
 
-				<aui:script require="commerce-frontend-js/components/item_finder/entry as itemFinder, commerce-frontend-js/utilities/slugify as slugify, commerce-frontend-js/utilities/eventsDefinitions as events, commerce-frontend-js/utilities/index as utilities">
-					var headers = utilities.fetchParams.headers;
-					var productId = <%= cpDefinition.getCProductId() %>;
+						<liferay-frontend:component
+							context='<%=
+								HashMapBuilder.<String, Object>put(
+									"portletId", portletDisplay.getRootPortletId()
+								).put(
+									"productDefinitonSpecifications", CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS
+								).put(
+									"productId", cpDefinition.getCProductId()
+								).put(
+									"spritemap", themeDisplay.getPathThemeSpritemap()
+								).build()
+							%>'
+							module="{detailsItemFinder} from commerce-product-definitions-web"
+						/>
+					</div>
 
-					function selectItem(specification) {
-						return Liferay.Util.fetch(
-							'/o/headless-commerce-admin-catalog/v1.0/products/' +
-								productId +
-								'/productSpecifications/',
-							{
-								body: JSON.stringify(
-									Object.assign(
-										{
-											productId: productId,
-											specificationId: specification.id,
-											specificationKey: specification.key,
-											value: {},
-										},
-										specification.optionCategory
-											? {
-													optionCategoryId:
-														specification.optionCategory.id,
-											  }
-											: {}
-									)
-								),
-								headers: headers,
-								method: 'POST',
-							}
-						).then(() => {
-							Liferay.fire(events.FDS_UPDATE_DISPLAY, {
-								id:
-									'<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>',
-							});
-							return null;
-						});
-					}
-
-					function addNewItem(name) {
-						var nameDefinition = {};
-
-						nameDefinition[themeDisplay.getLanguageId()] = name;
-
-						if (themeDisplay.getLanguageId() !== themeDisplay.getDefaultLanguageId()) {
-							nameDefinition[themeDisplay.getDefaultLanguageId()] = name;
-						}
-
-						return Liferay.Util.fetch(
-							'/o/headless-commerce-admin-catalog/v1.0/specifications',
-							{
-								body: JSON.stringify({
-									key: slugify.default(name),
-									title: nameDefinition,
-								}),
-								headers: headers,
-								method: 'POST',
-							}
-						)
-							.then((response) => {
-								if (response.ok) {
-									return response.json();
-								}
-
-								return response.json().then((data) => {
-									return Promise.reject(data.errorDescription);
-								});
-							})
-							.then(selectItem);
-					}
-
-					function getSelectedItems() {
-						return Promise.resolve([]);
-					}
-
-					itemFinder.default('itemFinder', 'item-finder-root', {
-						apiUrl: '/o/headless-commerce-admin-catalog/v1.0/specifications',
-						createNewItemLabel:
-							'<%= LanguageUtil.get(request, "create-new-specification") %>',
-						getSelectedItems: getSelectedItems,
-						inputPlaceholder:
-							'<%= LanguageUtil.get(request, "find-or-create-a-specification") %>',
-						itemSelectedMessage:
-							'<%= LanguageUtil.get(request, "specification-selected") %>',
-						itemsKey: 'id',
-						linkedDataSetsId: [
-							'<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>',
-						],
-						multiSelectableEntries: true,
-						itemsKey: 'id',
-						onItemCreated: addNewItem,
-						onItemSelected: selectItem,
-						pageSize: 10,
-						panelHeaderLabel: '<%= LanguageUtil.get(request, "add-specifications") %>',
-						portletId: '<%= portletDisplay.getRootPortletId() %>',
-						schema: [
-							{
-								fieldName: ['title', 'LANG'],
-							},
-							{
-								fieldName: 'key',
-							},
-						],
-						spritemap: '<%= themeDisplay.getPathThemeSpritemap() %>',
-						titleLabel:
-							'<%= LanguageUtil.get(request, "add-existing-specification") %>',
-					});
-				</aui:script>
-			</div>
-
-			<div class="col-12">
-				<commerce-ui:panel
-					bodyClasses="p-0"
-					title='<%= LanguageUtil.get(request, "specifications") %>'
-				>
-					<frontend-data-set:classic-display
-						contextParams='<%=
-							HashMapBuilder.<String, String>put(
-								"cpDefinitionId", String.valueOf(cpDefinitionId)
-							).build()
-						%>'
-						dataProviderKey="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
-						formName="fm"
-						id="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
-						itemsPerPage="<%= 10 %>"
-						selectedItemsKey="cpdefinitionSpecificationOptionValueId"
-						showManagementBar="<%= false %>"
-					/>
-				</commerce-ui:panel>
-			</div>
+					<div class="col-12">
+						<commerce-ui:panel
+							bodyClasses="p-0"
+							title='<%= LanguageUtil.get(request, "specifications") %>'
+						>
+							<frontend-data-set:classic-display
+								contextParams='<%=
+									HashMapBuilder.<String, String>put(
+										"cpDefinitionId", String.valueOf(cpDefinitionId)
+									).build()
+								%>'
+								dataProviderKey="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
+								formName="fm"
+								id="<%= CommerceProductFDSNames.PRODUCT_DEFINITION_SPECIFICATIONS %>"
+								itemsPerPage="<%= 10 %>"
+								selectedItemsKey="cpdefinitionSpecificationOptionValueId"
+								showManagementBar="<%= false %>"
+							/>
+						</commerce-ui:panel>
+					</div>
+				</c:otherwise>
+			</c:choose>
 		</c:if>
 	</div>
 </aui:form>
 
 <c:if test="<%= cpDefinition == null %>">
-	<aui:script require="frontend-js-web/index as frontendJsWeb, commerce-frontend-js/utilities/slugify as slugify">
-		var {debounce} = frontendJsWeb;
-
-		var form = document.getElementById('<portlet:namespace />fm');
-
-		var nameInput = form.querySelector('#<portlet:namespace />nameMapAsXML');
-		var urlInput = form.querySelector('#<portlet:namespace />urlTitleMapAsXML');
-		var urlTitleInputLocalized = Liferay.component(
-			'<portlet:namespace />urlTitleMapAsXML'
-		);
-
-		var handleOnNameInput = function () {
-			var slug = slugify.default(nameInput.value);
-			urlInput.value = slug;
-
-			urlTitleInputLocalized.updateInputLanguage(slug);
-		};
-
-		nameInput.addEventListener('input', debounce(handleOnNameInput, 200));
-	</aui:script>
+	<liferay-frontend:component
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"namespace", liferayPortletResponse.getNamespace()
+			).build()
+		%>'
+		module="{debounceDetails} from commerce-product-definitions-web"
+	/>
 
 	<aui:script>
 		document

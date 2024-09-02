@@ -10,6 +10,8 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
+import java.io.Serializable;
+
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,6 +21,7 @@ import java.sql.Types;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Preston Crary
@@ -116,58 +119,79 @@ public class CTRowUtil {
 
 	public static String getConstraintConflictsSQL(
 		String tableName, String primaryColumnName,
-		String[] uniqueIndexColumnNames, long sourceCTCollectionId,
-		long targetCTCollectionId) {
+		String[] uniqueIndexColumnNames, long targetCTCollectionId) {
 
 		StringBundler sb = new StringBundler(
 			(9 * uniqueIndexColumnNames.length) + 17);
 
-		sb.append("select sourceTable.");
+		sb.append("select ");
 		sb.append(primaryColumnName);
-		sb.append(" as sourcePK, targetTable.");
-		sb.append(primaryColumnName);
-		sb.append(" as targetPK from ");
+		sb.append(" from ");
 		sb.append(tableName);
-		sb.append(" sourceTable inner join ");
-		sb.append(tableName);
-		sb.append(" targetTable on sourceTable.");
-		sb.append(primaryColumnName);
-		sb.append(" != targetTable.");
-		sb.append(primaryColumnName);
-		sb.append(" and sourceTable.ctCollectionId = ");
-		sb.append(sourceCTCollectionId);
-		sb.append(" and targetTable.ctCollectionId = ");
+		sb.append(" where ctCollectionId = ");
 		sb.append(targetCTCollectionId);
+		sb.append(" and ");
+		sb.append(primaryColumnName);
+		sb.append(" != ?");
 
 		for (String uniqueIndexColumnName : uniqueIndexColumnNames) {
-			_getUniqueIndexColumnNamePredicate(sb, uniqueIndexColumnName);
+			sb.append(" and ");
+			sb.append(uniqueIndexColumnName);
+			sb.append(" = ?");
 		}
 
 		return sb.toString();
 	}
 
-	private static void _getUniqueIndexColumnNamePredicate(
-		StringBundler sb, String uniqueIndexColumnName) {
+	public static String getConstraintEntitiesSQL(
+		String tableName, String primaryColumnName,
+		String[] uniqueIndexColumnNames, long ctCollectionId,
+		Set<Long> primaryKeys) {
 
-		if ((DBManagerUtil.getDBType() == DBType.ORACLE) ||
-			(DBManagerUtil.getDBType() == DBType.SQLSERVER)) {
+		StringBundler sb = new StringBundler(
+			(9 * uniqueIndexColumnNames.length) + 17);
 
-			sb.append(" and ((sourceTable.");
+		sb.append("select ");
+		sb.append(primaryColumnName);
+		sb.append(", ");
+
+		for (String uniqueIndexColumnName : uniqueIndexColumnNames) {
 			sb.append(uniqueIndexColumnName);
-			sb.append(" = targetTable.");
-			sb.append(uniqueIndexColumnName);
-			sb.append(") or (sourceTable.");
-			sb.append(uniqueIndexColumnName);
-			sb.append(" is null and targetTable.");
-			sb.append(uniqueIndexColumnName);
-			sb.append(" is null))");
+			sb.append(", ");
 		}
-		else {
-			sb.append(" and sourceTable.");
-			sb.append(uniqueIndexColumnName);
-			sb.append(" = targetTable.");
-			sb.append(uniqueIndexColumnName);
+
+		sb.setIndex(sb.index() - 1);
+
+		sb.append(" from ");
+		sb.append(tableName);
+		sb.append(" where ctCollectionId = ");
+		sb.append(ctCollectionId);
+		sb.append(" and ");
+		sb.append(primaryColumnName);
+		sb.append(" in (");
+
+		int i = 0;
+
+		for (Serializable primaryKey : primaryKeys) {
+			if (i == _BATCH_SIZE) {
+				sb.setStringAt(")", sb.index() - 1);
+
+				sb.append(" or ");
+				sb.append(primaryColumnName);
+				sb.append(" in (");
+
+				i = 0;
+			}
+
+			sb.append(primaryKey);
+			sb.append(", ");
+
+			i++;
 		}
+
+		sb.setStringAt(")", sb.index() - 1);
+
+		return sb.toString();
 	}
 
 	private static boolean _isPostgresBlobTable(
@@ -188,5 +212,7 @@ public class CTRowUtil {
 
 	private CTRowUtil() {
 	}
+
+	private static final int _BATCH_SIZE = 1000;
 
 }

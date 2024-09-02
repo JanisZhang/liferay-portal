@@ -5,17 +5,17 @@
 
 package com.liferay.portal.search.opensearch2.internal.index;
 
-import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.opensearch2.internal.configuration.OpenSearchConfigurationObserver;
 import com.liferay.portal.search.opensearch2.internal.configuration.OpenSearchConfigurationWrapper;
 import com.liferay.portal.search.opensearch2.internal.connection.OpenSearchConnectionManager;
 import com.liferay.portal.search.opensearch2.internal.index.util.IndexFactoryCompanyIdRegistryUtil;
-import com.liferay.portal.search.spi.model.index.contributor.IndexContributor;
 
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.indices.OpenSearchIndicesClient;
@@ -42,27 +42,12 @@ public class CompanyIndexFactory
 	}
 
 	@Override
-	public boolean createIndices(
+	public boolean deleteIndex(
 		long companyId, OpenSearchIndicesClient openSearchIndicesClient) {
 
-		String indexName = _indexHelper.getIndexName(companyId);
-
-		if (_indexHelper.hasIndex(indexName, openSearchIndicesClient)) {
-			return false;
-		}
-
-		_indexHelper.createIndex(indexName, openSearchIndicesClient);
-
-		return true;
-	}
-
-	@Override
-	public boolean deleteIndices(
-		long companyId, OpenSearchIndicesClient openSearchIndicesClient) {
+		String indexName = _companyIndexHelper.getIndexName(companyId);
 
 		Company company = _companyLocalService.fetchCompany(companyId);
-
-		String indexName = _indexHelper.getIndexName(companyId);
 
 		if ((company != null) &&
 			!Validator.isBlank(company.getIndexNameCurrent())) {
@@ -70,13 +55,11 @@ public class CompanyIndexFactory
 			indexName = company.getIndexNameCurrent();
 		}
 
-		if (!_indexHelper.hasIndex(indexName, openSearchIndicesClient)) {
+		if (!_companyIndexHelper.hasIndex(indexName, openSearchIndicesClient)) {
 			return false;
 		}
 
-		_executeIndexContributorsBeforeRemove(indexName);
-
-		_indexHelper.deleteIndex(
+		_companyIndexHelper.deleteIndex(
 			companyId, indexName, openSearchIndicesClient, true);
 
 		return true;
@@ -88,10 +71,31 @@ public class CompanyIndexFactory
 	}
 
 	@Override
-	public void onOpenSearchConfigurationUpdate() {
-		_createCompanyIndexes();
+	public boolean initializeIndex(
+		long companyId, OpenSearchIndicesClient openSearchIndicesClient) {
 
-		_indexHelper.updateMaxResultWindow();
+		String indexName = _companyIndexHelper.getIndexName(companyId);
+
+		if (_companyIndexHelper.hasIndex(indexName, openSearchIndicesClient)) {
+			if ((companyId != CompanyConstants.SYSTEM) &&
+				FeatureFlagManagerUtil.isEnabled(companyId, "LPD-7822")) {
+
+				_companyIndexHelper.updateIndex(
+					companyId, indexName, openSearchIndicesClient);
+			}
+
+			return false;
+		}
+
+		_companyIndexHelper.createIndex(
+			companyId, indexName, openSearchIndicesClient);
+
+		return true;
+	}
+
+	@Override
+	public void onOpenSearchConfigurationUpdate() {
+		_initializeCompanyIndexes();
 	}
 
 	@Override
@@ -108,7 +112,7 @@ public class CompanyIndexFactory
 	protected void activate() {
 		_openSearchConfigurationWrapper.register(this);
 
-		_createCompanyIndexes();
+		_initializeCompanyIndexes();
 	}
 
 	@Deactivate
@@ -116,48 +120,25 @@ public class CompanyIndexFactory
 		_openSearchConfigurationWrapper.unregister(this);
 	}
 
-	private void _createCompanyIndex(long companyId) {
+	private synchronized void _initializeCompanyIndexes() {
+		_companyLocalService.forEachCompanyId(
+			companyId -> _initializeIndex(companyId),
+			IndexFactoryCompanyIdRegistryUtil.getCompanyIds());
+	}
+
+	private void _initializeIndex(long companyId) {
 		try {
 			OpenSearchClient openSearchClient =
 				_openSearchConnectionManager.getOpenSearchClient();
 
-			createIndices(companyId, openSearchClient.indices());
+			initializeIndex(companyId, openSearchClient.indices());
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"Unable to reinitialize index for company " + companyId,
+					"Unable to initialize index for company " + companyId,
 					exception);
 			}
-		}
-	}
-
-	private synchronized void _createCompanyIndexes() {
-		_companyLocalService.forEachCompanyId(
-			companyId -> _createCompanyIndex(companyId),
-			IndexFactoryCompanyIdRegistryUtil.getCompanyIds());
-	}
-
-	private void _executeIndexContributorBeforeRemove(
-		IndexContributor indexContributor, String indexName) {
-
-		try {
-			indexContributor.onBeforeRemove(indexName);
-		}
-		catch (Throwable throwable) {
-			_log.error(
-				StringBundler.concat(
-					"Unable to apply contributor ", indexContributor,
-					" when removing index ", indexName),
-				throwable);
-		}
-	}
-
-	private void _executeIndexContributorsBeforeRemove(String indexName) {
-		for (IndexContributor indexContributor :
-				_indexHelper.getIndexContributors()) {
-
-			_executeIndexContributorBeforeRemove(indexContributor, indexName);
 		}
 	}
 
@@ -165,10 +146,10 @@ public class CompanyIndexFactory
 		CompanyIndexFactory.class);
 
 	@Reference
-	private CompanyLocalService _companyLocalService;
+	private CompanyIndexHelper _companyIndexHelper;
 
 	@Reference
-	private IndexHelper _indexHelper;
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private OpenSearchConfigurationWrapper _openSearchConfigurationWrapper;

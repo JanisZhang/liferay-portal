@@ -214,6 +214,8 @@ definition {
 
 			Click(locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_CLEAR_BUTTON");
 		}
+
+		PageEditor.gotoTab(tabName = "Browser");
 	}
 
 	@summary = "Default summary"
@@ -443,6 +445,8 @@ definition {
 				Click(locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_CLEAR_BUTTON");
 			}
 		}
+
+		PageEditor.gotoTab(tabName = "Browser");
 	}
 
 	@summary = "Default summary"
@@ -828,6 +832,8 @@ definition {
 				fragmentName = ${fragmentName},
 				position = ${position});
 		}
+
+		PageEditor.gotoTab(tabName = "Browser");
 	}
 
 	@summary = "Default summary"
@@ -1357,6 +1363,8 @@ definition {
 			var index = 1;
 		}
 
+		WaitForVisible(locator1 = "Fragment#FRAGMENT_LABEL");
+
 		Click.javaScriptClick(
 			index = ${index},
 			key_fragmentName = ${fragmentName},
@@ -1377,6 +1385,8 @@ definition {
 				fragmentName = ${fragmentName},
 				index = ${index});
 		}
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		if (isSet(className)) {
 			var fragmentName = ${className};
@@ -2066,6 +2076,8 @@ definition {
 		}
 		else {
 			PageEditor.clickConfigurableField(fragmentName = "Applied Filters");
+
+			PageEditor.gotoTab(tabName = "Browser");
 		}
 
 		WaitForVisible(
@@ -2135,11 +2147,15 @@ definition {
 			PageEditor.clickConfigurableField(
 				fragmentName = ${fragmentName},
 				index = ${index});
+
+			PageEditor.gotoTab(tabName = "Browser");
 		}
 
 		if (isSet(deviceType) && (${deviceType} != "Desktop")) {
 			SelectFrame(value1 = "relative=top");
 		}
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		AssertVisible(
 			key_sidebarButton = "Browser",
@@ -2281,6 +2297,8 @@ definition {
 				PageEditor.clickConfigurableField(
 					fragmentName = ${fragmentName},
 					index = ${index});
+
+				PageEditor.gotoTab(tabName = "Browser");
 
 				PageEditor.viewItemSelectorText(
 					fieldLabel = "Collection",
@@ -2534,6 +2552,8 @@ definition {
 			PageEditor.clickConfigurableField(
 				fragmentName = ${fragmentName},
 				index = ${index});
+
+			PageEditor.gotoTab(tabName = "Browser");
 		}
 
 		AssertVisible(
@@ -2700,6 +2720,8 @@ definition {
 		var key_fragmentName = ${fragmentName};
 
 		PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		AssertVisible(
 			key_sidebarButton = "Browser",
@@ -2935,6 +2957,8 @@ definition {
 
 		PageEditor.clickConfigurableField(fragmentName = "Dropdown");
 
+		PageEditor.gotoTab(tabName = "Browser");
+
 		AssertVisible(
 			key_sidebarButton = "Browser",
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -3008,11 +3032,15 @@ definition {
 			PageEditor.clickConfigurableField(
 				fragmentName = "Form Container",
 				index = ${index});
+
+			PageEditor.gotoTab(tabName = "Browser");
 		}
 
 		if (isSet(deviceType) && (${deviceType} != "Desktop")) {
 			SelectFrame(value1 = "relative=top");
 		}
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		AssertVisible(
 			key_sidebarButton = "Browser",
@@ -3051,12 +3079,12 @@ definition {
 
 			if (${successMessage} == "Stay in Page") {
 				Select(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Stay in Page");
 
 				AssertSelectedLabel(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Stay in Page");
 
@@ -3064,12 +3092,12 @@ definition {
 			}
 			else if (${successMessage} == "Show Embedded Message") {
 				Select(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Show Embedded Message");
 
 				AssertSelectedLabel(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Show Embedded Message");
 
@@ -3088,12 +3116,12 @@ definition {
 			}
 			else if (${successMessage} == "Go to Page") {
 				Select(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Go to Page");
 
 				AssertSelectedLabel(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Go to Page");
 
@@ -3139,12 +3167,12 @@ definition {
 			}
 			else if (${successMessage} == "Go to External URL") {
 				Select(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Go to External URL");
 
 				AssertSelectedLabel(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Go to External URL");
 
@@ -3163,12 +3191,12 @@ definition {
 			}
 			else if (${successMessage} == "Go to Entry Display Page") {
 				Select(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Go to Entry Display Page");
 
 				AssertSelectedLabel(
-					key_fieldLabel = "Success Interaction",
+					key_fieldLabel = "Success Action",
 					locator1 = "Select#GENERIC_SELECT_FIELD",
 					value1 = "Go to Entry Display Page");
 
@@ -3182,7 +3210,7 @@ definition {
 
 			if (${showNotificationWhenFormIsSubmitted} == "true") {
 				Check.checkNotVisible(
-					checkboxName = "Show Notification when Form Is Submitted",
+					checkboxName = "Show Notification After Submit",
 					locator1 = "Checkbox#ANY_CHECKBOX");
 
 				if (isSet(successNotificationText)) {
@@ -3557,6 +3585,8 @@ definition {
 
 		PageEditor.clickConfigurableField(fragmentName = "Knowledge Base Navigation");
 
+		PageEditor.gotoTab(tabName = "Browser");
+
 		AssertVisible(
 			key_sidebarButton = "Browser",
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -3583,6 +3613,8 @@ definition {
 		PageEditor.clickConfigurableField(
 			fragmentName = "Container",
 			index = ${index});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		AssertVisible(
 			key_sidebarButton = "Browser",
@@ -3948,6 +3980,8 @@ definition {
 			fragmentName = "Grid",
 			index = ${index});
 
+		PageEditor.gotoTab(tabName = "Browser");
+
 		AssertVisible(
 			key_sidebarButton = "Browser",
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -4208,6 +4242,8 @@ definition {
 
 		PageEditor.clickConfigurableField(fragmentName = "Menu Display");
 
+		PageEditor.gotoTab(tabName = "Browser");
+
 		AssertVisible(
 			key_sidebarButton = "Browser",
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -4360,6 +4396,8 @@ definition {
 	macro editTabs(persistSelectedTab = null, panel = null, numberOfTabs = null) {
 		PageEditor.clickConfigurableField(fragmentName = "Tabs");
 
+		PageEditor.gotoTab(tabName = "Browser");
+
 		AssertVisible(
 			key_sidebarButton = "Browser",
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -4500,6 +4538,8 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 			fragmentName = ${fragmentName},
 			index = ${index});
 
+		PageEditor.gotoTab(tabName = "Browser");
+
 		AssertVisible(
 			key_sidebarButton = "Browser",
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -4522,12 +4562,16 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 
 		if (IsElementNotPresent(locator1 = "Fragment#FRAGMENT_COMMENT_ICON")) {
 			PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
+
+			PageEditor.gotoTab(tabName = "Browser");
 		}
 
 		Click(locator1 = "Fragment#FRAGMENT_COMMENT_ICON");
 
 		if (IsElementNotPresent(locator1 = "PageEditor#FRAGMENT_SIDEBAR_COMMENT_SECTION_NAME")) {
 			PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
+
+			PageEditor.gotoTab(tabName = "Browser");
 		}
 	}
 
@@ -4536,6 +4580,8 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 		PageEditor.clickConfigurableField(
 			fragmentName = ${fragmentName},
 			index = ${index});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		AssertVisible(
 			key_sidebarButton = "Browser",
@@ -4553,6 +4599,8 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 		var key_fragmentName = ${fragmentName};
 
 		PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		Click.waitForMenuToggleJSClick(locator1 = "Fragment#FRAGMENT_HEADER_ELLIPSIS");
 
@@ -4650,6 +4698,8 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 
 		PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
 
+		PageEditor.gotoTab(tabName = "Browser");
+
 		Click.waitForMenuToggleJSClick(locator1 = "Fragment#FRAGMENT_HEADER_ELLIPSIS");
 
 		MenuItem.click(menuItem = "Save Composition");
@@ -4658,6 +4708,8 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 	@summary = "Default summary"
 	macro gotoSelectPanel(fragmentName = null) {
 		PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		AssertVisible(
 			key_sidebarButton = "Browser",
@@ -4688,6 +4740,8 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 		}
 
 		PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		if (isSet(deviceType) && (${deviceType} != "Desktop")) {
 			SelectFrame(value1 = "relative=top");
@@ -4736,6 +4790,8 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 		var key_fragmentName = ${fragmentName};
 
 		PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		Click.waitForMenuToggleJSClick(locator1 = "Fragment#FRAGMENT_HEADER_ELLIPSIS");
 
@@ -4841,7 +4897,7 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 	@summary = "Default summary"
 	macro previewEmbeddedMessage() {
 		Check.checkNotVisible(
-			checkboxName = "Preview Embedded Message",
+			checkboxName = "Preview Success Message",
 			locator1 = "Checkbox#ANY_CHECKBOX");
 	}
 
@@ -4917,6 +4973,8 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 		PageEditor.clickConfigurableField(
 			fragmentName = ${fragmentName},
 			index = ${index});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		Click.waitForMenuToggleJSClick(locator1 = "Fragment#FRAGMENT_HEADER_ELLIPSIS");
 
@@ -5064,6 +5122,8 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 	macro resizeConfigurationPanel(fragmentName = null, position = null) {
 		PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
 
+		PageEditor.gotoTab(tabName = "Browser");
+
 		AssertElementPresent(
 			key_nodeName = ${fragmentName},
 			locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_ACTIVE");
@@ -5127,21 +5187,6 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 			locator1 = "MenuItem#ANY_ICON");
 
 		PageEditor.waitForAutoSave();
-	}
-
-	@summary = "Default summary"
-	macro searchFragmentViaSidebar(fragmentName = null) {
-		WaitForPageLoad();
-
-		if (IsElementPresent(locator1 = "Icon#TIMES_2")) {
-			Click(locator1 = "Icon#TIMES_2");
-		}
-
-		Navigator.gotoNavTab(navTab = "Fragments");
-
-		Type(
-			locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_FIELD",
-			value1 = ${fragmentName});
 	}
 
 	@summary = "Default summary"
@@ -5295,24 +5340,6 @@ return	Array.from(getWebElement("(//div[@data-name='${fragmentName}'])[${index}]
 		}
 
 		PageEditor.waitForAutoSave();
-	}
-
-	@summary = "Default summary"
-	macro viewCannotAddFragmentToOutsideOfDropZone(fragmentName = null, collectionName = null) {
-		WaitForPageLoad();
-
-		Navigator.gotoNavTab(navTab = "Fragments");
-
-		PageEditor.expandFragmentCollection(collectionName = ${collectionName});
-
-		DragAndDrop(
-			key_collectionName = ${collectionName},
-			key_fragmentName = ${fragmentName},
-			locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
-			locator2 = "PageEditor#OUTSIDE_OF_DROP_ZONE",
-			value1 = "");
-
-		PageEditor.viewFragmentNotPresent(fragmentName = ${fragmentName});
 	}
 
 	@summary = "Default summary"

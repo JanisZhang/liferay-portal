@@ -40,10 +40,12 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -64,8 +66,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -107,7 +107,7 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			NavigationMenuResource.builder();
 
 		navigationMenuResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -121,7 +121,32 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		NavigationMenu navigationMenu1 = randomNavigationMenu();
+
+		String json = objectMapper.writeValueAsString(navigationMenu1);
+
+		NavigationMenu navigationMenu2 = NavigationMenuSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(navigationMenu1, navigationMenu2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		NavigationMenu navigationMenu = randomNavigationMenu();
+
+		String json1 = objectMapper.writeValueAsString(navigationMenu);
+		String json2 = NavigationMenuSerDes.toJSON(navigationMenu);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -136,40 +161,6 @@ public abstract class BaseNavigationMenuResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		NavigationMenu navigationMenu1 = randomNavigationMenu();
-
-		String json = objectMapper.writeValueAsString(navigationMenu1);
-
-		NavigationMenu navigationMenu2 = NavigationMenuSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(navigationMenu1, navigationMenu2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		NavigationMenu navigationMenu = randomNavigationMenu();
-
-		String json1 = objectMapper.writeValueAsString(navigationMenu);
-		String json2 = NavigationMenuSerDes.toJSON(navigationMenu);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -218,7 +209,10 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteNavigationMenu() throws Exception {
-		NavigationMenu navigationMenu =
+
+		// No namespace
+
+		NavigationMenu navigationMenu1 =
 			testGraphQLDeleteNavigationMenu_addNavigationMenu();
 
 		Assert.assertTrue(
@@ -228,23 +222,66 @@ public abstract class BaseNavigationMenuResourceTestCase {
 						"deleteNavigationMenu",
 						new HashMap<String, Object>() {
 							{
-								put("navigationMenuId", navigationMenu.getId());
+								put(
+									"navigationMenuId",
+									navigationMenu1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteNavigationMenu"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"navigationMenu",
 					new HashMap<String, Object>() {
 						{
-							put("navigationMenuId", navigationMenu.getId());
+							put("navigationMenuId", navigationMenu1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessDelivery_v1_0
+
+		NavigationMenu navigationMenu2 =
+			testGraphQLDeleteNavigationMenu_addNavigationMenu();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"deleteNavigationMenu",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"navigationMenuId",
+										navigationMenu2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+				"Object/deleteNavigationMenu"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessDelivery_v1_0",
+					new GraphQLField(
+						"navigationMenu",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"navigationMenuId",
+									navigationMenu2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected NavigationMenu testGraphQLDeleteNavigationMenu_addNavigationMenu()
@@ -278,6 +315,8 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		NavigationMenu navigationMenu =
 			testGraphQLGetNavigationMenu_addNavigationMenu();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				navigationMenu,
@@ -295,11 +334,36 @@ public abstract class BaseNavigationMenuResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/navigationMenu"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				navigationMenu,
+				NavigationMenuSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"navigationMenu",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"navigationMenuId",
+												navigationMenu.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/navigationMenu"))));
 	}
 
 	@Test
 	public void testGraphQLGetNavigationMenuNotFound() throws Exception {
 		Long irrelevantNavigationMenuId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -315,6 +379,27 @@ public abstract class BaseNavigationMenuResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"navigationMenu",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"navigationMenuId",
+										irrelevantNavigationMenuId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -623,6 +708,8 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/navigationMenus");
@@ -636,6 +723,28 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/navigationMenus");
+
+		Assert.assertEquals(
+			totalCount + 2, navigationMenusJSONObject.getLong("totalCount"));
+
+		assertContains(
+			navigationMenu1,
+			Arrays.asList(
+				NavigationMenuSerDes.toDTOs(
+					navigationMenusJSONObject.getString("items"))));
+		assertContains(
+			navigationMenu2,
+			Arrays.asList(
+				NavigationMenuSerDes.toDTOs(
+					navigationMenusJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		navigationMenusJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
 			"JSONObject/navigationMenus");
 
 		Assert.assertEquals(
@@ -1328,22 +1437,20 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = navigationMenu.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							navigationMenu.getDateCreated(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							navigationMenu.getDateCreated(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1361,22 +1468,20 @@ public abstract class BaseNavigationMenuResourceTestCase {
 
 		if (entityFieldName.equals("dateModified")) {
 			if (operator.equals("between")) {
+				Date date = navigationMenu.getDateModified();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							navigationMenu.getDateModified(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							navigationMenu.getDateModified(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1472,7 +1577,8 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1533,12 +1639,12 @@ public abstract class BaseNavigationMenuResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1547,11 +1653,16 @@ public abstract class BaseNavigationMenuResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1583,6 +1694,24 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1604,16 +1733,6 @@ public abstract class BaseNavigationMenuResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

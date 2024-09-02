@@ -1,4 +1,4 @@
-@component-name = "portal-portal-configuration"
+@component-name = "portal-core-infra"
 definition {
 
 	property portal.release = "true";
@@ -60,7 +60,7 @@ definition {
 				webId = "www.able.com");
 
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 		}
@@ -104,14 +104,14 @@ definition {
 				webId = "www.able.com");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
 
 		task ("And given a user exists in that instance with permission to create other users") {
 			JSONRole.addRegularRole(
-				roleTitle = "Test Role",
+				roleKey = "Test Role",
 				specificURL = "http://www.able.com:8080");
 
 			Permissions.definePermissionsViaJSONAPI(
@@ -122,7 +122,7 @@ definition {
 
 			JSONUser.addUser(
 				creatorEmailAddress = "test@www.able.com",
-				creatorPassword = "test",
+				creatorPassword = PropsUtil.get("default.admin.password"),
 				portalInstanceName = "www.able.com",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "userea@www.able.com",
@@ -136,7 +136,7 @@ definition {
 				roleTitle = "Test Role",
 				userScreenName = "usersn");
 
-			User.editPassword(newPassword = "test");
+			User.editPassword(newPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Then that user can create another user in the instance without error") {
@@ -174,7 +174,7 @@ definition {
 			webId = "www.baker.com");
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 
@@ -198,7 +198,7 @@ definition {
 		var otherInstanceAccessAttempt = StringUtil.replace(${documentURL}, "able", "baker");
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.baker.com",
 			virtualHostsURL = "http://www.baker.com:8080");
 
@@ -272,7 +272,7 @@ definition {
 		User.logoutPG();
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 
@@ -361,7 +361,7 @@ definition {
 			locator1 = "Home#PAGE");
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.charlie.com:8080/group/guest",
 			userEmailAddress = "test@liferay.com");
 
@@ -373,7 +373,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 
@@ -409,7 +409,7 @@ definition {
 			webId = "www.able.com");
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 

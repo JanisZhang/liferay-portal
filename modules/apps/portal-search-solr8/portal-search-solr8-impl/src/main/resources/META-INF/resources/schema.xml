@@ -13,6 +13,12 @@
 		<fieldType class="solr.BoolField" name="boolean" omitNorms="true" sortMissingLast="true" />
 		<fieldType class="solr.DatePointField" name="date" omitNorms="true" positionIncrementGap="0" />
 		<fieldType class="solr.DoublePointField" name="double" omitNorms="true" positionIncrementGap="0" />
+		<fieldType class="solr.TextField" name="email_lowercase" omitNorms="true" sortMissingLast="true">
+			<analyzer>
+				<tokenizer class="solr.UAX29URLEmailTokenizerFactory" />
+				<filter class="solr.LowerCaseFilterFactory" />
+			</analyzer>
+		</fieldType>
 		<fieldType class="solr.FloatPointField" name="float" omitNorms="true" positionIncrementGap="0" />
 		<fieldType class="solr.StrField" indexed="false" name="ignored" stored="false" />
 		<fieldType class="solr.IntPointField" name="integer" omitNorms="true" positionIncrementGap="0" />
@@ -659,7 +665,9 @@
 		<copyField dest="all" source="title*" />
 		<copyField dest="all" source="type" />
 		<copyField dest="all" source="userName" />
+		<copyField dest="assetTagNames.lowercase" source="assetTagNames" />
 		<copyField dest="assetTagNames.raw" source="assetTagNames" />
+		<copyField dest="emailAddress.text" source="emailAddress" />
 		<copyField dest="screenName.text" source="screenName" />
 		<copyField dest="userName.text" source="userName" />
 		<field indexed="true" multiValued="false" name="_version_" stored="true" type="long" />
@@ -669,9 +677,13 @@
 		<field docValues="true" indexed="true" name="assetCategoryId" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="assetCategoryIds" stored="true" type="string" />
 		<field indexed="true" name="assetCategoryTitle" stored="true" termPositions="true" termVectors="true" type="text" />
+		<field indexed="true" multiValued="true" name="assetInternalCategoryIds" stored="true" type="string" />
+		<field indexed="true" multiValued="true" name="assetInternalCategoryTitles" stored="true" type="string" />
+		<field indexed="true" multiValued="true" name="assetInternalVocabularyIds" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="assetTagId" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="assetTagIds" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="assetTagNames" stored="true" termPositions="true" termVectors="true" type="text" />
+		<field indexed="true" multiValued="true" name="assetTagNames.lowercase" stored="false" type="string_keyword_lowercase" />
 		<field indexed="true" multiValued="true" name="assetTagNames.raw" stored="false" type="string" />
 		<field docValues="true" indexed="true" name="assetVocabularyId" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="assetVocabularyIds" stored="true" type="string" />
@@ -690,21 +702,27 @@
 		<field indexed="true" name="defaultLanguageId" stored="true" type="string" />
 		<field indexed="true" name="description" stored="true" termPositions="true" termVectors="true" type="text" />
 		<field indexed="true" name="destinationURL" stored="true" type="text" />
-		<field indexed="true" name="destinationURLParts" stored="true" type="text" />
+		<field indexed="true" multiValued="true" name="destinationURLParts" stored="true" type="text" />
 		<field indexed="true" name="discussion" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="displayDate" stored="true" type="string" />
 		<field indexed="true" name="emailAddress" stored="true" type="string" />
+		<field indexed="true" name="emailAddress.text" stored="false" type="email_lowercase" />
 		<field indexed="true" name="emailAddressDomain" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="endTime" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="entryClassName" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="entryClassPK" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="expirationDate" stored="true" type="string" />
 		<field indexed="true" name="extension" stored="true" type="string" />
+		<field indexed="true" name="externalReferenceCode" stored="true" type="string" />
 		<field indexed="true" name="fileEntryTypeId" stored="true" type="string" />
 		<field indexed="true" name="firstName" stored="true" type="text_lowercase" />
 		<field docValues="true" indexed="true" name="folderId" stored="true" type="string" />
 		<field indexed="true" name="fullName" stored="true" termPositions="true" termVectors="true" type="text" />
 		<field indexed="true" name="geoLocation" stored="true" type="location" />
+		<field indexed="true" multiValued="true" name="groupAssetCategoryExternalReferenceCodes" stored="true" type="string" />
+		<field indexed="true" multiValued="true" name="groupAssetInternalCategoryExternalReferenceCodes" stored="true" type="string" />
+		<field indexed="true" multiValued="true" name="groupAssetVocabularyCategoryExternalReferenceCodes" stored="true" type="string" />
+		<field indexed="true" name="groupExternalReferenceCode" stored="true" type="string" />
 		<field docValues="true" indexed="true" multiValued="true" name="groupId" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="groupIds" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="groupRoleId" stored="true" type="string" />
@@ -725,7 +743,7 @@
 		<field indexed="true" multiValued="true" name="organizationIds" stored="true" type="string" />
 		<field indexed="true" name="parentCategoryId" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="parentCategoryIds" stored="true" type="string" />
-		<field indexed="true" name="path" stored="true" type="string" />
+		<field indexed="true" multiValued="true" name="path" stored="true" type="string" />
 		<field indexed="true" name="portletId" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="priority" stored="true" type="double" />
 		<field docValues="true" indexed="true" name="publishDate" stored="true" type="string" />
@@ -741,16 +759,19 @@
 		<field indexed="true" multiValued="true" name="roleNames" stored="true" type="string_keyword_lowercase" />
 		<field docValues="true" indexed="true" name="rootEntryClassName" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="rootEntryClassPK" stored="true" type="string" />
+		<field indexed="true" name="scopeGroupExternalReferenceCode" stored="true" type="string" />
 		<field docValues="true" indexed="true" multiValued="true" name="scopeGroupId" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="screenName" stored="true" type="string" />
 		<field indexed="true" name="screenName.text" stored="false" type="text_lowercase" />
 		<field indexed="true" name="size" stored="true" type="string" />
 		<field indexed="true" name="sourceURL" stored="true" type="text" />
-		<field indexed="true" name="sourceURLParts" stored="true" type="text" />
+		<field indexed="true" multiValued="true" name="sourceURLParts" stored="true" type="text" />
 		<field indexed="true" name="spellCheckWeight" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="spellCheckWord" stored="true" type="textSpell" />
 		<field docValues="true" indexed="true" name="startTime" stored="true" type="long" />
 		<field indexed="true" name="status" stored="true" type="string" />
+		<field indexed="true" name="statusByUserExternalReferenceCode" stored="true" type="string" />
+		<field indexed="true" name="statusByUserId" stored="true" type="string" />
 		<field indexed="true" name="subtitle" stored="true" type="text" />
 		<field indexed="true" multiValued="true" name="teamIds" stored="true" type="string" />
 		<field indexed="true" name="threadId" stored="true" type="string" />
@@ -758,7 +779,8 @@
 		<field indexed="true" multiValued="true" name="treePath" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="type" stored="true" type="string" />
 		<field indexed="true" name="uid" stored="true" type="string" />
-		<field indexed="true" name="urlParts" stored="true" type="text" />
+		<field indexed="true" multiValued="true" name="urlParts" stored="true" type="text" />
+		<field indexed="true" name="userExternalReferenceCode" stored="true" type="string" />
 		<field docValues="true" indexed="true" name="userGroupId" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="userGroupIds" stored="true" type="string" />
 		<field indexed="true" multiValued="true" name="userGroupRoleIds" stored="true" type="string" />
@@ -770,12 +792,12 @@
 		<field indexed="true" name="viewCount" stored="true" type="long" />
 		<field indexed="true" name="visible" stored="true" type="string" />
 		<dynamicField docValues="true" indexed="true" name="*_coordinate" stored="false" type="double" />
-		<dynamicField docValues="true" indexed="true" multiValued="false" name="*Date_sortable" stored="true" type="long" />
-		<dynamicField docValues="true" indexed="true" multiValued="false" name="*Number_sortable" stored="true" type="double" />
-		<dynamicField docValues="true" indexed="true" multiValued="false" name="*String_sortable" stored="true" type="string" />
-		<dynamicField docValues="true" indexed="true" multiValued="false" name="*_sortable" stored="true" type="string" />
+		<dynamicField docValues="true" indexed="true" multiValued="true" name="*Date_sortable" stored="true" type="long" />
+		<dynamicField docValues="true" indexed="true" multiValued="true" name="*Number_sortable" stored="true" type="double" />
+		<dynamicField docValues="true" indexed="true" multiValued="true" name="*String_sortable" stored="true" type="string" />
+		<dynamicField docValues="true" indexed="true" multiValued="true" name="*_sortable" stored="true" type="string" />
 		<dynamicField indexed="true" multiValued="false" name="*_geolocation" stored="true" type="location" />
-		<dynamicField indexed="true" multiValued="false" name="*_sortable.keyword_lowercase" stored="false" type="string_keyword_lowercase" />
+		<dynamicField indexed="true" multiValued="true" name="*_sortable.keyword_lowercase" stored="false" type="string_keyword_lowercase" />
 		<dynamicField indexed="true" multiValued="true" name="ddm__keyword__*" stored="true" type="string" />
 		<dynamicField indexed="true" multiValued="true" name="expando__keyword__*" stored="true" type="string_keyword_lowercase" />
 		<dynamicField indexed="true" multiValued="true" name="*_ar" stored="true" termOffsets="true" termPositions="true" termVectors="true" type="text_ar" />

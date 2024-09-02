@@ -24,6 +24,7 @@ import PublicationsSearchContainer from './PublicationsSearchContainer';
 
 export default function ChangeTrackingIndicator({
 	checkoutDropdownItem,
+	contextChangeButtons,
 	createDropdownItem,
 	getConflictInfoURL,
 	getSelectPublicationsURL,
@@ -33,12 +34,14 @@ export default function ChangeTrackingIndicator({
 	orderByAscending,
 	orderByColumn,
 	preferencesPrefix,
+	previewProductionDropdownItem,
+	returnToPublicationDropdownItem,
 	reviewDropdownItem,
 	saveDisplayPreferenceURL,
 	spritemap,
 	timelineIconClass,
 	timelineIconName,
-	timelineItems,
+	timelineItemsURL,
 	title,
 	warningBody,
 	warningButton,
@@ -49,6 +52,7 @@ export default function ChangeTrackingIndicator({
 	const COLUMN_NAME = 'name';
 
 	const [ascending, setAscending] = useState(orderByAscending === 'true');
+	const [closeWarning, setCloseWarning] = useState(false);
 	const [column, setColumn] = useState(
 		orderByColumn === COLUMN_NAME ? COLUMN_NAME : COLUMN_MODIFIED_DATE
 	);
@@ -95,11 +99,20 @@ export default function ChangeTrackingIndicator({
 		});
 	}
 
-	dropdownItems.push({
-		label: Liferay.Language.get('select-a-publication'),
-		onClick: () => setShowModal(true),
-		symbolLeft: 'cards2',
-	});
+	if (previewProductionDropdownItem) {
+		dropdownItems.push(previewProductionDropdownItem);
+	}
+
+	if (returnToPublicationDropdownItem) {
+		dropdownItems.push(returnToPublicationDropdownItem);
+	}
+	else {
+		dropdownItems.push({
+			label: Liferay.Language.get('select-a-publication'),
+			onClick: () => setShowModal(true),
+			symbolLeft: 'cards2',
+		});
+	}
 
 	if (createDropdownItem) {
 		dropdownItems.push(createDropdownItem);
@@ -146,6 +159,10 @@ export default function ChangeTrackingIndicator({
 
 	const renderUserPortrait = (entry, userInfo) => {
 		const user = userInfo[entry.userId];
+
+		if (!user) {
+			return <ClaySticker />;
+		}
 
 		return (
 			<ClaySticker
@@ -423,7 +440,7 @@ export default function ChangeTrackingIndicator({
 				}
 				onShowChange={setShowWarning}
 				show={showWarning}
-				size="lg"
+				style={{maxWidth: contextChangeButtons ? '711px' : '421px'}}
 				trigger={renderTrigger}
 			>
 				<ClayLayout.ContainerFluid>
@@ -438,6 +455,47 @@ export default function ChangeTrackingIndicator({
 					</ClayLayout.Row>
 
 					<ClayLayout.Row>
+						{contextChangeButtons && (
+							<>
+								<ClayLayout.Col>
+									<ClayButton
+										displayType="secondary"
+										onClick={() => {
+											setCloseWarning(true);
+										}}
+										size="sm"
+										style={{
+											whiteSpace: 'nowrap',
+											width: 'auto',
+										}}
+									>
+										{Liferay.Language.get(
+											'stay-in-current-publication'
+										)}
+									</ClayButton>
+								</ClayLayout.Col>
+
+								<ClayLayout.Col>
+									<ClayButton
+										displayType="secondary"
+										onClick={() => {
+											setShowModal(true);
+											setCloseWarning(true);
+										}}
+										size="sm"
+										style={{
+											whiteSpace: 'nowrap',
+											width: 'auto',
+										}}
+									>
+										{Liferay.Language.get(
+											'select-a-publication'
+										)}
+									</ClayButton>
+								</ClayLayout.Col>
+							</>
+						)}
+
 						<ClayLayout.Col>
 							{warningButton && checkoutDropdownItem && (
 								<ClayButton
@@ -466,7 +524,7 @@ export default function ChangeTrackingIndicator({
 											});
 										}
 									}}
-									size="xs"
+									size={contextChangeButtons ? 'sm' : 'xs'}
 								>
 									{Liferay.Language.get('work-on-production')}
 								</ClayButton>
@@ -489,10 +547,11 @@ export default function ChangeTrackingIndicator({
 	);
 
 	const renderTimeline = () => {
-		if (timelineItems) {
+		if (timelineItemsURL !== null) {
 			return (
 				<ClayDropDown
 					alignmentPosition={Align.BottomCenter}
+					renderMenuOnClick
 					trigger={
 						<ClayButton
 							aria-controls="publication-timeline-dropdown"
@@ -505,7 +564,10 @@ export default function ChangeTrackingIndicator({
 						</ClayButton>
 					}
 				>
-					<PublicationTimeline timelineItems={timelineItems} />
+					<PublicationTimeline
+						namespace={namespace}
+						timelineItemsURL={timelineItemsURL}
+					/>
 				</ClayDropDown>
 			);
 		}
@@ -532,7 +594,9 @@ export default function ChangeTrackingIndicator({
 				</ClayLayout.ContentCol>
 
 				<ClayLayout.ContentCol>
-					{showWarning ? renderWarning() : renderDropdown()}
+					{showWarning && !closeWarning
+						? renderWarning()
+						: renderDropdown()}
 				</ClayLayout.ContentCol>
 
 				<ClayLayout.ContentCol>

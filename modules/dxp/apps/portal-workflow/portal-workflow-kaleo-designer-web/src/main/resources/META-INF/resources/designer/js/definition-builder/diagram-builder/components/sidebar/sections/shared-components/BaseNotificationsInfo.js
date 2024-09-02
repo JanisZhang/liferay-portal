@@ -8,11 +8,12 @@ import {useResource} from '@clayui/data-provider';
 import ClayForm, {ClayInput, ClaySelect} from '@clayui/form';
 import {MultipleSelect} from '@liferay/object-js-components-web';
 import PropTypes from 'prop-types';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 
+import {DefinitionBuilderContext} from '../../../../../DefinitionBuilderContext';
 import {contextUrl} from '../../../../../constants';
 import {
-	headers,
+	HEADERS,
 	retrieveAccountRoles,
 	userBaseURL,
 } from '../../../../../util/fetchUtil';
@@ -86,17 +87,15 @@ const BaseNotificationsInfo = ({
 	userRecipientUpdateSelectedItem,
 	...restProps
 }) => {
+	const {allowScriptContentToBeExecutedOrIncluded, hadGroovyScriptBefore} =
+		useContext(DefinitionBuilderContext);
 	const [networkStatus, setNetworkStatus] = useState(4);
 	const {resource} = useResource({
 		fetchOptions: {
-			headers: {
-				...headers,
-				'accept': `application/json`,
-				'x-csrf-token': Liferay.authToken,
-			},
+			headers: HEADERS,
 		},
 		fetchPolicy: 'cache-first',
-		link: `${window.location.origin}${contextUrl}${userBaseURL}/roles`,
+		link: `${window.location.origin}${contextUrl}${userBaseURL}/roles?restrictFields=rolePermissions`,
 		onNetworkStatusChange: setNetworkStatus,
 		variables: {
 			pageSize: -1,
@@ -145,6 +144,19 @@ const BaseNotificationsInfo = ({
 		},
 	];
 
+	const getRecipientTypeOptions = () => {
+		if (
+			!allowScriptContentToBeExecutedOrIncluded &&
+			!hadGroovyScriptBefore
+		) {
+			return recipientTypeOptions.filter(
+				({value}) => value !== 'scriptedRecipient'
+			);
+		}
+
+		return recipientTypeOptions;
+	};
+
 	const getUpdateSelectedItem = (recipientType) => {
 		let updateSelectedItem;
 
@@ -173,25 +185,25 @@ const BaseNotificationsInfo = ({
 		retrieveAccountRoles(accountEntryId)
 			.then((response) => response.json())
 			.then(({items}) => {
-				const accountRoleItems = items.map(({displayName, name}) => {
+				const accountRoleItems = items.map(({name}) => {
 					return {
-						roleKey: name,
-						roleName: displayName,
+						roleName: name,
 						roleType: 'Account',
 					};
 				});
 
 				setAccountRoles(accountRoleItems);
 			});
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [accountEntryId]);
 
 	useEffect(() => {
-		const checkedTrue = items
-			.filter((item) => {
-				return item.checked === true;
+		const checkedTrue = items[0].children
+			.filter((child) => {
+				return child.checked === true;
 			})
-			.map((item) => item.label);
+			.map((child) => child.label);
 
 		if (checkedTrue.includes(Liferay.Language.get('email'))) {
 			setNotificationTypeEmail(true);
@@ -348,7 +360,7 @@ const BaseNotificationsInfo = ({
 					}}
 					value={recipientType}
 				>
-					{recipientTypeOptions.map((item) => (
+					{getRecipientTypeOptions().map((item) => (
 						<ClaySelect.Option
 							disabled={item.disabled}
 							key={item.value}

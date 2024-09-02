@@ -3,7 +3,6 @@ import ListItem from './ListItem';
 import NoResultsDisplay from 'shared/components/NoResultsDisplay';
 import React from 'react';
 import {Attribute, Breakdown, Event, Filter} from 'event-analysis/utils/types';
-import {spritemap} from 'shared/util/constants';
 
 interface ISearchableListProps {
 	activeId?: string;
@@ -18,6 +17,7 @@ interface ISearchableListProps {
 	onItemOptionsClick?: (item: Attribute) => void;
 	onQueryChange: (query: string) => void;
 	query: string;
+	showInfoCard?: boolean;
 	showOptionsCondition?: (item: Attribute) => boolean;
 	uneditableIds?: string[];
 }
@@ -31,6 +31,7 @@ const SearchableList: React.FC<ISearchableListProps> = ({
 	onItemOptionsClick,
 	onQueryChange,
 	query,
+	showInfoCard,
 	showOptionsCondition = () => false,
 	uneditableIds
 }) => {
@@ -49,7 +50,6 @@ const SearchableList: React.FC<ISearchableListProps> = ({
 				formProps={{onSubmit: e => e.preventDefault()}}
 				onChange={onQueryChange}
 				placeholder={Liferay.Language.get('search')}
-				spritemap={spritemap}
 				value={query}
 			/>
 
@@ -90,6 +90,7 @@ const SearchableList: React.FC<ISearchableListProps> = ({
 												)
 										: null
 								}
+								showInfoCard={showInfoCard}
 							/>
 						);
 					})}

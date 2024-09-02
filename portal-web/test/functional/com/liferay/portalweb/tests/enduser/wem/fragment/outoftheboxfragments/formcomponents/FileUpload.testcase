@@ -1,10 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Fragments";
+	property testray.main.component.name = "Fragment Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -74,7 +74,7 @@ definition {
 
 			PageEditor.editFragmentText(
 				className = "button",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				id = "text",
 				text = "Custom Text");
 		}
@@ -84,7 +84,7 @@ definition {
 				PageEditor.viewFragmentEditableText(
 					className = "button",
 					editableText = "Custom Text",
-					fragmentName = "Submit Button",
+					fragmentName = "Form Button",
 					id = "submit-button-text");
 			}
 
@@ -229,7 +229,7 @@ definition {
 					fragmentName = "File Upload",
 					index = 2);
 
-				for (var fragmentName : list "File Upload,Submit Button") {
+				for (var fragmentName : list "File Upload,Form Button") {
 					PageEditor.removeFragment(fragmentName = ${fragmentName});
 				}
 			}

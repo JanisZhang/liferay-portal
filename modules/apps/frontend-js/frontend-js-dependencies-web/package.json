@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"@liferay/js-api": "0.6.0-pre.0",
+		"@liferay/js-api": "0.6.0",
 		"axe-core": "4.2.0",
 		"clipboard": "2.0.4",
 		"cropperjs": "1.5.11",
@@ -16,7 +16,7 @@
 		"html-to-image": "1.11.11",
 		"image-promise": "5.0.1",
 		"jspdf": "2.5.1",
-		"liferay-ckeditor": "4.21.0-liferay.1",
+		"liferay-ckeditor": "4.21.0-liferay.3",
 		"lodash.groupby": "4.6.0",
 		"lodash.isequal": "4.5.0",
 		"moment": "2.29.4",
@@ -38,9 +38,9 @@
 	"name": "@liferay/frontend-js-dependencies-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
-	"version": "1.0.13"
+	"version": "1.0.21"
 }

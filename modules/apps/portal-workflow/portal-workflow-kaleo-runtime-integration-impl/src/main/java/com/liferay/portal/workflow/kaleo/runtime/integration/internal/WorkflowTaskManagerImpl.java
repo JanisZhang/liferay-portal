@@ -909,7 +909,7 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 			}
 
 			Set<User> allowedUsers = new TreeSet<>(
-				new UserScreenNameComparator(true));
+				UserScreenNameComparator.getInstance(true));
 
 			long assignedUserId = _getAssignedUserId(workflowTaskId);
 
@@ -996,7 +996,8 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 
 		Role role = _roleLocalService.getRole(assigneeClassPK);
 
-		if ((role.getType() == RoleConstants.TYPE_DEPOT) ||
+		if ((role.getType() == RoleConstants.TYPE_ACCOUNT) ||
+			(role.getType() == RoleConstants.TYPE_DEPOT) ||
 			(role.getType() == RoleConstants.TYPE_ORGANIZATION) ||
 			(role.getType() == RoleConstants.TYPE_SITE)) {
 
@@ -1103,7 +1104,8 @@ public class WorkflowTaskManagerImpl implements WorkflowTaskManager {
 		Role role = _roleLocalService.getRole(
 			kaleoTaskAssignment.getAssigneeClassPK());
 
-		if ((role.getType() == RoleConstants.TYPE_DEPOT) ||
+		if ((role.getType() == RoleConstants.TYPE_ACCOUNT) ||
+			(role.getType() == RoleConstants.TYPE_DEPOT) ||
 			(role.getType() == RoleConstants.TYPE_ORGANIZATION) ||
 			(role.getType() == RoleConstants.TYPE_SITE)) {
 

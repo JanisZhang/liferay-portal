@@ -7,6 +7,7 @@ package com.liferay.dynamic.data.mapping.form.field.type.internal.document.libra
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.mapping.constants.DDMFormConstants;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
@@ -245,11 +246,8 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 				UserConstants.TYPE_REGULAR, groupIds, organizationIds, roleIds,
 				userGroupIds, sendEmail, serviceContext);
 
-			_userLocalService.updateStatus(
-				user.getUserId(), WorkflowConstants.STATUS_INACTIVE,
-				new ServiceContext());
-
-			return user;
+			return _userLocalService.updateStatus(
+				user, WorkflowConstants.STATUS_INACTIVE, new ServiceContext());
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
@@ -425,6 +423,18 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 					return StringPool.BLANK;
 				}
 
+				long ddmFormInstanceRecordId = _getDDMFormInstanceRecordId(
+					ddmFormField, ddmFormFieldRenderingContext);
+
+				if (ddmFormInstanceRecordId == 0) {
+					return _dlURLHelper.getDownloadURL(
+						fileEntry, fileEntry.getFileVersion(),
+						getThemeDisplay(
+							ddmFormFieldRenderingContext.
+								getHttpServletRequest()),
+						StringPool.BLANK);
+				}
+
 				RequestBackedPortletURLFactory requestBackedPortletURLFactory =
 					RequestBackedPortletURLFactoryUtil.create(
 						ddmFormFieldRenderingContext.getHttpServletRequest());
@@ -436,9 +446,7 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 				).setParameter(
 					"ddmFormFieldName", ddmFormField.getName()
 				).setParameter(
-					"ddmFormInstanceRecordId",
-					_getDDMFormInstanceRecordId(
-						ddmFormField, ddmFormFieldRenderingContext)
+					"ddmFormInstanceRecordId", ddmFormInstanceRecordId
 				).setParameter(
 					"fileEntryId", fileEntry.getFileEntryId()
 				).setResourceID(
@@ -763,6 +771,9 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributor
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private DLURLHelper _dlURLHelper;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

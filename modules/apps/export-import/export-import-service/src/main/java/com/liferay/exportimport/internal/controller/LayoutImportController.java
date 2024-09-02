@@ -79,6 +79,8 @@ import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.kernel.xml.XPath;
 import com.liferay.portal.kernel.zip.ZipReader;
 import com.liferay.portal.kernel.zip.ZipReaderFactory;
+import com.liferay.release.feature.flag.ReleaseFeatureFlag;
+import com.liferay.release.feature.flag.ReleaseFeatureFlagManagerUtil;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.site.model.adapter.StagedGroup;
 import com.liferay.sites.kernel.util.Sites;
@@ -883,6 +885,50 @@ public class LayoutImportController implements ImportController {
 
 			layoutSetPrototypeUuid = GetterUtil.getString(
 				headerElement.attributeValue("type-uuid"));
+
+			if (ReleaseFeatureFlagManagerUtil.isEnabled(
+					ReleaseFeatureFlag.DISABLE_PRIVATE_LAYOUTS)) {
+
+				LayoutSet publicLayoutSet =
+					_layoutSetLocalService.fetchLayoutSet(
+						group.getGroupId(), false);
+
+				if (publicLayoutSet != null) {
+					publicLayoutSet.setThemeId(
+						GetterUtil.getString(
+							headerElement.attributeValue("theme-id")));
+
+					_layoutSetLocalService.updateLayoutSet(publicLayoutSet);
+				}
+
+				LayoutSet privateLayoutSet =
+					_layoutSetLocalService.fetchLayoutSet(
+						group.getGroupId(), true);
+
+				if (privateLayoutSet != null) {
+					privateLayoutSet.setThemeId(
+						GetterUtil.getString(
+							headerElement.attributeValue("theme-id")));
+
+					_layoutSetLocalService.updateLayoutSet(privateLayoutSet);
+				}
+			}
+			else {
+				boolean privateLayout = MapUtil.getBoolean(
+					portletDataContext.getParameterMap(),
+					PortletDataHandlerKeys.LAYOUT_SET_PRIVATE_LAYOUT);
+
+				LayoutSet layoutSet = _layoutSetLocalService.fetchLayoutSet(
+					group.getGroupId(), privateLayout);
+
+				if (layoutSet != null) {
+					layoutSet.setThemeId(
+						GetterUtil.getString(
+							headerElement.attributeValue("theme-id")));
+
+					_layoutSetLocalService.updateLayoutSet(layoutSet);
+				}
+			}
 		}
 
 		if (Validator.isNotNull(layoutSetPrototypeUuid)) {

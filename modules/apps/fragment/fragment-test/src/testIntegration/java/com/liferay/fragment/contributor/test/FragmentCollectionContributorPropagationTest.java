@@ -156,8 +156,8 @@ public class FragmentCollectionContributorPropagationTest {
 
 			FragmentEntryLink fragmentEntryLink =
 				_fragmentEntryLinkLocalService.addFragmentEntryLink(
-					TestPropsValues.getUserId(), defaultGroup.getGroupId(), 0,
-					0,
+					null, TestPropsValues.getUserId(),
+					defaultGroup.getGroupId(), 0, 0,
 					_segmentsExperienceLocalService.
 						fetchDefaultSegmentsExperienceId(layout.getPlid()),
 					layout.getPlid(), StringPool.BLANK, originalHTML,
@@ -204,7 +204,12 @@ public class FragmentCollectionContributorPropagationTest {
 
 			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			Assert.assertTrue(logEntries.toString(), logEntries.isEmpty());
+			for (LogEntry logEntry : logEntries) {
+				Assert.assertEquals(
+					"No theme found for specified theme id " +
+						"not_registered_theme. Returning the default theme.",
+					logEntry.getMessage());
+			}
 		}
 		finally {
 			try {
@@ -309,7 +314,7 @@ public class FragmentCollectionContributorPropagationTest {
 
 				FragmentEntryLink fragmentEntryLink =
 					_fragmentEntryLinkLocalService.addFragmentEntryLink(
-						user.getUserId(), group.getGroupId(), 0, 0,
+						null, user.getUserId(), group.getGroupId(), 0, 0,
 						segmentsExperienceId, layout.getPlid(),
 						StringPool.BLANK, originalHTML, StringPool.BLANK,
 						StringPool.BLANK, null, StringPool.BLANK, 0,

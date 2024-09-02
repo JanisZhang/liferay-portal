@@ -1,14 +1,14 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.111.0",
-		"@clayui/empty-state": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/modal": "3.111.0",
-		"@clayui/panel": "3.111.0",
-		"@clayui/popover": "3.111.0",
+		"@clayui/modal": "3.117.0",
+		"@clayui/panel": "3.116.0",
+		"@clayui/popover": "3.116.1",
 		"@liferay/frontend-js-codemirror-web": "*",
 		"@liferay/frontend-js-react-web": "*",
 		"classnames": "2.3.1",
@@ -21,10 +21,10 @@
 	"main": "js/index.js",
 	"name": "@liferay/template-web",
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "1.0.78"
+	"version": "1.0.90"
 }

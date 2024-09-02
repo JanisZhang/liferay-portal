@@ -49,14 +49,14 @@ public class DLFileShortcutLocalServiceWrapper
 
 	@Override
 	public DLFileShortcut addFileShortcut(
-			long userId, long groupId, long repositoryId, long folderId,
-			long toFileEntryId,
+			String externalReferenceCode, long userId, long groupId,
+			long repositoryId, long folderId, long toFileEntryId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFileShortcutLocalService.addFileShortcut(
-			userId, groupId, repositoryId, folderId, toFileEntryId,
-			serviceContext);
+			externalReferenceCode, userId, groupId, repositoryId, folderId,
+			toFileEntryId, serviceContext);
 	}
 
 	@Override
@@ -168,6 +168,14 @@ public class DLFileShortcutLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_dlFileShortcutLocalService.deleteFileShortcut(fileShortcutId);
+	}
+
+	@Override
+	public void deleteFileShortcut(String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_dlFileShortcutLocalService.deleteFileShortcut(
+			externalReferenceCode, groupId);
 	}
 
 	@Override
@@ -329,6 +337,15 @@ public class DLFileShortcutLocalServiceWrapper
 		return _dlFileShortcutLocalService.fetchDLFileShortcut(fileShortcutId);
 	}
 
+	@Override
+	public DLFileShortcut fetchDLFileShortcutByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return _dlFileShortcutLocalService.
+			fetchDLFileShortcutByExternalReferenceCode(
+				externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the document library file shortcut matching the UUID and group.
 	 *
@@ -363,6 +380,16 @@ public class DLFileShortcutLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dlFileShortcutLocalService.getDLFileShortcut(fileShortcutId);
+	}
+
+	@Override
+	public DLFileShortcut getDLFileShortcutByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlFileShortcutLocalService.
+			getDLFileShortcutByExternalReferenceCode(
+				externalReferenceCode, groupId);
 	}
 
 	/**
@@ -489,6 +516,11 @@ public class DLFileShortcutLocalServiceWrapper
 
 		return _dlFileShortcutLocalService.getFileShortcutsCount(
 			groupId, folderId, active, status);
+	}
+
+	@Override
+	public java.util.List<DLFileShortcut> getGroupFileShortcuts(long groupId) {
+		return _dlFileShortcutLocalService.getGroupFileShortcuts(groupId);
 	}
 
 	@Override

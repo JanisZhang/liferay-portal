@@ -9,6 +9,88 @@ declare module '*.svg' {
 
 declare module 'warning';
 
+type AnalyticsViews = {
+	results: {
+		metrics: {
+			avgTimeOnPageMetric: {
+				value: number;
+			};
+			bounceMetric: {
+				value: number;
+			};
+			bounceRateMetric: {
+				value: number;
+			};
+			ctaClicksMetric: {
+				value: number;
+			};
+			directAccessMetric: {
+				value: number;
+			};
+			entrancesMetric: {
+				value: number;
+			};
+			exitRateMetric: {
+				value: number;
+			};
+			indirectAccessMetric: {
+				value: number;
+			};
+			readsMetric: {
+				value: number;
+			};
+			sessionsMetric: {
+				value: number;
+			};
+			timeOnPageMetric: {
+				value: number;
+			};
+			viewsMetric: {
+				value: number;
+			};
+			visitorsMetric: {
+				value: number;
+			};
+		};
+		title: string;
+		url: string;
+	}[];
+	total: number;
+};
+
+type PublisherRequestInfo = {
+	emailAddress?: string;
+	extension?: string;
+	firstName?: string;
+	id?: number;
+	lastName?: string;
+	phone?: {
+		code: string;
+		flag: string;
+	};
+	phoneNumber?: string;
+	publisherType: string[];
+	requestDescription?: string;
+	requestStatus?: {
+		key: string;
+		name: string;
+	};
+};
+
+type ListTypeDefinition = {
+	externalReferenceCode: string;
+	id: number;
+	listTypeEntries: {
+		externalReferenceCode: string;
+		key: string;
+		name: string;
+		name_i18n: {
+			[key: string]: string;
+		};
+	}[];
+	name: string;
+};
+
 type Account = {
 	customFields?: CustomField[];
 	description: string;
@@ -25,6 +107,7 @@ type Categories = {
 	externalReferenceCode: string;
 	id: string;
 	name: string;
+	value?: string;
 	vocabulary: string;
 };
 
@@ -39,6 +122,17 @@ type CustomField = {
 	};
 	dataType?: string;
 	name: string;
+};
+
+type ActionMap<M extends {[index: string]: any}> = {
+	[Key in keyof M]: M[Key] extends undefined
+		? {
+				type: Key;
+			}
+		: {
+				payload: M[Key];
+				type: Key;
+			};
 };
 
 type AccountBrief = {
@@ -92,6 +186,13 @@ type AccountRole = {
 	id: number;
 	name: string;
 	roleId: number;
+};
+
+type Availability = {
+	active: boolean;
+	available: number;
+	fallback: boolean;
+	max: number;
 };
 
 type BillingAddress = {
@@ -197,6 +298,12 @@ type DefaultProperties = {
 	cloudBaseURL: string;
 	contactSupportUrl: string;
 	eulaBaseURL: string;
+	featureFlags: string[];
+	featurePreviews: ['use-product-id-for-specification'];
+	marketoFormId: string;
+	trialAccountCheck: 'false' | 'true';
+	trialEulaURL: string;
+	trialProductId: string;
 };
 
 interface CommerceAccount extends Omit<Account, 'description'> {
@@ -238,10 +345,13 @@ type Order = {
 	orderItems: [
 		{
 			id?: number;
+			name?: {
+				en_US: string;
+			};
 			quantity?: number;
 			skuId: number;
 			unitPriceWithTaxAmount?: number;
-		}
+		},
 	];
 	orderStatus: number;
 	orderStatusInfo?: {
@@ -251,6 +361,7 @@ type Order = {
 	orderTypeId?: number;
 	shippingAmount?: number;
 	shippingWithTaxAmount?: number;
+	totalAmount?: number;
 };
 
 type OrderType = {
@@ -293,6 +404,14 @@ interface PlacedOrderItems {
 	thumbnail: string;
 	version: string;
 	virtualItemURLs: string;
+	virtualItems: VirtualItem[];
+}
+
+interface VirtualItem {
+	productVersion?: String;
+	url: string;
+	usages: number;
+	version: string;
 }
 
 interface PostalAddressResponse {
@@ -350,7 +469,7 @@ interface Product {
 	description: {[key: string]: string};
 	externalReferenceCode: string;
 	finalPrice?: number;
-	id?: number;
+	id: number;
 	images: ProductImages[];
 	modifiedDate: string;
 	name: {[key: string]: string};
@@ -401,13 +520,17 @@ type DeliverySKU = {
 	price: {price: number; priceFormatted: string};
 	purchasable: boolean;
 	sku: string;
-	skuOptions: {skuOptionKey: string; skuOptionValueKey: string}[];
+	skuOptions: DeliverySKUOption[];
+	tierPrices?: TierPrice[];
 };
+
+type DeliverySKUOption = {skuOptionKey: string; skuOptionValueKey: string};
 
 interface DeliveryProduct {
 	attachments: DeliveryProductAttachment[];
 	catalogName?: string;
 	categories: ProductCategories[];
+	createDate: string;
 	customFields?: CustomField[];
 	description: string;
 	externalReferenceCode: string;
@@ -418,6 +541,7 @@ interface DeliveryProduct {
 	productId: number;
 	productSpecifications: DeliveryProductSpecification[];
 	productType: string;
+	shortDescription: string;
 	skus: DeliverySKU[];
 	urlImage: string;
 }
@@ -425,6 +549,7 @@ interface DeliveryProduct {
 interface ProductAttachment {
 	customFields?: CustomField[];
 	externalReferenceCode: string;
+	fileEntryId: number;
 	galleryEnabled: boolean;
 	id: number;
 	priority: number;
@@ -496,6 +621,13 @@ type ProductSpecification = {
 	value: {[key: string]: string};
 };
 
+type TierPrice = {
+	currency: string;
+	price: number;
+	priceFormatted: string;
+	quantity: number;
+};
+
 type UserAccount = {
 	accountBriefs: AccountBrief[];
 	alternateName: string;
@@ -514,6 +646,9 @@ type UserAccount = {
 	password: string;
 	roleBriefs: {id: number; name: string}[];
 	type: string;
+	userAccountContactInformation?: {
+		telephones?: UserAccoutTelephone[];
+	};
 };
 
 type RequestBody = {
@@ -562,11 +697,18 @@ type Industries = {
 	};
 };
 
+type UserAccoutTelephone = {
+	extension?: string;
+	id?: number;
+	phoneNumber?: string;
+	phoneType?: string;
+	primary?: boolean;
+};
+
 type UserForm = {
 	accountQuantity: number;
 	accountSelected: Account | undefined;
 	accounts: Account[];
-	agreeToTermsAndConditions: boolean;
 	companyName: string;
 	emailAddress: string;
 	extension?: string | undefined;

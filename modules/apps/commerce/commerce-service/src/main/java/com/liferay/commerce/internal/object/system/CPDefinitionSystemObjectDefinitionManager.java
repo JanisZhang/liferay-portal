@@ -16,6 +16,7 @@ import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.field.builder.BooleanObjectFieldBuilder;
 import com.liferay.object.field.builder.LongIntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
+import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.system.BaseSystemObjectDefinitionManager;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
@@ -23,11 +24,16 @@ import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +53,7 @@ public class CPDefinitionSystemObjectDefinitionManager
 	public long addBaseModel(User user, Map<String, Object> values)
 		throws Exception {
 
-		ProductResource productResource = _buildProductResource(user);
+		ProductResource productResource = _buildProductResource(false, user);
 
 		Product product = productResource.postProduct(_toProduct(values));
 
@@ -64,6 +70,7 @@ public class CPDefinitionSystemObjectDefinitionManager
 			(CPDefinition)baseModel);
 	}
 
+	@Override
 	public BaseModel<?> fetchBaseModelByExternalReferenceCode(
 		String externalReferenceCode, long companyId) {
 
@@ -88,7 +95,14 @@ public class CPDefinitionSystemObjectDefinitionManager
 	public String getBaseModelExternalReferenceCode(long primaryKey)
 		throws PortalException {
 
-		CProduct cProduct = _cProductLocalService.getCProduct(primaryKey);
+		CProduct cProduct = _cProductLocalService.fetchCProduct(primaryKey);
+
+		if (cProduct == null) {
+			CPDefinition cpDefinition =
+				_cpDefinitionLocalService.getCPDefinition(primaryKey);
+
+			cProduct = cpDefinition.getCProduct();
+		}
 
 		return cProduct.getExternalReferenceCode();
 	}
@@ -215,6 +229,18 @@ public class CPDefinitionSystemObjectDefinitionManager
 	}
 
 	@Override
+	public Page<?> getPage(
+			User user, String search, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception {
+
+		ProductResource productResource = _buildProductResource(true, user);
+
+		return productResource.getProductsPage(
+			search, filter, pagination, sorts);
+	}
+
+	@Override
 	public Column<?, Long> getPrimaryKeyColumn() {
 		return CPDefinitionTable.INSTANCE.CPDefinitionId;
 	}
@@ -240,6 +266,21 @@ public class CPDefinitionSystemObjectDefinitionManager
 	}
 
 	@Override
+	public Map<String, Object> getVariables(
+		String contentType, ObjectDefinition objectDefinition,
+		boolean oldValues, JSONObject payloadJSONObject) {
+
+		Map<String, Object> variables = super.getVariables(
+			contentType, objectDefinition, oldValues, payloadJSONObject);
+
+		if (variables.containsKey("CProductId")) {
+			variables.put("productId", variables.get("CProductId"));
+		}
+
+		return variables;
+	}
+
+	@Override
 	public int getVersion() {
 		return 3;
 	}
@@ -249,7 +290,7 @@ public class CPDefinitionSystemObjectDefinitionManager
 			long primaryKey, User user, Map<String, Object> values)
 		throws Exception {
 
-		ProductResource productResource = _buildProductResource(user);
+		ProductResource productResource = _buildProductResource(false, user);
 
 		CPDefinition cpDefinition = _cpDefinitionLocalService.getCPDefinition(
 			primaryKey);
@@ -262,11 +303,13 @@ public class CPDefinitionSystemObjectDefinitionManager
 			values);
 	}
 
-	private ProductResource _buildProductResource(User user) {
+	private ProductResource _buildProductResource(
+		boolean checkPermissions, User user) {
+
 		ProductResource.Builder builder = _productResourceFactory.create();
 
 		return builder.checkPermissions(
-			false
+			checkPermissions
 		).preferredLocale(
 			user.getLocale()
 		).user(

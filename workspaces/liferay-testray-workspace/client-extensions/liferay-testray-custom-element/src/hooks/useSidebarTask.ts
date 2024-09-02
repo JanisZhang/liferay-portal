@@ -3,35 +3,32 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {atom, useAtomValue} from 'jotai';
 import {useMemo} from 'react';
 
 import SearchBuilder from '../core/SearchBuilder';
 import {Liferay} from '../services/liferay';
 import {
 	APIResponse,
-	TestraySubTask,
+	TestraySubtask,
 	TestrayTaskUser,
-	testraySubTaskImpl,
 	testrayTaskUsersImpl,
 } from '../services/rest';
-import {SubTaskStatuses} from '../util/statuses';
+import {SubtaskStatuses, TaskStatuses} from '../util/statuses';
 import {useFetch} from './useFetch';
 
+const taskFilters = new SearchBuilder()
+	.eq('userId', Liferay.ThemeDisplay.getUserId())
+	.and()
+	.eq('taskToTasksUsers/dueStatus', TaskStatuses.IN_ANALYSIS)
+	.build();
+
+export const taskSidebarRefresh = atom(0);
+
 export function useSidebarTask() {
-	const subTasksFilter = new SearchBuilder()
-		.eq('userId', Liferay.ThemeDisplay.getUserId())
-		.and()
-		.ne('dueStatus', SubTaskStatuses.MERGED)
-		.and()
-		.ne('dueStatus', SubTaskStatuses.COMPLETE)
-		.build();
-
-	const taskFilters = new SearchBuilder()
-		.eq('userId', Liferay.ThemeDisplay.getUserId())
-		.build();
-
+	const refresh = useAtomValue(taskSidebarRefresh);
 	const {data: tasksUserResponse} = useFetch<APIResponse<TestrayTaskUser>>(
-		testrayTaskUsersImpl.resource,
+		testrayTaskUsersImpl.resource + '&t=' + refresh,
 		{
 			params: {
 				filter: taskFilters,
@@ -41,34 +38,30 @@ export function useSidebarTask() {
 		}
 	);
 
-	const {data: subtasksResponse} = useFetch<APIResponse<TestraySubTask>>(
-		testraySubTaskImpl.resource,
-		{
-			params: {
-				filter: subTasksFilter,
-			},
-			transformData: (response) =>
-				testraySubTaskImpl.transformDataFromList(response),
-		}
+	const {data: subtasksResponse} = useFetch<APIResponse<TestraySubtask>>(
+		`/testray-testflow/testray-subtask?userId=${Liferay.ThemeDisplay.getUserId()}&status=${SubtaskStatuses.IN_ANALYSIS}&t=${refresh}`
 	);
 
-	const subTasks = useMemo(() => subtasksResponse?.items || [], [
-		subtasksResponse?.items,
-	]);
+	const subtasks = useMemo(
+		() => subtasksResponse?.items || [],
+		[subtasksResponse?.items]
+	);
 
 	const tasks = useMemo(
 		() =>
 			(tasksUserResponse?.items || []).map(({task}) => ({
 				...task,
-				subTasks: subtasksResponse?.items.filter((subtask) => {
-					return subtask?.task?.id === task?.id ? subtask : undefined;
+				subtasks: subtasksResponse?.items.filter((subtask) => {
+					return subtask?.testrayTaskId === task?.id
+						? subtask
+						: undefined;
 				}),
 			})),
 		[subtasksResponse?.items, tasksUserResponse?.items]
 	);
 
 	return {
-		subTasks,
+		subtasks,
 		tasks,
 		tasksUserResponse,
 	};

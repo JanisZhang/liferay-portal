@@ -21,7 +21,10 @@ import {
 	KeyboardMovementContextProvider,
 	useMovementSource,
 } from '../contexts/KeyboardMovementContext';
+import {LayoutKeyboardContextProvider} from '../contexts/LayoutKeyboardContext';
 import {LocalConfigContextProvider} from '../contexts/LocalConfigContext';
+import {PortletContentContextProvider} from '../contexts/PortletContentContext';
+import {ShortcutContextProvider} from '../contexts/ShortcutContext';
 import {StoreContextProvider} from '../contexts/StoreContext';
 import AppHooks from '../hooks/app_hooks/index';
 import {reducer} from '../reducers/index';
@@ -29,9 +32,11 @@ import {DragAndDropContextProvider} from '../utils/drag_and_drop/useDragAndDrop'
 import CommonStylesManager from './CommonStylesManager';
 import {DisplayPagePreviewItemSelector} from './DisplayPagePreviewItemSelector';
 import DragPreviewWrapper from './DragPreviewWrapper';
+import FocusManager from './FocusManager';
 import ItemConfigurationSidebar from './ItemConfigurationSidebar';
 import {LayoutBreadcrumbs} from './LayoutBreadcrumbs';
 import LayoutViewport from './LayoutViewport';
+import MultiSelectManager from './MultiSelectManager';
 import ShortcutManager from './ShortcutManager';
 import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
@@ -59,33 +64,41 @@ export default function App({state}) {
 
 									<DragPreviewWrapper />
 
+									<FocusManager />
+
 									<WidgetsManager />
 
 									<FormValidationContextProvider>
 										<Toolbar />
 
 										<KeyboardMovementContextProvider>
-											<KeyboardManager />
+											<ShortcutContextProvider>
+												<KeyboardManager />
 
-											<KeyboardMovementPreview />
+												<KeyboardMovementPreview />
 
-											<KeyboardMovementText />
+												<KeyboardMovementText />
 
-											<LocalConfigContextProvider>
-												<GlobalContextProvider>
-													<CommonStylesManager />
+												<PortletContentContextProvider>
+													<LocalConfigContextProvider>
+														<GlobalContextProvider>
+															<CommonStylesManager />
 
-													<LayoutViewport />
+															<StyleBookContextProvider>
+																<Sidebar />
 
-													<LayoutBreadcrumbs />
+																<LayoutKeyboardContextProvider>
+																	<LayoutViewport />
+																</LayoutKeyboardContextProvider>
 
-													<StyleBookContextProvider>
-														<Sidebar />
+																<LayoutBreadcrumbs />
 
-														<ItemConfigurationSidebar />
-													</StyleBookContextProvider>
-												</GlobalContextProvider>
-											</LocalConfigContextProvider>
+																<ItemConfigurationSidebar />
+															</StyleBookContextProvider>
+														</GlobalContextProvider>
+													</LocalConfigContextProvider>
+												</PortletContentContextProvider>
+											</ShortcutContextProvider>
 										</KeyboardMovementContextProvider>
 									</FormValidationContextProvider>
 								</DisplayPagePreviewItemContextProvider>
@@ -105,5 +118,12 @@ App.propTypes = {
 function KeyboardManager() {
 	const movementSource = useMovementSource();
 
-	return movementSource ? <KeyboardMovementManager /> : <ShortcutManager />;
+	return movementSource ? (
+		<KeyboardMovementManager />
+	) : (
+		<>
+			<ShortcutManager />
+			{Liferay.FeatureFlags['LPD-18221'] ? <MultiSelectManager /> : null}
+		</>
+	);
 }

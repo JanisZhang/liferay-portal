@@ -12,7 +12,7 @@ ConstructorGlobalVariableDeclarationCheck | .java | Checks that initial values o
 [JSPDefineObjectsCheck](check/jsp_define_objects_check.markdown#jspdefineobjectscheck) | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks for unnecessary duplication of code that already exists in `defineObjects`. |
 [JSPUnusedJSPFCheck](check/jsp_unused_jspf_check.markdown#jspunusedjspfcheck) | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds `.jspf` files that are not used. |
 JSPUnusedTermsCheck | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds taglibs, variables and imports that are unused. |
-JavaCollapseImportsCheck | .java | Collapses imports that use wildcard |
+JavaCollapseImportsCheck | .java | Collapses imports that use wildcard. |
 JavaHibernateSQLCheck | .java | Finds calls to `com.liferay.portal.kernel.dao.orm.Session.createSQLQuery` (use `Session.createSynchronizedSQLQuery` instead). |
 [JavaMultiPlusConcatCheck](check/java_multi_plus_concat_check.markdown#javamultiplusconcatcheck) | .java | Checks that we do not concatenate more than 3 String objects. |
 [JavaServiceTrackerFactoryCheck](check/java_service_tracker_factory_check.markdown#javaservicetrackerfactorycheck) | .java | Checks that there are no calls to deprecated method `ServiceTrackerFactory.open(java.lang.Class)`. |
@@ -23,6 +23,7 @@ LocalPatternCheck | .java | Checks that a `java.util.Pattern` variable is declar
 [MapIterationCheck](check/map_iteration_check.markdown#mapiterationcheck) | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks that there are no unnecessary map iterations. |
 ParsePrimitiveTypeCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Verifies that `GetterUtil.parse*` is used to parse primitive types, when possible. |
 [PoshiPauseUsageCheck](check/poshi_pause_usage_check.markdown#poshipauseusagecheck) | .function, .jar, .lar, .macro, .path, .testcase, .war or .zip | Finds missing comment with JIRA project when using `Pause`. |
+RESTDTOSetCallCheck | .java | Ensures using set calls with `UnsafeSupplier` parameter for REST DTO. |
 RedundantBranchingStatementCheck | .java | Finds unnecessary branching (`break`, `continue` or `return`) statements. |
 [RedundantLogCheck](check/redundant_log_check.markdown#redundantlogcheck) | .java | Finds unnecessary logs. |
 [ResourcePermissionFactoryCheck](check/resource_permission_factory_check.markdown#resourcepermissionfactorycheck) | .java | Checks usage of `*ResourcePermissionFactory` classes. |

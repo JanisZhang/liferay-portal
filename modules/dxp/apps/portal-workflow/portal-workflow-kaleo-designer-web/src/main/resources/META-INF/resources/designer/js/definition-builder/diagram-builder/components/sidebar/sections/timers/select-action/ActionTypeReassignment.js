@@ -31,22 +31,23 @@ const ActionTypeReassignment = ({
 	setActionSections,
 	setContentName,
 	setErrors,
+	timersIndex,
 }) => {
 	const reassignmentType = actionData.assignmentType;
 	const [subSections, setSubSections] = useState(
-		actionData?.users?.length &&
-			actionData.users.some(({emailAddress}) => emailAddress)
-			? actionData.users
+		actionData?.sectionData?.length
+			? actionData?.sectionData
 			: [{identifier: `${Date.now()}-0`}]
 	);
 
 	useEffect(() => {
-		if (reassignmentType === 'user') {
+		if (reassignmentType === 'user' || reassignmentType === 'roleType') {
 			setActionSections((currentSections) => {
 				const updatedSections = [...currentSections];
 
-				updatedSections[actionSectionsIndex].assignmentType = 'user';
-				updatedSections[actionSectionsIndex].users = subSections;
+				updatedSections[actionSectionsIndex].assignmentType =
+					reassignmentType;
+				updatedSections[actionSectionsIndex].sectionData = subSections;
 
 				return updatedSections;
 			});
@@ -57,13 +58,14 @@ const ActionTypeReassignment = ({
 
 	useEffect(() => {
 		if (
-			actionData?.users?.length &&
-			actionData.users.some(({emailAddress}) => emailAddress)
+			reassignmentType === 'user' &&
+			actionData?.sectionData?.length &&
+			actionData.sectionData.some(({emailAddress}) => emailAddress)
 		) {
 			const retrievedUsers = [];
 			retrieveUsersBy(
 				'emailAddress',
-				actionData.users.map(({emailAddress}) => emailAddress)
+				actionData.sectionData.map(({emailAddress}) => emailAddress)
 			)
 				.then((response) => response.json())
 				.then(({items}) => {
@@ -81,6 +83,7 @@ const ActionTypeReassignment = ({
 					setSubSections(retrievedUsers);
 				});
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -125,6 +128,7 @@ const ActionTypeReassignment = ({
 								setSections={setSubSections}
 								subSectionIdentifier={subSectionIdentifier}
 								subSectionsLength={subSections.length}
+								timersIndex={timersIndex}
 							/>
 						)
 					);

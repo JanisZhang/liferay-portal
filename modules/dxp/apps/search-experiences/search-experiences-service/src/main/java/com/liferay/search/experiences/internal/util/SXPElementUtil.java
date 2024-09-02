@@ -67,7 +67,7 @@ public class SXPElementUtil {
 			sxpElementLocalService.addSXPElement(
 				sxpElement.getExternalReferenceCode(), user.getUserId(),
 				LocalizedMapUtil.getLocalizedMap(
-					sxpElement.getDescription_i18n()),
+					sxpElement.getDescription_i18n(), true),
 				String.valueOf(sxpElement.getElementDefinition()),
 				sxpElement.getDescription_i18n(
 				).get(
@@ -78,7 +78,9 @@ public class SXPElementUtil {
 					LocaleUtil.US.toString()
 				),
 				true, _SCHEMA_VERSION,
-				LocalizedMapUtil.getLocalizedMap(sxpElement.getTitle_i18n()), 0,
+				LocalizedMapUtil.getLocalizedMap(
+					sxpElement.getTitle_i18n(), true),
+				0,
 				new ServiceContext() {
 					{
 						setAddGuestPermissions(true);
@@ -91,31 +93,31 @@ public class SXPElementUtil {
 	}
 
 	private static List<SXPElement> _createSXPElements() {
-		Bundle bundle = FrameworkUtil.getBundle(CompanyModelListener.class);
-
-		Package pkg = CompanyModelListener.class.getPackage();
-
-		String path = StringUtil.replace(
-			pkg.getName(), CharPool.PERIOD, CharPool.SLASH);
-
-		List<SXPElement> sxpElements = new ArrayList<>();
-
-		Enumeration<URL> enumeration = bundle.findEntries(
-			path.concat("/dependencies"), "*.json", false);
-
 		try {
+			List<SXPElement> sxpElements = new ArrayList<>();
+
+			Bundle bundle = FrameworkUtil.getBundle(CompanyModelListener.class);
+
+			Package pkg = CompanyModelListener.class.getPackage();
+
+			String path = StringUtil.replace(
+				pkg.getName(), CharPool.PERIOD, CharPool.SLASH);
+
+			Enumeration<URL> enumeration = bundle.findEntries(
+				path.concat("/dependencies"), "*.json", false);
+
 			while (enumeration.hasMoreElements()) {
 				sxpElements.add(
 					com.liferay.search.experiences.rest.dto.v1_0.util.
 						SXPElementUtil.toSXPElement(
 							URLUtil.toString(enumeration.nextElement())));
 			}
+
+			return sxpElements;
 		}
 		catch (IOException ioException) {
 			throw new ExceptionInInitializerError(ioException);
 		}
-
-		return sxpElements;
 	}
 
 	private static List<SXPElement> _getOrCreateSXPElements() {

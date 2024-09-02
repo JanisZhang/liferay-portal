@@ -94,14 +94,12 @@ export default function ColorPicker({
 }: Props) {
 	const colors: ColorCategoryMap = {};
 	const inputId = useId();
-	const labelId = useId();
 	const deleteStyleError = useDeleteStyleError();
 	const setStyleError = useSetStyleError();
 	const styleErrors = useStyleErrors();
 
-	const [activeDropdownColorPicker, setActiveDropdownColorPicker] = useState(
-		false
-	);
+	const [activeDropdownColorPicker, setActiveDropdownColorPicker] =
+		useState(false);
 	const [activeColorPicker, setActiveColorPicker] = useState(false);
 	const [clearedValue, setClearedValue] = useState(false);
 	const [color, setColor] = usePropsFirst(
@@ -139,8 +137,8 @@ export default function ColorPicker({
 		value
 			? tokenValues[value]?.label
 			: field.inherited
-			? defaultTokenLabel
-			: null,
+				? defaultTokenLabel
+				: null,
 		{forceProp: clearedValue}
 	);
 
@@ -178,16 +176,22 @@ export default function ColorPicker({
 		}
 	);
 
-	const onSetValue = (
-		value: string,
-		label: string | null = null,
-		name: string | null = null
-	) => {
+	const onSetValue = ({
+		isReset,
+		label = null,
+		name = null,
+		value,
+	}: {
+		isReset?: boolean;
+		label?: string | null;
+		name?: string | null;
+		value: string;
+	}) => {
 		setColor(value);
 		setTokenLabel(label);
 		onValueSelect(field.name, name ?? value);
 
-		if (value === '') {
+		if (value === '' && !isReset) {
 			setClearedValue(true);
 		}
 		else {
@@ -270,13 +274,12 @@ export default function ColorPicker({
 	};
 
 	return (
-		<ClayForm.Group small>
-			<label className={classNames({'sr-only': !showLabel})} id={labelId}>
+		<ClayForm.Group aria-label={field.label} small>
+			<label className={classNames({'sr-only': !showLabel})}>
 				{field.label}
 			</label>
 
 			<div
-				aria-labelledby={labelId}
 				className={classNames('layout__color-picker', {
 					'custom': !tokenLabel,
 					'has-error': error.value,
@@ -292,7 +295,7 @@ export default function ColorPicker({
 						label={tokenLabel}
 						onSetActive={setActiveDropdownColorPicker}
 						onValueChange={({label, name, value}) =>
-							onSetValue(value, label, name)
+							onSetValue({label, name, value})
 						}
 						small
 						value={color || defaultTokenValue}
@@ -338,7 +341,7 @@ export default function ColorPicker({
 						<ClayInput.GroupItem append>
 							<ClayInput
 								aria-invalid={Boolean(error.label)}
-								aria-label={field.label}
+								aria-label={Liferay.Language.get('color')}
 								className="layout__color-picker__input"
 								id={inputId}
 								onBlur={onBlurInput}
@@ -372,7 +375,9 @@ export default function ColorPicker({
 										),
 									]);
 
-									onSetValue(tokenValues[value].value);
+									onSetValue({
+										value: tokenValues[value].value,
+									});
 								}
 								else {
 									setCustomColors(
@@ -381,7 +386,7 @@ export default function ColorPicker({
 											: []
 									);
 
-									onSetValue(defaultTokenValue);
+									onSetValue({value: defaultTokenValue});
 								}
 							}}
 							size="sm"
@@ -396,7 +401,7 @@ export default function ColorPicker({
 						fieldLabel={showLabel ? null : field.label}
 						onSetActive={setActiveDropdownColorPicker}
 						onValueChange={({label, name, value}) => {
-							onSetValue(value, label, name);
+							onSetValue({label, name, value});
 
 							if (error.value) {
 								setError({
@@ -428,10 +433,13 @@ export default function ColorPicker({
 
 							setError({label: null, value: null});
 
-							onSetValue(
-								field.defaultValue ?? '',
-								field.defaultValue ? null : defaultTokenValue
-							);
+							onSetValue({
+								isReset: true,
+								label: field.defaultValue
+									? null
+									: defaultTokenValue,
+								value: field.defaultValue ?? '',
+							});
 						}}
 						size="sm"
 						symbol="restore"

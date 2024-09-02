@@ -414,6 +414,7 @@ public class SQLServerDB extends BaseDB {
 		runSQL(connection, sb.toString());
 	}
 
+	@Override
 	protected String getCopyTableStructureSQL(
 		String tableName, String newTableName) {
 
@@ -422,6 +423,7 @@ public class SQLServerDB extends BaseDB {
 			" where 1 = 0");
 	}
 
+	@Override
 	protected String getRenameTableSQL(
 		String oldTableName, String newTableName) {
 
@@ -450,6 +452,10 @@ public class SQLServerDB extends BaseDB {
 
 	@Override
 	protected String reword(String data) throws IOException {
+		if (Validator.isNull(data)) {
+			return null;
+		}
+
 		try (UnsyncBufferedReader unsyncBufferedReader =
 				new UnsyncBufferedReader(new UnsyncStringReader(data))) {
 

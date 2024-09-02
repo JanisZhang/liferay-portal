@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayBadge from '@clayui/badge';
 import {Heading} from '@clayui/core';
 import ClayLayout from '@clayui/layout';
 import ClayPanel from '@clayui/panel';
@@ -13,22 +14,16 @@ import Jethr0Breadcrumbs from '../../components/Jethr0Breadcrumbs/Jethr0Breadcru
 import Jethr0ButtonsRow from '../../components/Jethr0ButtonsRow/Jethr0ButtonsRow';
 import Jethr0Card from '../../components/Jethr0Card/Jethr0Card';
 import Jethr0ContainerFluid from '../../components/Jethr0ContainerFluid/Jethr0ContainerFluid';
+import Jethr0InformationField from '../../components/Jethr0InformationField/Jethr0InformationField';
 import Jethr0NavigationBar from '../../components/Jethr0NavigationBar/Jethr0NavigationBar';
 import Jethr0Table from '../../components/Jethr0Table/Jethr0Table';
+import {getJobDefinitionByKey} from '../../objects/jobdefinitions/JobDefinitionUtil';
+import {deleteJobById, getJobById} from '../../objects/jobs/JobUtil';
 import {toLocaleString} from '../../services/DateUtil';
 import {toDurationString} from '../../services/DurationUtil';
-import postSpringBootData from '../../services/postSpringBootData';
-import useSpringBootData from '../../services/useSpringBootData';
 
-function JobBuilds({jobId}) {
-	const [jobBuilds, setJobBuilds] = useState(null);
-
-	useSpringBootData({
-		setData: setJobBuilds,
-		urlPath: '/jobs/' + jobId + '/builds',
-	});
-
-	if (!jobBuilds) {
+function JobBuilds({job}) {
+	if (!job?.builds) {
 		return <div>Loading...</div>;
 	}
 
@@ -54,49 +49,44 @@ function JobBuilds({jobId}) {
 						</tr>
 					</thead>
 					<tbody>
-						{jobBuilds &&
-							jobBuilds.map((jobBuild) => {
-								return (
-									<tr key={jobBuild.id}>
-										<th className="font-weight-semi-bold">
-											<Link
-												title={jobBuild.id}
-												to={'/builds/' + jobBuild.id}
+						{job.builds?.map((jobBuild) => {
+							return (
+								<tr key={jobBuild.id}>
+									<th className="font-weight-semi-bold">
+										<Link
+											title={jobBuild.id}
+											to={'/builds/' + jobBuild.id}
+										>
+											{jobBuild.id}
+										</Link>
+									</th>
+									<td>{jobBuild.name}</td>
+									<td>
+										{toLocaleString(jobBuild.dateCreated)}
+									</td>
+									<td>{jobBuild.state.name}</td>
+									<td>{jobBuild.initialBuild.toString()}</td>
+									<td>
+										{toDurationString(
+											jobBuild.latestDuration
+										)}
+									</td>
+									<td>
+										{jobBuild.latestJenkinsBuildURL ? (
+											<a
+												href={
+													jobBuild.latestJenkinsBuildURL
+												}
 											>
-												{jobBuild.id}
-											</Link>
-										</th>
-										<td>{jobBuild.name}</td>
-										<td>
-											{toLocaleString(
-												jobBuild.dateCreated
-											)}
-										</td>
-										<td>{jobBuild.state.name}</td>
-										<td>
-											{jobBuild.initialBuild.toString()}
-										</td>
-										<td>
-											{toDurationString(
-												jobBuild.latestDuration
-											)}
-										</td>
-										<td>
-											{jobBuild.latestJenkinsBuildURL ? (
-												<a
-													href={
-														jobBuild.latestJenkinsBuildURL
-													}
-												>
-													Latest Jenkins Build
-												</a>
-											) : (
-												<div>-</div>
-											)}
-										</td>
-									</tr>
-								);
-							})}
+												Latest Jenkins Build
+											</a>
+										) : (
+											<div>-</div>
+										)}
+									</td>
+								</tr>
+							);
+						})}
 					</tbody>
 				</Jethr0Table>
 			</ClayPanel.Body>
@@ -105,6 +95,14 @@ function JobBuilds({jobId}) {
 }
 
 function JobInformation({job}) {
+	const [jobDefinition, setJobDefinition] = useState(null);
+
+	if (!jobDefinition) {
+		getJobDefinitionByKey({key: job.type.key, setJobDefinition});
+
+		return;
+	}
+
 	if (!job) {
 		return (
 			<ClayPanel
@@ -118,8 +116,11 @@ function JobInformation({job}) {
 		);
 	}
 
-	const jobParameterDefinitions = job.definition.parameterDefinitions;
-	const jobParameters = JSON.parse(job.parameters);
+	let jobParameters = [];
+
+	if (job.parameters) {
+		jobParameters = JSON.parse(job.parameters);
+	}
 
 	return (
 		<ClayPanel
@@ -129,91 +130,92 @@ function JobInformation({job}) {
 			displayType="secondary"
 		>
 			<ClayPanel.Body>
-				<JobInformationField
+				<Jethr0InformationField
 					fieldLabel="Job Name"
 					fieldType="STRING"
 					fieldValue={job.name}
 				/>
-				<JobInformationField
+
+				<Jethr0InformationField
 					fieldLabel="Job ID"
 					fieldType="STRING"
 					fieldValue={job.id}
 				/>
-				<JobInformationField
+
+				<strong>{'Job Blessed: '}</strong>
+				{job.blessed ? (
+					<ClayBadge displayType="success" label="blessed" />
+				) : (
+					<ClayBadge displayType="secondary" label="normal" />
+				)}
+				<br />
+
+				<Jethr0InformationField
 					fieldLabel="Job State"
 					fieldType="STRING"
 					fieldValue={job.state.name}
 				/>
-				<JobInformationField
+
+				<Jethr0InformationField
 					fieldLabel="Job Type"
 					fieldType="STRING"
 					fieldValue={job.type.name}
 				/>
-				<JobInformationField
+
+				{job.routine && (
+					<Jethr0InformationField
+						fieldLabel="Routine"
+						fieldType="URL"
+						fieldURLValue={'/#/routines/' + job.routine.id}
+						fieldValue={job.routine.name}
+					/>
+				)}
+
+				<Jethr0InformationField
 					fieldLabel="Create Date"
 					fieldType="DATE"
 					fieldValue={job.dateCreated}
 				/>
-				<JobInformationField
+
+				<Jethr0InformationField
 					fieldLabel="Modified Date"
 					fieldType="DATE"
 					fieldValue={job.dateModified}
 				/>
-				<JobInformationField
+
+				<Jethr0InformationField
 					fieldLabel="Start Date"
 					fieldType="DATE"
 					fieldValue={job.startDate}
 				/>
-				{jobParameters &&
-					jobParameterDefinitions &&
-					jobParameterDefinitions.map((jobParameterDefinition) => {
-						return (
-							<JobInformationField
-								fieldLabel={jobParameterDefinition.label}
-								fieldType={jobParameterDefinition.type}
-								fieldValue={
-									jobParameters[jobParameterDefinition.key]
-								}
-								key={jobParameterDefinition.key}
-							/>
-						);
+
+				{jobDefinition.jobDefinitionParameters &&
+					jobParameters?.map((jobParameter) => {
+						let parameter;
+
+						for (const jobDefinitionParameter of jobDefinition.jobDefinitionParameters) {
+							if (
+								jobDefinitionParameter.key === jobParameter.key
+							) {
+								parameter = jobDefinitionParameter;
+
+								break;
+							}
+						}
+
+						if (parameter) {
+							return (
+								<Jethr0InformationField
+									fieldLabel={parameter.label}
+									fieldType={parameter.type.name}
+									fieldValue={jobParameter.value}
+									key={jobParameter.key}
+								/>
+							);
+						}
 					})}
 			</ClayPanel.Body>
 		</ClayPanel>
-	);
-}
-
-function JobInformationField({fieldLabel, fieldType, fieldValue}) {
-	if (fieldValue === undefined || fieldValue === '') {
-		return <></>;
-	}
-
-	if (fieldType === 'DATE') {
-		return (
-			<>
-				<strong>{fieldLabel + ': '}</strong>
-				{toLocaleString(fieldValue)}
-				<br />
-			</>
-		);
-	}
-
-	if (fieldType === 'URL') {
-		return (
-			<>
-				<strong>{fieldLabel + ': '}</strong>
-				<a href={fieldValue}>{fieldValue}</a>
-				<br />
-			</>
-		);
-	}
-
-	return (
-		<>
-			<strong>{fieldLabel + ': '}</strong>
-			{fieldValue}
-			<br />
-		</>
 	);
 }
 
@@ -221,13 +223,35 @@ function JobPage() {
 	const {id} = useParams();
 	const [job, setJob] = useState(null);
 
-	useSpringBootData({
-		setData: setJob,
-		urlPath: '/jobs/' + id,
-	});
+	if (!job) {
+		getJobById({id, setJob});
+	}
+
+	if (!job) {
+		return (
+			<ClayLayout.Container>
+				<Jethr0Card>
+					<Jethr0NavigationBar active="Jobs" />
+					<Jethr0Breadcrumbs breadcrumbs={breadcrumbs} />
+					<Jethr0ContainerFluid>
+						<ClayLayout.Row justify="between">
+							<Heading level={3} weight="lighter">
+								{'Job #' + id}
+							</Heading>
+						</ClayLayout.Row>
+					</Jethr0ContainerFluid>
+				</Jethr0Card>
+			</ClayLayout.Container>
+		);
+	}
 
 	function redirectToJobsPage() {
-		window.location.replace('/#/jobs');
+		if (job.routine) {
+			window.location.replace('/#/routines/' + job.routine.id);
+		}
+		else {
+			window.location.replace('/#/jobs');
+		}
 	}
 
 	let jobName = 'Job #' + id;
@@ -236,29 +260,51 @@ function JobPage() {
 		jobName = job.name;
 	}
 
-	const breadcrumbs = [
+	let breadcrumbs = [
 		{active: false, link: '/', name: 'Home'},
 		{active: false, link: '/jobs', name: 'Jobs'},
 		{active: true, link: '/jobs/' + id, name: jobName},
 	];
 
+	if (job.routine) {
+		breadcrumbs = [
+			{active: false, link: '/', name: 'Home'},
+			{active: false, link: '/routines', name: 'Routines'},
+			{
+				active: false,
+				link: '/routines/' + job.routine.id,
+				name: job.routine.name,
+			},
+			{active: true, link: '/jobs/' + id, name: jobName},
+		];
+	}
+
 	return (
 		<ClayLayout.Container>
 			<Jethr0Card>
-				<Jethr0NavigationBar active="Jobs" />
+				<Jethr0NavigationBar
+					active={job.routine ? 'Routines' : 'Jobs'}
+				/>
+
 				<Jethr0Breadcrumbs breadcrumbs={breadcrumbs} />
+
 				<Jethr0ContainerFluid>
 					<ClayLayout.Row justify="between">
 						<Heading level={3} weight="lighter">
 							{jobName}
 						</Heading>
+
 						<Jethr0ButtonsRow
 							buttons={[
 								{
+									link: '/jobs/' + id + '/update',
+									title: 'Update',
+								},
+								{
 									onClick: () => {
-										postSpringBootData({
+										deleteJobById({
+											id,
 											redirect: redirectToJobsPage,
-											urlPath: '/jobs/delete/' + id,
 										});
 									},
 									title: 'Delete',
@@ -267,8 +313,10 @@ function JobPage() {
 						/>
 					</ClayLayout.Row>
 				</Jethr0ContainerFluid>
+
 				<JobInformation job={job} />
-				<JobBuilds jobId={id} />
+
+				<JobBuilds job={job} />
 			</Jethr0Card>
 		</ClayLayout.Container>
 	);

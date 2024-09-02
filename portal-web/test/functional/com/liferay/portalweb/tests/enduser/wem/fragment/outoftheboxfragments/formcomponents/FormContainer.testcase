@@ -1,10 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Fragments";
+	property testray.main.component.name = "Fragment Administration";
 
 	setUp {
 		task ("Set up virtual instance and sign in") {
@@ -64,6 +64,8 @@ definition {
 		}
 
 		task ("When the page creator tries to add a Heading fragment into Form Container") {
+			PageEditor.gotoTab(tabName = "Fragments and Widgets");
+
 			DragAndDrop.javaScriptDragAndDropToObject(
 				index = 1,
 				key_collectionName = "Basic Components",
@@ -90,7 +92,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Submit Button") {
+			for (var fragmentName : list "Text,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -143,7 +145,7 @@ definition {
 
 			DragAndDrop.javaScriptDragAndDropToObject(
 				key_collectionName = "Form Components",
-				key_fragmentName = "Text Input",
+				key_fragmentName = "Text",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
 				locator2 = "PageEditor#FRAGMENT_DROP_TARGET");
 		}
@@ -151,7 +153,7 @@ definition {
 		task ("Then the page creator should see an error message") {
 			Alert.viewErrorMessage(errorMessage = "Form components can only be placed inside a mapped form container.");
 
-			PageEditor.viewFragmentNotPresent(fragmentName = "Text Input");
+			PageEditor.viewFragmentNotPresent(fragmentName = "Text");
 		}
 	}
 
@@ -394,7 +396,7 @@ definition {
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Form Components",
 				fragmentName = "Date",
-				targetFragmentName = "Text Input");
+				targetFragmentName = "Text");
 
 			PageEditor.editInput(
 				field = "Purchase Date",
@@ -443,7 +445,7 @@ definition {
 
 		task ("Then the page creator cannot see the Success Notification Text and Preview Success Notification fields") {
 			AssertNotChecked.assertNotCheckedNotVisible(
-				checkboxName = "Show Notification when Form Is Submitted",
+				checkboxName = "Show Notification After Submit",
 				locator1 = "Checkbox#ANY_CHECKBOX");
 
 			AssertElementNotPresent(
@@ -523,12 +525,12 @@ definition {
 			PageEditor.viewFragmentEditableText(
 				className = "button",
 				editableText = "Submit",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				id = "submit-button");
 		}
 
 		task ("Then the page creator could remove automatically added input fragments") {
-			for (var fragmentName : list "Text Input,Textarea,Submit Button") {
+			for (var fragmentName : list "Text,Textarea,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -542,13 +544,13 @@ definition {
 		task ("When the page creator adds a Text Input fragment into Form Container") {
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Form Components",
-				fragmentName = "Text Input");
+				fragmentName = "Text");
 		}
 
 		task ("Then the page creator could map the Text Input to the Text field") {
 			PageEditor.editInput(
 				field = "Region",
-				fragmentName = "Text Input");
+				fragmentName = "Text");
 
 			PageEditor.viewInputStyle(
 				label = "Region",
@@ -592,7 +594,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Submit Button") {
+			for (var fragmentName : list "Text,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 		}
@@ -601,7 +603,7 @@ definition {
 			PageEditor.gotoConfiguration(fragmentName = "Form Container");
 
 			AssertSelectedLabel(
-				key_fieldLabel = "Success Interaction",
+				key_fieldLabel = "Success Action",
 				locator1 = "Select#GENERIC_SELECT_FIELD",
 				value1 = "Show Embedded Message");
 
@@ -611,7 +613,7 @@ definition {
 				value1 = "Thank you. Your information was successfully received.");
 
 			AssertNotChecked.assertNotCheckedNotVisible(
-				key_toggleSwitchLabel = "Preview Embedded Message",
+				key_toggleSwitchLabel = "Preview Success Message",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
 			AssertVisible(
@@ -632,16 +634,16 @@ definition {
 		task ("When the page designer publishes the content page with mapped Form Container") {
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Form Components",
-				fragmentName = "Text Input");
+				fragmentName = "Text");
 
 			PageEditor.editInput(
 				field = "Region",
-				fragmentName = "Text Input");
+				fragmentName = "Text");
 
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Form Components",
-				fragmentName = "Submit Button",
-				targetFragmentName = "Text Input");
+				fragmentName = "Form Button",
+				targetFragmentName = "Text");
 
 			PageEditor.publish();
 		}
@@ -737,7 +739,7 @@ definition {
 					url = "https://www.liferay.com");
 
 				AssertElementNotPresent(
-					checkboxName = "Show Notification when Form Is Submitted",
+					checkboxName = "Show Notification After Submit",
 					locator1 = "Checkbox#ANY_CHECKBOX");
 
 				PageEditor.publish();
@@ -1354,7 +1356,7 @@ definition {
 			Click(
 				index = 1,
 				locator1 = "Fragment#INPUT_TOGGLE",
-				type = "select-from-list");
+				type = "select");
 
 			MenuItem.click(menuItem = "Fish");
 
@@ -1371,7 +1373,7 @@ definition {
 			Click(
 				index = 2,
 				locator1 = "Fragment#INPUT_TOGGLE",
-				type = "select-from-list");
+				type = "select");
 
 			MenuItem.click(menuItem = "First Class");
 
@@ -1442,7 +1444,7 @@ definition {
 			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
 				attribute = "address",
 				attributeValue = "Dalian",
-				expectedValue = "2020-08-08T00:00:00Z",
+				expectedValue = "2020-08-08T00:00:00.000Z",
 				fieldName = "purchaseDate",
 				objectName = "PurchaseOrder");
 
@@ -1521,7 +1523,7 @@ definition {
 					key_fragmentName = "Form Components",
 					locator1 = "Checkbox#ALLOWED_FRAGMENT");
 
-				for (var fragmentName : list "Form Container,CAPTCHA,Checkbox,File Upload,Select from List") {
+				for (var fragmentName : list "Form Container,CAPTCHA,Checkbox,File Upload,Select") {
 					Check.checkToggleSwitch(
 						key_fragmentName = ${fragmentName},
 						locator1 = "Checkbox#ALLOWED_FRAGMENT");
@@ -1529,7 +1531,7 @@ definition {
 
 				Button.clickSave();
 
-				//MastersPageTemplates.deselectAllowedFragments(fragmentNameList = "Date,Numeric Input,Submit Button,Text Input");
+				//MastersPageTemplates.deselectAllowedFragments(fragmentNameList = "Date,Numeric,Form Button,Text");
 
 				MastersPageTemplates.publishMaster();
 			}
@@ -1705,11 +1707,11 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			PageEditor.removeFragment(fragmentName = "Submit Button");
+			PageEditor.removeFragment(fragmentName = "Form Button");
 
 			PageEditor.editInput(
 				field = "-- Unmapped --",
-				fragmentName = "Text Input");
+				fragmentName = "Text");
 		}
 
 		task ("When the page designer publishes the content page") {
@@ -2258,12 +2260,12 @@ definition {
 				panel = "General");
 
 			PageEditor.editInput(
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				markAsRequired = "true");
 		}
 
 		task ("When the page designer removes the Text Input fragment") {
-			PageEditor.removeFragment(fragmentName = "Text Input");
+			PageEditor.removeFragment(fragmentName = "Text");
 		}
 
 		task ("Then the page designer could see a warning message") {
@@ -2310,7 +2312,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Date,Submit Button") {
+			for (var fragmentName : list "Date,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -2368,7 +2370,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Submit Button") {
+			for (var fragmentName : list "Text,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -2378,12 +2380,12 @@ definition {
 
 			PageEditor.addElementToContainer(
 				collectionName = "Form Components",
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				navTab = "Fragments");
 
 			PageEditor.editInput(
 				field = "Region",
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				markAsRequired = "true");
 		}
 
@@ -2427,7 +2429,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Date,Submit Button") {
+			for (var fragmentName : list "Date,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -2486,7 +2488,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Submit Button") {
+			for (var fragmentName : list "Text,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -2497,12 +2499,12 @@ definition {
 			PageEditor.addElementToColumn(
 				collectionName = "Form Components",
 				columnNumber = 1,
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				navTab = "Fragments");
 
 			PageEditor.editInput(
 				field = "Region",
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				markAsRequired = "true");
 		}
 
@@ -2546,7 +2548,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Submit Button") {
+			for (var fragmentName : list "Text,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -2556,18 +2558,18 @@ definition {
 
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Form Components",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				height = "Tall",
 				targetFragmentName = "Container");
 
 			PageEditor.addElementToContainer(
 				collectionName = "Form Components",
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				navTab = "Fragments");
 
 			PageEditor.editInput(
 				field = "Name*",
-				fragmentName = "Text Input");
+				fragmentName = "Text");
 
 			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
 		}
@@ -2616,7 +2618,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Submit Button") {
+			for (var fragmentName : list "Text,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -2626,19 +2628,19 @@ definition {
 
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Form Components",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				height = "Tall",
 				targetFragmentName = "Grid");
 
 			PageEditor.addElementToColumn(
 				collectionName = "Form Components",
 				columnNumber = 1,
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				navTab = "Fragments");
 
 			PageEditor.editInput(
 				field = "Name*",
-				fragmentName = "Text Input");
+				fragmentName = "Text");
 
 			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
 		}
@@ -2687,7 +2689,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Submit Button") {
+			for (var fragmentName : list "Text,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -2697,18 +2699,18 @@ definition {
 
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Form Components",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				height = "Tall",
 				targetFragmentName = "Container");
 
 			PageEditor.addElementToContainer(
 				collectionName = "Form Components",
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				navTab = "Fragments");
 
 			PageEditor.editInput(
 				field = "Region",
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				markAsRequired = "true");
 
 			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
@@ -2758,7 +2760,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			for (var fragmentName : list "Text Input,Submit Button") {
+			for (var fragmentName : list "Text,Form Button") {
 				PageEditor.removeFragment(fragmentName = ${fragmentName});
 			}
 
@@ -2768,19 +2770,19 @@ definition {
 
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Form Components",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				height = "Tall",
 				targetFragmentName = "Grid");
 
 			PageEditor.addElementToColumn(
 				collectionName = "Form Components",
 				columnNumber = 1,
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				navTab = "Fragments");
 
 			PageEditor.editInput(
 				field = "Region",
-				fragmentName = "Text Input",
+				fragmentName = "Text",
 				markAsRequired = "true");
 
 			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
@@ -2830,7 +2832,7 @@ definition {
 				contentType = "Purchase Order",
 				panel = "General");
 
-			PageEditor.removeFragment(fragmentName = "Submit Button");
+			PageEditor.removeFragment(fragmentName = "Form Button");
 		}
 
 		task ("When the page creator publishes the content page") {
@@ -2851,11 +2853,11 @@ definition {
 			PageEditor.addFragmentToFormContainer(
 				collectionName = "Layout Elements",
 				fragmentName = "Container",
-				targetFragmentName = "Text Input");
+				targetFragmentName = "Text");
 
 			PageEditor.addElementToContainer(
 				collectionName = "Form Components",
-				fragmentName = "Submit Button",
+				fragmentName = "Form Button",
 				navTab = "Fragments");
 
 			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
@@ -2907,7 +2909,7 @@ definition {
 
 			PageEditor.editInput(
 				field = "-- Unmapped --",
-				fragmentName = "Text Input");
+				fragmentName = "Text");
 		}
 
 		task ("When the page creator publishes the content page") {

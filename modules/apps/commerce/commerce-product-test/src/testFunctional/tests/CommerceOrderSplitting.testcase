@@ -13,18 +13,18 @@ definition {
 	tearDown {
 		CommerceConfiguration.commerceTearDown();
 
+		User.logoutAndLoginPG();
+
 		ObjectAdmin.openObjectAdmin();
 
-		ObjectPortlet.selectCustomObject(label = "Commerce Order");
+		ObjectPortlet.selectObject(label = "Commerce Order");
 
 		ObjectAdmin.goToActionsTab();
 
-		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
-			Click(
-				key_value = "",
-				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+		while (IsElementPresent(locator1 = "xpath=(//div[@class='table-list-title'])[1]")) {
+			var actionLabel = selenium.getText("xpath=(//div[@class='table-list-title'])[1]/a");
 
-			MenuItem.click(menuItem = "Delete");
+			ObjectAdmin.deleteActionViaUI(actionLabel = ${actionLabel});
 		}
 	}
 
@@ -121,7 +121,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -141,9 +141,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -238,7 +236,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -260,9 +258,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -364,7 +360,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -386,9 +382,7 @@ definition {
 		}
 
 		task ("And the customer order is splitted") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -494,7 +488,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -516,9 +510,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -628,7 +620,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -652,9 +644,7 @@ definition {
 		}
 
 		task ("And the customer order is splitted") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -673,7 +663,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -778,7 +768,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -806,9 +796,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -922,7 +910,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -944,9 +932,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1069,7 +1055,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1091,9 +1077,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1215,7 +1199,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1237,9 +1221,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1340,7 +1322,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1362,9 +1344,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page and accepts the order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -1570,7 +1550,9 @@ definition {
 
 			CommerceSKUs.generateAllSkuCombinations();
 
-			var skuCombinationName = selenium.getText("//div[(@class='dnd-td') and (contains(string(), 'VALUE1VALUE2') or contains(string(), 'VALUE2VALUE1'))]//..//div[(@class='dnd-td')][1]");
+			WaitForElementPresent(locator1 = "//div[@class='dnd-tbody']//div[(@class='dnd-tr')]//span[text()='Approved']/../../..//div[@class='table-list-title']/a");
+
+			var skuCombinationName = selenium.getText("//div[@class='dnd-tbody']//div[(@class='dnd-tr')]//span[text()='Approved']/../../..//div[@class='table-list-title']/a");
 
 			CommerceNavigator.gotoEntry(entryName = ${skuCombinationName});
 
@@ -1590,7 +1572,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1598,12 +1580,12 @@ definition {
 
 			FrontStore.addToCartFromProductDetails(
 				productName = "ABS Sensor",
-				productSku = "VALUE1VALUE2");
+				productSku = ${skuCombinationName});
 
 			CommerceNavigator.gotoMiniCart();
 
 			CommerceNavigator.editMiniCartItemQuantity(
-				cartItemSku = "VALUE1VALUE2",
+				cartItemSku = ${skuCombinationName},
 				productQuantity = 3);
 
 			CommerceCheckout.gotoCheckout();
@@ -1633,9 +1615,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1668,7 +1648,7 @@ definition {
 				productListPrice = "49.00",
 				productName = "ABS Sensor",
 				productQuantity = 3,
-				productSku = "VALUE1VALUE2",
+				productSku = ${skuCombinationName},
 				productTotalPrice = "147.00");
 
 			CommerceOrders.viewOrdersEntry(
@@ -1704,7 +1684,7 @@ definition {
 				productListPrice = "20.00",
 				productName = "ABS Sensor",
 				productQuantity = 3,
-				productSku = "VALUE1VALUE2",
+				productSku = ${skuCombinationName},
 				productTotalPrice = "60.00");
 
 			CommerceOrders.viewOrdersEntry(
@@ -1746,7 +1726,7 @@ definition {
 		task ("Then a new Commerce Order action rule with default settings is created") {
 			ObjectAdmin.openObjectAdmin();
 
-			ObjectPortlet.selectCustomObject(label = "Commerce Order");
+			ObjectPortlet.selectObject(label = "Commerce Order");
 
 			ObjectAdmin.goToActionsTab();
 
@@ -1845,7 +1825,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1867,9 +1847,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1991,7 +1969,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2013,9 +1991,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2128,7 +2104,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2150,9 +2126,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2237,7 +2211,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2259,9 +2233,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2371,7 +2343,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2393,9 +2365,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2506,7 +2476,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2528,9 +2498,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2670,11 +2638,9 @@ definition {
 
 			Click(
 				key_optionName = "Update an Object Entry",
-				locator1 = "CommerceEntry#COMBOBOX_DROPDOWN_OPTION_NAME");
+				locator1 = "ObjectAdmin#CLAY_GENERIC_DROPDOWN_ITEM");
 
-			PortletEntry.save();
-
-			Refresh();
+			Button.clickSave();
 		}
 
 		task ("Then the health check is clickable again") {
@@ -2759,7 +2725,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2781,9 +2747,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2875,7 +2839,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2897,9 +2861,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -3040,7 +3002,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -3062,9 +3024,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -3169,7 +3129,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -3191,9 +3151,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -3323,7 +3281,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -3345,9 +3303,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -3433,7 +3389,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -3455,9 +3411,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}

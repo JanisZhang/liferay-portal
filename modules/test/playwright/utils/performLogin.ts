@@ -5,36 +5,96 @@
 
 import {Cookie, Page, expect} from '@playwright/test';
 
+import {liferayConfig} from '../liferay.config';
+
 export type LoginScreenName =
-	| 'test'
-	| 'test-company-admin'
-	| 'test-organization-owner'
-	| 'test-unprivileged';
+	| 'demo.company.admin'
+	| 'demo.organization.owner'
+	| 'demo.unprivileged'
+	| 'test';
+
+export const userData = {
+	'demo.company.admin': {
+		name: 'Demo',
+		password: 'demo',
+		surname: 'Company Admin',
+	},
+	'demo.organization.owner': {
+		name: 'Demo',
+		password: 'demo',
+		surname: 'Organization Owner',
+	},
+	'demo.unprivileged': {
+		name: 'Demo',
+		password: 'demo',
+		surname: 'Unprivileged',
+	},
+	'test': {
+		name: 'Test',
+		password: liferayConfig.environment.password,
+		surname: 'Test',
+	},
+};
 
 async function performLogin(
 	page: Page,
-	screenName: LoginScreenName
+	screenName: LoginScreenName | string,
+	baseUrl = '/',
+	domain = '@liferay.com'
 ): Promise<Cookie[]> {
-	await page.goto('/');
+	const {name, password, surname} = userData[screenName];
 
-	await page.getByRole('button', {name: 'Sign In'}).click();
+	await page.goto(baseUrl);
 
-	await page.getByLabel('Email Address').fill(`${screenName}@liferay.com`);
-	await page.getByLabel('Password').fill('test');
+	const signInButton = page.getByRole('button', {name: 'Sign In'});
+
+	await expect(page.getByPlaceholder('Search')).toBeVisible();
+
+	await signInButton.click();
+
+	const emailAddressInput = page.getByLabel('Email Address');
+
+	await expect(emailAddressInput).toBeVisible();
+
+	await emailAddressInput.fill(`${screenName}${domain}`);
+
+	await page.getByLabel('Password').fill(password);
 	await page.getByLabel('Remember Me').check();
 
-	await page
-		.getByLabel('Sign In- Loading')
-		.getByRole('button', {name: 'Sign In'})
-		.click();
+	if ((await signInButton.count()) === 1) {
+		await signInButton.click();
+	}
+	else {
+		await page
+			.getByLabel('Sign In- Loading')
+			.getByRole('button', {name: 'Sign In'})
+			.click();
+	}
 
 	await expect(
-		page.getByLabel(`${screenName} ${screenName} User Profile`)
+		page.getByLabel(`${name} ${surname} User Profile`)
 	).toBeVisible({
 		timeout: 30 * 1000,
 	});
 
 	return await page.context().cookies();
+}
+
+export async function performLogout(page: Page) {
+	await page.goto('/');
+
+	await page.getByTitle('User Profile Menu').click();
+
+	await page.getByRole('menuitem', {name: 'Sign Out'}).click();
+}
+
+export async function performUserSwitch(
+	page: Page,
+	screenName: LoginScreenName | string
+) {
+	await performLogout(page);
+
+	await performLogin(page, screenName);
 }
 
 export default performLogin;

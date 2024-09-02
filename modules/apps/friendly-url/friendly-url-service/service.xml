@@ -39,6 +39,12 @@
 				<finder-column name="classNameId" />
 				<finder-column name="urlTitle" />
 			</finder>
+			<finder name="C_C_U_C" return-type="Collection">
+				<finder-column name="companyId" />
+				<finder-column name="classNameId" />
+				<finder-column name="urlTitle" />
+				<finder-column name="ctCollectionId" />
+			</finder>
 			<finder name="G_C_C_L" return-type="Collection">
 				<finder-column name="groupId" />
 				<finder-column name="classNameId" />
@@ -92,6 +98,7 @@
 	</entity>
 	<exceptions>
 		<exception>DuplicateFriendlyURLEntry</exception>
+		<exception>FriendlyURLCategory</exception>
 		<exception>FriendlyURLLength</exception>
 	</exceptions>
 </service-builder>

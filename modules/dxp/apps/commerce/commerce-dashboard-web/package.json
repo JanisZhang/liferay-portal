@@ -9,10 +9,10 @@
 	"name": "commerce-dashboard-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
 	"sideEffects": false,
-	"version": "4.0.43"
+	"version": "4.0.50"
 }

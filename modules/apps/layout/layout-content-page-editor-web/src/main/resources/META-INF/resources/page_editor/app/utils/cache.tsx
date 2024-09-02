@@ -13,7 +13,7 @@ export type CacheData<T> = {
 	data?: T;
 	key: string;
 	loadPromise?: FetcherReturn<T>;
-	status: typeof CACHE_STATUS[keyof typeof CACHE_STATUS];
+	status: (typeof CACHE_STATUS)[keyof typeof CACHE_STATUS];
 };
 
 export const CACHE_KEYS = {
@@ -23,11 +23,12 @@ export const CACHE_KEYS = {
 	collectionVariations: 'collectionVariations',
 	collectionWarningMessage: 'collectionWarningMessage',
 	formFields: 'formFields',
+	relationships: 'relationships',
 	roles: 'roles',
 	users: 'users',
 } as const;
 
-export type CacheKey = typeof CACHE_KEYS[keyof typeof CACHE_KEYS];
+export type CacheKey = (typeof CACHE_KEYS)[keyof typeof CACHE_KEYS];
 
 export const CACHE_STATUS = {
 	loading: 'loading',

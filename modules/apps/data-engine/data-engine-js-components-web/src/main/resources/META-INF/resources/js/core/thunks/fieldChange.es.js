@@ -10,10 +10,10 @@ import {disableSubmitButton} from '../utils/submitButtonController.es';
 
 let REVALIDATE_UPDATES = [];
 
-const notRequireUpdatePageFieldNames = ['requiredErrorMessage'];
+const skipPageEvaluationFieldNames = ['name', 'requiredErrorMessage'];
 
-const needsPageUpdate = (fieldName) => {
-	return !notRequireUpdatePageFieldNames.includes(fieldName);
+const needsPageEvaluation = (fieldName) => {
+	return !skipPageEvaluationFieldNames.includes(fieldName);
 };
 
 const getEditedPages = ({
@@ -89,7 +89,17 @@ export default function fieldChange({
 
 		dispatch({payload: editedPages, type: EVENT_TYPES.PAGE.UPDATE});
 
-		if (evaluable && (viewMode || needsPageUpdate(fieldName))) {
+		if (Liferay.FeatureFlags['LPD-11228']) {
+			if (
+				fieldInstance.type === 'numeric' ||
+				fieldInstance.type === 'text' ||
+				fieldInstance.type === 'rich_text'
+			) {
+				dispatch({type: EVENT_TYPES.HISTORY.EDITED});
+			}
+		}
+
+		if (evaluable && (viewMode || needsPageEvaluation(fieldName))) {
 			try {
 				disableSubmitButton(submitButtonId);
 
@@ -161,6 +171,22 @@ export default function fieldChange({
 				name: fieldInstance.name,
 				value,
 			});
+		}
+
+		if (Liferay.FeatureFlags['LPD-11228']) {
+			if (
+				fieldInstance.type !== 'numeric' &&
+				fieldInstance.type !== 'text' &&
+				fieldInstance.type !== 'rich_text'
+			) {
+				setTimeout(
+					() =>
+						Liferay.fire('journal:storeState', {
+							fieldName: fieldInstance.label,
+						}),
+					0
+				);
+			}
 		}
 	};
 }

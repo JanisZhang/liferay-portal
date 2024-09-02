@@ -5,16 +5,20 @@
 
 package com.liferay.jethr0.event.github;
 
-import com.liferay.jethr0.event.EventHandlerContext;
 import com.liferay.jethr0.event.github.comment.GitHubComment;
 import com.liferay.jethr0.event.github.pullrequest.GitHubPullRequest;
 import com.liferay.jethr0.job.JobEntity;
 import com.liferay.jethr0.job.PortalEvaluatePullRequestJobEntity;
 import com.liferay.jethr0.job.repository.JobEntityRepository;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
 import com.liferay.jethr0.util.StringUtil;
 
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONObject;
 
@@ -53,22 +57,32 @@ public class ReevaluateGitHubCommentEventHandler
 				"CI is reevaluating the build with build ID: `", jenkinsBuildID,
 				"` against the latest valid upstream results."));
 
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringUtil.combine(
+					"Reevaluation completed for ",
+					gitHubPullRequest.getHTMLURL(), " at ",
+					StringUtil.toString(new Date())));
+		}
+
 		return gitHubComment.toString();
 	}
 
 	protected ReevaluateGitHubCommentEventHandler(
-		EventHandlerContext eventHandlerContext, JSONObject messageJSONObject) {
+		JSONObject messageJSONObject) {
 
-		super(eventHandlerContext, messageJSONObject);
+		super(messageJSONObject);
 	}
 
 	private JobEntity _createJobEntity(String jenkinsBuildID)
 		throws InvalidJSONException {
 
-		JobEntityRepository jobEntityRepository = getJobEntityRepository();
+		JobEntityRepository jobEntityRepository =
+			Jethr0ContextUtil.getJobEntityRepository();
 
 		JobEntity jobEntity = jobEntityRepository.create(
-			"ci:reevaluate:" + jenkinsBuildID, 3, null, JobEntity.State.OPENED,
+			null, "ci:reevaluate:" + jenkinsBuildID, null, 3, null,
+			JobEntity.State.OPENED,
 			JobEntity.Type.PORTAL_EVALUATE_PULL_REQUEST);
 
 		if (!(jobEntity instanceof PortalEvaluatePullRequestJobEntity)) {
@@ -92,6 +106,9 @@ public class ReevaluateGitHubCommentEventHandler
 
 		return portalEvaluatePullRequestJobEntity;
 	}
+
+	private static final Log _log = LogFactory.getLog(
+		StopGitHubCommentEventHandler.class);
 
 	private static final Pattern _reevaluatePattern = Pattern.compile(
 		"ci:reevaluate:(?<jenkinsBuildID>[\\d]+_[\\d]+)");

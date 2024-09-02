@@ -24,6 +24,7 @@ export type Operators =
 
 export interface SearchBuilderConstructor {
 	useURIEncode?: boolean;
+	[key: string]: any;
 }
 
 /**
@@ -77,6 +78,10 @@ export default class SearchBuilder {
 	 * @example addressLocality ne 'London'
 	 */
 	static ne(key: Key, value: Value) {
+		if (value === null) {
+			return `${key} ne ${value}`;
+		}
+
 		return `${key} ne '${value}'`;
 	}
 
@@ -110,7 +115,12 @@ export default class SearchBuilder {
 		for (const key in filter) {
 			const value = filter[key];
 
-			if (!value || !(value as string).length) {
+			if (
+				!value ||
+				!(value as string).length ||
+				(Array.isArray(value) &&
+					value.some((item: any) => item.value === ''))
+			) {
 				continue;
 			}
 
@@ -118,6 +128,72 @@ export default class SearchBuilder {
 		}
 
 		return _filter;
+	}
+
+	static formatValuesToString(values: Value[]) {
+		if (values) {
+			return values
+				.map((value) => `${value}`)
+				.join(',')
+				.trim();
+		}
+
+		return '';
+	}
+
+	static createCustomFilter(schema: RendererFields, filter: any) {
+		const customOperator = schema?.operator;
+		const requestOperator = schema?.requestOperator as string;
+		const optionalOperator = schema?.optionalOperator as Operators;
+
+		const isNoFilterApplied =
+			filter.includes('false') || filter.includes('No');
+
+		if (customOperator && SearchBuilder[customOperator]) {
+			if (optionalOperator === 'ne') {
+				if (isNoFilterApplied) {
+					return `not (${SearchBuilder[optionalOperator](
+						requestOperator,
+						null
+					)})`;
+				}
+			}
+
+			if (Array.isArray(filter)) {
+				const filters = filter
+					.map((item) =>
+						typeof item === 'object' ? item.value : item
+					)
+					.join(',');
+
+				if (filters.includes('DIDNOTRUN')) {
+					return SearchBuilder[optionalOperator](
+						requestOperator,
+						filters
+					);
+				}
+
+				return SearchBuilder[customOperator](requestOperator, filters);
+			}
+			else if (typeof filter === 'object' && 'value' in filter) {
+				return SearchBuilder[customOperator](
+					requestOperator,
+					filter.value
+				);
+			}
+
+			return SearchBuilder[customOperator](requestOperator, filter);
+		}
+
+		if (typeof filter === 'string') {
+			return filter;
+		}
+
+		return this.formatValuesToString(
+			filter.map((_value: any) =>
+				typeof _value === 'object' ? _value.value : _value
+			)
+		);
 	}
 
 	static createFilter({
@@ -153,7 +229,6 @@ export default class SearchBuilder {
 				if (schema.type === 'date') {
 					value = new Date(value).toISOString();
 				}
-
 				const getOptionalSearchCondition = () => {
 					const formattedKey = key.replace('$', '');
 
@@ -178,16 +253,17 @@ export default class SearchBuilder {
 				searchCondition = getOptionalSearchCondition();
 			}
 			else {
-				searchCondition = Array.isArray(value)
-					? SearchBuilder.in(
-							key,
-							value.map((_value) =>
-								typeof _value === 'object'
-									? _value.value
-									: _value
-							)
-					  )
-					: SearchBuilder.eq(key, value);
+				if (Array.isArray(value)) {
+					searchCondition = SearchBuilder.in(
+						key,
+						value.map((_value) =>
+							typeof _value === 'object' ? _value.value : _value
+						)
+					);
+				}
+				else {
+					searchCondition = SearchBuilder.eq(key, value);
+				}
 			}
 
 			_filter.push(
@@ -224,6 +300,10 @@ export default class SearchBuilder {
 		return this.setContext(SearchBuilder.eq(key, value));
 	}
 
+	public gt(key: Key, value: Value) {
+		return this.setContext(SearchBuilder.gt(key, value));
+	}
+
 	public in(key: Key, values: Value[]) {
 		return this.setContext(SearchBuilder.in(key, values));
 	}
@@ -246,6 +326,10 @@ export default class SearchBuilder {
 		});
 
 		return this.group('CLOSE');
+	}
+
+	public lt(key: Key, value: Value) {
+		return this.setContext(SearchBuilder.lt(key, value));
 	}
 
 	public ne(key: Key, value: Value) {

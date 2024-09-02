@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+// @ts-nocheck
+
 const ARROW_KEYS = {
 	ArrowDown: 'ArrowDown',
 	ArrowLeft: 'ArrowLeft',
@@ -56,9 +58,8 @@ export default function PanelKeyboardHandler({categoryKey, namespace}) {
 				focusElement(getFocusableSibling(activeElement, 'up'));
 			}
 			else if (event.key === 'ArrowRight') {
-				const expandedAttribute = activeElement.getAttribute(
-					'aria-expanded'
-				);
+				const expandedAttribute =
+					activeElement.getAttribute('aria-expanded');
 
 				if (expandedAttribute === 'false') {
 					activeElement.click();
@@ -68,9 +69,8 @@ export default function PanelKeyboardHandler({categoryKey, namespace}) {
 				}
 			}
 			else if (event.key === 'ArrowLeft') {
-				const expandedAttribute = activeElement.getAttribute(
-					'aria-expanded'
-				);
+				const expandedAttribute =
+					activeElement.getAttribute('aria-expanded');
 
 				if (expandedAttribute === 'true') {
 					activeElement.click();

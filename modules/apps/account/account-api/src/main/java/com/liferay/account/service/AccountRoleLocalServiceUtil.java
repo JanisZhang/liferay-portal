@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -52,13 +53,14 @@ public class AccountRoleLocalServiceUtil {
 	}
 
 	public static AccountRole addAccountRole(
-			long userId, long accountEntryId, String name,
-			Map<java.util.Locale, String> titleMap,
+			String externalReferenceCode, long userId, long accountEntryId,
+			String name, Map<java.util.Locale, String> titleMap,
 			Map<java.util.Locale, String> descriptionMap)
 		throws PortalException {
 
 		return getService().addAccountRole(
-			userId, accountEntryId, name, titleMap, descriptionMap);
+			externalReferenceCode, userId, accountEntryId, name, titleMap,
+			descriptionMap);
 	}
 
 	public static void associateUser(
@@ -234,6 +236,13 @@ public class AccountRoleLocalServiceUtil {
 		return getService().fetchAccountRole(accountRoleId);
 	}
 
+	public static AccountRole fetchAccountRoleByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
+
+		return getService().fetchAccountRoleByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
 	public static AccountRole fetchAccountRoleByRoleId(long roleId) {
 		return getService().fetchAccountRoleByRoleId(roleId);
 	}
@@ -249,6 +258,14 @@ public class AccountRoleLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getAccountRole(accountRoleId);
+	}
+
+	public static AccountRole getAccountRoleByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().getAccountRoleByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static AccountRole getAccountRoleByRoleId(long roleId)
@@ -381,13 +398,11 @@ public class AccountRoleLocalServiceUtil {
 	}
 
 	public static AccountRoleLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(AccountRoleLocalService service) {
-		_service = service;
-	}
-
-	private static volatile AccountRoleLocalService _service;
+	private static final Snapshot<AccountRoleLocalService> _serviceSnapshot =
+		new Snapshot<>(
+			AccountRoleLocalServiceUtil.class, AccountRoleLocalService.class);
 
 }

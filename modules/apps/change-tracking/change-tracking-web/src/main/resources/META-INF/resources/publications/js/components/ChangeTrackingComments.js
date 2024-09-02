@@ -280,7 +280,7 @@ export default function ChangeTrackingComments({
 			return (
 				<ClayEmptyState
 					description={Liferay.Language.get('no-comments-yet')}
-					imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.gif`}
+					imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.svg`}
 					small
 					title={Liferay.Language.get('no-results-found')}
 				/>
@@ -422,29 +422,32 @@ export default function ChangeTrackingComments({
 										</div>
 									</div>
 
-									{editing !== comment.ctCommentId && (
-										<div className="autofit-col">
-											<ClayDropDownWithItems
-												alignmentPosition={
-													Align.BottomLeft
-												}
-												items={dropdownItems}
-												spritemap={spritemap}
-												trigger={
-													<ClayButtonWithIcon
-														disabled={
-															deleting ===
-															comment.ctCommentId
-														}
-														displayType="unstyled"
-														small
-														spritemap={spritemap}
-														symbol="ellipsis-v"
-													/>
-												}
-											/>
-										</div>
-									)}
+									{editing !== comment.ctCommentId &&
+										currentUserId === comment.userId && (
+											<div className="autofit-col">
+												<ClayDropDownWithItems
+													alignmentPosition={
+														Align.BottomLeft
+													}
+													items={dropdownItems}
+													spritemap={spritemap}
+													trigger={
+														<ClayButtonWithIcon
+															disabled={
+																deleting ===
+																comment.ctCommentId
+															}
+															displayType="unstyled"
+															small
+															spritemap={
+																spritemap
+															}
+															symbol="ellipsis-v"
+														/>
+													}
+												/>
+											</div>
+										)}
 								</div>
 							</div>
 						</div>

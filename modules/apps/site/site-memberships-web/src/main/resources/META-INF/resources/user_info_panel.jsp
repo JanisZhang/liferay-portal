@@ -16,7 +16,7 @@ Group group = siteMembershipsDisplayContext.getGroup();
 <c:choose>
 	<c:when test="<%= ListUtil.isEmpty(users) %>">
 		<div class="sidebar-header">
-			<h4>
+			<div class="h4">
 				<liferay-ui:message key="membership-type" />: <liferay-ui:message key="<%= GroupConstants.getTypeLabel(group.getType()) %>" />
 
 				<%
@@ -35,7 +35,7 @@ Group group = siteMembershipsDisplayContext.getGroup();
 
 					<aui:a cssClass="badge badge-primary badge-sm" href="<%= viewMembershipRequestsURL %>" label="<%= String.valueOf(pendingRequests) %>" title='<%= LanguageUtil.format(request, "there-are-x-membership-requests-pending", String.valueOf(pendingRequests), false) %>' />
 				</c:if>
-			</h4>
+			</div>
 
 			<div class="h6 text-secondary">
 				<liferay-ui:message arguments="<%= GroupUtil.getGroupTypeLabel(group, locale) %>" key='<%= "membership-type-" + GroupConstants.getTypeLabel(group.getType()) + "-help" %>' translateArguments="<%= false %>" />
@@ -47,7 +47,7 @@ Group group = siteMembershipsDisplayContext.getGroup();
 				tabsItems="<%= siteMembershipsDisplayContext.getTabsItems() %>"
 			>
 				<clay:tabs-panel>
-					<h5><liferay-ui:message key="num-of-users" /></h5>
+					<div class="h5"><liferay-ui:message key="num-of-users" /></div>
 
 					<%
 					LinkedHashMap<String, Object> userParams = LinkedHashMapBuilder.<String, Object>put(
@@ -71,9 +71,9 @@ Group group = siteMembershipsDisplayContext.getGroup();
 		%>
 
 		<div class="sidebar-header">
-			<h4>
+			<div class="h4">
 				<%= HtmlUtil.escape(curUser.getFullName()) %>
-			</h4>
+			</div>
 
 			<div class="h6">
 				<%= curUser.getScreenName() %>
@@ -113,7 +113,7 @@ Group group = siteMembershipsDisplayContext.getGroup();
 						<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="thumbnail" />" class="crop-img rounded" src="<%= portraitURL %>" />
 					</c:if>
 
-					<h5><liferay-ui:message key="email" /></h5>
+					<div class="h5"><liferay-ui:message key="email" /></div>
 
 					<p>
 						<%= curUser.getEmailAddress() %>
@@ -128,7 +128,7 @@ Group group = siteMembershipsDisplayContext.getGroup();
 					%>
 
 					<c:if test="<%= !ListUtil.isEmpty(rolesAndTeamsNames) %>">
-						<h5><liferay-ui:message key="roles-and-teams" /></h5>
+						<div class="h5"><liferay-ui:message key="roles-and-teams" /></div>
 
 						<p>
 							<%= HtmlUtil.escape(StringUtil.merge(rolesAndTeamsNames, StringPool.COMMA_AND_SPACE)) %>
@@ -140,7 +140,7 @@ Group group = siteMembershipsDisplayContext.getGroup();
 	</c:when>
 	<c:when test="<%= ListUtil.isNotEmpty(users) && (users.size() > 1) %>">
 		<div class="sidebar-header">
-			<h4><liferay-ui:message arguments="<%= users.size() %>" key="x-items-are-selected" /></h4>
+			<div class="h4"><liferay-ui:message arguments="<%= users.size() %>" key="x-items-are-selected" /></div>
 		</div>
 
 		<div class="sheet-row">
@@ -148,7 +148,7 @@ Group group = siteMembershipsDisplayContext.getGroup();
 				tabsItems="<%= siteMembershipsDisplayContext.getTabsItems() %>"
 			>
 				<clay:tabs-panel>
-					<h5><liferay-ui:message arguments="<%= users.size() %>" key="x-items-are-selected" /></h5>
+					<div class="h5"><liferay-ui:message arguments="<%= users.size() %>" key="x-items-are-selected" /></div>
 				</clay:tabs-panel>
 			</clay:tabs>
 		</div>

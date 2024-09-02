@@ -246,19 +246,21 @@ class EventScreen extends HtmlScreen {
 	 */
 
 	makePermanentSelectorsTemporary_(currentLanguageId, languageId) {
-		HtmlScreen.selectors.stylesTemporary = HtmlScreen.selectors.stylesTemporary
-			.split(',')
-			.concat(
-				HtmlScreen.selectors.stylesPermanent
-					.split(',')
-					.map((item) => `${item}[href*="${currentLanguageId}"]`)
-			)
-			.join();
+		HtmlScreen.selectors.stylesTemporary =
+			HtmlScreen.selectors.stylesTemporary
+				.split(',')
+				.concat(
+					HtmlScreen.selectors.stylesPermanent
+						.split(',')
+						.map((item) => `${item}[href*="${currentLanguageId}"]`)
+				)
+				.join();
 
-		HtmlScreen.selectors.stylesPermanent = HtmlScreen.selectors.stylesPermanent
-			.split(',')
-			.map((item) => `${item}[href*="${languageId}"]`)
-			.join();
+		HtmlScreen.selectors.stylesPermanent =
+			HtmlScreen.selectors.stylesPermanent
+				.split(',')
+				.map((item) => `${item}[href*="${languageId}"]`)
+				.join();
 	}
 
 	/**
@@ -286,24 +288,6 @@ class EventScreen extends HtmlScreen {
 		if (onLoad) {
 			onLoad();
 		}
-	}
-
-	/**
-	 * Adds the type attribute with 'image/x-icon' when the favicon is an icon,
-	 * this ensures that it works fine in IE 11.
-	 * @param {!Array<Element>} elements
-	 * @private
-	 * @return {Promise}
-	 */
-
-	runFaviconInElement_(elements) {
-		return super.runFaviconInElement_(elements).then(() => {
-			elements.forEach((element) => {
-				if (!element.type && element.href.indexOf('.ico') !== -1) {
-					element.type = 'image/x-icon';
-				}
-			});
-		});
 	}
 }
 

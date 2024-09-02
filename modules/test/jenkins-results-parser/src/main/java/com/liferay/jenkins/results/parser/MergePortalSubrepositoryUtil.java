@@ -10,7 +10,8 @@ import java.io.IOException;
 
 import java.net.URL;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -115,8 +116,9 @@ public class MergePortalSubrepositoryUtil {
 	private static void _checkPassingTestSuites(
 		URL jenkinsBuildURL, PullRequest portalPullRequest) {
 
-		List<String> requiredPassingTestSuiteNames = Arrays.asList(
-			"relevant", "sf");
+		List<String> requiredPassingTestSuiteNames = new ArrayList<>();
+
+		Collections.addAll(requiredPassingTestSuiteNames, "relevant", "sf");
 
 		requiredPassingTestSuiteNames.removeAll(
 			portalPullRequest.getPassingTestSuiteNames());
@@ -177,7 +179,7 @@ public class MergePortalSubrepositoryUtil {
 		}
 		catch (IOException ioException) {
 			_reportError(
-				"Failed to update " + gitRepoFilePath, jenkinsBuildURL,
+				"Unable to update " + gitRepoFilePath, jenkinsBuildURL,
 				portalPullRequest, ioException);
 		}
 	}
@@ -243,7 +245,7 @@ public class MergePortalSubrepositoryUtil {
 
 		if (executionResult.getExitValue() != 0) {
 			throw new RuntimeException(
-				"Failed to create & apply the patch \n" +
+				"Unable to create & apply the patch \n" +
 					executionResult.getStandardError());
 		}
 
@@ -435,18 +437,6 @@ public class MergePortalSubrepositoryUtil {
 			return;
 		}
 
-		GitHubRemoteGitCommit gitHubRemoteGitCommit =
-			GitCommitFactory.newGitHubRemoteGitCommit(
-				matcher.group("userName"), matcher.group("repositoryName"),
-				targetGitRepoCommitSHA);
-
-		gitHubRemoteGitCommit.setStatus(
-			GitHubRemoteGitCommit.Status.SUCCESS, "liferay/merged-into-central",
-			JenkinsResultsParserUtil.combine(
-				"Merged into ", portalPullRequest.getReceiverUsername(), "/",
-				portalPullRequest.getGitRepositoryName()),
-			String.valueOf(jenkinsBuildURL));
-
 		String message = JenkinsResultsParserUtil.combine(
 			"Completed subrepo merge process at ",
 			JenkinsResultsParserUtil.toDateString(new Date()), ".\n",
@@ -461,10 +451,22 @@ public class MergePortalSubrepositoryUtil {
 		JenkinsResultsParserUtil.updateBuildDescription(
 			message, jenkinsBuildURL);
 
-		portalPullRequest.addComment(
+		PullRequest.Comment pullRequestComment = portalPullRequest.addComment(
 			JenkinsResultsParserUtil.combine(
 				message, "\n\nFor more details click <a href=\"",
 				String.valueOf(jenkinsBuildURL), "\">here</a>."));
+
+		GitHubRemoteGitCommit gitHubRemoteGitCommit =
+			GitCommitFactory.newGitHubRemoteGitCommit(
+				matcher.group("userName"), matcher.group("repositoryName"),
+				targetGitRepoCommitSHA);
+
+		gitHubRemoteGitCommit.setStatus(
+			GitHubRemoteGitCommit.Status.SUCCESS, "liferay/merged-into-central",
+			JenkinsResultsParserUtil.combine(
+				"Merged into ", portalPullRequest.getReceiverUsername(), "/",
+				portalPullRequest.getGitRepositoryName()),
+			String.valueOf(pullRequestComment.getURL()));
 
 		portalPullRequest.close();
 	}
@@ -510,7 +512,7 @@ public class MergePortalSubrepositoryUtil {
 
 		if (remoteGitBranch == null) {
 			_reportError(
-				"Failed to push updates to " + remoteURL, jenkinsBuildURL,
+				"Unable to push updates to " + remoteURL, jenkinsBuildURL,
 				portalPullRequest);
 		}
 	}

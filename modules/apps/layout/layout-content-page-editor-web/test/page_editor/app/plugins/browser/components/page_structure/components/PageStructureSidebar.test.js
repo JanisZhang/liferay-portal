@@ -16,6 +16,7 @@ import {LAYOUT_DATA_ITEM_TYPE_LABELS} from '../../../../../../../../src/main/res
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/layoutDataItemTypes';
 import {VIEWPORT_SIZES} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
 import {ControlsProvider} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext';
+import {ShortcutContextProvider} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ShortcutContext';
 import {StoreAPIContextProvider} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
 import updateItemConfig from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/thunks/updateItemConfig';
 import {pageContentsAtom} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/usePageContents';
@@ -52,7 +53,7 @@ jest.mock(
 );
 
 const renderComponent = ({
-	activeItemId = null,
+	activeItemIds = [],
 	formConfig,
 	hasUpdatePermissions = true,
 	lockedExperience = false,
@@ -71,8 +72,8 @@ const renderComponent = ({
 		<DndProvider backend={HTML5Backend}>
 			<ControlsProvider
 				activeInitialState={{
-					activationOrigin: null,
-					activeItemId,
+					activationOrigin: 'layout',
+					activeItemIds,
 					activeItemType: null,
 				}}
 				hoverInitialState={{
@@ -252,7 +253,9 @@ const renderComponent = ({
 						selectedViewportSize: viewportSize,
 					})}
 				>
-					<PageStructureSidebar />
+					<ShortcutContextProvider>
+						<PageStructureSidebar />
+					</ShortcutContextProvider>
 				</StoreAPIContextProvider>
 			</ControlsProvider>
 		</DndProvider>
@@ -265,6 +268,7 @@ describe('PageStructureSidebar', () => {
 			data: [],
 			status: 'saved',
 		});
+		window.HTMLElement.prototype.scrollIntoView = jest.fn;
 	});
 
 	it('has a warning message when there is no content', () => {
@@ -272,7 +276,6 @@ describe('PageStructureSidebar', () => {
 			masterRootItemChildren: [],
 			rootItemChildren: [],
 		});
-
 		expect(
 			screen.getByText('there-is-no-content-on-this-page')
 		).toBeInTheDocument();
@@ -280,9 +283,8 @@ describe('PageStructureSidebar', () => {
 
 	it('uses fragments names as labels', () => {
 		renderComponent({
-			activeItemId: '04-fragment',
+			activeItemIds: ['04-fragment'],
 		});
-
 		expect(
 			screen.getByText('Fragment 1', {selector: 'span'})
 		).toBeInTheDocument();
@@ -290,10 +292,9 @@ describe('PageStructureSidebar', () => {
 
 	it('uses default labels for containers, columns, rows', () => {
 		renderComponent({
-			activeItemId: '03-column',
+			activeItemIds: ['03-column'],
 			rootItemChildren: ['01-container', '02-row', '03-column'],
 		});
-
 		['container', 'row', 'column'].forEach((itemLabel) =>
 			screen
 				.getAllByText(LAYOUT_DATA_ITEM_TYPE_LABELS[itemLabel])
@@ -301,11 +302,10 @@ describe('PageStructureSidebar', () => {
 		);
 	});
 
-	it('sets activeItemId as selected item', () => {
+	it('sets activeItemIds as selected item', () => {
 		const {baseElement} = renderComponent({
-			activeItemId: '04-fragment',
+			activeItemIds: ['04-fragment'],
 		});
-
 		expect(
 			baseElement.querySelector('[aria-controls="04-fragment"]')
 		).toHaveAttribute('aria-expanded', 'true');
@@ -319,10 +319,9 @@ describe('PageStructureSidebar', () => {
 
 	it('scans fragments editables', () => {
 		renderComponent({
-			activeItemId: '04-fragment',
+			activeItemIds: ['04-fragment'],
 			rootItemChildren: ['04-fragment'],
 		});
-
 		expect(
 			screen.queryByLabelText('select-05-editable')
 		).toBeInTheDocument();
@@ -331,34 +330,28 @@ describe('PageStructureSidebar', () => {
 
 	it('sets element as active item', () => {
 		renderComponent({
-			activeItemId: '03-column',
+			activeItemIds: ['03-column'],
 		});
 		const button = screen.getByLabelText('select-grid');
-
 		userEvent.click(button);
-
 		expect(button.parentElement).toHaveAttribute('aria-selected', 'true');
 	});
 
 	it('sets element as active item when it is a fragment', () => {
 		renderComponent({
-			activeItemId: '03-column',
+			activeItemIds: ['03-column'],
 		});
 		const button = screen.getByLabelText('select-Fragment 1');
-
 		userEvent.click(button);
-
 		expect(button.parentElement).toHaveAttribute('aria-selected', 'true');
 	});
 
 	it('sets element as active item when it is a column', () => {
 		renderComponent({
-			activeItemId: '02-row',
+			activeItemIds: ['02-row'],
 		});
 		const button = screen.getByLabelText('select-module');
-
 		userEvent.click(button);
-
 		expect(button.parentElement).toHaveAttribute('aria-selected', 'false');
 	});
 
@@ -367,7 +360,6 @@ describe('PageStructureSidebar', () => {
 			hasUpdatePermissions: false,
 			rootItemChildren: ['01-container', '02-row', '04-fragment'],
 		});
-
 		expect(screen.queryByLabelText('remove-container')).toBe(null);
 		expect(screen.queryByLabelText('remove-grid')).toBe(null);
 		expect(screen.queryByLabelText('remove-Fragment 1')).toBe(null);
@@ -375,11 +367,10 @@ describe('PageStructureSidebar', () => {
 
 	it('does not allow removing items if viewport is not desktop', () => {
 		renderComponent({
-			activeItemId: '11-container',
+			activeItemIds: ['11-container'],
 			rootItemChildren: ['01-container', '02-row', '04-fragment'],
 			viewportSize: VIEWPORT_SIZES.portraitMobile,
 		});
-
 		expect(screen.queryByLabelText('remove-container')).toBe(null);
 		expect(screen.queryByLabelText('remove-grid')).toBe(null);
 		expect(screen.queryByLabelText('remove-Fragment 1')).toBe(null);
@@ -387,10 +378,9 @@ describe('PageStructureSidebar', () => {
 
 	it('uses field label for mapped editables', () => {
 		renderComponent({
-			activeItemId: '04-fragment',
+			activeItemIds: ['04-fragment'],
 			rootItemChildren: ['04-fragment'],
 		});
-
 		expect(
 			screen.getByText('Fragment 1', {selector: 'span'})
 		).toBeInTheDocument();
@@ -398,10 +388,9 @@ describe('PageStructureSidebar', () => {
 
 	it('render custom fragment names as labels', () => {
 		renderComponent({
-			activeItemId: '04-fragment',
+			activeItemIds: ['04-fragment'],
 			rootItemChildren: ['04-fragment'],
 		});
-
 		expect(
 			screen.getByText('Fragment 1', {selector: 'span'})
 		).toBeInTheDocument();
@@ -409,38 +398,29 @@ describe('PageStructureSidebar', () => {
 
 	it('allow changing fragment name', () => {
 		const {baseElement} = renderComponent({
-			activeItemId: '04-fragment',
+			activeItemIds: ['04-fragment'],
 			rootItemChildren: ['04-fragment'],
 		});
-
 		userEvent.dblClick(screen.getByLabelText('select-Fragment 1'));
-
 		const input = baseElement.querySelector('input');
-
 		expect(input).toBeInTheDocument();
-
 		userEvent.type(input, 'Custom Fragment Name');
-
 		fireEvent.blur(input);
-
 		expect(screen.getByText('Custom Fragment Name')).toBeInTheDocument();
-
 		expect(updateItemConfig).toBeCalledWith(
 			expect.objectContaining({
 				itemConfig: {name: 'Custom Fragment Name'},
 			})
 		);
-
 		updateItemConfig.mockClear();
 	});
 
 	describe('Form container without permissions', () => {
 		it('shows the form normally when it is mapped to an element with permissions', () => {
 			renderComponent({
-				activeItemId: '04-fragment',
+				activeItemIds: ['04-fragment'],
 				rootItemChildren: ['06-form'],
 			});
-
 			expect(
 				screen.getByText('form-container', {selector: 'span'})
 			).toBeInTheDocument();
@@ -453,24 +433,21 @@ describe('PageStructureSidebar', () => {
 
 		it('shows a permission restriction message when the form is mapped to an element without permissions and their children are not listed', () => {
 			const {baseElement} = renderComponent({
-				activeItemId: '06-form',
+				activeItemIds: ['06-form'],
 				formConfig: {
 					classNameId: '22222',
 					classTypeId: '0',
 				},
 				rootItemChildren: ['06-form'],
 			});
-
 			expect(
 				screen.getByText('form-container', {selector: 'span'})
 			).toBeInTheDocument();
-
 			expect(
 				screen.getByText(
 					'this-content-cannot-be-displayed-due-to-permission-restrictions'
 				)
 			).toBeInTheDocument();
-
 			expect(
 				baseElement.querySelector('[aria-controls="06-form"]')
 			).not.toBeInTheDocument();
@@ -478,15 +455,13 @@ describe('PageStructureSidebar', () => {
 
 		it('shows a permission restriction message when the fragment is restricted', () => {
 			renderComponent({
-				activeItemId: '04-fragment',
+				activeItemIds: ['04-fragment'],
 				restrictedItemIds: new Set(['04-fragment']),
 				rootItemChildren: ['04-fragment'],
 			});
-
 			expect(
 				screen.getByText('Fragment 1', {selector: 'span'})
 			).toBeInTheDocument();
-
 			expect(
 				screen.getByText(
 					'this-content-cannot-be-displayed-due-to-permission-restrictions'

@@ -99,6 +99,7 @@ const getDefaultValue = (property: Property): any => {
 							propertyName: EVENT_KEY,
 							value: name
 						},
+
 						{
 							operatorName: FunctionalOperators.Contains,
 							propertyName: 'attribute/',

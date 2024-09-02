@@ -6,6 +6,7 @@
 import {DropdownOption} from '../../../common/components/Dropdown/Dropdown';
 import {PermissionActionType} from '../../../common/enums/permissionActionType';
 import LiferayPicklist from '../../../common/interfaces/liferayPicklist';
+import {Liferay} from '../../../common/services/liferay';
 import {Status} from '../../../common/utils/constants/status';
 
 export default function getDropdownOptions(
@@ -13,6 +14,19 @@ export default function getDropdownOptions(
 	mdfRequestStatus: LiferayPicklist,
 	updateRequestStatus: (status: LiferayPicklist) => Promise<void>
 ) {
+	const callConfirmActionMDFRequestModal = (
+		action: string,
+		status: LiferayPicklist
+	) =>
+		Liferay.Util.openConfirmModal({
+			message: `Are you sure you want to ${action} this MDF request?`,
+			onConfirm: (isConfirmed: boolean) => {
+				if (isConfirmed) {
+					updateRequestStatus(status);
+				}
+			},
+		});
+
 	return actions?.reduce<DropdownOption[]>((previousValue, currentValue) => {
 		if (mdfRequestStatus?.key === Status.PENDING.key) {
 			if (
@@ -179,6 +193,35 @@ export default function getDropdownOptions(
 					},
 				});
 			}
+		}
+
+		if (
+			mdfRequestStatus?.key === Status.APPROVED.key &&
+			currentValue === PermissionActionType.CANCEL
+		) {
+			previousValue.push({
+				key: Status.CANCELED.key,
+				label: Status.CANCELED.name,
+				onClick: () => {
+					callConfirmActionMDFRequestModal('cancel', Status.CANCELED);
+				},
+			});
+		}
+
+		if (
+			mdfRequestStatus?.key === Status.APPROVED.key &&
+			currentValue === PermissionActionType.COMPLETE
+		) {
+			previousValue.push({
+				key: Status.COMPLETED.key,
+				label: Status.COMPLETED.name,
+				onClick: () => {
+					callConfirmActionMDFRequestModal(
+						'complete',
+						Status.COMPLETED
+					);
+				},
+			});
 		}
 
 		if (mdfRequestStatus?.key === Status.CANCELED.key) {

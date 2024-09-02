@@ -68,6 +68,7 @@ const buildStructure = {
 	projectId: yup.number(),
 	promoted: yup.boolean(),
 	routineId: yup.string().required(),
+	runOptions: yup.mixed(),
 	template: yup.boolean(),
 	templateTestrayBuildId: yup.string(),
 };
@@ -97,17 +98,13 @@ const yupSchema = {
 		caseId: yup.number(),
 		comment: yup.string(),
 		dueStatus: yup.string().required(),
+		errors: yup.string().nullable(),
 		issues: yup.string(),
 		mbMessageId: yup.number().nullable(),
 		mbThreadId: yup.number().nullable(),
 		runId: yup.number(),
 		startDate: yup.string().nullable(),
 		userId: yup.number(),
-	}),
-	caseResultIssues: yup.object({
-		caseResultId: yup.number(),
-		issueId: yup.number(),
-		name: yup.string(),
 	}),
 	caseType: yup.object({
 		name: yup.string().required(),
@@ -146,13 +143,6 @@ const yupSchema = {
 		buildId: yup.number(),
 		id: yup.string(),
 		number: yup.number(),
-	}),
-	issue: yup.object({
-		name: yup.string(),
-	}),
-	jiraImportRequirement: yup.object({
-		issues: yup.string().required(),
-		projectId: yup.number().required(),
 	}),
 	jiraIssues: yup.object({
 		issues: yup.array(
@@ -225,13 +215,7 @@ const yupSchema = {
 		taskId: yup.number(),
 		userId: yup.number(),
 	}),
-	subtaskIssues: yup.object({
-		issueId: yup.number(),
-		name: yup.string(),
-		subTaskId: yup.number(),
-	}),
 	subtaskToCaseResult: yup.object({
-		caseResultId: yup.number(),
 		issues: yup.string(),
 		name: yup.string(),
 		subtaskId: yup.number(),
@@ -251,7 +235,6 @@ const yupSchema = {
 	}),
 	task: yup.object({
 		buildId: yup.number(),
-		caseTypes: yup.array(yup.number()).required(),
 		dueStatus: yup.string(),
 		id: yup.number().required(),
 		name: yup.string().required(i18n.sub('x-is-a-required-field', 'name')),

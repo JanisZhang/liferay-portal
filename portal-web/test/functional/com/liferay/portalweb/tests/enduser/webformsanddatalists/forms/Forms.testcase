@@ -1,4 +1,4 @@
-@component-name = "portal-web-forms-and-data-lists"
+@component-name = "portal-bpm"
 definition {
 
 	property osgi.module.configuration.file.names = "com.liferay.frontend.js.loader.modules.extender.internal.configuration.Details.config";
@@ -402,9 +402,14 @@ definition {
 			key_checkboxOption = "Never Expire",
 			locator1 = "Form#CHECKBOX_SUBMISSIONS");
 
-		FormViewBuilder.editDate(
+		FormFields.editDateCalendar(
 			fieldName = "Date",
-			fieldValue = "01/01/2001");
+			fieldValue = "01/01/2024",
+			valueDay = 1,
+			valueMonth = "January",
+			valueYear = 2024);
+
+		Click(locator1 = "FormFields#DATE_CALENDAR");
 
 		AssertElementPresent(
 			key_feedbackMessage = "Please enter a valid expiration date. Only future dates are accepted.",
@@ -413,8 +418,6 @@ definition {
 		FormViewBuilder.editDate(
 			fieldName = "Date",
 			fieldValue = "01/01/2100");
-
-		Click(locator1 = "FormFields#DATE_CALENDAR");
 
 		Form.save();
 
@@ -1205,7 +1208,7 @@ definition {
 			outputParameterName = "Country Names",
 			outputParameterPath = "nameCurrentValue",
 			outputParameterType = "List",
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			url = "${portalURL}/api/jsonws/country/get-countries",
 			username = "test@liferay.com");
 
@@ -1312,6 +1315,8 @@ definition {
 			optionName = "Select1",
 			optionValue = "Select 1");
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.editOptionsRow(
 			optionName = "Select2",
 			optionValue = "Select 2",
@@ -1332,6 +1337,8 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1");
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.editOptionsRow(
 			optionName = "Option2",
@@ -1989,6 +1996,8 @@ definition {
 			optionName = "Option1",
 			optionValue = "Option 1");
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
@@ -2007,6 +2016,8 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Select1",
 			optionValue = "Select 1");
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.editOptionsRow(
 			optionName = "Select2",
@@ -2241,6 +2252,10 @@ definition {
 				optionName = "<test${number}",
 				optionValue = "<test ${number}",
 				rowNumber = ${number});
+
+			if (${number} != 2) {
+				FormFields.clickAddOptionButton();
+			}
 		}
 
 		Form.gotoAdvancedTab();

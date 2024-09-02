@@ -14,3 +14,13 @@ type ConfigurationSection =
 	| 'Text';
 
 type ConfigurationTab = 'Advanced' | 'General' | 'Styles';
+
+type SidebarTab =
+	| 'Fragments and Widgets'
+	| 'Browser'
+	| 'Page Design Options'
+	| 'Page Rules'
+	| 'Page Content'
+	| 'Comments';
+
+type Viewport = 'Desktop' | 'Landscape Phone' | 'Portrait Phone' | 'Tablet';

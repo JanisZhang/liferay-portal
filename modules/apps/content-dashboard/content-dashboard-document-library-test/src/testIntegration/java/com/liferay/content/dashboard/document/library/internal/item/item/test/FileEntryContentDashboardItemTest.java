@@ -17,14 +17,16 @@ import com.liferay.content.dashboard.item.ContentDashboardItemVersion;
 import com.liferay.content.dashboard.item.VersionableContentDashboardItem;
 import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -41,7 +43,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ContentTypes;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -50,6 +52,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -57,6 +60,7 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import java.net.URL;
 import java.net.URLEncoder;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -116,19 +120,19 @@ public class FileEntryContentDashboardItemTest {
 			versionableContentDashboardItem =
 				_getVersionableContentDashboardItem(1);
 
-		List<ContentDashboardItemVersion> contentDashboardItemVersionList =
+		List<ContentDashboardItemVersion> contentDashboardItemVersions =
 			versionableContentDashboardItem.getAllContentDashboardItemVersions(
 				_getMockHttpServletRequest());
 
 		Assert.assertEquals(
-			contentDashboardItemVersionList.toString(), 1,
-			contentDashboardItemVersionList.size());
+			contentDashboardItemVersions.toString(), 1,
+			contentDashboardItemVersions.size());
 
 		ContentDashboardItemVersion contentDashboardItemVersion =
-			contentDashboardItemVersionList.get(0);
+			contentDashboardItemVersions.get(0);
 
 		Assert.assertEquals(
-			LanguageUtil.get(LocaleUtil.getDefault(), "approved"),
+			_language.get(LocaleUtil.getDefault(), "approved"),
 			contentDashboardItemVersion.getLabel());
 		Assert.assertEquals("1.0", contentDashboardItemVersion.getVersion());
 		Assert.assertEquals("success", contentDashboardItemVersion.getStyle());
@@ -142,19 +146,19 @@ public class FileEntryContentDashboardItemTest {
 			versionableContentDashboardItem =
 				_getVersionableContentDashboardItem(2);
 
-		List<ContentDashboardItemVersion> contentDashboardItemVersionList =
+		List<ContentDashboardItemVersion> contentDashboardItemVersions =
 			versionableContentDashboardItem.getAllContentDashboardItemVersions(
 				_getMockHttpServletRequest());
 
 		Assert.assertEquals(
-			contentDashboardItemVersionList.toString(), 2,
-			contentDashboardItemVersionList.size());
+			contentDashboardItemVersions.toString(), 2,
+			contentDashboardItemVersions.size());
 
 		ContentDashboardItemVersion contentDashboardItemVersion =
-			contentDashboardItemVersionList.get(0);
+			contentDashboardItemVersions.get(0);
 
 		Assert.assertEquals(
-			LanguageUtil.get(LocaleUtil.getDefault(), "approved"),
+			_language.get(LocaleUtil.getDefault(), "approved"),
 			contentDashboardItemVersion.getLabel());
 		Assert.assertEquals("1.1", contentDashboardItemVersion.getVersion());
 		Assert.assertEquals("success", contentDashboardItemVersion.getStyle());
@@ -241,8 +245,8 @@ public class FileEntryContentDashboardItemTest {
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString() + ".jpg",
-			MimeTypesUtil.getExtensionContentType(ContentTypes.IMAGE_JPEG),
-			new byte[0], null, null, null, _serviceContext);
+			MimeTypesUtil.getExtensionContentType("image/jpg"), new byte[0],
+			null, null, null, _serviceContext);
 
 		VersionableContentDashboardItem<FileEntry>
 			versionableContentDashboardItem =
@@ -284,8 +288,6 @@ public class FileEntryContentDashboardItemTest {
 
 		ContentDashboardItemSubtype contentDashboardItemSubtype =
 			versionableContentDashboardItem.getContentDashboardItemSubtype();
-
-		Assert.assertNotNull(contentDashboardItemSubtype);
 
 		Assert.assertEquals(
 			"Basic Document (Image)",
@@ -356,22 +358,69 @@ public class FileEntryContentDashboardItemTest {
 			versionableContentDashboardItem =
 				_getVersionableContentDashboardItem(2);
 
-		List<ContentDashboardItemVersion> contentDashboardItemVersionList =
+		List<ContentDashboardItemVersion> contentDashboardItemVersions =
 			versionableContentDashboardItem.
 				getLatestContentDashboardItemVersions(LocaleUtil.getDefault());
 
 		Assert.assertEquals(
-			contentDashboardItemVersionList.toString(), 1,
-			contentDashboardItemVersionList.size());
+			contentDashboardItemVersions.toString(), 1,
+			contentDashboardItemVersions.size());
 
 		ContentDashboardItemVersion contentDashboardItemVersion =
-			contentDashboardItemVersionList.get(0);
+			contentDashboardItemVersions.get(0);
 
 		Assert.assertEquals(
-			LanguageUtil.get(LocaleUtil.getDefault(), "approved"),
+			_language.get(LocaleUtil.getDefault(), "approved"),
 			contentDashboardItemVersion.getLabel());
 		Assert.assertEquals("1.1", contentDashboardItemVersion.getVersion());
 		Assert.assertEquals("success", contentDashboardItemVersion.getStyle());
+	}
+
+	@Test
+	public void testGetLatestContentDashboardItemVersionsWithExpiredDLFileEntry()
+		throws Exception {
+
+		FileEntry fileEntry = _getFileEntry(3);
+
+		DLFileEntry dlFileEntry = _dlFileEntryLocalService.getDLFileEntry(
+			fileEntry.getFileEntryId());
+
+		_dlFileEntryLocalService.updateStatus(
+			TestPropsValues.getUserId(), dlFileEntry,
+			dlFileEntry.getLatestFileVersion(true),
+			WorkflowConstants.STATUS_EXPIRED, _serviceContext,
+			Collections.emptyMap());
+
+		VersionableContentDashboardItem<FileEntry>
+			versionableContentDashboardItem =
+				(VersionableContentDashboardItem<FileEntry>)
+					_contentDashboardItemFactory.create(
+						fileEntry.getFileEntryId());
+
+		List<ContentDashboardItemVersion> contentDashboardItemVersions =
+			versionableContentDashboardItem.
+				getLatestContentDashboardItemVersions(LocaleUtil.getDefault());
+
+		Assert.assertEquals(
+			contentDashboardItemVersions.toString(), 2,
+			contentDashboardItemVersions.size());
+
+		ContentDashboardItemVersion contentDashboardItemVersion =
+			contentDashboardItemVersions.get(0);
+
+		Assert.assertEquals(
+			_language.get(LocaleUtil.getDefault(), "approved"),
+			contentDashboardItemVersion.getLabel());
+		Assert.assertEquals("1.1", contentDashboardItemVersion.getVersion());
+		Assert.assertEquals("success", contentDashboardItemVersion.getStyle());
+
+		contentDashboardItemVersion = contentDashboardItemVersions.get(1);
+
+		Assert.assertEquals(
+			_language.get(LocaleUtil.getDefault(), "expired"),
+			contentDashboardItemVersion.getLabel());
+		Assert.assertEquals("1.2", contentDashboardItemVersion.getVersion());
+		Assert.assertEquals("danger", contentDashboardItemVersion.getStyle());
 	}
 
 	@Test
@@ -394,83 +443,40 @@ public class FileEntryContentDashboardItemTest {
 				LocaleUtil.getDefault()));
 	}
 
+	@FeatureFlags("LPD-30087")
 	@Test
 	public void testGetSpecificInformationList() throws Exception {
 		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
 
-		VersionableContentDashboardItem<FileEntry>
-			versionableContentDashboardItem =
-				_getVersionableContentDashboardItem(1);
-
-		List<ContentDashboardItem.SpecificInformation<?>>
-			specificInformationList =
-				versionableContentDashboardItem.getSpecificInformationList(
-					LocaleUtil.getDefault());
-
-		ContentDashboardItem.SpecificInformation<?>
-			extensionSpecificInformation = null;
-
-		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
-				specificInformationList) {
-
-			if (Objects.equals(specificInformation.getKey(), "extension")) {
-				extensionSpecificInformation = specificInformation;
-
-				break;
-			}
-		}
-
-		Assert.assertNotNull(
-			"extension not found", extensionSpecificInformation);
-
-		Assert.assertEquals("jpg", extensionSpecificInformation.getValue());
-
-		ContentDashboardItem.SpecificInformation<?> sizeSpecificInformation =
-			null;
-
-		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
-				specificInformationList) {
-
-			if (Objects.equals(specificInformation.getKey(), "size")) {
-				sizeSpecificInformation = specificInformation;
-
-				break;
-			}
-		}
-
-		Assert.assertNotNull("size not found", sizeSpecificInformation);
-		Assert.assertEquals("0 B", sizeSpecificInformation.getValue());
-
-		Assert.assertTrue(
-			ListUtil.exists(
-				specificInformationList,
-				specificInformation -> Objects.equals(
-					specificInformation.getKey(), "file-name")));
-
-		ContentDashboardItem.SpecificInformation<URL>
-			webDAVSpecificInformation = null;
-
-		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
-				specificInformationList) {
-
-			if (Objects.equals(specificInformation.getKey(), "web-dav-url")) {
-				webDAVSpecificInformation =
-					(ContentDashboardItem.SpecificInformation<URL>)
-						specificInformation;
-
-				break;
-			}
-		}
-
-		Assert.assertNotNull(
-			"web-dav-url not found", webDAVSpecificInformation);
-
-		String url = String.valueOf(webDAVSpecificInformation.getValue());
-
-		Assert.assertTrue(url.contains("webdav"));
-
-		Assert.assertEquals(
-			"webdav-help", webDAVSpecificInformation.getHelpText());
+		_assertSpecificInformationList(
+			null, "jpg", null, "0 B", _getVersionableContentDashboardItem(1));
+		_assertSpecificInformationList(
+			_language.get(LocaleUtil.getDefault(), "square"), "jpg", "225x225",
+			"7 KB",
+			_getVersionableContentDashboardItem("dependencies/225x225.jpg", 1));
+		_assertSpecificInformationList(
+			_language.get(LocaleUtil.getDefault(), "tall"), "jpg", "183x275",
+			"6 KB",
+			_getVersionableContentDashboardItem("dependencies/183x275.jpg", 1));
+		_assertSpecificInformationList(
+			_language.get(LocaleUtil.getDefault(), "tall"), "jpg", "183x275",
+			"6 KB",
+			_getVersionableContentDashboardItem(
+				"dependencies/small_image.jpg", 1));
+		_assertSpecificInformationList(
+			_language.get(LocaleUtil.getDefault(), "wide"), "jpg", "277x182",
+			"8 KB",
+			_getVersionableContentDashboardItem("dependencies/277x182.jpg", 1));
+		_assertSpecificInformationList(
+			_language.get(LocaleUtil.getDefault(), "wide"), "jpg", "500x333",
+			"42 KB",
+			_getVersionableContentDashboardItem(
+				"dependencies/medium_image.jpg", 1));
+		_assertSpecificInformationList(
+			_language.get(LocaleUtil.getDefault(), "wide"), "jpg", "1920x1080",
+			"281 KB",
+			_getVersionableContentDashboardItem(
+				"dependencies/large_image.jpg", 1));
 	}
 
 	@Test
@@ -491,7 +497,7 @@ public class FileEntryContentDashboardItemTest {
 				_getVersionableContentDashboardItem(1);
 
 		Assert.assertEquals(
-			LanguageUtil.get(LocaleUtil.getDefault(), "document"),
+			_language.get(LocaleUtil.getDefault(), "document"),
 			versionableContentDashboardItem.getTypeLabel(
 				LocaleUtil.getDefault()));
 	}
@@ -522,8 +528,7 @@ public class FileEntryContentDashboardItemTest {
 		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"example.jpg",
-			MimeTypesUtil.getExtensionContentType(ContentTypes.IMAGE_JPEG),
+			"example.jpg", MimeTypesUtil.getExtensionContentType("image/jpg"),
 			new byte[0], null, null, null, _serviceContext);
 
 		VersionableContentDashboardItem<FileEntry>
@@ -579,8 +584,7 @@ public class FileEntryContentDashboardItemTest {
 		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"example.jpg",
-			MimeTypesUtil.getExtensionContentType(ContentTypes.IMAGE_JPEG),
+			"example.jpg", MimeTypesUtil.getExtensionContentType("image/jpg"),
 			new byte[0], null, null, null, _serviceContext);
 
 		VersionableContentDashboardItem<FileEntry>
@@ -592,6 +596,110 @@ public class FileEntryContentDashboardItemTest {
 		Assert.assertFalse(
 			versionableContentDashboardItem.isViewable(
 				_getMockHttpServletRequest()));
+	}
+
+	private void _assertSpecificInformationList(
+		String expectedAspectRatio, String expectedExtension,
+		String expectedResolution, String expectedSize,
+		VersionableContentDashboardItem<FileEntry>
+			versionableContentDashboardItem) {
+
+		List<ContentDashboardItem.SpecificInformation<?>>
+			specificInformationList =
+				versionableContentDashboardItem.getSpecificInformationList(
+					LocaleUtil.getDefault());
+
+		ContentDashboardItem.SpecificInformation<?>
+			aspectRatioSpecificInformation = _getSpecificInformation(
+				"content-dashboard-aspect-ratio", specificInformationList);
+
+		Assert.assertEquals(
+			expectedAspectRatio, aspectRatioSpecificInformation.getValue());
+
+		ContentDashboardItem.SpecificInformation<?>
+			extensionSpecificInformation = _getSpecificInformation(
+				"extension", specificInformationList);
+
+		Assert.assertEquals(
+			expectedExtension, extensionSpecificInformation.getValue());
+
+		ContentDashboardItem.SpecificInformation<?>
+			resolutionSpecificInformation = _getSpecificInformation(
+				"resolution", specificInformationList);
+
+		Assert.assertEquals(
+			expectedResolution, resolutionSpecificInformation.getValue());
+
+		ContentDashboardItem.SpecificInformation<?> sizeSpecificInformation =
+			_getSpecificInformation("size", specificInformationList);
+
+		Assert.assertEquals(expectedSize, sizeSpecificInformation.getValue());
+
+		Assert.assertTrue(
+			ListUtil.exists(
+				specificInformationList,
+				specificInformation -> Objects.equals(
+					specificInformation.getKey(), "file-name")));
+
+		ContentDashboardItem.SpecificInformation<URL>
+			webDAVSpecificInformation =
+				(ContentDashboardItem.SpecificInformation<URL>)
+					_getSpecificInformation(
+						"web-dav-url", specificInformationList);
+
+		String url = String.valueOf(webDAVSpecificInformation.getValue());
+
+		Assert.assertTrue(url.contains("webdav"));
+
+		Assert.assertEquals(
+			"webdav-help", webDAVSpecificInformation.getHelpText());
+	}
+
+	private FileEntry _getFileEntry(
+			byte[] bytes, String fileName, int numVersions)
+		throws Exception {
+
+		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			fileName, MimeTypesUtil.getExtensionContentType(fileName), fileName,
+			StringPool.BLANK, "description", StringPool.BLANK, bytes, null,
+			null, null, _serviceContext);
+
+		_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
+			null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+			_portal.getClassNameId(FileEntry.class.getName()),
+			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
+			RandomTestUtil.randomString(),
+			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0, 0, 0,
+			WorkflowConstants.STATUS_APPROVED, _serviceContext);
+
+		if (numVersions > 1) {
+			for (int i = 1; i < numVersions; i++) {
+				fileEntry = _dlAppLocalService.updateFileEntry(
+					fileEntry.getUserId(), fileEntry.getFileEntryId(),
+					fileEntry.getFileName(), fileEntry.getMimeType(),
+					fileEntry.getTitle(), StringUtil.randomString(),
+					fileEntry.getDescription(), RandomTestUtil.randomString(),
+					DLVersionNumberIncrease.MINOR, fileEntry.getContentStream(),
+					fileEntry.getSize(), fileEntry.getDisplayDate(),
+					fileEntry.getExpirationDate(), fileEntry.getReviewDate(),
+					_serviceContext);
+			}
+		}
+
+		return fileEntry;
+	}
+
+	private FileEntry _getFileEntry(int numVersions) throws Exception {
+		return _getFileEntry(new byte[0], "example.jpg", numVersions);
+	}
+
+	private FileEntry _getFileEntry(String fileName, int numVersions)
+		throws Exception {
+
+		return _getFileEntry(
+			FileUtil.getBytes(getClass(), fileName), fileName, numVersions);
 	}
 
 	private MockHttpServletRequest _getMockHttpServletRequest()
@@ -621,6 +729,22 @@ public class FileEntryContentDashboardItemTest {
 		return mockHttpServletRequest;
 	}
 
+	private ContentDashboardItem.SpecificInformation<?> _getSpecificInformation(
+		String key,
+		List<ContentDashboardItem.SpecificInformation<?>>
+			specificInformationList) {
+
+		for (ContentDashboardItem.SpecificInformation<?> specificInformation :
+				specificInformationList) {
+
+			if (Objects.equals(specificInformation.getKey(), key)) {
+				return specificInformation;
+			}
+		}
+
+		return null;
+	}
+
 	private ThemeDisplay _getThemeDisplay(HttpServletRequest httpServletRequest)
 		throws Exception {
 
@@ -643,35 +767,18 @@ public class FileEntryContentDashboardItemTest {
 			_getVersionableContentDashboardItem(int numVersions)
 		throws Exception {
 
-		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
-			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
-			_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			"example.jpg",
-			MimeTypesUtil.getExtensionContentType(ContentTypes.IMAGE_JPEG),
-			"example.jpg", StringPool.BLANK, "description", StringPool.BLANK,
-			new byte[0], null, null, null, _serviceContext);
+		FileEntry fileEntry = _getFileEntry(numVersions);
 
-		_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(), 0,
-			_portal.getClassNameId(FileEntry.class.getName()),
-			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
-			RandomTestUtil.randomString(),
-			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0, 0, 0,
-			WorkflowConstants.STATUS_APPROVED, _serviceContext);
+		return (VersionableContentDashboardItem<FileEntry>)
+			_contentDashboardItemFactory.create(fileEntry.getFileEntryId());
+	}
 
-		if (numVersions > 1) {
-			for (int i = 1; i < numVersions; i++) {
-				fileEntry = _dlAppLocalService.updateFileEntry(
-					fileEntry.getUserId(), fileEntry.getFileEntryId(),
-					fileEntry.getFileName(), fileEntry.getMimeType(),
-					fileEntry.getTitle(), StringUtil.randomString(),
-					fileEntry.getDescription(), RandomTestUtil.randomString(),
-					DLVersionNumberIncrease.MINOR, fileEntry.getContentStream(),
-					fileEntry.getSize(), fileEntry.getDisplayDate(),
-					fileEntry.getExpirationDate(), fileEntry.getReviewDate(),
-					_serviceContext);
-			}
-		}
+	private VersionableContentDashboardItem<FileEntry>
+			_getVersionableContentDashboardItem(
+				String fileName, int numVersions)
+		throws Exception {
+
+		FileEntry fileEntry = _getFileEntry(fileName, numVersions);
 
 		return (VersionableContentDashboardItem<FileEntry>)
 			_contentDashboardItemFactory.create(fileEntry.getFileEntryId());
@@ -693,8 +800,14 @@ public class FileEntryContentDashboardItemTest {
 	@Inject
 	private DLAppLocalService _dlAppLocalService;
 
+	@Inject
+	private DLFileEntryLocalService _dlFileEntryLocalService;
+
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private Language _language;
 
 	@Inject
 	private LayoutPageTemplateEntryLocalService

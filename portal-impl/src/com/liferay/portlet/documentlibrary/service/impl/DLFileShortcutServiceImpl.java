@@ -19,6 +19,8 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portlet.documentlibrary.service.base.DLFileShortcutServiceBaseImpl;
 
+import java.util.List;
+
 /**
  * @author Brian Wing Shun Chan
  */
@@ -26,8 +28,8 @@ public class DLFileShortcutServiceImpl extends DLFileShortcutServiceBaseImpl {
 
 	@Override
 	public DLFileShortcut addFileShortcut(
-			long groupId, long repositoryId, long folderId, long toFileEntryId,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long groupId, long repositoryId,
+			long folderId, long toFileEntryId, ServiceContext serviceContext)
 		throws PortalException {
 
 		ModelResourcePermissionUtil.check(
@@ -49,8 +51,8 @@ public class DLFileShortcutServiceImpl extends DLFileShortcutServiceBaseImpl {
 		}
 
 		return dlFileShortcutLocalService.addFileShortcut(
-			getUserId(), groupId, repositoryId, folderId, toFileEntryId,
-			serviceContext);
+			externalReferenceCode, getUserId(), groupId, repositoryId, folderId,
+			toFileEntryId, serviceContext);
 	}
 
 	@Override
@@ -67,6 +69,26 @@ public class DLFileShortcutServiceImpl extends DLFileShortcutServiceBaseImpl {
 	}
 
 	@Override
+	public void deleteFileShortcut(String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		DLFileShortcut fileShortcut =
+			dlFileShortcutLocalService.getDLFileShortcutByExternalReferenceCode(
+				externalReferenceCode, groupId);
+
+		ModelResourcePermission<FileShortcut>
+			fileShortcutModelResourcePermission =
+				ModelResourcePermissionRegistryUtil.getModelResourcePermission(
+					FileShortcut.class.getName());
+
+		fileShortcutModelResourcePermission.check(
+			getPermissionChecker(), fileShortcut.getFileShortcutId(),
+			ActionKeys.DELETE);
+
+		dlFileShortcutLocalService.deleteFileShortcut(fileShortcut);
+	}
+
+	@Override
 	public DLFileShortcut getFileShortcut(long fileShortcutId)
 		throws PortalException {
 
@@ -79,6 +101,23 @@ public class DLFileShortcutServiceImpl extends DLFileShortcutServiceBaseImpl {
 			getPermissionChecker(), fileShortcutId, ActionKeys.VIEW);
 
 		return dlFileShortcutLocalService.getFileShortcut(fileShortcutId);
+	}
+
+	@Override
+	public List<DLFileShortcut> getGroupFileShortcuts(long groupId) {
+		return dlFileShortcutPersistence.findByGroupId(groupId);
+	}
+
+	@Override
+	public List<DLFileShortcut> getGroupFileShortcuts(
+		long groupId, int start, int end) {
+
+		return dlFileShortcutPersistence.findByGroupId(groupId, start, end);
+	}
+
+	@Override
+	public long getGroupFileShortcutsCount(long groupId) {
+		return dlFileShortcutPersistence.countByGroupId(groupId);
 	}
 
 	@Override

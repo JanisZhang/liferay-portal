@@ -38,7 +38,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -203,7 +202,7 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			localizedFriendlyURL = getURLSeparator() + urlTitle;
 		}
 
-		if (!Objects.equals(originalFriendlyURL, localizedFriendlyURL)) {
+		if (!isSameFriendlyURL(originalFriendlyURL, localizedFriendlyURL)) {
 			return new LayoutFriendlyURLComposite(
 				layout, localizedFriendlyURL, true);
 		}
@@ -213,9 +212,7 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 
 	@Override
 	public String getURLSeparator() {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-203351") ||
-			!isURLSeparatorConfigurable()) {
-
+		if (!isURLSeparatorConfigurable()) {
 			return getDefaultURLSeparator();
 		}
 
@@ -297,6 +294,10 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		}
 
 		return locale;
+	}
+
+	protected boolean isSameFriendlyURL(String url1, String url2) {
+		return Objects.equals(url1, url2);
 	}
 
 	protected boolean useOriginalFriendlyURL() {

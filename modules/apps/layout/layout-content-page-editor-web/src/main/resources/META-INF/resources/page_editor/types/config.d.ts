@@ -135,6 +135,7 @@ export interface Config {
 	getIframeContentURL: string;
 	getInfoItemActionErrorMessageURL: string;
 	getInfoItemFieldValueURL: string;
+	getInfoItemOneToManyRelationshipsURL: string;
 	getLayoutFriendlyURL: string;
 	getLayoutPageTemplateCollectionsURL: string;
 	getPageContentsURL: string;
@@ -142,6 +143,8 @@ export interface Config {
 	getRolesURL: string;
 	getUsersURL: string;
 	imageSelectorURL: string;
+	imagesPath: string;
+	infoFieldItemSelectorURL: string;
 	infoItemPreviewSelectorURL: string;
 	infoItemSelectorURL: string;
 	isConversionDraft: boolean;
@@ -163,14 +166,12 @@ export interface Config {
 		label: string;
 		value: string;
 	}>;
-	panels: string[][];
 	pending: boolean;
 	plid: string;
-	pluginsRootPath: string;
 	portletNamespace: string;
 	publishURL: string;
 	redirectURL: string;
-	renderFragmentEntryURL: string;
+	renderFragmentEntriesURL: string;
 	restoreCollectionDisplayConfigURL: string;
 	searchContainerPageMaxDelta: number;
 
@@ -187,7 +188,8 @@ export interface Config {
 
 	selectedSegmentsEntryId: string;
 
-	sidebarPanels: SidebarPanel[] | Record<string, SidebarPanel>;
+	sidebarPanels: SidebarPanel[];
+	sidebarPanelsMap: Record<string, SidebarPanel>;
 
 	singleSegmentsExperienceMode: boolean;
 	siteNavigationMenuItemSelectorURL: string;
@@ -198,14 +200,8 @@ export interface Config {
 		styleBookEntryId: string;
 	}>;
 	stylebookEntryId: string;
-	themeColorCssClasses: string[];
+	themeColorsCssClasses: string[];
 	toolbarId: string;
-
-	toolbarPlugins: Array<{
-		loadingPlaceholder: string;
-		pluginEntryPoint: string;
-		toolbarPluginId: string;
-	}>;
 
 	unmarkItemsForDeletionURL: string;
 	updateCollectionDisplayConfigURL: string;

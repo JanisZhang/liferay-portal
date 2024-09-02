@@ -3,21 +3,27 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-// @ts-ignore
-
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
 import {commercePagesTest} from '../../../fixtures/commercePagesTest';
+import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../../fixtures/loginTest';
 
-export const test = mergeTests(apiHelpersTest, commercePagesTest, loginTest());
+export const test = mergeTests(
+	apiHelpersTest,
+	commercePagesTest,
+	dataApiHelpersTest,
+	loginTest()
+);
 
-test('can sort specifications by specification group priority', async ({
+test('LPD-13560 Can sort specifications by specification group and label priority', async ({
 	apiHelpers,
 	commerceLayoutsPage,
 	specificationFacetsPage,
 }) => {
+	test.setTimeout(180000);
+
 	const pageLabel = 'Specification Facet Page';
 
 	await commerceLayoutsPage.goToPages();
@@ -26,11 +32,10 @@ test('can sort specifications by specification group priority', async ({
 	await specificationFacetsPage.addRequiredFacetWidgets();
 	await specificationFacetsPage.configureSearchOptions();
 
-	const site = await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath(
-		'guest'
-	);
+	const site =
+		await apiHelpers.headlessAdminUser.getSiteByFriendlyUrlPath('guest');
 
-	const channel = await apiHelpers.headlessCommerceAdminChannel.postChannel({
+	await apiHelpers.headlessCommerceAdminChannel.postChannel({
 		name: 'Specification Facet Channel',
 		siteGroupId: site.id,
 	});
@@ -40,6 +45,7 @@ test('can sort specifications by specification group priority', async ({
 			'Warranty',
 			1
 		);
+
 	const optionCategory2 =
 		await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
 			'Material',
@@ -49,6 +55,7 @@ test('can sort specifications by specification group priority', async ({
 	const specification1 =
 		await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
 			true,
+			optionCategory2.priority,
 			'Warranty1',
 			{
 				id: optionCategory1.id,
@@ -59,9 +66,11 @@ test('can sort specifications by specification group priority', async ({
 				},
 			}
 		);
+
 	const specification2 =
 		await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
 			true,
+			optionCategory1.priority,
 			'Material1',
 			{
 				id: optionCategory2.id,
@@ -77,7 +86,7 @@ test('can sort specifications by specification group priority', async ({
 		name: 'Specification Facet Catalog',
 	});
 
-	const product1 = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+	await apiHelpers.headlessCommerceAdminCatalog.postProduct({
 		catalogId: catalog.id,
 		name: {
 			en_US: 'Product1',
@@ -91,7 +100,8 @@ test('can sort specifications by specification group priority', async ({
 			},
 		],
 	});
-	const product2 = await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+
+	await apiHelpers.headlessCommerceAdminCatalog.postProduct({
 		catalogId: catalog.id,
 		name: {
 			en_US: 'Product2',
@@ -116,32 +126,162 @@ test('can sort specifications by specification group priority', async ({
 		await expect(panelList[i]).toHaveText(specificationFacetsList[i]);
 	}
 
-	await Promise.all([
-		apiHelpers.headlessCommerceAdminCatalog.deleteOptionCategory(
-			optionCategory1.id
-		),
-		apiHelpers.headlessCommerceAdminCatalog.deleteOptionCategory(
-			optionCategory2.id
-		),
-		apiHelpers.headlessCommerceAdminChannel.deleteChannel(channel.id),
-	]);
-
-	await apiHelpers.headlessCommerceAdminCatalog.deleteSpecification(
-		specification1.id
-	);
-	await apiHelpers.headlessCommerceAdminCatalog.deleteSpecification(
-		specification2.id
+	await specificationFacetsPage.configureSpecificationFacetOrdering(
+		'label-priority:asc'
 	);
 
-	await apiHelpers.headlessCommerceAdminCatalog.deleteProduct(
-		product1.productId
-	);
-	await apiHelpers.headlessCommerceAdminCatalog.deleteProduct(
-		product2.productId
-	);
+	await specificationFacetsPage.reloadPage();
 
-	await apiHelpers.headlessCommerceAdminCatalog.deleteCatalog(catalog.id);
+	const reverseSpecificationFacetsList = specificationFacetsList.reverse();
+
+	for (let i = 0; i < reverseSpecificationFacetsList.length; i++) {
+		await expect(panelList[i]).toHaveText(
+			reverseSpecificationFacetsList[i]
+		);
+	}
 
 	await commerceLayoutsPage.goToPages();
 	await specificationFacetsPage.deleteSpecificationPage();
+});
+
+test('LPD-20340 Option and Specification facet portlets behave the same way', async ({
+	apiHelpers,
+	commerceLayoutsPage,
+	page,
+	specificationFacetsPage,
+}) => {
+	const site = await apiHelpers.headlessSite.createSite({
+		name: 'Specification Facet Site',
+	});
+
+	apiHelpers.data.push({id: site.id, type: 'site'});
+
+	await apiHelpers.headlessCommerceAdminChannel.postChannel({
+		name: 'Specification Facet Channel',
+		siteGroupId: site.id,
+	});
+
+	const optionCategory1 =
+		await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
+			'Warranty',
+			1
+		);
+
+	const optionCategory2 =
+		await apiHelpers.headlessCommerceAdminCatalog.postOptionCategory(
+			'Material',
+			0
+		);
+
+	const specification1 =
+		await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
+			true,
+			optionCategory2.priority,
+			'Warranty1',
+			{
+				id: optionCategory1.id,
+				key: optionCategory1.key,
+				priority: optionCategory1.priority,
+				title: {
+					en_US: optionCategory1.key,
+				},
+			}
+		);
+
+	const specification2 =
+		await apiHelpers.headlessCommerceAdminCatalog.postSpecification(
+			true,
+			optionCategory1.priority,
+			'Material1',
+			{
+				id: optionCategory2.id,
+				key: optionCategory2.key,
+				priority: optionCategory2.priority,
+				title: {
+					en_US: optionCategory2.key,
+				},
+			}
+		);
+
+	const catalog = await apiHelpers.headlessCommerceAdminCatalog.postCatalog({
+		name: 'Specification Facet Catalog',
+	});
+
+	await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+		catalogId: catalog.id,
+		name: {
+			en_US: 'Product1',
+		},
+		productSpecifications: [
+			{
+				specificationKey: specification1.key,
+				value: {
+					en_US: 'Product1',
+				},
+			},
+		],
+	});
+
+	await apiHelpers.headlessCommerceAdminCatalog.postProduct({
+		catalogId: catalog.id,
+		name: {
+			en_US: 'Product2',
+		},
+		productSpecifications: [
+			{
+				specificationKey: specification2.key,
+				value: {
+					en_US: 'Product2',
+				},
+			},
+		],
+	});
+
+	await commerceLayoutsPage.goToPages(false, site.name);
+	await commerceLayoutsPage.createWidgetPage('Specification Facet Page');
+
+	await page.goto(`/web/${site.name}/specification-facet-page`);
+
+	await specificationFacetsPage.addRequiredFacetWidgets();
+	await specificationFacetsPage.configureSearchOptions();
+
+	await expect(
+		specificationFacetsPage.searchOptionsConfigurationSaveButton
+	).toBeEnabled();
+
+	await page.reload();
+
+	const panelList = await specificationFacetsPage.panelList.all();
+
+	const specificationFacetsList = ['Material1', 'Warranty1'];
+
+	for (let i = 0; i < specificationFacetsList.length; i++) {
+		await expect(panelList[i]).toHaveText(specificationFacetsList[i]);
+	}
+
+	await specificationFacetsPage.configureOptionFacetFrequencyThreshold('60');
+
+	await expect(specificationFacetsPage.configurationSaveButton).toBeEnabled();
+
+	await page.reload();
+
+	await specificationFacetsPage.configureSpecificationFacetFrequencyThreshold(
+		'60'
+	);
+
+	await expect(specificationFacetsPage.configurationSaveButton).toBeEnabled();
+
+	await page.reload();
+
+	await expect(page.getByText('No facets were found.')).toHaveCount(2);
+
+	await specificationFacetsPage.configureSpecificationFacetFrequencyThreshold(
+		'2'
+	);
+
+	await expect(specificationFacetsPage.configurationSaveButton).toBeEnabled();
+
+	await page.reload();
+
+	await expect(page.getByText('No facets were found.')).toHaveCount(2);
 });

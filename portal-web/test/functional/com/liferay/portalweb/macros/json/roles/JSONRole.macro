@@ -34,11 +34,11 @@ definition {
 
 	@summary = "Default summary"
 	macro addRegularRole(roleTitle = null, roleKey = null, specificURL = null, roleDescription = null) {
-		Variables.assertDefined(parameterList = ${roleTitle});
+		Variables.assertDefined(parameterList = ${roleKey});
 
 		var descriptionMap = JSONRoleSetter.setDescriptionMap(description = ${roleDescription});
-		var name = JSONRoleSetter.setName(name = ${roleTitle});
-		var titleMap = JSONRoleSetter.setTitleMap(title = ${roleKey});
+		var name = JSONRoleSetter.setName(name = ${roleKey});
+		var titleMap = JSONRoleSetter.setTitleMap(title = ${roleTitle});
 		var type = JSONRoleSetter.setType(roleType = "regular");
 
 		JSONRoleAPI._addRole(

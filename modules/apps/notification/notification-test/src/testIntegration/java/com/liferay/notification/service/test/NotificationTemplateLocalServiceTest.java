@@ -16,7 +16,7 @@ import com.liferay.notification.model.NotificationRecipientSetting;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.service.NotificationRecipientSettingLocalService;
 import com.liferay.notification.service.NotificationTemplateLocalService;
-import com.liferay.notification.service.test.util.NotificationTemplateUtil;
+import com.liferay.notification.test.util.NotificationTemplateUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
@@ -74,12 +74,12 @@ public class NotificationTemplateLocalServiceTest {
 					Arrays.asList(
 						NotificationTemplateUtil.
 							createNotificationRecipientSetting(
-								NotificationRecipientSettingConstants.
-									NAME_ROLE_NAME,
+								notificationRecipientSettingName,
 								RandomTestUtil.randomString()),
 						NotificationTemplateUtil.
 							createNotificationRecipientSetting(
-								notificationRecipientSettingName,
+								NotificationRecipientSettingConstants.
+									NAME_ROLE_NAME,
 								RandomTestUtil.randomString())),
 					StringUtil.randomString(256),
 					NotificationConstants.TYPE_EMAIL)));
@@ -97,12 +97,12 @@ public class NotificationTemplateLocalServiceTest {
 					Arrays.asList(
 						NotificationTemplateUtil.
 							createNotificationRecipientSetting(
-								NotificationRecipientSettingConstants.
-									NAME_SINGLE_RECIPIENT,
+								notificationRecipientSettingName,
 								RandomTestUtil.randomString()),
 						NotificationTemplateUtil.
 							createNotificationRecipientSetting(
-								notificationRecipientSettingName,
+								NotificationRecipientSettingConstants.
+									NAME_SINGLE_RECIPIENT,
 								RandomTestUtil.randomString())),
 					StringUtil.randomString(256),
 					NotificationConstants.TYPE_USER_NOTIFICATION)));

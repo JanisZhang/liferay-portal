@@ -10,7 +10,7 @@ import com.liferay.antivirus.async.store.constants.AntivirusAsyncConstants;
 import com.liferay.antivirus.async.store.constants.AntivirusAsyncDestinationNames;
 import com.liferay.antivirus.async.store.internal.event.AntivirusAsyncEventListenerManager;
 import com.liferay.antivirus.async.store.util.AntivirusAsyncUtil;
-import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.document.library.kernel.store.Store;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
@@ -39,6 +39,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 import java.util.Map;
 
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -56,18 +57,17 @@ import org.osgi.service.component.annotations.Reference;
 public class AntivirusAsyncFileStoreSchedulerJobConfiguration
 	implements SchedulerJobConfiguration {
 
+	@Override
 	public String getDestinationName() {
 		return AntivirusAsyncDestinationNames.ANTIVIRUS_BATCH;
 	}
 
 	@Override
-	public UnsafeConsumer<Message, Exception> getJobExecutorUnsafeConsumer() {
-		return message -> scan((String)message.getPayload());
-	}
-
-	@Override
 	public UnsafeRunnable<Exception> getJobExecutorUnsafeRunnable() {
-		throw new UnsupportedOperationException();
+		java.io.File file = (java.io.File)_storeServiceReference.getProperty(
+			"rootDir");
+
+		return () -> scan((String)file.getAbsolutePath());
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class AntivirusAsyncFileStoreSchedulerJobConfiguration
 				AntivirusAsyncConfiguration.class, properties);
 
 		_triggerConfiguration = TriggerConfiguration.createTriggerConfiguration(
-			antivirusAsyncConfiguration.retryCronExpression());
+			antivirusAsyncConfiguration.batchScanCronExpression());
 
 		_triggerConfiguration.setStartDate(
 			new Date(
@@ -139,6 +139,10 @@ public class AntivirusAsyncFileStoreSchedulerJobConfiguration
 
 	private void _scheduleAntivirusScan(Path rootPath, Path filePath) {
 		Path relativePath = rootPath.relativize(filePath);
+
+		if (relativePath.getNameCount() <= 1) {
+			return;
+		}
 
 		// Company ID
 
@@ -263,6 +267,9 @@ public class AntivirusAsyncFileStoreSchedulerJobConfiguration
 
 	@Reference
 	private MessageBus _messageBus;
+
+	@Reference(target = "(rootDir=*)")
+	private ServiceReference<Store> _storeServiceReference;
 
 	private TriggerConfiguration _triggerConfiguration;
 

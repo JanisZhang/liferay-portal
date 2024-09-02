@@ -6,7 +6,8 @@
 	height: 2.5rem;
 	justify-content: flex-start;
 	padding: 1rem 0.75rem;
-	width: 16.5rem;
+	transition: background-color 0.3s;
+	width: initial !important;
 
 	&-selected {
 		background-color: #e6edfb;
@@ -16,32 +17,25 @@
 		background-color: #e6edfb;
 	}
 
-	transition: background-color 0.3s;
-
 	&-icon {
+		filter: saturate(0%);
 		height: 1.5rem;
 		margin-right: 0.625rem;
+		transition: filter 0.3s;
 		width: 1.5rem;
-		filter: invert(33%) sepia(8%) saturate(551%) hue-rotate(197deg)
-			brightness(95%) contrast(91%);
-
-		&:hover {
-			filter: invert(18%) sepia(87%) saturate(3738%) hue-rotate(218deg)
-				brightness(85%) contrast(103%);
-		}
 
 		&-selected {
 			filter: invert(18%) sepia(87%) saturate(3738%) hue-rotate(218deg)
 				brightness(85%) contrast(103%);
 		}
-
-		transition: filter 0.3s;
 	}
 
 	&-text {
 		font-size: 0.813rem;
 		font-weight: 600;
 		line-height: 1.5rem;
+		text-wrap: nowrap;
+		transition: color 0.3s;
 
 		&-selected {
 			color: #004ad7;
@@ -50,7 +44,5 @@
 		&:hover {
 			color: #004ad7;
 		}
-
-		transition: color 0.3s;
 	}
 }

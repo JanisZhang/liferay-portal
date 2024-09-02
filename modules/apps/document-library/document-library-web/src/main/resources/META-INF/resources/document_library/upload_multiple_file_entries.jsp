@@ -99,7 +99,7 @@ if (portletTitleBasedNavigation) {
 								<liferay-util:include page="/document_library/upload_multiple_file_entries_resources.jsp" servletContext="<%= application %>" />
 							</div>
 
-							<span aria-hidden="true" class="loading-animation loading-animation-secondary loading-animation-sm hide" id="<portlet:namespace />loading"></span>
+							<span aria-hidden="true" class="hide loading-animation loading-animation-secondary loading-animation-sm" id="<portlet:namespace />loading"></span>
 						</div>
 
 						<%
@@ -108,9 +108,7 @@ if (portletTitleBasedNavigation) {
 						PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "add-multiple-file-entries"), currentURL);
 						%>
 
-						<aui:script require="frontend-js-web/index as frontendJsWeb">
-							var {runScriptsInElement} = frontendJsWeb;
-
+						<aui:script sandbox="<%= true %>">
 							Liferay.on('tempFileRemoved', () => {
 								Liferay.Util.openToast({
 									message:
@@ -231,7 +229,9 @@ if (portletTitleBasedNavigation) {
 											.then((response) => {
 												commonFileMetadataContainer.innerHTML = response;
 
-												runScriptsInElement(commonFileMetadataContainer);
+												Liferay.Util.runScriptsInElement(
+													commonFileMetadataContainer
+												);
 											});
 
 										Liferay.fire('filesSaved');

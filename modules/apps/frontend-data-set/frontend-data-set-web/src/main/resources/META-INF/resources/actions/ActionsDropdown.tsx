@@ -163,7 +163,7 @@ function ActionsDropdown({
 						action.target,
 						action.onClick ? action.onClick : null
 					)
-						? formatActionURL(action.href, itemData)
+						? formatActionURL(action.href, itemData, action.target)
 						: null
 				}
 				monospaced={Boolean(action.icon)}
@@ -199,11 +199,16 @@ function ActionsDropdown({
 			return (
 				<DropdownItem
 					action={item}
-					closeMenu={() => onMenuActiveChange(false)}
+					closeMenu={() =>
+						onMenuActiveChange && onMenuActiveChange(false)
+					}
 					key={i}
 					onClick={onClick}
 					setLoading={setLoading}
-					url={item.href && formatActionURL(item.href, itemData)}
+					url={
+						item.href &&
+						formatActionURL(item.href, itemData, item.target)
+					}
 				/>
 			);
 		});
@@ -218,15 +223,12 @@ function ActionsDropdown({
 
 			<ClayDropDown
 				active={menuActive}
-				onActiveChange={() => onMenuActiveChange(!menuActive)}
+				onActiveChange={() =>
+					onMenuActiveChange && onMenuActiveChange(!menuActive)
+				}
 				trigger={
 					<ClayButton
-						className={classnames(
-							'component-action dropdown-toggle',
-							{
-								'ml-1': !Liferay.FeatureFlags['LPS-193005'],
-							}
-						)}
+						className="component-action dropdown-toggle"
 						disabled={loading}
 						displayType="unstyled"
 					>

@@ -11,10 +11,15 @@ import com.liferay.account.service.AccountGroupLocalService;
 import com.liferay.account.service.AccountGroupRelService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.link.service.AssetLinkLocalService;
 import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.client.extension.service.ClientExtensionEntryLocalService;
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
+import com.liferay.depot.service.DepotEntryGroupRelLocalService;
+import com.liferay.depot.service.DepotEntryLocalService;
+import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
@@ -23,6 +28,7 @@ import com.liferay.expando.kernel.service.ExpandoValueLocalService;
 import com.liferay.fragment.importer.FragmentsImporter;
 import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeDefinitionResource;
 import com.liferay.headless.admin.list.type.resource.v1_0.ListTypeEntryResource;
+import com.liferay.headless.admin.taxonomy.resource.v1_0.KeywordResource;
 import com.liferay.headless.admin.taxonomy.resource.v1_0.TaxonomyCategoryResource;
 import com.liferay.headless.admin.taxonomy.resource.v1_0.TaxonomyVocabularyResource;
 import com.liferay.headless.admin.user.resource.v1_0.AccountResource;
@@ -30,13 +36,13 @@ import com.liferay.headless.admin.user.resource.v1_0.AccountRoleResource;
 import com.liferay.headless.admin.user.resource.v1_0.OrganizationResource;
 import com.liferay.headless.admin.user.resource.v1_0.UserAccountResource;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowDefinitionResource;
+import com.liferay.headless.delivery.resource.v1_0.BlogPostingResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseArticleResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseFolderResource;
 import com.liferay.headless.delivery.resource.v1_0.StructuredContentFolderResource;
 import com.liferay.journal.service.JournalArticleLocalService;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
@@ -46,6 +52,7 @@ import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.notification.rest.resource.v1_0.NotificationTemplateResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectFieldResource;
+import com.liferay.object.admin.rest.resource.v1_0.ObjectFolderResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectRelationshipResource;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.service.ObjectActionLocalService;
@@ -55,6 +62,7 @@ import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
@@ -105,26 +113,33 @@ public class SiteInitializerExtension {
 		AccountRoleLocalService accountRoleLocalService,
 		AccountRoleResource.Factory accountRoleResourceFactory,
 		AssetCategoryLocalService assetCategoryLocalService,
-		AssetListEntryLocalService assetListEntryLocalService, Bundle bundle,
+		AssetEntryLocalService assetEntryLocalService,
+		AssetLinkLocalService assetLinkLocalService,
+		AssetListEntryLocalService assetListEntryLocalService,
+		BlogPostingResource.Factory blogPostingResourceFactory, Bundle bundle,
 		CETManager cetManager,
 		ClientExtensionEntryLocalService clientExtensionEntryLocalService,
+		CompanyLocalService companyLocalService,
 		ConfigurationProvider configurationProvider,
 		DataDefinitionResource.Factory dataDefinitionResourceFactory,
 		DDMStructureLocalService ddmStructureLocalService,
 		DDMTemplateLocalService ddmTemplateLocalService,
 		DefaultDDMStructureHelper defaultDDMStructureHelper,
-		DependencyManager dependencyManager, DLURLHelper dlURLHelper,
+		DependencyManager dependencyManager,
+		DepotEntryGroupRelLocalService depotEntryGroupRelLocalService,
+		DepotEntryLocalService depotEntryLocalService,
+		DLFileEntryTypeLocalService dlFileEntryTypeLocalService,
+		DLURLHelper dlURLHelper,
 		DocumentFolderResource.Factory documentFolderResourceFactory,
 		DocumentResource.Factory documentResourceFactory,
 		ExpandoValueLocalService expandoValueLocalService,
 		FragmentsImporter fragmentsImporter,
 		GroupLocalService groupLocalService,
 		JournalArticleLocalService journalArticleLocalService,
-		JSONFactory jsonFactory,
+		JSONFactory jsonFactory, KeywordResource.Factory keywordResourceFactory,
 		KnowledgeBaseArticleResource.Factory
 			knowledgeBaseArticleResourceFactory,
 		KnowledgeBaseFolderResource.Factory knowledgeBaseFolderResourceFactory,
-		LayoutCopyHelper layoutCopyHelper,
 		LayoutLocalService layoutLocalService,
 		LayoutPageTemplateEntryLocalService layoutPageTemplateEntryLocalService,
 		LayoutPageTemplateStructureLocalService
@@ -148,6 +163,7 @@ public class SiteInitializerExtension {
 		ObjectEntryManager objectEntryManager,
 		ObjectFieldLocalService objectFieldLocalService,
 		ObjectFieldResource.Factory objectFieldResourceFactory,
+		ObjectFolderResource.Factory objectFolderResourceFactory,
 		ObjectRelationshipLocalService objectRelationshipLocalService,
 		ObjectRelationshipResource.Factory objectRelationshipResourceFactory,
 		OrganizationLocalService organizationLocalService,
@@ -188,17 +204,20 @@ public class SiteInitializerExtension {
 			accountGroupLocalService, accountGroupRelService,
 			accountResourceFactory, accountRoleLocalService,
 			accountRoleResourceFactory, assetCategoryLocalService,
-			assetListEntryLocalService, bundle, cetManager,
-			clientExtensionEntryLocalService, configurationProvider,
-			dataDefinitionResourceFactory, ddmStructureLocalService,
-			ddmTemplateLocalService, defaultDDMStructureHelper, dlURLHelper,
+			assetEntryLocalService, assetLinkLocalService,
+			assetListEntryLocalService, blogPostingResourceFactory, bundle,
+			cetManager, clientExtensionEntryLocalService, companyLocalService,
+			configurationProvider, dataDefinitionResourceFactory,
+			ddmStructureLocalService, ddmTemplateLocalService,
+			defaultDDMStructureHelper, depotEntryGroupRelLocalService,
+			depotEntryLocalService, dlFileEntryTypeLocalService, dlURLHelper,
 			documentFolderResourceFactory, documentResourceFactory,
 			expandoValueLocalService, fragmentsImporter, groupLocalService,
-			journalArticleLocalService, jsonFactory,
+			journalArticleLocalService, jsonFactory, keywordResourceFactory,
 			knowledgeBaseArticleResourceFactory,
-			knowledgeBaseFolderResourceFactory, layoutCopyHelper,
-			layoutLocalService, layoutPageTemplateEntryLocalService,
-			layoutsImporter, layoutPageTemplateStructureLocalService,
+			knowledgeBaseFolderResourceFactory, layoutLocalService,
+			layoutPageTemplateEntryLocalService, layoutsImporter,
+			layoutPageTemplateStructureLocalService,
 			layoutPageTemplateStructureRelLocalService, layoutSetLocalService,
 			layoutUtilityPageEntryLocalService, listTypeDefinitionResource,
 			listTypeDefinitionResourceFactory, listTypeEntryLocalService,
@@ -207,11 +226,12 @@ public class SiteInitializerExtension {
 			objectDefinitionLocalService, objectDefinitionResourceFactory,
 			objectEntryLocalService, objectEntryManager,
 			objectFieldLocalService, objectFieldResourceFactory,
-			objectRelationshipLocalService, objectRelationshipResourceFactory,
-			organizationLocalService, organizationResourceFactory,
-			ploEntryLocalService, portal, portletPreferencesLocalService,
-			resourceActionLocalService, resourcePermissionLocalService,
-			roleLocalService, sapEntryLocalService, segmentsEntryLocalService,
+			objectFolderResourceFactory, objectRelationshipLocalService,
+			objectRelationshipResourceFactory, organizationLocalService,
+			organizationResourceFactory, ploEntryLocalService, portal,
+			portletPreferencesLocalService, resourceActionLocalService,
+			resourcePermissionLocalService, roleLocalService,
+			sapEntryLocalService, segmentsEntryLocalService,
 			segmentsExperienceLocalService, archivedSettingsFactory,
 			siteNavigationMenuItemLocalService,
 			siteNavigationMenuItemTypeRegistry, siteNavigationMenuLocalService,

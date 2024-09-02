@@ -1,4 +1,4 @@
-@component-name = "portal-knowledge-base"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
@@ -883,9 +883,9 @@ definition {
 
 		Panel.expandPanel(panel = "Categorization");
 
-		AssetCategorization.removeTag(tagName = "tag1");
+		AssetCategorization.removeTag(tagName = "Tag1");
 
-		AssetCategorization.addTag(tagName = "tag2");
+		AssetCategorization.addTag(tagName = "Tag2");
 
 		PortletEntry.publish();
 
@@ -1484,6 +1484,12 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanViewEmbeddedVideo {
+		PortalSettings.openToConfigInInstanceSettings(portletId = "com.liferay.portal.security.iframe.sanitizer.configuration.IFrameConfiguration");
+
+		SystemSettings.configureSystemSetting(
+			enableSetting = "false",
+			settingFieldName = "Enabled");
+
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.addCP(

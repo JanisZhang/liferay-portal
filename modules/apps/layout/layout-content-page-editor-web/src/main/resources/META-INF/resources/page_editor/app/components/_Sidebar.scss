@@ -13,6 +13,7 @@ $zIndexContent: 0;
 
 @mixin sidebar {
 	display: flex;
+	flex-direction: column;
 	height: calc(
 		100vh -
 			(
@@ -33,13 +34,16 @@ html#{$cadmin-selector} .cadmin .page-editor__item-configuration-sidebar {
 	background: $cadmin-white;
 	border-left: 1px solid $cadmin-secondary-l3;
 	right: 0;
-	transition: transform ease $defaultTransitionDuration;
-	width: $defaultSidebarContentWidth;
-
+	transition:
+		transform ease $defaultTransitionDuration,
+		width ease $defaultTransitionDuration;
 	transform: translateX(100%);
+	visibility: hidden;
+	width: $defaultSidebarContentWidth;
 
 	&--open {
 		transform: translateX(0);
+		visibility: visible;
 	}
 }
 
@@ -47,12 +51,20 @@ html#{$cadmin-selector}
 	.page-editor__small-resolution
 	.cadmin
 	.page-editor__item-configuration-sidebar {
+	&--open {
+		border-left: 1px solid $cadmin-secondary-l3;
+		overflow: unset;
+		width: $defaultSidebarContentWidth;
+	}
+	border: none;
 	height: unset;
 	min-height: calc(
 		var(--editor-height) + var(--toolbar-height) + var(--zoom-alert-height)
 	);
+	overflow: hidden;
 	position: absolute;
 	top: calc(var(--control-menu-container-height));
+	width: 0;
 	z-index: $sidebarZIndex + 1;
 }
 
@@ -73,8 +85,6 @@ html#{$cadmin-selector}
 			var(--editor-height) + var(--toolbar-height) +
 				var(--zoom-alert-height)
 		);
-		position: absolute;
-		top: 0;
 	}
 
 	&__content {
@@ -92,7 +102,8 @@ html#{$cadmin-selector} .cadmin .page-editor__sidebar {
 	@include sidebar;
 	left: 0;
 
-	transition: left ease $defaultTransitionDuration,
+	transition:
+		left ease $defaultTransitionDuration,
 		right ease $defaultTransitionDuration;
 
 	&__buttons {
@@ -100,6 +111,7 @@ html#{$cadmin-selector} .cadmin .page-editor__sidebar {
 		display: flex;
 		flex-direction: column;
 		font-size: 0.875rem;
+		height: 100%;
 		padding: 16px 5px;
 		transition: transform ease $defaultTransitionDuration;
 		width: $sidebarButtonWidth;
@@ -130,8 +142,10 @@ html#{$cadmin-selector} .cadmin .page-editor__sidebar {
 			}
 
 			&:focus {
-				box-shadow: 0 0 0 2px $cadmin-white,
-					0 0 0 4px $cadmin-primary-l1, inset 0 0 rgba(0, 0, 0, 0);
+				box-shadow:
+					0 0 0 2px $cadmin-white,
+					0 0 0 4px $cadmin-primary-l1,
+					inset 0 0 rgba(0, 0, 0, 0);
 				outline: none;
 			}
 		}
@@ -170,14 +184,17 @@ html#{$cadmin-selector} .cadmin .page-editor__sidebar {
 		left: $sidebarButtonWidth;
 		position: fixed;
 		transform: translateX(-100%);
-		transition: transform ease $defaultTransitionDuration,
+		transition:
+			transform ease $defaultTransitionDuration,
 			left ease $defaultTransitionDuration;
 
+		visibility: hidden;
 		width: var(--sidebar-content-width, $defaultSidebarContentWidth);
 		z-index: $zIndexContent;
 
 		&--open {
 			transform: translateX(0);
+			visibility: visible;
 		}
 
 		&:focus-visible {
@@ -196,8 +213,8 @@ html#{$cadmin-selector} .cadmin .page-editor__sidebar {
 		&:hover,
 		&:focus-visible,
 		&--resizing {
-			box-shadow: inset ($resizerWidth / 2 - $resizerBorderWidth) 0 0
-					$white,
+			box-shadow:
+				inset ($resizerWidth / 2 - $resizerBorderWidth) 0 0 $white,
 				inset ($resizerWidth / 2) 0 0 $primary-l1;
 			outline: none;
 		}
@@ -218,8 +235,12 @@ html#{$cadmin-selector} .cadmin .page-editor__sidebar {
 html#{$cadmin-selector} body {
 	--toolbar-height: #{$toolbarHeight};
 
-	@include media-breakpoint-up(xl, $cadmin-grid-breakpoints) {
+	@include media-breakpoint-up(md, $cadmin-grid-breakpoints) {
 		--toolbar-height: #{$desktopToolbarHeight};
+	}
+
+	@include media-breakpoint-up(md, $cadmin-grid-breakpoints) {
+		overflow: hidden;
 	}
 }
 
@@ -234,7 +255,8 @@ html#{$cadmin-selector} .page-editor__wrapper {
 
 	padding-left: $sidebarButtonWidth;
 	position: relative;
-	transition: padding-left ease $defaultTransitionDuration,
+	transition:
+		padding-left ease $defaultTransitionDuration,
 		margin-right ease $defaultTransitionDuration;
 	will-change: padding-left, margin-right;
 	max-height: calc(

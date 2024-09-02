@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -99,7 +100,7 @@ public class DisplayPageTemplateResourceTest
 
 		displayPageTemplateResource = DisplayPageTemplateResource.builder(
 		).authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).parameters(
@@ -122,7 +123,7 @@ public class DisplayPageTemplateResourceTest
 
 		displayPageTemplateResource = DisplayPageTemplateResource.builder(
 		).authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).parameters(
@@ -220,7 +221,7 @@ public class DisplayPageTemplateResourceTest
 		throws Exception {
 
 		return _layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-			TestPropsValues.getUserId(), siteId, 0,
+			null, TestPropsValues.getUserId(), siteId, 0,
 			_portal.getClassNameId(BlogsEntry.class.getName()), 0,
 			RandomTestUtil.randomString(),
 			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0, 0, 0,

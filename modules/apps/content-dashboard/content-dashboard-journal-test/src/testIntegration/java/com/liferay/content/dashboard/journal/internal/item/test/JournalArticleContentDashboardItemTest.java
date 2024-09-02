@@ -81,6 +81,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -99,6 +100,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 @RunWith(Arquillian.class)
 public class JournalArticleContentDashboardItemTest {
 
+	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
@@ -1097,7 +1099,7 @@ public class JournalArticleContentDashboardItemTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				_group.getCreatorUserId(), journalArticle.getGroupId(), 0,
+				null, _group.getCreatorUserId(), journalArticle.getGroupId(), 0,
 				_portal.getClassNameId(JournalArticle.class.getName()),
 				ddmStructure.getStructureId(), RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,

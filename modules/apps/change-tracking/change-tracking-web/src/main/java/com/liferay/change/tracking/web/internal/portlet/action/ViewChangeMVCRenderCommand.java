@@ -11,6 +11,7 @@ import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTPreferences;
+import com.liferay.change.tracking.scheduler.PublishScheduler;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
@@ -22,7 +23,6 @@ import com.liferay.change.tracking.web.internal.display.BasePersistenceRegistry;
 import com.liferay.change.tracking.web.internal.display.context.PublicationsDisplayContext;
 import com.liferay.change.tracking.web.internal.display.context.ViewChangesDisplayContext;
 import com.liferay.change.tracking.web.internal.helper.PublicationHelper;
-import com.liferay.change.tracking.web.internal.scheduler.PublishScheduler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -34,11 +34,13 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
 import com.liferay.portlet.LiferayPortletUtil;
 
 import javax.portlet.RenderRequest;
@@ -145,7 +147,8 @@ public class ViewChangeMVCRenderCommand implements MVCRenderCommand {
 					_portal.getHttpServletRequest(renderRequest), _language,
 					_publicationHelper, renderRequest, renderResponse),
 				_publishSchedulerSnapshot.get(), renderRequest, renderResponse,
-				_userLocalService);
+				_userLocalService, _workflowInstanceLinkLocalService,
+				_workflowTaskManager);
 
 		renderRequest.setAttribute(
 			CTWebKeys.VIEW_CHANGES_DISPLAY_CONTEXT, viewChangesDisplayContext);
@@ -205,5 +208,11 @@ public class ViewChangeMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private UserLocalService _userLocalService;
+
+	@Reference
+	private WorkflowInstanceLinkLocalService _workflowInstanceLinkLocalService;
+
+	@Reference
+	private WorkflowTaskManager _workflowTaskManager;
 
 }

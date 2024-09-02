@@ -17,10 +17,7 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 
@@ -51,6 +48,7 @@ public class ObjectEntryItemSelectorView
 		ObjectDefinition objectDefinition,
 		ObjectEntryManager objectEntryManager,
 		ObjectRelatedModelsProviderRegistry objectRelatedModelsProviderRegistry,
+		ObjectScopeProviderRegistry objectScopeProviderRegistry,
 		Portal portal) {
 
 		_infoPermissionProvider = infoPermissionProvider;
@@ -60,6 +58,7 @@ public class ObjectEntryItemSelectorView
 		_objectEntryManager = objectEntryManager;
 		_objectRelatedModelsProviderRegistry =
 			objectRelatedModelsProviderRegistry;
+		_objectScopeProviderRegistry = objectScopeProviderRegistry;
 		_portal = portal;
 	}
 
@@ -90,17 +89,8 @@ public class ObjectEntryItemSelectorView
 		InfoItemItemSelectorCriterion itemSelectorCriterion,
 		ThemeDisplay themeDisplay) {
 
-		try {
-			return _infoPermissionProvider.hasViewPermission(
-				GuestOrUserUtil.getPermissionChecker());
-		}
-		catch (PrincipalException principalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(principalException);
-			}
-		}
-
-		return false;
+		return _infoPermissionProvider.hasViewPermission(
+			themeDisplay.getPermissionChecker());
 	}
 
 	@Override
@@ -117,11 +107,8 @@ public class ObjectEntryItemSelectorView
 				(HttpServletRequest)servletRequest,
 				infoItemItemSelectorCriterion, _objectDefinition,
 				_objectEntryManager, _objectRelatedModelsProviderRegistry,
-				_portal, portletURL));
+				_objectScopeProviderRegistry, _portal, portletURL));
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		ObjectEntryItemSelectorView.class);
 
 	private static final List<ItemSelectorReturnType>
 		_supportedItemSelectorReturnTypes = Arrays.asList(
@@ -136,6 +123,7 @@ public class ObjectEntryItemSelectorView
 	private final ObjectEntryManager _objectEntryManager;
 	private final ObjectRelatedModelsProviderRegistry
 		_objectRelatedModelsProviderRegistry;
+	private final ObjectScopeProviderRegistry _objectScopeProviderRegistry;
 	private final Portal _portal;
 
 }

@@ -713,6 +713,14 @@ public class KBArticleLocalServiceWrapper
 	}
 
 	@Override
+	public KBArticle getLatestKBArticle(long resourcePrimKey, int[] statuses)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleLocalService.getLatestKBArticle(
+			resourcePrimKey, statuses);
+	}
+
+	@Override
 	public KBArticle getLatestKBArticleByExternalReferenceCode(
 			long groupId, String externalReferenceCode)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -927,8 +935,15 @@ public class KBArticleLocalServiceWrapper
 	}
 
 	@Override
-	public void unlockKBArticle(long resourcePrimKey) {
-		_kbArticleLocalService.unlockKBArticle(resourcePrimKey);
+	public void unlockKBArticle(long userId, long resourcePrimKey) {
+		_kbArticleLocalService.unlockKBArticle(userId, resourcePrimKey);
+	}
+
+	@Override
+	public void unlockKBArticle(
+		long userId, long resourcePrimKey, boolean force) {
+
+		_kbArticleLocalService.unlockKBArticle(userId, resourcePrimKey, force);
 	}
 
 	@Override

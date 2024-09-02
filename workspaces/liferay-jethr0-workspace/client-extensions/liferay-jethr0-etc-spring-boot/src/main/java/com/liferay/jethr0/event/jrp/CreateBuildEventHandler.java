@@ -8,10 +8,16 @@ package com.liferay.jethr0.event.jrp;
 import com.liferay.jethr0.bui1d.BuildEntity;
 import com.liferay.jethr0.bui1d.queue.BuildQueue;
 import com.liferay.jethr0.bui1d.repository.BuildEntityRepository;
-import com.liferay.jethr0.event.EventHandlerContext;
 import com.liferay.jethr0.jenkins.JenkinsQueue;
 import com.liferay.jethr0.job.JobEntity;
 import com.liferay.jethr0.job.repository.JobEntityRepository;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
+import com.liferay.jethr0.util.StringUtil;
+
+import java.util.Date;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONObject;
 
@@ -22,9 +28,16 @@ public class CreateBuildEventHandler extends BaseJRPEventHandler {
 
 	@Override
 	public String process() throws InvalidJSONException {
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				"Creating build from JRP at " +
+					StringUtil.toString(new Date()));
+		}
+
 		JobEntity jobEntity = getJobEntity(getJobJSONObject());
 
-		BuildEntityRepository buildEntityRepository = getBuildRepository();
+		BuildEntityRepository buildEntityRepository =
+			Jethr0ContextUtil.getBuildEntityRepository();
 
 		BuildEntity buildEntity = buildEntityRepository.create(
 			jobEntity, getBuildJSONObject());
@@ -32,28 +45,37 @@ public class CreateBuildEventHandler extends BaseJRPEventHandler {
 		if (jobEntity.getState() == JobEntity.State.COMPLETED) {
 			jobEntity.setState(JobEntity.State.QUEUED);
 
-			JobEntityRepository jobEntityRepository = getJobEntityRepository();
+			JobEntityRepository jobEntityRepository =
+				Jethr0ContextUtil.getJobEntityRepository();
 
 			jobEntityRepository.update(jobEntity);
 		}
 
-		BuildQueue buildQueue = getBuildQueue();
+		BuildQueue buildQueue = Jethr0ContextUtil.getBuildQueue();
 
 		buildQueue.addJobEntity(jobEntity);
 
-		JenkinsQueue jenkinsQueue = getJenkinsQueue();
+		JenkinsQueue jenkinsQueue = Jethr0ContextUtil.getJenkinsQueue();
 
 		jenkinsQueue.invoke();
 
 		updateJRPStatus(null, buildEntity, jobEntity, "queued");
 
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringUtil.combine(
+					"Created build ", buildEntity.getEntityURL(),
+					" from JRP at ", StringUtil.toString(new Date())));
+		}
+
 		return jobEntity.toString();
 	}
 
-	protected CreateBuildEventHandler(
-		EventHandlerContext eventHandlerContext, JSONObject messageJSONObject) {
-
-		super(eventHandlerContext, messageJSONObject);
+	protected CreateBuildEventHandler(JSONObject messageJSONObject) {
+		super(messageJSONObject);
 	}
+
+	private static final Log _log = LogFactory.getLog(
+		CreateBuildEventHandler.class);
 
 }

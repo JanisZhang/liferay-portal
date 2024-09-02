@@ -6,6 +6,7 @@
 package com.liferay.site.navigation.service;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
 
@@ -31,30 +32,31 @@ public class SiteNavigationMenuServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.site.navigation.service.impl.SiteNavigationMenuServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static SiteNavigationMenu addSiteNavigationMenu(
-			long groupId, String name, int type, boolean auto,
+			String externalReferenceCode, long groupId, String name, int type,
+			boolean auto,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addSiteNavigationMenu(
-			groupId, name, type, auto, serviceContext);
+			externalReferenceCode, groupId, name, type, auto, serviceContext);
 	}
 
 	public static SiteNavigationMenu addSiteNavigationMenu(
-			long groupId, String name, int type,
+			String externalReferenceCode, long groupId, String name, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addSiteNavigationMenu(
-			groupId, name, type, serviceContext);
+			externalReferenceCode, groupId, name, type, serviceContext);
 	}
 
 	public static SiteNavigationMenu addSiteNavigationMenu(
-			long groupId, String name,
+			String externalReferenceCode, long groupId, String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addSiteNavigationMenu(
-			groupId, name, serviceContext);
+			externalReferenceCode, groupId, name, serviceContext);
 	}
 
 	public static SiteNavigationMenu deleteSiteNavigationMenu(
@@ -62,6 +64,14 @@ public class SiteNavigationMenuServiceUtil {
 		throws PortalException {
 
 		return getService().deleteSiteNavigationMenu(siteNavigationMenuId);
+	}
+
+	public static SiteNavigationMenu deleteSiteNavigationMenu(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteSiteNavigationMenu(
+			externalReferenceCode, groupId);
 	}
 
 	public static SiteNavigationMenu fetchSiteNavigationMenu(
@@ -78,6 +88,15 @@ public class SiteNavigationMenuServiceUtil {
 	 */
 	public static String getOSGiServiceIdentifier() {
 		return getService().getOSGiServiceIdentifier();
+	}
+
+	public static SiteNavigationMenu
+			getSiteNavigationMenuByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getSiteNavigationMenuByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	public static List<SiteNavigationMenu> getSiteNavigationMenus(
@@ -157,13 +176,12 @@ public class SiteNavigationMenuServiceUtil {
 	}
 
 	public static SiteNavigationMenuService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(SiteNavigationMenuService service) {
-		_service = service;
-	}
-
-	private static volatile SiteNavigationMenuService _service;
+	private static final Snapshot<SiteNavigationMenuService> _serviceSnapshot =
+		new Snapshot<>(
+			SiteNavigationMenuServiceUtil.class,
+			SiteNavigationMenuService.class);
 
 }

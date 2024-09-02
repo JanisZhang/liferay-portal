@@ -156,7 +156,7 @@ public class RegionResourceImpl extends BaseRegionResourceImpl {
 				titleMap.put(_language.getLanguageId(locale), null);
 			}
 
-			region.setTitle_i18n(titleMap);
+			region.setTitle_i18n(() -> titleMap);
 		}
 	}
 
@@ -188,8 +188,8 @@ public class RegionResourceImpl extends BaseRegionResourceImpl {
 
 	private static final EntityModel _entityModel =
 		() -> EntityModel.toEntityFieldsMap(
-			new StringEntityField("name", locale -> "name"),
-			new DoubleEntityField("position", locale -> "position"));
+			new DoubleEntityField("position", locale -> "position"),
+			new StringEntityField("name", locale -> "name"));
 
 	@Reference
 	private CountryService _countryService;

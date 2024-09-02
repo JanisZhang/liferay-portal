@@ -85,7 +85,7 @@ public class DLFolderServiceTest {
 			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType = _dlFileEntryTypeService.addFileEntryType(
-			_group.getGroupId(), _ddmStructure.getStructureId(), null,
+			null, _group.getGroupId(), _ddmStructure.getStructureId(), null,
 			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -372,7 +372,7 @@ public class DLFolderServiceTest {
 			fileEntry4.getFileEntryId(), 5);
 
 		FileShortcut fileShortcut1 = _dlAppService.addFileShortcut(
-			_group.getGroupId(), _parentFolder.getFolderId(),
+			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			fileEntry4.getFileEntryId(), serviceContext);
 
 		FileEntry fileEntry5 = _dlAppService.addFileEntry(
@@ -387,7 +387,7 @@ public class DLFolderServiceTest {
 			fileEntry5.getFileEntryId(), 3);
 
 		FileShortcut fileShortcut2 = _dlAppService.addFileShortcut(
-			_group.getGroupId(), _parentFolder.getFolderId(),
+			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			fileEntry5.getFileEntryId(), serviceContext);
 
 		expectedFoldersAndFileEntriesAndFileShortcuts.add(fileEntry2);

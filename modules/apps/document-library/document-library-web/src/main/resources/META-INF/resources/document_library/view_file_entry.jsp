@@ -23,9 +23,10 @@ if (addPortletBreadcrumbEntries) {
 }
 
 boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation"));
+boolean showBackIcon = Validator.isNotNull(dlViewFileEntryDisplayContext.getRedirect());
 
 if (portletTitleBasedNavigation) {
-	portletDisplay.setShowBackIcon(true);
+	portletDisplay.setShowBackIcon(showBackIcon);
 	portletDisplay.setURLBack(dlViewFileEntryDisplayContext.getRedirect());
 
 	renderResponse.setTitle(fileVersion.getTitle());
@@ -34,7 +35,7 @@ if (portletTitleBasedNavigation) {
 
 <liferay-ui:success key='<%= portletDisplay.getId() + "requestProcessed" %>' message="your-request-completed-successfully" />
 
-<div class="<%= portletTitleBasedNavigation ? StringPool.BLANK : "closed sidenav-container sidenav-right" %>" id="<%= liferayPortletResponse.getNamespace() + (portletTitleBasedNavigation ? "FileEntry" : ("infoPanelId_" + fileEntry.getFileEntryId())) %>">
+<div class="<%= portletTitleBasedNavigation ? "document-libray-preview-container" : "closed sidenav-container sidenav-right" %>" id="<%= liferayPortletResponse.getNamespace() + (portletTitleBasedNavigation ? "FileEntry" : ("infoPanelId_" + fileEntry.getFileEntryId())) %>">
 	<c:if test="<%= portletTitleBasedNavigation %>">
 		<liferay-util:include page="/document_library/file_entry_upper_tbar.jsp" servletContext="<%= application %>" />
 	</c:if>
@@ -84,15 +85,17 @@ if (portletTitleBasedNavigation) {
 			<div class="file-entry-actions management-bar management-bar-light navbar navbar-expand-md">
 				<ul class="navbar-nav navbar-nav-expand">
 					<li class="nav-item nav-item-expand">
-						<clay:link
-							aria-label='<%= LanguageUtil.get(request, "back") %>'
-							borderless="<%= true %>"
-							displayType="secondary"
-							href="<%= dlViewFileEntryDisplayContext.getRedirect() %>"
-							icon="angle-left"
-							monospaced="<%= true %>"
-							type="button"
-						/>
+						<c:if test="<%= showBackIcon %>">
+							<clay:link
+								aria-label='<%= LanguageUtil.get(request, "back") %>'
+								borderless="<%= true %>"
+								displayType="secondary"
+								href="<%= dlViewFileEntryDisplayContext.getRedirect() %>"
+								icon="angle-left"
+								monospaced="<%= true %>"
+								type="button"
+							/>
+						</c:if>
 
 						<h3 class="mb-1 text-secondary"><%= HtmlUtil.escape(dlViewFileEntryDisplayContext.getDocumentTitle()) %></h3>
 					</li>
@@ -107,7 +110,7 @@ if (portletTitleBasedNavigation) {
 						<clay:dropdown-actions
 							aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 							dropdownItems="<%= dlViewFileEntryDisplayContext.getActionDropdownItems() %>"
-							propsTransformer="document_library/js/DLFileEntryDropdownPropsTransformer"
+							propsTransformer="{DLFileEntryDropdownPropsTransformer} from document-library-web"
 						/>
 					</li>
 				</ul>
@@ -159,7 +162,7 @@ if (portletTitleBasedNavigation) {
 	<portlet:actionURL name="/document_library/edit_file_entry_image_editor" var="editImageURL" />
 
 	<react:component
-		module="document_library/js/image-editor/EditImageWithImageEditor"
+		module="{EditImageWithImageEditor} from document-library-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"editImageURL", editImageURL
@@ -211,10 +214,8 @@ FolderItemSelectorURLProvider folderItemSelectorURLProvider = new FolderItemSele
 
 				submitForm(form, actionUrl, false);
 			},
-			title:
-				'<liferay-ui:message arguments="<%= 1 %>" key="select-destination-folder-for-x-items" translateArguments="<%= false %>" />',
-			url:
-				'<%= HtmlUtil.escapeJS(folderItemSelectorURLProvider.getSelectMoveToFolderURL(fileEntry.getRepositoryId(), fileEntry.getFolderId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID)) %>',
+			title: '<liferay-ui:message arguments="<%= 1 %>" key="select-destination-folder-for-x-items" translateArguments="<%= false %>" />',
+			url: '<%= HtmlUtil.escapeJS(folderItemSelectorURLProvider.getSelectMoveToFolderURL(fileEntry.getRepositoryId(), fileEntry.getFolderId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID)) %>',
 		});
 	}
 </aui:script>
@@ -239,4 +240,4 @@ FolderItemSelectorURLProvider folderItemSelectorURLProvider = new FolderItemSele
 
 <liferay-util:dynamic-include key="com.liferay.document.library.web#/document_library/view_file_entry.jsp#post" />
 
-<%@ include file="/document_library/friendly_url_changed_message.jspf" %>
+<%@ include file="/document_library/session_messages.jspf" %>

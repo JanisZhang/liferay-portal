@@ -59,12 +59,13 @@ public abstract class CMISRepositoryHandler
 
 	@Override
 	public FileShortcut addFileShortcut(
-			long userId, long folderId, long toFileEntryId,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			long toFileEntryId, ServiceContext serviceContext)
 		throws PortalException {
 
 		return _baseCmisRepository.addFileShortcut(
-			userId, folderId, toFileEntryId, serviceContext);
+			externalReferenceCode, userId, folderId, toFileEntryId,
+			serviceContext);
 	}
 
 	@Override
@@ -383,6 +384,13 @@ public abstract class CMISRepositoryHandler
 
 	public List<String> getObjectPaths(String objectId) throws PortalException {
 		return _baseCmisRepository.getObjectPaths(objectId);
+	}
+
+	@Override
+	public List<FileShortcut> getRepositoryFileShortcuts(long groupId)
+		throws PortalException {
+
+		return _baseCmisRepository.getRepositoryFileShortcuts(groupId);
 	}
 
 	public abstract Session getSession() throws PortalException;

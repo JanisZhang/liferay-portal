@@ -112,12 +112,6 @@ public class PlacedOrderItemResourceTest
 			_accountEntry.getAccountEntryId(),
 			_commerceCurrency.getCommerceCurrencyId());
 
-		_commerceOrder.setOrderStatus(
-			CommerceOrderConstants.ORDER_STATUS_COMPLETED);
-
-		_commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
-			_commerceOrder);
-
 		_commercePriceList =
 			_commercePriceListLocalService.addCommercePriceList(
 				RandomTestUtil.randomString(), testGroup.getGroupId(),
@@ -127,13 +121,95 @@ public class PlacedOrderItemResourceTest
 				1, 2022, 12, 0, 0, 0, 0, 0, 0, true, _serviceContext);
 	}
 
+	@Ignore
+	@Override
+	@Test
+	public void testGetPlacedOrderByExternalReferenceCodePlacedOrderItemsPage()
+		throws Exception {
+
+		super.testGetPlacedOrderByExternalReferenceCodePlacedOrderItemsPage();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGetPlacedOrderByExternalReferenceCodePlacedOrderItemsPageWithPagination()
+		throws Exception {
+
+		super.
+			testGetPlacedOrderByExternalReferenceCodePlacedOrderItemsPageWithPagination();
+	}
+
 	@Override
 	@Test
 	public void testGetPlacedOrderItem() throws Exception {
 		super.testGetPlacedOrderItem();
+	}
 
-		_testGetPlacedOrderItemWithFileEntry();
-		_testGetPlacedOrderItemWithURL();
+	@Test
+	public void testGetPlacedOrderItemWithFileEntry() throws Exception {
+		_fileEntry = _dlAppLocalService.addFileEntry(
+			null, _user.getUserId(), testGroup.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
+			FileUtil.getBytes(
+				PlacedOrderItemResourceTest.class, "dependencies/image.jpg"),
+			null, null, null, _serviceContext);
+
+		PlacedOrderItem postPlacedOrderItem = _addPlacedOrderItem(
+			_toPlacedOrderItem(
+				_addCPDefinition(_fileEntry.getFileEntryId(), null)));
+
+		PlacedOrderItem getPlacedOrderItem =
+			placedOrderItemResource.getPlacedOrderItem(
+				postPlacedOrderItem.getId());
+
+		CommerceVirtualOrderItem commerceVirtualOrderItem =
+			_commerceVirtualOrderItemLocalService.
+				fetchCommerceVirtualOrderItemByCommerceOrderItemId(
+					getPlacedOrderItem.getId());
+
+		String[] virtualItemURLs = {
+			StringBundler.concat(
+				_portal.getPathModule(), StringPool.SLASH,
+				CommerceMediaConstants.SERVLET_PATH,
+				CommerceMediaConstants.URL_SEPARATOR_VIRTUAL_ORDER_ITEM,
+				commerceVirtualOrderItem.getCommerceVirtualOrderItemId(),
+				CommerceMediaConstants.URL_SEPARATOR_FILE,
+				_fileEntry.getFileEntryId())
+		};
+
+		Assert.assertEquals(
+			virtualItemURLs, getPlacedOrderItem.getVirtualItemURLs());
+	}
+
+	@Test
+	public void testGetPlacedOrderItemWithURL() throws Exception {
+		_commerceOrder = CommerceTestUtil.addB2BCommerceOrder(
+			testGroup.getGroupId(), _user.getUserId(),
+			_accountEntry.getAccountEntryId(),
+			_commerceCurrency.getCommerceCurrencyId());
+
+		String url = "https://liferay.com/myfiles/download";
+
+		PlacedOrderItem postPlacedOrderItem = _addPlacedOrderItem(
+			_toPlacedOrderItem(_addCPDefinition(0, url)));
+
+		PlacedOrderItem getPlacedOrderItem =
+			placedOrderItemResource.getPlacedOrderItem(
+				postPlacedOrderItem.getId());
+
+		String[] virtualItemURLs = {url};
+
+		Assert.assertEquals(
+			virtualItemURLs, getPlacedOrderItem.getVirtualItemURLs());
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGetPlacedOrderPlacedOrderItemsPage() throws Exception {
+		super.testGetPlacedOrderPlacedOrderItemsPage();
 	}
 
 	@Ignore
@@ -161,7 +237,32 @@ public class PlacedOrderItemResourceTest
 	}
 
 	@Override
+	protected PlacedOrderItem
+			testGetPlacedOrderByExternalReferenceCodePlacedOrderItemsPage_addPlacedOrderItem(
+				String externalReferenceCode, PlacedOrderItem placedOrderItem)
+		throws Exception {
+
+		return _addPlacedOrderItem(placedOrderItem);
+	}
+
+	@Override
+	protected String
+			testGetPlacedOrderByExternalReferenceCodePlacedOrderItemsPage_getExternalReferenceCode()
+		throws Exception {
+
+		return _commerceOrder.getExternalReferenceCode();
+	}
+
+	@Override
 	protected PlacedOrderItem testGetPlacedOrderItem_addPlacedOrderItem()
+		throws Exception {
+
+		return _addPlacedOrderItem(randomPlacedOrderItem());
+	}
+
+	@Override
+	protected PlacedOrderItem
+			testGetPlacedOrderItemByExternalReferenceCode_addPlacedOrderItem()
 		throws Exception {
 
 		return _addPlacedOrderItem(randomPlacedOrderItem());
@@ -226,6 +327,15 @@ public class PlacedOrderItemResourceTest
 					testGroup, _commerceOrder),
 				_serviceContext);
 
+		_commerceOrder = _commerceOrderLocalService.getCommerceOrder(
+			_commerceOrder.getCommerceOrderId());
+
+		_commerceOrder.setOrderStatus(
+			CommerceOrderConstants.ORDER_STATUS_COMPLETED);
+
+		_commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			_commerceOrder);
+
 		_commerceOrderItems.add(commerceOrderItem);
 
 		_commerceVirtualOrderItemChecker.checkCommerceVirtualOrderItems(
@@ -233,6 +343,8 @@ public class PlacedOrderItemResourceTest
 
 		return new PlacedOrderItem() {
 			{
+				externalReferenceCode =
+					commerceOrderItem.getExternalReferenceCode();
 				id = commerceOrderItem.getCommerceOrderItemId();
 				name = commerceOrderItem.getName();
 				productId = commerceOrderItem.getCProductId();
@@ -270,58 +382,6 @@ public class PlacedOrderItemResourceTest
 		};
 	}
 
-	private void _testGetPlacedOrderItemWithFileEntry() throws Exception {
-		_fileEntry = _dlAppLocalService.addFileEntry(
-			null, _user.getUserId(), testGroup.getGroupId(),
-			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			RandomTestUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
-			FileUtil.getBytes(
-				PlacedOrderItemResourceTest.class, "dependencies/image.jpg"),
-			null, null, null, _serviceContext);
-
-		PlacedOrderItem postPlacedOrderItem = _addPlacedOrderItem(
-			_toPlacedOrderItem(
-				_addCPDefinition(_fileEntry.getFileEntryId(), null)));
-
-		PlacedOrderItem getPlacedOrderItem =
-			placedOrderItemResource.getPlacedOrderItem(
-				postPlacedOrderItem.getId());
-
-		CommerceVirtualOrderItem commerceVirtualOrderItem =
-			_commerceVirtualOrderItemLocalService.
-				fetchCommerceVirtualOrderItemByCommerceOrderItemId(
-					getPlacedOrderItem.getId());
-
-		String[] virtualItemURLs = {
-			StringBundler.concat(
-				_portal.getPathModule(), StringPool.SLASH,
-				CommerceMediaConstants.SERVLET_PATH,
-				CommerceMediaConstants.URL_SEPARATOR_VIRTUAL_ORDER_ITEM,
-				commerceVirtualOrderItem.getCommerceVirtualOrderItemId(),
-				CommerceMediaConstants.URL_SEPARATOR_FILE,
-				_fileEntry.getFileEntryId())
-		};
-
-		Assert.assertEquals(
-			virtualItemURLs, getPlacedOrderItem.getVirtualItemURLs());
-	}
-
-	private void _testGetPlacedOrderItemWithURL() throws Exception {
-		String url = "https://liferay.com/myfiles/download";
-
-		PlacedOrderItem postPlacedOrderItem = _addPlacedOrderItem(
-			_toPlacedOrderItem(_addCPDefinition(0, url)));
-
-		PlacedOrderItem getPlacedOrderItem =
-			placedOrderItemResource.getPlacedOrderItem(
-				postPlacedOrderItem.getId());
-
-		String[] virtualItemURLs = {url};
-
-		Assert.assertEquals(
-			virtualItemURLs, getPlacedOrderItem.getVirtualItemURLs());
-	}
-
 	private PlacedOrderItem _toPlacedOrderItem(CPDefinition cpDefinition) {
 		List<CPInstance> cpInstances = cpDefinition.getCPInstances();
 
@@ -329,6 +389,8 @@ public class PlacedOrderItemResourceTest
 
 		return new PlacedOrderItem() {
 			{
+				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				productId = cpDefinition.getCProductId();

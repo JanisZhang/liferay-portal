@@ -4,7 +4,7 @@
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
-import DropDown, {Align} from '@clayui/drop-down';
+import DropDown from '@clayui/drop-down';
 import ClayEmptyState from '@clayui/empty-state';
 import classNames from 'classnames';
 import React, {
@@ -86,7 +86,7 @@ export function DropdownColorPicker({
 										(color) =>
 											isFoundValue(color.label) ||
 											isFoundValue(color.value)
-								  );
+									);
 
 							return {
 								...acc,
@@ -96,7 +96,7 @@ export function DropdownColorPicker({
 							};
 						},
 						{}
-				  );
+					);
 
 			return {
 				...acc,
@@ -187,7 +187,6 @@ export function DropdownColorPicker({
 			<DropDown.Menu
 				active={active}
 				alignElementRef={triggerElementRef}
-				alignmentPosition={Align.TopRight}
 				className="clay-color-dropdown-menu px-0"
 				containerProps={{
 					className: 'cadmin',
@@ -356,7 +355,7 @@ function Wrapper({
 					description={Liferay.Language.get(
 						'try-again-with-a-different-search'
 					)}
-					imgSrc={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/search_state.gif`}
+					imgSrc={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/search_state.svg`}
 					small
 					title={Liferay.Language.get('no-results-found')}
 				/>

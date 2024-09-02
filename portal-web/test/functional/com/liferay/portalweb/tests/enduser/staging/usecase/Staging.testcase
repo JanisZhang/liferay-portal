@@ -1,4 +1,4 @@
-@component-name = "portal-staging"
+@component-name = "portal-headless"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -328,8 +328,6 @@ definition {
 	@description = "This is a use case for LPS-190015, TC3. Canceling the multi publishing of several webcontents, stops them process properly and no webcontnts are published."
 	@priority = 3
 	test CanceledMultiPublisDoesNotPublishAnyWebContent {
-		property custom.properties = "feature.flag.LPS-165481=true";
-
 		task ("Activate local live staging") {
 			JSONStaging.enableLocalStaging(groupName = "Site Name");
 		}
@@ -493,7 +491,7 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
@@ -626,7 +624,6 @@ definition {
 	}
 
 	@description = "This is a test for LPS-146160. Verify Admin can enable local staging on the inherited site even site template propagation is disabled. The testcase is blocked by LPS-146160."
-	@ignore = "true"
 	@priority = 3
 	test CanEnableLocalStagingOnInheritedSite {
 		property test.liferay.virtual.instance = "false";
@@ -867,7 +864,7 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://localhost:9080",
 				userEmailAddress = "test@liferay.com");
 
@@ -1073,7 +1070,6 @@ definition {
 	@description = "This is a use case for LPS-190064 (TC-3). The name of multiple published Web Contents are NOT displayed in the Publication Summary even when the actions are different."
 	@priority = 4
 	test DifferentlyModifiedWebContentTitlesAreNotDisplayedInPublicationSummary {
-		property custom.properties = "feature.flag.LPS-165481=true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -1142,7 +1138,6 @@ definition {
 	@description = "This is a use case for LPS-190064 (TC-5). The name of a Drafted Web Content is NOT displayed in the Publication Summary."
 	@priority = 4
 	test DraftedWebContentTitleIsNotDisplayedInPublicationSummary {
-		property custom.properties = "feature.flag.LPS-165481=true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -1393,7 +1388,6 @@ definition {
 	@description = "This is a use case for LPS-190064 (TC-2). The name of multiple published Web Contents are NOT displayed in the Publication Summary."
 	@priority = 4
 	test MultipleWebContentTitlesAreNotDisplayedInPublicationSummary {
-		property custom.properties = "feature.flag.LPS-165481=true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -1684,8 +1678,6 @@ definition {
 	@description = "This is a use case for LPS-190015, TC2. Publishing several webcontents from the first page of wcs by multi publish option."
 	@priority = 3
 	test PublishMoreWebContentWithMultiPublishOption {
-		property custom.properties = "feature.flag.LPS-165481=true";
-
 		task ("Activate local live staging") {
 			JSONStaging.enableLocalStaging(groupName = "Site Name");
 		}
@@ -1728,8 +1720,6 @@ definition {
 	@description = "This is a use case for LPS-190015, TC1. Publishing a single webcontent by multi publish option."
 	@priority = 3
 	test PublishOneWebContentWithMultiPublishOption {
-		property custom.properties = "feature.flag.LPS-165481=true";
-
 		task ("Activate local live staging") {
 			JSONStaging.enableLocalStaging(groupName = "Site Name");
 		}
@@ -1962,7 +1952,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea1@liferay.com");
 
 		for (var pageCount : list "1,2,3") {
@@ -1984,7 +1974,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea2@liferay.com");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
@@ -2020,7 +2010,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea1@liferay.com");
 
 		for (var pageCount : list "1,2,3") {
@@ -2042,7 +2032,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea2@liferay.com");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
@@ -2346,7 +2336,7 @@ definition {
 		User.logoutPG();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
@@ -2359,7 +2349,7 @@ definition {
 		User.logoutPG(specificURL = "http://localhost:9080");
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Category.openCategoriesAdmin(siteURLKey = "global");
@@ -2371,7 +2361,7 @@ definition {
 		User.logoutPG();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
@@ -2498,8 +2488,7 @@ definition {
 
 		Staging.configurePublishToLive(
 			contentName = "Web Content",
-			subContent = "Web Content",
-			uncheckSubSubContent = "Include If Modified");
+			subContent = "Web Content");
 
 		Staging.savePublishTemplate(
 			publishTemplateDescription = "Publish Template Description",
@@ -2541,7 +2530,6 @@ definition {
 	@description = "This is a use case for LPS-190064 (TC-4). The name of a solely published Web Content that is inside of a Web Content Folder is displayed in the Publication Summary without the title of the folder."
 	@priority = 4
 	test SingleFolderedWebContentTitleIsProperlyDisplayedInPublicationSummary {
-		property custom.properties = "feature.flag.LPS-165481=true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -2586,7 +2574,6 @@ definition {
 	@description = "This is a use case for LPS-190064 (TC-1). The name of a solely published Web Content is displayed in the Publication Summary without any UI break."
 	@priority = 4
 	test SingleWebContentTitleIsProperlyDisplayedInPublicationSummary {
-		property custom.properties = "feature.flag.LPS-165481=true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -2710,7 +2697,7 @@ definition {
 		AssertElementNotPresent(locator1 = "Portlet#SPECIFIC_TITLE");
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Navigator.gotoSitePage(
@@ -3020,7 +3007,7 @@ definition {
 		User.logoutPG();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
@@ -3952,7 +3939,7 @@ definition {
 			Navigator.openSpecificURL(url = "http://www.able.com:8080");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@liferay.com");
 		}

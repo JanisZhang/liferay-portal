@@ -24,7 +24,7 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface QueryPreProcessConfiguration {
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	@Meta.AD(deflt = "", name = "field-name-patterns", required = false)

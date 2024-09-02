@@ -20,7 +20,7 @@ import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.comparator.OrganizationNameComparator;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -174,7 +174,7 @@ public class AccountOrganizationRetrieverTest {
 		Assert.assertEquals(organizations.toString(), 4, organizations.size());
 		Assert.assertEquals(
 			ListUtil.sort(
-				_organizations, new OrganizationNameComparator(false)),
+				_organizations, OrganizationNameComparator.getInstance(false)),
 			organizations);
 	}
 

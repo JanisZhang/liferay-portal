@@ -49,20 +49,6 @@ AUI.add(
 					const instance = this;
 
 					instance._setEndDate();
-
-					const endDateValue = instance._endDate.valueOf();
-
-					if (
-						instance._validDate &&
-						instance._startDate.valueOf() >= endDateValue
-					) {
-						instance._startDate = new Date(
-							endDateValue - instance._duration
-						);
-
-						instance._setStartDatePickerDate();
-					}
-
 					instance._setDuration();
 					instance._validate();
 				},
@@ -71,21 +57,6 @@ AUI.add(
 					const instance = this;
 
 					instance._setEndTime();
-
-					const endDateValue = instance._endDate.valueOf();
-
-					if (
-						instance._validDate &&
-						instance._startDate.valueOf() >= endDateValue
-					) {
-						instance._startDate = new Date(
-							endDateValue - instance._duration
-						);
-
-						instance._setStartDatePickerDate();
-						instance._setStartTimePickerTime();
-					}
-
 					instance._setDuration();
 					instance._validate();
 				},
@@ -176,6 +147,8 @@ AUI.add(
 					const endTimePicker = instance.get('endTimePicker');
 
 					endTimePicker.selectDates([instance._endDate]);
+
+					endTimePicker.updateTime(instance._endDate);
 				},
 
 				_setStartDate() {
@@ -223,6 +196,8 @@ AUI.add(
 					const startTimePicker = instance.get('startTimePicker');
 
 					startTimePicker.selectDates([instance._startDate]);
+
+					startTimePicker.updateTime(instance._startDate);
 				},
 
 				_validate() {

@@ -15,14 +15,14 @@
 
 	<div class="minium-topbar__middle">
 		<#if show_top_menu>
-			<@site_navigation_menu_sub_navigation default_preferences=freeMarkerPortletPreferences.getPreferences("portletSetupPortletDecoratorId", "barebone") />
+			<@site_navigation_menu_sub_navigation default_preferences = freeMarkerPortletPreferences.getPreferences("portletSetupPortletDecoratorId", "barebone") />
 		</#if>
 	</div>
 
 	<#if show_account_selector || show_mini_cart>
 		<div class="minium-topbar__end">
 			<#if show_account_selector>
-				<div class="minium-topbar__account-selector-wrapper">
+				<div class="align-items-center d-flex minium-topbar__account-selector-wrapper">
 					<@liferay_commerce_ui["account-selector"] />
 				</div>
 			</#if>

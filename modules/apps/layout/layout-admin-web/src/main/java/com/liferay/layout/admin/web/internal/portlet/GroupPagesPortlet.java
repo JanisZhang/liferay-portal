@@ -7,6 +7,7 @@ package com.liferay.layout.admin.web.internal.portlet;
 
 import com.liferay.application.list.GroupProvider;
 import com.liferay.asset.kernel.exception.AssetCategoryException;
+import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.friendly.url.exception.DuplicateFriendlyURLEntryException;
@@ -15,12 +16,12 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.admin.web.internal.configuration.LayoutUtilityPageThumbnailConfiguration;
 import com.liferay.layout.admin.web.internal.constants.LayoutAdminWebKeys;
+import com.liferay.layout.admin.web.internal.display.context.LayoutUtilityPageEntryDisplayContext;
 import com.liferay.layout.admin.web.internal.display.context.LayoutsAdminDisplayContext;
 import com.liferay.layout.admin.web.internal.display.context.MillerColumnsDisplayContext;
 import com.liferay.layout.admin.web.internal.display.context.SelectLayoutCollectionDisplayContext;
 import com.liferay.layout.admin.web.internal.helper.LayoutActionsHelper;
 import com.liferay.layout.admin.web.internal.servlet.taglib.util.LayoutActionDropdownItemsProvider;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.page.template.exception.DuplicateLayoutPageTemplateCollectionException;
 import com.liferay.layout.page.template.exception.LayoutPageTemplateCollectionNameException;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -52,6 +53,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -208,7 +210,7 @@ public class GroupPagesPortlet extends MVCPortlet {
 
 			LayoutsAdminDisplayContext layoutsAdminDisplayContext =
 				new LayoutsAdminDisplayContext(
-					_itemSelector, layoutActionsHelper, _layoutCopyHelper,
+					_itemSelector, layoutActionsHelper, _layoutLocalService,
 					_layoutSetPrototypeHelper,
 					_portal.getLiferayPortletRequest(renderRequest),
 					_portal.getLiferayPortletResponse(renderResponse));
@@ -241,6 +243,10 @@ public class GroupPagesPortlet extends MVCPortlet {
 					_portal.getLiferayPortletRequest(renderRequest),
 					_portal.getLiferayPortletResponse(renderResponse)));
 			renderRequest.setAttribute(
+				LayoutUtilityPageEntryDisplayContext.class.getName(),
+				new LayoutUtilityPageEntryDisplayContext(
+					renderRequest, renderResponse));
+			renderRequest.setAttribute(
 				TranslationURLProvider.class.getName(),
 				_translationURLProvider);
 
@@ -256,6 +262,7 @@ public class GroupPagesPortlet extends MVCPortlet {
 	@Override
 	protected boolean isSessionErrorException(Throwable throwable) {
 		if (throwable instanceof AssetCategoryException ||
+			throwable instanceof AssetTagException ||
 			throwable instanceof DDMFormValuesValidationException ||
 			throwable instanceof DuplicateFriendlyURLEntryException ||
 			throwable instanceof
@@ -303,7 +310,7 @@ public class GroupPagesPortlet extends MVCPortlet {
 	private LayoutConverterRegistry _layoutConverterRegistry;
 
 	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private LayoutPageTemplateEntryLocalService

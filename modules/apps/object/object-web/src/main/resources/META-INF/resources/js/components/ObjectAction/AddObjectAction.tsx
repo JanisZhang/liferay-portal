@@ -6,9 +6,10 @@
 import {SidebarCategory} from '@liferay/object-js-components-web';
 import React from 'react';
 
-import ObjectAction from './index';
+import {ObjectActionContainer} from './ObjectActionContainer';
 
 interface AddObjectActionProps {
+	allowScriptContentToBeExecutedOrIncluded: boolean;
 	apiURL: string;
 	objectActionCodeEditorElements: SidebarCategory[];
 	objectActionExecutors: ObjectActionTriggerExecutorItem[];
@@ -16,11 +17,13 @@ interface AddObjectActionProps {
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectDefinitionsRelationshipsURL: string;
+	scriptManagementConfigurationPortletURL: string;
 	systemObject: boolean;
 	validateExpressionURL: string;
 }
 
 export default function AddObjectAction({
+	allowScriptContentToBeExecutedOrIncluded,
 	apiURL,
 	objectActionCodeEditorElements,
 	objectActionExecutors = [],
@@ -28,11 +31,15 @@ export default function AddObjectAction({
 	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectDefinitionsRelationshipsURL,
+	scriptManagementConfigurationPortletURL,
 	systemObject,
 	validateExpressionURL,
 }: AddObjectActionProps) {
 	return (
-		<ObjectAction
+		<ObjectActionContainer
+			allowScriptContentToBeExecutedOrIncluded={
+				allowScriptContentToBeExecutedOrIncluded
+			}
 			objectAction={{active: true, system: false}}
 			objectActionCodeEditorElements={objectActionCodeEditorElements}
 			objectActionExecutors={objectActionExecutors}
@@ -48,6 +55,9 @@ export default function AddObjectAction({
 				method: 'POST',
 				url: apiURL,
 			}}
+			scriptManagementConfigurationPortletURL={
+				scriptManagementConfigurationPortletURL
+			}
 			successMessage={Liferay.Language.get(
 				'the-object-action-was-created-successfully'
 			)}

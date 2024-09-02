@@ -4,7 +4,12 @@
  */
 
 import {openCreationModal} from '@liferay/layout-js-components-web';
-import {openModal} from 'frontend-js-web';
+import {
+	openModal,
+	openSelectionModal,
+	setFormValues,
+	sub,
+} from 'frontend-js-web';
 
 import openDeletePageTemplateModal from '../commands/openDeletePageTemplateModal';
 
@@ -21,6 +26,40 @@ const ACTIONS = {
 				);
 			},
 			title: dialogTitle,
+		});
+	},
+
+	moveLayoutPageTemplateCollection(
+		{
+			itemSelectorURL,
+			layoutPageTemplateCollectionId,
+			layoutPageTemplateCollectionName,
+		},
+		portletNamespace
+	) {
+		openSelectionModal({
+			height: '70vh',
+			onSelect: (selectedItem) => {
+				const form = document.getElementById(
+					`${portletNamespace}actionEntriesFm`
+				);
+
+				setFormValues(form, {
+					layoutPageTemplateCollectionsIds:
+						layoutPageTemplateCollectionId,
+					targetLayoutPageTemplateCollectionId:
+						selectedItem.resourceid,
+				});
+
+				submitForm(form);
+			},
+			selectEventName: 'selectFolder',
+			size: 'md',
+			title: sub(
+				Liferay.Language.get('move-x-to'),
+				`"${layoutPageTemplateCollectionName}"`
+			),
+			url: itemSelectorURL,
 		});
 	},
 

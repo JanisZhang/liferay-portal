@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayEmptyState from '@clayui/empty-state';
 import ClayLabel from '@clayui/label';
 import ClayList from '@clayui/list';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
@@ -91,11 +90,11 @@ function Email({
 						</div>
 
 						<div className="col-12">
-							<h5 className="mt-3">
+							<div className="h5 mt-3">
 								<a href="#" onClick={handleClickOnSubject}>
 									{subject}
 								</a>
-							</h5>
+							</div>
 
 							<div>{summary}</div>
 						</div>
@@ -142,15 +141,7 @@ function EmailsList({dataLoading, frontendDataSetContext, items}) {
 	}
 
 	if (!items?.length) {
-		return (
-			<ClayEmptyState
-				description={Liferay.Language.get(
-					'sorry,-no-results-were-found'
-				)}
-				imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
-				title={Liferay.Language.get('no-results-found')}
-			/>
-		);
+		return null;
 	}
 
 	return (

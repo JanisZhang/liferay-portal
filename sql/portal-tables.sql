@@ -32,13 +32,15 @@ create table Address (
 
 create table AnnouncementsDelivery (
 	mvccVersion LONG default 0 not null,
-	deliveryId LONG not null primary key,
+	ctCollectionId LONG default 0 not null,
+	deliveryId LONG not null,
 	companyId LONG,
 	userId LONG,
 	type_ VARCHAR(75) null,
 	email BOOLEAN,
 	sms BOOLEAN,
-	website BOOLEAN
+	website BOOLEAN,
+	primary key (deliveryId, ctCollectionId)
 );
 
 create table AnnouncementsEntry (
@@ -354,6 +356,7 @@ create table DLFileEntryType (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	fileEntryTypeId LONG not null,
 	groupId LONG,
 	companyId LONG,
@@ -383,6 +386,7 @@ create table DLFileShortcut (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	fileShortcutId LONG not null,
 	groupId LONG,
 	companyId LONG,
@@ -630,6 +634,7 @@ create table Layout (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	plid LONG not null,
 	groupId LONG,
 	companyId LONG,
@@ -814,8 +819,13 @@ create table LayoutSetPrototype (
 
 create table ListType (
 	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
 	listTypeId LONG not null primary key,
 	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
 	name VARCHAR(75) null,
 	type_ VARCHAR(75) null
 );
@@ -933,7 +943,7 @@ create table PasswordTracker (
 	companyId LONG,
 	userId LONG,
 	createDate DATE null,
-	password_ VARCHAR(75) null
+	password_ VARCHAR(255) null
 );
 
 create table Phone (
@@ -971,7 +981,7 @@ create table PortalPreferenceValue (
 	companyId LONG,
 	portalPreferencesId LONG,
 	index_ INTEGER,
-	key_ VARCHAR(255) null,
+	key_ VARCHAR(1024) null,
 	largeValue TEXT null,
 	namespace VARCHAR(255) null,
 	smallValue VARCHAR(255) null
@@ -1142,6 +1152,16 @@ create table Release_ (
 	testString VARCHAR(1024) null
 );
 
+create table RememberMeToken (
+	mvccVersion LONG default 0 not null,
+	rememberMeTokenId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	createDate DATE null,
+	expirationDate DATE null,
+	value VARCHAR(255) null
+);
+
 create table Repository (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
@@ -1209,6 +1229,7 @@ create table Role_ (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	roleId LONG not null,
 	companyId LONG,
 	userId LONG,
@@ -1407,7 +1428,7 @@ create table Ticket (
 	createDate DATE null,
 	classNameId LONG,
 	classPK LONG,
-	key_ VARCHAR(75) null,
+	key_ VARCHAR(255) null,
 	type_ INTEGER,
 	extraInfo TEXT null,
 	expirationDate DATE null
@@ -1435,7 +1456,7 @@ create table User_ (
 	createDate DATE null,
 	modifiedDate DATE null,
 	contactId LONG,
-	password_ VARCHAR(75) null,
+	password_ VARCHAR(255) null,
 	passwordEncrypted BOOLEAN,
 	passwordReset BOOLEAN,
 	passwordModifiedDate DATE null,

@@ -39,6 +39,7 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -100,7 +101,7 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 			SkuUnitOfMeasureResource.builder();
 
 		skuUnitOfMeasureResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,7 +115,32 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		SkuUnitOfMeasure skuUnitOfMeasure1 = randomSkuUnitOfMeasure();
+
+		String json = objectMapper.writeValueAsString(skuUnitOfMeasure1);
+
+		SkuUnitOfMeasure skuUnitOfMeasure2 = SkuUnitOfMeasureSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(skuUnitOfMeasure1, skuUnitOfMeasure2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		SkuUnitOfMeasure skuUnitOfMeasure = randomSkuUnitOfMeasure();
+
+		String json1 = objectMapper.writeValueAsString(skuUnitOfMeasure);
+		String json2 = SkuUnitOfMeasureSerDes.toJSON(skuUnitOfMeasure);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -129,40 +155,6 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		SkuUnitOfMeasure skuUnitOfMeasure1 = randomSkuUnitOfMeasure();
-
-		String json = objectMapper.writeValueAsString(skuUnitOfMeasure1);
-
-		SkuUnitOfMeasure skuUnitOfMeasure2 = SkuUnitOfMeasureSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(skuUnitOfMeasure1, skuUnitOfMeasure2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		SkuUnitOfMeasure skuUnitOfMeasure = randomSkuUnitOfMeasure();
-
-		String json1 = objectMapper.writeValueAsString(skuUnitOfMeasure);
-		String json2 = SkuUnitOfMeasureSerDes.toJSON(skuUnitOfMeasure);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -215,7 +207,10 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteSkuUnitOfMeasure() throws Exception {
-		SkuUnitOfMeasure skuUnitOfMeasure =
+
+		// No namespace
+
+		SkuUnitOfMeasure skuUnitOfMeasure1 =
 			testGraphQLDeleteSkuUnitOfMeasure_addSkuUnitOfMeasure();
 
 		Assert.assertTrue(
@@ -225,23 +220,61 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 						"deleteSkuUnitOfMeasure",
 						new HashMap<String, Object>() {
 							{
-								put("id", skuUnitOfMeasure.getId());
+								put("id", skuUnitOfMeasure1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteSkuUnitOfMeasure"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"skuUnitOfMeasure",
 					new HashMap<String, Object>() {
 						{
-							put("id", skuUnitOfMeasure.getId());
+							put("id", skuUnitOfMeasure1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		SkuUnitOfMeasure skuUnitOfMeasure2 =
+			testGraphQLDeleteSkuUnitOfMeasure_addSkuUnitOfMeasure();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteSkuUnitOfMeasure",
+							new HashMap<String, Object>() {
+								{
+									put("id", skuUnitOfMeasure2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteSkuUnitOfMeasure"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"skuUnitOfMeasure",
+						new HashMap<String, Object>() {
+							{
+								put("id", skuUnitOfMeasure2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected SkuUnitOfMeasure
@@ -276,6 +309,8 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 		SkuUnitOfMeasure skuUnitOfMeasure =
 			testGraphQLGetSkuUnitOfMeasure_addSkuUnitOfMeasure();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				skuUnitOfMeasure,
@@ -291,11 +326,35 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/skuUnitOfMeasure"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				skuUnitOfMeasure,
+				SkuUnitOfMeasureSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"skuUnitOfMeasure",
+									new HashMap<String, Object>() {
+										{
+											put("id", skuUnitOfMeasure.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/skuUnitOfMeasure"))));
 	}
 
 	@Test
 	public void testGraphQLGetSkuUnitOfMeasureNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -309,6 +368,25 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"skuUnitOfMeasure",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -948,6 +1026,14 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("pricingQuantity", additionalAssertFieldName)) {
+				if (skuUnitOfMeasure.getPricingQuantity() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("primary", additionalAssertFieldName)) {
 				if (skuUnitOfMeasure.getPrimary() == null) {
 					valid = false;
@@ -1199,6 +1285,17 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 				if (!Objects.deepEquals(
 						skuUnitOfMeasure1.getPrecision(),
 						skuUnitOfMeasure2.getPrecision())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("pricingQuantity", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						skuUnitOfMeasure1.getPricingQuantity(),
+						skuUnitOfMeasure2.getPricingQuantity())) {
 
 					return false;
 				}
@@ -1462,6 +1559,11 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("pricingQuantity")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("primary")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1548,7 +1650,8 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1613,12 +1716,12 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1627,11 +1730,16 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1663,6 +1771,24 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1684,16 +1810,6 @@ public abstract class BaseSkuUnitOfMeasureResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

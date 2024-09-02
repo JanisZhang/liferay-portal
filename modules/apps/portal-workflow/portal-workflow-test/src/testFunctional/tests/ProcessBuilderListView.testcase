@@ -1,4 +1,4 @@
-@component-name = "portal-workflow"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -243,6 +243,8 @@ definition {
 	@description = "Verify that the user is not able to search by Workflow description"
 	@priority = 3
 	test CanSearchByDescription {
+		property portal.upstream = "quarantine";
+
 		Workflow.openWorkflowListView();
 
 		task ("Search for existing Description") {

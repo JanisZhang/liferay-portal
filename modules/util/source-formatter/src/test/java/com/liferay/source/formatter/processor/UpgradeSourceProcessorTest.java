@@ -42,6 +42,12 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeBNDDeclarativeServicesCheck() throws Exception {
+		test("upgrade/upgrade-declarative-services-check/bnd.testbnd");
+		test("upgrade/upgrade-declarative-services-replace-check/bnd.testbnd");
+	}
+
+	@Test
 	public void testUpgradeBNDIncludeResourceCheck() throws Exception {
 		test("upgrade/upgrade-include-resource-check/bnd.testbnd");
 	}
@@ -70,6 +76,15 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		throws Exception {
 
 		test("upgrade/UpgradeJavaAssetEntryAssetCategoriesCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaBaseFragmentCollectionContributorExtendedClassesCheck()
+		throws Exception {
+
+		test(
+			"upgrade/UpgradeJavaBaseFragmentCollectionContributor" +
+				"ExtendedClassesCheck.testjava");
 	}
 
 	@Test
@@ -102,6 +117,13 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeJavaDisplayPageInfoItemCapabilityCheck()
+		throws Exception {
+
+		test("upgrade/UpgradeJavaDisplayPageInfoItemCapabilityCheck.testjava");
+	}
+
+	@Test
 	public void testUpgradeJavaFacetedSearcherCheck() throws Exception {
 		test("upgrade/UpgradeJavaFacetedSearcherCheck.testjava");
 	}
@@ -114,6 +136,13 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testUpgradeJavaFDSDataProviderCheck() throws Exception {
 		test("upgrade/UpgradeJavaFDSDataProviderCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaFinderImplCheck() throws Exception {
+		test(
+			"upgrade/src/service/persistence/impl/UpgradeJavaFinderImplCheck." +
+				"testjava");
 	}
 
 	@Test
@@ -136,7 +165,7 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 			"upgrade/UpgradeJavaGetLayoutDisplayPageObjectProviderCheck." +
 				"testjava",
 			StringBundler.concat(
-				"Could not resolve variable className for new ",
+				"Unable to resolve variable className for new ",
 				"InfoItemReference(). Replace 'TO_BE_REPLACED_FOR_CLASSNAME' ",
 				"with the correct type"));
 	}
@@ -149,6 +178,13 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeJavaLocalServiceImplCheck() throws Exception {
+		test(
+			"upgrade/src/service/impl" +
+				"/UpgradeJavaLocalServiceImplCheck.testjava");
+	}
+
+	@Test
 	public void testUpgradeJavaModelPermissionsCheck() throws Exception {
 		test("upgrade/UpgradeJavaModelPermissionsCheck.testjava");
 	}
@@ -157,7 +193,7 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	public void testUpgradeJavaMultiVMPoolUtilCheck() throws Exception {
 		test(
 			"upgrade/UpgradeJavaMultiVMPoolUtilCheck.testjava",
-			"Could not resolve types for MultiVMPool.getPortalCache(). " +
+			"Unable to resolve types for MultiVMPool.getPortalCache(). " +
 				"Replace 'TO_BE_REPLACED' with the correct type");
 	}
 
@@ -183,6 +219,11 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testUpgradeJavaScreenContributorClassCheck() throws Exception {
 		test("upgrade/UpgradeJavaScreenContributorClassCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaServiceImplCheck() throws Exception {
+		test("upgrade/src/service/impl/UpgradeJavaServiceImplCheck.testjava");
 	}
 
 	@Test
@@ -254,6 +295,16 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		test("upgrade/XMLUpgradeDTDVersionCheck.testxml");
 	}
 
+	@Test
+	public void testXMLUpgradeServiceDeclarativeServicesCheck()
+		throws Exception {
+
+		test("upgrade/upgrade-declarative-services-check/service.testxml");
+		test(
+			"upgrade/upgrade-declarative-services-replace-check" +
+				"/service.testxml");
+	}
+
 	@Override
 	protected SourceFormatterArgs getSourceFormatterArgs() {
 		List<String> checkCategoryNames = new ArrayList<>();
@@ -263,7 +314,9 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		List<String> sourceFormatterProperties = new ArrayList<>();
 
 		sourceFormatterProperties.add(
-			"upgrade.to.version=" + _UPGRADE_TO_VERSION);
+			"upgrade.to.liferay.version=" + _UPGRADE_TO_LIFERAY_VERSION);
+		sourceFormatterProperties.add(
+			"upgrade.to.release.version=" + _UPGRADE_TO_RELEASE_VERSION);
 
 		SourceFormatterArgs sourceFormatterArgs =
 			super.getSourceFormatterArgs();
@@ -287,6 +340,8 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		}
 	}
 
-	private static final String _UPGRADE_TO_VERSION = "7.4.13.u27";
+	private static final String _UPGRADE_TO_LIFERAY_VERSION = "7.4.13.u27";
+
+	private static final String _UPGRADE_TO_RELEASE_VERSION = "2024.q1.1";
 
 }

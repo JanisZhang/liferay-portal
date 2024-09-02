@@ -52,7 +52,7 @@ definition {
 		WaitForConsoleTextPresent(value1 = "The portal instance needs to be restarted to complete the installation");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:8080",
 			userEmailAddress = "test@liferay.com");
 

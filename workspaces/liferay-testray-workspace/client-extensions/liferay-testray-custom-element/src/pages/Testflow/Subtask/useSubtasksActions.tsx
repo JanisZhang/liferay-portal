@@ -3,8 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {useAtom} from 'jotai';
 import {useRef} from 'react';
 import {useOutletContext} from 'react-router-dom';
+import usePermission from '~/hooks/usePermission';
+import {taskSidebarRefresh} from '~/hooks/useSidebarTask';
+import {TestrayRole} from '~/util/constants';
 
 import useFormActions from '../../../hooks/useFormActions';
 import useFormModal from '../../../hooks/useFormModal';
@@ -12,10 +16,10 @@ import useModalContext from '../../../hooks/useModalContext';
 import useMutate from '../../../hooks/useMutate';
 import i18n from '../../../i18n';
 import {Liferay} from '../../../services/liferay';
-import {TestraySubTask} from '../../../services/rest';
-import {testraySubTaskImpl} from '../../../services/rest/TestraySubtask';
+import {TestraySubtask} from '../../../services/rest';
+import {testraySubtaskImpl} from '../../../services/rest/TestraySubtask';
 import {Action} from '../../../types';
-import {SubTaskStatuses} from '../../../util/statuses';
+import {SubtaskStatuses} from '../../../util/statuses';
 import {UserListView} from '../../Manage/User';
 
 type OutletContext = {
@@ -25,40 +29,48 @@ type OutletContext = {
 };
 
 const useSubtasksActions = () => {
+	const [, setTaskSidebarRefresh] = useAtom(taskSidebarRefresh);
+	const {forceRefetch, modal: completeModal} = useFormModal();
+	const {form} = useFormActions();
+	const {onOpenModal, state} = useModalContext();
 	const {
 		revalidate: {revalidateSubtask},
 	} = useOutletContext<OutletContext>();
-	const {form} = useFormActions();
 	const {updateItemFromList} = useMutate();
-	const {onOpenModal, state} = useModalContext();
-	const {forceRefetch, modal: completeModal} = useFormModal();
+	const hasPermission = usePermission([
+		TestrayRole.TESTRAY_ADMINISTRATOR,
+		TestrayRole.TESTRAY_ANALYST,
+		TestrayRole.TESTRAY_LEAD,
+	]);
 
 	const actionsRef = useRef([
 		{
 			action: (subtask, mutate) =>
-				testraySubTaskImpl.assignToMe(subtask).then(() => {
-					updateItemFromList(
-						mutate,
-						0,
-						{},
-						{
-							revalidate: true,
-						}
-					);
+				testraySubtaskImpl
+					.assignToMe(subtask)
+					.then(() => {
+						updateItemFromList(
+							mutate,
+							0,
+							{},
+							{
+								revalidate: true,
+							}
+						);
 
-					revalidateSubtask();
-				}),
-			hidden: ({dueStatus}) =>
-				dueStatus?.key === SubTaskStatuses.IN_ANALYSIS,
+						revalidateSubtask();
+					})
+					.then(() => setTaskSidebarRefresh(new Date().getTime())),
+			hidden: ({status}) => status === SubtaskStatuses.IN_ANALYSIS,
 			icon: 'user',
-			name: ({dueStatus}) =>
+			name: ({status}) =>
 				i18n.sub(
 					'assign-to-me-and-x',
-					dueStatus.key === SubTaskStatuses.OPEN
+					status === SubtaskStatuses.OPEN
 						? 'begin-analysis'
 						: 'reanalyze'
 				),
-			permission: 'UPDATE',
+			permission: hasPermission,
 		},
 		{
 			action: (subtask, mutate) =>
@@ -68,11 +80,12 @@ const useSubtasksActions = () => {
 							listViewProps={{
 								managementToolbarProps: {
 									display: {columns: false},
+									hasSearch: true,
 								},
 							}}
 							tableProps={{
 								onClickRow: (user) => {
-									testraySubTaskImpl
+									testraySubtaskImpl
 										.assignTo(subtask, user.id)
 										.then(() => {
 											updateItemFromList(
@@ -84,7 +97,11 @@ const useSubtasksActions = () => {
 
 											revalidateSubtask();
 										})
-
+										.then(() =>
+											setTaskSidebarRefresh(
+												new Date().getTime()
+											)
+										)
 										.then(form.onSuccess)
 										.catch(form.onError)
 										.finally(state.onClose);
@@ -96,50 +113,53 @@ const useSubtasksActions = () => {
 					title: i18n.translate('users'),
 				}),
 			icon: 'user',
-			name: ({dueStatus}) => {
-				if (dueStatus.key === SubTaskStatuses.IN_ANALYSIS) {
+			name: ({status}) => {
+				if (status === SubtaskStatuses.IN_ANALYSIS) {
 					return i18n.translate('assign');
 				}
 
-				if (dueStatus.key === SubTaskStatuses.OPEN) {
+				if (status === SubtaskStatuses.OPEN) {
 					return i18n.translate('assign-and-begin-analysis');
 				}
 
-				if (dueStatus.key === SubTaskStatuses.COMPLETE) {
+				if (status === SubtaskStatuses.COMPLETE) {
 					return i18n.translate('assign-and-reanalyze');
 				}
 			},
-			permission: 'UPDATE',
+			permission: hasPermission,
 		},
 		{
 			action: (subtask) => completeModal.open(subtask),
-			hidden: ({dueStatus, user}) =>
-				user?.id !== Number(Liferay.ThemeDisplay.getUserId()) ||
-				dueStatus.key !== SubTaskStatuses.IN_ANALYSIS,
+			hidden: ({status, userId}) =>
+				userId !== Number(Liferay.ThemeDisplay.getUserId()) ||
+				status !== SubtaskStatuses.IN_ANALYSIS,
 			icon: 'polls',
 			name: i18n.sub('complete-x', ''),
-			permission: 'UPDATE',
+			permission: hasPermission,
 		},
 		{
 			action: (subtask, mutate) =>
-				testraySubTaskImpl.returnToOpen(subtask).then(() => {
-					updateItemFromList(
-						mutate,
-						0,
-						{},
-						{
-							revalidate: true,
-						}
-					);
+				testraySubtaskImpl
+					.returnToOpen(subtask)
+					.then(() => {
+						updateItemFromList(
+							mutate,
+							0,
+							{},
+							{
+								revalidate: true,
+							}
+						);
 
-					revalidateSubtask();
-				}),
-			hidden: ({dueStatus}) => dueStatus.key !== SubTaskStatuses.COMPLETE,
+						revalidateSubtask();
+					})
+					.then(() => setTaskSidebarRefresh(new Date().getTime())),
+			hidden: ({status}) => status === SubtaskStatuses.OPEN,
 			icon: 'polls',
 			name: i18n.translate('return-to-open'),
-			permission: 'UPDATE',
+			permission: hasPermission,
 		},
-	] as Action<TestraySubTask>[]);
+	] as Action<TestraySubtask>[]);
 
 	return {
 		actions: actionsRef.current,

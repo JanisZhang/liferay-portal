@@ -1,4 +1,4 @@
-@component-name = "portal-logging"
+@component-name = "portal-core-infra"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -27,6 +27,16 @@ definition {
 		property test.assert.warning.exceptions = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "sequential";
+
+		ServerAdministration.openServerAdmin();
+
+		ServerAdministration.addCategoryLogLevels(
+			categoryLevel = "DEBUG",
+			categoryName = "com.liferay.portal.util.PortalInstances");
+
+		ServerAdministration.viewCategoryLogLevels(
+			categoryLevel = "DEBUG",
+			categoryName = "com.liferay.portal.util.PortalInstances");
 
 		for (var portalInstanceName : list "www.able.com,www.baker.com") {
 			HeadlessPortalInstanceAPI.addPortalInstance(
@@ -100,7 +110,7 @@ definition {
 				key_virtualHost = "liferay.com",
 				locator1 = "CompanyLogging#COMPANY_LOG_TITLE");
 
-			AssertLocation.assertPartialLocation(value1 = "web/guest");
+			AssertTextPresent(value1 = "The requested resource could not be found");
 		}
 
 		task ("When the user adds a virtual instance") {
@@ -181,13 +191,13 @@ definition {
 
 		task ("And given a company admin user is added for that virtual instance") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
 			JSONUser.addUser(
 				creatorEmailAddress = "test@www.able.com",
-				creatorPassword = "test",
+				creatorPassword = PropsUtil.get("default.admin.password"),
 				portalInstanceName = "www.able.com",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "userea@www.able.com",
@@ -201,7 +211,7 @@ definition {
 				roleTitle = "Administrator",
 				userScreenName = "usersn");
 
-			User.editPassword(newPassword = "test");
+			User.editPassword(newPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("And given the company admin logs in to the virtual instance") {
@@ -243,13 +253,13 @@ definition {
 
 		task ("And given a company admin user is added for that virtual instance") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
 			JSONUser.addUser(
 				creatorEmailAddress = "test@www.able.com",
-				creatorPassword = "test",
+				creatorPassword = PropsUtil.get("default.admin.password"),
 				portalInstanceName = "www.able.com",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "userea@www.able.com",
@@ -263,7 +273,7 @@ definition {
 				roleTitle = "Administrator",
 				userScreenName = "usersn");
 
-			User.editPassword(newPassword = "test");
+			User.editPassword(newPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("And given the company admin logs in to the virtual instance") {
@@ -321,7 +331,7 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 
 			CompanyLogging.openServerLogsAdmin();

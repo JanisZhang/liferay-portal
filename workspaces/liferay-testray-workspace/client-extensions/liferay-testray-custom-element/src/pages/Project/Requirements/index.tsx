@@ -5,7 +5,7 @@
 
 import ClayIcon from '@clayui/icon';
 import ClayManagementToolbar from '@clayui/management-toolbar';
-import {useNavigate, useParams} from 'react-router-dom';
+import {useParams} from 'react-router-dom';
 import useFormModal from '~/hooks/useFormModal';
 import {testrayRequirementsImpl} from '~/services/rest';
 
@@ -17,7 +17,6 @@ import {ListViewContextProviderProps} from '../../../context/ListViewContext';
 import SearchBuilder from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
 import {Action} from '../../../types';
-import ImportJiraIssuesFormModal from './ImportJiraIssuesFormModal';
 import useRequirementActions from './useRequirementActions';
 
 type RequirementListViewProps = {
@@ -39,13 +38,11 @@ const RequirementListView: React.FC<RequirementListViewProps> = ({
 	tableProps,
 	variables,
 }) => {
-	const navigate = useNavigate();
-
 	return (
 		<ListView
 			forceRefetch={formModal?.forceRefetch}
 			managementToolbarProps={{
-				addButton: () => navigate('create'),
+				applyFilters: true,
 				buttons: (actions) =>
 					actions?.create && (
 						<>
@@ -145,11 +142,6 @@ const Requirements = () => {
 				variables={{
 					filter: SearchBuilder.eq('projectId', projectId as string),
 				}}
-			/>
-
-			<ImportJiraIssuesFormModal
-				forceRefetch={formModal.forceRefetch}
-				modal={formModal.modal}
 			/>
 		</Container>
 	);

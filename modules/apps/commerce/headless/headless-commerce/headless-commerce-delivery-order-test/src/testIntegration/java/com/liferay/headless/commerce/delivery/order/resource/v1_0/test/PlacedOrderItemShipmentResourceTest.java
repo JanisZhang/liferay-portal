@@ -98,12 +98,6 @@ public class PlacedOrderItemShipmentResourceTest
 			_accountEntry.getAccountEntryId(),
 			_commerceCurrency.getCommerceCurrencyId());
 
-		_commerceOrder.setOrderStatus(
-			CommerceOrderConstants.ORDER_STATUS_COMPLETED);
-
-		_commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
-			_commerceOrder);
-
 		_commercePriceList =
 			_commercePriceListLocalService.addCommercePriceList(
 				RandomTestUtil.randomString(), testGroup.getGroupId(),
@@ -126,6 +120,15 @@ public class PlacedOrderItemShipmentResourceTest
 					_accountEntry, _commerceCurrency, _commerceChannel, _user,
 					testGroup, _commerceOrder),
 				_serviceContext);
+
+		_commerceOrder = _commerceOrderLocalService.getCommerceOrder(
+			_commerceOrder.getCommerceOrderId());
+
+		_commerceOrder.setOrderStatus(
+			CommerceOrderConstants.ORDER_STATUS_COMPLETED);
+
+		_commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+			_commerceOrder);
 
 		_country = _countryLocalService.addCountry(
 			"XY", "XYZ", true, true, RandomTestUtil.randomString(),
@@ -161,6 +164,7 @@ public class PlacedOrderItemShipmentResourceTest
 				createDate = RandomTestUtil.nextDate();
 				estimatedDeliveryDate = RandomTestUtil.nextDate();
 				estimatedShippingDate = RandomTestUtil.nextDate();
+				externalReferenceCode = RandomTestUtil.randomString();
 				id = RandomTestUtil.randomLong();
 				modifiedDate = RandomTestUtil.nextDate();
 				orderId = _commerceOrder.getCommerceOrderId();
@@ -173,6 +177,24 @@ public class PlacedOrderItemShipmentResourceTest
 					RandomTestUtil.randomString());
 			}
 		};
+	}
+
+	@Override
+	protected PlacedOrderItemShipment
+			testGetPlacedOrderItemByExternalReferenceCodePlacedOrderItemShipmentsPage_addPlacedOrderItemShipment(
+				String externalReferenceCode,
+				PlacedOrderItemShipment placedOrderItemShipment)
+		throws Exception {
+
+		return _addCommerceShipmentItem(placedOrderItemShipment);
+	}
+
+	@Override
+	protected String
+			testGetPlacedOrderItemByExternalReferenceCodePlacedOrderItemShipmentsPage_getExternalReferenceCode()
+		throws Exception {
+
+		return _commerceOrderItem.getExternalReferenceCode();
 	}
 
 	@Override
@@ -235,6 +257,8 @@ public class PlacedOrderItemShipmentResourceTest
 					placedOrderItemShipment.getEstimatedDeliveryDate();
 				estimatedShippingDate =
 					placedOrderItemShipment.getEstimatedShippingDate();
+				externalReferenceCode =
+					placedOrderItemShipment.getExternalReferenceCode();
 				id = commerceShipmentItem.getCommerceShipmentItemId();
 				modifiedDate = commerceShipmentItem.getModifiedDate();
 				orderId = _commerceOrder.getCommerceOrderId();

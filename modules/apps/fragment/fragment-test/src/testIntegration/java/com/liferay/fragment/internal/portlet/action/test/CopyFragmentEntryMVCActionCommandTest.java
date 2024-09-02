@@ -96,7 +96,7 @@ public class CopyFragmentEntryMVCActionCommandTest {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				null);
 
@@ -138,13 +138,13 @@ public class CopyFragmentEntryMVCActionCommandTest {
 	public void testCopyFragmentEntry() throws Exception {
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				null);
 
 		FragmentEntry fragmentEntry =
 			_fragmentEntryLocalService.addFragmentEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				StringPool.BLANK, StringUtil.randomString(), StringPool.BLANK,
 				StringUtil.randomString(), StringPool.BLANK, false,
 				StringPool.BLANK, StringPool.BLANK, 0, false,

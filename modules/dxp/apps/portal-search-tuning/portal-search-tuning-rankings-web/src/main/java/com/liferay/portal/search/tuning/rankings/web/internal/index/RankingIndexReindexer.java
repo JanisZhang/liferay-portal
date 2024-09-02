@@ -18,6 +18,8 @@ import com.liferay.portal.kernel.search.background.task.ReindexStatusMessageSend
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.SyncReindexManager;
 import com.liferay.portal.search.spi.reindexer.IndexReindexer;
 import com.liferay.portal.search.tuning.rankings.constants.ResultRankingsConstants;
@@ -32,6 +34,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -72,9 +75,11 @@ public class RankingIndexReindexer implements IndexReindexer {
 			}
 
 			try {
-				rankingIndexCreator.deleteIfExists(rankingIndexName);
+				RankingIndexCreatorUtil.deleteIfExists(
+					_searchEngineAdapter, rankingIndexName);
 
-				rankingIndexCreator.create(rankingIndexName);
+				RankingIndexCreatorUtil.create(
+					_searchEngineAdapter, rankingIndexName);
 			}
 			catch (RuntimeException runtimeException) {
 				_log.error(
@@ -93,7 +98,7 @@ public class RankingIndexReindexer implements IndexReindexer {
 		int sendStatusInterval = Math.max(100, classPKs.size() / 20);
 
 		for (int i = 0; i < classPKs.size(); i++) {
-			rankingIndexWriter.create(
+			_rankingIndexWriter.create(
 				rankingIndexName, _buildRanking(classPKs.get(i)));
 
 			if ((i % sendStatusInterval) == 0) {
@@ -112,6 +117,12 @@ public class RankingIndexReindexer implements IndexReindexer {
 		}
 	}
 
+	@Activate
+	protected void activate() {
+		_rankingIndexWriter = new RankingIndexWriter(
+			_documentBuilderFactory, _searchEngineAdapter);
+	}
+
 	@Reference
 	protected ClassNameLocalService classNameLocalService;
 
@@ -122,13 +133,7 @@ public class RankingIndexReindexer implements IndexReindexer {
 	protected RankingBuilderFactory rankingBuilderFactory;
 
 	@Reference
-	protected RankingIndexCreator rankingIndexCreator;
-
-	@Reference
 	protected RankingIndexNameBuilder rankingIndexNameBuilder;
-
-	@Reference
-	protected RankingIndexWriter rankingIndexWriter;
 
 	@Reference
 	protected RankingPinBuilderFactory rankingPinBuilderFactory;
@@ -213,5 +218,13 @@ public class RankingIndexReindexer implements IndexReindexer {
 	private static final Snapshot<SyncReindexManager>
 		_syncReindexManagerSnapshot = new Snapshot<>(
 			RankingIndexReindexer.class, SyncReindexManager.class, null, true);
+
+	@Reference
+	private DocumentBuilderFactory _documentBuilderFactory;
+
+	private RankingIndexWriter _rankingIndexWriter;
+
+	@Reference
+	private SearchEngineAdapter _searchEngineAdapter;
 
 }

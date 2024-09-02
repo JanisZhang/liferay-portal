@@ -117,6 +117,7 @@ public class Jethr0BuildUpdater extends BaseBuildUpdater {
 		return false;
 	}
 
+	@Override
 	protected boolean isBuildRunning() {
 		if (Objects.equals(_jethr0Status, "running")) {
 			return true;
@@ -230,6 +231,8 @@ public class Jethr0BuildUpdater extends BaseBuildUpdater {
 		build.setBuildURL(jenkinsBuildURL);
 		build.setJenkinsMaster(jenkinsMaster);
 
+		build.saveBuildURLInBuildDatabase();
+
 		_jethr0BuildId = jsonObject.getLong("jethr0BuildId");
 		_jethr0Result = jsonObject.getString("result");
 		_jethr0Status = "completed";
@@ -245,6 +248,8 @@ public class Jethr0BuildUpdater extends BaseBuildUpdater {
 		buildInvocation.setBuildURL(jethr0BuildURL);
 
 		build.setBuildURL(jethr0BuildURL);
+
+		build.saveBuildURLInBuildDatabase();
 
 		_jethr0BuildId = jsonObject.getLong("jethr0BuildId");
 		_jethr0Status = "queued";
@@ -266,6 +271,8 @@ public class Jethr0BuildUpdater extends BaseBuildUpdater {
 		build.setBuildURL(jenkinsBuildURL);
 
 		build.setJenkinsMaster(jenkinsMaster);
+
+		build.saveBuildURLInBuildDatabase();
 
 		_jethr0BuildId = jsonObject.getLong("jethr0BuildId");
 		_jethr0Status = "running";

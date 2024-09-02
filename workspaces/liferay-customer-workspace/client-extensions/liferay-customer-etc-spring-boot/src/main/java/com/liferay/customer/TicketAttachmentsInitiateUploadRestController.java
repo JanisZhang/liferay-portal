@@ -5,9 +5,9 @@
 
 package com.liferay.customer;
 
-import com.liferay.customer.google.service.GoogleCloudStorageWebService;
-import com.liferay.customer.object.model.TicketAttachment;
-import com.liferay.customer.object.service.TicketAttachmentWebService;
+import com.liferay.customer.model.TicketAttachment;
+import com.liferay.customer.service.GoogleCloudStorageWebService;
+import com.liferay.customer.service.TicketAttachmentWebService;
 import com.liferay.osb.spring.boot.client.zendesk.model.ZendeskOrganization;
 import com.liferay.osb.spring.boot.client.zendesk.model.ZendeskTicket;
 import com.liferay.osb.spring.boot.client.zendesk.service.ZendeskWebService;
@@ -46,7 +46,7 @@ public class TicketAttachmentsInitiateUploadRestController
 			JSONObject jsonObject = new JSONObject(json);
 
 			String fileName = jsonObject.getString("fileName");
-			String md5Checksum = jsonObject.getString("md5Checksum");
+			String md5Checksum = jsonObject.optString("md5Checksum");
 			long zendeskTicketId = jsonObject.getLong("zendeskTicketId");
 
 			TicketAttachment ticketAttachment =
@@ -90,7 +90,7 @@ public class TicketAttachmentsInitiateUploadRestController
 				responseJSONObject.toString(), HttpStatus.OK);
 		}
 		catch (Exception exception) {
-			_log.error(exception);
+			_log.error(exception, exception);
 
 			return new ResponseEntity(
 				exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

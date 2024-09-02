@@ -12,6 +12,10 @@ import com.liferay.jenkins.results.parser.PortalAWSJob;
 import com.liferay.jenkins.results.parser.PortalEnvironmentJob;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
 import com.liferay.jenkins.results.parser.QAWebsitesGitRepositoryJob;
+import com.liferay.jenkins.results.parser.test.batch.JUnitTestBatch;
+import com.liferay.jenkins.results.parser.test.batch.PlaywrightTestBatch;
+import com.liferay.jenkins.results.parser.test.batch.PoshiTestBatch;
+import com.liferay.jenkins.results.parser.test.batch.TestBatch;
 
 import java.io.File;
 
@@ -40,6 +44,11 @@ public class TestClassGroupFactory {
 				testBaseDir);
 		}
 
+		if (batchTestClassGroup instanceof JSUnitModulesBatchTestClassGroup) {
+			return new JSUnitAxisTestClassGroup(
+				(JSUnitModulesBatchTestClassGroup)batchTestClassGroup);
+		}
+
 		if (batchTestClassGroup instanceof JUnitBatchTestClassGroup) {
 			return new JUnitAxisTestClassGroup(
 				(JUnitBatchTestClassGroup)batchTestClassGroup);
@@ -54,6 +63,11 @@ public class TestClassGroupFactory {
 				(PluginsGulpBatchTestClassGroup)batchTestClassGroup);
 		}
 
+		if (batchTestClassGroup instanceof SemVerModulesBatchTestClassGroup) {
+			return new SemVerModulesAxisTestClassGroup(
+				(SemVerModulesBatchTestClassGroup)batchTestClassGroup);
+		}
+
 		return new AxisTestClassGroup(batchTestClassGroup);
 	}
 
@@ -65,6 +79,11 @@ public class TestClassGroupFactory {
 
 		if (batchTestClassGroup instanceof FunctionalBatchTestClassGroup) {
 			return new FunctionalAxisTestClassGroup(
+				jsonObject, segmentTestClassGroup);
+		}
+
+		if (batchTestClassGroup instanceof JSUnitModulesBatchTestClassGroup) {
+			return new JSUnitAxisTestClassGroup(
 				jsonObject, segmentTestClassGroup);
 		}
 
@@ -83,19 +102,30 @@ public class TestClassGroupFactory {
 				jsonObject, segmentTestClassGroup);
 		}
 
+		if (batchTestClassGroup instanceof SemVerModulesBatchTestClassGroup) {
+			return new SemVerModulesAxisTestClassGroup(
+				jsonObject, segmentTestClassGroup);
+		}
+
 		return new AxisTestClassGroup(jsonObject, segmentTestClassGroup);
 	}
 
 	public static BatchTestClassGroup newBatchTestClassGroup(
 		Job job, JSONObject jsonObject) {
 
-		return _newBatchTestClassGroup(null, job, jsonObject);
+		return _newBatchTestClassGroup(null, job, jsonObject, null);
+	}
+
+	public static BatchTestClassGroup newBatchTestClassGroup(
+		Job job, TestBatch testBatch) {
+
+		return _newBatchTestClassGroup(null, job, null, testBatch);
 	}
 
 	public static BatchTestClassGroup newBatchTestClassGroup(
 		String batchName, Job job) {
 
-		return _newBatchTestClassGroup(batchName, job, null);
+		return _newBatchTestClassGroup(batchName, job, null, null);
 	}
 
 	public static SegmentTestClassGroup newSegmentTestClassGroup(
@@ -161,6 +191,18 @@ public class TestClassGroupFactory {
 		}
 		else if (batchTestClassGroup instanceof ModulesBatchTestClassGroup) {
 			if (batchTestClassGroup instanceof
+					SemVerModulesBatchTestClassGroup) {
+
+				if (jsonObject != null) {
+					return new SemVerModulesSegmentTestClassGroup(
+						batchTestClassGroup, jsonObject);
+				}
+
+				return new SemVerModulesSegmentTestClassGroup(
+					batchTestClassGroup);
+			}
+
+			if (batchTestClassGroup instanceof
 					ServiceBuilderModulesBatchTestClassGroup) {
 
 				if (jsonObject != null) {
@@ -178,6 +220,17 @@ public class TestClassGroupFactory {
 			}
 
 			return new ModulesSegmentTestClassGroup(batchTestClassGroup);
+		}
+		else if (batchTestClassGroup instanceof
+					QAWebsitesPlaywrightBatchTestClassGroup) {
+
+			if (jsonObject != null) {
+				return new QAWebsitesPlaywrightSegmentTestClassGroup(
+					batchTestClassGroup, jsonObject);
+			}
+
+			return new QAWebsitesPlaywrightSegmentTestClassGroup(
+				batchTestClassGroup);
 		}
 		else if (batchTestClassGroup instanceof PlaywrightBatchTestClassGroup) {
 			if (jsonObject != null) {
@@ -214,10 +267,15 @@ public class TestClassGroupFactory {
 	}
 
 	private static BatchTestClassGroup _newBatchTestClassGroup(
-		String batchName, Job job, JSONObject jsonObject) {
+		String batchName, Job job, JSONObject jsonObject, TestBatch testBatch) {
 
 		if (JenkinsResultsParserUtil.isNullOrEmpty(batchName)) {
-			batchName = jsonObject.getString("batch_name");
+			if (jsonObject != null) {
+				batchName = jsonObject.getString("batch_name");
+			}
+			else {
+				batchName = testBatch.getName();
+			}
 		}
 
 		String key = JobFactory.getKey(job) + "_" + batchName;
@@ -252,6 +310,11 @@ public class TestClassGroupFactory {
 				if (jsonObject != null) {
 					batchTestClassGroup = new FunctionalBatchTestClassGroup(
 						jsonObject, portalTestClassJob);
+				}
+				else if (testBatch != null) {
+					batchTestClassGroup = new FunctionalBatchTestClassGroup(
+						batchName, portalTestClassJob,
+						(PoshiTestBatch)testBatch);
 				}
 				else {
 					batchTestClassGroup = new FunctionalBatchTestClassGroup(
@@ -331,6 +394,11 @@ public class TestClassGroupFactory {
 					batchTestClassGroup = new ModulesJUnitBatchTestClassGroup(
 						jsonObject, portalTestClassJob);
 				}
+				else if (testBatch != null) {
+					batchTestClassGroup = new ModulesJUnitBatchTestClassGroup(
+						batchName, portalTestClassJob,
+						(JUnitTestBatch)testBatch);
+				}
 				else {
 					batchTestClassGroup = new ModulesJUnitBatchTestClassGroup(
 						batchName, portalTestClassJob);
@@ -346,10 +414,27 @@ public class TestClassGroupFactory {
 						batchName, portalTestClassJob);
 				}
 			}
+			else if (batchName.startsWith("playwright-compile-")) {
+				if (jsonObject != null) {
+					batchTestClassGroup =
+						new PlaywrightCompileBatchTestClassGroup(
+							jsonObject, portalTestClassJob);
+				}
+				else {
+					batchTestClassGroup =
+						new PlaywrightCompileBatchTestClassGroup(
+							batchName, portalTestClassJob);
+				}
+			}
 			else if (batchName.startsWith("playwright-js-")) {
 				if (jsonObject != null) {
 					batchTestClassGroup = new PlaywrightBatchTestClassGroup(
 						jsonObject, portalTestClassJob);
+				}
+				else if (testBatch != null) {
+					batchTestClassGroup = new PlaywrightBatchTestClassGroup(
+						batchName, (PlaywrightTestBatch)testBatch,
+						portalTestClassJob);
 				}
 				else {
 					batchTestClassGroup = new PlaywrightBatchTestClassGroup(
@@ -402,6 +487,18 @@ public class TestClassGroupFactory {
 							batchName, (QAWebsitesGitRepositoryJob)job);
 				}
 			}
+			else if (batchName.startsWith("qa-websites-playwright-")) {
+				if (jsonObject != null) {
+					batchTestClassGroup =
+						new QAWebsitesPlaywrightBatchTestClassGroup(
+							jsonObject, (QAWebsitesGitRepositoryJob)job);
+				}
+				else {
+					batchTestClassGroup =
+						new QAWebsitesPlaywrightBatchTestClassGroup(
+							batchName, (QAWebsitesGitRepositoryJob)job);
+				}
+			}
 			else if (batchName.startsWith("rest-builder-")) {
 				if (jsonObject != null) {
 					batchTestClassGroup =
@@ -412,6 +509,16 @@ public class TestClassGroupFactory {
 					batchTestClassGroup =
 						new RESTBuilderModulesBatchTestClassGroup(
 							batchName, portalTestClassJob);
+				}
+			}
+			else if (batchName.startsWith("semantic-versioning")) {
+				if (jsonObject != null) {
+					batchTestClassGroup = new SemanticVersioningTestClassGroup(
+						jsonObject, portalTestClassJob);
+				}
+				else {
+					batchTestClassGroup = new SemanticVersioningTestClassGroup(
+						batchName, portalTestClassJob);
 				}
 			}
 			else if (batchName.startsWith("service-builder-")) {

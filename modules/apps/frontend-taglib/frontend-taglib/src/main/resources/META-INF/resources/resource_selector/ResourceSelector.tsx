@@ -7,7 +7,6 @@ import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import {openSelectionModal} from 'frontend-js-web';
-import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
 interface IResourceSelectorProps {
@@ -16,13 +15,13 @@ interface IResourceSelectorProps {
 	modalTitle: string;
 	portletNamespace: string;
 	resourceName: string;
-	resourceNameKey: string;
+	resourceNameKey?: string;
 	resourceValue: string;
-	resourceValueKey: string;
+	resourceValueKey?: string;
 	selectEventName: string;
 	selectResourceURL: string;
 	showRemoveButton: boolean;
-	warningMessage: boolean;
+	warningMessage?: boolean;
 }
 
 export default function ResourceSelector({
@@ -31,14 +30,17 @@ export default function ResourceSelector({
 	modalTitle,
 	portletNamespace,
 	resourceName: initialResourceName,
-	resourceNameKey = 'resourcename',
+	resourceNameKey: initialResourceNameKey,
 	resourceValue: initialResourceValue,
-	resourceValueKey = 'resourceid',
+	resourceValueKey: initialResourceValueKey,
 	selectEventName,
 	selectResourceURL,
 	showRemoveButton,
 	warningMessage,
 }: IResourceSelectorProps) {
+	const resourceNameKey = initialResourceNameKey || 'resourcename';
+	const resourceValueKey = initialResourceValueKey || 'resourceid';
+
 	const [resourceData, setResourceData] = useState({
 		resourceName: initialResourceName,
 		resourceValue: initialResourceValue,
@@ -58,10 +60,27 @@ export default function ResourceSelector({
 			onSelect: (selectedItem) => {
 				if (selectedItem) {
 					setResourceData({
+
+						// @ts-ignore
+
 						resourceName: selectedItem[resourceNameKey],
+
+						// @ts-ignore
+
 						resourceValue: selectedItem[resourceValueKey],
 						showWarning: false,
 					});
+
+					const repositoryIdElement = document.getElementById(
+						`${portletNamespace}selectedRepositoryId`
+					) as HTMLInputElement;
+
+					if (repositoryIdElement) {
+
+						// @ts-ignore
+
+						repositoryIdElement.value = selectedItem.repositoryid;
+					}
 				}
 			},
 			selectEventName: `${portletNamespace}${selectEventName}`,
@@ -117,16 +136,3 @@ export default function ResourceSelector({
 		</div>
 	);
 }
-
-ResourceSelector.propTypes = {
-	inputLabel: PropTypes.string.isRequired,
-	inputName: PropTypes.string.isRequired,
-	modalTitle: PropTypes.string.isRequired,
-	portletNamespace: PropTypes.string.isRequired,
-	resourceName: PropTypes.string.isRequired,
-	resourceValue: PropTypes.string.isRequired,
-	selectEventName: PropTypes.string.isRequired,
-	selectResourceURL: PropTypes.string.isRequired,
-	showRemoveButton: PropTypes.bool.isRequired,
-	warningMessage: PropTypes.bool,
-};

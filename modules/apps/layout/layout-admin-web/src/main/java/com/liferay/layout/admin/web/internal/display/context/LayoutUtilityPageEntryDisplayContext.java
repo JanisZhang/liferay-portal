@@ -6,8 +6,11 @@
 package com.liferay.layout.admin.web.internal.display.context;
 
 import com.liferay.layout.admin.web.internal.security.permission.resource.LayoutUtilityPageEntryPermission;
+import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRenderer;
+import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRendererRegistryUtil;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
-import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalServiceUtil;
+import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryServiceUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
@@ -81,16 +84,41 @@ public class LayoutUtilityPageEntryDisplayContext {
 
 		layoutUtilityPageEntrySearchContainer.setOrderByCol(getOrderByCol());
 		layoutUtilityPageEntrySearchContainer.setOrderByType(getOrderByType());
-		layoutUtilityPageEntrySearchContainer.setResultsAndTotal(
-			() ->
-				LayoutUtilityPageEntryLocalServiceUtil.
-					getLayoutUtilityPageEntries(
-						_themeDisplay.getScopeGroupId(),
-						layoutUtilityPageEntrySearchContainer.getStart(),
-						layoutUtilityPageEntrySearchContainer.getEnd(), null),
-			LayoutUtilityPageEntryLocalServiceUtil.
-				getLayoutUtilityPageEntriesCount(
-					_themeDisplay.getScopeGroupId()));
+
+		String[] types = TransformUtil.transformToArray(
+			LayoutUtilityPageEntryViewRendererRegistryUtil.
+				getLayoutUtilityPageEntryViewRenderers(),
+			LayoutUtilityPageEntryViewRenderer::getType, String.class);
+
+		if (Validator.isNotNull(_getKeywords())) {
+			layoutUtilityPageEntrySearchContainer.setResultsAndTotal(
+				() ->
+					LayoutUtilityPageEntryServiceUtil.
+						getLayoutUtilityPageEntries(
+							_themeDisplay.getScopeGroupId(), _getKeywords(),
+							types,
+							layoutUtilityPageEntrySearchContainer.getStart(),
+							layoutUtilityPageEntrySearchContainer.getEnd(),
+							null),
+				LayoutUtilityPageEntryServiceUtil.
+					getLayoutUtilityPageEntriesCount(
+						_themeDisplay.getScopeGroupId(), _getKeywords(),
+						types));
+		}
+		else {
+			layoutUtilityPageEntrySearchContainer.setResultsAndTotal(
+				() ->
+					LayoutUtilityPageEntryServiceUtil.
+						getLayoutUtilityPageEntries(
+							_themeDisplay.getScopeGroupId(), types,
+							layoutUtilityPageEntrySearchContainer.getStart(),
+							layoutUtilityPageEntrySearchContainer.getEnd(),
+							null),
+				LayoutUtilityPageEntryServiceUtil.
+					getLayoutUtilityPageEntriesCount(
+						_themeDisplay.getScopeGroupId(), types));
+		}
+
 		layoutUtilityPageEntrySearchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
 
@@ -123,6 +151,16 @@ public class LayoutUtilityPageEntryDisplayContext {
 		return _orderByType;
 	}
 
+	private String _getKeywords() {
+		if (_keywords != null) {
+			return _keywords;
+		}
+
+		_keywords = ParamUtil.getString(_renderRequest, "keywords");
+
+		return _keywords;
+	}
+
 	private PortletURL _getPortletURL() {
 		return PortletURLBuilder.createRenderURL(
 			_renderResponse
@@ -141,6 +179,7 @@ public class LayoutUtilityPageEntryDisplayContext {
 		return _tabs1;
 	}
 
+	private String _keywords;
 	private SearchContainer<LayoutUtilityPageEntry>
 		_layoutUtilityPageEntrySearchContainer;
 	private String _orderByCol;

@@ -5,14 +5,17 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeoutException;
@@ -37,11 +40,11 @@ public class JenkinsCohort {
 	}
 
 	public int getIdleJenkinsSlaveCount() {
+		int idleJenkinsSlaveCount = 0;
+
 		if (_jenkinsCohortJobsMap.isEmpty()) {
 			update();
 		}
-
-		int idleJenkinsSlaveCount = 0;
 
 		for (JenkinsMaster jenkinsMaster : _jenkinsMastersMap.values()) {
 			idleJenkinsSlaveCount += jenkinsMaster.getIdleJenkinsSlavesCount();
@@ -94,12 +97,22 @@ public class JenkinsCohort {
 		return _name;
 	}
 
+	public Set<String> getNetworkNames() {
+		Set<String> networkNames = new HashSet<>();
+
+		for (JenkinsMaster jenkinsMaster : getJenkinsMasters()) {
+			networkNames.add(jenkinsMaster.getNetworkName());
+		}
+
+		return networkNames;
+	}
+
 	public int getOfflineJenkinsSlaveCount() {
+		int offlineJenkinsSlaveCount = 0;
+
 		if (_jenkinsCohortJobsMap.isEmpty()) {
 			update();
 		}
-
-		int offlineJenkinsSlaveCount = 0;
 
 		for (JenkinsMaster jenkinsMaster : _jenkinsMastersMap.values()) {
 			offlineJenkinsSlaveCount +=
@@ -110,11 +123,11 @@ public class JenkinsCohort {
 	}
 
 	public int getOnlineJenkinsSlaveCount() {
+		int onlineJenkinsSlaveCount = 0;
+
 		if (_jenkinsCohortJobsMap.isEmpty()) {
 			update();
 		}
-
-		int onlineJenkinsSlaveCount = 0;
 
 		for (JenkinsMaster jenkinsMaster : _jenkinsMastersMap.values()) {
 			onlineJenkinsSlaveCount +=
@@ -125,11 +138,11 @@ public class JenkinsCohort {
 	}
 
 	public int getQueuedBuildCount() {
+		int queuedBuildCount = 0;
+
 		if (_jenkinsCohortJobsMap.isEmpty()) {
 			update();
 		}
-
-		int queuedBuildCount = 0;
 
 		for (JenkinsCohortJob jenkinsCohortJob :
 				_jenkinsCohortJobsMap.values()) {
@@ -142,11 +155,11 @@ public class JenkinsCohort {
 	}
 
 	public int getRunningBuildCount() {
+		int runningBuildCount = 0;
+
 		if (_jenkinsCohortJobsMap.isEmpty()) {
 			update();
 		}
-
-		int runningBuildCount = 0;
 
 		for (JenkinsCohortJob jenkinsCohortJob :
 				_jenkinsCohortJobsMap.values()) {
@@ -377,6 +390,65 @@ public class JenkinsCohort {
 		sb.append(";");
 
 		JenkinsResultsParserUtil.write(filePath, sb.toString());
+	}
+
+	public void writeNodeDataJSONFile(String filePath) throws IOException {
+		File file = new File(filePath);
+
+		JSONObject jsonObject = null;
+
+		if (file.exists()) {
+			String fileContent = JenkinsResultsParserUtil.read(file);
+
+			jsonObject = new JSONObject(fileContent);
+		}
+		else {
+			jsonObject = new JSONObject();
+
+			jsonObject.put(
+				"idle_nodes", new JSONArray()
+			).put(
+				"occupied_nodes", new JSONArray()
+			).put(
+				"offline_nodes", new JSONArray()
+			).put(
+				"online_nodes", new JSONArray()
+			).put(
+				"queued_builds", new JSONArray()
+			).put(
+				"timestamps", new JSONArray()
+			);
+		}
+
+		JSONArray idleNodesJSONArray = jsonObject.getJSONArray("idle_nodes");
+
+		idleNodesJSONArray.put(getIdleJenkinsSlaveCount());
+
+		JSONArray occupiedNodesJSONArray = jsonObject.getJSONArray(
+			"occupied_nodes");
+
+		occupiedNodesJSONArray.put(getRunningBuildCount());
+
+		JSONArray offlineNodesJSONArray = jsonObject.getJSONArray(
+			"offline_nodes");
+
+		offlineNodesJSONArray.put(getOfflineJenkinsSlaveCount());
+
+		JSONArray onlineNodesJSONArray = jsonObject.getJSONArray(
+			"online_nodes");
+
+		onlineNodesJSONArray.put(getOnlineJenkinsSlaveCount());
+
+		JSONArray queuedBuildsJSONArray = jsonObject.getJSONArray(
+			"queued_builds");
+
+		queuedBuildsJSONArray.put(getQueuedBuildCount());
+
+		JSONArray timestampsJSONArray = jsonObject.getJSONArray("timestamps");
+
+		timestampsJSONArray.put(System.currentTimeMillis());
+
+		JenkinsResultsParserUtil.write(filePath, jsonObject.toString());
 	}
 
 	protected JenkinsCohort(String name) {

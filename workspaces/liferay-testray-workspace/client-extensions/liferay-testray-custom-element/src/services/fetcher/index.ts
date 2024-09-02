@@ -1,4 +1,5 @@
 /* eslint-disable @liferay/portal/no-global-fetch */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -16,8 +17,16 @@ const headlessDeliveryAPIs = [
 	'message-board-threads',
 ];
 
+const testrayRestAPIs = [
+	'testray-build-autofill',
+	'testray-case-result',
+	'testray-run-comparisons',
+	'testray-status-metrics',
+	'testray-testflow',
+];
+
 function changeResource(resource: RequestInfo) {
-	const getIsResourceFromAPI = (apis: string[]) =>
+	const getResourceFromAPI = (apis: string[]) =>
 		apis.some((api) => resource.toString().includes(api));
 
 	if (resource.toString().startsWith('http')) {
@@ -32,11 +41,15 @@ function changeResource(resource: RequestInfo) {
 		return `${liferayHost}/o/dispatch-rest/v1.0${resource}`;
 	}
 
-	if (getIsResourceFromAPI(headlessDeliveryAPIs)) {
+	if (getResourceFromAPI(testrayRestAPIs)) {
+		return `${liferayHost}/o/testray-rest/v1.0${resource}`;
+	}
+
+	if (getResourceFromAPI(headlessDeliveryAPIs)) {
 		return `${liferayHost}/o/headless-delivery/v1.0${resource}`;
 	}
 
-	if (getIsResourceFromAPI(headlessAdminUserAPIs)) {
+	if (getResourceFromAPI(headlessAdminUserAPIs)) {
 		return `${liferayHost}/o/headless-admin-user/v1.0${resource}`;
 	}
 

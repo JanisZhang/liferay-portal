@@ -79,8 +79,8 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 												<div class="input-group-inset-item input-group-inset-item-after">
 													<clay:button
 														data-qa-id="searchButton"
-														icon="search"
 														displayType="unstyled"
+														icon="search"
 														monospaced="<%= false %>"
 														type="submit"
 													/>
@@ -269,7 +269,8 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 		recordSetId,
 		recordSetName
 	) {
-		document.<portlet:namespace />fm.<portlet:namespace />recordSetId.value = recordSetId;
+		document.<portlet:namespace />fm.<portlet:namespace />recordSetId.value =
+			recordSetId;
 
 		var displayingRecordSetIdHolder = document.querySelector(
 			'.displaying-record-set-id-holder'
@@ -305,13 +306,13 @@ private OrderByComparator<DDLRecordSet> getDDLRecordSetOrderByComparator(String 
 	OrderByComparator<DDLRecordSet> orderByComparator = null;
 
 	if (orderByCol.equals("create-date")) {
-		orderByComparator = new DDLRecordSetCreateDateComparator(orderByAsc);
+		orderByComparator = DDLRecordSetCreateDateComparator.getInstance(orderByAsc);
 	}
 	else if (orderByCol.equals("modified-date")) {
 		orderByComparator = new DDLRecordSetModifiedDateComparator(orderByAsc);
 	}
 	else if (orderByCol.equals("name")) {
-		orderByComparator = new DDLRecordSetNameComparator(orderByAsc);
+		orderByComparator = DDLRecordSetNameComparator.getInstance(orderByAsc);
 	}
 
 	return orderByComparator;

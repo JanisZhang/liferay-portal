@@ -122,27 +122,58 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 			throw new UnsupportedOperationException();
 		}
 
-		if (isModifiable() && isSystem()) {
-			return ObjectDefinitionUtil.
-				getModifiableSystemObjectDefinitionRESTContextPath(getName());
-		}
-
-		String shortName = TextFormatter.formatPlural(
-			StringUtil.toLowerCase(getShortName()));
-
 		if (!isRootDescendantNode()) {
-			return "/c/" + shortName;
+			if (isModifiableAndSystem()) {
+				return ObjectDefinitionUtil.
+					getModifiableSystemObjectDefinitionRESTContextPath(
+						getName());
+			}
+
+			String lowerCaseShortName = StringUtil.toLowerCase(getShortName());
+
+			return "/c/" + TextFormatter.formatPlural(lowerCaseShortName);
 		}
 
 		ObjectDefinition rootObjectDefinition =
 			ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
 				getRootObjectDefinitionId());
 
+		if (isModifiableAndSystem()) {
+			String rootRESTContextPath =
+				ObjectDefinitionUtil.
+					getModifiableSystemObjectDefinitionRESTContextPath(
+						rootObjectDefinition.getName());
+
+			String restContextPath =
+				ObjectDefinitionUtil.
+					getModifiableSystemObjectDefinitionRESTContextPath(
+						getName());
+
+			restContextPath = restContextPath.substring(
+				restContextPath.lastIndexOf(StringPool.SLASH));
+
+			return rootRESTContextPath + restContextPath;
+		}
+
 		return StringBundler.concat(
 			"/c/",
 			TextFormatter.formatPlural(
 				StringUtil.toLowerCase(rootObjectDefinition.getShortName())),
-			StringPool.SLASH, shortName);
+			StringPool.SLASH,
+			TextFormatter.formatPlural(StringUtil.toLowerCase(getShortName())));
+	}
+
+	@Override
+	public String getRootObjectDefinitionExternalReferenceCode() {
+		ObjectDefinition rootObjectDefinition =
+			ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
+				getRootObjectDefinitionId());
+
+		if (rootObjectDefinition == null) {
+			return null;
+		}
+
+		return rootObjectDefinition.getExternalReferenceCode();
 	}
 
 	@Override
@@ -171,12 +202,22 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 		return false;
 	}
 
+	@Override
 	public boolean isLinkedToObjectFolder(long objectFolderId) {
 		if (getObjectFolderId() == objectFolderId) {
 			return false;
 		}
 
 		return true;
+	}
+
+	@Override
+	public boolean isModifiableAndSystem() {
+		if (isModifiable() && isSystem()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override

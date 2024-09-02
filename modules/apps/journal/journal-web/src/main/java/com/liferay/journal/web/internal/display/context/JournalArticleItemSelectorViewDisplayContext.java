@@ -41,6 +41,9 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
@@ -49,9 +52,12 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupServiceUtil;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -59,7 +65,7 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -93,15 +99,21 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		InfoItemItemSelectorCriterion infoItemItemSelectorCriterion,
 		String itemSelectedEventName,
 		JournalArticleItemSelectorView journalArticleItemSelectorView,
-		JournalWebConfiguration journalWebConfiguration, PortletURL portletURL,
-		boolean search, StagingGroupHelper stagingGroupHelper) {
+		JournalWebConfiguration journalWebConfiguration, Portal portal,
+		PortletURL portletURL,
+		ResourcePermissionLocalService resourcePermissionLocalService,
+		RoleLocalService roleLocalService, boolean search,
+		StagingGroupHelper stagingGroupHelper) {
 
 		_httpServletRequest = httpServletRequest;
 		_infoItemItemSelectorCriterion = infoItemItemSelectorCriterion;
 		_itemSelectedEventName = itemSelectedEventName;
 		_journalArticleItemSelectorView = journalArticleItemSelectorView;
 		_journalWebConfiguration = journalWebConfiguration;
+		_portal = portal;
 		_portletURL = portletURL;
+		_resourcePermissionLocalService = resourcePermissionLocalService;
+		_roleLocalService = roleLocalService;
 		_search = search;
 		_stagingGroupHelper = stagingGroupHelper;
 
@@ -240,12 +252,6 @@ public class JournalArticleItemSelectorViewDisplayContext {
 					PortletURLBuilder.create(
 						getPortletURL()
 					).setParameter(
-						"groupType", "site"
-					).setParameter(
-						"scopeGroupType",
-						ParamUtil.getBoolean(
-							_httpServletRequest, "scopeGroupType")
-					).setParameter(
 						"showGroupSelector", true
 					).buildString());
 			}
@@ -297,9 +303,14 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		return PortletURLBuilder.create(
 			PortletURLUtil.clone(
 				_portletURL,
-				PortalUtil.getLiferayPortletResponse(_portletResponse))
+				_portal.getLiferayPortletResponse(_portletResponse))
 		).setParameter(
 			"displayStyle", getDisplayStyle()
+		).setParameter(
+			"groupType", "site"
+		).setParameter(
+			"scopeGroupType",
+			ParamUtil.getBoolean(_httpServletRequest, "scopeGroupType")
 		).setParameter(
 			"selectedTab", _getTitle(_httpServletRequest.getLocale())
 		).buildPortletURL();
@@ -318,6 +329,8 @@ public class JournalArticleItemSelectorViewDisplayContext {
 			getPortletURL()
 		).setParameter(
 			"folderId", _getFolderId()
+		).setParameter(
+			"scope", _getScopeFilter()
 		).buildPortletURL();
 
 		SearchContainer<Object> articleAndFolderSearchContainer =
@@ -386,15 +399,17 @@ public class JournalArticleItemSelectorViewDisplayContext {
 
 				if (Objects.equals(_getOrderByCol(), "id")) {
 					folderOrderByComparator =
-						new FolderArticleArticleIdComparator(orderByAsc);
+						FolderArticleArticleIdComparator.getInstance(
+							orderByAsc);
 				}
 				else if (Objects.equals(_getOrderByCol(), "modified-date")) {
 					folderOrderByComparator =
-						new FolderArticleModifiedDateComparator(orderByAsc);
+						FolderArticleModifiedDateComparator.getInstance(
+							orderByAsc);
 				}
 				else if (Objects.equals(_getOrderByCol(), "title")) {
-					folderOrderByComparator = new FolderArticleTitleComparator(
-						orderByAsc);
+					folderOrderByComparator =
+						FolderArticleTitleComparator.getInstance(orderByAsc);
 				}
 
 				return JournalFolderServiceUtil.getFoldersAndArticles(
@@ -416,6 +431,21 @@ public class JournalArticleItemSelectorViewDisplayContext {
 
 	public int getStatus() {
 		return _infoItemItemSelectorCriterion.getStatus();
+	}
+
+	public boolean hasGuestViewPermission(JournalArticle journalArticle)
+		throws PortalException {
+
+		if (_guestRole == null) {
+			_guestRole = _roleLocalService.getRole(
+				journalArticle.getCompanyId(), RoleConstants.GUEST);
+		}
+
+		return _resourcePermissionLocalService.hasResourcePermission(
+			journalArticle.getCompanyId(), JournalArticle.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(journalArticle.getResourcePrimKey()),
+			_guestRole.getRoleId(), ActionKeys.VIEW);
 	}
 
 	public boolean isMultiSelection() {
@@ -565,7 +595,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 			return _journalArticleClassNameId;
 		}
 
-		_journalArticleClassNameId = PortalUtil.getClassNameId(
+		_journalArticleClassNameId = _portal.getClassNameId(
 			JournalArticle.class.getName());
 
 		return _journalArticleClassNameId;
@@ -603,6 +633,16 @@ public class JournalArticleItemSelectorViewDisplayContext {
 			"item-selector-order-by-type", "asc");
 
 		return _orderByType;
+	}
+
+	private String _getScopeFilter() {
+		if (_scope != null) {
+			return _scope;
+		}
+
+		_scope = ParamUtil.getString(_httpServletRequest, "scope");
+
+		return _scope;
 	}
 
 	private long _getStagingAwareGroupId() {
@@ -741,6 +781,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 	private JournalFolder _folder;
 	private Long _folderId;
 	private Long _groupId;
+	private Role _guestRole;
 	private final HttpServletRequest _httpServletRequest;
 	private final InfoItemItemSelectorCriterion _infoItemItemSelectorCriterion;
 	private final String _itemSelectedEventName;
@@ -751,9 +792,14 @@ public class JournalArticleItemSelectorViewDisplayContext {
 	private String _keywords;
 	private String _orderByCol;
 	private String _orderByType;
+	private final Portal _portal;
 	private final PortletRequest _portletRequest;
 	private final PortletResponse _portletResponse;
 	private final PortletURL _portletURL;
+	private final ResourcePermissionLocalService
+		_resourcePermissionLocalService;
+	private final RoleLocalService _roleLocalService;
+	private String _scope;
 	private final boolean _search;
 	private Boolean _searchEverywhere;
 	private final StagingGroupHelper _stagingGroupHelper;

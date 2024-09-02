@@ -1,9 +1,10 @@
-@component-name = "portal-database-partitioning"
+@component-name = "portal-db-infrastructure"
 definition {
 
 	property app.server.types = "tomcat";
 	property ci.retries.disabled = "true";
 	property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
+	property database.partition.enabled = "true";
 	property database.types = "mysql, postgresql";
 	property liferay.online.properties = "true";
 	property portal.release = "true";
@@ -32,7 +33,7 @@ definition {
 			virtualHost = "www.able.com");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "test@www.able.com");
 
@@ -103,7 +104,7 @@ definition {
 		User.logoutPG();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
@@ -153,7 +154,7 @@ definition {
 			virtualHost = "www.able.com");
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 

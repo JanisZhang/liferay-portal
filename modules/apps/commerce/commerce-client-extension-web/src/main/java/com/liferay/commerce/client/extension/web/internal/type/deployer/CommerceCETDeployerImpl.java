@@ -9,13 +9,14 @@ import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.CommerceCheckoutStepCET;
 import com.liferay.client.extension.type.deployer.CommerceCETDeployer;
 import com.liferay.commerce.client.extension.web.internal.util.ClientExtensionCommerceCheckoutStep;
+import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelLocalService;
 import com.liferay.commerce.util.CommerceCheckoutStep;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
 import com.liferay.portal.catapult.PortalCatapult;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.service.UserService;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.ServletContext;
@@ -34,18 +35,14 @@ public class CommerceCETDeployerImpl implements CommerceCETDeployer {
 
 	@Override
 	public List<ServiceRegistration<?>> deploy(CET cet) {
-		List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<>();
-
-		CommerceCheckoutStepCET commerceCheckoutStepCET =
-			(CommerceCheckoutStepCET)cet;
-
-		_register(
-			CommerceCheckoutStep.class,
-			new ClientExtensionCommerceCheckoutStep(
-				commerceCheckoutStepCET, _jsonFactory, _jspRenderer,
-				_portalCatapult, _servletContext, _userService));
-
-		return serviceRegistrations;
+		return Arrays.asList(
+			_register(
+				CommerceCheckoutStep.class,
+				new ClientExtensionCommerceCheckoutStep(
+					(CommerceCheckoutStepCET)cet,
+					_commercePaymentMethodGroupRelLocalService, _jsonFactory,
+					_jspRenderer, _portalCatapult, _servletContext,
+					_userService)));
 	}
 
 	@Activate
@@ -61,6 +58,10 @@ public class CommerceCETDeployerImpl implements CommerceCETDeployer {
 	}
 
 	private BundleContext _bundleContext;
+
+	@Reference
+	private CommercePaymentMethodGroupRelLocalService
+		_commercePaymentMethodGroupRelLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;

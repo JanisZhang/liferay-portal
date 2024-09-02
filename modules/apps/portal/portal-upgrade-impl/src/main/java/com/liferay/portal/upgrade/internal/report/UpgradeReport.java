@@ -7,6 +7,7 @@ package com.liferay.portal.upgrade.internal.report;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -18,6 +19,8 @@ import com.liferay.portal.kernel.model.ReleaseConstants;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.upgrade.ReleaseManager;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.EnvPropertiesUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
@@ -31,10 +34,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
 import com.liferay.portal.upgrade.internal.recorder.UpgradeRecorder;
+import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import java.nio.file.Files;
 
@@ -53,8 +59,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
@@ -68,10 +76,23 @@ public class UpgradeReport {
 
 	public UpgradeReport() {
 		_initialBuildNumber = _getBuildNumber();
-		_initialTableCounts = _getTableCounts();
+
+		if (StartupHelperUtil.isNewRelease()) {
+			_initialTableCounts = _getTableCounts();
+		}
 	}
 
 	public void generateReport(UpgradeRecorder upgradeRecorder) {
+		if (StringUtil.equals(upgradeRecorder.getType(), "no upgrade")) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"Upgrade report was not generated because no upgrade " +
+						"processes were executed");
+			}
+
+			return;
+		}
+
 		if (_log.isInfoEnabled()) {
 			_log.info("Starting upgrade report generation");
 		}
@@ -283,8 +304,70 @@ public class UpgradeReport {
 				).build();
 			}
 		).put(
+			"properties.set.by.user",
+			() -> {
+				Map<String, Properties> propertiesMap = new LinkedHashMap<>();
+
+				for (String filePath :
+						PropsUtil.getArray("include-and-override")) {
+
+					if (!FileUtil.exists(filePath)) {
+						continue;
+					}
+
+					Properties properties = new Properties();
+
+					try (InputStream inputStream = new FileInputStream(
+							filePath)) {
+
+						properties.load(inputStream);
+					}
+					catch (IOException ioException) {
+						if (_log.isWarnEnabled()) {
+							_log.warn(
+								"Unable to load properties from file: " +
+									filePath,
+								ioException);
+						}
+
+						continue;
+					}
+
+					propertiesMap.put(filePath, properties);
+				}
+
+				String envPrefix = "LIFERAY_";
+
+				Map<String, String> env = System.getenv();
+
+				Properties properties = new Properties();
+
+				for (Map.Entry<String, String> entry : env.entrySet()) {
+					String key = entry.getKey();
+
+					if (!key.startsWith(envPrefix)) {
+						continue;
+					}
+
+					properties.setProperty(
+						EnvPropertiesUtil.decode(
+							StringUtil.toLowerCase(
+								key.substring(envPrefix.length()))),
+						entry.getValue());
+				}
+
+				propertiesMap.put(
+					"Properties set with environment variables", properties);
+
+				return new PropertiesPrinter(propertiesMap);
+			}
+		).put(
 			"document.library.storage.size",
 			() -> {
+				if (PropsValues.UPGRADE_REPORT_DL_STORAGE_SIZE_TIMEOUT == 0) {
+					return "Disabled";
+				}
+
 				if (!StringUtil.endsWith(
 						PropsValues.DL_STORE_IMPL, "FileSystemStore")) {
 
@@ -447,6 +530,8 @@ public class UpgradeReport {
 				return longestRunningUpgradeProcesses;
 			}
 		).put(
+			"failed.sqls", upgradeRecorder.getFailedSQLs()
+		).put(
 			"errors", _getMessagesPrinters(upgradeRecorder.getErrorMessages())
 		).put(
 			"warnings",
@@ -601,9 +686,13 @@ public class UpgradeReport {
 
 		try {
 			for (Map.Entry<String, Object> entry1 : reportData.entrySet()) {
-				String key = "upgrade.report." + entry1.getKey();
-
 				Object value = entry1.getValue();
+
+				if (value == null) {
+					continue;
+				}
+
+				String key = "upgrade.report." + entry1.getKey();
 
 				if (value instanceof Map<?, ?>) {
 					Map<?, ?> map = (Map<?, ?>)value;
@@ -628,8 +717,13 @@ public class UpgradeReport {
 		StringBundler sb = new StringBundler();
 
 		for (Map.Entry<String, Object> entry1 : reportData.entrySet()) {
-			String key = entry1.getKey();
 			Object value = entry1.getValue();
+
+			if (value == null) {
+				continue;
+			}
+
+			String key = entry1.getKey();
 
 			if (value instanceof List<?>) {
 				String reportHeader = _getReportHeader(key);
@@ -728,7 +822,7 @@ public class UpgradeReport {
 	private double _dlSize;
 	private final Thread _dlSizeThread = new DLSizeThread();
 	private final int _initialBuildNumber;
-	private final Map<String, Integer> _initialTableCounts;
+	private Map<String, Integer> _initialTableCounts;
 	private String _rootDir;
 
 	private class DLSizeThread extends Thread {
@@ -797,6 +891,67 @@ public class UpgradeReport {
 			private final int _occurrences;
 
 		}
+
+	}
+
+	private class PropertiesPrinter {
+
+		public PropertiesPrinter(Map<String, Properties> propertiesMap) {
+			_propertiesMap = propertiesMap;
+		}
+
+		@Override
+		public String toString() {
+			StringBundler sb = new StringBundler();
+
+			sb.append(StringPool.NEW_LINE);
+			sb.append(StringPool.NEW_LINE);
+
+			for (Map.Entry<String, Properties> filePropertiesEntry :
+					_propertiesMap.entrySet()) {
+
+				String source = filePropertiesEntry.getKey();
+
+				Properties properties = filePropertiesEntry.getValue();
+
+				sb.append(source);
+
+				sb.append(StringPool.NEW_LINE);
+
+				sb.append(
+					ListUtil.toString(
+						Collections.nCopies(source.length(), StringPool.MINUS),
+						StringPool.NULL, StringPool.BLANK));
+
+				sb.append(StringPool.NEW_LINE);
+
+				for (Map.Entry<Object, Object> propertyEntry :
+						properties.entrySet()) {
+
+					sb.append(propertyEntry.getKey());
+					sb.append(StringPool.COLON);
+					sb.append(StringPool.SPACE);
+
+					if (ArrayUtil.contains(
+							PropsValues.ADMIN_OBFUSCATED_PROPERTIES,
+							String.valueOf(propertyEntry.getValue()))) {
+
+						sb.append(StringPool.EIGHT_STARS);
+					}
+					else {
+						sb.append(propertyEntry.getValue());
+					}
+
+					sb.append(StringPool.NEW_LINE);
+				}
+
+				sb.append(StringPool.NEW_LINE);
+			}
+
+			return sb.toString();
+		}
+
+		private final Map<String, Properties> _propertiesMap;
 
 	}
 

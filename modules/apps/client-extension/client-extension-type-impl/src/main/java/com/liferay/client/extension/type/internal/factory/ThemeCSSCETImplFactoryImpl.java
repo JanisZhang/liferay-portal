@@ -9,6 +9,10 @@ import com.liferay.client.extension.exception.ClientExtensionEntryTypeSettingsEx
 import com.liferay.client.extension.type.ThemeCSSCET;
 import com.liferay.client.extension.type.internal.ThemeCSSCETImpl;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
@@ -25,8 +29,10 @@ import javax.portlet.PortletRequest;
 public class ThemeCSSCETImplFactoryImpl
 	extends BaseCETImplFactoryImpl<ThemeCSSCET> {
 
-	public ThemeCSSCETImplFactoryImpl() {
+	public ThemeCSSCETImplFactoryImpl(JSONFactory jsonFactory) {
 		super(ThemeCSSCET.class);
+
+		_jsonFactory = jsonFactory;
 	}
 
 	@Override
@@ -49,7 +55,14 @@ public class ThemeCSSCETImplFactoryImpl
 		return UnicodePropertiesBuilder.create(
 			true
 		).put(
+			"clayRTLURL", ParamUtil.getString(portletRequest, "clayRTLURL")
+		).put(
 			"clayURL", ParamUtil.getString(portletRequest, "clayURL")
+		).put(
+			"frontendTokenDefinitionJSON",
+			ParamUtil.getString(portletRequest, "frontendTokenDefinitionJSON")
+		).put(
+			"mainRTLURL", ParamUtil.getString(portletRequest, "mainRTLURL")
 		).put(
 			"mainURL", ParamUtil.getString(portletRequest, "mainURL")
 		).build();
@@ -82,6 +95,31 @@ public class ThemeCSSCETImplFactoryImpl
 				"Invalid Main CSS URL: " + mainURL, "main-css-url-x-is-invalid",
 				mainURL);
 		}
+
+		String frontendTokenDefinitionJSON =
+			newThemeCSSCET.getFrontendTokenDefinitionJSON();
+
+		if (Validator.isBlank(frontendTokenDefinitionJSON)) {
+			return;
+		}
+
+		try {
+			_jsonFactory.createJSONObject(frontendTokenDefinitionJSON);
+		}
+		catch (JSONException jsonException) {
+			_log.error(jsonException);
+
+			throw new ClientExtensionEntryTypeSettingsException(
+				"Invalid Frontend Token Definition JSON: " +
+					frontendTokenDefinitionJSON,
+				"the-format-is-not-valid-please-upload-a-valid-frontend-" +
+					"token-definition-json-file");
+		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ThemeCSSCETImplFactoryImpl.class);
+
+	private final JSONFactory _jsonFactory;
 
 }

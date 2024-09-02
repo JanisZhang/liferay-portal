@@ -1,4 +1,4 @@
-@component-name = "portal-user-management"
+@component-name = "portal-commerce"
 definition {
 
 	property portal.release = "true";
@@ -135,7 +135,7 @@ definition {
 
 		JSONUser.addUser(
 			creatorEmailAddress = "user1@liferay.com",
-			creatorPassword = "test",
+			creatorPassword = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "user%27ea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
@@ -574,7 +574,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserBar.gotoDropdownItem(dropdownItem = "My Profile");
@@ -1759,8 +1759,8 @@ definition {
 
 	@priority = 4
 	test EditUserSite {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
@@ -1893,7 +1893,7 @@ definition {
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
-		JSONRole.addRegularRole(roleTitle = "Impersonating Role Name");
+		JSONRole.addRegularRole(roleKey = "Impersonating Role Name");
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW_CONTROL_PANEL",
@@ -2115,7 +2115,7 @@ definition {
 		User.logoutPG();
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 
@@ -2147,7 +2147,7 @@ definition {
 		User.logoutPG();
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		AssertConsoleTextNotPresent(value1 = "DuplicateFriendlyURLEntryException");
@@ -2173,7 +2173,7 @@ definition {
 		User.logoutPG();
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Navigator.openSpecificURL(url = "${portalURL}/c/portal/logout");
@@ -2185,15 +2185,15 @@ definition {
 	test OnlyGlobalTagCanbeAssociatedToUser {
 		JSONAssettag.addTag(
 			groupName = "Guest",
-			tagName = "Default Site Tag Name");
+			tagName = "default site tag name");
 
 		JSONAssettag.addTag(
 			groupName = "Global",
-			tagName = "Global Tag Name 1");
+			tagName = "global tag name 1");
 
 		JSONAssettag.addTag(
 			groupName = "Global",
-			tagName = "Global Tag Name 2");
+			tagName = "global tag name 2");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -2205,16 +2205,14 @@ definition {
 
 		User.editUserTagCP(
 			addTagMethod = "Select",
-			tagNameList = "Global Tag Name 1,Global Tag Name 2",
+			tagNameList = "global tag name 1,global tag name 2",
 			userName = "userfn userln");
 
 		User.openUsersAdmin();
 
 		UserNavigator.gotoUser(userScreenName = "usersn");
 
-		for (var tagName : list "Global Tag Name 1,Global Tag Name 2") {
-			var tagName = StringUtil.lowerCase(${tagName});
-
+		for (var tagName : list "global tag name 1,global tag name 2") {
 			AssetCategorization.viewTag(tagName = ${tagName});
 		}
 
@@ -2227,7 +2225,7 @@ definition {
 
 		var rowEntry = StringUtil.lowerCase(${rowEntry});
 
-		LexiconEntry.viewNoEntry(rowEntry = StringUtil.lowerCase("Default Site Tag Name"));
+		LexiconEntry.viewNoEntry(rowEntry = StringUtil.lowerCase("default site tag name"));
 
 		// Additional steps to cover LPS-111656
 
@@ -2243,9 +2241,7 @@ definition {
 
 		UserNavigator.gotoUser(userScreenName = "usersn");
 
-		for (var tagName : list "Global Tag Name 1,Global Tag Name 2") {
-			var tagName = StringUtil.lowerCase(${tagName});
-
+		for (var tagName : list "global tag name 1,global tag name 2") {
 			AssetCategorization.viewTag(tagName = ${tagName});
 		}
 	}
@@ -2503,40 +2499,6 @@ definition {
 			value1 = "exception.UserEmailAddressException$MustNotBeDuplicate: User ${userId} cannot be created or updated because a user with company ${companyId} and email address userea@liferay.com is already in use");
 	}
 
-	@description = "This is a use case for LPS-120825."
-	@priority = 4
-	test UpdateUserInformation {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		User.openUsersAdmin();
-
-		UserNavigator.gotoUser(userScreenName = "test");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Portlet#HEADER",
-			value1 = "Edit User");
-
-		User.editUserInformation(
-			userEmailAddressEdit = "testadmin@liferay.com",
-			userScreenNameEdit = "testscreen");
-
-		User.viewUserInformation(
-			userEmailAddress = "testadmin@liferay.com",
-			userFirstName = "Test",
-			userLastName = "Test",
-			userScreenName = "testscreen");
-
-		JSONUser.updateUser(
-			creatorEmailAddress = "testadmin@liferay.com",
-			creatorPassword = "test",
-			screenNameUpdate = "test",
-			userEmailAddress = "testadmin@liferay.com",
-			userEmailAddressUpdate = "test@liferay.com",
-			userFirstName = "Test",
-			userLastName = "Test");
-	}
-
 	@priority = 4
 	test ValidateRegExPasswordPolicyCP {
 		property test.liferay.virtual.instance = "false";
@@ -2735,7 +2697,7 @@ definition {
 
 			JSONUser.setFirstPassword(
 				agreeToTermsAndAnswerReminderQuery = "true",
-				newPassword = "test",
+				newPassword = PropsUtil.get("default.admin.password"),
 				requireReset = "false",
 				userEmailAddress = "userea@liferay.com");
 
@@ -2744,7 +2706,7 @@ definition {
 
 		task ("When: Log in as new user and send the verification code") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 
 			Button.click(button = "Send New Verification Code");
@@ -2870,7 +2832,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserInvalidPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		User.loginUserPG();
@@ -2878,8 +2840,8 @@ definition {
 
 	@priority = 4
 	test ViewLoginForActivatedUser {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property testray.component.names = "Training";
@@ -2909,7 +2871,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserBar.gotoDropdown();
@@ -2945,11 +2907,11 @@ definition {
 		User.logoutPG();
 
 		User.loginUserInvalidPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 

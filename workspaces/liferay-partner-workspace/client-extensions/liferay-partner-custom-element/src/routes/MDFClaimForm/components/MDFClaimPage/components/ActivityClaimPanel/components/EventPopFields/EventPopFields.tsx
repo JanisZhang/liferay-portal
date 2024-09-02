@@ -12,6 +12,7 @@ import LiferayFile from '../../../../../../../../common/interfaces/liferayFile';
 import MDFClaim from '../../../../../../../../common/interfaces/mdfClaim';
 import MDFClaimActivity from '../../../../../../../../common/interfaces/mdfClaimActivity';
 import deleteDocument from '../../../../../../../../common/services/liferay/headless-delivery/deleteDocument';
+import {ResourceName} from '../../../../../../../../common/services/liferay/object/enum/resourceName';
 
 interface IProps {
 	activity: MDFClaimActivity;
@@ -30,13 +31,13 @@ const EventPopFields = ({
 				description="Only files with the following extensions wil be accepted: doc, docx, jpg, jpeg, png, tif, tiff, pdf"
 				displayType="secondary"
 				label="Event Program"
-				name={`activities[${currentActivityIndex}].eventProgram`}
+				name={`activities[${currentActivityIndex}].eventProgramFile`}
 				onAccept={(liferayFile: LiferayFile) => {
-					if (activity.eventProgram?.documentId) {
-						deleteDocument(activity.eventProgram?.documentId);
+					if (activity.eventProgramFile?.documentId) {
+						deleteDocument(activity.eventProgramFile?.documentId);
 					}
 					setFieldValue(
-						`activities[${currentActivityIndex}].eventProgram`,
+						`activities[${currentActivityIndex}].eventProgramFile`,
 						liferayFile
 					);
 				}}
@@ -56,11 +57,12 @@ const EventPopFields = ({
 						activity.proofOfPerformance?.eventInvitations
 							? activity.proofOfPerformance.eventInvitations.concat(
 									liferayFiles as LiferayFile[]
-							  )
+								)
 							: liferayFiles
 					)
 				}
 				required={activity.selected}
+				resourceName={ResourceName.MDF_CLAIM_ACTIVITY_DOCUMENTS}
 				value={activity.proofOfPerformance?.eventInvitations}
 			/>
 
@@ -75,11 +77,12 @@ const EventPopFields = ({
 						activity.proofOfPerformance?.eventPhotos
 							? activity.proofOfPerformance.eventPhotos.concat(
 									liferayFiles as LiferayFile[]
-							  )
+								)
 							: liferayFiles
 					)
 				}
 				required={activity.selected}
+				resourceName={ResourceName.MDF_CLAIM_ACTIVITY_DOCUMENTS}
 				value={activity.proofOfPerformance?.eventPhotos}
 			/>
 
@@ -94,11 +97,12 @@ const EventPopFields = ({
 						activity.proofOfPerformance?.eventCollaterals
 							? activity.proofOfPerformance.eventCollaterals.concat(
 									liferayFiles as LiferayFile[]
-							  )
+								)
 							: liferayFiles
 					)
 				}
 				required={activity.selected}
+				resourceName={ResourceName.MDF_CLAIM_ACTIVITY_DOCUMENTS}
 				value={activity.proofOfPerformance?.eventCollaterals}
 			/>
 		</>

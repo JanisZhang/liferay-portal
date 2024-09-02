@@ -13,12 +13,8 @@ import MiniCartContext from './MiniCartContext';
 import {hasOptions} from './util/index';
 
 function Opener() {
-	const {
-		cartState,
-		displayTotalItemsQuantity,
-		openCart,
-		setEditedItem,
-	} = useContext(MiniCartContext);
+	const {cartState, displayTotalItemsQuantity, openCart, setEditedItem} =
+		useContext(MiniCartContext);
 
 	const {cartItems = [], summary = {}} = cartState;
 	const {itemsQuantity: initialItemsQuantity} = summary;
@@ -43,7 +39,10 @@ function Opener() {
 				(cartItem) => cartItem.id === orderItemId
 			);
 
-			if (cartItem && hasOptions(cartItem.options)) {
+			if (
+				cartItem &&
+				(hasOptions(cartItem.options) || cartItem.skuUnitOfMeasure)
+			) {
 				setEditedItem({
 					cartItemId: orderItemId,
 					dataSetId,
@@ -72,7 +71,7 @@ function Opener() {
 				'mini-cart-opener': true,
 			})}
 			data-badge-count={numberOfItems}
-			data-qa-id="mini-cart-button"
+			data-qa-id="miniCartButton"
 			onClick={openCart}
 		>
 			<ClayIcon symbol="shopping-cart" />

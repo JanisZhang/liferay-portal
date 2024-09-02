@@ -15,6 +15,10 @@ import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsD
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
 import {LIST_ITEM_TYPES} from '../../../app/config/constants/listItemTypes';
 import {
+	useSelectItem,
+	useSelectMultipleItems,
+} from '../../../app/contexts/ControlsContext';
+import {
 	useDisableKeyboardMovement,
 	useSetMovementSource,
 } from '../../../app/contexts/KeyboardMovementContext';
@@ -40,6 +44,8 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 	const dispatch = useDispatch();
 	const [disabled, setDisabled] = useState(item.disabled);
 	const setMovementSource = useSetMovementSource();
+	const selectItem = useSelectItem();
+	const selectMultipleItems = useSelectMultipleItems();
 
 	const onMovementSource = (event) => {
 		if (event.key === 'Enter' || event.key === ' ') {
@@ -83,6 +89,7 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 
 	const {isDraggingSource, sourceRef} = useDragSymbol(
 		{
+			fieldTypes: item.data.fieldTypes,
 			fragmentEntryType: item.data.type,
 			icon: item.icon,
 			isWidget: item.data.portletId,
@@ -112,6 +119,9 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 					itemType: item.type,
 					parentItemId: parentId,
 					position,
+					selectItems: Liferay.FeatureFlags['LPD-18221']
+						? selectMultipleItems
+						: selectItem,
 				})
 			)
 				.then(() => {
@@ -168,7 +178,8 @@ const ListItem = ({
 					disabled,
 					'ml-3 page-editor__fragments-widgets__tab-portlet-item':
 						item.data.portletItemId,
-					'page-editor__fragments-widgets__tab-list-item--active': isActive,
+					'page-editor__fragments-widgets__tab-list-item--active':
+						isActive,
 				}
 			)}
 			onKeyDown={onMovementSource}
@@ -231,7 +242,8 @@ const CardItem = ({
 				'page-editor__fragments-widgets__tab-card-item',
 				{
 					disabled,
-					'page-editor__fragments-widgets__tab-list-item--active': isActive,
+					'page-editor__fragments-widgets__tab-list-item--active':
+						isActive,
 				}
 			)}
 			onKeyDown={onMovementSource}

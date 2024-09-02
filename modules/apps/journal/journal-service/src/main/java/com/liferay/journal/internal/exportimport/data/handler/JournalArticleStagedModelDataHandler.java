@@ -56,7 +56,6 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
@@ -83,7 +82,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlEscapableObject;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -522,16 +520,18 @@ public class JournalArticleStagedModelDataHandler
 			articleElement.addAttribute("preloaded", "true");
 		}
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-165481")) {
-			ManifestSummary manifestSummary =
-				portletDataContext.getManifestSummary();
+		ManifestSummary manifestSummary =
+			portletDataContext.getManifestSummary();
 
-			manifestSummary.addAssetTitle(
-				JournalArticle.class.getName(),
-				article.getTitle(article.getDefaultLanguageId()));
+		manifestSummary.addAssetTitle(
+			JournalArticle.class.getName(),
+			article.getTitle(article.getDefaultLanguageId()));
+
+		if (!GetterUtil.getBoolean(
+				articleElement.attributeValue("articleAdded"))) {
+
+			_exportAssetDisplayPage(portletDataContext, article);
 		}
-
-		_exportAssetDisplayPage(portletDataContext, article);
 
 		_exportFriendlyURLEntries(portletDataContext, article);
 
@@ -1403,21 +1403,6 @@ public class JournalArticleStagedModelDataHandler
 		articleNewPrimaryKeys.put(
 			article.getResourcePrimKey(), importedArticle.getResourcePrimKey());
 
-		if (ListUtil.isEmpty(assetDisplayPageEntryElements)) {
-			AssetDisplayPageEntry existingAssetDisplayPageEntry =
-				_assetDisplayPageEntryLocalService.fetchAssetDisplayPageEntry(
-					importedArticle.getGroupId(),
-					_portal.getClassNameId(JournalArticle.class.getName()),
-					importedArticle.getResourcePrimKey());
-
-			if (existingAssetDisplayPageEntry != null) {
-				_assetDisplayPageEntryLocalService.deleteAssetDisplayPageEntry(
-					existingAssetDisplayPageEntry);
-			}
-
-			return;
-		}
-
 		for (Element assetDisplayPageEntryElement :
 				assetDisplayPageEntryElements) {
 
@@ -1579,8 +1564,6 @@ public class JournalArticleStagedModelDataHandler
 						jsonObject.getString("className"));
 					subscriptionSender.setClassPK(
 						jsonObject.getLong("classPK"));
-					subscriptionSender.setCompanyId(
-						userNotificationEvent.getCompanyId());
 
 					Map<String, HashMap<String, Object>> contextMap =
 						(Map)_jsonFactory.looseDeserialize(

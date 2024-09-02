@@ -56,6 +56,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.comparator.LayoutPriorityComparator;
 import com.liferay.portal.model.impl.LayoutImpl;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.HashMap;
 import java.util.List;
@@ -523,9 +524,10 @@ public class LayoutLocalServiceHelper implements IdentifiableOSGiService {
 			}
 		}
 
-		for (Locale locale : LanguageUtil.getAvailableLocales()) {
-			String languageId = StringUtil.toLowerCase(
-				LocaleUtil.toLanguageId(locale));
+		for (String languageId : PropsValues.LOCALES) {
+			languageId = StringUtil.toLowerCase(languageId);
+
+			Locale locale = LocaleUtil.fromLanguageId(languageId, false);
 
 			String i18nPathLanguageId =
 				StringPool.SLASH +
@@ -735,7 +737,8 @@ public class LayoutLocalServiceHelper implements IdentifiableOSGiService {
 
 		if (!Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY) &&
 			!Objects.equals(type, LayoutConstants.TYPE_COLLECTION) &&
-			!Objects.equals(type, LayoutConstants.TYPE_CONTENT)) {
+			!Objects.equals(type, LayoutConstants.TYPE_CONTENT) &&
+			!Objects.equals(type, LayoutConstants.TYPE_UTILITY)) {
 
 			return false;
 		}

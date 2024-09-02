@@ -1,4 +1,4 @@
-@component-name = "portal-deployment-hypersonic"
+@component-name = "portal-core-infra"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -137,14 +137,14 @@ definition {
 		User.openUsersAdmin();
 
 		User.editEmailAddressCP(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@test.com",
 			userScreenName = "test");
 
 		User.logoutPG();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@test.com");
 
 		Portlet.shutdownServer();
@@ -154,7 +154,7 @@ definition {
 		User.logoutPG();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@test.com");
 	}
 

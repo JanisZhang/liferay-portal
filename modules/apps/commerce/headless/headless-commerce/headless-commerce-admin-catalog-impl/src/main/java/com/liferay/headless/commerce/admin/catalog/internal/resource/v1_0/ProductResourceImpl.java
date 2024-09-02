@@ -14,6 +14,7 @@ import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetTagService;
 import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
+import com.liferay.commerce.price.list.service.CommercePriceEntryService;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.configuration.CProductVersionConfiguration;
 import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
@@ -34,6 +35,7 @@ import com.liferay.commerce.product.service.CPDefinitionOptionValueRelService;
 import com.liferay.commerce.product.service.CPDefinitionService;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueService;
 import com.liferay.commerce.product.service.CPInstanceService;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureService;
 import com.liferay.commerce.product.service.CPOptionService;
 import com.liferay.commerce.product.service.CPSpecificationOptionService;
 import com.liferay.commerce.product.service.CProductLocalService;
@@ -52,6 +54,7 @@ import com.liferay.commerce.shop.by.diagram.service.CSDiagramEntryService;
 import com.liferay.commerce.shop.by.diagram.service.CSDiagramPinService;
 import com.liferay.commerce.shop.by.diagram.service.CSDiagramSettingService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Attachment;
@@ -72,8 +75,10 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductTaxConfigurat
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductVirtualSettings;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.RelatedProduct;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Sku;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.odata.entity.v1_0.ProductEntityModel;
+import com.liferay.headless.commerce.admin.catalog.internal.util.DateConfigUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.AttachmentUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.DiagramUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.MappedProductUtil;
@@ -88,6 +93,7 @@ import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductTax
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.ProductVirtualSettingsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.RelatedProductUtil;
+import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuUnitOfMeasureUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.SkuUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductResource;
 import com.liferay.headless.commerce.core.util.DateConfig;
@@ -110,12 +116,15 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.RepositoryLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
-import com.liferay.portal.kernel.util.CalendarFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -135,7 +144,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -338,12 +346,6 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		_updateProduct(cpDefinition, product);
 
-		if (!Validator.isBlank(product.getExternalReferenceCode())) {
-			_cpDefinitionService.updateExternalReferenceCode(
-				product.getExternalReferenceCode(),
-				cpDefinition.getCPDefinitionId());
-		}
-
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
 		return responseBuilder.build();
@@ -460,9 +462,19 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	}
 
 	private CPDefinition _addOrUpdateProduct(Product product) throws Exception {
-		CommerceCatalog commerceCatalog =
-			_commerceCatalogLocalService.getCommerceCatalog(
+		CommerceCatalog commerceCatalog = null;
+
+		if (product.getCatalogId() != null) {
+			commerceCatalog = _commerceCatalogLocalService.fetchCommerceCatalog(
 				product.getCatalogId());
+		}
+		else if (product.getCatalogExternalReferenceCode() != null) {
+			commerceCatalog =
+				_commerceCatalogLocalService.
+					getCommerceCatalogByExternalReferenceCode(
+						product.getCatalogExternalReferenceCode(),
+						contextCompany.getCompanyId());
+		}
 
 		ServiceContext serviceContext = _serviceContextHelper.getServiceContext(
 			commerceCatalog.getGroupId());
@@ -730,19 +742,67 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
-			addAction(
-				"UPDATE", cpDefinition.getCPDefinitionId(), "deleteProduct",
-				_cpDefinitionModelResourcePermission)
+			() -> {
+				Map<String, String> action = addAction(
+					"UPDATE", cpDefinition.getCPDefinitionId(), "deleteProduct",
+					_cpDefinitionModelResourcePermission);
+
+				if (action == null) {
+					return null;
+				}
+
+				String href = action.get("href");
+
+				action.put(
+					"href",
+					StringUtil.replace(
+						href, String.valueOf(cpDefinition.getCPDefinitionId()),
+						String.valueOf(cpDefinition.getCProductId())));
+
+				return action;
+			}
 		).put(
 			"get",
-			addAction(
-				"VIEW", cpDefinition.getCPDefinitionId(), "getProduct",
-				_cpDefinitionModelResourcePermission)
+			() -> {
+				Map<String, String> action = addAction(
+					"VIEW", cpDefinition.getCPDefinitionId(), "getProduct",
+					_cpDefinitionModelResourcePermission);
+
+				if (action == null) {
+					return null;
+				}
+
+				String href = action.get("href");
+
+				action.put(
+					"href",
+					StringUtil.replace(
+						href, String.valueOf(cpDefinition.getCPDefinitionId()),
+						String.valueOf(cpDefinition.getCProductId())));
+
+				return action;
+			}
 		).put(
 			"update",
-			addAction(
-				"UPDATE", cpDefinition.getCPDefinitionId(), "patchProduct",
-				_cpDefinitionModelResourcePermission)
+			() -> {
+				Map<String, String> action = addAction(
+					"UPDATE", cpDefinition.getCPDefinitionId(), "patchProduct",
+					_cpDefinitionModelResourcePermission);
+
+				if (action == null) {
+					return null;
+				}
+
+				String href = action.get("href");
+
+				action.put(
+					"href",
+					StringUtil.replace(
+						href, String.valueOf(cpDefinition.getCPDefinitionId()),
+						String.valueOf(cpDefinition.getCProductId())));
+
+				return action;
+			}
 		).build();
 	}
 
@@ -1030,15 +1090,28 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 				serviceContext.setExpandoBridgeAttributes(null);
 
-				SkuUtil.updateCommercePriceEntries(
-					_commercePriceEntryLocalService,
-					_commercePriceListLocalService, _configurationProvider,
-					cpInstance,
-					(BigDecimal)GetterUtil.get(
-						sku.getPrice(), cpInstance.getPrice()),
-					(BigDecimal)GetterUtil.get(
-						sku.getPromoPrice(), cpInstance.getPromoPrice()),
-					serviceContext);
+				if (ArrayUtil.isEmpty(sku.getSkuUnitOfMeasures())) {
+					SkuUtil.updateCommercePriceEntries(
+						_commercePriceEntryLocalService,
+						_commercePriceListLocalService, _configurationProvider,
+						cpInstance,
+						(BigDecimal)GetterUtil.get(
+							sku.getPrice(), cpInstance.getPrice()),
+						(BigDecimal)GetterUtil.get(
+							sku.getPromoPrice(), cpInstance.getPromoPrice()),
+						StringPool.BLANK, serviceContext);
+				}
+				else {
+					for (SkuUnitOfMeasure skuUnitOfMeasure :
+							sku.getSkuUnitOfMeasures()) {
+
+						SkuUnitOfMeasureUtil.addOrUpdateCPInstanceUnitOfMeasure(
+							_cpInstanceUnitOfMeasureService,
+							_commercePriceEntryService,
+							_commercePriceListLocalService, cpInstance,
+							skuUnitOfMeasure, serviceContext);
+					}
+				}
 			}
 		}
 
@@ -1048,10 +1121,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		if (images != null) {
 			for (Attachment attachment : images) {
-				if (attachment.getTags() != null) {
-					serviceContext.setAssetTagNames(attachment.getTags());
-				}
-
+				serviceContext.setAssetTagNames(attachment.getTags());
 				serviceContext.setExpandoBridgeAttributes(
 					_getExpandoBridgeAttributes(attachment));
 
@@ -1074,10 +1144,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		if (attachments != null) {
 			for (Attachment attachment : attachments) {
-				if (attachment.getTags() != null) {
-					serviceContext.setAssetTagNames(attachment.getTags());
-				}
-
+				serviceContext.setAssetTagNames(attachment.getTags());
 				serviceContext.setExpandoBridgeAttributes(
 					_getExpandoBridgeAttributes(attachment));
 
@@ -1277,7 +1344,8 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 				ProductVirtualSettingsUtil.addOrUpdateProductVirtualSettings(
 					cpDefinition, productVirtualSettings,
 					_cpDefinitionVirtualSettingService,
-					_cpdVirtualSettingFileEntryService, _uniqueFileNameProvider,
+					_cpdVirtualSettingFileEntryService, _dlAppService,
+					_repositoryLocalService, _uniqueFileNameProvider,
 					serviceContext);
 			}
 			else {
@@ -1318,18 +1386,6 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 		serviceContext.setExpandoBridgeAttributes(
 			_getExpandoBridgeAttributes(product));
-
-		Calendar displayCalendar = CalendarFactoryUtil.getCalendar(
-			serviceContext.getTimeZone());
-
-		DateConfig displayDateConfig = new DateConfig(displayCalendar);
-
-		Calendar expirationCalendar = CalendarFactoryUtil.getCalendar(
-			serviceContext.getTimeZone());
-
-		expirationCalendar.add(Calendar.MONTH, 1);
-
-		DateConfig expirationDateConfig = new DateConfig(expirationCalendar);
 
 		Category[] categories = product.getCategories();
 
@@ -1408,6 +1464,23 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 				cpDefinition.getMetaKeywordsMap());
 		}
 
+		DateConfig displayDateConfig = new DateConfig(
+			DateConfigUtil.convertDateToCalendar(
+				GetterUtil.getDate(
+					product.getDisplayDate(),
+					DateFormatFactoryUtil.getDate(
+						contextAcceptLanguage.getPreferredLocale(),
+						contextUser.getTimeZone()),
+					cpDefinition.getDisplayDate())));
+		DateConfig expirationDateConfig = DateConfig.toExpirationDateConfig(
+			GetterUtil.getDate(
+				product.getExpirationDate(),
+				DateFormatFactoryUtil.getDate(
+					contextAcceptLanguage.getPreferredLocale(),
+					contextUser.getTimeZone()),
+				cpDefinition.getExpirationDate()),
+			contextUser.getTimeZone());
+
 		cpDefinition = _cpDefinitionService.updateCPDefinition(
 			cpDefinition.getCPDefinitionId(),
 			LanguageUtils.getLocalizedMap(nameMap),
@@ -1424,8 +1497,16 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			displayDateConfig.getMinute(), expirationDateConfig.getMonth(),
 			expirationDateConfig.getDay(), expirationDateConfig.getYear(),
 			expirationDateConfig.getHour(), expirationDateConfig.getMinute(),
-			GetterUtil.getBoolean(product.getNeverExpire(), true),
+			GetterUtil.get(
+				product.getNeverExpire(),
+				cpDefinition.getExpirationDate() == null),
 			serviceContext);
+
+		if (!Validator.isBlank(product.getExternalReferenceCode())) {
+			_cpDefinitionService.updateExternalReferenceCode(
+				product.getExternalReferenceCode(),
+				cpDefinition.getCPDefinitionId());
+		}
 
 		if ((product.getActive() != null) && !product.getActive()) {
 			Map<String, Serializable> workflowContext = new HashMap<>();
@@ -1481,6 +1562,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
 
 	@Reference
+	private CommercePriceEntryService _commercePriceEntryService;
+
+	@Reference
 	private CommercePriceListLocalService _commercePriceListLocalService;
 
 	@Reference
@@ -1530,6 +1614,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	private CPInstanceService _cpInstanceService;
 
 	@Reference
+	private CPInstanceUnitOfMeasureService _cpInstanceUnitOfMeasureService;
+
+	@Reference
 	private CPOptionService _cpOptionService;
 
 	@Reference
@@ -1549,6 +1636,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Reference
 	private CSDiagramSettingService _csDiagramSettingService;
+
+	@Reference
+	private DLAppService _dlAppService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.document.library.kernel.model.DLFileEntry)"
@@ -1575,6 +1665,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		target = "(component.name=com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter.ProductDTOConverter)"
 	)
 	private DTOConverter<CPDefinition, Product> _productDTOConverter;
+
+	@Reference
+	private RepositoryLocalService _repositoryLocalService;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

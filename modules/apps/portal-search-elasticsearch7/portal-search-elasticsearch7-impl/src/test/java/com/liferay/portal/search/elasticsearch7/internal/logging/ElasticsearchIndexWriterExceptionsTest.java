@@ -16,11 +16,11 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.search.elasticsearch7.internal.ElasticsearchIndexWriter;
 import com.liferay.portal.search.elasticsearch7.internal.indexing.LiferayElasticsearchIndexingFixtureFactory;
+import com.liferay.portal.search.test.rule.logging.ExpectedLogMethodTestRule;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.DocumentCreationHelpers;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
 import com.liferay.portal.search.test.util.logging.ExpectedLog;
-import com.liferay.portal.search.test.util.logging.ExpectedLogMethodTestRule;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
@@ -174,33 +174,18 @@ public class ElasticsearchIndexWriterExceptionsTest
 	}
 
 	@Test
-	public void testPartiallyUpdateDocument() {
-		expectedException.expect(ElasticsearchStatusException.class);
-		expectedException.expectMessage(
-			"type=document_missing_exception, reason=[_doc]");
-
+	public void testPartiallyUpdateDocument() throws SearchException {
 		Document document = new DocumentImpl();
 
 		document.addKeyword(Field.UID, "1");
 
 		IndexWriter indexWriter = getIndexWriter();
 
-		try {
-			indexWriter.partiallyUpdateDocument(
-				createSearchContext(), document);
-		}
-		catch (SearchException searchException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(searchException);
-			}
-		}
+		indexWriter.partiallyUpdateDocument(createSearchContext(), document);
 	}
 
 	@Test
-	public void testPartiallyUpdateDocuments() {
-		expectedException.expect(RuntimeException.class);
-		expectedException.expectMessage("Bulk partial update failed");
-
+	public void testPartiallyUpdateDocuments() throws SearchException {
 		Document document = new DocumentImpl();
 
 		List<Document> documents = new ArrayList<>();
@@ -211,15 +196,7 @@ public class ElasticsearchIndexWriterExceptionsTest
 
 		IndexWriter indexWriter = getIndexWriter();
 
-		try {
-			indexWriter.partiallyUpdateDocuments(
-				createSearchContext(), documents);
-		}
-		catch (SearchException searchException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(searchException);
-			}
-		}
+		indexWriter.partiallyUpdateDocuments(createSearchContext(), documents);
 	}
 
 	@Test

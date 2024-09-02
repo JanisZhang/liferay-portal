@@ -141,8 +141,6 @@ definition {
 	@description = "This is a test for LPS-202596. The content creator could filter web contents by Status type."
 	@priority = 3
 	test CanFilterByStatusType {
-		property custom.properties = "feature.flag.LPS-196768=true";
-
 		task ("Given a site administrator has a web content") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
@@ -174,8 +172,6 @@ definition {
 	@description = "This is a test for LPS-202596. The content creator could filter web contents by Versions type."
 	@priority = 3
 	test CanFilterByVersionsType {
-		property custom.properties = "feature.flag.LPS-196768=true";
-
 		task ("Given a site administrator has a folder and a web content with three versions") {
 			JSONWebcontent.addFolder(
 				folderName = "WC Folder Name",
@@ -322,8 +318,6 @@ definition {
 	@description = "This is a test for LPS-202596. The content creator could filter assets by Web Content type in Web Content admin."
 	@priority = 3
 	test CanFilterByWebContentType {
-		property custom.properties = "feature.flag.LPS-196768=true";
-
 		task ("Given a site administrator has a folder and web contents") {
 			JSONWebcontent.addFolder(
 				folderName = "WC Folder Name",
@@ -396,8 +390,6 @@ definition {
 	@description = "This is a test for LPS-202596. The content creator cannot filter assets by type when Index All Article Versions disabled."
 	@priority = 3
 	test CanNotFilterAssetByTypeWhenDisableIndexAllArticleVersionsEnabled {
-		property custom.properties = "feature.flag.LPS-196768=true";
-
 		task ("Given a site administrator disable Index All Article Versions Enabled") {
 			ApplicationsMenu.gotoPortlet(
 				category = "Configuration",
@@ -494,8 +486,6 @@ definition {
 	@description = "This is a test for LPS-202596. The content creator could search comments associated to web contents by keywords."
 	@priority = 3
 	test CanSearchWebContentCommentsByKeyword {
-		property custom.properties = "feature.flag.LPS-196768=true";
-
 		task ("Given a site administrator has a folder and a web content with 2 comments") {
 			JSONWebcontent.addFolder(
 				folderName = "Liferay",
@@ -711,8 +701,6 @@ definition {
 	@description = "This is a test for LPS-197159. Assert could filter categories and tags filter for Web Content."
 	@priority = 4
 	test FilterWebContentsByCategoriesAndTags {
-		property custom.properties = "feature.flag.LPS-196768=true";
-
 		task ("Given a site administrator has web contents") {
 			JSONCategory.addVocabulary(
 				groupName = "Test Site Name",
@@ -780,7 +768,7 @@ definition {
 
 			ManagementBar.setFilterAndOrder(filterBy = "Tags");
 
-			AssetCategorization.selectTags(tagNameList = "echo");
+			AssetCategorization.selectTags(tagNameList = "Echo");
 
 			AssertTextEquals(
 				locator1 = "Search#SEARCH_INFO",
@@ -788,7 +776,7 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "ContentDashboard#FILTER_TEXT",
-				value1 = "Tags: echo");
+				value1 = "Tags: Echo");
 
 			WebContentAdmin.viewEntryTitle(entry = "Liferay LXC");
 
@@ -800,7 +788,7 @@ definition {
 
 			ManagementBar.setFilterAndOrder(filterBy = "Tags");
 
-			AssetCategorization.selectTags(tagNameList = "lima");
+			AssetCategorization.selectTags(tagNameList = "Lima");
 
 			AssertTextEquals(
 				locator1 = "Search#SEARCH_INFO",
@@ -808,7 +796,7 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "ContentDashboard#FILTER_TEXT",
-				value1 = "Tags: lima");
+				value1 = "Tags: Lima");
 
 			AssertTextEquals(
 				locator1 = "Message#EMPTY_INFO",
@@ -819,8 +807,6 @@ definition {
 	@description = "This is a test for LPS-196819. The site administrator could manage web contents by structures."
 	@priority = 4
 	test ManageWebContentsByStructures {
-		property custom.properties = "feature.flag.LPS-194763=true${line.separator}feature.flag.LPS-197692=true";
-
 		task ("Given a site administrator has web contents") {
 			JSONWebcontent.addWebContent(
 				content = "EMEA Guild",
@@ -906,8 +892,6 @@ definition {
 	@description = "This is a test for LPS-196819. The site administrator could manage web contents by structures in Asset Library."
 	@priority = 3
 	test ManageWebContentsByStructuresInAssetLibrary {
-		property custom.properties = "feature.flag.LPS-194763=true${line.separator}feature.flag.LPS-197692=true";
-
 		task ("Given a site administrator has web contents in asset library") {
 			JSONDepot.addDepot(depotName = "Test Depot Name");
 
@@ -1262,8 +1246,6 @@ definition {
 	@description = "This is a test for LPS-196819. The site administrator could search web contents in Content Library sheet."
 	@priority = 4
 	test SearchWebContentsInContentLibrarySheet {
-		property custom.properties = "feature.flag.LPS-194763=true${line.separator}feature.flag.LPS-197692=true";
-
 		task ("Given a site administrator has web contents") {
 			JSONWebcontent.addWebContent(
 				content = "Liferay DXP",
@@ -1319,8 +1301,6 @@ definition {
 	@description = "This is a test for LPS-196819. The site administrator could search web contents in specific structure sheet."
 	@priority = 4
 	test SearchWebContentsInHighlightedStructureSheet {
-		property custom.properties = "feature.flag.LPS-194763=true${line.separator}feature.flag.LPS-197692=true";
-
 		task ("Given a site administrator has web contents") {
 			JSONWebcontent.addWebContent(
 				content = "Liferay DXP",
@@ -1378,8 +1358,6 @@ definition {
 	@description = "This is a test for LPS-196819. The site administrator could select structures from global site and asset library on modal."
 	@priority = 3
 	test SelectStructuresFromGlobalAndAssetLibraryAsHighlightedStrutures {
-		property custom.properties = "feature.flag.LPS-194763=true${line.separator}feature.flag.LPS-197692=true";
-
 		task ("Given a site administrator has web content structure in asset library") {
 			JSONDepot.addDepot(depotName = "Test Depot Name");
 
@@ -1465,32 +1443,6 @@ definition {
 		}
 
 		task ("Then it must be possible to select the "Results", "Location" and "Search In" fields with the keyboard and must be in compliance with WCAG 2.1 AA standard.") {
-			task ("Using just the keyboard, in the "Results" field select the "Versions" option.") {
-				KeyPress(
-					buttonId = "JournalPortlet_searchResults",
-					locator1 = "Button#BUTTON_ID");
-
-				KeyPress(
-					buttonId = "JournalPortlet_searchResults",
-					locator1 = "Button#BUTTON_ID",
-					value1 = "\DOWN");
-
-				KeyPress(
-					buttonId = "JournalPortlet_searchResults",
-					locator1 = "Button#BUTTON_ID",
-					value1 = "\ENTER");
-			}
-
-			task ("Check that the web content version is present.") {
-				AssertTextEquals(
-					locator1 = "//span[contains(@class, 'workflow-value')]",
-					value1 = "1.0");
-			}
-
-			task ("View no accessibility issues found.") {
-				AssertAccessible();
-			}
-
 			task ("Using just the keyboard, in the "Location" field select the "Everywhere" option.") {
 				KeyPress(
 					buttonId = "JournalPortlet_searchLocation",
@@ -1574,8 +1526,6 @@ definition {
 	@description = "This is a test for LPS-196819. The site administrator could add all available type items in Content Library sheet."
 	@priority = 3
 	test ViewAvailableTypesInContentLibrarySheet {
-		property custom.properties = "feature.flag.LPS-194763=true${line.separator}feature.flag.LPS-197692=true";
-
 		task ("Given a site administrator has a web content structure") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -1757,156 +1707,9 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-196839. Show "Results" picker with the following options: "Web Contents","Versions" and "Comments". "Web Content" will be selected as default. Show "Location" picker with the following options: "Current Folder-name" and "Everywhere". "Current Folder-name" will be selected as default. Show "Search In" picker with the following options: "All Fields", "Title Only". "All Fields" will be selected as default."
-	@priority = 4
-	test ViewDefaultOptionsWhenSearchingWebContentTitle {
-		task ("Given 2 web contents and a folder with a web content") {
-			JSONWebcontent.addWebContent(
-				content = "Liferay DXP",
-				groupName = "Test Site Name",
-				title = "Over The Years");
-
-			JSONWebcontent.addWebContent(
-				content = "Liferay DXP",
-				groupName = "Test Site Name",
-				title = "Over The Earth");
-
-			JSONWebcontent.addFolder(
-				folderName = "WC Folder Name",
-				groupName = "Test Site Name");
-
-			JSONWebcontent.addWebContent(
-				content = "After many years I understood",
-				folderName = "WC Folder Name",
-				groupName = "Test Site Name",
-				title = "Web Content Title");
-		}
-
-		task ("When go to the folder and search for 'years'") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			WebContentFolder.gotoCP(
-				folderName = "WC Folder Name",
-				webContentTitle = "WC Folder Name");
-
-			Search.searchCP(searchTerm = "years");
-		}
-
-		task ("Then view the default options") {
-			task ("Check that in the Result field, “Web Content” will be selected as default.") {
-				AssertTextEquals(
-					buttonId = "JournalPortlet_searchResults",
-					locator1 = "Button#BUTTON_ID",
-					value1 = "Web Content");
-			}
-
-			task ("Check that the Web Content, Versions and Comments options appear in the Results field.") {
-				Click(
-					buttonId = "JournalPortlet_searchResults",
-					locator1 = "Button#BUTTON_ID");
-
-				var i = 1;
-
-				for (var menuItem : list "Web Content,Versions,Comments") {
-					AssertVisible(
-						index = ${i},
-						key_menuItem = ${menuItem},
-						key_subheader = "Results",
-						locator1 = "MenuItem#GROUPED_DROPDOWN_MENU_ITEM_BY_INDEX");
-
-					var i = ${i} + 1;
-				}
-			}
-
-			task ("Check that in the Result field, “Current Folder-name” will be selected as default.") {
-				AssertTextEquals(
-					buttonId = "JournalPortlet_searchLocation",
-					locator1 = "Button#BUTTON_ID",
-					value1 = "WC Folder Name");
-			}
-
-			task ("Check that the “Current Folder-name” and “Everywhere” options appear in the Location field.") {
-				Click(
-					buttonId = "JournalPortlet_searchLocation",
-					locator1 = "Button#BUTTON_ID");
-
-				var i = 1;
-
-				for (var menuItem : list "WC Folder Name,Everywhere") {
-					AssertVisible(
-						index = ${i},
-						key_menuItem = ${menuItem},
-						key_subheader = "Location",
-						locator1 = "MenuItem#GROUPED_DROPDOWN_MENU_ITEM_BY_INDEX");
-
-					var i = ${i} + 1;
-				}
-			}
-
-			task ("Check that in the Result field, “All Fields” will be selected as default.") {
-				AssertTextEquals(
-					buttonId = "JournalPortlet_searchIn",
-					locator1 = "Button#BUTTON_ID",
-					value1 = "All Fields");
-			}
-
-			task ("Check that the “All Fields” and “Title Only” options appear in the Search In field.") {
-				Click(
-					buttonId = "JournalPortlet_searchIn",
-					locator1 = "Button#BUTTON_ID");
-
-				var i = 1;
-
-				for (var menuItem : list "All Fields,Title Only") {
-					AssertVisible(
-						index = ${i},
-						key_menuItem = ${menuItem},
-						key_subheader = "Search In",
-						locator1 = "MenuItem#GROUPED_DROPDOWN_MENU_ITEM_BY_INDEX");
-
-					var i = ${i} + 1;
-				}
-			}
-		}
-	}
-
-	@description = "This is a test for LPS-151948. The Filter by Status is available to the Versions tab."
-	@priority = 4
-	test ViewFilterByStatusAvailableToVersionsTab {
-		task ("Given a site designer has a draft web content") {
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = "Test Site Name",
-				title = "Web Content Title",
-				workflowAction = "DRAFT");
-		}
-
-		task ("When the site designer search the web content in Web Content admin") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			WebContent.searchCP(webContentTitle = "Web Content Title");
-		}
-
-		task ("Then the site designer could filter search results by status in Versions panel") {
-			Click(
-				buttonId = "JournalPortlet_searchResults",
-				locator1 = "Button#BUTTON_ID");
-
-			MenuItem.click(menuItem = "Versions");
-
-			WaitForPageLoad();
-
-			Click(locator1 = "ManagementBar#FILTER");
-
-			MenuItem.viewVisible(menuItem = "Filter by Status");
-		}
-	}
-
 	@description = "This is a test for LPS-196819. The site administrator could see info panel of web contents in specific structure sheet."
 	@priority = 3
 	test ViewInfoPanelOfWebContentsInHighlightedStructureSheet {
-		property custom.properties = "feature.flag.LPS-194763=true${line.separator}feature.flag.LPS-197692=true";
-
 		task ("Given a site administrator has web contents") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -2139,7 +1942,7 @@ definition {
 
 			Click(locator1 = "ManagementBar#FILTER");
 
-			for (var filterName : list "Draft,With Scheduled Versions,With Approved Versions,With Expired Versions") {
+			for (var filterName : list "Draft,Scheduled,Approved,Expired") {
 				MenuItem.viewVisible(menuItem = ${filterName});
 			}
 
@@ -2163,7 +1966,7 @@ definition {
 
 			Click(locator1 = "ManagementBar#FILTER");
 
-			for (var filterName : list "Draft,Denied,Pending,With Scheduled Versions,With Approved Versions,With Expired Versions") {
+			for (var filterName : list "Draft,Denied,Pending,Scheduled,Approved,Expired") {
 				MenuItem.viewVisible(menuItem = ${filterName});
 			}
 		}
@@ -2252,8 +2055,6 @@ definition {
 	@description = "This is a test for LPS-196819. The site administrator could see all web contents with specific structure on that structure sheet."
 	@priority = 4
 	test ViewWebContentsInHighlightedStructureSheet {
-		property custom.properties = "feature.flag.LPS-194763=true${line.separator}feature.flag.LPS-197692=true";
-
 		task ("Given a site administrator has a folder and web contents") {
 			JSONWebcontent.addFolder(
 				folderName = "WC Folder Name",

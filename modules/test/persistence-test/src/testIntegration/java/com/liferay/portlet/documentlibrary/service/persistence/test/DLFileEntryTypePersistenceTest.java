@@ -6,6 +6,7 @@
 package com.liferay.portlet.documentlibrary.service.persistence.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.document.library.kernel.exception.DuplicateDLFileEntryTypeExternalReferenceCodeException;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryTypeException;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
@@ -18,14 +19,18 @@ import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.Time;
+import com.liferay.portal.security.permission.SimplePermissionChecker;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
@@ -120,6 +125,9 @@ public class DLFileEntryTypePersistenceTest {
 
 		newDLFileEntryType.setUuid(RandomTestUtil.randomString());
 
+		newDLFileEntryType.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
 		newDLFileEntryType.setGroupId(RandomTestUtil.nextLong());
 
 		newDLFileEntryType.setCompanyId(RandomTestUtil.nextLong());
@@ -158,6 +166,9 @@ public class DLFileEntryTypePersistenceTest {
 		Assert.assertEquals(
 			existingDLFileEntryType.getUuid(), newDLFileEntryType.getUuid());
 		Assert.assertEquals(
+			existingDLFileEntryType.getExternalReferenceCode(),
+			newDLFileEntryType.getExternalReferenceCode());
+		Assert.assertEquals(
 			existingDLFileEntryType.getFileEntryTypeId(),
 			newDLFileEntryType.getFileEntryTypeId());
 		Assert.assertEquals(
@@ -195,6 +206,28 @@ public class DLFileEntryTypePersistenceTest {
 			Time.getShortTimestamp(
 				existingDLFileEntryType.getLastPublishDate()),
 			Time.getShortTimestamp(newDLFileEntryType.getLastPublishDate()));
+	}
+
+	@Test(
+		expected = DuplicateDLFileEntryTypeExternalReferenceCodeException.class
+	)
+	public void testUpdateWithExistingExternalReferenceCode() throws Exception {
+		DLFileEntryType dlFileEntryType = addDLFileEntryType();
+
+		DLFileEntryType newDLFileEntryType = addDLFileEntryType();
+
+		newDLFileEntryType.setGroupId(dlFileEntryType.getGroupId());
+
+		newDLFileEntryType = _persistence.update(newDLFileEntryType);
+
+		Session session = _persistence.getCurrentSession();
+
+		session.evict(newDLFileEntryType);
+
+		newDLFileEntryType.setExternalReferenceCode(
+			dlFileEntryType.getExternalReferenceCode());
+
+		_persistence.update(newDLFileEntryType);
 	}
 
 	@Test
@@ -254,6 +287,15 @@ public class DLFileEntryTypePersistenceTest {
 	}
 
 	@Test
+	public void testCountByERC_G() throws Exception {
+		_persistence.countByERC_G("", RandomTestUtil.nextLong());
+
+		_persistence.countByERC_G("null", 0L);
+
+		_persistence.countByERC_G((String)null, 0L);
+	}
+
+	@Test
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		DLFileEntryType newDLFileEntryType = addDLFileEntryType();
 
@@ -278,6 +320,24 @@ public class DLFileEntryTypePersistenceTest {
 
 	@Test
 	public void testFilterFindByGroupId() throws Exception {
+		PermissionThreadLocal.setPermissionChecker(
+			new SimplePermissionChecker() {
+				{
+					init(TestPropsValues.getUser());
+				}
+
+				@Override
+				public boolean isCompanyAdmin(long companyId) {
+					return false;
+				}
+
+			});
+
+		Assert.assertTrue(InlineSQLHelperUtil.isEnabled(0));
+
+		_persistence.filterFindByGroupId(
+			0, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
 		_persistence.filterFindByGroupId(
 			0, QueryUtil.ALL_POS, QueryUtil.ALL_POS, getOrderByComparator());
 	}
@@ -285,11 +345,11 @@ public class DLFileEntryTypePersistenceTest {
 	protected OrderByComparator<DLFileEntryType> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
 			"DLFileEntryType", "mvccVersion", true, "ctCollectionId", true,
-			"uuid", true, "fileEntryTypeId", true, "groupId", true, "companyId",
-			true, "userId", true, "userName", true, "createDate", true,
-			"modifiedDate", true, "dataDefinitionId", true, "fileEntryTypeKey",
-			true, "name", true, "description", true, "scope", true,
-			"lastPublishDate", true);
+			"uuid", true, "externalReferenceCode", true, "fileEntryTypeId",
+			true, "groupId", true, "companyId", true, "userId", true,
+			"userName", true, "createDate", true, "modifiedDate", true,
+			"dataDefinitionId", true, "fileEntryTypeKey", true, "name", true,
+			"description", true, "scope", true, "lastPublishDate", true);
 	}
 
 	@Test
@@ -589,6 +649,17 @@ public class DLFileEntryTypePersistenceTest {
 			ReflectionTestUtil.invoke(
 				dlFileEntryType, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "fileEntryTypeKey"));
+
+		Assert.assertEquals(
+			dlFileEntryType.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				dlFileEntryType, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
+		Assert.assertEquals(
+			Long.valueOf(dlFileEntryType.getGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				dlFileEntryType, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
 	}
 
 	protected DLFileEntryType addDLFileEntryType() throws Exception {
@@ -601,6 +672,8 @@ public class DLFileEntryTypePersistenceTest {
 		dlFileEntryType.setCtCollectionId(RandomTestUtil.nextLong());
 
 		dlFileEntryType.setUuid(RandomTestUtil.randomString());
+
+		dlFileEntryType.setExternalReferenceCode(RandomTestUtil.randomString());
 
 		dlFileEntryType.setGroupId(RandomTestUtil.nextLong());
 

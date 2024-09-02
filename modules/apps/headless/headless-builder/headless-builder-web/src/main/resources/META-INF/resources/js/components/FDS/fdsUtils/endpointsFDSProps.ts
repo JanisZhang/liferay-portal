@@ -24,7 +24,7 @@ export function getAPIEndpointsFDSProps(
 		},
 		emptyState: {
 			description: '',
-			image: '/states/empty_state.gif',
+			image: '/states/empty_state.svg',
 			title: Liferay.Language.get('no-api-endpoint-found'),
 		},
 		id: portletId,
@@ -46,7 +46,7 @@ export function getAPIEndpointsFDSProps(
 							id: 'copyEndpointURL',
 							label: Liferay.Language.get('copy-url'),
 						},
-				  ]
+					]
 				: []),
 			{
 				icon: 'trash',

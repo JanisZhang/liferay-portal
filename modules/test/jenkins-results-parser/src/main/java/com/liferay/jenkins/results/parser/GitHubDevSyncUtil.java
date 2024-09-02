@@ -800,6 +800,7 @@ public class GitHubDevSyncUtil {
 		GitRemote gitRemote) {
 
 		List<RemoteGitBranch> cacheRemoteGitBranches = new ArrayList<>();
+
 		Set<String> lockedBaseCacheRemoteGitBranchNames = new HashSet<>();
 		Map<String, RemoteGitBranch> remoteGitBranches = new HashMap<>();
 
@@ -891,8 +892,7 @@ public class GitHubDevSyncUtil {
 
 			gitHubDevRemoteURLs.add(
 				JenkinsResultsParserUtil.combine(
-					"git@", gitHubDevNodeHostname, ":",
-					gitWorkingDirectory.getGitRepositoryUsername(), "/",
+					"git@", gitHubDevNodeHostname, ":liferay/",
 					gitWorkingDirectory.getGitRepositoryName(), ".git"));
 		}
 

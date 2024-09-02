@@ -5,73 +5,52 @@
 
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
-import {useState} from 'react';
-import {UseFormRegister, useFieldArray, useForm} from 'react-hook-form';
+import {Control, UseFormRegister, useFieldArray} from 'react-hook-form';
 import {useParams} from 'react-router-dom';
 import Loading from '~/components/Loading';
-import {ACTIONS} from '~/util/constants';
 
 import Form from '../../../../../components/Form';
 import useFormModal from '../../../../../hooks/useFormModal';
 import i18n from '../../../../../i18n';
 import yupSchema from '../../../../../schema/yup';
 import {
-	TestrayFactorOption,
 	TestrayOptionsByCategory,
+	TestrayRun,
 } from '../../../../../services/rest';
 import FactorOptionsFormModal from '../../../../Standalone/FactorOptions/FactorOptionsFormModal';
-import BuildSelectStacksModal, {FactorStack} from './BuildSelectStacksModal';
 import StackList from './Stack';
 import useGetFactorsData from './hooks/useGetFactorsData';
-import useGetRunsData from './hooks/useGetRunsData';
 
 export type BuildFormType = typeof yupSchema.build.__outputType;
 
 type BuildFormRunProps = {
+	action: string;
+	control: Control<any>;
+	loadingRuns: boolean;
 	register: UseFormRegister<BuildFormType>;
+	runItems: TestrayRun[];
+	runOptionsList: TestrayOptionsByCategory[];
 };
 
-const BuildFormRun: React.FC<BuildFormRunProps> = ({register}) => {
+const BuildFormRun: React.FC<BuildFormRunProps> = ({
+	action,
+	control,
+	loadingRuns,
+	register,
+	runItems,
+	runOptionsList,
+}) => {
 	const {modal: optionModal} = useFormModal();
-	const {buildId, routineId} = useParams();
-	const {control} = useForm({});
-
-	const action = buildId ? ACTIONS.UPDATE : ACTIONS.CREATE;
+	const {routineId} = useParams();
 
 	const {append, fields, remove, update} = useFieldArray({
 		control,
-		name: 'factorStacks',
+		name: 'runOptions',
 	});
 
-	const [runOptionsList, setRunOptionsList] = useState<
-		TestrayOptionsByCategory[]
-	>([[] as any]);
+	const {factorItems} = useGetFactorsData(update, routineId);
 
-	const [factorOptionsList, setFactorOptionsList] = useState<
-		TestrayFactorOption[][]
-	>([[] as any]);
-
-	const {modal: optionSelectModal} = useFormModal({
-		onSave: (factorStacks: FactorStack[]) => {
-			for (const factor of factorStacks) {
-				append({...factor, disabled: false});
-			}
-		},
-	});
-
-	const {factorItems, loading: loadingFactors} = useGetFactorsData(
-		setFactorOptionsList,
-		update,
-		routineId
-	);
-
-	const {loading: loadingRuns, runItems} = useGetRunsData(
-		setRunOptionsList,
-		update,
-		buildId
-	);
-
-	if (loadingRuns || loadingFactors) {
+	if (loadingRuns) {
 		return <Loading />;
 	}
 
@@ -81,7 +60,7 @@ const BuildFormRun: React.FC<BuildFormRunProps> = ({register}) => {
 
 			<Form.Divider />
 
-			{!runItems.length && !factorItems.length && (
+			{!runItems.length && (
 				<ClayAlert>
 					{i18n.translate(
 						'create-environment-factors-if-you-want-to-generate-runs'
@@ -89,7 +68,7 @@ const BuildFormRun: React.FC<BuildFormRunProps> = ({register}) => {
 				</ClayAlert>
 			)}
 
-			{(!!runItems.length || !!factorItems.length) && (
+			{!!runItems.length && (
 				<>
 					<ClayButton.Group className="mb-4">
 						<ClayButton
@@ -98,15 +77,6 @@ const BuildFormRun: React.FC<BuildFormRunProps> = ({register}) => {
 						>
 							{i18n.translate('add-option')}
 						</ClayButton>
-						{action === ACTIONS.CREATE && (
-							<ClayButton
-								className="ml-1"
-								displayType="secondary"
-								onClick={() => optionSelectModal.open()}
-							>
-								{i18n.translate('select-stacks')}
-							</ClayButton>
-						)}
 					</ClayButton.Group>
 
 					<StackList
@@ -114,11 +84,7 @@ const BuildFormRun: React.FC<BuildFormRunProps> = ({register}) => {
 						append={append as any}
 						factorItems={factorItems}
 						fields={fields}
-						optionsList={
-							action === ACTIONS.CREATE
-								? factorOptionsList
-								: runOptionsList
-						}
+						optionsList={runOptionsList}
 						register={register}
 						remove={remove}
 						update={update as any}
@@ -127,11 +93,6 @@ const BuildFormRun: React.FC<BuildFormRunProps> = ({register}) => {
 			)}
 
 			<FactorOptionsFormModal modal={optionModal} />
-
-			<BuildSelectStacksModal
-				factorItems={factorItems}
-				modal={optionSelectModal}
-			/>
 		</>
 	);
 };

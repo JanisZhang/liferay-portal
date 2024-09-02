@@ -9,6 +9,7 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.ClientDataRequestHelper;
 import com.liferay.portal.kernel.upload.FileItem;
 import com.liferay.portal.kernel.upload.UploadRequest;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
@@ -35,6 +36,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(service = ClientDataRequestHelper.class)
 public class ClientDataRequestHelperImpl implements ClientDataRequestHelper {
 
+	@Override
 	public Part getPart(String name, Object request, Portlet portlet)
 		throws IOException, PortletException {
 
@@ -49,13 +51,14 @@ public class ClientDataRequestHelperImpl implements ClientDataRequestHelper {
 
 		FileItem[] fileItems = multipartParameterMap.get(name);
 
-		if ((fileItems == null) || (fileItems.length == 0)) {
+		if (ArrayUtil.isEmpty(fileItems)) {
 			return null;
 		}
 
 		return new PartImpl(fileItems[0], portlet.getMultipartLocation());
 	}
 
+	@Override
 	public Collection<Part> getParts(Object request, Portlet portlet)
 		throws IOException, PortletException {
 

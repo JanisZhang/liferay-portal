@@ -1,14 +1,10 @@
 {
-	"dependencies": {
+	"devDependencies": {
 		"@liferay/eslint-plugin": "1.5.0",
-		"@liferay/npm-scripts": "49.0.0"
+		"@liferay/prettier-plugin": "1.1.5",
+		"@liferay/stylelint-plugin": "1.1.0",
+		"eslint": "7.32.0",
+		"prettier": "3.2.5"
 	},
-	"private": true,
-	"resolutions": {
-		"prettier": "2.1.2"
-	},
-	"scripts": {
-		"checkFormat": "liferay-npm-scripts lint && liferay-npm-scripts format:check",
-		"format": "liferay-npm-scripts lint:fix && liferay-npm-scripts format"
-	}
+	"private": true
 }

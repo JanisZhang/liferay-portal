@@ -5,6 +5,11 @@
 
 package com.liferay.scim.rest.resource.v1_0.test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.cfg.MapperConfig;
+import com.fasterxml.jackson.databind.introspect.AnnotatedField;
+
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
@@ -32,10 +37,15 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.scim.rest.client.dto.v1_0.MultiValuedAttribute;
 import com.liferay.scim.rest.client.dto.v1_0.Name;
 import com.liferay.scim.rest.client.dto.v1_0.User;
+import com.liferay.scim.rest.client.dto.v1_0.UserSchemaExtension;
 import com.liferay.scim.rest.client.http.HttpInvoker;
 import com.liferay.scim.rest.resource.v1_0.test.util.ScimTestUtil;
 
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+
+import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -72,6 +82,8 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 				"matcherField", "email"
 			).put(
 				"oAuth2ApplicationName", "scim-client-test"
+			).put(
+				"userId", TestPropsValues.getUserId()
 			).build());
 	}
 
@@ -147,7 +159,8 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 
 		User user3 = testDeleteV2User_addUser();
 
-		_assertListResponse(userResource.getV2Users(5, 3), 3, 1, user3);
+		_assertListResponse(
+			userResource.getV2Users(5, 3), 3, 1, user1, user2, user3);
 	}
 
 	@Override
@@ -189,7 +202,7 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 		// Provision an existing inactive user with no SCIM client ID set
 
 		updatedPortalUser2 = _userLocalService.updateStatus(
-			updatedPortalUser2.getUserId(), WorkflowConstants.STATUS_INACTIVE,
+			updatedPortalUser2, WorkflowConstants.STATUS_INACTIVE,
 			new ServiceContext());
 
 		Assert.assertFalse(updatedPortalUser2.isActive());
@@ -242,8 +255,35 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
-			"emails", "externalId", "name", "title", "userName"
+			"emails", "externalId", "name", "title",
+			"urn_ietf_params_scim_schemas_extension_liferay_2_0_User",
+			"userName"
 		};
+	}
+
+	@Override
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		ObjectMapper objectMapper = super.getClientSerDesObjectMapper();
+
+		objectMapper.setPropertyNamingStrategy(
+			new PropertyNamingStrategy() {
+
+				@Override
+				public String nameForField(
+					MapperConfig<?> config, AnnotatedField field,
+					String defaultName) {
+
+					if (!StringUtil.startsWith(defaultName, "urn")) {
+						return super.nameForField(config, field, defaultName);
+					}
+
+					return "urn:ietf:params:scim:schemas:extension:liferay:" +
+						"2.0:User";
+				}
+
+			});
+
+		return objectMapper;
 	}
 
 	@Override
@@ -271,7 +311,17 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 				}
 			});
 		user.setSchemas(
-			new String[] {"urn:ietf:params:scim:schemas:core:2.0:User"});
+			new String[] {
+				"urn:ietf:params:scim:schemas:core:2.0:User",
+				"urn:ietf:params:scim:schemas:extension:liferay:2.0:User"
+			});
+		user.setUrn_ietf_params_scim_schemas_extension_liferay_2_0_User(
+			new UserSchemaExtension() {
+				{
+					birthday = DateUtils.truncate(new Date(), Calendar.DATE);
+					male = true;
+				}
+			});
 
 		return user;
 	}
@@ -324,7 +374,7 @@ public class UserResourceTest extends BaseUserResourceTestCase {
 		JSONArray resourcesJSONArray = listResponseJSONObject.getJSONArray(
 			"Resources");
 
-		Assert.assertEquals(expectedUsers.length, resourcesJSONArray.length());
+		Assert.assertEquals(expectedItemsPerPage, resourcesJSONArray.length());
 
 		for (int i = 0; i < resourcesJSONArray.length(); i++) {
 			JSONObject userJSONObject = resourcesJSONArray.getJSONObject(i);

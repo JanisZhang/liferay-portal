@@ -84,6 +84,12 @@ public interface ObjectRelationshipLocalService
 			boolean system, String type, ObjectField objectField)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
+	public ObjectRelationship addObjectRelationship(
+			String externalReferenceCode, long userId, long objectDefinitionId1,
+			long objectDefinitionId2, ObjectField objectField)
+		throws PortalException;
+
 	public void addObjectRelationshipMappingTableValues(
 			long userId, long objectRelationshipId, long primaryKey1,
 			long primaryKey2, ServiceContext serviceContext)
@@ -165,6 +171,8 @@ public interface ObjectRelationshipLocalService
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
 
+	public void disableEdge(long objectDefinitionId2) throws PortalException;
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
 
@@ -236,6 +244,10 @@ public interface ObjectRelationshipLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long dynamicQueryCount(
 		DynamicQuery dynamicQuery, Projection projection);
+
+	public ObjectRelationship enableEdge(
+			long objectRelationshipId, boolean edge)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectRelationship fetchObjectRelationship(
@@ -315,7 +327,7 @@ public interface ObjectRelationshipLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ObjectRelationship getObjectRelationshipByObjectDefinitionId(
 			long objectDefinitionId, String name)
-		throws Exception;
+		throws PortalException;
 
 	/**
 	 * Returns the object relationship with the matching UUID and company.

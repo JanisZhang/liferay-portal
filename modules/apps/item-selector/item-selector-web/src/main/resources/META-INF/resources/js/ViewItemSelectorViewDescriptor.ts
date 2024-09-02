@@ -27,9 +27,8 @@ export default function ({
 			card.classList.remove('active');
 		});
 
-		const newSelectedCard = event.delegateTarget.closest(
-			'.form-check-card'
-		);
+		const newSelectedCard =
+			event.delegateTarget.closest('.form-check-card');
 
 		if (newSelectedCard) {
 			newSelectedCard.classList.add('active');
@@ -50,6 +49,15 @@ export default function ({
 		});
 	};
 
+	const onBlurHandler = delegate(
+		document.getElementById(`${namespace}entriesContainer`)!,
+		'blur',
+		'tbody tr',
+		(event: DelegatedEvent<any>) => {
+			event.target.classList.remove('table-focus');
+		}
+	);
+
 	const onClickHandler = delegate(
 		document.getElementById(`${namespace}entriesContainer`)!,
 		'click',
@@ -57,6 +65,15 @@ export default function ({
 		(event: DelegatedEvent<MouseEvent>) => {
 			updateSelectedCard(event);
 			dispatchSelectEvent(event);
+		}
+	);
+
+	const onFocusHandler = delegate(
+		document.getElementById(`${namespace}entriesContainer`)!,
+		'focus',
+		'tbody tr',
+		(event: DelegatedEvent<any>) => {
+			event.target.classList.add('table-focus');
 		}
 	);
 
@@ -74,7 +91,9 @@ export default function ({
 
 	return {
 		dispose() {
+			onBlurHandler.dispose();
 			onClickHandler.dispose();
+			onFocusHandler.dispose();
 			onKeydownHandler.dispose();
 		},
 	};

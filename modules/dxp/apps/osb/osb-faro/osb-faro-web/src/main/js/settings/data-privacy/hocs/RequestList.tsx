@@ -44,7 +44,7 @@ import {
 } from 'shared/util/router';
 import {useMutation, useQuery} from '@apollo/react-hooks';
 import {useParams} from 'react-router-dom';
-import {useQueryPagination} from 'shared/hooks';
+import {useQueryPagination} from 'shared/hooks/useQueryPagination';
 import {User} from 'shared/util/records';
 import {
 	useSelectionContext,
@@ -272,11 +272,6 @@ const RequestList: React.FC<IRequestListProps> = ({
 					}
 				})
 					.then(() => {
-						analytics.track('Created User Data Request', {
-							types,
-							uploadedFile: !!fileName
-						});
-
 						addAlert({
 							alertType: Alert.Types.Success,
 							message: Liferay.Language.get(
@@ -441,22 +436,13 @@ const RequestList: React.FC<IRequestListProps> = ({
 
 					return (
 						authorized &&
+						!itemsSelected &&
 						status === GDPRRequestStatuses.Completed && (
 							<ClayLink
 								className={classnames}
-								{...(!itemsSelected && {
-									href: `/o/proxy/download/data-control-tasks/${id}?projectGroupId=${groupId}`
-								})}
-								onClick={() =>
-									analytics.track(
-										'Downloaded User Data Request'
-									)
-								}
-								onKeyDown={() =>
-									analytics.track(
-										'Downloaded User Data Request'
-									)
-								}
+								// @ts-ignore
+								externalLink
+								href={`/o/proxy/download/data-control-tasks/${id}?projectGroupId=${groupId}`}
 								role='button'
 								tabIndex={0}
 							>
@@ -470,15 +456,12 @@ const RequestList: React.FC<IRequestListProps> = ({
 						<Nav.Item>
 							{authorized && selectedItems.size ? (
 								<ClayLink
-									className='btn btn-primary button-root nav-btn '
+									className='btn btn-primary button-root nav-btn'
+									// @ts-ignore
+									externalLink
 									href={`/o/proxy/download/data-control-tasks?projectGroupId=${groupId}&ids=${selectedItems
 										.map(({id}) => id)
 										.join('&ids=')}`}
-									onClick={() =>
-										analytics.track(
-											'Downloaded User Data Request'
-										)
-									}
 								>
 									{Liferay.Language.get('download-all')}
 								</ClayLink>

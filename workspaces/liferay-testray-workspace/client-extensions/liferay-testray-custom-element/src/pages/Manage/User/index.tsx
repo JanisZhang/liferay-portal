@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useNavigate} from 'react-router-dom';
-
 import Container from '../../../components/Layout/Container';
 import ListView, {ListViewProps} from '../../../components/ListView';
 import {TableProps} from '../../../components/Table';
@@ -33,14 +31,12 @@ const UserListView: React.FC<UserListViewProps> = ({
 	tableProps,
 	variables,
 }) => {
-	const navigate = useNavigate();
-
 	return (
 		<ListView
 			forceRefetch={formModal?.forceRefetch}
 			managementToolbarProps={{
-				addButton: () => navigate('create'),
-				filterSchema: 'user',
+				applyFilters: false,
+				hasSearch: true,
 				title: i18n.translate('users'),
 			}}
 			resource="/user-accounts"
@@ -88,8 +84,6 @@ const UserListView: React.FC<UserListViewProps> = ({
 };
 
 const Users = () => {
-	const navigate = useNavigate();
-
 	useHeader({
 		dropdown: [],
 		heading: [
@@ -104,7 +98,7 @@ const Users = () => {
 		<Container>
 			<UserListView
 				tableProps={{
-					onClickRow: (user) => navigate(`${user.id}/update`),
+					navigateTo: (user) => `${user.id}/update`,
 				}}
 			/>
 		</Container>

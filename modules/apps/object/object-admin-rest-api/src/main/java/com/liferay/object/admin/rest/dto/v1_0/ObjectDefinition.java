@@ -433,6 +433,47 @@ public class ObjectDefinition implements Serializable {
 	private Supplier<Boolean> _enableCommentsSupplier;
 
 	@Schema
+	public Boolean getEnableIndexSearch() {
+		if (_enableIndexSearchSupplier != null) {
+			enableIndexSearch = _enableIndexSearchSupplier.get();
+
+			_enableIndexSearchSupplier = null;
+		}
+
+		return enableIndexSearch;
+	}
+
+	public void setEnableIndexSearch(Boolean enableIndexSearch) {
+		this.enableIndexSearch = enableIndexSearch;
+
+		_enableIndexSearchSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setEnableIndexSearch(
+		UnsafeSupplier<Boolean, Exception> enableIndexSearchUnsafeSupplier) {
+
+		_enableIndexSearchSupplier = () -> {
+			try {
+				return enableIndexSearchUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean enableIndexSearch;
+
+	@JsonIgnore
+	private Supplier<Boolean> _enableIndexSearchSupplier;
+
+	@Schema
 	public Boolean getEnableLocalization() {
 		if (_enableLocalizationSupplier != null) {
 			enableLocalization = _enableLocalizationSupplier.get();
@@ -1719,6 +1760,18 @@ public class ObjectDefinition implements Serializable {
 			sb.append(enableComments);
 		}
 
+		Boolean enableIndexSearch = getEnableIndexSearch();
+
+		if (enableIndexSearch != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"enableIndexSearch\": ");
+
+			sb.append(enableIndexSearch);
+		}
+
 		Boolean enableLocalization = getEnableLocalization();
 
 		if (enableLocalization != null) {
@@ -2198,7 +2251,10 @@ public class ObjectDefinition implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

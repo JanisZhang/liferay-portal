@@ -202,3 +202,33 @@ bf19898d460c99969f6c5415186df2154402b09a^..dff5c34cad96e5c2fd0dced1add010c9af050
 # Bundle Version 7.0.38
 #
 dff5c34cad96e5c2fd0dced1add010c9af0505b2^..516efcaf79e2f6f4aaafa31337ff47f818419679=LPD-6984
+
+#
+# Bundle Version 7.0.39
+#
+516efcaf79e2f6f4aaafa31337ff47f818419679^..80ccec0392b9c806ae9dea4cb53a364726a1723f=LPD-20207
+
+#
+# Bundle Version 7.0.40
+#
+80ccec0392b9c806ae9dea4cb53a364726a1723f^..c08b08f5a119e2c5a96e9e8a3045ecb2ebb760af=LPD-24741
+
+#
+# Bundle Version 7.0.41
+#
+c08b08f5a119e2c5a96e9e8a3045ecb2ebb760af^..4daaadb537540302086474de7d6ed677b5543980=LPD-25358
+
+#
+# Bundle Version 7.0.43
+#
+4daaadb537540302086474de7d6ed677b5543980^..256fefc829dda3fe0e4b50a2bc3ffe6e0ade2d04=LPD-27050 LPD-27363
+
+#
+# Bundle Version 7.0.44
+#
+256fefc829dda3fe0e4b50a2bc3ffe6e0ade2d04^..722a7ba904f1dbd601f113938e607491f0cffbc6=LPD-25784
+
+#
+# Bundle Version 7.0.45
+#
+722a7ba904f1dbd601f113938e607491f0cffbc6^..5733ef85bed667a64606f999e7bce8b1f4db68bd=LPD-32570

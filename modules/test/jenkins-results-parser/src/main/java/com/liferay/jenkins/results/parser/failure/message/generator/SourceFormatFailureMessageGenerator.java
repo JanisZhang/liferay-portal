@@ -5,8 +5,6 @@
 
 package com.liferay.jenkins.results.parser.failure.message.generator;
 
-import org.dom4j.Element;
-
 /**
  * @author Peter Yoo
  * @author Yi-Chen Tsai
@@ -15,14 +13,14 @@ public class SourceFormatFailureMessageGenerator
 	extends BaseFailureMessageGenerator {
 
 	@Override
-	public Element getMessageElement(String consoleText) {
+	public String getMessage(String consoleText) {
 		if (!consoleText.contains(_TOKEN_SOURCE_FORMAT)) {
 			return null;
 		}
 
-		int start = consoleText.lastIndexOf(_TOKEN_SOURCE_FORMAT);
+		int start = consoleText.lastIndexOf("format-source-files:");
 
-		if (consoleText.contains(_TOKEN_FORMATTING_ISSUES)) {
+		if (consoleText.contains(_TOKEN_FORMATTING_ISSUES) && (start == -1)) {
 			start = consoleText.lastIndexOf(_TOKEN_FORMATTING_ISSUES, start);
 		}
 
@@ -32,7 +30,7 @@ public class SourceFormatFailureMessageGenerator
 
 		end = consoleText.lastIndexOf("\n", end);
 
-		return getConsoleTextSnippetElement(consoleText, false, start, end);
+		return getConsoleTextSnippet(consoleText, false, start, end);
 	}
 
 	private static final String _TOKEN_FORMATTING_ISSUES = "formatting issues:";

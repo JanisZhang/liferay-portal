@@ -1,10 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Fragments";
+	property testray.main.component.name = "Fragment Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -173,6 +173,8 @@ definition {
 
 		task ("Assert the fragment name is localized") {
 			PageEditor.clickConfigurableField(fragmentName = "Título");
+
+			PageEditor.gotoTab(tabName = "Navegador");
 
 			PageEditor.viewFragmentHeaderVisible(fragmentName = "Título");
 		}

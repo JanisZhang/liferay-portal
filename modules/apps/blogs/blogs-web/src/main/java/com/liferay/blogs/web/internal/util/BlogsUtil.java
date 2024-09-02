@@ -211,19 +211,20 @@ public class BlogsUtil {
 	public static OrderByComparator<BlogsEntry> getOrderByComparator(
 		String orderByCol, String orderByType) {
 
+		OrderByComparator<BlogsEntry> orderByComparator = null;
+
 		boolean orderByAsc = true;
 
 		if (orderByType.equals("desc")) {
 			orderByAsc = false;
 		}
 
-		OrderByComparator<BlogsEntry> orderByComparator = null;
-
 		if (orderByCol.equals("display-date")) {
-			orderByComparator = new EntryDisplayDateComparator(orderByAsc);
+			orderByComparator = EntryDisplayDateComparator.getInstance(
+				orderByAsc);
 		}
 		else {
-			orderByComparator = new EntryTitleComparator(orderByAsc);
+			orderByComparator = EntryTitleComparator.getInstance(orderByAsc);
 		}
 
 		return orderByComparator;

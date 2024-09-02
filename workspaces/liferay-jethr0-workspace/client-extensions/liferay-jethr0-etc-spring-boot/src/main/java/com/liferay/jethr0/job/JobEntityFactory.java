@@ -19,10 +19,7 @@ public class JobEntityFactory extends BaseEntityFactory<JobEntity> {
 
 	@Override
 	public JobEntity newEntity(JSONObject jsonObject) {
-		JSONObject typeJSONObject = jsonObject.getJSONObject("type");
-
-		JobEntity.Type type = JobEntity.Type.getByKey(
-			typeJSONObject.getString("key"));
+		JobEntity.Type type = JobEntity.Type.get(jsonObject.get("type"));
 
 		if (type == JobEntity.Type.ARCHIVE_CI_BUILD_DATA) {
 			return new ArchiveCIBuildDataJobEntity(jsonObject);
@@ -75,6 +72,9 @@ public class JobEntityFactory extends BaseEntityFactory<JobEntity> {
 		else if (type == JobEntity.Type.MAINTENANCE_WEEKLY_NODE) {
 			return new MaintenanceWeeklyNodeJobEntity(jsonObject);
 		}
+		else if (type == JobEntity.Type.MERGE_CENTRAL_SUBREPOSITORY) {
+			return new MergeCentralSubrepositoryJobEntity(jsonObject);
+		}
 		else if (type == JobEntity.Type.MERGE_PORTAL_SUBREPOSITORY) {
 			return new MergePortalSubrepositoryJobEntity(jsonObject);
 		}
@@ -120,6 +120,9 @@ public class JobEntityFactory extends BaseEntityFactory<JobEntity> {
 		else if (type == JobEntity.Type.PORTAL_RELEASE) {
 			return new PortalReleaseJobEntity(jsonObject);
 		}
+		else if (type == JobEntity.Type.PORTAL_UPSTREAM) {
+			return new DefaultPortalUpstreamJobEntity(jsonObject);
+		}
 		else if (type == JobEntity.Type.PORTAL_UPSTREAM_ACCEPTANCE) {
 			return new AcceptancePortalUpstreamJobEntity(jsonObject);
 		}
@@ -153,6 +156,9 @@ public class JobEntityFactory extends BaseEntityFactory<JobEntity> {
 		else if (type == JobEntity.Type.SANITIZE_LANGUAGE) {
 			return new SanitizeLanguageJobEntity(jsonObject);
 		}
+		else if (type == JobEntity.Type.SCANCODE_PIPELINES) {
+			return new ScancodePipelinesJobEntity(jsonObject);
+		}
 		else if (type == JobEntity.Type.SUBREPOSITORY_PULL_REQUEST) {
 			return new SubrepositoryPullRequestJobEntity(jsonObject);
 		}
@@ -161,6 +167,9 @@ public class JobEntityFactory extends BaseEntityFactory<JobEntity> {
 		}
 		else if (type == JobEntity.Type.VERIFICATION_NODE) {
 			return new VerificationNodeJobEntity(jsonObject);
+		}
+		else if (type == JobEntity.Type.VERIFICATION_SERVERS_DAILY) {
+			return new VerificationServersDailyJobEntity(jsonObject);
 		}
 
 		return new DefaultJobEntity(jsonObject);

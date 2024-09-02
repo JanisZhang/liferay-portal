@@ -109,13 +109,14 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 
 	private void _upgradeDDMStructure() throws Exception {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
-				"select structureId, definition from DDMStructure where " +
-					"classNameId = ? or classNameId = ? order by createDate");
+				"select ctCollectionId, structureId, definition from " +
+					"DDMStructure where classNameId = ? or classNameId = ? " +
+						"order by createDate");
 			PreparedStatement preparedStatement2 =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
 					"update DDMStructure set definition = ? where " +
-						"structureId = ?")) {
+						"ctCollectionId = ? and structureId = ?")) {
 
 			preparedStatement1.setLong(
 				1,
@@ -130,7 +131,9 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 						_addLabelToFieldsGroup(
 							resultSet.getString("definition")));
 					preparedStatement2.setLong(
-						2, resultSet.getLong("structureId"));
+						2, resultSet.getLong("ctCollectionId"));
+					preparedStatement2.setLong(
+						3, resultSet.getLong("structureId"));
 
 					preparedStatement2.addBatch();
 				}
@@ -144,6 +147,7 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				StringBundler.concat(
 					"select DDMStructure.structureKey,  ",
+					"DDMStructureVersion.ctCollectionId, ",
 					"DDMStructureVersion.structureVersionId, ",
 					"DDMStructureVersion.definition from DDMStructureVersion ",
 					"inner join DDMStructure on DDMStructure.structureId = ",
@@ -154,7 +158,7 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
 					"update DDMStructureVersion set definition = ? where " +
-						"structureVersionId = ?")) {
+						"ctCollectionId = ? and structureVersionId = ?")) {
 
 			preparedStatement1.setLong(
 				1,
@@ -169,7 +173,10 @@ public class DDMStructureUpgradeProcess extends UpgradeProcess {
 						_addLabelToFieldsGroup(
 							resultSet.getString("definition")));
 					preparedStatement2.setLong(
-						2, resultSet.getLong("structureVersionId"));
+						2, resultSet.getLong("ctCollectionId"));
+					preparedStatement2.setLong(
+						3, resultSet.getLong("structureVersionId"));
+
 					preparedStatement2.addBatch();
 				}
 

@@ -46,12 +46,12 @@ const getTreeLevelInfo = (depth) =>
 				getURL: FETCH_URLS.getSubCategories,
 				icon: 'categories',
 				showSelect: true,
-		  }
+			}
 		: {
 				getURL: FETCH_URLS.getCategories,
 				icon: 'vocabulary',
 				showSelect: false,
-		  };
+			};
 
 /**
  * Returns a copy of the tree with properties added/updated to the object at index.
@@ -339,7 +339,7 @@ function CategorySelectorModal({
 						description={Liferay.Language.get(
 							'an-error-has-occurred-and-we-were-unable-to-load-the-results'
 						)}
-						imgSrc="/o/admin-theme/images/states/empty_state.gif"
+						imgSrc="/o/admin-theme/images/states/empty_state.svg"
 						title={Liferay.Language.get('no-items-were-found')}
 					/>
 				)}

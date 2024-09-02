@@ -1,5 +1,32 @@
 components:
     schemas:
+        EmbeddingModel:
+            properties:
+                modelId:
+                    type: string
+        EmbeddingProviderConfiguration:
+            properties:
+                attributes:
+                    type: object
+                embeddingVectorDimensions:
+                    type: integer
+                languageIds:
+                    items:
+                        type: string
+                    type: array
+                modelClassNames:
+                    items:
+                        type: string
+                    type: array
+                providerName:
+                    type: string
+            type: object
+        EmbeddingProviderValidationResult:
+            properties:
+                errorMessage:
+                    type: string
+                expectedDimensions:
+                    type: integer
         FacetConfiguration:
             properties:
                 aggregationName:
@@ -44,6 +71,11 @@ components:
             type: object
         SearchResult:
             properties:
+                dateCreated:
+                    description:
+                        The time the item was created.
+                    format: date-time
+                    type: string
                 dateModified:
                     description:
                         The last time the item was changed.
@@ -104,7 +136,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.portal.search.rest.client', and version '1.0.16'."
+        'com.liferay.portal.search.rest.client', and version '1.0.22'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -113,10 +145,82 @@ info:
 openapi: 3.0.1
 paths:
     "/search":
+        get:
+            description:
+                "Search the company index for matching content. This endpoint is development and requires setting the
+                portal property 'feature.flag.LPD-11232' to true or enabling via Instance Settings > Feature Flags: Developer."
+            operationId: getSearchPage
+            parameters:
+                - in: query
+                  name: blueprintExternalReferenceCode
+                  schema:
+                      type: string
+                - in: query
+                  name: emptySearch
+                  schema:
+                      type: boolean
+                - in: query
+                  description:
+                      Model class names to be searched for. Defaults to all.
+                  name: entryClassNames
+                  schema:
+                      type: string
+                - in: query
+                  description:
+                      The list of fields to be returned.
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: scope
+                  schema:
+                      type: string
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/SearchResult"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/SearchResult"
+                                type: array
+            tags: ["SearchResult"]
         post:
             description:
-                "Search the company index for matching content. This endpoint is beta and requires setting the
-                portal property 'feature.flag.LPS-179669' to true or enabling via Instance Settings > Feature Flags: Beta."
+                "Search the company index for matching content. This endpoint requires setting the
+                portal property 'feature.flag.LPS-179669' to true or enabling via Instance Settings > Feature Flags: Release."
             operationId: postSearchPage
             parameters:
                 - in: query
@@ -152,6 +256,10 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: scope
+                  schema:
+                      type: string
+                - in: query
                   name: search
                   schema:
                       type: string
@@ -181,6 +289,61 @@ paths:
                                     $ref: "#/components/schemas/SearchResult"
                                 type: array
             tags: ["SearchResult"]
+    /embeddings/embedding-models:
+        get:
+            operationId: getEmbeddingEmbeddingModelsPage
+            parameters:
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: provider
+                  schema:
+                      type: string
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/EmbeddingModel"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/EmbeddingModel"
+                                type: array
+            tags: ["EmbeddingModel"]
+    /embeddings/validate-provider-configuration:
+        post:
+            operationId: postEmbeddingValidateProviderConfiguration
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/EmbeddingProviderConfiguration"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/EmbeddingProviderConfiguration"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/EmbeddingProviderValidationResult"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/EmbeddingProviderValidationResult"
+            tags: ["EmbeddingProviderValidationResult"]
     /suggestions:
         post:
             operationId: postSuggestionsPage
@@ -194,6 +357,9 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  deprecated: true
+                  description:
+                      Deprecated as of Cavanaugh (7.4.x), replaced by scope
                   name: groupId
                   schema:
                       format: int64

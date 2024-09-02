@@ -13,7 +13,7 @@ import React, {useEffect, useMemo, useState} from 'react';
 
 import {useStyleBook} from '../../../plugins/page_design_options/hooks/useStyleBook';
 import {ConfigurationFieldPropTypes} from '../../../prop_types/index';
-import {useActiveItemId} from '../../contexts/ControlsContext';
+import {useActiveItemIds} from '../../contexts/ControlsContext';
 import {useGlobalContext} from '../../contexts/GlobalContext';
 import {useSelector} from '../../contexts/StoreContext';
 import selectCanDetachTokenValues from '../../selectors/selectCanDetachTokenValues';
@@ -22,7 +22,10 @@ import {getResetLabelByViewport} from '../../utils/getResetLabelByViewport';
 import {ColorPaletteField} from './ColorPaletteField';
 
 export function ColorPickerField({field, isCustomStyle, onValueSelect, value}) {
-	const activeItemId = useActiveItemId();
+	const activeItemIds = useActiveItemIds();
+
+	const [activeItemId] = activeItemIds;
+
 	const canDetachTokenValues = useSelector(selectCanDetachTokenValues);
 	const [computedValue, setComputedValue] = useState(null);
 	const globalContext = useGlobalContext();

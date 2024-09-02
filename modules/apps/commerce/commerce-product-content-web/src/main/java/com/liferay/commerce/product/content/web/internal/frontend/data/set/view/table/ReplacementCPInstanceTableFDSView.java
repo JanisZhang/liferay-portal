@@ -39,10 +39,8 @@ public class ReplacementCPInstanceTableFDSView extends BaseTableFDSView {
 			"name", "name"
 		).add(
 			"priceModel", "price",
-			fdsTableSchemaField ->
-				fdsTableSchemaField.setContentRendererModuleURL(
-					"commerce-frontend-js/components/data_renderers" +
-						"/PriceRenderer")
+			fdsTableSchemaField -> fdsTableSchemaField.setContentRenderer(
+				"priceRenderer")
 		).build();
 	}
 

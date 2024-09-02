@@ -271,6 +271,11 @@ public class DLAppHelperLocalServiceImpl
 	}
 
 	@Override
+	public List<DLFileShortcut> getGroupFileShortcuts(long groupId) {
+		return _dlFileShortcutPersistence.findByGroupId(groupId);
+	}
+
+	@Override
 	public List<FileEntry> getNoAssetFileEntries() {
 		return null;
 	}
@@ -468,7 +473,8 @@ public class DLAppHelperLocalServiceImpl
 			if (dlFileVersion.isApproved()) {
 				visible = true;
 			}
-			else {
+
+			if (!dlFileVersion.isApproved() && !dlFileVersion.isScheduled()) {
 				String version = dlFileVersion.getVersion();
 
 				if (!version.equals(DLFileEntryConstants.VERSION_DEFAULT)) {
@@ -681,7 +687,8 @@ public class DLAppHelperLocalServiceImpl
 			return;
 		}
 
-		if (newStatus == WorkflowConstants.STATUS_APPROVED) {
+		if ((newStatus == WorkflowConstants.STATUS_APPROVED) ||
+			(newStatus == WorkflowConstants.STATUS_SCHEDULED)) {
 
 			// Asset
 

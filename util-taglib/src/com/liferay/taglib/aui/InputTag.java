@@ -36,7 +36,7 @@ public class InputTag extends BaseInputTag {
 
 	@Override
 	public int doEndTag() throws JspException {
-		updateFormCheckboxNames();
+		_updateFormCheckboxNames();
 
 		return super.doEndTag();
 	}
@@ -63,11 +63,10 @@ public class InputTag extends BaseInputTag {
 	}
 
 	public String getBaseType() {
-		Class<?> model = getModel();
-
-		String type = getType();
-
 		String baseType = null;
+
+		Class<?> model = getModel();
+		String type = getType();
 
 		if ((model != null) && Validator.isNull(type)) {
 			baseType = ModelHintsUtil.getType(model.getName(), getField());
@@ -320,7 +319,7 @@ public class InputTag extends BaseInputTag {
 		}
 	}
 
-	protected void updateFormCheckboxNames() {
+	private void _updateFormCheckboxNames() {
 		if (!Objects.equals(getBaseType(), "checkbox")) {
 			return;
 		}

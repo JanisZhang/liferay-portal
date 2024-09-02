@@ -7,6 +7,7 @@ package com.liferay.account.service;
 
 import com.liferay.account.model.AccountRole;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.Map;
@@ -31,13 +32,14 @@ public class AccountRoleServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.account.service.impl.AccountRoleServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static AccountRole addAccountRole(
-			long accountEntryId, String name,
+			String externalReferenceCode, long accountEntryId, String name,
 			Map<java.util.Locale, String> titleMap,
 			Map<java.util.Locale, String> descriptionMap)
 		throws PortalException {
 
 		return getService().addAccountRole(
-			accountEntryId, name, titleMap, descriptionMap);
+			externalReferenceCode, accountEntryId, name, titleMap,
+			descriptionMap);
 	}
 
 	public static void associateUser(
@@ -109,13 +111,10 @@ public class AccountRoleServiceUtil {
 	}
 
 	public static AccountRoleService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(AccountRoleService service) {
-		_service = service;
-	}
-
-	private static volatile AccountRoleService _service;
+	private static final Snapshot<AccountRoleService> _serviceSnapshot =
+		new Snapshot<>(AccountRoleServiceUtil.class, AccountRoleService.class);
 
 }

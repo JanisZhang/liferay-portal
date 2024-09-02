@@ -5,7 +5,7 @@
 
 import {
 	FormError,
-	REQUIRED_MSG,
+	constantsUtils,
 	invalidateRequired,
 	useForm,
 } from '@liferay/object-js-components-web';
@@ -24,6 +24,7 @@ export interface TabProps {
 	disabled: boolean;
 	errors: ObjectValidationErrors;
 	handleChange: ChangeEventHandler<HTMLInputElement>;
+	scriptManagementConfigurationPortletURL: string;
 	selectedPartialValidationField: string;
 	setValues: (values: Partial<ObjectValidation>) => void;
 	values: Partial<ObjectValidation>;
@@ -40,19 +41,20 @@ export function useObjectValidationForm({
 		const script = validation.script;
 
 		if (invalidateRequired(label)) {
-			errors.name = REQUIRED_MSG;
+			errors.name = constantsUtils.REQUIRED_MSG;
 		}
 
 		if (invalidateRequired(errorMessage)) {
-			errors.errorLabel = REQUIRED_MSG;
+			errors.errorLabel = constantsUtils.REQUIRED_MSG;
 		}
 
 		if (
 			validation.engine !== 'compositeKey' &&
 			!validation.engine?.startsWith('function#') &&
+			!validation.engine?.startsWith('javaDelegate#') &&
 			invalidateRequired(script)
 		) {
-			errors.script = REQUIRED_MSG;
+			errors.script = constantsUtils.REQUIRED_MSG;
 		}
 
 		if (
@@ -69,19 +71,18 @@ export function useObjectValidationForm({
 			validation.outputType === 'partialValidation' &&
 			!validation.objectValidationRuleSettings?.length
 		) {
-			errors.outputType = REQUIRED_MSG;
+			errors.outputType = constantsUtils.REQUIRED_MSG;
 		}
 
 		return errors;
 	};
 
-	const {errors, handleChange, handleSubmit, setValues, values} = useForm<
-		ObjectValidation
-	>({
-		initialValues,
-		onSubmit,
-		validate,
-	});
+	const {errors, handleChange, handleSubmit, setValues, values} =
+		useForm<ObjectValidation>({
+			initialValues,
+			onSubmit,
+			validate,
+		});
 
 	return {errors, handleChange, handleSubmit, setValues, values};
 }

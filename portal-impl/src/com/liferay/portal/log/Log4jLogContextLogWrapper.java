@@ -5,10 +5,13 @@
 
 package com.liferay.portal.log;
 
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.petra.concurrent.DCLSingleton;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogContext;
-import com.liferay.portal.kernel.log.LogContextRegistryUtil;
 import com.liferay.portal.kernel.log.LogWrapper;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Map;
@@ -50,7 +53,7 @@ public class Log4jLogContextLogWrapper extends LogWrapper {
 	public void debug(Throwable throwable) {
 		_populateThreadContext();
 
-		super.debug(null, throwable);
+		super.debug(throwable);
 
 		_cleanThreadContext();
 	}
@@ -77,7 +80,7 @@ public class Log4jLogContextLogWrapper extends LogWrapper {
 	public void error(Throwable throwable) {
 		_populateThreadContext();
 
-		super.error(null, throwable);
+		super.error(throwable);
 
 		_cleanThreadContext();
 	}
@@ -104,7 +107,7 @@ public class Log4jLogContextLogWrapper extends LogWrapper {
 	public void fatal(Throwable throwable) {
 		_populateThreadContext();
 
-		super.fatal(null, throwable);
+		super.fatal(throwable);
 
 		_cleanThreadContext();
 	}
@@ -131,7 +134,7 @@ public class Log4jLogContextLogWrapper extends LogWrapper {
 	public void info(Throwable throwable) {
 		_populateThreadContext();
 
-		super.info(null, throwable);
+		super.info(throwable);
 
 		_cleanThreadContext();
 	}
@@ -158,7 +161,7 @@ public class Log4jLogContextLogWrapper extends LogWrapper {
 	public void trace(Throwable throwable) {
 		_populateThreadContext();
 
-		super.trace(null, throwable);
+		super.trace(throwable);
 
 		_cleanThreadContext();
 	}
@@ -185,9 +188,19 @@ public class Log4jLogContextLogWrapper extends LogWrapper {
 	public void warn(Throwable throwable) {
 		_populateThreadContext();
 
-		super.warn(null, throwable);
+		super.warn(throwable);
 
 		_cleanThreadContext();
+	}
+
+	private static ServiceTrackerList<LogContext> _createServiceTrackerList() {
+		try {
+			return ServiceTrackerListFactory.open(
+				SystemBundleUtil.getBundleContext(), LogContext.class);
+		}
+		catch (IllegalStateException illegalStateException) {
+			return null;
+		}
 	}
 
 	private void _cleanThreadContext() {
@@ -195,7 +208,15 @@ public class Log4jLogContextLogWrapper extends LogWrapper {
 	}
 
 	private void _populateThreadContext() {
-		for (LogContext logContext : LogContextRegistryUtil.getLogContexts()) {
+		ServiceTrackerList<LogContext> serviceTrackerList =
+			_serviceTrackerListDCLSingleton.getSingleton(
+				Log4jLogContextLogWrapper::_createServiceTrackerList);
+
+		if (serviceTrackerList == null) {
+			return;
+		}
+
+		for (LogContext logContext : serviceTrackerList) {
 			Map<String, String> context = logContext.getContext(_name);
 
 			for (Map.Entry<String, String> entry : context.entrySet()) {
@@ -211,6 +232,9 @@ public class Log4jLogContextLogWrapper extends LogWrapper {
 			}
 		}
 	}
+
+	private static final DCLSingleton<ServiceTrackerList<LogContext>>
+		_serviceTrackerListDCLSingleton = new DCLSingleton<>();
 
 	private final String _name;
 

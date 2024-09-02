@@ -30,6 +30,11 @@ public class ThemeCSSCETImpl extends BaseCETImpl implements ThemeCSSCET {
 	}
 
 	@Override
+	public String getClayRTLURL() {
+		return getString("clayRTLURL");
+	}
+
+	@Override
 	public String getClayURL() {
 		return getString("clayURL");
 	}
@@ -40,6 +45,16 @@ public class ThemeCSSCETImpl extends BaseCETImpl implements ThemeCSSCET {
 	}
 
 	@Override
+	public String getFrontendTokenDefinitionJSON() {
+		return getString("frontendTokenDefinitionJSON");
+	}
+
+	@Override
+	public String getMainRTLURL() {
+		return getString("mainRTLURL");
+	}
+
+	@Override
 	public String getMainURL() {
 		return getString("mainURL");
 	}
@@ -47,6 +62,11 @@ public class ThemeCSSCETImpl extends BaseCETImpl implements ThemeCSSCET {
 	@Override
 	public String getType() {
 		return ClientExtensionEntryConstants.TYPE_THEME_CSS;
+	}
+
+	@Override
+	public String getViewJSP() {
+		return "/admin/view_theme_css.jsp";
 	}
 
 	@Override

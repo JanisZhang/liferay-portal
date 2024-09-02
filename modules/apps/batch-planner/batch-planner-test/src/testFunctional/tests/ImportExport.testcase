@@ -1,10 +1,10 @@
-@component-name = "portal-batch-planner"
+@component-name = "portal-headless"
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Import/Export";
+	property testray.main.component.name = "Data Migration Center";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -15,58 +15,10 @@ definition {
 	tearDown {
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
+		ObjectAdmin.deleteAllCustomObjectsViaAPI();
+
 		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
-		}
-		else {
-			ObjectAdmin.deleteAllCustomObjectsViaAPI();
-		}
-	}
-
-	@priority = 4
-	test CanDownloadJsonTFormatFileAsJson {
-		property portal.acceptance = "true";
-
-		task ("Given Stock object definition created") {
-			ObjectDefinitionAPI.createAndPublishObjectDefinition(
-				en_US_label = "stock",
-				en_US_plural_label = "stocks",
-				name = "Stock",
-				requiredStringFieldName = "name");
-		}
-
-		task ("And Given Stock entries created") {
-			CustomObjectAPI.createObjectEntryWithFields(
-				en_US_plural_label = "stocks",
-				fieldName = "name",
-				fieldValue = "Stock Entry");
-		}
-
-		task ("When Exporting File with JSONT format in Import/Export center") {
-			BatchEngine.setUpGlobalIds();
-
-			ImportExport.exportAndUnzipFile(
-				entityType = "C_Stock (v1_0 - Liferay Object REST)",
-				exportFields = "name",
-				exportFileFormat = "JSONT");
-		}
-
-		task ("Then the downloaded zip file contain *.json file") {
-			DownloadTempFile();
-
-			var filePath = TestCase.getDependenciesDirPath(fileName = "jsont_objectEntry_import.txt");
-
-			FileUtil.replaceStringInFile(${filePath}, 20095, ${staticCompanyId});
-
-			FileUtil.replaceStringInFile(${filePath}, 20123, ${staticUserId});
-
-			var originalFileDownloadName = TestCase.getDownloadedTempFileName(fileNamePattern = "*.zip");
-
-			AntCommands.runCommand("build-test.xml", "unzip-temp-file -DfileName=${originalFileDownloadName}");
-
-			ImportExport.assertFileContent(
-				comparisonFileName = "jsont_objectEntry_import.txt",
-				fileName = "export.batch-engine-data.json");
 		}
 	}
 
@@ -78,7 +30,7 @@ definition {
 
 		task ("Given a completed import") {
 			ImportExport.importFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
 				fileName = "csv_account_import.csv");
 		}
@@ -120,7 +72,7 @@ definition {
 		}
 
 		task ("When the user selects an entity and clicks on the Download a Sample File for This Entity button") {
-			ImportExport.selectEntity(entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
+			ImportExport.selectEntity(entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)");
 
 			Click.clickAt(locator1 = "ImportExport#SAMPLE_FILE_DOWNLOAD_BUTTON");
 		}
@@ -158,7 +110,7 @@ definition {
 
 		task ("When the user selects specific channel fields for export and exports the channels in CSV format") {
 			ImportExport.exportAndUnzipFile(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
+				entityType = "Channel (v1.0 - Liferay Headless Commerce Admin Channel)",
 				exportFields = "name,type,currencyCode",
 				exportFileFormat = "CSV");
 		}
@@ -183,7 +135,7 @@ definition {
 
 			UploadDependencyFile.uploadFile(fileName = "csv_account_import.csv");
 
-			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
 		}
 
 		task ("When the user maps only specific fields and imports the file") {
@@ -223,76 +175,6 @@ definition {
 		}
 	}
 
-	@description = "Verify users can exclude fields from being exported in JSON format"
-	@priority = 3
-	test CanExcludeJSONFieldsFromExport {
-		property portal.acceptance = "true";
-
-		task ("Given Stock object definition created") {
-			ObjectDefinitionAPI.createAndPublishObjectDefinition(
-				en_US_label = "stock",
-				en_US_plural_label = "stocks",
-				name = "Stock",
-				requiredStringFieldName = "name");
-		}
-
-		task ("And Given Stock entries created") {
-			CustomObjectAPI.createObjectEntryWithFields(
-				en_US_plural_label = "stocks",
-				fieldName = "name",
-				fieldValue = "Stock Entry");
-		}
-
-		task ("When the user selects specific channel fields in JSON format") {
-			ImportExport.exportAndUnzipFile(
-				entityType = "C_Stock (v1_0 - Liferay Object REST)",
-				exportFields = "name",
-				exportFileFormat = "JSON");
-		}
-
-		task ("Then only those fields should be exported") {
-			ImportExport.assertFileContent(
-				comparisonFileName = "json_objectEntry_export_excluded.txt",
-				fileName = "export.json");
-		}
-	}
-
-	@description = "Verify users can exclude fields from being exported in JSONL format"
-	@priority = 3
-	test CanExcludeJSONLFieldsFromExport {
-		property portal.acceptance = "true";
-
-		task ("Given Stock object definition created") {
-			ObjectDefinitionAPI.createAndPublishObjectDefinition(
-				en_US_label = "stock",
-				en_US_plural_label = "stocks",
-				name = "Stock",
-				requiredStringFieldName = "name");
-		}
-
-		task ("And Given Stock entries created") {
-			CustomObjectAPI.createObjectEntryWithFields(
-				en_US_plural_label = "stocks",
-				fieldName = "name",
-				fieldValue = "Stock Entry");
-		}
-
-		task ("When the user selects specific channel fields in JSONL format in Import/Export center") {
-			BatchEngine.setUpGlobalIds();
-
-			ImportExport.exportAndUnzipFile(
-				entityType = "C_Stock (v1_0 - Liferay Object REST)",
-				exportFields = "name",
-				exportFileFormat = "JSONL");
-		}
-
-		task ("Then only those fields should be exported") {
-			ImportExport.assertFileContent(
-				comparisonFileName = "jsonl_objectEntry_import.txt",
-				fileName = "export.jsonl");
-		}
-	}
-
 	@description = "Verify users can export entity data via CSV files"
 	@ignore = "true"
 	@priority = 3
@@ -321,7 +203,7 @@ definition {
 
 		task ("When the user selects CSV as Export File Format and exports the accounts") {
 			ImportExport.exportAndUnzipFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				exportFields = "name,type,description,externalReferenceCode",
 				exportFileFormat = "CSV");
 		}
@@ -362,7 +244,7 @@ definition {
 		task ("When the user exports the accounts in CSV format with Contains Headers not checked") {
 			ImportExport.exportAndUnzipFile(
 				containsHeaders = "false",
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				exportFields = "name,type,description,externalReferenceCode",
 				exportFileFormat = "CSV");
 		}
@@ -381,11 +263,11 @@ definition {
 
 		task ("Given Object Definition import and export") {
 			ImportExport.importFile(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				fileName = "json_objectDefinition_import_approved.json");
 
 			ImportExport.exportAndUnzipFile(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFileFormat = "JSON");
 		}
 
@@ -421,7 +303,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				fileName = "objectDefinition_import.json",
 				templateName = "Test Object Definition Import Template");
 
@@ -430,7 +312,7 @@ definition {
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFileFormat = "JSON",
 				templateName = "Test Object Definition Export Template");
 		}
@@ -462,7 +344,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
 				fileName = "csv_account_import.csv");
 		}
@@ -521,7 +403,7 @@ definition {
 				checkboxName = "Headers",
 				locator1 = "Checkbox#ANY_CHECKBOX");
 
-			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
 		}
 
 		task ("Then the user should be able to map account fields to columns in the CSV file") {
@@ -574,7 +456,7 @@ definition {
 		}
 
 		task ("When import objectDefinition with an existing json file in which status is approved") {
-			ImportExport.selectEntity(entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
+			ImportExport.selectEntity(entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)");
 
 			UploadDependencyFile.uploadFile(fileName = "json_objectDefinition_import_approved.json");
 
@@ -615,7 +497,7 @@ definition {
 		}
 
 		task ("When import objectDefinition with an existing json file in which the status is draft") {
-			ImportExport.selectEntity(entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
+			ImportExport.selectEntity(entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)");
 
 			UploadDependencyFile.uploadFile(fileName = "json_objectDefinition_import_draft.json");
 
@@ -652,11 +534,11 @@ definition {
 
 		task ("Given Object Definition import and export") {
 			ImportExport.importFile(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				fileName = "json_objectDefinition_import_approved.json");
 
 			ImportExport.exportAndUnzipFile(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFileFormat = "JSON");
 		}
 
@@ -704,7 +586,7 @@ definition {
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON",
 				templateName = "Test Object Definition Export Template");
@@ -723,7 +605,7 @@ definition {
 
 		task ("Then the export should be configured according to the template") {
 			ImportExport.assertExportTemplate(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON",
 				templateName = "Test Object Definition Export Template");
@@ -741,7 +623,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				fileName = "objectDefinition_import.json",
 				templateName = "Test Object Definition Import Template");
 		}
@@ -759,7 +641,7 @@ definition {
 
 		task ("Then the import should be configured according to the template") {
 			ImportExport.assertImportTemplate(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				templateName = "Test Object Definition Import Template");
 		}
 	}
@@ -775,7 +657,7 @@ definition {
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON");
 		}
@@ -804,7 +686,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				fileName = "objectDefinition_import.json");
 		}
 
@@ -830,7 +712,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				fileName = "objectDefinition_import.json",
 				templateName = "Test Object Definition Import Template");
 		}
@@ -879,11 +761,11 @@ definition {
 	test CanSearchExecutions {
 		task ("Given object definition import and export") {
 			ImportExport.importFile(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				fileName = "json_objectDefinition_import_approved.json");
 
 			ImportExport.exportAndUnzipFile(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFileFormat = "JSON");
 		}
 
@@ -937,7 +819,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				fileName = "objectDefinition_import.json",
 				templateName = "Test Object Definition Import Template");
 
@@ -946,7 +828,7 @@ definition {
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON",
 				templateName = "Test Object Definition Export Template");
@@ -1010,7 +892,7 @@ definition {
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFields = "name,objectFields,active,externalReferenceCode",
 				exportFileFormat = "JSON",
 				templateName = "Test Account Export Template");
@@ -1073,7 +955,7 @@ definition {
 			ImportExport.gotoExport();
 
 			ImportExport.configureExport(
-				entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)",
+				entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)",
 				exportFields = "",
 				exportFileFormat = "JSON");
 
@@ -1134,7 +1016,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
 				fileName = "csv_account_import_error.csv",
 				stopImportOnError = "true");
@@ -1181,7 +1063,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
 				fileName = "csv_account_import_error.csv",
 				stopImportOnError = "true");
@@ -1197,7 +1079,7 @@ definition {
 
 		task ("And given a succesful import") {
 			ImportExport.importFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
 				fileName = "csv_account_import.csv");
 		}
@@ -1253,7 +1135,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
 				fileName = "csv_account_import_error.csv",
 				stopImportOnError = "true");
@@ -1309,7 +1191,7 @@ definition {
 		}
 
 		task ("When I select the entity type") {
-			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
 		}
 
 		task ("Then the fields are automatically mapped") {
@@ -1335,7 +1217,7 @@ definition {
 		}
 
 		task ("Then I can see all available entity types to export") {
-			ImportExport.assertAvailableEntityTypes(entityTypes = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
+			ImportExport.assertAvailableEntityTypes(entityTypes = "ObjectDefinition (v1.0 - Liferay Object Admin REST)");
 		}
 	}
 
@@ -1352,7 +1234,7 @@ definition {
 		}
 
 		task ("Then I can see all available entity types to import") {
-			ImportExport.assertAvailableEntityTypes(entityTypes = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
+			ImportExport.assertAvailableEntityTypes(entityTypes = "ObjectDefinition (v1.0 - Liferay Object Admin REST)");
 		}
 	}
 
@@ -1370,7 +1252,7 @@ definition {
 		}
 
 		task ("When I select the entity type") {
-			ImportExport.selectEntity(entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
+			ImportExport.selectEntity(entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)");
 		}
 
 		task ("Then the fields are automatically mapped") {
@@ -1392,7 +1274,7 @@ definition {
 		}
 
 		task ("When I select the entity type") {
-			ImportExport.selectEntity(entityType = "ObjectDefinition (v1_0 - Liferay Object Admin REST)");
+			ImportExport.selectEntity(entityType = "ObjectDefinition (v1.0 - Liferay Object Admin REST)");
 		}
 
 		task ("Then the fields are automatically mapped") {
@@ -1412,7 +1294,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
 				fileName = "csv_account_import_error.csv",
 				stopImportOnError = "true");
@@ -1454,7 +1336,7 @@ definition {
 
 			UploadDependencyFile.uploadFile(fileName = "csv_account_import.csv");
 
-			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
 		}
 
 		task ("When the user maps the import fields") {
@@ -1478,7 +1360,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
 				fileName = "csv_account_import.csv");
 		}
@@ -1512,7 +1394,7 @@ definition {
 
 		task ("Given a failed account import in which one of 3 rows was skipped due to an error in the second row") {
 			ImportExport.importFile(
-				entityType = "Account (v1_0 - Liferay Headless Admin User)",
+				entityType = "Account (v1.0 - Liferay Headless Admin User)",
 				fieldMappings = "name:Account Name,type:Account Type,description:Account Description,externalReferenceCode:External Reference Code",
 				fileName = "csv_account_import_error.csv",
 				stopImportOnError = "false");
@@ -1547,7 +1429,7 @@ definition {
 
 			UploadDependencyFile.uploadFile(fileName = "json_account_import.json");
 
-			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
 		}
 
 		task ("When the user maps the import fields") {
@@ -1571,7 +1453,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
+				entityType = "Channel (v1.0 - Liferay Headless Commerce Admin Channel)",
 				fieldMappings = "currencyCode:currencyCode,name:name,type:type",
 				fileName = "json_channel_import.json");
 		}
@@ -1606,7 +1488,7 @@ definition {
 
 			UploadDependencyFile.uploadFile(fileName = "jsonl_account_import.jsonl");
 
-			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.selectEntity(entityType = "Account (v1.0 - Liferay Headless Admin User)");
 		}
 
 		task ("When the user maps the import fields") {
@@ -1630,7 +1512,7 @@ definition {
 			ImportExport.gotoImport();
 
 			ImportExport.configureImport(
-				entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)",
+				entityType = "Channel (v1.0 - Liferay Headless Commerce Admin Channel)",
 				fieldMappings = "currencyCode:currencyCode,name:name,type:type",
 				fileName = "jsonl_channel_import.jsonl");
 		}
@@ -1665,7 +1547,7 @@ definition {
 		}
 
 		task ("When the user selects the import entity") {
-			ImportExport.selectEntity(entityType = "Channel (v1_0 - Liferay Headless Commerce Admin Channel)");
+			ImportExport.selectEntity(entityType = "Channel (v1.0 - Liferay Headless Commerce Admin Channel)");
 		}
 
 		task ("Then the required and optional fields should be shown for that entity.") {

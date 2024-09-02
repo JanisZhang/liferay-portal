@@ -1418,6 +1418,15 @@ public class UserServiceWrapper
 			userId, externalReferenceCode);
 	}
 
+	@Override
+	public User updateExternalReferenceCode(
+			User user, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userService.updateExternalReferenceCode(
+			user, externalReferenceCode);
+	}
+
 	/**
 	 * Updates a user account that was automatically created when a guest user
 	 * participated in an action (e.g. posting a comment) and only provided his
@@ -1669,6 +1678,14 @@ public class UserServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _userService.updateStatus(userId, status, serviceContext);
+	}
+
+	@Override
+	public User updateStatus(
+			User user, int status, ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userService.updateStatus(user, status, serviceContext);
 	}
 
 	/**

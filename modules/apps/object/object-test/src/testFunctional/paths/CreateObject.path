@@ -42,7 +42,7 @@
 	</tr>
 	<tr>
 		<td>FIELD_ADDED_ON_BLOCK</td>
-		<td>//div[contains(@class,'object-admin-panel__simple-body__content-left')]//div//h5[contains(text(),'${key_fieldLabelName}')]</td>
+		<td>//div[contains(@class,'object-admin-panel__simple-body__content-left')]//div//div[contains(@class,'h5') and contains(text(),'${key_fieldLabelName}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -82,7 +82,7 @@
 	</tr>
 	<tr>
 		<td>DISABLED_TAB_TYPE_RELATIONSHIPS</td>
-		<td>//div[@class = 'layout-tab__tab-types disabled']//h4[@class = 'layout-tab__tab-types__title' and contains(text(),'Relationships')]</td>
+		<td>//div[@class = 'layout-tab__tab-types disabled']//div[contains(@class,'layout-tab__tab-types__title') and contains(text(),'Relationships')]</td>
 		<td></td>
 	</tr>
 	<tr>

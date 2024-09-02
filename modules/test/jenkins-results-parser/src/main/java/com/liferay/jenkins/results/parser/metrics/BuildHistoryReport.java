@@ -47,7 +47,8 @@ public class BuildHistoryReport {
 
 		buildHistoryReport.addFile(
 			"js/table-data.js",
-			_getTableDataJSFileContent(buildHistories, "Job Category"));
+			_getTableDataJSFileContent(
+				buildHistories, "Job Category", 1, "[Total]"));
 		buildHistoryReport.addFile(
 			"js/timeline-data.js",
 			_getTimelineDataJSFileContent(buildHistories, duration, startTime));
@@ -55,28 +56,53 @@ public class BuildHistoryReport {
 		return buildHistoryReport;
 	}
 
-	public static BuildHistoryReport newTestSuiteReport(
+	public static BuildHistoryReport newPullRequestTestSuiteReport(
+		long durationDays, File outputDir, String startDateString) {
+
+		return _newTestSuiteReport(
+			durationDays, _portalMasterPullRequestJobNamePattern, outputDir,
+			"liferay-portal/master Pull Request History Report",
+			startDateString);
+	}
+
+	public static BuildHistoryReport newReleaseTestSuiteReport(
+		long durationDays, File outputDir, String startDateString) {
+
+		return _newTestSuiteReport(
+			durationDays, _portalReleaseJobNamePattern, outputDir,
+			"Portal Release History Report", startDateString);
+	}
+
+	public static BuildHistoryReport newUpstreamTestSuiteReport(
+		long durationDays, File outputDir, String startDateString) {
+
+		return _newTestSuiteReport(
+			durationDays, _portalMasterUpstreamJobNamePattern, outputDir,
+			"liferay-portal/master Upstream History Report", startDateString);
+	}
+
+	public static BuildHistoryReport newUtilizationReport(
 		long durationDays, File outputDir, String startDateString) {
 
 		BuildHistoryReport buildHistoryReport = new BuildHistoryReport(
 			outputDir);
 
 		buildHistoryReport.addFilesFromResource(
-			"dependencies/metrics/test-suite-report", "/index.html");
-
-		long duration = TimeUnit.DAYS.toMillis(durationDays);
-		long startTime = _getStartTime(startDateString);
+			"dependencies/metrics/utilization-report", "/index.html");
 
 		Collection<BuildHistory> buildHistories =
-			BuildHistoryProcessor.newTestSuiteJobHistories(
-				duration, _portalMasterPullRequestJobNamePattern, startTime);
+			BuildHistoryProcessor.newUtilizationBuildHistories(
+				TimeUnit.DAYS.toMillis(durationDays),
+				_getStartTime(startDateString));
 
-		buildHistoryReport.addFile(
-			"js/table-data.js",
-			_getTableDataJSFileContent(buildHistories, "Test Suite Name"));
-		buildHistoryReport.addFile(
-			"js/timeline-data.js",
-			_getTimelineDataJSFileContent(buildHistories, startTime, duration));
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(
+			_getTableDataJSFileContent(buildHistories, "Category", 7, "All"));
+
+		sb.append("\nvar reportName = \"Utilization Report\";");
+
+		buildHistoryReport.addFile("js/table-data.js", sb.toString());
 
 		return buildHistoryReport;
 	}
@@ -135,21 +161,16 @@ public class BuildHistoryReport {
 	}
 
 	private static String _getTableDataJSFileContent(
-		Collection<BuildHistory> buildHistories, String groupIdentifierName) {
+		Collection<BuildHistory> buildHistories, String groupIdentifierName,
+		int intervalDays, String mergedBuildHistoryName) {
 
 		JSONArray jsonArray = new JSONArray();
 
 		boolean removeHeader = false;
 
-		BuildHistory totalBuildHistory =
-			BuildHistoryProcessor.mergeBuildHistories(
-				buildHistories, "[Total]");
-
-		buildHistories.add(totalBuildHistory);
-
 		for (BuildHistory buildHistory : buildHistories) {
 			JSONArray tableJSONArray = buildHistory.getTableJSONArray(
-				groupIdentifierName);
+				groupIdentifierName, intervalDays);
 
 			if (removeHeader) {
 				tableJSONArray.remove(0);
@@ -161,7 +182,18 @@ public class BuildHistoryReport {
 			jsonArray.putAll(tableJSONArray);
 		}
 
-		buildHistories.remove(totalBuildHistory);
+		if (mergedBuildHistoryName != null) {
+			BuildHistory mergedBuildHistory =
+				BuildHistoryProcessor.mergeBuildHistories(
+					buildHistories, mergedBuildHistoryName);
+
+			JSONArray tableJSONArray = mergedBuildHistory.getTableJSONArray(
+				groupIdentifierName, intervalDays);
+
+			tableJSONArray.remove(0);
+
+			jsonArray.putAll(tableJSONArray);
+		}
 
 		return "var tableData = " + jsonArray.toString();
 	}
@@ -181,15 +213,54 @@ public class BuildHistoryReport {
 		jsonObject.put(
 			"jobTimelines", jsonArray
 		).put(
-			"time", BuildHistory.Timeline.getTimeJSONArray(duration, startTime)
+			"time", BuildHistory.getTimeJSONArray(duration, startTime)
 		);
 
 		return "var timelineData = " + jsonObject.toString();
 	}
 
+	private static BuildHistoryReport _newTestSuiteReport(
+		long durationDays, Pattern jobNamePattern, File outputDir,
+		String reportName, String startDateString) {
+
+		BuildHistoryReport buildHistoryReport = new BuildHistoryReport(
+			outputDir);
+
+		buildHistoryReport.addFilesFromResource(
+			"dependencies/metrics/test-suite-report", "/index.html");
+
+		long duration = TimeUnit.DAYS.toMillis(durationDays);
+
+		Collection<BuildHistory> buildHistories =
+			BuildHistoryProcessor.newTestSuiteJobHistories(
+				duration, jobNamePattern, _getStartTime(startDateString));
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(
+			_getTableDataJSFileContent(
+				buildHistories, "Test Suite Name", 1, "[Total]"));
+
+		sb.append("\nvar reportName = \"");
+
+		sb.append(reportName);
+
+		sb.append("\";");
+
+		buildHistoryReport.addFile("js/table-data.js", sb.toString());
+
+		return buildHistoryReport;
+	}
+
 	private static final Pattern _portalMasterPullRequestJobNamePattern =
 		Pattern.compile(
 			"test-portal-acceptance-pullrequest(|-downstream)\\(master\\)");
+	private static final Pattern _portalMasterUpstreamJobNamePattern =
+		Pattern.compile(
+			"test-portal-(acceptance-upstream-dxp|testsuite-upstream)" +
+				"(|-downstream)\\(master\\)");
+	private static final Pattern _portalReleaseJobNamePattern = Pattern.compile(
+		"test-portal(|-fixpack|-hotfix)-release(|-downstream)");
 
 	private final Map<File, String> _fileMap = new HashMap<>();
 	private final File _outputDir;

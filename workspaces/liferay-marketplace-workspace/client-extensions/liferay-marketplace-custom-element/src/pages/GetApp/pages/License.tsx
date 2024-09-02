@@ -12,7 +12,6 @@ import i18n from '../../../i18n';
 import {useGetAppContext} from '../GetAppContextProvider';
 import {GetAppOutletContext} from '../GetAppOutlet';
 import {PaidTimeline} from '../components/LicenseSelector/PaidTimeline';
-import {TrialTimeline} from '../components/LicenseSelector/TrialTimeline';
 import Container from '../containers/Container';
 
 export default function LicenseSelector() {
@@ -21,6 +20,7 @@ export default function LicenseSelector() {
 			formState: {isValid},
 			license,
 			product,
+			stepState,
 		},
 		dispatch,
 	] = useGetAppContext();
@@ -57,6 +57,16 @@ export default function LicenseSelector() {
 				primaryButtonProps: {
 					children: i18n.translate('continue'),
 					disabled: !isValid,
+					onClick: () => {
+						if (licenseType === 'TRIAL') {
+							dispatch({
+								payload: 'trial',
+								type: 'SET_PAYMENT_METHOD',
+							});
+						}
+
+						stepState.onNext();
+					},
 				},
 			}}
 			title="License Selection"
@@ -84,15 +94,34 @@ export default function LicenseSelector() {
 
 			<div className="timeline-container">
 				{licenseType === 'TRIAL' && (
-					<TrialTimeline
-						handleLicenseSelect={() =>
-							dispatch({
-								payload: trialSku,
-								type: 'SET_SELETED_SKU',
-							})
-						}
-						selectedSKU={license.selectedSKU}
-					/>
+					<div className="d-flex flex-column trial-timeline">
+						<p className="d-flex mb-2 trial-info">
+							Need help with license calculations?
+							<span className="align-items-center d-flex info-button">
+								More Info
+								<ClayIcon symbol="question-circle-full" />
+							</span>
+						</p>
+
+						<CardButton
+							description="Trial licenses are intended for you to try the app before you buy. Typical trials are 30 days."
+							disabled={false}
+							icon={
+								<span className="trial-card-icon">
+									<ClayIcon symbol="percentage-symbol" />
+								</span>
+							}
+							iconRight
+							onClick={() => {
+								dispatch({
+									payload: trialSku,
+									type: 'SET_SELETED_SKU',
+								});
+							}}
+							selected={license.selectedSKU}
+							title="Trial License"
+						/>
+					</div>
 				)}
 
 				{licenseType === 'PAID' && (

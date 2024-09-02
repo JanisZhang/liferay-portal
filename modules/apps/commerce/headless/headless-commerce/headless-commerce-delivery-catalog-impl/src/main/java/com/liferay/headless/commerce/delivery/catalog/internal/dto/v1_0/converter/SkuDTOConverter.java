@@ -10,6 +10,7 @@ import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
+import com.liferay.commerce.currency.model.CommerceMoneyFactory;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngine;
@@ -59,12 +60,15 @@ import com.liferay.headless.commerce.delivery.catalog.internal.util.v1_0.SkuOpti
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
@@ -110,10 +114,20 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 			_cpInstanceUnitOfMeasureLocalService.
 				getActiveCPInstanceUnitOfMeasures(cpInstance.getCPInstanceId());
 
-		JSONArray jsonArray = CPJSONUtil.toJSONArray(
-			_cpDefinitionOptionRelLocalService.
-				getCPDefinitionOptionRelKeysCPDefinitionOptionValueRelKeys(
-					cpInstance.getCPInstanceId()));
+		JSONArray jsonArray = null;
+
+		JSONArray skuOptionsJSONArray =
+			skuDTOConverterContext.getSkuOptionsJSONArray();
+
+		if (JSONUtil.isEmpty(skuOptionsJSONArray)) {
+			jsonArray = CPJSONUtil.toJSONArray(
+				_cpDefinitionOptionRelLocalService.
+					getCPDefinitionOptionRelKeysCPDefinitionOptionValueRelKeys(
+						cpInstance.getCPInstanceId()));
+		}
+		else {
+			jsonArray = skuOptionsJSONArray;
+		}
 
 		SkuOption[] skuOptionsArray = _getSkuOptions(
 			_cpInstanceHelper.getCPDefinitionOptionValueRelsMap(
@@ -174,6 +188,7 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 							displayDiscountLevels();
 					});
 				setExpirationDate(cpInstance::getExpirationDate);
+				setExternalReferenceCode(cpInstance::getExternalReferenceCode);
 				setGtin(cpInstance::getGtin);
 				setHeight(cpInstance::getHeight);
 				setId(cpInstance::getCPInstanceId);
@@ -188,14 +203,17 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 				setPrice(
 					() -> _getPrice(
 						skuDTOConverterContext.getCommerceContext(), cpInstance,
+						_cpInstanceUnitOfMeasureLocalService.
+							fetchCPInstanceUnitOfMeasure(
+								cpInstance.getCPInstanceId(),
+								skuDTOConverterContext.getUnitOfMeasureKey()),
 						JSONUtil.toString(
 							JSONUtil.toJSONArray(
 								skuOptionsArray,
 								skuOption -> _jsonFactory.createJSONObject(
 									skuOption.toString()))),
 						skuDTOConverterContext.getLocale(),
-						skuDTOConverterContext.getQuantity(),
-						skuDTOConverterContext.getUnitOfMeasureKey()));
+						skuDTOConverterContext.getQuantity()));
 				setProductConfiguration(
 					() -> _productConfigurationDTOConverter.toDTO(
 						new DefaultDTOConverterContext(
@@ -266,9 +284,7 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 								getCommerceTierPriceEntries(
 									commercePriceEntry.
 										getCommercePriceEntryId(),
-									QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-									new CommerceTierPriceEntryMinQuantityComparator(
-										true)),
+									WorkflowConstants.STATUS_APPROVED),
 							commerceTierPriceEntry -> _toTierPrice(
 								commerceCurrency, commerceTierPriceEntry, null,
 								skuDTOConverterContext.getLocale()),
@@ -311,19 +327,20 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 						cpInstance.getSku(), unitOfMeasureKey),
 					CommerceInventoryAvailabilityConstants.AVAILABLE)) {
 
-				availability.setLabel_i18n(_language.get(locale, "available"));
-				availability.setLabel("available");
+				availability.setLabel_i18n(
+					() -> _language.get(locale, "available"));
+				availability.setLabel(() -> "available");
 			}
 			else {
 				availability.setLabel_i18n(
-					_language.get(locale, "unavailable"));
-				availability.setLabel("unavailable");
+					() -> _language.get(locale, "unavailable"));
+				availability.setLabel(() -> "unavailable");
 			}
 		}
 
 		if (_cpDefinitionInventoryEngine.isDisplayStockQuantity(cpInstance)) {
 			availability.setStockQuantity(
-				_commerceInventoryEngine.getStockQuantity(
+				() -> _commerceInventoryEngine.getStockQuantity(
 					companyId, commerceCatalogGroupId, commerceChannelGroupId,
 					sku, unitOfMeasureKey));
 		}
@@ -337,20 +354,19 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 			BigDecimal quantity, String unitOfMeasureKey)
 		throws Exception {
 
-		CommerceProductPriceRequest commerceProductPriceRequest =
-			new CommerceProductPriceRequest();
-
-		commerceProductPriceRequest.setCalculateTax(
-			_isTaxIncludedInPrice(commerceContext.getCommerceChannelId()));
-		commerceProductPriceRequest.setCommerceContext(commerceContext);
-		commerceProductPriceRequest.setCommerceOptionValues(
-			commerceOptionValues);
-		commerceProductPriceRequest.setCpInstanceId(cpInstanceId);
-		commerceProductPriceRequest.setQuantity(quantity);
-		commerceProductPriceRequest.setSecure(true);
-		commerceProductPriceRequest.setUnitOfMeasureKey(unitOfMeasureKey);
-
-		return commerceProductPriceRequest;
+		return new CommerceProductPriceRequest() {
+			{
+				setCalculateTax(
+					_isTaxIncludedInPrice(
+						commerceContext.getCommerceChannelId()));
+				setCommerceContext(commerceContext);
+				setCommerceOptionValues(commerceOptionValues);
+				setCpInstanceId(cpInstanceId);
+				setQuantity(quantity);
+				setSecure(true);
+				setUnitOfMeasureKey(unitOfMeasureKey);
+			}
+		};
 	}
 
 	private String[] _getFormattedDiscountPercentages(
@@ -369,8 +385,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 
 	private Price _getPrice(
 			CommerceContext commerceContext, CPInstance cpInstance,
-			String formFieldValues, Locale locale, BigDecimal quantity,
-			String unitOfMeasureKey)
+			CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure,
+			String formFieldValues, Locale locale, BigDecimal quantity)
 		throws Exception {
 
 		CommerceProductPrice commerceProductPrice =
@@ -380,7 +396,9 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 					_commerceOptionValueHelper.
 						getCPDefinitionCommerceOptionValues(
 							cpInstance.getCPDefinitionId(), formFieldValues),
-					cpInstance.getCPInstanceId(), quantity, unitOfMeasureKey));
+					cpInstance.getCPInstanceId(), quantity,
+					(cpInstanceUnitOfMeasure == null) ? StringPool.BLANK :
+						cpInstanceUnitOfMeasure.getKey()));
 
 		if (commerceProductPrice == null) {
 			return new Price();
@@ -388,7 +406,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 
 		CommerceCurrency commerceCurrency =
 			commerceContext.getCommerceCurrency();
-
+		CommerceMoney pricingQuantityUnitPriceCommerceMoney =
+			commerceProductPrice.getPricingQuantityUnitPrice();
 		CommerceMoney unitPriceCommerceMoney =
 			commerceProductPrice.getUnitPrice();
 
@@ -404,6 +423,43 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 				setPriceFormatted(() -> unitPriceCommerceMoney.format(locale));
 				setPriceOnApplication(
 					commerceProductPrice::isPriceOnApplication);
+				setPricingQuantityPrice(
+					() -> {
+						if (pricingQuantityUnitPriceCommerceMoney == null) {
+							return null;
+						}
+
+						BigDecimal pricingQuantityUnitPrice =
+							pricingQuantityUnitPriceCommerceMoney.getPrice();
+
+						if (pricingQuantityUnitPrice == null) {
+							return null;
+						}
+
+						return pricingQuantityUnitPrice.doubleValue();
+					});
+				setPricingQuantityPriceFormatted(
+					() -> {
+						if ((pricingQuantityUnitPriceCommerceMoney == null) ||
+							(cpInstanceUnitOfMeasure == null)) {
+
+							return null;
+						}
+
+						BigDecimal pricingQuantity = BigDecimalUtil.get(
+							cpInstanceUnitOfMeasure.getPricingQuantity(),
+							BigDecimal.ZERO);
+
+						if (BigDecimalUtil.lte(
+								pricingQuantity, BigDecimal.ZERO)) {
+
+							return null;
+						}
+
+						return pricingQuantityUnitPriceCommerceMoney.format(
+							locale, pricingQuantity,
+							cpInstanceUnitOfMeasure.getName(locale));
+					});
 			}
 		};
 
@@ -414,9 +470,9 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 			((unitPromoPrice.compareTo(unitPrice) < 0) ||
 			 unitPriceCommerceMoney.isPriceOnApplication())) {
 
-			price.setPromoPrice(unitPromoPrice.doubleValue());
+			price.setPromoPrice(unitPromoPrice::doubleValue);
 			price.setPromoPriceFormatted(
-				unitPromoPriceCommerceMoney.format(locale));
+				() -> unitPromoPriceCommerceMoney.format(locale));
 		}
 
 		CommerceDiscountValue discountValue =
@@ -426,20 +482,88 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 			CommerceMoney discountAmountCommerceMoney =
 				discountValue.getDiscountAmount();
 
-			CommerceMoney finalPriceCommerceMoney =
-				commerceProductPrice.getFinalPrice();
+			price.setDiscount(() -> discountAmountCommerceMoney.format(locale));
 
-			price.setDiscount(discountAmountCommerceMoney.format(locale));
 			price.setDiscountPercentage(
-				_commercePriceFormatter.format(
+				() -> _commercePriceFormatter.format(
 					discountValue.getDiscountPercentage(), locale));
 			price.setDiscountPercentages(
-				_getFormattedDiscountPercentages(
+				() -> _getFormattedDiscountPercentages(
 					discountValue.getPercentages(), locale));
-			price.setFinalPrice(finalPriceCommerceMoney.format(locale));
+		}
+
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
+
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
+
+		if (finalPrice != null) {
+			price.setFinalPrice(() -> finalPriceCommerceMoney.format(locale));
 		}
 
 		return price;
+	}
+
+	private CommerceMoney _getPricingQuantityUnitPriceCommerceMoney(
+		CommerceCurrency commerceCurrency,
+		CommercePriceEntry commercePriceEntry) {
+
+		if (commercePriceEntry == null) {
+			return _commerceMoneyFactory.create(
+				commerceCurrency, BigDecimal.ZERO);
+		}
+
+		BigDecimal pricingQuantity = commercePriceEntry.getPricingQuantity();
+
+		if ((pricingQuantity == null) ||
+			BigDecimalUtil.lte(pricingQuantity, BigDecimal.ZERO)) {
+
+			return _commerceMoneyFactory.emptyCommerceMoney();
+		}
+
+		BigDecimal pricingQuantityUnitPrice = pricingQuantity.multiply(
+			commercePriceEntry.getPrice()
+		).divide(
+			commercePriceEntry.getQuantity(),
+			commerceCurrency.getMaxFractionDigits(),
+			RoundingMode.valueOf(commerceCurrency.getRoundingMode())
+		);
+
+		return _commerceMoneyFactory.create(
+			commerceCurrency, pricingQuantityUnitPrice);
+	}
+
+	private CommerceMoney _getPricingQuantityUnitPriceCommerceMoney(
+			CommerceCurrency commerceCurrency,
+			CommerceTierPriceEntry commerceTierPriceEntry)
+		throws PortalException {
+
+		if (commerceTierPriceEntry == null) {
+			return _commerceMoneyFactory.create(
+				commerceCurrency, BigDecimal.ZERO);
+		}
+
+		CommercePriceEntry commercePriceEntry =
+			commerceTierPriceEntry.getCommercePriceEntry();
+
+		BigDecimal pricingQuantity = commercePriceEntry.getPricingQuantity();
+
+		if ((pricingQuantity == null) ||
+			BigDecimalUtil.lte(pricingQuantity, BigDecimal.ZERO)) {
+
+			return _commerceMoneyFactory.emptyCommerceMoney();
+		}
+
+		BigDecimal pricingQuantityUnitPrice = pricingQuantity.multiply(
+			commerceTierPriceEntry.getPrice()
+		).divide(
+			commercePriceEntry.getQuantity(),
+			commerceCurrency.getMaxFractionDigits(),
+			RoundingMode.valueOf(commerceCurrency.getRoundingMode())
+		);
+
+		return _commerceMoneyFactory.create(
+			commerceCurrency, pricingQuantityUnitPrice);
 	}
 
 	private SkuOption[] _getSkuOptions(
@@ -519,6 +643,10 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 						return _getPrice(
 							skuDTOConverterContext.getCommerceContext(),
 							replacementCPInstance,
+							_cpInstanceUnitOfMeasureLocalService.
+								getCPInstanceUnitOfMeasure(
+									replacementCPInstance.getCPInstanceId(),
+									replacementUnitOfMeasureKey),
 							JSONUtil.toString(
 								JSONUtil.toJSONArray(
 									replacementSkuSkuOptions,
@@ -527,8 +655,7 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 											replacementSkuSkuOption.
 												toString()))),
 							skuDTOConverterContext.getLocale(),
-							skuDTOConverterContext.getQuantity(),
-							replacementUnitOfMeasureKey);
+							skuDTOConverterContext.getQuantity());
 					});
 				setProductConfiguration(
 					() -> {
@@ -544,6 +671,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 								null));
 					});
 				setSku(replacementCPInstance::getSku);
+				setSkuExternalReferenceCode(
+					replacementCPInstance::getExternalReferenceCode);
 				setSkuId(replacementCPInstance::getCPInstanceId);
 				setSkuOptions(
 					() -> SkuOptionUtil.getSkuOptions(
@@ -607,6 +736,9 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 
 						BigDecimal commercePriceEntryPrice =
 							commercePriceEntry.getPrice();
+						CommerceMoney pricingQuantityUnitPriceCommerceMoney =
+							_getPricingQuantityUnitPriceCommerceMoney(
+								commerceCurrency, commercePriceEntry);
 
 						return new Price() {
 							{
@@ -619,6 +751,53 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 										commercePriceEntryPrice, locale));
 								setPriceOnApplication(
 									commercePriceEntry::isPriceOnApplication);
+								setPricingQuantityPrice(
+									() -> {
+										if (pricingQuantityUnitPriceCommerceMoney ==
+												null) {
+
+											return null;
+										}
+
+										BigDecimal pricingQuantityUnitPrice =
+											pricingQuantityUnitPriceCommerceMoney.
+												getPrice();
+
+										if (pricingQuantityUnitPrice == null) {
+											return null;
+										}
+
+										return pricingQuantityUnitPrice.
+											doubleValue();
+									});
+								setPricingQuantityPriceFormatted(
+									() -> {
+										if ((pricingQuantityUnitPriceCommerceMoney ==
+												null) ||
+											(cpInstanceUnitOfMeasure == null)) {
+
+											return null;
+										}
+
+										BigDecimal pricingQuantity =
+											BigDecimalUtil.get(
+												cpInstanceUnitOfMeasure.
+													getPricingQuantity(),
+												BigDecimal.ZERO);
+
+										if (BigDecimalUtil.lte(
+												pricingQuantity,
+												BigDecimal.ZERO)) {
+
+											return null;
+										}
+
+										return pricingQuantityUnitPriceCommerceMoney.
+											format(
+												locale, pricingQuantity,
+												cpInstanceUnitOfMeasure.getName(
+													locale));
+									});
 							}
 						};
 					});
@@ -648,8 +827,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 									commercePriceEntry.
 										getCommercePriceEntryId(),
 									QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-									new CommerceTierPriceEntryMinQuantityComparator(
-										true)),
+									CommerceTierPriceEntryMinQuantityComparator.
+										getInstance(true)),
 							commerceTierPriceEntry -> _toTierPrice(
 								commerceCurrency, commerceTierPriceEntry,
 								cpInstanceUnitOfMeasure, locale),
@@ -660,12 +839,16 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 	}
 
 	private TierPrice _toTierPrice(
-		CommerceCurrency commerceCurrency,
-		CommerceTierPriceEntry commerceTierPriceEntry,
-		CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure, Locale locale) {
+			CommerceCurrency commerceCurrency,
+			CommerceTierPriceEntry commerceTierPriceEntry,
+			CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure, Locale locale)
+		throws PortalException {
 
 		BigDecimal commerceTierPriceEntryPrice =
 			commerceTierPriceEntry.getPrice();
+		CommerceMoney pricingQuantityUnitPriceCommerceMoney =
+			_getPricingQuantityUnitPriceCommerceMoney(
+				commerceCurrency, commerceTierPriceEntry);
 
 		return new TierPrice() {
 			{
@@ -674,6 +857,43 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 				setPriceFormatted(
 					() -> _commercePriceFormatter.format(
 						commerceCurrency, commerceTierPriceEntryPrice, locale));
+				setPricingQuantityPrice(
+					() -> {
+						if (pricingQuantityUnitPriceCommerceMoney == null) {
+							return null;
+						}
+
+						BigDecimal pricingQuantityUnitPrice =
+							pricingQuantityUnitPriceCommerceMoney.getPrice();
+
+						if (pricingQuantityUnitPrice == null) {
+							return null;
+						}
+
+						return pricingQuantityUnitPrice.doubleValue();
+					});
+				setPricingQuantityPriceFormatted(
+					() -> {
+						if ((pricingQuantityUnitPriceCommerceMoney == null) ||
+							(cpInstanceUnitOfMeasure == null)) {
+
+							return null;
+						}
+
+						BigDecimal pricingQuantity = BigDecimalUtil.get(
+							cpInstanceUnitOfMeasure.getPricingQuantity(),
+							BigDecimal.ZERO);
+
+						if (BigDecimalUtil.lte(
+								pricingQuantity, BigDecimal.ZERO)) {
+
+							return null;
+						}
+
+						return pricingQuantityUnitPriceCommerceMoney.format(
+							locale, pricingQuantity,
+							cpInstanceUnitOfMeasure.getName(locale));
+					});
 				setQuantity(
 					() -> _commerceQuantityFormatter.format(
 						cpInstanceUnitOfMeasure,
@@ -687,6 +907,9 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 
 	@Reference
 	private CommerceInventoryEngine _commerceInventoryEngine;
+
+	@Reference
+	private CommerceMoneyFactory _commerceMoneyFactory;
 
 	@Reference
 	private CommerceOptionValueHelper _commerceOptionValueHelper;

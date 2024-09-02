@@ -222,6 +222,10 @@ definition {
 			locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_TYPE",
 			value1 = "From Your Computer");
 
+		SetElementAttribute.removeElementAttribute(
+			attribute1 = "hidden",
+			locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_INPUT");
+
 		UploadCommonFile(
 			locator1 = "WCEditWebContent#SELECT_FEATURED_IMAGE_INPUT",
 			value1 = ${uploadFileName});
@@ -512,6 +516,8 @@ definition {
 	@summary = "Default summary"
 	macro addWithStructureCP(saveAsDraft = null, webContentUpload = null, available = null, description = null, webContentGeolocation = null, webContentImageDescription = null, webContentLinkToPage = null, webContentText = null, dmDocumentTitle = null, webContentImage = null, row = null, webContentSelectFromList = null, webContentSingleSelection = null, depotName = null, otherSiteName = null, webContentColor = null, structureName = null, webContentDate = null, webContentWebContent = null, navTab = null, webContentNumeric = null, webContentTitle = null, templateName = null, webContentRichText = null, dmFolderName = null, folderName = null, webContentMultipleSelection = null, fieldType = null, invalidFileValidation = null, dmNavTab = null) {
 		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
+
+		AssertVisible(locator1 = "Sidebar#FORM_BUILDER");
 
 		if (isSet(webContentTitle)) {
 			PortletEntry.inputTitle(title = ${webContentTitle});
@@ -2465,8 +2471,6 @@ definition {
 		Click(locator1 = "Icon#INFO");
 
 		for (var tagName : list ${tagNameList}) {
-			var tagName = StringUtil.lowerCase(${tagName});
-
 			AssertElementNotPresent(
 				key_tagName = ${tagName},
 				locator1 = "WC#SIDEBAR_TAG");
@@ -2666,8 +2670,6 @@ definition {
 
 	@summary = "Default summary"
 	macro viewTagFromInfoPanel(webContentTitle = null) {
-		var tagName = StringUtil.lowerCase(${tagName});
-
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 		Check(

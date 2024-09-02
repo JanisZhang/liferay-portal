@@ -12,8 +12,8 @@ import ClayModal, {ClayModalProvider, useModal} from '@clayui/modal';
 import {
 	API,
 	ManagementToolbarSearch,
-	filterArrayByQuery,
-	getLocalizableLabel,
+	arrayUtils,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import {ManagementToolbar} from 'frontend-js-components-web';
 import {openToast, sub} from 'frontend-js-web';
@@ -38,17 +38,15 @@ export function ModalMoveObjectDefinition({
 	onAfterMoveObjectDefinition,
 	setMoveObjectDefinition,
 }: ModalMoveObjectDefinitionProps) {
-	const [objectDefinition, setObjectDefinition] = useState<
-		ObjectDefinition
-	>();
+	const [objectDefinition, setObjectDefinition] =
+		useState<ObjectDefinition>();
 	const [query, setQuery] = useState('');
 	const [
 		selectedObjectFolderExternalReferenceCode,
 		setSelectedObjectFolderExternalReferenceCode,
 	] = useState<string>('');
-	const [selectedObjectFolder, setSelectedObjectFolder] = useState<
-		ObjectFolder
-	>();
+	const [selectedObjectFolder, setSelectedObjectFolder] =
+		useState<ObjectFolder>();
 	const [error, setError] = useState<string>('');
 
 	const {observer, onClose} = useModal({
@@ -65,7 +63,7 @@ export function ModalMoveObjectDefinition({
 	);
 
 	const modalObjectFolderItems = useMemo(() => {
-		const filteredItems = filterArrayByQuery({
+		const filteredItems = arrayUtils.filterArrayByQuery({
 			array: filteredObjectFolders,
 			query,
 			str: 'label',
@@ -77,7 +75,8 @@ export function ModalMoveObjectDefinition({
 	const handleMoveObject = async () => {
 		const movedObjectDefinition: ObjectDefinition = {
 			...(objectDefinition as ObjectDefinition),
-			objectFolderExternalReferenceCode: selectedObjectFolderExternalReferenceCode,
+			objectFolderExternalReferenceCode:
+				selectedObjectFolderExternalReferenceCode,
 		};
 
 		try {
@@ -93,7 +92,7 @@ export function ModalMoveObjectDefinition({
 				message: sub(
 					Liferay.Language.get('x-was-moved-successfully'),
 					`<strong>${Liferay.Util.escapeHTML(
-						getLocalizableLabel(
+						stringUtils.getLocalizableLabel(
 							defaultLanguageId,
 							movedObjectDefinition?.label,
 							movedObjectDefinition?.name
@@ -113,13 +112,13 @@ export function ModalMoveObjectDefinition({
 	useEffect(() => {
 		const makeFetch = async () => {
 			if (objectDefinitionId) {
-				const objectDefinitionResponse = await API.getObjectDefinitionById(
-					objectDefinitionId
-				);
+				const objectDefinitionResponse =
+					await API.getObjectDefinitionById(objectDefinitionId);
 
-				const objectFolderResponse = await API.getObjectFolderByExternalReferenceCode(
-					objectDefinitionResponse.objectFolderExternalReferenceCode
-				);
+				const objectFolderResponse =
+					await API.getObjectFolderByExternalReferenceCode(
+						objectDefinitionResponse.objectFolderExternalReferenceCode
+					);
 
 				setSelectedObjectFolder(objectFolderResponse);
 				setObjectDefinition(objectDefinitionResponse);
@@ -133,7 +132,9 @@ export function ModalMoveObjectDefinition({
 		<ClayModalProvider>
 			<ClayModal center observer={observer}>
 				<ClayModal.Header>
-					{`${Liferay.Language.get('move')} "${getLocalizableLabel(
+					{`${Liferay.Language.get(
+						'move'
+					)} "${stringUtils.getLocalizableLabel(
 						defaultLanguageId,
 						objectDefinition?.label
 					)}"`}
@@ -199,7 +200,7 @@ export function ModalMoveObjectDefinition({
 													<ClayIcon symbol="diagram" />
 
 													<span className="lfr-object__object-web-view-modal-move-object-definition-list-item-label">
-														{getLocalizableLabel(
+														{stringUtils.getLocalizableLabel(
 															defaultLanguageId,
 															label,
 															name

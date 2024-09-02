@@ -56,6 +56,8 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 		build.addInvocation(_invoke(jenkinsMaster));
 
 		build.reset();
+
+		build.setStatus("queued");
 	}
 
 	@Override
@@ -164,6 +166,7 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 		return false;
 	}
 
+	@Override
 	protected boolean isBuildRunning() {
 		try {
 			JSONObject buildJSONObject = _getBuildJSONObject();
@@ -175,6 +178,8 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 			Build build = getBuild();
 
 			build.setBuildURL(buildJSONObject.getString("url"));
+
+			build.saveBuildURLInBuildDatabase();
 
 			Build.Invocation buildInvocation = build.getCurrentInvocation();
 
@@ -219,6 +224,17 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 			}
 
 			if (_matchesBuildParameters(_getBuildParameters(buildJSONObject))) {
+				Build.Invocation previousInvocation =
+					build.getPreviousInvocation();
+
+				if ((previousInvocation != null) &&
+					Objects.equals(
+						previousInvocation.getBuildURL(),
+						buildJSONObject.optString("url"))) {
+
+					continue;
+				}
+
 				return buildJSONObject;
 			}
 		}

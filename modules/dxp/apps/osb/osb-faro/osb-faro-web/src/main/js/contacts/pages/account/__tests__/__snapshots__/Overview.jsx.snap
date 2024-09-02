@@ -14,11 +14,11 @@ exports[`AccountOverview should render 1`] = `
         <div
           class="card-header"
         >
-          <h5
+          <div
             class="card-title"
           >
             Account Activities
-          </h5>
+          </div>
         </div>
         <div
           class="card-body"
@@ -54,7 +54,7 @@ exports[`AccountOverview should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#caret-top"
+                      href="#caret-top"
                     />
                   </svg>
                   128.0%
@@ -67,12 +67,8 @@ exports[`AccountOverview should render 1`] = `
           >
             <div
               class="recharts-responsive-container"
-              style="width: 100%; height: 340px;"
-            >
-              <div
-                style="position: absolute; width: 0px; height: 0px; visibility: hidden; display: none;"
-              />
-            </div>
+              style="width: 100%; height: 340px; min-width: 0;"
+            />
           </div>
         </div>
         <div
@@ -88,7 +84,7 @@ exports[`AccountOverview should render 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#angle-right-small"
+                href="#angle-right-small"
               />
             </svg>
           </a>
@@ -101,11 +97,11 @@ exports[`AccountOverview should render 1`] = `
         <div
           class="card-header"
         >
-          <h5
+          <div
             class="card-title"
           >
             Account Interest Topics
-          </h5>
+          </div>
         </div>
         <div
           class="table-responsive table-root flex-grow-1"
@@ -187,11 +183,11 @@ exports[`AccountOverview should render 1`] = `
                 <td
                   class="table-column-text-end"
                 >
-                  <h4
-                    class="table-title text-truncate"
+                  <div
+                    class="h4 table-title text-truncate"
                   >
                     Infinity%
-                  </h4>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -210,7 +206,7 @@ exports[`AccountOverview should render 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#angle-right-small"
+                href="#angle-right-small"
               />
             </svg>
           </a>
@@ -223,11 +219,11 @@ exports[`AccountOverview should render 1`] = `
         <div
           class="card-header"
         >
-          <h5
+          <div
             class="card-title"
           >
             Associated Segments
-          </h5>
+          </div>
         </div>
         <div
           class="card-body"
@@ -257,7 +253,7 @@ exports[`AccountOverview should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#search"
+                      href="#search"
                     />
                   </svg>
                 </button>
@@ -284,7 +280,7 @@ exports[`AccountOverview should render 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#individual-dynamic-segment"
+                        href="#individual-dynamic-segment"
                       />
                     </svg>
                   </div>
@@ -327,7 +323,7 @@ exports[`AccountOverview should render 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#angle-right-small"
+                href="#angle-right-small"
               />
             </svg>
           </a>
@@ -343,11 +339,11 @@ exports[`AccountOverview should render 1`] = `
         <div
           class="card-header"
         >
-          <h5
+          <div
             class="card-title"
           >
             Account Firmographics
-          </h5>
+          </div>
         </div>
         <div
           class="card-body"
@@ -454,11 +450,11 @@ exports[`AccountOverview should render 1`] = `
         <div
           class="card-header"
         >
-          <h5
+          <div
             class="card-title"
           >
             Contact Information
-          </h5>
+          </div>
         </div>
         <div
           class="card-body"
@@ -525,11 +521,11 @@ exports[`AccountOverview should render 1`] = `
         <div
           class="card-header"
         >
-          <h5
+          <div
             class="card-title"
           >
             Known Individuals
-          </h5>
+          </div>
         </div>
         <div
           class="table-responsive table-root flex-grow-1"
@@ -594,7 +590,7 @@ exports[`AccountOverview should render 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#angle-right-small"
+                href="#angle-right-small"
               />
             </svg>
           </a>

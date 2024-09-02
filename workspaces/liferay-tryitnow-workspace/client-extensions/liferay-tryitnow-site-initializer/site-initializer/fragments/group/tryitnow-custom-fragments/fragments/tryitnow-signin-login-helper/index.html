@@ -37,7 +37,7 @@
 						<p>
 							<lfr-editable id="txtSummary" type="text">
 								[#if (configuration.person) == 'carl']
-									Carl is a customer of Clarity. He can create tickets to explain what problems or questions he has
+									Carl is a customer of Clarity. He can create tickets to explain what problems or questions he has.
 								[/#if]
 
 								[#if (configuration.person) == 'sam']
@@ -91,13 +91,11 @@
 							<td class="label">
 								<p>Password</p>
 							</td>
-							<td class="value" onclick="copyToClipboard(this,'txtPassword-${configuration.person}')">
+							<td class="value">
 								<div class="d-flex justify-content-between">
 									<div id="txtPassword-${configuration.person}">
-										<lfr-editable id="password" type="text">test</lfr-editable>
+										<lfr-editable id="password" type="text">[Your chosen password]</lfr-editable>
 									</div>
-
-									<img src="[resources:copy.svg]" />
 								</div>
 							</td>
 						</tr>

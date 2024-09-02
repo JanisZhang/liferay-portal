@@ -9,6 +9,16 @@
 					"title": "Invitation Email Body",
 					"type": "object"
 				},
+				"invitationEmailSenderEmailAddress": {
+					"description": "Define a specific email address for the sender of user invitation emails. If empty, the inviter's email address is used.",
+					"title": "Invitation Email Sender Email Address",
+					"type": "string"
+				},
+				"invitationEmailSenderName": {
+					"description": "Define a specific name for the sender of user invitation emails. If empty, the inviter's name is used.",
+					"title": "Invitation Email Sender Name",
+					"type": "string"
+				},
 				"invitationEmailSubject": {
 					"description": "Provide a localized template for the subject of user invitation emails.",
 					"properties": {
@@ -486,6 +496,42 @@
 		},
 		{
 			"properties": {
+				"emailFromAddress": {
+					"default": "",
+					"title": "Email from Address",
+					"type": "string"
+				},
+				"emailFromName": {
+					"default": "",
+					"title": "Email from Name",
+					"type": "string"
+				},
+				"invitationEmailBody": {
+					"description": "Provide a localized template for the body of user invitation emails.",
+					"properties": {
+					},
+					"title": "Invitation Email Body",
+					"type": "object"
+				},
+				"invitationEmailSubject": {
+					"description": "Provide a localized template for the subject of user invitation emails.",
+					"properties": {
+					},
+					"title": "Invitation Email Subject",
+					"type": "object"
+				},
+				"pid": {
+					"const": "com.liferay.change.tracking.configuration.CTCollectionEmailConfiguration",
+					"title": "Publications Email Notifications"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Publications Email Notifications"
+		},
+		{
+			"properties": {
 				"defaultCTCollectionTemplateId": {
 					"default": 0,
 					"title": "Default Publication Template ID",
@@ -549,7 +595,7 @@
 					"title": "Publications View Changes"
 				},
 				"productionOnlyApplication": {
-					"default": "com_liferay_dispatch_web_internal_portlet_DispatchPortlet, com_liferay_my_account_web_portlet_MyAccountPortlet, com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet, com_liferay_oauth_client_admin_web_internal_portlet_OAuthClientAdminPortlet, com_liferay_oauth2_provider_web_internal_portlet_OAuth2AdminPortlet, com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet, com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet, com_liferay_password_policies_admin_web_portlet_PasswordPoliciesAdminPortlet, com_liferay_portal_language_override_web_internal_portlet_PLOPortlet, com_liferay_search_experiences_web_internal_blueprint_admin_portlet_SXPBlueprintAdminPortlet",
+					"default": "com_liferay_dispatch_web_internal_portlet_DispatchPortlet, com_liferay_my_account_web_portlet_MyAccountPortlet, com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet, com_liferay_oauth_client_admin_web_internal_portlet_OAuthClientAdminPortlet, com_liferay_oauth2_provider_web_internal_portlet_OAuth2AdminPortlet, com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet, com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet, com_liferay_password_policies_admin_web_portlet_PasswordPoliciesAdminPortlet, com_liferay_portal_language_override_web_internal_portlet_PLOPortlet, com_liferay_portal_search_tuning_rankings_web_internal_portlet_ResultRankingsPortlet, com_liferay_portal_search_tuning_synonyms_web_internal_portlet_SynonymsPortlet, com_liferay_search_experiences_web_internal_blueprint_admin_portlet_SXPBlueprintAdminPortlet",
 					"description": "These applications do not participate in a publication. Any data saved will be saved directly into production.",
 					"items": {
 						"type": "string"
@@ -557,8 +603,13 @@
 					"title": "Production Only Application",
 					"type": "array"
 				},
+				"showAllData": {
+					"description": "Show all data in the data tab when reviewing a change as an administrator.",
+					"title": "Show All Data When Reviewing Changes",
+					"type": "boolean"
+				},
 				"unsupportedApplication": {
-					"default": "com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet, com_liferay_users_admin_web_portlet_UsersAdminPortlet",
+					"default": "com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet, com_liferay_batch_planner_web_internal_portlet_BatchPlannerPortlet, com_liferay_users_admin_web_portlet_UsersAdminPortlet",
 					"description": "These applications do not support publications. Any data saved in a publication will result in an error.",
 					"items": {
 						"type": "string"
@@ -678,6 +729,11 @@
 		},
 		{
 			"properties": {
+				"enabled": {
+					"default": true,
+					"title": "Enabled",
+					"type": "boolean"
+				},
 				"key": {
 					"title": "Key",
 					"type": "string"
@@ -1224,6 +1280,24 @@
 		},
 		{
 			"properties": {
+				"enableFriendlyURLWithExtension": {
+					"default": false,
+					"description": "Add the file extension to the file entry friendly URL by default.",
+					"title": "Enable Friendly URL With Extension",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.document.library.configuration.DLFileEntryFriendlyURLConfiguration",
+					"title": "File Entry Friendly URL"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "File Entry Friendly URL"
+		},
+		{
+			"properties": {
 				"clientId": {
 					"description": "Set the OAuth 2 client id for the Google Drive API. Go to {0} to create it.",
 					"title": "Client ID",
@@ -1250,6 +1324,23 @@
 				"clientSecret"
 			],
 			"title": "Google Drive"
+		},
+		{
+			"properties": {
+				"cacheTextExtraction": {
+					"default": true,
+					"title": "Cache Text Extraction",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.document.library.internal.configuration.DLIndexerConfiguration",
+					"title": "Indexer"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Indexer"
 		},
 		{
 			"properties": {
@@ -1440,6 +1531,24 @@
 		},
 		{
 			"properties": {
+				"javascriptModuleEnabled": {
+					"default": true,
+					"description": "When enabled, fragment JavaScript is embedded in a script as a module instead of as a function.",
+					"title": "Javascript Module Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.fragment.configuration.FragmentJavascriptConfiguration",
+					"title": "Javascript"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Javascript"
+		},
+		{
+			"properties": {
 				"pid": {
 					"const": "com.liferay.fragment.configuration.FragmentServiceConfiguration",
 					"title": "Page Fragments"
@@ -1532,21 +1641,17 @@
 		},
 		{
 			"properties": {
-				"friendlyURLSeparators": {
+				"friendlyURLSeparatorsJSON": {
 					"default": "{}",
-					"description": "Friendly URL Separators Description",
-					"title": "Friendly URL Separators Name",
 					"type": "string"
 				},
 				"pid": {
-					"const": "com.liferay.friendly.url.configuration.FriendlyURLSeparatorCompanyConfiguration",
-					"title": "Friendly URL Separator Configuration"
+					"const": "com.liferay.friendly.url.configuration.FriendlyURLSeparatorCompanyConfiguration"
 				}
 			},
 			"required": [
 				"pid"
-			],
-			"title": "Friendly URL Separator Configuration"
+			]
 		},
 		{
 			"properties": {
@@ -1576,6 +1681,18 @@
 					"default": true,
 					"description": "Set this to true to enable comments for journal articles.",
 					"title": "Article Comments Enabled",
+					"type": "boolean"
+				},
+				"autogenerateDDMStructureKey": {
+					"default": true,
+					"description": "Check this if structure keys should always be autogenerated.",
+					"title": "Autogenerate Structure Key",
+					"type": "boolean"
+				},
+				"autogenerateDDMTemplateKey": {
+					"default": true,
+					"description": "Check this if template keys should always be autogenerated.",
+					"title": "Autogenerate Template Key",
 					"type": "boolean"
 				},
 				"charactersblacklist": {
@@ -1611,6 +1728,11 @@
 					},
 					"title": "Custom Token Values",
 					"type": "array"
+				},
+				"displayFieldName": {
+					"default": false,
+					"title": "Display field name in structures UI and allow users to edit it.",
+					"type": "boolean"
 				},
 				"enableContentTransformerListener": {
 					"default": false,
@@ -2254,6 +2376,22 @@
 			"title": "Message Digest Crypto Hash Provider Configuration"
 		},
 		{
+			"properties": {
+				"defaultPermissions": {
+					"title": "Default Permissions",
+					"type": "string"
+				},
+				"pid": {
+					"const": "com.liferay.portal.defaultpermissions.configuration.PortalDefaultPermissionsCompanyConfiguration",
+					"title": "Default Permissions Configuration"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Default Permissions Configuration"
+		},
+		{
 			"description": "Enables CORS for matching URLs in the portal.",
 			"properties": {
 				"enabled": {
@@ -2294,6 +2432,38 @@
 				"pid"
 			],
 			"title": "Portal Cross-Origin Resource Sharing (CORS)"
+		},
+		{
+			"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
+			"properties": {
+				"pid": {
+					"const": "com.liferay.portal.search.configuration.SemanticSearchConfiguration",
+					"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
+					"title": "Semantic Search (Beta)"
+				},
+				"textEmbeddingCacheTimeout": {
+					"default": 604800,
+					"title": "Text Embedding Cache Timeout",
+					"type": "number"
+				},
+				"textEmbeddingProviderConfigurationJSONs": {
+					"default": "",
+					"items": {
+						"type": "string"
+					},
+					"title": "Text Embedding Provider Configuration JSONs",
+					"type": "array"
+				},
+				"textEmbeddingsEnabled": {
+					"default": false,
+					"title": "Text Embeddings Enabled",
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "Semantic Search (Beta)"
 		},
 		{
 			"properties": {
@@ -2428,6 +2598,51 @@
 				"pid"
 			],
 			"title": "Basic Authentication Protocol Support"
+		},
+		{
+			"properties": {
+				"blacklist": {
+					"items": {
+						"type": "string"
+					},
+					"title": "Blacklist",
+					"type": "array"
+				},
+				"enabled": {
+					"default": true,
+					"title": "Enabled",
+					"type": "boolean"
+				},
+				"pid": {
+					"const": "com.liferay.portal.security.iframe.sanitizer.configuration.IFrameConfiguration",
+					"title": "IFrame Sanitizer"
+				},
+				"removeIFrameTags": {
+					"default": false,
+					"title": "Remove IFrame Tags",
+					"type": "boolean"
+				},
+				"sandboxAttributeValues": {
+					"default": "",
+					"items": {
+						"type": "string"
+					},
+					"title": "Sandbox Attribute Values",
+					"type": "array"
+				},
+				"whitelist": {
+					"default": "com.liferay.fragment.model.FragmentEntry|com.liferay.journal.model.JournalArticle",
+					"items": {
+						"type": "string"
+					},
+					"title": "Whitelist",
+					"type": "array"
+				}
+			},
+			"required": [
+				"pid"
+			],
+			"title": "IFrame Sanitizer"
 		},
 		{
 			"properties": {
@@ -2571,6 +2786,11 @@
 					"default": 0,
 					"title": "LDAP Server ID",
 					"type": "number"
+				},
+				"modifiedDate": {
+					"default": "",
+					"title": "Modified Date",
+					"type": "string"
 				},
 				"pid": {
 					"const": "com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration",
@@ -3092,6 +3312,12 @@
 					"description": "Enable to always show the Personal Menu in the Control Menu. This guarantees users can always access the Personal Menu even if a theme does not provide it.",
 					"title": "Show in Control Menu",
 					"type": "boolean"
+				},
+				"showNotificationBadgeInPersonalMenu": {
+					"default": true,
+					"description": "Enable to show the notification badge in the Personal Menu.",
+					"title": "Show Notification Badge in Personal Menu",
+					"type": "boolean"
 				}
 			},
 			"required": [
@@ -3103,8 +3329,8 @@
 			"description": "Configure which domains or IP addresses can be redirected to.",
 			"properties": {
 				"allowedDomains": {
-					"default": "",
-					"description": "Set the domains which the portal is allowed to redirect to. Remove all entries to allow any domain. Specifying a domain with a leading \"*.\" allows redirects to subdomains.",
+					"default": "localhost|PORTAL_DOMAINS",
+					"description": "Set the domains which the portal is allowed to redirect to. Remove all entries to allow any domain. Specifying a domain with a leading \"*.\" allows redirects to subdomains. PORTAL_DOMAINS will be replaced with the current domain of the portal or site.",
 					"items": {
 						"type": "string"
 					},
@@ -3126,7 +3352,7 @@
 					"title": "Redirect URLs"
 				},
 				"securityMode": {
-					"default": "ip",
+					"default": "domain",
 					"description": "If you are redirecting by domain, the portal will only redirect users to domains defined in the \"Redirect URL Domains Allowed\" fields. If you are redirecting by IP, the portal will only redirect to domains whose IP address resolves to an IP address defined in one of the \"Redirect URL IPs Allowed\" fields.",
 					"enum": [
 						"domain",
@@ -3249,38 +3475,6 @@
 				"pid"
 			],
 			"title": "SAML Provider Configuration"
-		},
-		{
-			"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
-			"properties": {
-				"pid": {
-					"const": "com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
-					"description": "Configure third party providers and other settings to index and search text embeddings. Semantic Search is a beta feature: enable it in Instance Settings > Feature Flags.",
-					"title": "Semantic Search (Beta)"
-				},
-				"textEmbeddingCacheTimeout": {
-					"default": 604800,
-					"title": "Text Embedding Cache Timeout",
-					"type": "number"
-				},
-				"textEmbeddingProviderConfigurationJSONs": {
-					"default": "",
-					"items": {
-						"type": "string"
-					},
-					"title": "Text Embedding Provider Configuration JSONs",
-					"type": "array"
-				},
-				"textEmbeddingsEnabled": {
-					"default": false,
-					"title": "Text Embeddings Enabled",
-					"type": "boolean"
-				}
-			},
-			"required": [
-				"pid"
-			],
-			"title": "Semantic Search (Beta)"
 		},
 		{
 			"properties": {
@@ -3495,6 +3689,14 @@
 		},
 		{
 			"properties": {
+				"companySitemapGroupIds": {
+					"default": "",
+					"items": {
+						"type": "string"
+					},
+					"title": "Sites Included in the XML Sitemap",
+					"type": "array"
+				},
 				"includeCategories": {
 					"default": true,
 					"title": "Include Category URLs in the XML Sitemap",
@@ -3772,6 +3974,7 @@
 				"com.liferay.asset.auto.tagger.opennlp.internal.configuration.OpenNLPDocumentAssetAutoTaggerCompanyConfiguration",
 				"com.liferay.asset.categories.configuration.AssetCategoriesCompanyConfiguration",
 				"com.liferay.batch.engine.configuration.BatchEngineTaskCompanyConfiguration",
+				"com.liferay.change.tracking.configuration.CTCollectionEmailConfiguration",
 				"com.liferay.change.tracking.configuration.CTSettingsConfiguration",
 				"com.liferay.change.tracking.web.internal.configuration.CTConfiguration",
 				"com.liferay.click.to.chat.web.internal.configuration.ClickToChatConfiguration",
@@ -3797,11 +4000,14 @@
 				"com.liferay.document.library.asset.auto.tagger.google.cloud.vision.internal.configuration.GCloudVisionAssetAutoTagProviderCompanyConfiguration",
 				"com.liferay.document.library.asset.auto.tagger.microsoft.cognitive.services.internal.configuration.MSCognitiveServicesAssetAutoTagProviderCompanyConfiguration",
 				"com.liferay.document.library.asset.auto.tagger.tensorflow.internal.configuration.TensorFlowImageAssetAutoTagProviderCompanyConfiguration",
+				"com.liferay.document.library.configuration.DLFileEntryFriendlyURLConfiguration",
 				"com.liferay.document.library.google.drive.configuration.DLGoogleDriveCompanyConfiguration",
+				"com.liferay.document.library.internal.configuration.DLIndexerConfiguration",
 				"com.liferay.document.library.opener.onedrive.web.internal.configuration.DLOneDriveCompanyConfiguration",
 				"com.liferay.document.library.web.internal.configuration.CacheControlConfiguration",
 				"com.liferay.exportimport.configuration.ExportImportServiceConfiguration",
 				"com.liferay.flags.configuration.FlagsGroupServiceConfiguration",
+				"com.liferay.fragment.configuration.FragmentJavascriptConfiguration",
 				"com.liferay.fragment.configuration.FragmentServiceConfiguration",
 				"com.liferay.fragment.entry.processor.freemarker.internal.configuration.FreeMarkerFragmentEntryProcessorConfiguration",
 				"com.liferay.fragment.web.internal.configuration.FragmentPortletConfiguration",
@@ -3825,7 +4031,9 @@
 				"com.liferay.object.configuration.ObjectConfiguration",
 				"com.liferay.portal.crypto.hash.provider.bcrypt.internal.configuration.BCryptCryptoHashProviderConfiguration",
 				"com.liferay.portal.crypto.hash.provider.message.digest.internal.configuration.MessageDigestCryptoHashProviderConfiguration",
+				"com.liferay.portal.defaultpermissions.configuration.PortalDefaultPermissionsCompanyConfiguration",
 				"com.liferay.portal.remote.cors.configuration.PortalCORSConfiguration",
+				"com.liferay.portal.search.configuration.SemanticSearchConfiguration",
 				"com.liferay.portal.search.elasticsearch7.configuration.DeepPaginationConfiguration",
 				"com.liferay.portal.search.internal.configuration.SiteActivityAsahConfiguration",
 				"com.liferay.portal.search.internal.configuration.UserActivityAsahConfiguration",
@@ -3833,6 +4041,7 @@
 				"com.liferay.portal.search.rest.configuration.SearchSuggestionsCompanyConfiguration",
 				"com.liferay.portal.security.auto.login.internal.basic.auth.header.configuration.BasicAuthHeaderAutoLoginConfiguration",
 				"com.liferay.portal.security.configuration.BasicAuthHeaderSupportConfiguration",
+				"com.liferay.portal.security.iframe.sanitizer.configuration.IFrameConfiguration",
 				"com.liferay.portal.security.ldap.authenticator.configuration.LDAPAuthConfiguration",
 				"com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration",
 				"com.liferay.portal.security.ldap.configuration.SystemLDAPConfiguration",
@@ -3845,7 +4054,6 @@
 				"com.liferay.product.navigation.personal.menu.configuration.PersonalMenuConfiguration",
 				"com.liferay.redirect.internal.configuration.RedirectURLConfiguration",
 				"com.liferay.saml.runtime.configuration.SamlProviderConfiguration",
-				"com.liferay.search.experiences.configuration.SemanticSearchConfiguration",
 				"com.liferay.search.experiences.internal.configuration.IpstackConfiguration",
 				"com.liferay.search.experiences.internal.configuration.OpenWeatherMapConfiguration",
 				"com.liferay.segments.asah.connector.internal.configuration.SegmentsAsahCompanyConfiguration",

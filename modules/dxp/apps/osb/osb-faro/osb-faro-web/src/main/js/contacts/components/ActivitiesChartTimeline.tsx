@@ -23,7 +23,7 @@ import {
 } from 'shared/util/date';
 import {Interval, RangeSelectors} from 'shared/types';
 import {sub} from 'shared/util/lang';
-import {useStatefulPagination} from 'shared/hooks';
+import {useStatefulPagination} from 'shared/hooks/useStatefulPagination';
 import {withSelectedPoint} from 'shared/hoc';
 
 const getActivities = ({
@@ -154,7 +154,7 @@ const ActivitiesChartTimeline: React.FC<IActivitiesChartTimelineProps> = ({
 			{!!history.length && (
 				<div className='selected-info'>
 					<div className='d-flex align-items-baseline'>
-						<h4>{sub(activitiesLabel, [date])}</h4>
+						<div className='h4'>{sub(activitiesLabel, [date])}</div>
 
 						{hasSelectedPoint && (
 							<ClayButton

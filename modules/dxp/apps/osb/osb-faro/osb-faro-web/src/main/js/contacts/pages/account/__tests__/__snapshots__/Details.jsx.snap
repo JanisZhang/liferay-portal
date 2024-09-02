@@ -8,18 +8,18 @@ exports[`AccountDetails should render 1`] = `
     <div
       class="card-header"
     >
-      <h5
+      <div
         class="card-title"
       >
         Account Attributes
-      </h5>
+      </div>
       <div
         class="secondary-info"
       >
         <b>
           3
         </b>
-         known attributes of 
+         known individuals are available of 
         <b>
           3
         </b>

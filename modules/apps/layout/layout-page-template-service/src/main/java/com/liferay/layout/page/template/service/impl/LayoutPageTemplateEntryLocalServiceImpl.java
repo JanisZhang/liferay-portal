@@ -114,18 +114,18 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
-			long userId, long groupId, long layoutPageTemplateCollectionId,
-			long classNameId, long classTypeId, String name, int type,
-			long previewFileEntryId, boolean defaultTemplate,
-			long layoutPrototypeId, long plid, long masterLayoutPlid,
-			int status, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long layoutPageTemplateCollectionId, long classNameId,
+			long classTypeId, String name, int type, long previewFileEntryId,
+			boolean defaultTemplate, long layoutPrototypeId, long plid,
+			long masterLayoutPlid, int status, ServiceContext serviceContext)
 		throws PortalException {
 
 		// Layout page template entry
 
 		User user = _userLocalService.getUser(userId);
 
-		_validate(groupId, name, type);
+		_validate(groupId, layoutPageTemplateCollectionId, name, type);
 
 		long layoutPageTemplateEntryId = counterLocalService.increment();
 
@@ -134,6 +134,7 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 				layoutPageTemplateEntryId);
 
 		layoutPageTemplateEntry.setUuid(serviceContext.getUuid());
+		layoutPageTemplateEntry.setExternalReferenceCode(externalReferenceCode);
 		layoutPageTemplateEntry.setGroupId(groupId);
 		layoutPageTemplateEntry.setCompanyId(user.getCompanyId());
 		layoutPageTemplateEntry.setUserId(user.getUserId());
@@ -213,9 +214,10 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
-			long userId, long groupId, long layoutPageTemplateCollectionId,
-			long classNameId, long classTypeId, String name, int type,
-			long masterLayoutPlid, int status, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long layoutPageTemplateCollectionId, long classNameId,
+			long classTypeId, String name, int type, long masterLayoutPlid,
+			int status, ServiceContext serviceContext)
 		throws PortalException {
 
 		// Layout page template entry
@@ -224,9 +226,9 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			addLayoutPageTemplateEntry(
-				userId, groupId, layoutPageTemplateCollectionId, classNameId,
-				classTypeId, name, type, 0, false, 0, 0, masterLayoutPlid,
-				status, serviceContext);
+				externalReferenceCode, userId, groupId,
+				layoutPageTemplateCollectionId, classNameId, classTypeId, name,
+				type, 0, false, 0, 0, masterLayoutPlid, status, serviceContext);
 
 		// Dynamic data mapping structure link
 
@@ -241,14 +243,15 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
-			long userId, long groupId, long layoutPageTemplateCollectionId,
-			String name, int type, long masterLayoutPlid, int status,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long layoutPageTemplateCollectionId, String name, int type,
+			long masterLayoutPlid, int status, ServiceContext serviceContext)
 		throws PortalException {
 
 		return addLayoutPageTemplateEntry(
-			userId, groupId, layoutPageTemplateCollectionId, 0, 0, name, type,
-			0, false, 0, 0, masterLayoutPlid, status, serviceContext);
+			externalReferenceCode, userId, groupId,
+			layoutPageTemplateCollectionId, 0, 0, name, type, 0, false, 0, 0,
+			masterLayoutPlid, status, serviceContext);
 	}
 
 	@Override
@@ -263,7 +266,8 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 				sourceLayoutPageTemplateEntryId);
 
 		String name = _getUniqueCopyName(
-			groupId, sourceLayoutPageTemplateEntry.getName(),
+			groupId, layoutPageTemplateCollectionId,
+			sourceLayoutPageTemplateEntry.getName(),
 			sourceLayoutPageTemplateEntry.getType());
 
 		long masterLayoutPlid = 0;
@@ -277,7 +281,7 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		LayoutPageTemplateEntry targetLayoutPageTemplateEntry =
 			addLayoutPageTemplateEntry(
-				userId, groupId, layoutPageTemplateCollectionId,
+				null, userId, groupId, layoutPageTemplateCollectionId,
 				sourceLayoutPageTemplateEntry.getClassNameId(),
 				sourceLayoutPageTemplateEntry.getClassTypeId(), name,
 				sourceLayoutPageTemplateEntry.getType(), 0, false,
@@ -396,6 +400,19 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 	}
 
 	@Override
+	public LayoutPageTemplateEntry deleteLayoutPageTemplateEntry(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			layoutPageTemplateEntryPersistence.findByERC_G(
+				externalReferenceCode, groupId);
+
+		return layoutPageTemplateEntryLocalService.
+			deleteLayoutPageTemplateEntry(layoutPageTemplateEntry);
+	}
+
+	@Override
 	public LayoutPageTemplateEntry fetchDefaultLayoutPageTemplateEntry(
 		long groupId, long classNameId, long classTypeId) {
 
@@ -421,18 +438,19 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 	@Override
 	public LayoutPageTemplateEntry fetchLayoutPageTemplateEntry(
-		long groupId, String layoutPageTemplateEntryKey) {
+		long groupId, long layoutPageTemplateCollectionId, String name,
+		int type) {
 
-		return layoutPageTemplateEntryPersistence.fetchByG_LPTEK(
-			groupId, layoutPageTemplateEntryKey);
+		return layoutPageTemplateEntryPersistence.fetchByG_L_N_T(
+			groupId, layoutPageTemplateCollectionId, name, type);
 	}
 
 	@Override
 	public LayoutPageTemplateEntry fetchLayoutPageTemplateEntry(
-		long groupId, String name, int type) {
+		long groupId, String layoutPageTemplateEntryKey) {
 
-		return layoutPageTemplateEntryPersistence.fetchByG_N_T(
-			groupId, name, type);
+		return layoutPageTemplateEntryPersistence.fetchByG_LPTEK(
+			groupId, layoutPageTemplateEntryKey);
 	}
 
 	@Override
@@ -447,6 +465,13 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 		long groupId) {
 
 		return layoutPageTemplateEntryPersistence.findByGroupId(groupId);
+	}
+
+	@Override
+	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long groupId, int status) {
+
+		return layoutPageTemplateEntryPersistence.findByG_S(groupId, status);
 	}
 
 	@Override
@@ -581,11 +606,12 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 	@Override
 	public String getUniqueLayoutPageTemplateEntryName(
-		long groupId, String name, int type) {
+		long groupId, long layoutPageTemplateCollectionId, String name,
+		int type) {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			layoutPageTemplateEntryPersistence.fetchByG_N_T(
-				groupId, name, type);
+			layoutPageTemplateEntryPersistence.fetchByG_L_N_T(
+				groupId, layoutPageTemplateCollectionId, name, type);
 
 		if (layoutPageTemplateEntry == null) {
 			return name;
@@ -598,8 +624,8 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 				name, count++);
 
 			layoutPageTemplateEntry =
-				layoutPageTemplateEntryPersistence.fetchByG_N_T(
-					groupId, newName, type);
+				layoutPageTemplateEntryPersistence.fetchByG_L_N_T(
+					groupId, layoutPageTemplateCollectionId, newName, type);
 
 			if (layoutPageTemplateEntry == null) {
 				return newName;
@@ -699,8 +725,9 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		if (!Objects.equals(layoutPageTemplateEntry.getName(), name)) {
 			_validate(
-				layoutPageTemplateEntry.getGroupId(), name,
-				layoutPageTemplateEntry.getType());
+				layoutPageTemplateEntry.getGroupId(),
+				layoutPageTemplateEntry.getLayoutPageTemplateCollectionId(),
+				name, layoutPageTemplateEntry.getType());
 		}
 
 		layoutPageTemplateEntry.setModifiedDate(new Date());
@@ -731,7 +758,8 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 		}
 
 		_validate(
-			layoutPageTemplateEntry.getGroupId(), name,
+			layoutPageTemplateEntry.getGroupId(),
+			layoutPageTemplateEntry.getLayoutPageTemplateCollectionId(), name,
 			layoutPageTemplateEntry.getType());
 
 		layoutPageTemplateEntry.setModifiedDate(new Date());
@@ -855,9 +883,9 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 		serviceContext.setAttribute("layout.page.template.entry.type", type);
 
 		Layout layout = _layoutLocalService.addLayout(
-			userId, groupId, privateLayout, 0, 0, 0, titleMap, titleMap, null,
-			null, null, layoutType, typeSettings, true, true, new HashMap<>(),
-			masterLayoutPlid, serviceContext);
+			null, userId, groupId, privateLayout, 0, 0, 0, titleMap, titleMap,
+			null, null, null, layoutType, typeSettings, true, true,
+			new HashMap<>(), masterLayoutPlid, serviceContext);
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
@@ -904,7 +932,7 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 		}
 
 		return addLayoutPageTemplateEntry(
-			layoutPrototype.getUserId(), groupId, 0, 0, 0,
+			null, layoutPrototype.getUserId(), groupId, 0, 0, 0,
 			nameMap.get(defaultLocale),
 			LayoutPageTemplateEntryTypeConstants.WIDGET_PAGE, 0, false,
 			layoutPrototype.getLayoutPrototypeId(), layout.getPlid(), 0, status,
@@ -991,7 +1019,8 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 	}
 
 	private String _getUniqueCopyName(
-		long groupId, String sourceName, int type) {
+		long groupId, long layoutPageTemplateCollectionId, String sourceName,
+		int type) {
 
 		String copy = _language.get(LocaleUtil.getSiteDefault(), "copy");
 
@@ -999,8 +1028,8 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		for (int i = 1;; i++) {
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
-				layoutPageTemplateEntryPersistence.fetchByG_N_T(
-					groupId, name, type);
+				layoutPageTemplateEntryPersistence.fetchByG_L_N_T(
+					groupId, layoutPageTemplateCollectionId, name, type);
 
 			if (layoutPageTemplateEntry == null) {
 				break;
@@ -1058,7 +1087,9 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 		}
 	}
 
-	private void _validate(long groupId, String name, int type)
+	private void _validate(
+			long groupId, long layoutPageTemplateCollectionId, String name,
+			int type)
 		throws PortalException {
 
 		if (Validator.isNull(name)) {
@@ -1084,8 +1115,8 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 		}
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			layoutPageTemplateEntryPersistence.fetchByG_N_T(
-				groupId, name, type);
+			layoutPageTemplateEntryPersistence.fetchByG_L_N_T(
+				groupId, layoutPageTemplateCollectionId, name, type);
 
 		if (layoutPageTemplateEntry != null) {
 			throw new LayoutPageTemplateEntryNameException.MustNotBeDuplicate(

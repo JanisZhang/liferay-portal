@@ -7,6 +7,7 @@ package com.liferay.user.service.test;
 
 import com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.audit.AuditMessage;
@@ -24,6 +25,7 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.PasswordPolicy;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.Ticket;
+import com.liferay.portal.kernel.model.TicketConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.model.UserGroup;
@@ -65,6 +67,7 @@ import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -76,6 +79,7 @@ import com.liferay.portal.security.audit.event.generators.constants.EventTypes;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.util.DigesterImpl;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -257,8 +261,6 @@ public class UserLocalServiceTest {
 
 		List<User> companyUsers = _userLocalService.getCompanyUsers(
 			_company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-
-		_companyLocalService.deleteCompany(_company);
 
 		Assert.assertEquals(companyUsers.toString(), 1, companyUsers.size());
 
@@ -482,7 +484,7 @@ public class UserLocalServiceTest {
 	}
 
 	@Test
-	public void testLockout() throws Exception {
+	public void testLockoutUser() throws Exception {
 		User user = UserTestUtil.addUser();
 
 		String password = "password";
@@ -584,19 +586,91 @@ public class UserLocalServiceTest {
 			_userLocalService.updatePassword(
 				user.getUserId(), password1, password1, false, false);
 
+			Assert.fail();
+		}
+		catch (PortalException portalException) {
+			Assert.assertEquals(
+				UserPasswordException.MustNotBeRecentlyUsed.class,
+				portalException.getClass());
+
 			Assert.assertEquals(
 				Authenticator.SUCCESS,
 				_userLocalService.authenticateByEmailAddress(
 					user.getCompanyId(), user.getEmailAddress(), password2,
 					null, null, null));
 		}
-		catch (PortalException portalException) {
-			Assert.assertEquals(
-				UserPasswordException.MustNotBeRecentlyUsed.class,
-				portalException.getClass());
-		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
+		}
+	}
+
+	@Test
+	public void testPasswordHistoryWithModifiedEncryption() throws Exception {
+		try (AutoCloseable autoCloseable1 =
+				ReflectionTestUtil.setFieldValueWithAutoCloseable(
+					DigesterImpl.class, "_BASE_64", false);
+			AutoCloseable autoCloseable2 =
+				ReflectionTestUtil.setFieldValueWithAutoCloseable(
+					PasswordEncryptorUtil.class,
+					"_PASSWORDS_ENCRYPTION_ALGORITHM", "SHA-384")) {
+
+			User user = UserTestUtil.addUser();
+
+			PasswordPolicy passwordPolicy = user.getPasswordPolicy();
+
+			passwordPolicy.setHistory(true);
+			passwordPolicy.setHistoryCount(2);
+
+			_passwordPolicyLocalService.updatePasswordPolicy(passwordPolicy);
+
+			String password1 = "password1";
+			String password2 = "password2";
+
+			try {
+				ServiceContextThreadLocal.pushServiceContext(
+					ServiceContextTestUtil.getServiceContext(
+						user.getGroupId(), user.getUserId()));
+
+				user = _userLocalService.updatePassword(
+					user.getUserId(), password1, password1, false, false);
+
+				Assert.assertEquals(
+					"{SHA-384}f5e2dd85fe11cec4c913f0f1fcecddb4a654dd92852f9" +
+						"78d6345638a0779a5e77ea39d33d6254bde0e1afa7a6c8ef0b9",
+					user.getPassword());
+
+				user = _userLocalService.updatePassword(
+					user.getUserId(), password2, password2, false, false);
+
+				Assert.assertEquals(
+					"{SHA-384}66b6aa56af08dc8caf7e001683058338244f436de61d40" +
+						"e342d0c69bda9f73cd6d167fdb29925db579923bdcef1fe5ae",
+					user.getPassword());
+
+				Assert.assertEquals(
+					Authenticator.SUCCESS,
+					_userLocalService.authenticateByEmailAddress(
+						user.getCompanyId(), user.getEmailAddress(), password2,
+						null, null, null));
+
+				_userLocalService.updatePassword(
+					user.getUserId(), password1, password1, false, false);
+
+				Assert.fail();
+			}
+			catch (PortalException portalException) {
+				Assert.assertEquals(
+					UserPasswordException.MustNotBeRecentlyUsed.class,
+					portalException.getClass());
+
+				Assert.assertEquals(
+					"{SHA-384}66b6aa56af08dc8caf7e001683058338244f436de61d40" +
+						"e342d0c69bda9f73cd6d167fdb29925db579923bdcef1fe5ae",
+					user.getPassword());
+			}
+			finally {
+				ServiceContextThreadLocal.popServiceContext();
+			}
 		}
 	}
 
@@ -764,6 +838,77 @@ public class UserLocalServiceTest {
 	}
 
 	@Test
+	public void testUnlockoutUserWithStaleLastFailedLoginDate()
+		throws Exception {
+
+		User user = UserTestUtil.addUser();
+
+		PasswordPolicy passwordPolicy = user.getPasswordPolicy();
+
+		passwordPolicy.setLockout(false);
+		passwordPolicy.setResetFailureCount(3L);
+
+		_passwordPolicyLocalService.updatePasswordPolicy(passwordPolicy);
+
+		long companyId = user.getCompanyId();
+		String emailAddress = user.getEmailAddress();
+		String screenName = user.getScreenName();
+		long userId = user.getUserId();
+
+		user = _assertFailedLoginAttempts(
+			() -> _userLocalService.authenticateByEmailAddress(
+				companyId, emailAddress, RandomTestUtil.randomString(), null,
+				null, null),
+			user);
+		user = _assertFailedLoginAttempts(
+			() -> _userLocalService.authenticateByScreenName(
+				companyId, screenName, RandomTestUtil.randomString(), null,
+				null, null),
+			user);
+
+		_assertFailedLoginAttempts(
+			() -> _userLocalService.authenticateByUserId(
+				companyId, userId, RandomTestUtil.randomString(), null, null,
+				null),
+			user);
+	}
+
+	@Test
+	public void testUnlockoutUserWithStaleLockoutDate() throws Exception {
+		User user = UserTestUtil.addUser();
+
+		PasswordPolicy passwordPolicy = user.getPasswordPolicy();
+
+		passwordPolicy.setLockout(true);
+		passwordPolicy.setMaxFailure(0);
+		passwordPolicy.setLockoutDuration(3L);
+
+		_passwordPolicyLocalService.updatePasswordPolicy(passwordPolicy);
+
+		long companyId = user.getCompanyId();
+		String emailAddress = user.getEmailAddress();
+		String screenName = user.getScreenName();
+		long userId = user.getUserId();
+
+		user = _assertLockout(
+			() -> _userLocalService.authenticateByEmailAddress(
+				companyId, emailAddress, RandomTestUtil.randomString(), null,
+				null, null),
+			user);
+		user = _assertLockout(
+			() -> _userLocalService.authenticateByScreenName(
+				companyId, screenName, RandomTestUtil.randomString(), null,
+				null, null),
+			user);
+
+		_assertLockout(
+			() -> _userLocalService.authenticateByUserId(
+				companyId, userId, RandomTestUtil.randomString(), null, null,
+				null),
+			user);
+	}
+
+	@Test
 	public void testUnsetRoleUsers() throws Exception {
 		User user = UserTestUtil.addUser();
 
@@ -833,7 +978,7 @@ public class UserLocalServiceTest {
 	}
 
 	@Test
-	public void testUpdatePasswordWithChangedAlgorithm() throws Exception {
+	public void testUpdatePasswordWithModifiedAlgorithm() throws Exception {
 		try (AutoCloseable autoCloseable =
 				ReflectionTestUtil.setFieldValueWithAutoCloseable(
 					PasswordEncryptorUtil.class,
@@ -860,6 +1005,32 @@ public class UserLocalServiceTest {
 			encryptedPassword = user.getPassword();
 
 			Assert.assertTrue(encryptedPassword.startsWith("{MD5}"));
+		}
+	}
+
+	@Test
+	public void testUpdateTicketWithModifiedEncryption() throws Exception {
+		try (AutoCloseable autoCloseable1 =
+				ReflectionTestUtil.setFieldValueWithAutoCloseable(
+					DigesterImpl.class, "_BASE_64", false);
+			AutoCloseable autoCloseable2 =
+				ReflectionTestUtil.setFieldValueWithAutoCloseable(
+					PasswordEncryptorUtil.class,
+					"_PASSWORDS_ENCRYPTION_ALGORITHM", "SHA-384")) {
+
+			Ticket ticket = _ticketLocalService.addDistinctTicket(
+				RandomTestUtil.randomLong(), null, RandomTestUtil.randomLong(),
+				TicketConstants.TYPE_PASSWORD, null, RandomTestUtil.nextDate(),
+				null);
+
+			ticket.setKey(PasswordEncryptorUtil.encrypt("password"));
+
+			ticket = _ticketLocalService.updateTicket(ticket);
+
+			Assert.assertEquals(
+				"{SHA-384}a8b64babd0aca91a59bdbb7761b421d4f2bb38280" +
+					"d3a75ba0f21f2bebc45583d446c598660c94ce680c47d19c30783a7",
+				ticket.getKey());
 		}
 	}
 
@@ -911,6 +1082,44 @@ public class UserLocalServiceTest {
 		}
 
 		return userIds;
+	}
+
+	private User _assertFailedLoginAttempts(
+			UnsafeRunnable<PortalException> unsafeRunnable, User user)
+		throws Exception {
+
+		user.setLastFailedLoginDate(
+			DateUtil.newDate(System.currentTimeMillis() - 5000L));
+		user.setFailedLoginAttempts(3);
+
+		user = _userLocalService.updateUser(user);
+
+		unsafeRunnable.run();
+
+		user = _userLocalService.fetchUser(user.getUserId());
+
+		Assert.assertEquals(1, user.getFailedLoginAttempts());
+
+		return user;
+	}
+
+	private User _assertLockout(
+			UnsafeRunnable<PortalException> unsafeRunnable, User user)
+		throws Exception {
+
+		user.setLockout(true);
+		user.setLockoutDate(
+			DateUtil.newDate(System.currentTimeMillis() - 5000L));
+
+		user = _userLocalService.updateUser(user);
+
+		unsafeRunnable.run();
+
+		user = _userLocalService.fetchUser(user.getUserId());
+
+		Assert.assertFalse(user.isLockout());
+
+		return user;
 	}
 
 	private static Company _company;

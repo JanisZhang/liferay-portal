@@ -25,6 +25,10 @@ public class BooleanQueryTranslatorImpl {
 			new org.apache.lucene.search.BooleanQuery.Builder();
 
 		processQueryClause(
+			booleanQuery.getFilterQueryClauses(), solrQueryTranslator,
+			query -> builder.add(query, BooleanClause.Occur.FILTER));
+
+		processQueryClause(
 			booleanQuery.getMustQueryClauses(), solrQueryTranslator,
 			query -> builder.add(query, BooleanClause.Occur.MUST));
 
@@ -46,6 +50,13 @@ public class BooleanQueryTranslatorImpl {
 		LuceneQueryConsumer luceneQueryConsumer) {
 
 		for (Query query : queryClauses) {
+			org.apache.lucene.search.Query luceneQuery = translate(
+				query, solrQueryTranslator);
+
+			if (luceneQuery == null) {
+				continue;
+			}
+
 			luceneQueryConsumer.accept(translate(query, solrQueryTranslator));
 		}
 	}

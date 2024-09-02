@@ -6,8 +6,10 @@
 package com.liferay.sharing.search.internal.permission;
 
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.search.spi.model.permission.SearchPermissionFieldContributor;
+import com.liferay.portal.search.spi.model.permission.contributor.SearchPermissionFieldContributor;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.service.SharingEntryLocalService;
 
@@ -36,6 +38,13 @@ public class SharingEntrySearchPermissionDocumentContributor
 
 	@Override
 	public void contribute(Document document, String className, long classPK) {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if ((serviceContext != null) && serviceContext.isStrictAdd()) {
+			return;
+		}
+
 		List<SharingEntry> sharingEntries =
 			_sharingEntryLocalService.getSharingEntries(
 				_portal.getClassNameId(className), classPK);

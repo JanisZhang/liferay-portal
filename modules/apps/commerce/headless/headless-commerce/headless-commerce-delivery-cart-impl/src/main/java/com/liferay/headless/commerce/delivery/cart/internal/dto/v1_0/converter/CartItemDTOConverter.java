@@ -10,6 +10,7 @@ import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.model.CPDefinitionInventory;
+import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
@@ -21,6 +22,7 @@ import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
+import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.util.CommerceQuantityFormatter;
 import com.liferay.expando.kernel.model.ExpandoBridge;
@@ -92,6 +94,8 @@ public class CartItemDTOConverter
 					});
 				setErrorMessages(
 					() -> _getErrorMessages(commerceOrderItem, locale));
+				setExternalReferenceCode(
+					commerceOrderItem::getExternalReferenceCode);
 				setId(commerceOrderItem::getCommerceOrderItemId);
 				setName(
 					() -> commerceOrderItem.getName(
@@ -111,9 +115,16 @@ public class CartItemDTOConverter
 						commerceOrderItem.getQuantity(),
 						commerceOrderItem.getUnitOfMeasureKey()));
 				setReplacedSku(commerceOrderItem::getReplacedSku);
+				setReplacedSkuExternalReferenceCode(
+					() -> _getReplacedSkuExternalReferenceCode(
+						commerceOrderItem.getReplacedCPInstanceId()));
 				setReplacedSkuId(commerceOrderItem::getReplacedCPInstanceId);
 				setSettings(
 					() -> _getSettings(commerceOrderItem.getCPInstanceId()));
+				setShippingAddressExternalReferenceCode(
+					() -> _getShippingAddressExternalReferenceCode(
+						commerceOrderItem.getShippingAddressId()));
+				setShippingAddressId(commerceOrderItem::getShippingAddressId);
 				setSku(commerceOrderItem::getSku);
 				setSkuId(commerceOrderItem::getCPInstanceId);
 				setSkuUnitOfMeasure(
@@ -239,9 +250,9 @@ public class CartItemDTOConverter
 			BigDecimal unitPromoPrice = promoPriceCommerceMoney.getPrice();
 
 			if (unitPromoPrice != null) {
-				price.setPromoPrice(unitPromoPrice.doubleValue());
+				price.setPromoPrice(unitPromoPrice::doubleValue);
 				price.setPromoPriceFormatted(
-					promoPriceCommerceMoney.format(locale));
+					() -> promoPriceCommerceMoney.format(locale));
 			}
 		}
 
@@ -252,11 +263,11 @@ public class CartItemDTOConverter
 			BigDecimal discountAmount = discountAmountCommerceMoney.getPrice();
 
 			if (discountAmount != null) {
-				price.setDiscount(discountAmount.doubleValue());
+				price.setDiscount(discountAmount::doubleValue);
 				price.setDiscountFormatted(
-					discountAmountCommerceMoney.format(locale));
+					() -> discountAmountCommerceMoney.format(locale));
 				price.setDiscountPercentage(
-					_commercePriceFormatter.format(
+					() -> _commercePriceFormatter.format(
 						commerceOrderItemPrice.getDiscountPercentage(),
 						locale));
 
@@ -270,13 +281,13 @@ public class CartItemDTOConverter
 					commerceOrderItemPrice.getDiscountPercentageLevel4();
 
 				price.setDiscountPercentageLevel1(
-					discountPercentageLevel1.doubleValue());
+					discountPercentageLevel1::doubleValue);
 				price.setDiscountPercentageLevel2(
-					discountPercentageLevel2.doubleValue());
+					discountPercentageLevel2::doubleValue);
 				price.setDiscountPercentageLevel3(
-					discountPercentageLevel3.doubleValue());
+					discountPercentageLevel3::doubleValue);
 				price.setDiscountPercentageLevel4(
-					discountPercentageLevel4.doubleValue());
+					discountPercentageLevel4::doubleValue);
 			}
 		}
 
@@ -287,11 +298,24 @@ public class CartItemDTOConverter
 
 		if (finalPrice != null) {
 			price.setFinalPriceFormatted(
-				finalPriceCommerceMoney.format(locale));
-			price.setFinalPrice(finalPrice.doubleValue());
+				() -> finalPriceCommerceMoney.format(locale));
+			price.setFinalPrice(finalPrice::doubleValue);
 		}
 
 		return price;
+	}
+
+	private String _getReplacedSkuExternalReferenceCode(
+		long replacedCPInstanceId) {
+
+		CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
+			replacedCPInstanceId);
+
+		if (cpInstance == null) {
+			return null;
+		}
+
+		return cpInstance.getExternalReferenceCode();
 	}
 
 	private Settings _getSettings(long cpInstanceId) {
@@ -327,27 +351,51 @@ public class CartItemDTOConverter
 			if ((allowedOrderQuantitiesArray != null) &&
 				(allowedOrderQuantitiesArray.length > 0)) {
 
-				settings.setAllowedQuantities(allowedOrderQuantitiesArray);
+				settings.setAllowedQuantities(
+					() -> allowedOrderQuantitiesArray);
 			}
 		}
 
 		if (minOrderQuantity != null) {
+			BigDecimal finalMinOrderQuantity = minOrderQuantity;
+
 			settings.setMinQuantity(
-				BigDecimalUtil.stripTrailingZeros(minOrderQuantity));
+				() -> BigDecimalUtil.stripTrailingZeros(finalMinOrderQuantity));
 		}
 
 		if (maxOrderQuantity != null) {
+			BigDecimal finalMaxOrderQuantity = maxOrderQuantity;
+
 			settings.setMaxQuantity(
-				BigDecimalUtil.stripTrailingZeros(maxOrderQuantity));
+				() -> BigDecimalUtil.stripTrailingZeros(finalMaxOrderQuantity));
 		}
 
 		if (multipleQuantity != null) {
+			BigDecimal finalMultipleQuantity = multipleQuantity;
+
 			settings.setMultipleQuantity(
-				BigDecimalUtil.stripTrailingZeros(multipleQuantity));
+				() -> BigDecimalUtil.stripTrailingZeros(finalMultipleQuantity));
 		}
 
 		return settings;
 	}
+
+	private String _getShippingAddressExternalReferenceCode(
+		long shippingAddressId) {
+
+		CommerceAddress commerceAddress =
+			_commerceAddressLocalService.fetchCommerceAddress(
+				shippingAddressId);
+
+		if (commerceAddress == null) {
+			return null;
+		}
+
+		return commerceAddress.getExternalReferenceCode();
+	}
+
+	@Reference
+	private CommerceAddressLocalService _commerceAddressLocalService;
 
 	@Reference
 	private CommerceOrderItemService _commerceOrderItemService;

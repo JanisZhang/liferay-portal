@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPDisplayLayout;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 /**
  * Provides the remote service utility for CPDisplayLayout. This utility wraps
@@ -48,6 +49,12 @@ public class CPDisplayLayoutServiceUtil {
 		return getService().fetchCPDisplayLayout(cpDisplayLayoutId);
 	}
 
+	public static CPDisplayLayout getCPDisplayLayout(long cpDisplayLayoutId)
+		throws PortalException {
+
+		return getService().getCPDisplayLayout(cpDisplayLayoutId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -79,13 +86,11 @@ public class CPDisplayLayoutServiceUtil {
 	}
 
 	public static CPDisplayLayoutService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPDisplayLayoutService service) {
-		_service = service;
-	}
-
-	private static volatile CPDisplayLayoutService _service;
+	private static final Snapshot<CPDisplayLayoutService> _serviceSnapshot =
+		new Snapshot<>(
+			CPDisplayLayoutServiceUtil.class, CPDisplayLayoutService.class);
 
 }

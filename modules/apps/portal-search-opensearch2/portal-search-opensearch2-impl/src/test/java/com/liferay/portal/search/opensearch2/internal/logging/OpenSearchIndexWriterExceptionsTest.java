@@ -17,11 +17,11 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.search.opensearch2.internal.OpenSearchIndexWriter;
 import com.liferay.portal.search.opensearch2.internal.OpenSearchTestRule;
 import com.liferay.portal.search.opensearch2.internal.indexing.LiferayOpenSearchIndexingFixtureFactory;
+import com.liferay.portal.search.test.rule.logging.ExpectedLogMethodTestRule;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.DocumentCreationHelpers;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
 import com.liferay.portal.search.test.util.logging.ExpectedLog;
-import com.liferay.portal.search.test.util.logging.ExpectedLogMethodTestRule;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
@@ -178,9 +178,6 @@ public class OpenSearchIndexWriterExceptionsTest extends BaseIndexingTestCase {
 
 	@Test
 	public void testPartiallyUpdateDocument() {
-		expectedException.expect(OpenSearchException.class);
-		expectedException.expectMessage("[document_missing_exception]");
-
 		Document document = new DocumentImpl();
 
 		document.addKeyword(Field.UID, "1");
@@ -200,9 +197,6 @@ public class OpenSearchIndexWriterExceptionsTest extends BaseIndexingTestCase {
 
 	@Test
 	public void testPartiallyUpdateDocuments() {
-		expectedException.expect(RuntimeException.class);
-		expectedException.expectMessage("Bulk partial update failed");
-
 		Document document = new DocumentImpl();
 
 		List<Document> documents = new ArrayList<>();

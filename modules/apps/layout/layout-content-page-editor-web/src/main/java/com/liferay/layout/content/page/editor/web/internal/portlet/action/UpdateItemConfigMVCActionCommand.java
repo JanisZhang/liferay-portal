@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.ActionRequest;
@@ -51,15 +52,32 @@ public class UpdateItemConfigMVCActionCommand
 		long segmentsExperienceId = ParamUtil.getLong(
 			actionRequest, "segmentsExperienceId");
 		String itemConfig = ParamUtil.getString(actionRequest, "itemConfig");
+
+		String[] itemIds = null;
+
 		String itemId = ParamUtil.getString(actionRequest, "itemId");
+
+		if (Validator.isNotNull(itemId)) {
+			itemIds = new String[] {itemId};
+		}
+		else {
+			itemIds = ParamUtil.getStringValues(actionRequest, "itemIds");
+		}
+
+		String[] finalItemIds = itemIds;
 
 		return JSONUtil.put(
 			"layoutData",
 			LayoutStructureUtil.updateLayoutPageTemplateData(
 				themeDisplay.getScopeGroupId(), segmentsExperienceId,
 				themeDisplay.getPlid(),
-				layoutStructure -> layoutStructure.updateItemConfig(
-					_jsonFactory.createJSONObject(itemConfig), itemId)));
+				layoutStructure -> {
+					for (String curItemId : finalItemIds) {
+						layoutStructure.updateItemConfig(
+							_jsonFactory.createJSONObject(itemConfig),
+							curItemId);
+					}
+				}));
 	}
 
 	@Reference

@@ -173,7 +173,8 @@ public class EditFileEntryTypeMVCActionCommand
 			WebKeys.THEME_DISPLAY);
 
 		dataDefinition.setDefaultDataLayout(
-			DataLayout.toDTO(ParamUtil.getString(actionRequest, "dataLayout")));
+			() -> DataLayout.toDTO(
+				ParamUtil.getString(actionRequest, "dataLayout")));
 
 		DataDefinitionResource dataDefinitionResource =
 			dataDefinitionResourceBuilder.user(
@@ -196,8 +197,8 @@ public class EditFileEntryTypeMVCActionCommand
 
 		DLFileEntryType fileEntryType =
 			_dlFileEntryTypeService.addFileEntryType(
-				themeDisplay.getScopeGroupId(), dataDefinition.getId(), null,
-				nameMap, descriptionMap, serviceContext);
+				null, themeDisplay.getScopeGroupId(), dataDefinition.getId(),
+				null, nameMap, descriptionMap, serviceContext);
 
 		_dlFileEntryTypeLocalService.addDDMStructureLinks(
 			fileEntryType.getFileEntryTypeId(),
@@ -297,7 +298,8 @@ public class EditFileEntryTypeMVCActionCommand
 			actionRequest, "fileEntryTypeId");
 
 		dataDefinition.setDefaultDataLayout(
-			DataLayout.toDTO(ParamUtil.getString(actionRequest, "dataLayout")));
+			() -> DataLayout.toDTO(
+				ParamUtil.getString(actionRequest, "dataLayout")));
 
 		DataDefinitionResource dataDefinitionResource =
 			dataDefinitionResourceBuilder.user(

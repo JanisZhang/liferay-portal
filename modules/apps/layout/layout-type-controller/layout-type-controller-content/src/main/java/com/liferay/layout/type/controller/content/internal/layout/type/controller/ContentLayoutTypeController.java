@@ -11,8 +11,6 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.security.permission.resource.LayoutContentModelResourcePermission;
 import com.liferay.layout.type.controller.BaseLayoutTypeControllerImpl;
-import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
-import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
@@ -83,6 +81,9 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
+		String layoutMode = ParamUtil.getString(
+			httpServletRequest, "p_l_mode", Constants.VIEW);
+
 		Boolean hasUpdatePermissions = null;
 
 		if (layout.isDraftLayout()) {
@@ -93,18 +94,29 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 				curLayout = layout;
 			}
 
-			hasUpdatePermissions = _hasUpdatePermissions(
-				themeDisplay.getPermissionChecker(), curLayout);
+			if (layoutMode.equals(Constants.PREVIEW) ||
+				layoutMode.equals(Constants.VIEW)) {
 
-			if (!hasUpdatePermissions) {
-				throw new PrincipalException.MustHavePermission(
-					themeDisplay.getPermissionChecker(), Layout.class.getName(),
-					layout.getLayoutId(), ActionKeys.UPDATE);
+				if (!_hasPreviewPermission(curLayout, themeDisplay)) {
+					throw new PrincipalException.MustHavePermission(
+						themeDisplay.getPermissionChecker(),
+						Layout.class.getName(), layout.getLayoutId(),
+						ActionKeys.UPDATE);
+				}
+			}
+			else {
+				hasUpdatePermissions = _hasUpdatePermissions(
+					themeDisplay.getPermissionChecker(), curLayout);
+
+				if (!hasUpdatePermissions) {
+					throw new PrincipalException.MustHavePermission(
+						themeDisplay.getPermissionChecker(),
+						Layout.class.getName(), layout.getLayoutId(),
+						ActionKeys.UPDATE);
+				}
 			}
 		}
 
-		String layoutMode = ParamUtil.getString(
-			httpServletRequest, "p_l_mode", Constants.VIEW);
 		String redirect = StringPool.BLANK;
 
 		if (layoutMode.equals(Constants.EDIT)) {
@@ -267,19 +279,6 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 			return;
 		}
 
-		LayoutUtilityPageEntry layoutUtilityPageEntry =
-			_fetchLayoutUtilityPageEntry(layout);
-
-		if (layoutUtilityPageEntry != null) {
-			httpServletRequest.setAttribute(
-				ContentPageEditorWebKeys.CLASS_NAME,
-				LayoutUtilityPageEntry.class.getName());
-			httpServletRequest.setAttribute(
-				ContentPageEditorWebKeys.CLASS_PK, layout.getPlid());
-
-			return;
-		}
-
 		httpServletRequest.setAttribute(
 			ContentPageEditorWebKeys.CLASS_NAME, Layout.class.getName());
 		httpServletRequest.setAttribute(
@@ -300,23 +299,6 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 		if (layout.isDraftLayout()) {
 			return _layoutPageTemplateEntryLocalService.
 				fetchLayoutPageTemplateEntryByPlid(layout.getClassPK());
-		}
-
-		return null;
-	}
-
-	private LayoutUtilityPageEntry _fetchLayoutUtilityPageEntry(Layout layout) {
-		LayoutUtilityPageEntry layoutUtilityPageEntry =
-			_layoutUtilityPageEntryLocalService.
-				fetchLayoutUtilityPageEntryByPlid(layout.getPlid());
-
-		if (layoutUtilityPageEntry != null) {
-			return layoutUtilityPageEntry;
-		}
-
-		if (layout.isDraftLayout()) {
-			return _layoutUtilityPageEntryLocalService.
-				fetchLayoutUtilityPageEntryByPlid(layout.getClassPK());
 		}
 
 		return null;
@@ -360,6 +342,19 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 		}
 
 		return layoutFullURL;
+	}
+
+	private boolean _hasPreviewPermission(
+			Layout layout, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		if (_fetchLayoutPageTemplateEntry(layout) != null) {
+			return _hasUpdatePermissions(
+				themeDisplay.getPermissionChecker(), layout);
+		}
+
+		return _layoutPermission.containsLayoutPreviewDraftPermission(
+			themeDisplay.getPermissionChecker(), layout);
 	}
 
 	private boolean _hasUpdatePermissions(
@@ -407,10 +402,6 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 
 	@Reference
 	private LayoutPermission _layoutPermission;
-
-	@Reference
-	private LayoutUtilityPageEntryLocalService
-		_layoutUtilityPageEntryLocalService;
 
 	@Reference
 	private LayoutContentModelResourcePermission _modelResourcePermission;

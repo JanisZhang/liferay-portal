@@ -1,4 +1,4 @@
-@component-name = "portal-portal-configuration"
+@component-name = "portal-core-infra"
 definition {
 
 	property app.server.types = "tomcat";
@@ -162,7 +162,7 @@ definition {
 
 		task ("And given the virtual instance is not the default company") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 
@@ -190,7 +190,7 @@ definition {
 			User.logoutPG(specificURL = "http://www.able.com:8080");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 

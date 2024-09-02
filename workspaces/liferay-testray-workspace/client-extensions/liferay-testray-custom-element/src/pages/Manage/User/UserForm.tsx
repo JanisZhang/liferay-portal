@@ -6,7 +6,6 @@
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayCheckbox} from '@clayui/form';
-import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import {useCallback, useContext, useEffect, useMemo} from 'react';
 import {useForm} from 'react-hook-form';
@@ -23,13 +22,17 @@ import i18n from '../../../i18n';
 import yupSchema, {yupResolver} from '../../../schema/yup';
 import {Liferay} from '../../../services/liferay';
 import {
-	JiraClientExtensionRestImpl,
 	UserAccount,
 	UserActions,
 	liferayUserAccountsImpl,
 } from '../../../services/rest';
 import {liferayUserRolesRest} from '../../../services/rest/TestrayRolesUser';
 import {RoleTypes} from '../../../util/constants';
+
+type Role = {
+	id: number;
+	name: string;
+};
 
 type UserFormDefault = {
 	actions: UserActions;
@@ -40,7 +43,7 @@ type UserFormDefault = {
 	id: string;
 	password?: string;
 	repassword?: string;
-	roleBriefs?: any;
+	roleBriefs?: Role[];
 	roles: number[];
 	testrayUser: boolean;
 };
@@ -152,14 +155,6 @@ const UserForm = () => {
 		setValue('roles', rolesFiltered);
 	};
 
-	const onClickJiraAuthorize = async () => {
-		await JiraClientExtensionRestImpl.preauthorize();
-
-		window.open(
-			`${JiraClientExtensionRestImpl.oAuth2Client.homePageURL}/jira/authorize/${myUserAccount?.id}`
-		);
-	};
-
 	const inputProps = {
 		errors,
 		register,
@@ -234,7 +229,7 @@ const UserForm = () => {
 
 								<Form.Input
 									{...inputProps}
-									label="Confirm Password"
+									label={i18n.translate('confirm-password')}
 									name="repassword"
 									required
 									type="password"
@@ -244,28 +239,33 @@ const UserForm = () => {
 					</ClayLayout.Row>
 				)}
 
-				{!isCreateForm && (
-					<ClayLayout.Row justify="start">
-						<ClayLayout.Col size={3} sm={12} xl={3}>
-							<h5 className="font-weight-normal">
-								{i18n.translate('change-password')}
-							</h5>
-						</ClayLayout.Col>
+				{userAccount?.roleBriefs?.some(
+					(role: Role) => role.name === 'Administrator'
+				) &&
+					!isCreateForm && (
+						<>
+							<ClayLayout.Row justify="start">
+								<ClayLayout.Col size={3} sm={12} xl={3}>
+									<h5 className="font-weight-normal">
+										{i18n.translate('change-password')}
+									</h5>
+								</ClayLayout.Col>
 
-						<ClayLayout.Col size={3} sm={12} xl={3}>
-							<ClayForm.Group className="form-group-sm">
-								<ClayButton
-									className="bg-neutral-2 borderless btn-light neutral text-neutral-7"
-									onClick={() => navigate('password')}
-								>
-									{i18n.translate('change-password')}
-								</ClayButton>
-							</ClayForm.Group>
-						</ClayLayout.Col>
-					</ClayLayout.Row>
-				)}
+								<ClayLayout.Col size={3} sm={12} xl={3}>
+									<ClayForm.Group className="form-group-sm">
+										<ClayButton
+											className="bg-neutral-2 borderless btn-light neutral text-neutral-7"
+											onClick={() => navigate('password')}
+										>
+											{i18n.translate('change-password')}
+										</ClayButton>
+									</ClayForm.Group>
+								</ClayLayout.Col>
+							</ClayLayout.Row>
 
-				<Form.Divider />
+							<Form.Divider />
+						</>
+					)}
 
 				<ClayLayout.Row className="mb-2" justify="start">
 					<ClayLayout.Col size={12} sm={12} xl={3}>
@@ -324,42 +324,6 @@ const UserForm = () => {
 							</ClayForm.Group>
 						</ClayLayout.Col>
 					</ClayLayout.Row>
-				)}
-
-				{myUserAccount && (
-					<>
-						<ClayLayout.Row justify="start">
-							<ClayLayout.Col size={3} sm={12} xl={3}>
-								<h5 className="font-weight-normal">
-									{i18n.translate('jira-authorization')}
-								</h5>
-							</ClayLayout.Col>
-
-							<ClayLayout.Col size={3} sm={12} xl={3}>
-								<ClayForm.Group className="align-items-center d-flex form-group-sm">
-									<ClayButton
-										className="align-items-center d-flex mr-4"
-										disabled={
-											myUserAccount?.jiraAuthorization
-										}
-										onClick={onClickJiraAuthorize}
-									>
-										{i18n.translate('jira-authorization')}
-									</ClayButton>
-
-									{myUserAccount.jiraAuthorization && (
-										<ClayIcon
-											className="mr-1"
-											color="green"
-											symbol="check-circle-full"
-										/>
-									)}
-								</ClayForm.Group>
-							</ClayLayout.Col>
-						</ClayLayout.Row>
-
-						<Form.Divider />
-					</>
 				)}
 
 				<Form.Footer

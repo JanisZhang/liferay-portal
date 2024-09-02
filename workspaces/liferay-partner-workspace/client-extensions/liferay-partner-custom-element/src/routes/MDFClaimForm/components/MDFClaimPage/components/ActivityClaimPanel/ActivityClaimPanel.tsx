@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayIcon from '@clayui/icon';
 import Link from '@clayui/link';
 import ClayPanel from '@clayui/panel';
-import {FormikContextType} from 'formik';
+import {FormikContextType, FormikErrors} from 'formik';
 import {useCallback, useState} from 'react';
 
 import PRMForm from '../../../../../../common/components/PRMForm';
@@ -17,7 +18,6 @@ import MDFClaim from '../../../../../../common/interfaces/mdfClaim';
 import MDFClaimActivity from '../../../../../../common/interfaces/mdfClaimActivity';
 import {Liferay} from '../../../../../../common/services/liferay';
 import deleteDocument from '../../../../../../common/services/liferay/headless-delivery/deleteDocument';
-import {Status} from '../../../../../../common/utils/constants/status';
 import getIntlNumberFormat from '../../../../../../common/utils/getIntlNumberFormat';
 import checkRequiredListOfQualifiedLeads from '../../../../utils/checkRequiredListOfQualifiedLeads';
 import BudgetClaimPanel from './components/BudgetClaimPanel';
@@ -32,7 +32,10 @@ import useBudgetsAmount from './hooks/useBudgetsAmount';
 interface IProps {
 	activity: MDFClaimActivity;
 	activityIndex: number;
+	errors: FormikErrors<MDFClaim>;
 	hasPermissionEditClaimActivity: boolean;
+	isButtonClicked: boolean;
+	isEdit: boolean;
 	overallCampaignDescription: string;
 }
 
@@ -42,7 +45,6 @@ type TypeActivityComponent = {
 
 const ActivityStatus = {
 	ACTIVE: 'active',
-	APPROVED: 'approved',
 	CLAIMED: 'claimed',
 	EXPIRED: 'expired',
 	SUBMITTED: 'submitted',
@@ -51,9 +53,8 @@ const ActivityStatus = {
 
 const activityStatusClassName = {
 	[ActivityStatus.ACTIVE]: 'label label-tonal-info ml-2',
-	[ActivityStatus.SUBMITTED]: 'label label-tonal-warning ml-2',
-	[ActivityStatus.APPROVED]: 'label label-tonal-success ml-2',
 	[ActivityStatus.EXPIRED]: 'label label-tonal-danger ml-2',
+	[ActivityStatus.SUBMITTED]: 'label label-tonal-warning ml-2',
 };
 
 const activityClaimStatusClassName = {
@@ -64,15 +65,31 @@ const activityClaimStatusClassName = {
 const ActivityClaimPanel = ({
 	activity,
 	activityIndex,
+	errors,
 	hasPermissionEditClaimActivity,
+	isButtonClicked,
+	isEdit,
 	overallCampaignDescription,
 	setFieldValue,
 }: IProps & Pick<FormikContextType<MDFClaim>, 'setFieldValue'>) => {
 	const [expanded, setExpanded] = useState<boolean>(!activity.selected);
 
-	const siteURL = Liferay.ThemeDisplay.getLayoutRelativeControlPanelURL().split(
-		'/'
-	)[2];
+	const isBudgetSelected = Array.isArray(errors?.activities)
+		? errors.activities.reduce((accumulator, activity, index) => {
+				if (
+					activity &&
+					'budgets' in activity &&
+					typeof activity.budgets !== 'string'
+				) {
+					accumulator.push(index);
+				}
+
+				return accumulator;
+			}, [])
+		: undefined;
+
+	const siteURL =
+		Liferay.ThemeDisplay.getLayoutRelativeControlPanelURL().split('/')[2];
 
 	useBudgetsAmount(
 		activity.budgets,
@@ -85,17 +102,6 @@ const ActivityClaimPanel = ({
 			[activityIndex, setFieldValue]
 		)
 	);
-
-	const claimableActivityByStatus =
-		(activity.activityStatus?.key === Status.APPROVED.key ||
-			activity.activityStatus?.key === Status.ACTIVE.key) &&
-		!activity.claimed;
-
-	const editableClaimActivityByStatus = activity.id && !activity.selected;
-
-	const displayActivityClaimCheckbox = activity.id
-		? hasPermissionEditClaimActivity
-		: claimableActivityByStatus || editableClaimActivityByStatus;
 
 	const typeActivityComponents: TypeActivityComponent = {
 		[TypeActivityKey.DIGITAL_MARKETING]: (
@@ -131,8 +137,7 @@ const ActivityClaimPanel = ({
 	return (
 		<>
 			<ClayPanel
-				className="bg-neutral-1 border-brand-primary-lighten-2 mb-4 text-neutral-7"
-				displayType="secondary"
+				className="border-brand-primary-lighten-4"
 				expanded={activity.selected && expanded}
 			>
 				<PanelHeader
@@ -148,23 +153,21 @@ const ActivityClaimPanel = ({
 						}
 					}}
 				>
-					{displayActivityClaimCheckbox && (
-						<div
-							onClick={() =>
-								activity.budgets?.map((_, index) =>
-									setFieldValue(
-										`activities[${activityIndex}].budgets[${index}].selected`,
-										false
-									)
+					<div
+						onClick={() =>
+							activity.budgets?.map((_, index) =>
+								setFieldValue(
+									`activities[${activityIndex}].budgets[${index}].selected`,
+									false
 								)
-							}
-						>
-							<PRMFormik.Field
-								component={PRMForm.Checkbox}
-								name={`activities[${activityIndex}].selected`}
-							/>
-						</div>
-					)}
+							)
+						}
+					>
+						<PRMFormik.Field
+							component={PRMForm.Checkbox}
+							name={`activities[${activityIndex}].selected`}
+						/>
+					</div>
 
 					<div className="flex-grow-1 mx-3">
 						<p className="mb-1 text-neutral-7 text-paragraph-sm">
@@ -216,6 +219,17 @@ const ActivityClaimPanel = ({
 							</h5>
 						</div>
 					</div>
+
+					{!expanded && activity.selected && (
+						<span className="collapse-icon-closed mt-2">
+							<ClayIcon symbol="angle-down" />
+						</span>
+					)}
+					{expanded && activity.selected && (
+						<span className="collapse-icon-open mt-2">
+							<ClayIcon symbol="angle-up" />
+						</span>
+					)}
 				</PanelHeader>
 
 				<PanelBody expanded={activity.selected && expanded}>
@@ -230,26 +244,54 @@ const ActivityClaimPanel = ({
 							/>
 						))}
 
+						{isBudgetSelected &&
+							errors?.activities &&
+							!isBudgetSelected.includes(activityIndex) &&
+							(isButtonClicked || isEdit) && (
+								<>
+									{(
+										errors.activities[activityIndex] as {
+											budgets?: boolean;
+										}
+									)?.budgets && (
+										<ClayAlert
+											displayType="danger"
+											hideCloseIcon={true}
+										>
+											{
+												(
+													errors?.activities[
+														activityIndex
+													] as {
+														budgets?: string;
+													}
+												)?.budgets
+											}
+										</ClayAlert>
+									)}
+								</>
+							)}
+
 						<div className="align-items-center d-flex justify-content-between">
 							<PRMFormik.Field
 								component={PRMForm.InputFile}
 								description="You can downloaded the Excel Template, fill it out, and upload it back here"
 								displayType="secondary"
 								label="List of Qualified Leads"
-								name={`activities[${activityIndex}].listOfQualifiedLeads`}
+								name={`activities[${activityIndex}].listOfQualifiedLeadsFile`}
 								onAccept={(liferayFile: LiferayFile) => {
 									if (
-										activity.listOfQualifiedLeads
+										activity.listOfQualifiedLeadsFile
 											?.documentId
 									) {
 										deleteDocument(
-											activity.listOfQualifiedLeads
+											activity.listOfQualifiedLeadsFile
 												?.documentId
 										);
 									}
 
 									setFieldValue(
-										`activities[${activityIndex}].listOfQualifiedLeads`,
+										`activities[${activityIndex}].listOfQualifiedLeadsFile`,
 										liferayFile
 									);
 								}}

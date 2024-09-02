@@ -49,6 +49,33 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface CartResource {
 
+	public Response deleteCartByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Cart getCartByExternalReferenceCode(String externalReferenceCode)
+		throws Exception;
+
+	public Cart patchCartByExternalReferenceCode(
+			String externalReferenceCode, Cart cart)
+		throws Exception;
+
+	public Cart putCartByExternalReferenceCode(
+			String externalReferenceCode, Cart cart)
+		throws Exception;
+
+	public Cart postCartByExternalReferenceCodeCheckout(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Cart postCartByExternalReferenceCodeCouponCode(
+			String externalReferenceCode, CouponCode couponCode)
+		throws Exception;
+
+	public String getCartByExternalReferenceCodePaymentUrl(
+			String externalReferenceCode, String callbackURL)
+		throws Exception;
+
 	public Response deleteCart(Long cartId) throws Exception;
 
 	public Response deleteCartBatch(String callbackURL, Object object)
@@ -69,6 +96,17 @@ public interface CartResource {
 		throws Exception;
 
 	public String getCartPaymentURL(Long cartId, String callbackURL)
+		throws Exception;
+
+	public Page<Cart>
+			getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodeCartsPage(
+				String accountExternalReferenceCode,
+				String channelExternalReferenceCode, String search,
+				Pagination pagination)
+		throws Exception;
+
+	public Cart postChannelCartByExternalReferenceCode(
+			String externalReferenceCode, Cart cart)
 		throws Exception;
 
 	public Page<Cart> getChannelCartsPage(

@@ -984,6 +984,7 @@ public class ModulesStructureTest {
 		if (dirName.endsWith("poshi-standalone") ||
 			name.equals("com.liferay.ant.bnd") ||
 			name.equals("com.liferay.arquillian.extension.junit.bridge") ||
+			name.equals("com.liferay.gradle.plugins.app.docker") ||
 			name.equals("com.liferay.gradle.plugins.defaults") ||
 			name.equals("com.liferay.portal.cache.test.util") ||
 			name.equals("com.liferay.poshi.core") ||
@@ -1648,7 +1649,7 @@ public class ModulesStructureTest {
 	private static final String[] _GIT_IGNORE_LINE_PREFIXES = {"/wedeploy/"};
 
 	private static final String[] _GIT_IGNORE_OPTIONAL_LINES = {
-		"gradle-ext.properties", "node_modules_cache/"
+		".tsc/", "gradle-ext.properties", "node_modules_cache/"
 	};
 
 	private static final String _GIT_REPO_FILE_NAME = ".gitrepo";
@@ -1688,8 +1689,8 @@ public class ModulesStructureTest {
 	private static Set<String> _checkoutPrivateAppsDirs;
 	private static final Set<String> _excludedDirNames = SetUtil.fromList(
 		Arrays.asList(
-			"bin", "build", "classes", "ext-test-impl", "node_modules",
-			"test-classes", "tmp"));
+			"_node-scripts", "bin", "build", "classes", "ext-test-impl",
+			"node_modules", "test-classes", "tmp"));
 	private static final Pattern _gitRepoGradleProjectGroupPattern =
 		Pattern.compile("com\\.liferay(?:\\.[a-z]+)+");
 	private static final Set<String> _gitRepoGradlePropertiesKeys =

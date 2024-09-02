@@ -28,12 +28,10 @@ import com.liferay.headless.admin.user.client.resource.v1_0.UserAccountResource;
 import com.liferay.headless.admin.user.client.serdes.v1_0.UserAccountSerDes;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.function.UnsafeSupplier;
-import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.captcha.Captcha;
 import com.liferay.portal.kernel.captcha.CaptchaException;
-import com.liferay.portal.kernel.exception.UserPasswordException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -81,8 +79,8 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
 import com.liferay.portal.test.log.LogCapture;
@@ -123,6 +121,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 
 /**
  * @author Javier Gamarra
+ * @author Matyas Wollner
  */
 @DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
@@ -142,6 +141,8 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 
 		_testUser = _userLocalService.getUserByEmailAddress(
 			testGroup.getCompanyId(), "test@liferay.com");
+
+		_userGroup = UserGroupTestUtil.addUserGroup();
 
 		_userLocalService.deleteGroupUser(
 			testGroup.getGroupId(), _testUser.getUserId());
@@ -179,40 +180,9 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 
 	@Override
 	@Test
-	public void testDeleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCode()
-		throws Exception {
-
-		UserAccount userAccount =
-			userAccountResource.putUserAccountByExternalReferenceCode(
-				StringUtil.toLowerCase(RandomTestUtil.randomString()),
-				randomUserAccount());
-
-		_accountEntryUserRelLocalService.addAccountEntryUserRel(
-			_accountEntry.getAccountEntryId(), userAccount.getId());
-
-		Assert.assertNotNull(
-			_accountEntryUserRelLocalService.fetchAccountEntryUserRel(
-				_accountEntry.getAccountEntryId(), userAccount.getId()));
-
-		userAccountResource.
-			deleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCodeHttpResponse(
-				_accountEntry.getExternalReferenceCode(),
-				userAccount.getExternalReferenceCode());
-
-		Assert.assertNull(
-			_accountEntryUserRelLocalService.fetchAccountEntryUserRel(
-				_accountEntry.getAccountEntryId(), userAccount.getId()));
-	}
-
-	@Override
-	@Test
-	public void testDeleteAccountUserAccount() throws Exception {
-		testDeleteAccountUserAccountByEmailAddress();
-	}
-
-	@Override
-	@Test
 	public void testDeleteAccountUserAccountByEmailAddress() throws Exception {
+		super.testDeleteAccountUserAccountByEmailAddress();
+
 		User user = UserTestUtil.addUser();
 
 		_accountEntryUserRelLocalService.addAccountEntryUserRel(
@@ -234,6 +204,9 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 	@Test
 	public void testDeleteAccountUserAccountByExternalReferenceCodeByEmailAddress()
 		throws Exception {
+
+		super.
+			testDeleteAccountUserAccountByExternalReferenceCodeByEmailAddress();
 
 		User user = UserTestUtil.addUser();
 
@@ -328,27 +301,6 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 				_accountEntryUserRelLocalService.fetchAccountEntryUserRel(
 					_accountEntry.getAccountEntryId(), user.getUserId()));
 		}
-	}
-
-	@Override
-	@Test
-	public void testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode()
-		throws Exception {
-
-		testGetAccountUserAccount();
-	}
-
-	@Override
-	@Test
-	public void testGetAccountUserAccount() throws Exception {
-		User user = UserTestUtil.addUser();
-
-		_accountEntryUserRelLocalService.addAccountEntryUserRel(
-			_accountEntry.getAccountEntryId(), user.getUserId());
-
-		Assert.assertNotNull(
-			_accountEntryUserRelLocalService.fetchAccountEntryUserRel(
-				_accountEntry.getAccountEntryId(), user.getUserId()));
 	}
 
 	@Override
@@ -469,6 +421,19 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 
 	@Override
 	@Test
+	public void testGetUserAccountsByStatusPage() throws Exception {
+		super.testGetUserAccountsByStatusPage();
+
+		Page<UserAccount> page =
+			userAccountResource.getUserAccountsByStatusPage(
+				testGetUserAccountsByStatusPage_getStatus(), null,
+				"status eq 0", Pagination.of(1, 2), null);
+
+		Assert.assertEquals(0, page.getTotalCount());
+	}
+
+	@Override
+	@Test
 	public void testGetUserAccountsPage() throws Exception {
 		UserAccount userAccount1 = testGetUserAccountsPage_addUserAccount(
 			randomUserAccount());
@@ -556,6 +521,22 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 			"userGroupRoleNames/any(f:contains(f, 'Test group role '))",
 			userAccount2);
 		_testGetUserAccountsPage("userGroupRoleNames/any(f:f eq 'Test Role')");
+
+		UserAccount userAccount6 =
+			testGetUserAccountsByStatusPage_addUserAccount(
+				"inactive", randomUserAccount());
+
+		_testGetUserAccountsPage("status eq 5", userAccount6);
+
+		idFilterString = String.format(
+			"id in ('%s','%s','%s','%s')", userAccount1.getId(),
+			userAccount2.getId(), userAccount3.getId(), userAccount6.getId());
+
+		_testGetUserAccountsPage(
+			String.format(
+				"%s and %s", idFilterString,
+				"((status eq 0) or (status eq 5))"),
+			userAccount1, userAccount2, userAccount3, userAccount6);
 	}
 
 	@Ignore
@@ -594,37 +575,6 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 			Arrays.asList(
 				userAccount1, userAccount2, userAccount3, userAccount4),
 			(List<UserAccount>)page2.getItems());
-	}
-
-	@Override
-	public void testGetUserAccountsPageWithSort(
-			EntityField.Type type,
-			UnsafeTriConsumer<EntityField, UserAccount, UserAccount, Exception>
-				unsafeTriConsumer)
-		throws Exception {
-
-		List<EntityField> entityFields = getEntityFields(type);
-
-		UserAccount userAccount1 = randomUserAccount();
-		UserAccount userAccount2 = randomUserAccount();
-
-		for (EntityField entityField : entityFields) {
-			unsafeTriConsumer.accept(entityField, userAccount1, userAccount2);
-		}
-
-		userAccount1 = testGetUserAccountsPage_addUserAccount(userAccount1);
-		userAccount2 = testGetUserAccountsPage_addUserAccount(userAccount2);
-
-		for (EntityField entityField : entityFields) {
-			Page<UserAccount> descPage =
-				userAccountResource.getUserAccountsPage(
-					null, String.format("id ne '%s'", _testUser.getUserId()),
-					Pagination.of(1, 2), entityField.getName() + ":desc");
-
-			assertEquals(
-				Arrays.asList(userAccount2, userAccount1),
-				(List<UserAccount>)descPage.getItems());
-		}
 	}
 
 	@Ignore
@@ -691,7 +641,6 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 					userAccountsJSONObject.getString("items"))));
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testPatchUserAccount() throws Exception {
@@ -738,7 +687,7 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 		_setUpTestUserAccountResource();
 
 		_assertProblem(
-			UserPasswordException.MustMatchCurrentPassword.class,
+			"The user account password is invalid",
 			() -> _regularUserAccountResource.patchUserAccountHttpResponse(
 				_regularUserAccount.getId(),
 				new UserAccount() {
@@ -827,6 +776,8 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 	@Override
 	@Test
 	public void testPostAccountUserAccountByEmailAddress() throws Exception {
+		super.testPostAccountUserAccountByEmailAddress();
+
 		User user = UserTestUtil.addUser();
 
 		Assert.assertNull(
@@ -912,10 +863,11 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 		}
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testPostUserAccount() throws Exception {
+		super.testPostUserAccount();
+
 		UserAccount userAccount = randomUserAccount();
 
 		String password = RandomTestUtil.randomString();
@@ -962,7 +914,7 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals(
-				CaptchaException.class.getName(), problem.getType());
+				"The captcha value is invalid", problem.getTitle());
 		}
 
 		_sapEntryLocalService.deleteSAPEntry(sapEntry);
@@ -989,7 +941,6 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 		Assert.assertNotNull(postUserAccount.getImage());
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testPutUserAccount() throws Exception {
@@ -1016,7 +967,7 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 		_regularUserAccount.setPassword(newPassword);
 
 		_assertProblem(
-			UserPasswordException.MustMatchCurrentPassword.class,
+			"The user account password is invalid",
 			() -> _regularUserAccountResource.putUserAccountHttpResponse(
 				_regularUserAccount.getId(), _regularUserAccount));
 
@@ -1045,7 +996,6 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 				}));
 	}
 
-	@Ignore
 	@Override
 	@Test
 	public void testPutUserAccountByExternalReferenceCode() throws Exception {
@@ -1073,7 +1023,7 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 		_regularUserAccount.setPassword(newPassword);
 
 		_assertProblem(
-			UserPasswordException.MustMatchCurrentPassword.class,
+			"The user account password is invalid",
 			() ->
 				_regularUserAccountResource.
 					putUserAccountByExternalReferenceCodeHttpResponse(
@@ -1155,7 +1105,7 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 	@Override
 	protected String[] getIgnoredEntityFieldNames() {
 		return new String[] {
-			"alternateName", "emailAddress", "lastLoginDate", "name"
+			"alternateName", "emailAddress", "lastLoginDate", "name", "status"
 		};
 	}
 
@@ -1184,10 +1134,50 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 
 	@Override
 	protected UserAccount
+			testDeleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_addUserAccount()
+		throws Exception {
+
+		return _addUserAccount(
+			testGroup.getGroupId(), _accountEntry, randomUserAccount());
+	}
+
+	@Override
+	protected String
+			testDeleteAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
+		throws Exception {
+
+		return _accountEntry.getExternalReferenceCode();
+	}
+
+	@Override
+	protected UserAccount testDeleteAccountUserAccount_addUserAccount()
+		throws Exception {
+
+		return _addUserAccount(
+			testGroup.getGroupId(), _accountEntry, randomUserAccount());
+	}
+
+	@Override
+	protected Long testDeleteAccountUserAccount_getAccountId()
+		throws Exception {
+
+		return _accountEntry.getAccountEntryId();
+	}
+
+	@Override
+	protected UserAccount
 			testDeleteAccountUserAccountByEmailAddress_addUserAccount()
 		throws Exception {
 
-		return _addUserAccount(testGroup.getGroupId(), randomUserAccount());
+		return _addUserAccount(
+			testGroup.getGroupId(), _accountEntry, randomUserAccount());
+	}
+
+	@Override
+	protected Long testDeleteAccountUserAccountByEmailAddress_getAccountId()
+		throws Exception {
+
+		return _accountEntry.getAccountEntryId();
 	}
 
 	@Override
@@ -1195,7 +1185,17 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 			testDeleteAccountUserAccountByExternalReferenceCodeByEmailAddress_addUserAccount()
 		throws Exception {
 
-		return _addUserAccount(testGroup.getGroupId(), randomUserAccount());
+		return _addUserAccount(
+			testGroup.getGroupId(), _accountEntry, randomUserAccount());
+	}
+
+	@Override
+	protected String
+			testDeleteAccountUserAccountByExternalReferenceCodeByEmailAddress_getExternalReferenceCode(
+				UserAccount userAccount)
+		throws Exception {
+
+		return _accountEntry.getExternalReferenceCode();
 	}
 
 	@Override
@@ -1221,6 +1221,36 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 		return userAccountResource.putUserAccountByExternalReferenceCode(
 			StringUtil.toLowerCase(RandomTestUtil.randomString()),
 			randomUserAccount());
+	}
+
+	@Override
+	protected UserAccount
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_addUserAccount()
+		throws Exception {
+
+		return _addAccountUserAccount(
+			_getAccountEntryId(), randomUserAccount());
+	}
+
+	@Override
+	protected String
+			testGetAccountByExternalReferenceCodeUserAccountByExternalReferenceCode_getAccountExternalReferenceCode()
+		throws Exception {
+
+		return _accountEntry.getExternalReferenceCode();
+	}
+
+	@Override
+	protected UserAccount testGetAccountUserAccount_addUserAccount()
+		throws Exception {
+
+		return _addAccountUserAccount(
+			_getAccountEntryId(), randomUserAccount());
+	}
+
+	@Override
+	protected Long testGetAccountUserAccount_getAccountId() throws Exception {
+		return _accountEntry.getAccountEntryId();
 	}
 
 	@Override
@@ -1375,11 +1405,29 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 			INACTIVE.toString();
 	}
 
+	@Override
 	protected UserAccount testGetUserAccountsPage_addUserAccount(
 			UserAccount userAccount)
 		throws Exception {
 
 		return _addUserAccount(testGroup.getGroupId(), userAccount);
+	}
+
+	@Override
+	protected UserAccount testGetUserGroupUsersPage_addUserAccount(
+			Long userGroupId, UserAccount userAccount)
+		throws Exception {
+
+		userAccount = _addUserAccount(testGroup.getGroupId(), userAccount);
+
+		_userLocalService.addUserGroupUser(userGroupId, userAccount.getId());
+
+		return userAccount;
+	}
+
+	@Override
+	protected Long testGetUserGroupUsersPage_getUserGroupId() throws Exception {
+		return _userGroup.getUserGroupId();
 	}
 
 	@Override
@@ -1403,6 +1451,15 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 		throws Exception {
 
 		return _addAccountUserAccount(_getAccountEntryId(), userAccount);
+	}
+
+	@Override
+	protected UserAccount
+			testPostAccountUserAccountByEmailAddress_addUserAccount(
+				UserAccount userAccount)
+		throws Exception {
+
+		return _addUserAccount(testGroup.getGroupId(), userAccount);
 	}
 
 	@Override
@@ -1447,6 +1504,18 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 			accountId, userAccount);
 	}
 
+	private UserAccount _addUserAccount(
+			long siteId, AccountEntry accountEntry, UserAccount userAccount)
+		throws Exception {
+
+		userAccount = _addUserAccount(siteId, userAccount);
+
+		_accountEntryUserRelLocalService.addAccountEntryUserRel(
+			accountEntry.getAccountEntryId(), userAccount.getId());
+
+		return userAccount;
+	}
+
 	private UserAccount _addUserAccount(long siteId, UserAccount userAccount)
 		throws Exception {
 
@@ -1470,7 +1539,7 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 	}
 
 	private <T extends Exception> void _assertProblem(
-			Class<T> exceptionClass,
+			String errorMessage,
 			UnsafeSupplier<HttpInvoker.HttpResponse, Exception>
 				httpResponseUnsafeSupplier)
 		throws Exception {
@@ -1485,12 +1554,13 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 				Response.Status.BAD_REQUEST.getStatusCode(),
 				httpResponse.getStatusCode());
 
-			if (exceptionClass != null) {
+			if (Validator.isNotNull(errorMessage)) {
 				JSONObject jsonObject = _jsonFactory.createJSONObject(
 					httpResponse.getContent());
 
-				Assert.assertEquals(
-					exceptionClass.getSimpleName(), jsonObject.get("type"));
+				String title = jsonObject.getString("title");
+
+				Assert.assertEquals(errorMessage, title);
 			}
 		}
 	}
@@ -1845,6 +1915,7 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 	private SAPEntryLocalService _sapEntryLocalService;
 
 	private User _testUser;
+	private UserGroup _userGroup;
 
 	@Inject
 	private UserGroupLocalService _userGroupLocalService;

@@ -203,11 +203,12 @@ function IndexActions({
 							text,
 							'text/html'
 						);
-						const backgroundTaskMapString = htmlDocument.documentElement
-							.querySelector(
-								`#${portletNamespace}classNameToBackgroundTaskMap`
-							)
-							?.innerHTML?.trim();
+						const backgroundTaskMapString =
+							htmlDocument.documentElement
+								.querySelector(
+									`#${portletNamespace}classNameToBackgroundTaskMap`
+								)
+								?.innerHTML?.trim();
 
 						const newBackgroundTaskMap =
 							JSON.parse(backgroundTaskMapString) || {};
@@ -366,17 +367,21 @@ function IndexActions({
 						elasticSearchDiskSpace.isLowOnDiskSpace
 							? Liferay.Language.get(
 									'reindex-elasticsearch-disk-space-warning'
-							  )
+								)
 							: data.id === 'spellCheckDictionaries'
-							? Liferay.Language.get(
-									'reindex-spell-check-dictionaries'
-							  )
-							: data.id === 'portal'
-							? Liferay.Language.get('reindex-search-indexes')
-							: Liferay.Util.sub(
-									Liferay.Language.get('reindex-type-x'),
-									'<' + data.displayName + '>'
-							  ),
+								? Liferay.Language.get(
+										'reindex-spell-check-dictionaries'
+									)
+								: data.id === 'portal'
+									? Liferay.Language.get(
+											'reindex-search-indexes'
+										)
+									: Liferay.Util.sub(
+											Liferay.Language.get(
+												'reindex-type-x'
+											),
+											'<' + data.displayName + '>'
+										),
 					size: 'md',
 					status,
 				},
@@ -515,7 +520,7 @@ function IndexActions({
 					</ClayLayout.Col>
 
 					<ClayLayout.Col size={8}>
-						<div className="sheet sheet-lg">
+						<div className="index-actions-sheet sheet sheet-lg">
 							<h2 className="sheet-title">
 								{Liferay.Language.get('actions')}
 							</h2>

@@ -35,6 +35,9 @@ import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
@@ -523,8 +526,25 @@ public class CommerceAccountHelperImpl implements CommerceAccountHelper {
 		CommerceChannel commerceChannel =
 			_commerceChannelLocalService.getCommerceChannel(commerceChannelId);
 
-		List<AccountEntry> accountEntries =
-			_accountEntryLocalService.getUserAccountEntries(
+		List<AccountEntry> accountEntries = null;
+
+		User currentUser = _userLocalService.fetchUser(userId);
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		if ((currentUser != null) &&
+			permissionChecker.hasPermission(
+				null, AccountEntry.class.getName(),
+				commerceChannel.getCompanyId(), ActionKeys.VIEW)) {
+
+			accountEntries = _accountEntryLocalService.getAccountEntries(
+				commerceChannel.getCompanyId(),
+				WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, null);
+		}
+		else {
+			accountEntries = _accountEntryLocalService.getUserAccountEntries(
 				userId, AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, null,
 				new String[] {
 					AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
@@ -533,6 +553,7 @@ public class CommerceAccountHelperImpl implements CommerceAccountHelper {
 					AccountConstants.ACCOUNT_ENTRY_TYPE_SUPPLIER
 				},
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+		}
 
 		for (AccountEntry accountEntry : accountEntries) {
 			if (_isChannelAccountEntry(

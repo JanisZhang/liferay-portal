@@ -1,4 +1,4 @@
-@component-name = "portal-database-upgrade-framework"
+@component-name = "portal-upgrades"
 definition {
 
 	property app.server.types = "tomcat";
@@ -21,7 +21,7 @@ definition {
 	@priority = 4
 	test AutoUpgradeFromLatest7413Update {
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:8080",
 			userEmailAddress = "test@liferay.com");
 
@@ -48,7 +48,7 @@ definition {
 		ContentPages.viewFragmentImage(
 			fragmentName = "image",
 			id = "image-square",
-			image = "tree-png");
+			image = "tree");
 
 		WebContentNavigator.openWebContentAdmin(
 			baseURL = "http://localhost:8080",
@@ -69,7 +69,7 @@ definition {
 		property timeout.explicit.wait = "120";
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:8080",
 			userEmailAddress = "test@liferay.com");
 
@@ -81,7 +81,7 @@ definition {
 			webId = "www.able.com");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "test@www.able.com");
 
@@ -100,7 +100,7 @@ definition {
 		Upgrade.restoreOriginalBundleAndUpgrade();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "test@www.able.com");
 
@@ -109,7 +109,7 @@ definition {
 		ContentPages.viewFragmentImage(
 			fragmentName = "image",
 			id = "image-square",
-			image = "tree-png");
+			image = "tree");
 
 		Navigator.openSpecificURL(url = "http://www.able.com:8080");
 
@@ -134,7 +134,7 @@ definition {
 		property liferay.online.properties = "true";
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com",
 			virtualHostsURL = "http://localhost:8080");
 
@@ -144,7 +144,7 @@ definition {
 			virtualHost = "www.able.com");
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 
@@ -161,7 +161,7 @@ definition {
 		Upgrade.restoreOriginalBundleAndUpgrade();
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 
@@ -170,7 +170,7 @@ definition {
 		ContentPages.viewFragmentImage(
 			fragmentName = "image",
 			id = "image-square",
-			image = "tree-png");
+			image = "tree");
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",

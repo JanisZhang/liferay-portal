@@ -67,9 +67,10 @@ const Timers = ({setContentName, setErrors}) => {
 							reassignments.assignmentType[0] ===
 							'resourceActions'
 						) {
-							reassignments.resourceAction = filteredTimerActions.map(
-								({resourceAction}) => resourceAction
-							);
+							reassignments.resourceAction =
+								filteredTimerActions.map(
+									({resourceAction}) => resourceAction
+								);
 						}
 						else if (
 							reassignments.assignmentType[0] === 'roleId'
@@ -89,28 +90,40 @@ const Timers = ({setContentName, setErrors}) => {
 								({script}) => script
 							)[0];
 
-							reassignments.scriptLanguage = filteredTimerActions.map(
-								({scriptLanguage}) => [
+							reassignments.scriptLanguage =
+								filteredTimerActions.map(({scriptLanguage}) => [
 									scriptLanguage || DEFAULT_LANGUAGE,
-								]
-							)[0];
+								])[0];
 						}
 						else if (
 							reassignments.assignmentType[0] === 'user' &&
 							Object.keys(filteredTimerActions[0]).includes(
-								'users'
+								'sectionData'
 							)
 						) {
-							reassignments.emailAddress = filteredTimerActions[0].users.map(
-								({emailAddress}) => emailAddress
-							);
+							reassignments.emailAddress =
+								filteredTimerActions[0].sectionData.map(
+									({emailAddress}) => emailAddress
+								);
 						}
 						else if (
-							reassignments.assignmentType[0] === 'roleType'
+							reassignments.assignmentType[0] === 'roleType' &&
+							Object.keys(filteredTimerActions[0]).includes(
+								'sectionData'
+							)
 						) {
-
-							// TO DO
-
+							reassignments.autoCreate =
+								filteredTimerActions[0].sectionData.map(
+									({autoCreate}) => autoCreate
+								);
+							reassignments.roleName =
+								filteredTimerActions[0].sectionData.map(
+									({roleName}) => roleName
+								);
+							reassignments.roleType =
+								filteredTimerActions[0].sectionData.map(
+									({roleType}) => roleType
+								);
 						}
 
 						return reassignments;
@@ -193,6 +206,12 @@ const Timers = ({setContentName, setErrors}) => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [timerSections]);
 
+	function filterSectionDataProperty(data, index, propertyName) {
+		return data.some((entry) => entry[0] === propertyName)
+			? data.filter((entry) => entry[0] === propertyName)[0][1][index]
+			: null;
+	}
+
 	const getAllTimerActions = (index) => {
 		const allTimerActions = {
 			reassignments: Object.entries(
@@ -239,11 +258,36 @@ const Timers = ({setContentName, setErrors}) => {
 					section.assignmentType === 'user' &&
 					data.some((entry) => entry[0] === 'emailAddress')
 				) {
-					section.users = data
+					section.sectionData = data
 						.find((entry) => entry[0] === 'emailAddress')[1]
 						.map((email, index) => ({
 							emailAddress: email,
 							identifier: `${Date.now()}-${index}`,
+						}));
+				}
+				else if (
+					section.assignmentType === 'roleType' &&
+					data.some((entry) => entry[0] === 'roleName')
+				) {
+					section.sectionData = data
+						.find((entry) => entry[0] === 'roleName')[1]
+						.map((_, index) => ({
+							autoCreate: filterSectionDataProperty(
+								data,
+								index,
+								'autoCreate'
+							),
+							identifier: `${Date.now()}-${index}`,
+							roleName: filterSectionDataProperty(
+								data,
+								index,
+								'roleName'
+							),
+							roleType: filterSectionDataProperty(
+								data,
+								index,
+								'roleType'
+							),
 						}));
 				}
 				else {

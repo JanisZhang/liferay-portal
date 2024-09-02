@@ -3,7 +3,7 @@ import AudienceReportStateRenderer from './AudienceReportStateRenderer';
 import HTMLBarChart from 'shared/components/HTMLBarChart';
 import InfoPopover, {IInfoPopoverProps} from 'shared/components/InfoPopover';
 import React from 'react';
-import {DocumentNode} from 'graphql';
+import {DocumentNode} from 'apollo-boost';
 import {fetchPolicyDefinition} from 'shared/util/graphql';
 import {formatData} from './util';
 import {getFilters, RawFilters} from 'shared/util/filter';
@@ -15,7 +15,9 @@ import {useQuery} from '@apollo/react-hooks';
 
 const AudienceReportTitle: React.FC<IInfoPopoverProps> = ({content, title}) => (
 	<div className='d-inline-flex gap'>
-		<h4 className='mb-3 text-center text-secondary title'>{title}</h4>
+		<div className='h4 mb-3 mr-2 text-center text-secondary title'>
+			{title}
+		</div>
 
 		{content && <InfoPopover content={content} title={title} />}
 	</div>

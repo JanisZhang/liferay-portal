@@ -4,8 +4,8 @@
  */
 
 import ClayChart from '@clayui/charts';
+import classNames from 'classnames';
 import {useEffect, useRef, useState} from 'react';
-import Form from '~/components/Form';
 import Loading from '~/components/Loading';
 import {useCaseResultsChart} from '~/hooks/useCaseResultsChart';
 
@@ -16,7 +16,7 @@ import {useTotalTestCases} from '../../../../hooks/data/useCaseResultGroupBy';
 import useIssuesFound from '../../../../hooks/data/useIssuesFound';
 import i18n from '../../../../i18n';
 import {TestrayBuild, TestrayTask} from '../../../../services/rest';
-import dayjs from '../../../../util/date';
+import {formatUTCDate} from '../../../../util/date';
 import {getDonutLegend} from '../../../../util/graph';
 import BuildAlertBar from './BuildAlertBar';
 
@@ -27,13 +27,7 @@ type BuildOverviewProps = {
 
 const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 	const totalTestCasesGroup = useTotalTestCases(testrayBuild);
-	const {
-		chart,
-		chartSelectData,
-		entity,
-		loading,
-		setEntity,
-	} = useCaseResultsChart({
+	const {chart, entity, loading} = useCaseResultsChart({
 		buildId: testrayBuild.id,
 	});
 
@@ -47,7 +41,6 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 
 	useEffect(() => {
 		setColumnChartLoad(false);
-
 		setTimeout(() => {
 			setColumnChartLoad(true);
 		}, 100);
@@ -66,17 +59,25 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 						},
 						{
 							title: i18n.translate('description'),
-							value: testrayBuild.description,
+
+							value: (
+								<div
+									dangerouslySetInnerHTML={{
+										__html: testrayBuild?.description,
+									}}
+								/>
+							),
 						},
 						{
 							title: i18n.translate('git-hash'),
-							value: testrayBuild.gitHash,
+							value:
+								testrayBuild?.gitHash === 'null' || ''
+									? '-'
+									: testrayBuild?.gitHash,
 						},
 						{
-							title: i18n.translate('create-date'),
-							value: dayjs(testrayBuild.dateCreated).format(
-								'lll'
-							),
+							title: i18n.translate('execution-date'),
+							value: formatUTCDate(testrayBuild.dueDate),
 						},
 						{
 							title: i18n.translate('created-by'),
@@ -84,11 +85,7 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 						},
 						{
 							title: i18n.translate('all-issues-found'),
-							value: issues.length ? (
-								<JiraLink issue={issues} />
-							) : (
-								'-'
-							),
+							value: <JiraLink issue={issues} />,
 						},
 					]}
 				/>
@@ -111,10 +108,10 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 					</dl>
 
 					<dl className="ml-3">
-						<dd>{i18n.sub('x-minutes', '0')}</dd>
+						<dd>{issues?.length}</dd>
 
 						<dd className="tr-small-heading">
-							{i18n.sub('time-x-total-issues', '0')}
+							{i18n.translate('total-issues')}
 						</dd>
 					</dl>
 				</div>
@@ -126,7 +123,12 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 				title={i18n.translate('total-test-cases')}
 			>
 				<div className="d-flex justify-content-between row">
-					<div className="align-items-center col-4 d-flex">
+					<div
+						className={classNames('align-items-center d-flex', {
+							'col': !entity,
+							'col-4': entity,
+						})}
+					>
 						{totalTestCasesGroup.ready && (
 							<div className="col-8">
 								<ClayChart
@@ -172,65 +174,85 @@ const BuildOverview: React.FC<BuildOverviewProps> = ({testrayBuild}) => {
 						</div>
 					</div>
 
-					<div className="col-8">
-						<Form.Select
-							className="col-2 ml-6"
-							defaultOption={false}
-							name="priority"
-							onChange={({target: {value}}) => setEntity(value)}
-							options={chartSelectData}
-							value={entity}
-						/>
+					{entity && (
+						<div className="col-8">
+							{loading ||
+								(!columnChartLoad && (
+									<Loading className="py-10" />
+								))}
 
-						{loading ||
-							(!columnChartLoad && <Loading className="py-10" />)}
-
-						{columnChartLoad && !loading && (
-							<ClayChart
-								axis={{
-									y: {
-										label: {
-											position: 'outer-middle',
-											text: i18n
-												.translate('tests')
-												.toUpperCase(),
+							{columnChartLoad && !loading && (
+								<ClayChart
+									axis={{
+										x: {
+											categories:
+												!!chart.testrayRunNumber
+													.length &&
+												chart.testrayRunNumber,
+											label: {
+												position: 'outer-center',
+												text: i18n
+													.translate(`${entity}`)
+													.toUpperCase(),
+											},
+											tick: {
+												show: chart.testrayRunNumber
+													.length
+													? true
+													: false,
+												text: {
+													show: chart.testrayRunNumber
+														.length
+														? true
+														: false,
+												},
+											},
+											type: 'category',
 										},
-									},
-								}}
-								bar={{
-									width: {
-										max: 30,
-									},
-								}}
-								data={{
-									colors: chart.colors,
-									columns: chart.columns,
-									groups: [chart.statuses],
-									type: 'bar',
-								}}
-								legend={{
-									inset: {
-										anchor: 'top-right',
-										step: 1,
-										x: 10,
-										y: -20,
-									},
-									position: 'inset',
-								}}
-								padding={{
-									bottom: 5,
-									top: 20,
-								}}
-								tooltip={{
-									format: {
-										title: (index: number) =>
-											chart.columnNames[index],
-									},
-									order: '',
-								}}
-							/>
-						)}
-					</div>
+										y: {
+											label: {
+												position: 'outer-middle',
+												text: i18n
+													.translate('tests')
+													.toUpperCase(),
+											},
+										},
+									}}
+									bar={{
+										width: {
+											max: 30,
+										},
+									}}
+									data={{
+										colors: chart.colors,
+										columns: chart.columns,
+										groups: [chart.statuses],
+										type: 'bar',
+									}}
+									legend={{
+										inset: {
+											anchor: 'top-right',
+											step: 1,
+											x: 10,
+											y: -20,
+										},
+										position: 'inset',
+									}}
+									padding={{
+										bottom: 5,
+										top: 20,
+									}}
+									tooltip={{
+										format: {
+											title: (index: number) =>
+												chart.columnNames[index],
+										},
+										order: '',
+									}}
+								/>
+							)}
+						</div>
+					)}
 				</div>
 			</Container>
 		</>

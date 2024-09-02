@@ -36,6 +36,7 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -96,7 +97,7 @@ public abstract class BaseEmailAddressResourceTestCase {
 		EmailAddressResource.Builder builder = EmailAddressResource.builder();
 
 		emailAddressResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -110,7 +111,32 @@ public abstract class BaseEmailAddressResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		EmailAddress emailAddress1 = randomEmailAddress();
+
+		String json = objectMapper.writeValueAsString(emailAddress1);
+
+		EmailAddress emailAddress2 = EmailAddressSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(emailAddress1, emailAddress2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		EmailAddress emailAddress = randomEmailAddress();
+
+		String json1 = objectMapper.writeValueAsString(emailAddress);
+		String json2 = EmailAddressSerDes.toJSON(emailAddress);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -125,40 +151,6 @@ public abstract class BaseEmailAddressResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		EmailAddress emailAddress1 = randomEmailAddress();
-
-		String json = objectMapper.writeValueAsString(emailAddress1);
-
-		EmailAddress emailAddress2 = EmailAddressSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(emailAddress1, emailAddress2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		EmailAddress emailAddress = randomEmailAddress();
-
-		String json1 = objectMapper.writeValueAsString(emailAddress);
-		String json2 = EmailAddressSerDes.toJSON(emailAddress);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -178,6 +170,178 @@ public abstract class BaseEmailAddressResourceTestCase {
 
 		Assert.assertEquals(regex, emailAddress.getEmailAddress());
 		Assert.assertEquals(regex, emailAddress.getType());
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeEmailAddressesPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetAccountByExternalReferenceCodeEmailAddressesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetAccountByExternalReferenceCodeEmailAddressesPage_getIrrelevantExternalReferenceCode();
+
+		Page<EmailAddress> page =
+			emailAddressResource.
+				getAccountByExternalReferenceCodeEmailAddressesPage(
+					externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			EmailAddress irrelevantEmailAddress =
+				testGetAccountByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantEmailAddress());
+
+			page =
+				emailAddressResource.
+					getAccountByExternalReferenceCodeEmailAddressesPage(
+						irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantEmailAddress, (List<EmailAddress>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeEmailAddressesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		EmailAddress emailAddress1 =
+			testGetAccountByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+				externalReferenceCode, randomEmailAddress());
+
+		EmailAddress emailAddress2 =
+			testGetAccountByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+				externalReferenceCode, randomEmailAddress());
+
+		page =
+			emailAddressResource.
+				getAccountByExternalReferenceCodeEmailAddressesPage(
+					externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(emailAddress1, (List<EmailAddress>)page.getItems());
+		assertContains(emailAddress2, (List<EmailAddress>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeEmailAddressesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeEmailAddressesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected EmailAddress
+			testGetAccountByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+				String externalReferenceCode, EmailAddress emailAddress)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeEmailAddressesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeEmailAddressesPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetAccountEmailAddressesPage() throws Exception {
+		Long accountId = testGetAccountEmailAddressesPage_getAccountId();
+		Long irrelevantAccountId =
+			testGetAccountEmailAddressesPage_getIrrelevantAccountId();
+
+		Page<EmailAddress> page =
+			emailAddressResource.getAccountEmailAddressesPage(accountId);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantAccountId != null) {
+			EmailAddress irrelevantEmailAddress =
+				testGetAccountEmailAddressesPage_addEmailAddress(
+					irrelevantAccountId, randomIrrelevantEmailAddress());
+
+			page = emailAddressResource.getAccountEmailAddressesPage(
+				irrelevantAccountId);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantEmailAddress, (List<EmailAddress>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountEmailAddressesPage_getExpectedActions(
+					irrelevantAccountId));
+		}
+
+		EmailAddress emailAddress1 =
+			testGetAccountEmailAddressesPage_addEmailAddress(
+				accountId, randomEmailAddress());
+
+		EmailAddress emailAddress2 =
+			testGetAccountEmailAddressesPage_addEmailAddress(
+				accountId, randomEmailAddress());
+
+		page = emailAddressResource.getAccountEmailAddressesPage(accountId);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(emailAddress1, (List<EmailAddress>)page.getItems());
+		assertContains(emailAddress2, (List<EmailAddress>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountEmailAddressesPage_getExpectedActions(accountId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountEmailAddressesPage_getExpectedActions(Long accountId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected EmailAddress testGetAccountEmailAddressesPage_addEmailAddress(
+			Long accountId, EmailAddress emailAddress)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountEmailAddressesPage_getAccountId()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountEmailAddressesPage_getIrrelevantAccountId()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -203,6 +367,8 @@ public abstract class BaseEmailAddressResourceTestCase {
 		EmailAddress emailAddress =
 			testGraphQLGetEmailAddress_addEmailAddress();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				emailAddress,
@@ -220,11 +386,36 @@ public abstract class BaseEmailAddressResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/emailAddress"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				emailAddress,
+				EmailAddressSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"emailAddress",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"emailAddressId",
+												emailAddress.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/emailAddress"))));
 	}
 
 	@Test
 	public void testGraphQLGetEmailAddressNotFound() throws Exception {
 		Long irrelevantEmailAddressId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -240,12 +431,127 @@ public abstract class BaseEmailAddressResourceTestCase {
 						getGraphQLFields())),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"emailAddress",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"emailAddressId",
+										irrelevantEmailAddressId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
 	}
 
 	protected EmailAddress testGraphQLGetEmailAddress_addEmailAddress()
 		throws Exception {
 
 		return testGraphQLEmailAddress_addEmailAddress();
+	}
+
+	@Test
+	public void testGetOrganizationByExternalReferenceCodeEmailAddressesPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetOrganizationByExternalReferenceCodeEmailAddressesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetOrganizationByExternalReferenceCodeEmailAddressesPage_getIrrelevantExternalReferenceCode();
+
+		Page<EmailAddress> page =
+			emailAddressResource.
+				getOrganizationByExternalReferenceCodeEmailAddressesPage(
+					externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			EmailAddress irrelevantEmailAddress =
+				testGetOrganizationByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantEmailAddress());
+
+			page =
+				emailAddressResource.
+					getOrganizationByExternalReferenceCodeEmailAddressesPage(
+						irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantEmailAddress, (List<EmailAddress>)page.getItems());
+			assertValid(
+				page,
+				testGetOrganizationByExternalReferenceCodeEmailAddressesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		EmailAddress emailAddress1 =
+			testGetOrganizationByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+				externalReferenceCode, randomEmailAddress());
+
+		EmailAddress emailAddress2 =
+			testGetOrganizationByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+				externalReferenceCode, randomEmailAddress());
+
+		page =
+			emailAddressResource.
+				getOrganizationByExternalReferenceCodeEmailAddressesPage(
+					externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(emailAddress1, (List<EmailAddress>)page.getItems());
+		assertContains(emailAddress2, (List<EmailAddress>)page.getItems());
+		assertValid(
+			page,
+			testGetOrganizationByExternalReferenceCodeEmailAddressesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrganizationByExternalReferenceCodeEmailAddressesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected EmailAddress
+			testGetOrganizationByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+				String externalReferenceCode, EmailAddress emailAddress)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrganizationByExternalReferenceCodeEmailAddressesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrganizationByExternalReferenceCodeEmailAddressesPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -328,6 +634,100 @@ public abstract class BaseEmailAddressResourceTestCase {
 
 	protected String
 			testGetOrganizationEmailAddressesPage_getIrrelevantOrganizationId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetUserAccountByExternalReferenceCodeEmailAddressesPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetUserAccountByExternalReferenceCodeEmailAddressesPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetUserAccountByExternalReferenceCodeEmailAddressesPage_getIrrelevantExternalReferenceCode();
+
+		Page<EmailAddress> page =
+			emailAddressResource.
+				getUserAccountByExternalReferenceCodeEmailAddressesPage(
+					externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			EmailAddress irrelevantEmailAddress =
+				testGetUserAccountByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantEmailAddress());
+
+			page =
+				emailAddressResource.
+					getUserAccountByExternalReferenceCodeEmailAddressesPage(
+						irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantEmailAddress, (List<EmailAddress>)page.getItems());
+			assertValid(
+				page,
+				testGetUserAccountByExternalReferenceCodeEmailAddressesPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		EmailAddress emailAddress1 =
+			testGetUserAccountByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+				externalReferenceCode, randomEmailAddress());
+
+		EmailAddress emailAddress2 =
+			testGetUserAccountByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+				externalReferenceCode, randomEmailAddress());
+
+		page =
+			emailAddressResource.
+				getUserAccountByExternalReferenceCodeEmailAddressesPage(
+					externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(emailAddress1, (List<EmailAddress>)page.getItems());
+		assertContains(emailAddress2, (List<EmailAddress>)page.getItems());
+		assertValid(
+			page,
+			testGetUserAccountByExternalReferenceCodeEmailAddressesPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetUserAccountByExternalReferenceCodeEmailAddressesPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected EmailAddress
+			testGetUserAccountByExternalReferenceCodeEmailAddressesPage_addEmailAddress(
+				String externalReferenceCode, EmailAddress emailAddress)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetUserAccountByExternalReferenceCodeEmailAddressesPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetUserAccountByExternalReferenceCodeEmailAddressesPage_getIrrelevantExternalReferenceCode()
 		throws Exception {
 
 		return null;
@@ -912,7 +1312,8 @@ public abstract class BaseEmailAddressResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -972,12 +1373,12 @@ public abstract class BaseEmailAddressResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -986,11 +1387,16 @@ public abstract class BaseEmailAddressResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1022,6 +1428,24 @@ public abstract class BaseEmailAddressResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1043,16 +1467,6 @@ public abstract class BaseEmailAddressResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

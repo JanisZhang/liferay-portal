@@ -84,7 +84,6 @@ public class SamlIdpSpConnectionLocalServiceImpl
 			attributesNamespaceEnabled);
 		samlIdpSpConnection.setEnabled(enabled);
 		samlIdpSpConnection.setEncryptionForced(encryptionForced);
-		samlIdpSpConnection.setExpandoBridgeAttributes(serviceContext);
 		samlIdpSpConnection.setMetadataUpdatedDate(date);
 
 		if ((metadataXmlInputStream == null) &&
@@ -115,6 +114,7 @@ public class SamlIdpSpConnectionLocalServiceImpl
 		samlIdpSpConnection.setNameIdAttribute(nameIdAttribute);
 		samlIdpSpConnection.setNameIdFormat(nameIdFormat);
 		samlIdpSpConnection.setSamlSpEntityId(samlSpEntityId);
+		samlIdpSpConnection.setExpandoBridgeAttributes(serviceContext);
 
 		return samlIdpSpConnectionPersistence.update(samlIdpSpConnection);
 	}
@@ -242,7 +242,6 @@ public class SamlIdpSpConnectionLocalServiceImpl
 			attributesNamespaceEnabled);
 		samlIdpSpConnection.setEnabled(enabled);
 		samlIdpSpConnection.setEncryptionForced(encryptionForced);
-		samlIdpSpConnection.setExpandoBridgeAttributes(serviceContext);
 		samlIdpSpConnection.setMetadataUrl(StringPool.BLANK);
 
 		if ((metadataXmlInputStream == null) &&
@@ -278,6 +277,7 @@ public class SamlIdpSpConnectionLocalServiceImpl
 		samlIdpSpConnection.setNameIdAttribute(nameIdAttribute);
 		samlIdpSpConnection.setNameIdFormat(nameIdFormat);
 		samlIdpSpConnection.setSamlSpEntityId(samlSpEntityId);
+		samlIdpSpConnection.setExpandoBridgeAttributes(serviceContext);
 
 		return samlIdpSpConnectionPersistence.update(samlIdpSpConnection);
 	}

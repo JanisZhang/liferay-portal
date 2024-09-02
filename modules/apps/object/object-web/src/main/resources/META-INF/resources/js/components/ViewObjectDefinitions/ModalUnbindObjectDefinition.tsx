@@ -6,11 +6,7 @@
 import ClayButton from '@clayui/button';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayModal, {useModal} from '@clayui/modal';
-import {
-	API,
-	getLocalizableLabel,
-	openToast,
-} from '@liferay/object-js-components-web';
+import {API, openToast, stringUtils} from '@liferay/object-js-components-web';
 import {createResourceURL, fetch, sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
@@ -27,9 +23,8 @@ export function ModalUnbindObjectDefinition({
 	onVisibilityChange,
 	selectedObjectDefinitionToUnbind,
 }: ModalUnbindObjectDefinitionProps) {
-	const [rootObjectDefinition, setRootObjectDefinition] = useState<
-		ObjectDefinition
-	>();
+	const [rootObjectDefinition, setRootObjectDefinition] =
+		useState<ObjectDefinition>();
 	const [loading, setLoading] = useState(false);
 
 	const {observer, onClose} = useModal({
@@ -71,9 +66,10 @@ export function ModalUnbindObjectDefinition({
 			else if (
 				selectedObjectDefinitionToUnbind?.rootObjectDefinitionExternalReferenceCode
 			) {
-				const rootObjectDefinitionResponse = await API.getObjectDefinitionByExternalReferenceCode(
-					selectedObjectDefinitionToUnbind?.rootObjectDefinitionExternalReferenceCode
-				);
+				const rootObjectDefinitionResponse =
+					await API.getObjectDefinitionByExternalReferenceCode(
+						selectedObjectDefinitionToUnbind?.rootObjectDefinitionExternalReferenceCode
+					);
 
 				setRootObjectDefinition(rootObjectDefinitionResponse);
 			}
@@ -82,6 +78,7 @@ export function ModalUnbindObjectDefinition({
 		};
 
 		makeFetch();
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -103,30 +100,30 @@ export function ModalUnbindObjectDefinition({
 										'please-confirm-before-unbinding-the-root-x'
 									),
 									[
-										getLocalizableLabel(
+										stringUtils.getLocalizableLabel(
 											rootObjectDefinition?.defaultLanguageId as Liferay.Language.Locale,
 											rootObjectDefinition?.label,
 											rootObjectDefinition?.name
 										),
 									]
-							  )
+								)
 							: sub(
 									Liferay.Language.get(
 										'please-confirm-before-unbinding-the-object-x-from-the-root-x'
 									),
 									[
-										getLocalizableLabel(
+										stringUtils.getLocalizableLabel(
 											selectedObjectDefinitionToUnbind?.defaultLanguageId as Liferay.Language.Locale,
 											selectedObjectDefinitionToUnbind?.label,
 											selectedObjectDefinitionToUnbind?.name
 										),
-										getLocalizableLabel(
+										stringUtils.getLocalizableLabel(
 											rootObjectDefinition?.defaultLanguageId as Liferay.Language.Locale,
 											rootObjectDefinition?.label,
 											rootObjectDefinition?.name
 										),
 									]
-							  )}
+								)}
 					</span>
 				)}
 			</ClayModal.Body>

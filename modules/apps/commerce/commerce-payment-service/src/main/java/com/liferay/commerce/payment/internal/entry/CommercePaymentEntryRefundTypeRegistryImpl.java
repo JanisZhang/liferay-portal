@@ -10,16 +10,17 @@ import com.liferay.commerce.payment.entry.CommercePaymentEntryRefundTypeRegistry
 import com.liferay.commerce.payment.internal.entry.comparator.CommercePaymentEntryRefundTypeOrderComparator;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.petra.lang.HashUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -28,6 +29,7 @@ import org.osgi.service.component.annotations.Deactivate;
 
 /**
  * @author Alessio Antonio Rendina
+ * @author Crescenzo Rega
  */
 @Component(service = CommercePaymentEntryRefundTypeRegistry.class)
 public class CommercePaymentEntryRefundTypeRegistryImpl
@@ -35,16 +37,14 @@ public class CommercePaymentEntryRefundTypeRegistryImpl
 
 	@Override
 	public CommercePaymentEntryRefundType getCommercePaymentEntryRefundType(
-		String key) {
+		long companyId, String key) {
 
-		if (Validator.isNull(key) ||
-			!FeatureFlagManagerUtil.isEnabled("COMMERCE-12754")) {
-
+		if (Validator.isNull(key)) {
 			return null;
 		}
 
 		CommercePaymentEntryRefundType commercePaymentEntryRefundType =
-			_serviceTrackerMap.getService(key);
+			_serviceTrackerMap.getService(new ScopedKey(companyId, key));
 
 		if (commercePaymentEntryRefundType == null) {
 			if (_log.isDebugEnabled()) {
@@ -59,27 +59,20 @@ public class CommercePaymentEntryRefundTypeRegistryImpl
 
 	@Override
 	public List<CommercePaymentEntryRefundType>
-		getCommercePaymentEntryRefundTypes() {
-
-		if (!FeatureFlagManagerUtil.isEnabled("COMMERCE-12754")) {
-			return Collections.emptyList();
-		}
+		getCommercePaymentEntryRefundTypes(long companyId) {
 
 		List<CommercePaymentEntryRefundType> commercePaymentEntryRefundTypes =
 			new ArrayList<>();
 
-		try {
-			commercePaymentEntryRefundTypes = ListUtil.fromCollection(
-				_serviceTrackerMap.values());
-
-			commercePaymentEntryRefundTypes.sort(
-				_commercePaymentEntryRefundTypeOrderComparator);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
+		for (ScopedKey scopedKey : _serviceTrackerMap.keySet()) {
+			if (companyId == scopedKey._companyId) {
+				commercePaymentEntryRefundTypes.add(
+					_serviceTrackerMap.getService(scopedKey));
 			}
 		}
+
+		commercePaymentEntryRefundTypes.sort(
+			_commercePaymentEntryRefundTypeOrderComparator);
 
 		return Collections.unmodifiableList(commercePaymentEntryRefundTypes);
 	}
@@ -87,20 +80,13 @@ public class CommercePaymentEntryRefundTypeRegistryImpl
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
-			bundleContext, CommercePaymentEntryRefundType.class, null,
-			(serviceReference, emitter) -> {
-				CommercePaymentEntryRefundType commercePaymentEntryRefundType =
-					bundleContext.getService(serviceReference);
-
-				try {
-					if (commercePaymentEntryRefundType.getKey() != null) {
-						emitter.emit(commercePaymentEntryRefundType.getKey());
-					}
-				}
-				finally {
-					bundleContext.ungetService(serviceReference);
-				}
-			});
+			bundleContext, CommercePaymentEntryRefundType.class,
+			"(enabled=true)",
+			(serviceReference, emitter) -> emitter.emit(
+				new ScopedKey(
+					GetterUtil.getLong(
+						serviceReference.getProperty("companyId")),
+					String.valueOf(serviceReference.getProperty("key")))));
 	}
 
 	@Deactivate
@@ -114,7 +100,47 @@ public class CommercePaymentEntryRefundTypeRegistryImpl
 	private final Comparator<CommercePaymentEntryRefundType>
 		_commercePaymentEntryRefundTypeOrderComparator =
 			new CommercePaymentEntryRefundTypeOrderComparator();
-	private ServiceTrackerMap<String, CommercePaymentEntryRefundType>
+	private ServiceTrackerMap<ScopedKey, CommercePaymentEntryRefundType>
 		_serviceTrackerMap;
+
+	private static class ScopedKey {
+
+		@Override
+		public boolean equals(Object object) {
+			if (this == object) {
+				return true;
+			}
+
+			if (!(object instanceof ScopedKey)) {
+				return false;
+			}
+
+			ScopedKey scopedKey = (ScopedKey)object;
+
+			if ((_companyId == scopedKey._companyId) &&
+				Objects.equals(_key, scopedKey._key)) {
+
+				return true;
+			}
+
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			int hash = HashUtil.hash(0, _companyId);
+
+			return HashUtil.hash(hash, _key);
+		}
+
+		private ScopedKey(long companyId, String key) {
+			_companyId = companyId;
+			_key = key;
+		}
+
+		private final long _companyId;
+		private final String _key;
+
+	}
 
 }

@@ -137,7 +137,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -246,11 +245,15 @@ public class ContentManager {
 				continue;
 			}
 
+			String className = formStyledLayoutStructureItem.getClassName();
+
+			if (Validator.isNull(className)) {
+				continue;
+			}
+
 			InfoPermissionProvider<?> infoPermissionProvider =
 				_infoItemServiceRegistry.getFirstInfoItemService(
-					InfoPermissionProvider.class,
-					_portal.getClassName(
-						formStyledLayoutStructureItem.getClassNameId()));
+					InfoPermissionProvider.class, className);
 
 			if ((infoPermissionProvider == null) ||
 				(infoPermissionProvider.hasViewPermission(
@@ -369,16 +372,6 @@ public class ContentManager {
 		}
 
 		return restrictedItemIds;
-	}
-
-	@Activate
-	protected void activate() {
-		_collectionStyledLayoutStructureItemClassNameId =
-			_portal.getClassNameId(
-				CollectionStyledLayoutStructureItem.class.getName());
-		_fragmentEntryLinkClassNameId = _portal.getClassNameId(
-			FragmentEntryLink.class.getName());
-		_portletClassNameId = _portal.getClassNameId(Portlet.class.getName());
 	}
 
 	private LiferayRenderRequest _createRenderRequest(
@@ -1052,7 +1045,7 @@ public class ContentManager {
 			boolean restricted = false;
 
 			if (layoutClassedModelUsage.getContainerType() ==
-					_fragmentEntryLinkClassNameId) {
+					_portal.getClassNameId(FragmentEntryLink.class.getName())) {
 
 				FragmentEntryLink fragmentEntryLink =
 					_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
@@ -1089,7 +1082,7 @@ public class ContentManager {
 			}
 
 			if ((layoutClassedModelUsage.getContainerType() ==
-					_portletClassNameId) &&
+					_portal.getClassNameId(Portlet.class.getName())) &&
 				(layoutStructure.isPortletMarkedForDeletion(
 					layoutClassedModelUsage.getContainerKey()) ||
 				 restrictedPortletIds.contains(
@@ -1287,7 +1280,9 @@ public class ContentManager {
 			"isRestricted",
 			() -> {
 				if ((assetListEntryUsage.getContainerType() ==
-						_collectionStyledLayoutStructureItemClassNameId) &&
+						_portal.getClassNameId(
+							CollectionStyledLayoutStructureItem.class.
+								getName())) &&
 					restrictedItemIds.contains(
 						assetListEntryUsage.getContainerKey())) {
 
@@ -1817,8 +1812,8 @@ public class ContentManager {
 		AssetListEntryUsage assetListEntryUsage, List<String> hiddenItemIds,
 		LayoutStructure layoutStructure) {
 
-		if (assetListEntryUsage.getContainerType() !=
-				_collectionStyledLayoutStructureItemClassNameId) {
+		if (assetListEntryUsage.getContainerType() != _portal.getClassNameId(
+				CollectionStyledLayoutStructureItem.class.getName())) {
 
 			return false;
 		}
@@ -1848,8 +1843,8 @@ public class ContentManager {
 		AssetListEntryUsage assetListEntryUsage, List<String> hiddenItemIds,
 		LayoutStructure layoutStructure) {
 
-		if (assetListEntryUsage.getContainerType() !=
-				_fragmentEntryLinkClassNameId) {
+		if (assetListEntryUsage.getContainerType() != _portal.getClassNameId(
+				FragmentEntryLink.class.getName())) {
 
 			return false;
 		}
@@ -1907,12 +1902,8 @@ public class ContentManager {
 	@Reference
 	private AssetTagLocalService _assetTagLocalService;
 
-	private long _collectionStyledLayoutStructureItemClassNameId;
-
 	@Reference
 	private DLURLHelper _dlURLHelper;
-
-	private long _fragmentEntryLinkClassNameId;
 
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
@@ -1959,8 +1950,6 @@ public class ContentManager {
 
 	@Reference
 	private Portal _portal;
-
-	private long _portletClassNameId;
 
 	@Reference
 	private PortletLocalService _portletLocalService;

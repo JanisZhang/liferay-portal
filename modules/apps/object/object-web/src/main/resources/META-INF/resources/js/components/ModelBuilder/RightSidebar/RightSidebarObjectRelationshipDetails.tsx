@@ -16,8 +16,8 @@ import {
 	API,
 	Input,
 	SingleSelect,
-	getLocalizableLabel,
 	openToast,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import {InputLocalized} from 'frontend-js-components-web';
 
@@ -48,12 +48,10 @@ export function RightSidebarObjectRelationshipDetails({
 		},
 		dispatch,
 	] = useObjectFolderContext();
-	const [objectDefinition1, setObjectDefinition1] = useState<
-		Partial<ObjectDefinition>
-	>();
-	const [objectDefinition2, setObjectDefinition2] = useState<
-		Partial<ObjectDefinition>
-	>();
+	const [objectDefinition1, setObjectDefinition1] =
+		useState<Partial<ObjectDefinition>>();
+	const [objectDefinition2, setObjectDefinition2] =
+		useState<Partial<ObjectDefinition>>();
 	const [
 		objectRelationshipParameterRequired,
 		setObjectRelationshipParameterRequired,
@@ -68,27 +66,24 @@ export function RightSidebarObjectRelationshipDetails({
 		deleteObjectRelationship: false,
 	});
 
-	const {
-		errors,
-		handleValidate,
-		setValues,
-		values,
-	} = useObjectRelationshipForm({
-		initialValues: {
-			id: 0,
-			label: {},
-			name: '',
-		},
-		onSubmit: () => {},
-		parameterRequired: false,
-	});
+	const {errors, handleValidate, setValues, values} =
+		useObjectRelationshipForm({
+			initialValues: {
+				id: 0,
+				label: {},
+				name: '',
+			},
+			onSubmit: () => {},
+			parameterRequired: false,
+		});
 
 	useEffect(() => {
 		const makeFetch = async () => {
 			if (selectedObjectRelationship) {
-				const selectedObjectRelationshipResponse = (await API.getObjectRelationship(
-					selectedObjectRelationship.id
-				)) as ObjectRelationship;
+				const selectedObjectRelationshipResponse =
+					(await API.getObjectRelationship(
+						selectedObjectRelationship.id
+					)) as ObjectRelationship;
 
 				setValues(selectedObjectRelationshipResponse);
 
@@ -110,13 +105,11 @@ export function RightSidebarObjectRelationshipDetails({
 						'/object_definitions/get_object_relationship_info',
 				}).href;
 
-				const {
-					parameterRequired,
-					restContextPath,
-				} = await API.fetchJSON<{
-					parameterRequired: boolean;
-					restContextPath: string;
-				}>(url);
+				const {parameterRequired, restContextPath} =
+					await API.fetchJSON<{
+						parameterRequired: boolean;
+						restContextPath: string;
+					}>(url);
 
 				setObjectRelationshipParameterRequired(parameterRequired);
 				setObjectRelationshipRestContextPath(restContextPath ?? '');
@@ -130,9 +123,9 @@ export function RightSidebarObjectRelationshipDetails({
 
 				if (nodeObjectDefinition1) {
 					const readOnly =
-						!(nodeObjectDefinition1 as Node<
-							ObjectDefinitionNodeData
-						>).data?.hasObjectDefinitionUpdateResourcePermission ||
+						!(
+							nodeObjectDefinition1 as Node<ObjectDefinitionNodeData>
+						).data?.hasObjectDefinitionUpdateResourcePermission ||
 						selectedObjectRelationshipResponse.reverse;
 
 					setReadOnly(readOnly);
@@ -141,6 +134,7 @@ export function RightSidebarObjectRelationshipDetails({
 		};
 
 		makeFetch();
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedObjectRelationship?.id]);
 
@@ -176,16 +170,16 @@ export function RightSidebarObjectRelationshipDetails({
 				if (isEdge(currentElement)) {
 					return {
 						...currentElement,
-						data: (currentElement as Edge<
-							ObjectRelationshipEdgeData[]
-						>).data?.map((objectRelationshipEdgeData) => {
+						data: (
+							currentElement as Edge<ObjectRelationshipEdgeData[]>
+						).data?.map((objectRelationshipEdgeData) => {
 							if (
 								objectRelationshipEdgeData.id ===
 								objectRelationship?.id
 							) {
 								return {
 									...objectRelationshipEdgeData,
-									label: getLocalizableLabel(
+									label: stringUtils.getLocalizableLabel(
 										defaultLanguageId,
 										objectRelationship.label,
 										objectRelationship.name
@@ -254,7 +248,6 @@ export function RightSidebarObjectRelationshipDetails({
 
 			<div className="lfr-objects__model-builder-right-sidebar-object-relationship-content">
 				<InputLocalized
-					disableFlag={readOnly}
 					disabled={readOnly}
 					error={errors.label}
 					label={Liferay.Language.get('label')}

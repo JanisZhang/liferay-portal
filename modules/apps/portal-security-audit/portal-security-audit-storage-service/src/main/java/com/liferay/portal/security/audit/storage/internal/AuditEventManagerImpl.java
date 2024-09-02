@@ -6,15 +6,22 @@
 package com.liferay.portal.security.audit.storage.internal;
 
 import com.liferay.portal.kernel.audit.AuditMessage;
+import com.liferay.portal.kernel.db.partition.DBPartition;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.security.audit.AuditEvent;
 import com.liferay.portal.security.audit.AuditEventManager;
 import com.liferay.portal.security.audit.storage.service.AuditEventLocalService;
+import com.liferay.portal.util.PortalInstances;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -29,6 +36,41 @@ public class AuditEventManagerImpl implements AuditEventManager {
 	public AuditEvent addAuditEvent(AuditMessage auditMessage) {
 		return _createAuditEvent(
 			_auditEventLocalService.addAuditEvent(auditMessage));
+	}
+
+	@Override
+	public void addAuditEvents(List<AuditMessage> auditMessages) {
+		if (DBPartition.isPartitionEnabled()) {
+			Map<Long, List<AuditMessage>> auditMessagesMap = new HashMap<>();
+
+			for (AuditMessage auditMessage : auditMessages) {
+				List<AuditMessage> companyAuditMessages =
+					auditMessagesMap.computeIfAbsent(
+						auditMessage.getCompanyId(), key -> new ArrayList<>());
+
+				companyAuditMessages.add(auditMessage);
+			}
+
+			for (Map.Entry<Long, List<AuditMessage>> entry :
+					auditMessagesMap.entrySet()) {
+
+				if (PortalInstances.isCompanyInDeletionProcess(
+						entry.getKey()) ||
+					!ArrayUtil.contains(
+						PortalInstancePool.getCompanyIds(), entry.getKey())) {
+
+					continue;
+				}
+
+				_companyLocalService.forEachCompanyId(
+					companyId -> _auditEventLocalService.addAuditEvents(
+						entry.getValue()),
+					new long[] {entry.getKey()});
+			}
+		}
+		else {
+			_auditEventLocalService.addAuditEvents(auditMessages);
+		}
 	}
 
 	@Override
@@ -115,5 +157,8 @@ public class AuditEventManagerImpl implements AuditEventManager {
 
 	@Reference
 	private AuditEventLocalService _auditEventLocalService;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 }

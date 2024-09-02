@@ -244,7 +244,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 		if (fragmentCollection == null) {
 			fragmentCollection =
 				_fragmentCollectionService.addFragmentCollection(
-					groupId, fragmentCollectionKey, name, description,
+					null, groupId, fragmentCollectionKey, name, description,
 					ServiceContextThreadLocal.getServiceContext());
 		}
 		else if (Objects.equals(
@@ -259,7 +259,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 
 			fragmentCollection =
 				_fragmentCollectionService.addFragmentCollection(
-					groupId,
+					null, groupId,
 					_fragmentCollectionLocalService.
 						generateFragmentCollectionKey(
 							groupId, fragmentCollectionKey),
@@ -344,9 +344,9 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 		try {
 			if (fragmentEntry == null) {
 				fragmentEntry = _fragmentEntryService.addFragmentEntry(
-					groupId, fragmentCollectionId, fragmentEntryKey, name, css,
-					html, js, cacheable, configuration, icon, 0, readOnly, type,
-					typeOptions, status,
+					null, groupId, fragmentCollectionId, fragmentEntryKey, name,
+					css, html, js, cacheable, configuration, icon, 0, readOnly,
+					type, typeOptions, status,
 					ServiceContextThreadLocal.getServiceContext());
 
 				_fragmentEntryLocalService.updateFragmentEntry(
@@ -361,7 +361,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 						fragmentsImportStrategy)) {
 
 				fragmentEntry = _fragmentEntryService.addFragmentEntry(
-					groupId, fragmentCollectionId,
+					null, groupId, fragmentCollectionId,
 					_fragmentEntryLocalService.generateFragmentEntryKey(
 						groupId, fragmentEntryKey),
 					_fragmentEntryLocalService.getUniqueFragmentEntryName(
@@ -553,7 +553,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 		}
 
 		return _fragmentCollectionService.addFragmentCollection(
-			groupId, _FRAGMENT_COLLECTION_KEY_DEFAULT,
+			null, groupId, _FRAGMENT_COLLECTION_KEY_DEFAULT,
 			_language.get(
 				_portal.getSiteDefaultLocale(groupId),
 				_FRAGMENT_COLLECTION_KEY_DEFAULT),
@@ -929,8 +929,8 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 				if (fragmentComposition == null) {
 					fragmentComposition =
 						_fragmentCompositionService.addFragmentComposition(
-							groupId, fragmentCollectionId, entry.getKey(), name,
-							description, definitionData, 0L,
+							null, groupId, fragmentCollectionId, entry.getKey(),
+							name, description, definitionData, 0L,
 							WorkflowConstants.STATUS_APPROVED,
 							ServiceContextThreadLocal.getServiceContext());
 				}
@@ -940,7 +940,7 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 
 					fragmentComposition =
 						_fragmentCompositionService.addFragmentComposition(
-							groupId, fragmentCollectionId,
+							null, groupId, fragmentCollectionId,
 							_fragmentCompositionLocalService.
 								generateFragmentCompositionKey(
 									groupId, entry.getKey()),

@@ -60,6 +60,11 @@ public interface AddressService extends BaseService {
 	public List<Address> getAddresses(String className, long classPK)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Address> getListTypeAddresses(
+			String className, long classPK, long[] listTypeIds)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -72,6 +77,14 @@ public interface AddressService extends BaseService {
 			String street2, String street3, String city, String zip,
 			long regionId, long countryId, long listTypeId, boolean mailing,
 			boolean primary, String phoneNumber)
+		throws PortalException;
+
+	public Address updateExternalReferenceCode(
+			Address address, String externalReferenceCode)
+		throws PortalException;
+
+	public Address updateExternalReferenceCode(
+			long addressId, String externalReferenceCode)
 		throws PortalException;
 
 }

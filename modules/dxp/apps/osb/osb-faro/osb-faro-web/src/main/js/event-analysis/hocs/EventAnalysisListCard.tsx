@@ -35,7 +35,8 @@ import {Routes, toRoute} from 'shared/util/router';
 import {Sizes} from 'shared/util/constants';
 import {useMutation, useQuery} from '@apollo/react-hooks';
 import {useParams} from 'react-router-dom';
-import {useQueryPagination, useQueryRangeSelectors} from 'shared/hooks';
+import {useQueryPagination} from 'shared/hooks/useQueryPagination';
+import {useQueryRangeSelectors} from 'shared/hooks/useQueryRangeSelectors';
 import {
 	useSelectionContext,
 	withSelectionProvider
@@ -90,7 +91,7 @@ const EventAnalysisListCard: React.FC<PropsFromRedux> = ({
 
 		const message = (
 			<div>
-				<h4 className='text-secondary'>
+				<div className='h4 text-secondary'>
 					{getPluralMessage(
 						Liferay.Language.get(
 							'are-you-sure-you-want-to-delete-this-analysis'
@@ -100,7 +101,7 @@ const EventAnalysisListCard: React.FC<PropsFromRedux> = ({
 						),
 						eventAnalysisIds.length
 					)}
-				</h4>
+				</div>
 
 				<p>
 					{getPluralMessage(

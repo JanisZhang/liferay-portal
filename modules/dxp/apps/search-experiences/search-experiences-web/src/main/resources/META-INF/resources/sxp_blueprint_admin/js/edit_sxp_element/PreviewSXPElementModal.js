@@ -77,9 +77,8 @@ export default function PreviewSXPElementModal({
 			.catch(() => {
 				setPreview({
 					sxpElementJSONObject,
-					uiConfigurationValues: getUIConfigurationValues(
-						sxpElementJSONObject
-					),
+					uiConfigurationValues:
+						getUIConfigurationValues(sxpElementJSONObject),
 				});
 			})
 			.finally(() => {
@@ -156,7 +155,7 @@ export default function PreviewSXPElementModal({
 								description={Liferay.Language.get(
 									'json-may-be-incorrect-and-we-were-unable-to-load-a-preview-of-the-configuration'
 								)}
-								imgSrc="/o/admin-theme/images/states/empty_state.gif"
+								imgSrc="/o/admin-theme/images/states/empty_state.svg"
 								title={Liferay.Language.get(
 									'unable-to-load-preview'
 								)}

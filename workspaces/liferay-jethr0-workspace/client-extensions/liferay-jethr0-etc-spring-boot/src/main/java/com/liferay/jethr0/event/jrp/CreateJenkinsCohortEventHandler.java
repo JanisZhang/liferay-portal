@@ -5,12 +5,18 @@
 
 package com.liferay.jethr0.event.jrp;
 
-import com.liferay.jethr0.event.EventHandlerContext;
 import com.liferay.jethr0.jenkins.cohort.JenkinsCohortEntity;
 import com.liferay.jethr0.jenkins.repository.JenkinsCohortEntityRepository;
 import com.liferay.jethr0.jenkins.repository.JenkinsNodeEntityRepository;
 import com.liferay.jethr0.jenkins.repository.JenkinsServerEntityRepository;
 import com.liferay.jethr0.jenkins.server.JenkinsServerEntity;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
+import com.liferay.jethr0.util.StringUtil;
+
+import java.util.Date;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,10 +28,16 @@ public class CreateJenkinsCohortEventHandler extends BaseJRPEventHandler {
 
 	@Override
 	public String process() throws InvalidJSONException {
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				"Creating jenkins cohort from JRP at " +
+					StringUtil.toString(new Date()));
+		}
+
 		JSONObject jenkinsCohortJSONObject = getJenkinsCohortJSONObject();
 
 		JenkinsCohortEntityRepository jenkinsCohortEntityRepository =
-			getJenkinsCohortEntityRepository();
+			Jethr0ContextUtil.getJenkinsCohortEntityRepository();
 
 		JenkinsCohortEntity jenkinsCohortEntity =
 			jenkinsCohortEntityRepository.create(jenkinsCohortJSONObject);
@@ -37,9 +49,9 @@ public class CreateJenkinsCohortEventHandler extends BaseJRPEventHandler {
 			!jenkinsServersJSONArray.isEmpty()) {
 
 			JenkinsServerEntityRepository jenkinsServerEntityRepository =
-				getJenkinsServerEntityRepository();
+				Jethr0ContextUtil.getJenkinsServerEntityRepository();
 			JenkinsNodeEntityRepository jenkinsNodeEntityRepository =
-				getJenkinsNodeEntityRepository();
+				Jethr0ContextUtil.getJenkinsNodeEntityRepository();
 
 			for (int i = 0; i < jenkinsServersJSONArray.length(); i++) {
 				JSONObject jenkinsServerJSONObject =
@@ -57,13 +69,22 @@ public class CreateJenkinsCohortEventHandler extends BaseJRPEventHandler {
 
 		jenkinsCohortEntityRepository.update(jenkinsCohortEntity);
 
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringUtil.combine(
+					"Created jenkins cohort ",
+					jenkinsCohortEntity.getEntityURL(), " from JRP at ",
+					StringUtil.toString(new Date())));
+		}
+
 		return jenkinsCohortEntity.toString();
 	}
 
-	protected CreateJenkinsCohortEventHandler(
-		EventHandlerContext eventHandlerContext, JSONObject messageJSONObject) {
-
-		super(eventHandlerContext, messageJSONObject);
+	protected CreateJenkinsCohortEventHandler(JSONObject messageJSONObject) {
+		super(messageJSONObject);
 	}
+
+	private static final Log _log = LogFactory.getLog(
+		CreateJenkinsCohortEventHandler.class);
 
 }

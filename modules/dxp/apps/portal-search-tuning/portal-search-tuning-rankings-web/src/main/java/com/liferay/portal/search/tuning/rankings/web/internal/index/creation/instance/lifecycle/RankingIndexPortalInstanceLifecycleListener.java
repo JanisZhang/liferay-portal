@@ -9,13 +9,20 @@ import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.search.capabilities.SearchCapabilities;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
+import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.spi.index.creation.instance.lifecycle.BaseIndexPortalInstanceLifecycleListener;
 import com.liferay.portal.search.tuning.rankings.index.RankingIndexReader;
 import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexName;
 import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexNameBuilder;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.RankingIndexCreator;
+import com.liferay.portal.search.tuning.rankings.web.internal.index.RankingIndexCreatorUtil;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.importer.SingleIndexToMultipleIndexImporter;
 
+import java.util.Map;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -45,7 +52,7 @@ public class RankingIndexPortalInstanceLifecycleListener
 			return;
 		}
 
-		_rankingIndexCreator.create(rankingIndexName);
+		RankingIndexCreatorUtil.create(_searchEngineAdapter, rankingIndexName);
 
 		if (_singleIndexToMultipleIndexImporter.needImport()) {
 			_singleIndexToMultipleIndexImporter.importRankings(
@@ -61,13 +68,30 @@ public class RankingIndexPortalInstanceLifecycleListener
 			return;
 		}
 
-		_rankingIndexCreator.deleteIfExists(
+		RankingIndexCreatorUtil.deleteIfExists(
+			_searchEngineAdapter,
 			_rankingIndexNameBuilder.getRankingIndexName(
 				company.getCompanyId()));
 	}
 
+	@Activate
+	@Override
+	protected void activate(
+		BundleContext bundleContext, Map<String, Object> properties) {
+
+		super.activate(bundleContext, properties);
+
+		_singleIndexToMultipleIndexImporter =
+			new SingleIndexToMultipleIndexImporter(
+				_indexNameBuilder, _queries, _rankingIndexReader,
+				_searchEngineAdapter);
+	}
+
 	@Reference
-	private RankingIndexCreator _rankingIndexCreator;
+	private IndexNameBuilder _indexNameBuilder;
+
+	@Reference
+	private Queries _queries;
 
 	@Reference
 	private RankingIndexNameBuilder _rankingIndexNameBuilder;
@@ -79,6 +103,8 @@ public class RankingIndexPortalInstanceLifecycleListener
 	private SearchCapabilities _searchCapabilities;
 
 	@Reference
+	private SearchEngineAdapter _searchEngineAdapter;
+
 	private SingleIndexToMultipleIndexImporter
 		_singleIndexToMultipleIndexImporter;
 

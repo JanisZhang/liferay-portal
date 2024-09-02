@@ -196,7 +196,7 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 
 				<aui:input cssClass="lfr-input-text-container" helpMessage="ignore-user-search-filter-for-auth-help" label="ignore-user-search-filter-for-auth" name='<%= "ldap--" + LDAPConstants.INGORE_USER_SEARCH_FILTER_FOR_AUTH + "--" %>' type="checkbox" value="<%= ignoreUserAuthFilterForAuth %>" />
 
-				<h4><liferay-ui:message key="user-mapping" /></h4>
+				<div class="h4"><liferay-ui:message key="user-mapping" /></div>
 
 				<aui:input cssClass="lfr-input-text-container" label="uuid" name="userMappingUuid" type="text" value="<%= userMappingUuid %>" />
 
@@ -241,7 +241,7 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 
 				<aui:input cssClass="lfr-input-text-container" label="import-search-filter" name='<%= "ldap--" + LDAPConstants.GROUP_SEARCH_FILTER + "--" %>' type="text" value="<%= ldapGroupSearchFilter %>" />
 
-				<h4><liferay-ui:message key="group-mapping" /></h4>
+				<div class="h4"><liferay-ui:message key="group-mapping" /></div>
 
 				<aui:input cssClass="lfr-input-text-container" label="group-name" name="groupMappingGroupName" type="text" value="<%= groupMappingGroupName %>" />
 
@@ -477,7 +477,8 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			'ldap--<%= LDAPConstants.SECURITY_PRINCIPAL %>--': principal,
 			'ldap--<%= LDAPConstants.SECURITY_CREDENTIAL %>--': credentials,
 			'ldap--<%= LDAPConstants.AUTH_SEARCH_FILTER %>--': searchFilter,
-			'ldap--<%= LDAPConstants.USER_SEARCH_FILTER %>--': importUserSearchFilter,
+			'ldap--<%= LDAPConstants.USER_SEARCH_FILTER %>--':
+				importUserSearchFilter,
 			'userMappingEmailAddress': userMappingEmailAddress,
 			'userMappingFirstName': userMappingFirstName,
 			'userMappingFullName': userMappingFullName,
@@ -490,14 +491,17 @@ renderResponse.setTitle((ldapServerId == 0) ? LanguageUtil.get(resourceBundle, "
 			'userMappingScreenName': userMappingScreenName,
 			'userMappingStatus': userMappingStatus,
 			'userMappingUuid': userMappingUuid,
-			'ldap--<%= LDAPConstants.GROUP_SEARCH_FILTER %>--': importGroupSearchFilter,
+			'ldap--<%= LDAPConstants.GROUP_SEARCH_FILTER %>--':
+				importGroupSearchFilter,
 			'groupMappingDescription': groupMappingDescription,
 			'groupMappingGroupName': groupMappingGroupName,
 			'groupMappingUser': groupMappingUser,
 			'ldap--<%= LDAPConstants.USERS_DN %>--': baseDN,
-			'ldap--<%= LDAPConstants.USER_DEFAULT_OBJECT_CLASSES %>--': exportMappingUserDefaultObjectClass,
+			'ldap--<%= LDAPConstants.USER_DEFAULT_OBJECT_CLASSES %>--':
+				exportMappingUserDefaultObjectClass,
 			'ldap--<%= LDAPConstants.GROUPS_DN %>--': baseDN,
-			'ldap--<%= LDAPConstants.GROUP_DEFAULT_OBJECT_CLASSES %>--': exportMappingGroupDefaultObjectClass,
+			'ldap--<%= LDAPConstants.GROUP_DEFAULT_OBJECT_CLASSES %>--':
+				exportMappingGroupDefaultObjectClass,
 		});
 	}
 

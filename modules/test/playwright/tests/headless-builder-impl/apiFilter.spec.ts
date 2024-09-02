@@ -6,12 +6,12 @@
 import {APIResponse, expect as baseExpect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
-import {headlessBuilderTest} from '../../fixtures/headlessBuilderTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {headlessBuilderTest} from '../headless-builder-web/fixtures/headlessBuilderTest';
 
 export const test = mergeTests(
 	apiHelpersTest,
-	headlessBuilderTest,
+	headlessBuilderTest(),
 	loginTest()
 );
 
@@ -35,7 +35,9 @@ const expect = baseExpect.extend({
 
 test('can GET with API Filter', async ({apiHelpers}) => {
 	const objectDefinition =
-		await apiHelpers.objectAdmin.postRandomObjectDefinition();
+		await apiHelpers.objectAdmin.postRandomObjectDefinition({
+			status: {code: 0},
+		});
 
 	const apiApplication = await apiHelpers.apiBuilder.postApiApplication({
 		apiApplicationToAPIEndpoints: [
@@ -97,7 +99,7 @@ test('can GET with API Filter', async ({apiHelpers}) => {
 	).toBeSuccessful();
 	for (let i = 0; i <= 25; i++) {
 		expect(
-			await apiHelpers.object.postObjectDefinitionRandomObjectEntries(
+			await apiHelpers.objectEntry.postObjectDefinitionRandomObjectEntries(
 				'textField',
 				`value${i}`,
 				objectDefinition.restContextPath

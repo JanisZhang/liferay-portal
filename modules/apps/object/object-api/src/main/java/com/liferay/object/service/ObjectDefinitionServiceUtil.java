@@ -7,6 +7,7 @@ package com.liferay.object.service;
 
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,8 @@ public class ObjectDefinitionServiceUtil {
 	 */
 	public static ObjectDefinition addCustomObjectDefinition(
 			long objectFolderId, boolean enableComments,
-			boolean enableLocalization, boolean enableObjectEntryDraft,
+			boolean enableIndexSearch, boolean enableLocalization,
+			boolean enableObjectEntryDraft,
 			Map<java.util.Locale, String> labelMap, String name,
 			String panelAppOrder, String panelCategoryKey,
 			Map<java.util.Locale, String> pluralLabelMap, boolean portlet,
@@ -41,10 +43,10 @@ public class ObjectDefinitionServiceUtil {
 		throws PortalException {
 
 		return getService().addCustomObjectDefinition(
-			objectFolderId, enableComments, enableLocalization,
-			enableObjectEntryDraft, labelMap, name, panelAppOrder,
-			panelCategoryKey, pluralLabelMap, portlet, scope, storageType,
-			objectFields);
+			objectFolderId, enableComments, enableIndexSearch,
+			enableLocalization, enableObjectEntryDraft, labelMap, name,
+			panelAppOrder, panelCategoryKey, pluralLabelMap, portlet, scope,
+			storageType, objectFields);
 	}
 
 	public static ObjectDefinition addObjectDefinition(
@@ -58,16 +60,19 @@ public class ObjectDefinitionServiceUtil {
 
 	public static ObjectDefinition addSystemObjectDefinition(
 			String externalReferenceCode, long userId, long objectFolderId,
-			boolean enableComments, Map<java.util.Locale, String> labelMap,
+			boolean enableComments, boolean enableIndexSearch,
+			boolean enableLocalization, Map<java.util.Locale, String> labelMap,
 			String name, String panelAppOrder, String panelCategoryKey,
-			Map<java.util.Locale, String> pluralLabelMap, String scope,
+			Map<java.util.Locale, String> pluralLabelMap, boolean portlet,
+			String scope,
 			List<com.liferay.object.model.ObjectField> objectFields)
 		throws PortalException {
 
 		return getService().addSystemObjectDefinition(
 			externalReferenceCode, userId, objectFolderId, enableComments,
-			labelMap, name, panelAppOrder, panelCategoryKey, pluralLabelMap,
-			scope, objectFields);
+			enableIndexSearch, enableLocalization, labelMap, name,
+			panelAppOrder, panelCategoryKey, pluralLabelMap, portlet, scope,
+			objectFields);
 	}
 
 	public static ObjectDefinition deleteObjectDefinition(
@@ -150,8 +155,9 @@ public class ObjectDefinitionServiceUtil {
 			long descriptionObjectFieldId, long objectFolderId,
 			long titleObjectFieldId, boolean accountEntryRestricted,
 			boolean active, boolean enableCategorization,
-			boolean enableComments, boolean enableLocalization,
-			boolean enableObjectEntryDraft, boolean enableObjectEntryHistory,
+			boolean enableComments, boolean enableIndexSearch,
+			boolean enableLocalization, boolean enableObjectEntryDraft,
+			boolean enableObjectEntryHistory,
 			Map<java.util.Locale, String> labelMap, String name,
 			String panelAppOrder, String panelCategoryKey, boolean portlet,
 			Map<java.util.Locale, String> pluralLabelMap, String scope,
@@ -162,10 +168,10 @@ public class ObjectDefinitionServiceUtil {
 			externalReferenceCode, objectDefinitionId,
 			accountEntryRestrictedObjectFieldId, descriptionObjectFieldId,
 			objectFolderId, titleObjectFieldId, accountEntryRestricted, active,
-			enableCategorization, enableComments, enableLocalization,
-			enableObjectEntryDraft, enableObjectEntryHistory, labelMap, name,
-			panelAppOrder, panelCategoryKey, portlet, pluralLabelMap, scope,
-			status);
+			enableCategorization, enableComments, enableIndexSearch,
+			enableLocalization, enableObjectEntryDraft,
+			enableObjectEntryHistory, labelMap, name, panelAppOrder,
+			panelCategoryKey, portlet, pluralLabelMap, scope, status);
 	}
 
 	public static ObjectDefinition updateExternalReferenceCode(
@@ -203,13 +209,11 @@ public class ObjectDefinitionServiceUtil {
 	}
 
 	public static ObjectDefinitionService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(ObjectDefinitionService service) {
-		_service = service;
-	}
-
-	private static volatile ObjectDefinitionService _service;
+	private static final Snapshot<ObjectDefinitionService> _serviceSnapshot =
+		new Snapshot<>(
+			ObjectDefinitionServiceUtil.class, ObjectDefinitionService.class);
 
 }

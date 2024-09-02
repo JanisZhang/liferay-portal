@@ -78,7 +78,7 @@ SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCa
 			<div class="row">
 				<c:if test="<%= subtotalCommerceDiscountValue != null %>">
 					<div class="col-auto">
-						<h4><liferay-ui:message key="subtotal-discount" /></h4>
+						<div class="h4"><liferay-ui:message key="subtotal-discount" /></div>
 					</div>
 
 					<div class="col-auto">
@@ -112,7 +112,7 @@ SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCa
 			<div class="row">
 				<c:if test="<%= totalCommerceDiscountValue != null %>">
 					<div class="col-auto">
-						<h4><liferay-ui:message key="total-discount" /></h4>
+						<div class="h4"><liferay-ui:message key="total-discount" /></div>
 					</div>
 
 					<div class="col-auto">
@@ -135,9 +135,20 @@ SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCa
 
 		<%
 		PortletURL checkoutPortletURL = commerceCartContentTotalDisplayContext.getCheckoutPortletURL();
+		CommerceOrder commerceOrder = commerceCartContentTotalDisplayContext.getCommerceOrder();
 		%>
 
-		<aui:button cssClass="btn-lg" disabled="<%= !commerceCartContentTotalDisplayContext.isValidCommerceOrder() %>" href="<%= checkoutPortletURL.toString() %>" value="checkout" />
+		<c:choose>
+			<c:when test="<%= (commerceOrder.getStatus() != 0) && commerceCartContentTotalDisplayContext.hasPermission(ActionKeys.UPDATE) && commerceCartContentTotalDisplayContext.isValidCommerceOrder() %>">
+				<liferay-commerce:order-transitions
+					commerceOrderId="<%= commerceCartContentTotalDisplayContext.getCommerceOrderId() %>"
+					cssClass="btn btn-fixed btn-primary"
+				/>
+			</c:when>
+			<c:otherwise>
+				<aui:button cssClass="btn-fixed" disabled="<%= !commerceCartContentTotalDisplayContext.isValidCommerceOrder() %>" href="<%= checkoutPortletURL.toString() %>" type="submit" value="checkout" />
+			</c:otherwise>
+		</c:choose>
 
 		<c:if test="<%= commerceCartContentTotalDisplayContext.isRequestQuoteEnabled() && commerceCartContentTotalDisplayContext.isValidCommerceOrder() %>">
 			<aui:button cssClass="btn-lg request-quote" id="requestQuote" value='<%= LanguageUtil.get(request, "request-a-quote") %>' />
@@ -146,7 +157,9 @@ SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCa
 
 	<%@ include file="/cart_total/request_quote.jspf" %>
 
+	<%@ include file="/common/transition.jspf" %>
+
 	<liferay-frontend:component
-		module="js/cart_total/view"
+		module="{cartTotalView} from commerce-cart-content-web"
 	/>
 </liferay-ddm:template-renderer>

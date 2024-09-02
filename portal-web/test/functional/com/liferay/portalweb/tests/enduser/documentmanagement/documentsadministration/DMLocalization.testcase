@@ -1,4 +1,4 @@
-@component-name = "portal-document-management"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.acceptance = "true";
@@ -256,6 +256,32 @@ definition {
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 		LexiconList.viewListEntryTitleLink(listEntry = "これは写真です");
+	}
+
+	@description = "This is a test for LPS-151368. It checks that the video URL is saved when adding external video shortcut in non-default language."
+	@priority = 4
+	test VideoURLIsSavedWhenUsingNonDefaultLanguage {
+		var portalURL = PropsUtil.get("portal.url");
+
+		Navigator.openSpecificURL(url = "${portalURL}/es");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		VideoShortcut.addCP(
+			localizedDocumentTypeName = "Acceso directo de vídeo externo",
+			localizedPublish = "Publicar",
+			localizedVideoURL = "URL del vídeo",
+			videoShortcutTitle = "DM Title",
+			videoURL = "https://www.facebook.com/Cristiano/videos/1710977485745946");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Editar",
+			rowEntry = "DM Title");
+
+		AssertTextEquals(
+			key_text = "URL del vídeo",
+			locator1 = "TextInput#ANY",
+			value1 = "https://www.facebook.com/Cristiano/videos/1710977485745946");
 	}
 
 }

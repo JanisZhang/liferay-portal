@@ -22,6 +22,7 @@ import com.liferay.info.item.InfoItemDetails;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemDetailsProvider;
+import com.liferay.info.item.provider.InfoItemPermissionProvider;
 import com.liferay.info.list.renderer.DefaultInfoListRendererContext;
 import com.liferay.info.list.renderer.InfoListRenderer;
 import com.liferay.info.permission.provider.InfoPermissionProvider;
@@ -41,6 +42,7 @@ import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.ColumnLayoutStructureItem;
 import com.liferay.layout.util.structure.ContainerStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
+import com.liferay.layout.util.structure.FormStepContainerStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.FormStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
@@ -57,6 +59,7 @@ import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTemplate;
 import com.liferay.portal.kernel.model.LayoutTemplateConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutTemplateLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -186,6 +189,31 @@ public class LayoutStructureRenderer {
 			 infoPermissionProvider.hasAddPermission(
 				 _themeDisplay.getScopeGroupId(),
 				 _themeDisplay.getPermissionChecker()))) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _hasUpdatePermission(
+			LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider)
+		throws Exception {
+
+		InfoItemServiceRegistry infoItemServiceRegistry =
+			ServletContextUtil.getInfoItemServiceRegistry();
+
+		InfoItemPermissionProvider infoItemPermissionProvider =
+			infoItemServiceRegistry.getFirstInfoItemService(
+				InfoItemPermissionProvider.class,
+				layoutDisplayPageObjectProvider.getClassName());
+
+		if ((infoItemPermissionProvider == null) ||
+			((_themeDisplay != null) &&
+			 infoItemPermissionProvider.hasPermission(
+				 _themeDisplay.getPermissionChecker(),
+				 layoutDisplayPageObjectProvider.getDisplayObject(),
+				 ActionKeys.UPDATE))) {
 
 			return true;
 		}
@@ -826,15 +854,72 @@ public class LayoutStructureRenderer {
 		jspWriter.write("</div></div>");
 	}
 
+	private void _renderFormStepContainerStyledLayoutStructureItem(
+			InfoForm infoForm,
+			FormStepContainerStyledLayoutStructureItem
+				formStepContainerStyledLayoutStructureItem)
+		throws Exception {
+
+		JspWriter jspWriter = _pageContext.getOut();
+
+		jspWriter.write("<div class=\"");
+		jspWriter.write(
+			formStepContainerStyledLayoutStructureItem.getUniqueCssClass());
+		jspWriter.write(StringPool.SPACE);
+		jspWriter.write(
+			formStepContainerStyledLayoutStructureItem.getCssClass());
+		jspWriter.write(StringPool.SPACE);
+		jspWriter.write(
+			formStepContainerStyledLayoutStructureItem.getStyledCssClasses());
+		jspWriter.write("\" style=\"");
+
+		jspWriter.write(
+			_renderLayoutStructureDisplayContext.getStyle(
+				formStepContainerStyledLayoutStructureItem));
+		jspWriter.write("\">");
+
+		List<String> childrenItemIds =
+			formStepContainerStyledLayoutStructureItem.getChildrenItemIds();
+
+		for (int i = 0; i < childrenItemIds.size(); i++) {
+			jspWriter.write("<div");
+
+			if (i != 0) {
+				jspWriter.write(" class=\"d-none\"");
+			}
+
+			jspWriter.write(StringPool.GREATER_THAN);
+
+			LayoutStructureItem layoutStructureItem =
+				_layoutStructure.getLayoutStructureItem(childrenItemIds.get(i));
+
+			_renderLayoutStructure(
+				layoutStructureItem.getChildrenItemIds(), infoForm);
+
+			jspWriter.write("</div>");
+		}
+
+		jspWriter.write("</div>");
+
+		_renderComponent(
+			"FormStepComponent" +
+				formStepContainerStyledLayoutStructureItem.getItemId(),
+			HashMapBuilder.<String, Object>put(
+				"formId",
+				formStepContainerStyledLayoutStructureItem.getParentItemId()
+			).build(),
+			"{FormStepHandler} from layout-taglib");
+	}
+
 	private void _renderFormStyledLayoutStructureItem(
 			InfoForm infoForm,
 			FormStyledLayoutStructureItem formStyledLayoutStructureItem)
 		throws Exception {
 
-		if ((infoForm == null) ||
-			!_hasAddPermission(
-				PortalUtil.getClassName(
-					formStyledLayoutStructureItem.getClassNameId()))) {
+		String className = formStyledLayoutStructureItem.getClassName();
+
+		if (Validator.isNull(className) || (infoForm == null) ||
+			!_hasAddPermission(className)) {
 
 			return;
 		}
@@ -921,6 +1006,8 @@ public class LayoutStructureRenderer {
 		jspWriter.write(
 			String.valueOf(formStyledLayoutStructureItem.getClassTypeId()));
 
+		boolean readOnly = false;
+
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
 			(LayoutDisplayPageObjectProvider<?>)
 				_httpServletRequest.getAttribute(
@@ -940,6 +1027,10 @@ public class LayoutStructureRenderer {
 			jspWriter.write(" value=\"");
 			jspWriter.write(
 				layoutDisplayPageObjectProvider.getExternalReferenceCode());
+
+			if (!_hasUpdatePermission(layoutDisplayPageObjectProvider)) {
+				readOnly = true;
+			}
 		}
 
 		jspWriter.write(
@@ -1003,10 +1094,18 @@ public class LayoutStructureRenderer {
 			_httpServletRequest,
 			"infoFormParameterMap" + formStyledLayoutStructureItem.getItemId());
 
+		if (readOnly) {
+			jspWriter.write("<fieldset disabled=\"disabled\">");
+		}
+
 		_renderLayoutStructure(
 			formStyledLayoutStructureItem.getChildrenItemIds(), infoForm);
 
 		SessionMessages.remove(_httpServletRequest, "infoFormParameterMap");
+
+		if (readOnly) {
+			jspWriter.write("</fieldset>");
+		}
 
 		jspWriter.write("</form>");
 	}
@@ -1150,6 +1249,14 @@ public class LayoutStructureRenderer {
 
 				_renderDropZoneLayoutStructureItem(
 					infoForm, layoutStructureItem);
+			}
+			else if (layoutStructureItem instanceof
+						FormStepContainerStyledLayoutStructureItem) {
+
+				_renderFormStepContainerStyledLayoutStructureItem(
+					infoForm,
+					(FormStepContainerStyledLayoutStructureItem)
+						layoutStructureItem);
 			}
 			else if (layoutStructureItem instanceof
 						FormStyledLayoutStructureItem) {

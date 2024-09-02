@@ -4,6 +4,7 @@ exports[`ValueInput should render 1`] = `
 <div>
   <button
     aria-activedescendant="true"
+    aria-controls="clay-id-2"
     aria-expanded="true"
     aria-haspopup="listbox"
     aria-owns="clay-id-2"
@@ -14,7 +15,7 @@ exports[`ValueInput should render 1`] = `
     tabindex="0"
     type="button"
   >
-    Select an option
+    True
   </button>
 </div>
 `;

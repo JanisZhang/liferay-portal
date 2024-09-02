@@ -147,3 +147,23 @@ ca795b8c504e18358fc281bde791ecbde8075dee^..82b96b92e000a000e64322671674fd32a6c48
 # Bundle Version 11.2.1
 #
 e702bb841709bbf008b56e8d22a2baceff3ef4a1^..bf6a1fc9925cfac4e38ffcea5e50c012c3c4c59b=LPS-188912
+
+#
+# Bundle Version 11.2.2
+#
+bf6a1fc9925cfac4e38ffcea5e50c012c3c4c59b^..3573c36fbc6ffe7eeaadca634d4d2ff2231e2c2c=LPD-16337
+
+#
+# Bundle Version 11.3.0
+#
+3573c36fbc6ffe7eeaadca634d4d2ff2231e2c2c^..aca338e2b43ff10d1c2e5cf38b591078ef50acec=LPD-20495
+
+#
+# Bundle Version 12.0.0
+#
+aca338e2b43ff10d1c2e5cf38b591078ef50acec^..c2042118de261ec5649768aa97d4be683096a00f=LPD-21824 LPD-24745
+
+#
+# Bundle Version 13.0.0
+#
+c2042118de261ec5649768aa97d4be683096a00f^..3073289b73ecc0aa3bf0930c09b3b6c4c4abbbec=LPD-25955

@@ -6,10 +6,11 @@
 import {navigate} from 'frontend-js-web';
 
 import {IFrontendDataSetContext} from '../../FrontendDataSetContext';
-import {ICreationActionItem} from '../../management_bar/components/CreationMenu';
+import {ICreationActionItem} from '../../management_bar/controls/CreationMenu';
 import {OPEN_MODAL, OPEN_SIDE_PANEL} from '../../utils/eventsDefinitions';
 import {resolveModalSize} from '../../utils/modals/resolveModalSize';
 import {ACTION_ITEM_TARGETS} from './constants';
+import formatActionURL from './formatActionURL';
 
 const {
 	BLANK,
@@ -37,6 +38,7 @@ export function triggerAction(
 		case MODAL_LARGE:
 		case MODAL_SMALL:
 			Liferay.fire(OPEN_MODAL, {
+				disableHeader: item.data?.disableHeader,
 				id: modalId,
 				onClose: loadData,
 				size: item.data?.size || resolveModalSize(actionTarget),
@@ -46,6 +48,7 @@ export function triggerAction(
 			break;
 		case SIDE_PANEL:
 			Liferay.fire(OPEN_SIDE_PANEL, {
+				disableHeader: item.data?.disableHeader,
 				id: sidePanelId,
 				onAfterSubmit: loadData,
 				title: item.data?.title,
@@ -56,7 +59,7 @@ export function triggerAction(
 			Liferay.fire(actionTargetURL);
 			break;
 		default:
-			navigate(actionTargetURL);
+			navigate(formatActionURL(actionTargetURL, item, actionTarget));
 			break;
 	}
 }

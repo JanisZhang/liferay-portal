@@ -46,11 +46,13 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -71,8 +73,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -125,7 +125,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			DocumentFolderResource.builder();
 
 		documentFolderResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -139,7 +139,32 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DocumentFolder documentFolder1 = randomDocumentFolder();
+
+		String json = objectMapper.writeValueAsString(documentFolder1);
+
+		DocumentFolder documentFolder2 = DocumentFolderSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(documentFolder1, documentFolder2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DocumentFolder documentFolder = randomDocumentFolder();
+
+		String json1 = objectMapper.writeValueAsString(documentFolder);
+		String json2 = DocumentFolderSerDes.toJSON(documentFolder);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -154,40 +179,6 @@ public abstract class BaseDocumentFolderResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		DocumentFolder documentFolder1 = randomDocumentFolder();
-
-		String json = objectMapper.writeValueAsString(documentFolder1);
-
-		DocumentFolder documentFolder2 = DocumentFolderSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(documentFolder1, documentFolder2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		DocumentFolder documentFolder = randomDocumentFolder();
-
-		String json1 = objectMapper.writeValueAsString(documentFolder);
-		String json2 = DocumentFolderSerDes.toJSON(documentFolder);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -506,7 +497,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			(entityField, documentFolder1, documentFolder2) -> {
 				BeanTestUtil.setProperty(
 					documentFolder1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -995,7 +986,10 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteDocumentFolder() throws Exception {
-		DocumentFolder documentFolder =
+
+		// No namespace
+
+		DocumentFolder documentFolder1 =
 			testGraphQLDeleteDocumentFolder_addDocumentFolder();
 
 		Assert.assertTrue(
@@ -1005,23 +999,66 @@ public abstract class BaseDocumentFolderResourceTestCase {
 						"deleteDocumentFolder",
 						new HashMap<String, Object>() {
 							{
-								put("documentFolderId", documentFolder.getId());
+								put(
+									"documentFolderId",
+									documentFolder1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteDocumentFolder"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"documentFolder",
 					new HashMap<String, Object>() {
 						{
-							put("documentFolderId", documentFolder.getId());
+							put("documentFolderId", documentFolder1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessDelivery_v1_0
+
+		DocumentFolder documentFolder2 =
+			testGraphQLDeleteDocumentFolder_addDocumentFolder();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"deleteDocumentFolder",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"documentFolderId",
+										documentFolder2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+				"Object/deleteDocumentFolder"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessDelivery_v1_0",
+					new GraphQLField(
+						"documentFolder",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"documentFolderId",
+									documentFolder2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected DocumentFolder testGraphQLDeleteDocumentFolder_addDocumentFolder()
@@ -1055,6 +1092,8 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		DocumentFolder documentFolder =
 			testGraphQLGetDocumentFolder_addDocumentFolder();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				documentFolder,
@@ -1072,11 +1111,36 @@ public abstract class BaseDocumentFolderResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/documentFolder"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				documentFolder,
+				DocumentFolderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"documentFolder",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"documentFolderId",
+												documentFolder.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/documentFolder"))));
 	}
 
 	@Test
 	public void testGraphQLGetDocumentFolderNotFound() throws Exception {
 		Long irrelevantDocumentFolderId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1092,6 +1156,27 @@ public abstract class BaseDocumentFolderResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"documentFolder",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"documentFolderId",
+										irrelevantDocumentFolderId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1590,7 +1675,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			(entityField, documentFolder1, documentFolder2) -> {
 				BeanTestUtil.setProperty(
 					documentFolder1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -2064,7 +2149,7 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			(entityField, documentFolder1, documentFolder2) -> {
 				BeanTestUtil.setProperty(
 					documentFolder1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -2242,6 +2327,8 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject documentFoldersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/documentFolders");
@@ -2255,6 +2342,28 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 		documentFoldersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/documentFolders");
+
+		Assert.assertEquals(
+			totalCount + 2, documentFoldersJSONObject.getLong("totalCount"));
+
+		assertContains(
+			documentFolder1,
+			Arrays.asList(
+				DocumentFolderSerDes.toDTOs(
+					documentFoldersJSONObject.getString("items"))));
+		assertContains(
+			documentFolder2,
+			Arrays.asList(
+				DocumentFolderSerDes.toDTOs(
+					documentFoldersJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		documentFoldersJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
 			"JSONObject/documentFolders");
 
 		Assert.assertEquals(
@@ -2646,6 +2755,8 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		DocumentFolder documentFolder =
 			testGraphQLGetSiteDocumentsFolderByExternalReferenceCode_addDocumentFolder();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				documentFolder,
@@ -2673,6 +2784,38 @@ public abstract class BaseDocumentFolderResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/documentsFolderByExternalReferenceCode"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertTrue(
+			equals(
+				documentFolder,
+				DocumentFolderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessDelivery_v1_0",
+								new GraphQLField(
+									"documentsFolderByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"siteKey",
+												"\"" +
+													testGraphQLGetSiteDocumentsFolderByExternalReferenceCode_getSiteId(
+														documentFolder) + "\"");
+
+											put(
+												"externalReferenceCode",
+												"\"" +
+													documentFolder.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+						"Object/documentsFolderByExternalReferenceCode"))));
 	}
 
 	protected Long
@@ -2689,6 +2832,8 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -2707,6 +2852,31 @@ public abstract class BaseDocumentFolderResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessDelivery_v1_0",
+						new GraphQLField(
+							"documentsFolderByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"siteKey",
+										"\"" + irrelevantGroup.getGroupId() +
+											"\"");
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -3783,22 +3953,20 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = documentFolder.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							documentFolder.getDateCreated(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							documentFolder.getDateCreated(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -3816,22 +3984,20 @@ public abstract class BaseDocumentFolderResourceTestCase {
 
 		if (entityFieldName.equals("dateModified")) {
 			if (operator.equals("between")) {
+				Date date = documentFolder.getDateModified();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							documentFolder.getDateModified(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							documentFolder.getDateModified(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -4037,7 +4203,8 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -4122,12 +4289,12 @@ public abstract class BaseDocumentFolderResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -4136,11 +4303,16 @@ public abstract class BaseDocumentFolderResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -4172,6 +4344,24 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -4193,16 +4383,6 @@ public abstract class BaseDocumentFolderResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

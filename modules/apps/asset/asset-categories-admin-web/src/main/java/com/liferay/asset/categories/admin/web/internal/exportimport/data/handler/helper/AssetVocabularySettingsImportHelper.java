@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portlet.asset.util.AssetVocabularySettingsHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -37,22 +38,11 @@ public class AssetVocabularySettingsImportHelper
 		_locale = locale;
 		_settingsMetadataJSONObject = settingsMetadataJSONObject;
 
-		updateSettings();
+		_updateSettings();
 	}
 
 	public String getSettings() {
 		return super.toString();
-	}
-
-	public void updateSettings() {
-		_fillClassNameIdsAndClassTypePKs(
-			getClassNameIdsAndClassTypePKs(), false);
-
-		_fillClassNameIdsAndClassTypePKs(
-			getRequiredClassNameIdsAndClassTypePKs(), true);
-
-		setClassNameIdsAndClassTypePKs(
-			_classNameIds, _classTypePKs, _requireds);
 	}
 
 	private boolean _existClassName(long classNameId) {
@@ -76,7 +66,8 @@ public class AssetVocabularySettingsImportHelper
 	}
 
 	private void _fillClassNameIdsAndClassTypePKs(
-		String[] classNameIdsAndClassTypePKs, boolean required) {
+		String[] classNameIdsAndClassTypePKs, List<Long> classNameIds,
+		List<Long> classTypePKs, List<Boolean> requireds, boolean required) {
 
 		for (String classNameIdAndClassTypePK : classNameIdsAndClassTypePKs) {
 			long oldClassNameId = getClassNameId(classNameIdAndClassTypePK);
@@ -87,16 +78,15 @@ public class AssetVocabularySettingsImportHelper
 
 			long newClassNameId = _getNewClassNameId(oldClassNameId);
 
-			_classNameIds = ArrayUtil.append(_classNameIds, newClassNameId);
+			classNameIds.add(_getNewClassNameId(oldClassNameId));
 
 			long oldClassTypePK = getClassTypePK(classNameIdAndClassTypePK);
 
-			_classTypePKs = ArrayUtil.append(
-				_classTypePKs,
+			classTypePKs.add(
 				_getNewClassTypePK(
 					oldClassNameId, newClassNameId, oldClassTypePK));
 
-			_requireds = ArrayUtil.append(_requireds, required);
+			requireds.add(required);
 		}
 	}
 
@@ -157,15 +147,31 @@ public class AssetVocabularySettingsImportHelper
 		return AssetCategoryConstants.ALL_CLASS_TYPE_PK;
 	}
 
+	private void _updateSettings() {
+		List<Long> classNameIds = new ArrayList<>();
+		List<Long> classTypePKs = new ArrayList<>();
+		List<Boolean> requireds = new ArrayList<>();
+
+		_fillClassNameIdsAndClassTypePKs(
+			getClassNameIdsAndClassTypePKs(), classNameIds, classTypePKs,
+			requireds, false);
+
+		_fillClassNameIdsAndClassTypePKs(
+			getRequiredClassNameIdsAndClassTypePKs(), classNameIds,
+			classTypePKs, requireds, true);
+
+		setClassNameIdsAndClassTypePKs(
+			ArrayUtil.toLongArray(classNameIds),
+			ArrayUtil.toLongArray(classTypePKs),
+			ArrayUtil.toBooleanArray(requireds));
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetVocabularySettingsImportHelper.class);
 
-	private long[] _classNameIds = new long[0];
 	private final ClassNameLocalService _classNameLocalService;
-	private long[] _classTypePKs = new long[0];
 	private final long[] _groupIds;
 	private final Locale _locale;
-	private boolean[] _requireds = new boolean[0];
 	private final JSONObject _settingsMetadataJSONObject;
 
 }

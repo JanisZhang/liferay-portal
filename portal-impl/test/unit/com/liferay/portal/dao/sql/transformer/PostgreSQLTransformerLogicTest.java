@@ -33,6 +33,15 @@ public class PostgreSQLTransformerLogicTest
 		return "DROP TABLE IF EXISTS Foo";
 	}
 
+	@Test
+	public void testReplaceBooleanAggregation() {
+		Assert.assertEquals(
+			"select foo from Foo order by CASE WHEN MIN(CAST(foo AS " +
+				"INTEGER)) = 1 THEN 1 ELSE 0 END",
+			sqlTransformer.transform(
+				"select foo from Foo order by AGGREGATION_BOOLEAN_MIN(foo)"));
+	}
+
 	@Override
 	@Test
 	public void testReplaceModWithExtraWhitespace() {
@@ -59,17 +68,20 @@ public class PostgreSQLTransformerLogicTest
 
 	@Override
 	protected String getCastClobTextTransformedSQL() {
-		return "select CAST(foo AS TEXT) from Foo";
-	}
-
-	@Override
-	protected String getCastLongOriginalSQL() {
-		return "select CAST_LONG(foo) from Foo";
+		return "select CAST(foo || (CAST(foo AS TEXT) || (bar || foo)) AS " +
+			"TEXT), CAST(foo || (bar || foo) AS TEXT) from Foo";
 	}
 
 	@Override
 	protected String getCastLongTransformedSQL() {
-		return "select CAST(foo AS BIGINT) from Foo";
+		return "select CAST(1 + (CAST(foo AS BIGINT) - (bar x 2)) AS " +
+			"BIGINT), CAST(foo + (bar x 3) AS BIGINT) from Foo";
+	}
+
+	@Override
+	protected String getCastTextTransformedSQL() {
+		return "select CAST(foo || (CAST(foo AS TEXT) || (bar || foo)) AS " +
+			"TEXT), CAST(foo || (bar || foo) AS TEXT) from Foo";
 	}
 
 	@Override

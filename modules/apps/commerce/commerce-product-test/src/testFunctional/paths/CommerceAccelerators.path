@@ -352,7 +352,7 @@
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_SUBSCRIPTION_INFO</td>
-	<td>//h4[contains(@class,'commerce-subscription-info')]/div/div[contains(.,'${key_subscriptionName} Subscription')]/..//span</td>
+	<td>//div[contains(@class,'commerce-subscription-info')]/div/div[contains(.,'${key_subscriptionName} Subscription')]/..//span</td>
 	<td></td>
 </tr>
 <tr>
@@ -473,12 +473,12 @@
 </tr>
 <tr>
 	<td>CHECKOUT_SUMMARY_DELIVERY_TERM</td>
-	<td>//div[contains(@class,'delivery-term')]/div[contains(.,'${key_deliveryTerm}')]</td>
+	<td>//div[contains(@class,'delivery-term')]//div[contains(@class,'shipping-description')]//a[text()='${key_deliveryTerm}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CHECKOUT_SUMMARY_PAYMENT_TERM</td>
-	<td>//div[contains(@class,'payment-method')][contains(.,'Payment Terms')]/div[contains(.,'${key_paymentTerm}')]</td>
+	<td>//div[contains(@class,'payment-term')]//div[contains(@class,'shipping-description')]//a[text()='${key_paymentTerm}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -576,7 +576,7 @@
 </tr>
 <tr>
 	<td>MINI_CART_ITEM_NAME_USING_SKU</td>
-	<td>//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]/../h5</td>
+	<td>//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]/../div[contains(@class,'h5')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -596,7 +596,7 @@
 </tr>
 <tr>
 	<td>MINI_CART_ITEM_NAME</td>
-	<td>//div[@class="mini-cart-item"]//h5[@class="item-name" and contains(.,'${key_cartItemName}')]</td>
+	<td>//div[@class="mini-cart-item"]//div[contains(@class,'item-name') and contains(.,'${key_cartItemName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -626,7 +626,7 @@
 </tr>
 <tr>
 	<td>MINI_CART_ITEM_NAME_SKU_INDEX</td>
-	<td>//div[contains(@class,'mini-cart-item align-items-start')][${key_index}]//div[@class='item-name' and contains(.,'${key_cartItemName}')]/..//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]</td>
+	<td>//div[contains(@class, 'item-name') and contains(.,'${key_cartItemName}')]/..//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -636,7 +636,7 @@
 </tr>
 <tr>
 	<td>MINI_CART_EDIT_ITEM_PRICE_ON_APPLICATION</td>
-	<td>//div[contains(@class,'mini-cart-prices mt-4')]//span[contains(@class,'price-on-application price-value')]</td>
+	<td>//div[contains(@class,'mini-cart-prices')]//span[contains(@class,'price-on-application price-value')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -731,12 +731,12 @@
 </tr>
 <tr>
 	<td>MINI_CART_ITEM_INFO_EXTRA</td>
-	<td>//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]/../../div[@class='item-info-extra mt-3']/*</td>
+	<td>//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]/../..//div[@class='item-info-extra pt-2']/p</td>
 	<td></td>
 </tr>
 <tr>
 	<td>MINI_CART_ITEM_INFO_EXTRA_N</td>
-	<td>xpath=(//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]/../../div[@class='item-info-extra mt-3']/*)[${key_index}]</td>
+	<td>xpath=(//p[@class='item-sku' and contains(.,'${key_cartItemSku}')]/../..//div[@class='item-info-extra pt-2']/p)[${key_index}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -796,7 +796,7 @@
 </tr>
 <tr>
 	<td>MINI_CART_SUMMARY_TABLE_TOTAL</td>
-	<td>//div[contains(@class,'summary-table')]//*[contains(.,'Total')]/following::h4</td>
+	<td>//div[contains(@class,'summary-table')]//*[contains(.,'Total')]/following::div[contains(@class,'h4')]</td>
 	<td></td>
 </tr>
 <tr>

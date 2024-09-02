@@ -38,6 +38,15 @@ public interface PropsKeys {
 	public static final String ADMIN_EMAIL_PASSWORD_CHANGED_SUBJECT =
 		"admin.email.password.changed.subject";
 
+	public static final String ADMIN_EMAIL_PASSWORD_LOCKOUT_BODY =
+		"admin.email.password.lockout.body";
+
+	public static final String ADMIN_EMAIL_PASSWORD_LOCKOUT_SUBJECT =
+		"admin.email.password.lockout.subject";
+
+	public static final String ADMIN_EMAIL_PASSWORD_LOCKOUT_UNTIL_BODY =
+		"admin.email.password.lockout.until.body";
+
 	public static final String ADMIN_EMAIL_PASSWORD_RESET_BODY =
 		"admin.email.password.reset.body";
 
@@ -58,6 +67,12 @@ public interface PropsKeys {
 	public static final String ADMIN_EMAIL_PASSWORD_SENT_SUBJECT =
 		"admin.email.password.sent.subject";
 
+	public static final String ADMIN_EMAIL_PASSWORD_UNCHANGEABLE_BODY =
+		"admin.email.password.unchangeable.body";
+
+	public static final String ADMIN_EMAIL_PASSWORD_UNCHANGEABLE_SUBJECT =
+		"admin.email.password.unchangeable.subject";
+
 	/**
 	 * @deprecated As of Mueller (7.2.x), with no direct replacement
 	 */
@@ -76,6 +91,12 @@ public interface PropsKeys {
 
 	public static final String ADMIN_EMAIL_USER_ADDED_SUBJECT =
 		"admin.email.user.added.subject";
+
+	public static final String ADMIN_EMAIL_USER_CREATION_ATTEMPT_BODY =
+		"admin.email.user.creation.attempt.body";
+
+	public static final String ADMIN_EMAIL_USER_CREATION_ATTEMPT_SUBJECT =
+		"admin.email.user.creation.attempt.subject";
 
 	public static final String ADMIN_EMAIL_VERIFICATION_BODY =
 		"admin.email.verification.body";
@@ -99,6 +120,9 @@ public interface PropsKeys {
 
 	public static final String ADMIN_SYNC_DEFAULT_ASSOCIATIONS =
 		"admin.sync.default.associations";
+
+	public static final String ANALYTICS_CLOUD_CLIENT_JS_VERSION =
+		"analytics.cloud.client.js.version";
 
 	public static final String ANNOUNCEMENTS_EMAIL_BODY =
 		"announcements.email.body";
@@ -417,6 +441,9 @@ public interface PropsKeys {
 
 	public static final String COMMUNITIES_CONTROL_PANEL_MEMBERS_VISIBLE =
 		"communities.control.panel.members.visible";
+
+	public static final String COMPANY_DEFAULT_ADD_DEFAULT_ADMIN_USER =
+		"company.default.add.default.admin.user";
 
 	public static final String COMPANY_DEFAULT_HOME_URL =
 		"company.default.home.url";
@@ -1168,6 +1195,14 @@ public interface PropsKeys {
 	public static final String INITIAL_SYSTEM_CHECK_ENABLED =
 		"initial.system.check.enabled";
 
+	public static final String
+		INVOKER_FILTER_CHAIN_CACHE_QUERY_STRING_IGNORED_KEYS =
+			"invoker.filter.chain.cache.query.string.ignored.keys";
+
+	public static final String
+		INVOKER_FILTER_CHAIN_CACHE_SKIP_QUERY_STRING_URIS =
+			"invoker.filter.chain.cache.skip.query.string.uris";
+
 	public static final String INVOKER_FILTER_CHAIN_ENABLED =
 		"invoker.filter.chain.cache.enabled";
 
@@ -1232,6 +1267,9 @@ public interface PropsKeys {
 
 	public static final String JSON_SERVICE_SERIALIZE_THROWABLE =
 		"json.service.serialize.throwable";
+
+	public static final String JSON_STRING_MAX_LENGTH =
+		"json.string.max.length";
 
 	public static final String JSON_WEB_SERVICE_ENABLED =
 		"json.web.service.enabled";
@@ -1357,6 +1395,9 @@ public interface PropsKeys {
 
 	public static final String LAYOUT_SITEMAPABLE = "layout.sitemapable";
 
+	public static final String LAYOUT_STATIC_PORTLETS =
+		"layout.static.portlets.";
+
 	public static final String LAYOUT_STATIC_PORTLETS_ALL =
 		"layout.static.portlets.all";
 
@@ -1399,15 +1440,6 @@ public interface PropsKeys {
 
 	public static final String LDAP_ATTRS_TRANSFORMER_IMPL =
 		"ldap.attrs.transformer.impl";
-
-	public static final String LEARN_RESOURCES_CDN_ENABLED =
-		"learn.resources.cdn.enabled";
-
-	public static final String LEARN_RESOURCES_ENABLED =
-		"learn.resources.enabled";
-
-	public static final String LEARN_RESOURCES_REFRESH_TIME =
-		"learn.resources.refresh.time";
 
 	public static final String LIFERAY_HOME = "liferay.home";
 
@@ -2037,19 +2069,19 @@ public interface PropsKeys {
 		"portal.instance.protocol";
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PORTAL_JAAS_AUTH_TYPE = "portal.jaas.auth.type";
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PORTAL_JAAS_ENABLE = "portal.jaas.enable";
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static final String PORTAL_JAAS_PLAIN_PASSWORD =
@@ -2255,6 +2287,9 @@ public interface PropsKeys {
 		"schema.module.build.auto.upgrade";
 
 	public static final String SCHEMA_RUN_ENABLED = "schema.run.enabled";
+
+	public static final String SCRIPT_MANAGEMENT_CONFIGURATION_ENABLED =
+		"script.management.configuration.enabled";
 
 	public static final String SEARCH_CONTAINER_PAGE_DEFAULT_DELTA =
 		"search.container.page.default.delta";
@@ -2521,6 +2556,9 @@ public interface PropsKeys {
 
 	public static final String SOURCE_FORGE_MIRRORS = "source.forge.mirrors";
 
+	public static final String SPRING_BEANFACTORY_STRICT_LIFECYCLE_ENABLED =
+		"spring.beanfactory.strict.lifecycle.enabled";
+
 	public static final String SPRING_CONFIGS = "spring.configs";
 
 	public static final String
@@ -2544,6 +2582,9 @@ public interface PropsKeys {
 	public static final String
 		STAGING_DRAFT_EXPORT_IMPORT_CONFIGURATION_CLEAN_UP_COUNT =
 			"staging.draft.export.import.configuration.clean.up.count";
+
+	public static final String STAGING_GROUPS_IN_MEMORY_FILTER_LIMIT =
+		"staging.groups.in.memory.filter.limit";
 
 	public static final String STAGING_LIVE_GROUP_LOCKING_ENABLED =
 		"staging.live.group.locking.enabled";
@@ -2581,6 +2622,9 @@ public interface PropsKeys {
 
 	public static final String TABLE_MAPPER_CACHELESS_MAPPING_TABLE_NAMES =
 		"table.mapper.cacheless.mapping.table.names";
+
+	public static final String TEMPLATE_ENGINE_CACHE_ENABLED =
+		"template.engine.cache.enabled";
 
 	public static final String
 		TEMPLATE_ENGINE_FREEMARKER_TRANSACTION_READ_ONLY =
@@ -2627,9 +2671,6 @@ public interface PropsKeys {
 		"thread.dump.speed.threshold";
 
 	public static final String TIME_ZONES = "time.zones";
-
-	public static final String TRANSACTION_ISOLATION_COUNTER =
-		"transaction.isolation.counter";
 
 	public static final String TRANSACTION_ISOLATION_PORTAL =
 		"transaction.isolation.portal";
@@ -2835,6 +2876,10 @@ public interface PropsKeys {
 
 	public static final String VIRTUAL_HOSTS_IGNORE_PATHS =
 		"virtual.hosts.ignore.paths";
+
+	public static final String
+		VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT =
+			"virtual.hosts.per.company.in.memory.filter.limit";
 
 	public static final String VIRTUAL_HOSTS_STRICT_ACCESS =
 		"virtual.hosts.strict.access";

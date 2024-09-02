@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Kenji Heigel
@@ -146,6 +147,8 @@ public class GenerateReportsControllerBuildRunner
 	}
 
 	private Map<String, Long> _getLatestReportUpdateTimes() {
+		Map<String, Long> latestReportUpdateTimes = new HashMap<>();
+
 		List<Build> builds = _getBuildHistory();
 
 		BuildData buildData = getBuildData();
@@ -154,8 +157,6 @@ public class GenerateReportsControllerBuildRunner
 			buildData.getBuildURL(), null);
 
 		builds.remove(currentBuild);
-
-		Map<String, Long> latestReportUpdateTimes = new HashMap<>();
 
 		for (GenerateReportsBuildRunner.Report report :
 				GenerateReportsBuildRunner.Report.values()) {
@@ -179,9 +180,11 @@ public class GenerateReportsControllerBuildRunner
 
 			String reportName = report.toString();
 
+			long defaultStartTime =
+				buildData.getStartTime() - _getReportStaleDuration(reportName);
+
 			if (!latestReportUpdateTimes.containsKey(reportName)) {
-				latestReportUpdateTimes.put(
-					reportName, _getReportStaleDuration(reportName));
+				latestReportUpdateTimes.put(reportName, defaultStartTime);
 			}
 		}
 
@@ -206,7 +209,7 @@ public class GenerateReportsControllerBuildRunner
 			return _DEFAULT_REPORT_STALE_DURATION;
 		}
 
-		return Long.parseLong(reportStaleDuration);
+		return TimeUnit.MINUTES.toMillis(Long.parseLong(reportStaleDuration));
 	}
 
 	private List<String> _getSelectedReportNames() {
@@ -231,6 +234,15 @@ public class GenerateReportsControllerBuildRunner
 			long reportStaleDuration = startTime - entry.getValue();
 
 			if (reportStaleDuration >= _getReportStaleDuration(reportName)) {
+				System.out.println(
+					JenkinsResultsParserUtil.combine(
+						reportName, " was last generated ",
+						JenkinsResultsParserUtil.toDurationString(
+							reportStaleDuration),
+						" ago which exceeds the stale duration of ",
+						JenkinsResultsParserUtil.toDurationString(
+							_getReportStaleDuration(reportName))));
+
 				_selectedReportNames.add(reportName);
 			}
 		}

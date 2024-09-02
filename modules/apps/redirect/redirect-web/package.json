@@ -1,10 +1,11 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/alert": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/layout": "3.111.0",
-		"@clayui/modal": "3.111.0",
+		"@clayui/modal": "3.117.0",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
 		"react": "16.12.0",
@@ -13,10 +14,10 @@
 	"main": "js/index.js",
 	"name": "redirect-web",
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "2.0.71"
+	"version": "2.0.83"
 }

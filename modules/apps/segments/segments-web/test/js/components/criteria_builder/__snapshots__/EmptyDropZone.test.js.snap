@@ -26,26 +26,20 @@ exports[`EmptyDropZone renders illustration when empty contributors 1`] = `
             <img
               alt=""
               class="aspect-ratio-item aspect-ratio-item-fluid d-none-c-prefers-reduced-motion"
-              src="http://localhost:8080/o/admin-theme/images/states/empty_state.gif"
+              src="http://localhost:8080/o/admin-theme/images/states/empty_state.svg"
             />
             <img
               alt=""
               class="aspect-ratio-item aspect-ratio-item-fluid d-block-c-prefers-reduced-motion"
-              src="/o/admin-theme/images/states/empty_state_reduced_motion.gif"
+              src="/o/admin-theme/images/states/empty_state_reduced_motion.svg"
             />
           </div>
         </div>
         <div
           class="c-empty-state-title"
         >
-          <span
-            class="text-truncate-inline"
-          >
-            <span
-              class="text-truncate"
-            >
-              no-x-yet
-            </span>
+          <span>
+            no-x-yet
           </span>
         </div>
         <div

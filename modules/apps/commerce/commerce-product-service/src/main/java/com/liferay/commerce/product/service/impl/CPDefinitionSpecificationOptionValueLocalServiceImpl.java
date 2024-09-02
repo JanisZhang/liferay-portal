@@ -189,6 +189,7 @@ public class CPDefinitionSpecificationOptionValueLocalServiceImpl
 			deleteCPDefinitionSpecificationOptionValues(cpDefinitionId, true);
 	}
 
+	@Override
 	public void deleteCPDefinitionSpecificationOptionValues(
 			long cpDefinitionId, boolean makeCopy)
 		throws PortalException {
@@ -248,6 +249,15 @@ public class CPDefinitionSpecificationOptionValueLocalServiceImpl
 
 		return cpDefinitionSpecificationOptionValuePersistence.fetchByC_CSOVI(
 			cpDefinitionId, cpDefinitionSpecificationOptionValueId);
+	}
+
+	@Override
+	public CPDefinitionSpecificationOptionValue
+		fetchCPDefinitionSpecificationOptionValue(
+			long cpDefinitionId, String key) {
+
+		return cpDefinitionSpecificationOptionValuePersistence.fetchByC_K(
+			cpDefinitionId, key);
 	}
 
 	@Override

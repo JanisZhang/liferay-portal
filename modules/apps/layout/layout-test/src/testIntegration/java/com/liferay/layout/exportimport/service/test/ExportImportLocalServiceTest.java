@@ -89,7 +89,7 @@ public class ExportImportLocalServiceTest {
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionLocalService.
 				addLayoutPageTemplateCollection(
-					TestPropsValues.getUserId(), group1.getGroupId(),
+					null, TestPropsValues.getUserId(), group1.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 					RandomTestUtil.randomString(), StringPool.BLANK,
@@ -98,7 +98,8 @@ public class ExportImportLocalServiceTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				serviceContext.getUserId(), serviceContext.getScopeGroupId(),
+				null, serviceContext.getUserId(),
+				serviceContext.getScopeGroupId(),
 				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
 				RandomTestUtil.randomString(),
@@ -184,7 +185,7 @@ public class ExportImportLocalServiceTest {
 		throws Exception {
 
 		Layout layout = _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), group.getGroupId(), false,
+			null, TestPropsValues.getUserId(), group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			HashMapBuilder.put(
 				_portal.getSiteDefaultLocale(group.getGroupId()), name

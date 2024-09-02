@@ -8,6 +8,7 @@ package com.liferay.project.templates.simulation.panel.entry;
 import com.liferay.maven.executor.MavenExecutor;
 import com.liferay.project.templates.BaseProjectTemplatesTestCase;
 import com.liferay.project.templates.extensions.util.Validator;
+import com.liferay.project.templates.extensions.util.VersionUtil;
 import com.liferay.project.templates.util.FileTestUtil;
 
 import java.io.File;
@@ -42,7 +43,7 @@ public class ProjectTemplatesSimulationPanelEntryTest
 			new Object[][] {
 				{"dxp", "7.0.10.17"}, {"dxp", "7.1.10.7"}, {"dxp", "7.2.10.7"},
 				{"portal", "7.3.7"}, {"portal", "7.4.3.56"},
-				{"dxp", "7.4.13.u72"}
+				{"dxp", "7.4.13.u72"}, {"dxp", "2024.q1.1"}
 			});
 	}
 
@@ -120,8 +121,9 @@ public class ProjectTemplatesSimulationPanelEntryTest
 			temporaryFolder, "maven", "mavenWS", _liferayVersion,
 			mavenExecutor);
 
-		if (_liferayVersion.startsWith("7.4") &&
-			_liferayProduct.equals("dxp")) {
+		if (_liferayVersion.startsWith("20") ||
+			(_liferayVersion.startsWith("7.4") &&
+			 _liferayProduct.equals("dxp"))) {
 
 			updateMavenPomProperties(
 				mavenWorkspaceDir, "liferay.bom.version", "liferay.bom.version",
@@ -142,19 +144,12 @@ public class ProjectTemplatesSimulationPanelEntryTest
 
 		File mavenModulesDir = new File(mavenWorkspaceDir, "modules");
 
-		String newTemplate = "false";
+		boolean newTemplate = false;
 
-		if (_liferayVersion.startsWith("7.4")) {
-			String qualifiedVersion = _liferayVersion.substring(
-				_liferayVersion.lastIndexOf(".") + 1);
+		if (_liferayVersion.equals("7.4.13.u72") ||
+			VersionUtil.isLiferayQuarterlyVersion(_liferayVersion)) {
 
-			if (_liferayProduct.equals("dxp")) {
-				qualifiedVersion = qualifiedVersion.substring(1);
-			}
-
-			if (Integer.valueOf(qualifiedVersion) > 71) {
-				newTemplate = "true";
-			}
+			newTemplate = true;
 		}
 
 		File mavenProjectDir = buildTemplateWithMaven(
@@ -185,7 +180,10 @@ public class ProjectTemplatesSimulationPanelEntryTest
 	public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
 	private String _getLiferayWorkspaceProduct() {
-		if (_liferayVersion.startsWith("7.0")) {
+		if (_liferayVersion.startsWith("20")) {
+			return "dxp-2024.q1.1";
+		}
+		else if (_liferayVersion.startsWith("7.0")) {
 			return "dxp-7.0-sp17";
 		}
 		else if (_liferayVersion.startsWith("7.1")) {

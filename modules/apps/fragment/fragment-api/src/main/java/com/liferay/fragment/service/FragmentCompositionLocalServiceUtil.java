@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -53,15 +54,17 @@ public class FragmentCompositionLocalServiceUtil {
 	}
 
 	public static FragmentComposition addFragmentComposition(
-			long userId, long groupId, long fragmentCollectionId,
-			String fragmentCompositionKey, String name, String description,
-			String data, long previewFileEntryId, int status,
+			String externalReferenceCode, long userId, long groupId,
+			long fragmentCollectionId, String fragmentCompositionKey,
+			String name, String description, String data,
+			long previewFileEntryId, int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFragmentComposition(
-			userId, groupId, fragmentCollectionId, fragmentCompositionKey, name,
-			description, data, previewFileEntryId, status, serviceContext);
+			externalReferenceCode, userId, groupId, fragmentCollectionId,
+			fragmentCompositionKey, name, description, data, previewFileEntryId,
+			status, serviceContext);
 	}
 
 	/**
@@ -120,6 +123,14 @@ public class FragmentCompositionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().deleteFragmentComposition(fragmentCompositionId);
+	}
+
+	public static FragmentComposition deleteFragmentComposition(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteFragmentComposition(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -230,6 +241,14 @@ public class FragmentCompositionLocalServiceUtil {
 			groupId, fragmentCompositionKey);
 	}
 
+	public static FragmentComposition
+		fetchFragmentCompositionByExternalReferenceCode(
+			String externalReferenceCode, long groupId) {
+
+		return getService().fetchFragmentCompositionByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the fragment composition matching the UUID and group.
 	 *
@@ -276,6 +295,15 @@ public class FragmentCompositionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getFragmentComposition(fragmentCompositionId);
+	}
+
+	public static FragmentComposition
+			getFragmentCompositionByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getFragmentCompositionByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -484,13 +512,12 @@ public class FragmentCompositionLocalServiceUtil {
 	}
 
 	public static FragmentCompositionLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(FragmentCompositionLocalService service) {
-		_service = service;
-	}
-
-	private static volatile FragmentCompositionLocalService _service;
+	private static final Snapshot<FragmentCompositionLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			FragmentCompositionLocalServiceUtil.class,
+			FragmentCompositionLocalService.class);
 
 }

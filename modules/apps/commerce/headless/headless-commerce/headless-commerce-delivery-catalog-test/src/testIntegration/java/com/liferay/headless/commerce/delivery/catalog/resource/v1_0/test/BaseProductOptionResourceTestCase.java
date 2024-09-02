@@ -38,6 +38,7 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -98,7 +99,7 @@ public abstract class BaseProductOptionResourceTestCase {
 		ProductOptionResource.Builder builder = ProductOptionResource.builder();
 
 		productOptionResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -112,7 +113,32 @@ public abstract class BaseProductOptionResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductOption productOption1 = randomProductOption();
+
+		String json = objectMapper.writeValueAsString(productOption1);
+
+		ProductOption productOption2 = ProductOptionSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(productOption1, productOption2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductOption productOption = randomProductOption();
+
+		String json1 = objectMapper.writeValueAsString(productOption);
+		String json2 = ProductOptionSerDes.toJSON(productOption);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -127,40 +153,6 @@ public abstract class BaseProductOptionResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ProductOption productOption1 = randomProductOption();
-
-		String json = objectMapper.writeValueAsString(productOption1);
-
-		ProductOption productOption2 = ProductOptionSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(productOption1, productOption2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ProductOption productOption = randomProductOption();
-
-		String json1 = objectMapper.writeValueAsString(productOption);
-		String json2 = ProductOptionSerDes.toJSON(productOption);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -173,6 +165,7 @@ public abstract class BaseProductOptionResourceTestCase {
 		productOption.setFieldType(regex);
 		productOption.setKey(regex);
 		productOption.setName(regex);
+		productOption.setOptionExternalReferenceCode(regex);
 
 		String json = ProductOptionSerDes.toJSON(productOption);
 
@@ -184,6 +177,256 @@ public abstract class BaseProductOptionResourceTestCase {
 		Assert.assertEquals(regex, productOption.getFieldType());
 		Assert.assertEquals(regex, productOption.getKey());
 		Assert.assertEquals(regex, productOption.getName());
+		Assert.assertEquals(
+			regex, productOption.getOptionExternalReferenceCode());
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage()
+		throws Exception {
+
+		String channelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getChannelExternalReferenceCode();
+		String irrelevantChannelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getIrrelevantChannelExternalReferenceCode();
+		String productExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getProductExternalReferenceCode();
+		String irrelevantProductExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getIrrelevantProductExternalReferenceCode();
+
+		Page<ProductOption> page =
+			productOptionResource.
+				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+					channelExternalReferenceCode, productExternalReferenceCode,
+					Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if ((irrelevantChannelExternalReferenceCode != null) &&
+			(irrelevantProductExternalReferenceCode != null)) {
+
+			ProductOption irrelevantProductOption =
+				testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_addProductOption(
+					irrelevantChannelExternalReferenceCode,
+					irrelevantProductExternalReferenceCode,
+					randomIrrelevantProductOption());
+
+			page =
+				productOptionResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+						irrelevantChannelExternalReferenceCode,
+						irrelevantProductExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantProductOption, (List<ProductOption>)page.getItems());
+			assertValid(
+				page,
+				testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getExpectedActions(
+					irrelevantChannelExternalReferenceCode,
+					irrelevantProductExternalReferenceCode));
+		}
+
+		ProductOption productOption1 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_addProductOption(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomProductOption());
+
+		ProductOption productOption2 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_addProductOption(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomProductOption());
+
+		page =
+			productOptionResource.
+				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+					channelExternalReferenceCode, productExternalReferenceCode,
+					Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(productOption1, (List<ProductOption>)page.getItems());
+		assertContains(productOption2, (List<ProductOption>)page.getItems());
+		assertValid(
+			page,
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getExpectedActions(
+				channelExternalReferenceCode, productExternalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getExpectedActions(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPageWithPagination()
+		throws Exception {
+
+		String channelExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getChannelExternalReferenceCode();
+		String productExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getProductExternalReferenceCode();
+
+		Page<ProductOption> productOptionPage =
+			productOptionResource.
+				getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+					channelExternalReferenceCode, productExternalReferenceCode,
+					null);
+
+		int totalCount = GetterUtil.getInteger(
+			productOptionPage.getTotalCount());
+
+		ProductOption productOption1 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_addProductOption(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomProductOption());
+
+		ProductOption productOption2 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_addProductOption(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomProductOption());
+
+		ProductOption productOption3 =
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_addProductOption(
+				channelExternalReferenceCode, productExternalReferenceCode,
+				randomProductOption());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductOption> page1 =
+				productOptionResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(
+				productOption1, (List<ProductOption>)page1.getItems());
+
+			Page<ProductOption> page2 =
+				productOptionResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			assertContains(
+				productOption2, (List<ProductOption>)page2.getItems());
+
+			Page<ProductOption> page3 =
+				productOptionResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
+
+			assertContains(
+				productOption3, (List<ProductOption>)page3.getItems());
+		}
+		else {
+			Page<ProductOption> page1 =
+				productOptionResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<ProductOption> productOptions1 =
+				(List<ProductOption>)page1.getItems();
+
+			Assert.assertEquals(
+				productOptions1.toString(), totalCount + 2,
+				productOptions1.size());
+
+			Page<ProductOption> page2 =
+				productOptionResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductOption> productOptions2 =
+				(List<ProductOption>)page2.getItems();
+
+			Assert.assertEquals(
+				productOptions2.toString(), 1, productOptions2.size());
+
+			Page<ProductOption> page3 =
+				productOptionResource.
+					getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage(
+						channelExternalReferenceCode,
+						productExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				productOption1, (List<ProductOption>)page3.getItems());
+			assertContains(
+				productOption2, (List<ProductOption>)page3.getItems());
+			assertContains(
+				productOption3, (List<ProductOption>)page3.getItems());
+		}
+	}
+
+	protected ProductOption
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_addProductOption(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode,
+				ProductOption productOption)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getChannelExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getIrrelevantChannelExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getProductExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionsPage_getIrrelevantProductExternalReferenceCode()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -517,6 +760,16 @@ public abstract class BaseProductOptionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"optionExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (productOption.getOptionExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("optionId", additionalAssertFieldName)) {
 				if (productOption.getOptionId() == null) {
 					valid = false;
@@ -734,6 +987,19 @@ public abstract class BaseProductOptionResourceTestCase {
 			if (Objects.equals("name", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						productOption1.getName(), productOption2.getName())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"optionExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productOption1.getOptionExternalReferenceCode(),
+						productOption2.getOptionExternalReferenceCode())) {
 
 					return false;
 				}
@@ -1099,6 +1365,52 @@ public abstract class BaseProductOptionResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("optionExternalReferenceCode")) {
+			Object object = productOption.getOptionExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("optionId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1139,7 +1451,8 @@ public abstract class BaseProductOptionResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1177,6 +1490,8 @@ public abstract class BaseProductOptionResourceTestCase {
 				id = RandomTestUtil.randomLong();
 				key = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				optionExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				optionId = RandomTestUtil.randomLong();
 				priority = RandomTestUtil.randomDouble();
 				required = RandomTestUtil.randomBoolean();
@@ -1205,12 +1520,12 @@ public abstract class BaseProductOptionResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1219,11 +1534,16 @@ public abstract class BaseProductOptionResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1255,6 +1575,24 @@ public abstract class BaseProductOptionResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1276,16 +1614,6 @@ public abstract class BaseProductOptionResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

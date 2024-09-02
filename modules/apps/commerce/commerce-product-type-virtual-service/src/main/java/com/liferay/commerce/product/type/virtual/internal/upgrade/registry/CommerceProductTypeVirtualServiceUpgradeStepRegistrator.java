@@ -7,8 +7,10 @@ package com.liferay.commerce.product.type.virtual.internal.upgrade.registry;
 
 import com.liferay.commerce.product.type.virtual.internal.upgrade.v1_1_0.CPDefinitionVirtualSettingUpgradeProcess;
 import com.liferay.commerce.product.type.virtual.internal.upgrade.v3_0_0.CPDVirtualSettingFileEntryUpgradeProcess;
+import com.liferay.commerce.product.type.virtual.internal.upgrade.v3_0_1.DLFileEntryUpgradeProcess;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.upgrade.DummyUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
@@ -36,10 +38,9 @@ public class CommerceProductTypeVirtualServiceUpgradeStepRegistrator
 		registry.register(
 			"1.1.0", "1.1.1",
 			UpgradeProcessFactory.alterColumnType(
-				"CPDefinitionVirtualSetting", "url", "VARCHAR(255) null"),
+				"CPDefinitionVirtualSetting", "sampleUrl", "VARCHAR(255) null"),
 			UpgradeProcessFactory.alterColumnType(
-				"CPDefinitionVirtualSetting", "sampleUrl",
-				"VARCHAR(255) null"));
+				"CPDefinitionVirtualSetting", "url", "VARCHAR(255) null"));
 
 		registry.register(
 			"1.1.1", "1.2.0",
@@ -58,8 +59,18 @@ public class CommerceProductTypeVirtualServiceUpgradeStepRegistrator
 				"CPDefinitionVirtualSetting", "sampleUrl",
 				"sampleURL VARCHAR(255) null"));
 
+		registry.register("2.0.0", "2.0.1", new DummyUpgradeProcess());
+
 		registry.register(
-			"2.0.0", "3.0.0", new CPDVirtualSettingFileEntryUpgradeProcess());
+			"2.0.1", "3.0.0", new CPDVirtualSettingFileEntryUpgradeProcess());
+
+		registry.register(
+			"3.0.0", "3.0.1",
+			new com.liferay.commerce.product.type.virtual.internal.upgrade.
+				v3_0_1.CPDefinitionVirtualSettingUpgradeProcess(),
+			new com.liferay.commerce.product.type.virtual.internal.upgrade.
+				v3_0_1.CPDVirtualSettingFileEntryUpgradeProcess(),
+			new DLFileEntryUpgradeProcess());
 
 		if (_log.isInfoEnabled()) {
 			_log.info(

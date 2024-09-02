@@ -1,10 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-site-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Navigation";
+	property testray.main.component.name = "Navigation Menus";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -18,15 +18,15 @@ definition {
 		}
 
 		task ("Enable local live") {
-			Staging.openStagingAdmin(siteURLKey = "test-site-name");
-
-			Staging.activateStagingCP(siteName = "Test Site Name");
+			JSONStaging.enableLocalStaging(groupName = "Test Site Name");
 		}
 	}
 
-	@description = "This is a test for LPS-135675. The user can create navigate menu items based on assets with associated display page template in staging site."
-	@priority = 4
+	@description = "This is a test for LPS-135675 and LPS-141351. The user can create navigate menu items based on assets with associated display page template in staging site."
+	@priority = 5
 	test AddDisplayPageTypeNavigationMenuItems {
+		property portal.acceptance = "true";
+
 		var groupId = JSONGroupSetter.setGroupId(
 			groupName = "Test Site Name (Staging)",
 			site = "false");

@@ -1,10 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Fragments";
+	property testray.main.component.name = "Fragment Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -70,7 +70,7 @@ definition {
 		}
 
 		task ("When the page designer accesses to the General tab of Multiselect List fragment") {
-			PageEditor.gotoConfiguration(fragmentName = "Multiselect List");
+			PageEditor.gotoConfiguration(fragmentName = "Multiselect");
 		}
 
 		task ("Then the page designer sees the default Number of Options is 5") {
@@ -82,7 +82,7 @@ definition {
 
 		task ("When the pages designer changes the Number of Options to 3") {
 			PageEditor.editInput(
-				fragmentName = "Multiselect List",
+				fragmentName = "Multiselect",
 				numberOfOptions = 3);
 		}
 
@@ -146,7 +146,7 @@ definition {
 				siteName = "Test Site Name");
 
 			PageEditor.editInput(
-				fragmentName = "Multiselect List",
+				fragmentName = "Multiselect",
 				showAllOptions = "true");
 		}
 
@@ -207,12 +207,12 @@ definition {
 			PageEditor.viewInputStyle(
 				label = "Favorite",
 				showLabel = "true",
-				type = "multiselect-list");
+				type = "multiselect");
 		}
 
 		task ("When the page designer enables the Show Help Text") {
 			PageEditor.editInput(
-				fragmentName = "Multiselect List",
+				fragmentName = "Multiselect",
 				hideHelpText = "false");
 		}
 
@@ -220,12 +220,12 @@ definition {
 			PageEditor.viewInputStyle(
 				helpText = "Add your help text here.",
 				showHelpText = "true",
-				type = "multiselect-list");
+				type = "multiselect");
 		}
 
 		task ("When the pages designer types a new label") {
 			PageEditor.editInput(
-				fragmentName = "Multiselect List",
+				fragmentName = "Multiselect",
 				label = "Preferences");
 		}
 
@@ -233,12 +233,12 @@ definition {
 			PageEditor.viewInputStyle(
 				label = "Preferences",
 				showLabel = "true",
-				type = "multiselect-list");
+				type = "multiselect");
 		}
 
 		task ("When the page designer marks the Multiselect List as required") {
 			PageEditor.editInput(
-				fragmentName = "Multiselect List",
+				fragmentName = "Multiselect",
 				markAsRequired = "true");
 		}
 
@@ -246,7 +246,7 @@ definition {
 			PageEditor.viewInputStyle(
 				label = "Preferences",
 				markAsRequired = "true",
-				type = "multiselect-list");
+				type = "multiselect");
 		}
 	}
 

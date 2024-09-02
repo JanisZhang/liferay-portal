@@ -3,20 +3,40 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useParams} from 'react-router-dom';
+import {ClayTooltipProvider} from '@clayui/tooltip';
+import {useNavigate, useParams} from 'react-router-dom';
+import Button from '~/components/Button';
+import TestrayIcons from '~/components/Icons/TestrayIcon';
+import fetcher from '~/services/fetcher';
+import {Liferay} from '~/services/liferay';
+import {TestrayRoutine} from '~/services/rest';
 
 import Container from '../../../components/Layout/Container';
 import ListViewRest from '../../../components/ListView';
 import ProgressBar from '../../../components/ProgressBar';
-import SearchBuilder from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
-import {TestrayRoutine, testrayRoutineImpl} from '../../../services/rest';
 import {getTimeFromNow} from '../../../util/date';
 import useRoutineActions from './useRoutineActions';
 
 const Routines = () => {
-	const {actions, navigate} = useRoutineActions();
+	const {actions} = useRoutineActions();
 	const {projectId} = useParams();
+	const navigate = useNavigate();
+
+	const handleCompareRuns = (testrayRoutineId: number) => {
+		fetcher(
+			`/testray-run-comparisons/by-testray-routineId/${testrayRoutineId}`
+		)
+			.then(({runId1, runId2}) =>
+				navigate(`/compare-runs/${runId1.runId}/${runId2.runId}/teams`)
+			)
+			.catch((_) =>
+				Liferay.Util.openToast({
+					message: i18n.translate('unable-to-find-more-than-one-run'),
+					type: 'danger',
+				})
+			);
+	};
 
 	return (
 		<Container>
@@ -31,122 +51,124 @@ const Routines = () => {
 					columnsFixed: ['name'],
 				}}
 				managementToolbarProps={{
-					addButton: () => navigate('create'),
+					applyFilters: true,
 					filterSchema: 'routines',
 					title: i18n.translate('routines'),
 				}}
-				resource={testrayRoutineImpl.resource}
+				resource={`/testray-status-metrics/by-testray-projectId/${projectId}/testray-routines-metrics`}
 				tableProps={{
 					actions,
 					columns: [
 						{
 							clickable: true,
-							key: 'name',
+							key: 'testrayRoutineName',
 							size: 'md',
 							sorteable: true,
 							value: i18n.translate('routine'),
 						},
 						{
+							key: 'testrayRoutineId',
+							render: (testrayRoutineId) => (
+								<ClayTooltipProvider>
+									<Button
+										className="align-items-center d-flex p-0 rounded-circle tr-assign-to-me"
+										data-tooltip-align="right"
+										displayType="link"
+										onClick={() =>
+											handleCompareRuns(testrayRoutineId)
+										}
+										title={i18n.sub('compare-x', 'runs')}
+									>
+										<TestrayIcons
+											fill="#acbcc7"
+											size={30}
+											symbol="drop"
+										/>
+									</Button>
+								</ClayTooltipProvider>
+							),
+							value: '',
+						},
+						{
 							clickable: true,
-							key: 'dateCreated',
+							key: 'dueDate',
 							render: (_, testrayRoutine: TestrayRoutine) =>
-								testrayRoutine.builds[0]?.dateCreated
+								testrayRoutine?.testrayBuildDueDate
 									? getTimeFromNow(
-											testrayRoutine.builds[0]
-												?.dateCreated
-									  )
+											testrayRoutine?.testrayBuildDueDate
+										)
 									: null,
 							value: i18n.translate('execution-date'),
 						},
 						{
 							clickable: true,
 							key: 'untested',
-							render: (_, testrayRoutine: TestrayRoutine) =>
-								testrayRoutine.builds[0]?.caseResultUntested ??
-								0,
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.untested,
 							value: i18n.translate('untested'),
 						},
 						{
 							clickable: true,
-							key: 'inprogress',
-							render: (_, testrayRoutine: TestrayRoutine) =>
-								testrayRoutine.builds[0]
-									?.caseResultInProgress ?? 0,
+							key: 'in-progress',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.inProgress,
 							value: i18n.translate('in-progress'),
 						},
 						{
 							clickable: true,
 							key: 'passed',
-							render: (_, testrayRoutine: TestrayRoutine) =>
-								testrayRoutine.builds[0]?.caseResultPassed ?? 0,
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.passed,
 							value: i18n.translate('passed'),
 						},
 						{
 							clickable: true,
 							key: 'failed',
-							render: (_, testrayRoutine: TestrayRoutine) =>
-								testrayRoutine.builds[0]?.caseResultFailed ?? 0,
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.failed,
 							value: i18n.translate('failed'),
 						},
 						{
 							clickable: true,
 							key: 'blocked',
-							render: (_, testrayRoutine: TestrayRoutine) =>
-								testrayRoutine.builds[0]?.caseResultBlocked ??
-								0,
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.blocked,
 							value: i18n.translate('blocked'),
 						},
 						{
 							clickable: true,
-							key: 'testfix',
-							render: (_, testrayRoutine: TestrayRoutine) =>
-								testrayRoutine.builds[0]?.caseResultTestFix ??
-								0,
+							key: 'test-fix',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.testfix,
 							value: i18n.translate('test-fix'),
 						},
 						{
 							clickable: true,
 							key: 'total',
-							render: (_, testrayRoutine: TestrayRoutine) =>
-								[
-									testrayRoutine.builds[0]?.caseResultBlocked,
-									testrayRoutine.builds[0]?.caseResultFailed,
-									testrayRoutine.builds[0]
-										?.caseResultInProgress,
-									testrayRoutine.builds[0]?.caseResultPassed,
-									testrayRoutine.builds[0]?.caseResultTestFix,
-									testrayRoutine.builds[0]
-										?.caseResultUntested,
-								]
-									.map((count) => (count ? Number(count) : 0))
-									.reduce(
-										(previousValue, currentValue) =>
-											previousValue + currentValue
-									),
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.total,
 							value: i18n.translate('total'),
 						},
 						{
 							clickable: true,
-							key: 'metrics',
-							render: (_, testrayRoutine: TestrayRoutine) => (
+							key: 'testrayStatusMetric',
+							render: (testrayStatusMetric) => (
 								<ProgressBar
+									chartOrder={[
+										'passed',
+										'failed',
+										'blocked',
+										'test_fix',
+										'incomplete',
+									]}
 									items={{
-										blocked: Number(
-											testrayRoutine.builds[0]
-												?.caseResultBlocked
-										),
-										failed: Number(
-											testrayRoutine.builds[0]
-												?.caseResultFailed
-										),
-										passed: Number(
-											testrayRoutine.builds[0]
-												?.caseResultPassed
-										),
-										test_fix: Number(
-											testrayRoutine.builds[0]
-												?.caseResultTestFix
-										),
+										blocked: testrayStatusMetric?.blocked,
+										failed: testrayStatusMetric?.failed,
+										incomplete:
+											testrayStatusMetric?.untested +
+											testrayStatusMetric?.inProgress,
+										passed: testrayStatusMetric?.passed,
+										test_fix: testrayStatusMetric?.testfix,
 									}}
 								/>
 							),
@@ -154,13 +176,7 @@ const Routines = () => {
 							width: '300',
 						},
 					],
-					navigateTo: ({id}) => id,
-				}}
-				transformData={(response) =>
-					testrayRoutineImpl.transformDataFromList(response)
-				}
-				variables={{
-					filter: SearchBuilder.eq('projectId', projectId as string),
+					navigateTo: ({testrayRoutineId}) => testrayRoutineId,
 				}}
 			/>
 		</Container>

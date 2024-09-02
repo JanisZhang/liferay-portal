@@ -133,7 +133,7 @@
 		<#list dlFolderModels as dlFolderModel>
 			${dataFactory.toInsertSQL(dlFolderModel)}
 
-			<@insertAssetEntry _entry=dlFolderModel />
+			<@insertAssetEntry _entry = dlFolderModel />
 
 			<#local dlFileEntryModels = dataFactory.newDlFileEntryModels(dlFolderModel)>
 
@@ -144,23 +144,23 @@
 
 				${dataFactory.toInsertSQL(dlFileVersionModel)}
 
-				<@insertAssetEntry _entry=dlFileEntryModel />
+				<@insertAssetEntry _entry = dlFileEntryModel />
 
 				<#local ddmStorageLinkId = dataFactory.getCounterNext()>
 
 				<@insertDDMContent
-					_ddmStorageLinkId=ddmStorageLinkId
-					_ddmStructureId=_ddmStructureId
-					_entry=dlFileEntryModel
+					_ddmStorageLinkId = ddmStorageLinkId
+					_ddmStructureId = _ddmStructureId
+					_entry = dlFileEntryModel
 				/>
 
 				<@insertMBDiscussion
-					_classNameId=dataFactory.DLFileEntryClassNameId
-					_classPK=dlFileEntryModel.fileEntryId
-					_groupId=dlFileEntryModel.groupId
-					_maxCommentCount=0
-					_mbRootMessageId=dataFactory.getCounterNext()
-					_mbThreadId=dataFactory.getCounterNext()
+					_classNameId = dataFactory.DLFileEntryClassNameId
+					_classPK = dlFileEntryModel.fileEntryId
+					_groupId = dlFileEntryModel.groupId
+					_maxCommentCount = 0
+					_mbRootMessageId = dataFactory.getCounterNext()
+					_mbThreadId = dataFactory.getCounterNext()
 				/>
 
 				${dataFactory.toInsertSQL(dataFactory.newSocialActivityModel(dlFileEntryModel))}
@@ -177,10 +177,10 @@
 			<#local groupModel = _groupModel>
 
 			<@insertDLFolder
-				_ddmStructureId=_ddmStructureId
-				_dlFolderDepth=_dlFolderDepth + 1
-				_groupModel=groupModel
-				_parentDLFolderId=dlFolderModel.folderId
+				_ddmStructureId = _ddmStructureId
+				_dlFolderDepth = _dlFolderDepth + 1
+				_groupModel = groupModel
+				_parentDLFolderId = dlFolderModel.folderId
 			/>
 		</#list>
 	</#if>
@@ -230,8 +230,8 @@
 
 	<#if _insertAssetEntry>
 		<@insertAssetEntry
-			_categoryAndTag=true
-			_entry=dataFactory.newObjectValuePair(journalArticleModel, journalArticleLocalizationModel)
+			_categoryAndTag = true
+			_entry = dataFactory.newObjectValuePair(journalArticleModel, journalArticleLocalizationModel)
 		/>
 	</#if>
 </#macro>
@@ -258,12 +258,12 @@
 
 	<#local mbRootMessageModel = dataFactory.newMBMessageModel(mbThreadModel, _classNameId, _classPK, 0)>
 
-	<@insertMBMessage _mbMessageModel=mbRootMessageModel />
+	<@insertMBMessage _mbMessageModel = mbRootMessageModel />
 
 	<#local mbMessageModels = dataFactory.newMBMessageModels(mbThreadModel, _classNameId, _classPK, _maxCommentCount)>
 
 	<#list mbMessageModels as mbMessageModel>
-		<@insertMBMessage _mbMessageModel=mbMessageModel />
+		<@insertMBMessage _mbMessageModel = mbMessageModel />
 
 		${dataFactory.toInsertSQL(dataFactory.newSocialActivityModel(mbMessageModel))}
 	</#list>
@@ -276,7 +276,7 @@
 >
 	${dataFactory.toInsertSQL(_mbMessageModel)}
 
-	<@insertAssetEntry _entry=_mbMessageModel />
+	<@insertAssetEntry _entry = _mbMessageModel />
 </#macro>
 
 <#macro insertUser
@@ -289,10 +289,10 @@
 	${dataFactory.toInsertSQL(dataFactory.newContactModel(_userModel))}
 
 	<#list _roleIds as roleId>
-		${dataFactory.toInsertSQL("Users_Roles", 0, roleId, _userModel.userId)}
+		${dataFactory.toInsertSQL("Users_Roles", _userModel.companyId, roleId, _userModel.userId)}
 	</#list>
 
 	<#list _groupIds as groupId>
-		${dataFactory.toInsertSQL("Users_Groups", 0, groupId, _userModel.userId)}
+		${dataFactory.toInsertSQL("Users_Groups", _userModel.companyId, groupId, _userModel.userId)}
 	</#list>
 </#macro>

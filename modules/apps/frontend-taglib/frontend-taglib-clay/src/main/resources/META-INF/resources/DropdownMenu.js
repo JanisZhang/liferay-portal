@@ -8,13 +8,15 @@ import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
 import classNames from 'classnames';
-import React from 'react';
+import React, {useState} from 'react';
 
 import normalizeDropdownItems from './normalize_dropdown_items';
 
 export default function DropdownMenu({
 	actionsDropdown = false,
 	additionalProps: _additionalProps,
+	alignmentByViewport,
+	alignmentPosition,
 	componentId: _componentId,
 	cssClass,
 	icon,
@@ -24,16 +26,44 @@ export default function DropdownMenu({
 	menuProps,
 	portletId: _portletId,
 	portletNamespace: _portletNamespace,
+	searchable,
 	swapIconSide,
 	...otherProps
 }) {
+	const [filteredItems, setFilteredItems] = useState(items);
+	const [searchValue, setSearchValue] = useState('');
+
+	const searchableProps = searchable
+		? {
+				onSearchValueChange: (value) => {
+					setFilteredItems(() =>
+						value
+							? items.filter(
+									({label}) =>
+										label
+											.toLowerCase()
+											.indexOf(value.toLowerCase()) !== -1
+								)
+							: items
+					);
+
+					setSearchValue(value);
+				},
+				searchValue,
+				searchable,
+			}
+		: {};
+
 	return (
 		<>
 			<ClayDropDownWithItems
+				{...searchableProps}
+				alignmentByViewport={alignmentByViewport}
+				alignmentPosition={alignmentPosition}
 				className={classNames({
 					'dropdown-action': actionsDropdown,
 				})}
-				items={normalizeDropdownItems(items) || []}
+				items={normalizeDropdownItems(filteredItems) || []}
 				menuElementAttrs={menuProps}
 				trigger={
 					<ClayButton

@@ -114,7 +114,7 @@ definition {
 		User.logoutPG();
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Blogs Page");
@@ -124,7 +124,7 @@ definition {
 		User.logoutPG();
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		JSONBlog.addEntry(
@@ -281,7 +281,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		Notifications.viewBadgeCount(notificationCount = 0);
 
@@ -300,44 +300,6 @@ definition {
 			entryTitle = "Blogs Entry Title");
 
 		Notifications.viewBadgeCount(notificationCount = 0);
-	}
-
-	@description = "This test covers LPS-143369. It validates that an email notification can be received after a Blog update is scheduled and the time is reached."
-	@priority = 4
-	test EmailIsReceivedWhenUpdateReachesScheduledTime {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}jsonws.web.service.paths.excludes=";
-		property test.smtp.server.enabled = "true";
-
-		JSONBlog.subscribeToBlogsWidget(
-			groupName = "Guest",
-			userEmailAddress = "userea@liferay.com");
-
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title");
-
-		JSONBlog.updateEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title",
-			groupName = "Guest",
-			increaseMinutes = 1,
-			newDisplayDate = "true",
-			newEntryContent = "Blogs Entry Content Edit");
-
-		Navigator.gotoPage(pageName = "Blogs Page");
-
-		Navigator.gotoNavItem(navItem = "Not Published (1)");
-
-		// We need to wait for the system time to pass by 1 minute in order for a scheduled blog entry to be published. There is currently no easy way to manipulate the system time in CI for automation. 1 minute is the shortest value we can set while ensuring the stability of the test. See LPS-157957.
-
-		Pause(value1 = 60000);
-
-		MockMock.viewMail(
-			asset = "Test Test Updated",
-			content = "Blogs Entry Title",
-			recipient = "userfn userln",
-			sender = "Joe Bloggs",
-			subject = "Test Test Updated");
 	}
 
 	@priority = 4

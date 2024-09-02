@@ -5,7 +5,7 @@
 
 import Button from '@clayui/button';
 import {useFormikContext} from 'formik';
-import {useCallback} from 'react';
+import {useCallback, useState} from 'react';
 
 import PRMForm from '../../../../common/components/PRMForm';
 import PRMFormik from '../../../../common/components/PRMFormik';
@@ -23,17 +23,23 @@ import useDynamicFieldEntries from '../../hooks/useDynamicFieldEntries';
 import useMDFActivityOptions from '../../hooks/useMDFActivityOptions';
 import DealRegistrationStepProps from '../../interfaces/dealRegistrationStepProps';
 
+const sortByAsc = (
+	first: React.OptionHTMLAttributes<HTMLOptionElement>,
+	second: React.OptionHTMLAttributes<HTMLOptionElement>
+): number => {
+	return first.label && second.label
+		? first.label.localeCompare(second.label)
+		: 0;
+};
+
 const General = ({
 	onCancel,
 	onContinue,
 }: PRMFormikPageProps & DealRegistrationStepProps) => {
-	const {
-		dirty,
-		isValid,
-		setFieldValue,
-		values,
-		...formikHelpers
-	} = useFormikContext<DealRegistration>();
+	const {dirty, isValid, setFieldValue, values, ...formikHelpers} =
+		useFormikContext<DealRegistration>();
+
+	const [isButtonClicked, setIsButtonClicked] = useState(false);
 
 	const {companiesEntries, fieldEntries} = useDynamicFieldEntries(
 		useCallback(
@@ -73,45 +79,35 @@ const General = ({
 		)
 	);
 
-	const {
-		onSelected: onCountrySelected,
-		options: countryOptions,
-	} = getPicklistOptions(
-		fieldEntries[LiferayPicklistName.COUNTRIES],
-		(selected) => setFieldValue('prospect.country', selected)
-	);
+	const {onSelected: onCountrySelected, options: countryOptions} =
+		getPicklistOptions(
+			fieldEntries[LiferayPicklistName.COUNTRIES],
+			(selected) => setFieldValue('prospect.country', selected)
+		);
 
-	const {
-		onSelected: onIndustrySelected,
-		options: industryOptions,
-	} = getPicklistOptions(
-		fieldEntries[LiferayPicklistName.INDUSTRIES],
-		(selected) => setFieldValue('prospect.industry', selected)
-	);
+	const {onSelected: onIndustrySelected, options: industryOptions} =
+		getPicklistOptions(
+			fieldEntries[LiferayPicklistName.INDUSTRIES]?.sort(sortByAsc),
+			(selected) => setFieldValue('prospect.industry', selected)
+		);
 
-	const {
-		onSelected: onDepartmentSelected,
-		options: departmentOptions,
-	} = getPicklistOptions(
-		fieldEntries[LiferayPicklistName.DEPARTMENTS],
-		(selected) => setFieldValue('primaryProspect.department', selected)
-	);
+	const {onSelected: onDepartmentSelected, options: departmentOptions} =
+		getPicklistOptions(
+			fieldEntries[LiferayPicklistName.DEPARTMENTS],
+			(selected) => setFieldValue('primaryProspect.department', selected)
+		);
 
-	const {
-		onSelected: onJobRoleSelected,
-		options: jobRoleOptions,
-	} = getPicklistOptions(
-		fieldEntries[LiferayPicklistName.JOB_ROLES],
-		(selected) => setFieldValue('primaryProspect.jobRole', selected)
-	);
+	const {onSelected: onJobRoleSelected, options: jobRoleOptions} =
+		getPicklistOptions(
+			fieldEntries[LiferayPicklistName.JOB_ROLES],
+			(selected) => setFieldValue('primaryProspect.jobRole', selected)
+		);
 
-	const {
-		onSelected: onStateSelected,
-		options: stateOptions,
-	} = getPicklistOptions(
-		fieldEntries[LiferayPicklistName.STATES],
-		(selected) => setFieldValue('prospect.state', selected)
-	);
+	const {onSelected: onStateSelected, options: stateOptions} =
+		getPicklistOptions(
+			fieldEntries[LiferayPicklistName.STATES],
+			(selected) => setFieldValue('prospect.state', selected)
+		);
 
 	return (
 		<PRMForm name="general" title="Deal Registration">
@@ -199,6 +195,13 @@ const General = ({
 				</PRMForm.Group>
 
 				<PRMForm.Section title="Primary Prospect Contact">
+					<PRMFormik.Field
+						component={PRMForm.InputText}
+						label="Title"
+						name="primaryProspect.title"
+						required
+					/>
+
 					<PRMForm.Group>
 						<PRMFormik.Field
 							component={PRMForm.InputText}
@@ -332,11 +335,16 @@ const General = ({
 
 				<div className="d-flex justify-content-between px-2 px-md-0">
 					<Button
-						disabled={!isValid || !dirty}
+						disabled={!dirty || (isButtonClicked && !isValid)}
 						onClick={() => {
+							setIsButtonClicked(true);
 							onContinue?.(formikHelpers, StepType.REVIEW);
-
-							window.scrollTo(0, 0);
+							window.scrollTo({
+								behavior: (isValid
+									? 'instant'
+									: 'smooth') as ScrollBehavior,
+								top: 0,
+							});
 						}}
 					>
 						Proceed

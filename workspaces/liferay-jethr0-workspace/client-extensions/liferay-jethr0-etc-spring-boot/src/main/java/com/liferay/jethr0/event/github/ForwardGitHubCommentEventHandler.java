@@ -5,24 +5,28 @@
 
 package com.liferay.jethr0.event.github;
 
-import com.liferay.jethr0.event.EventHandlerContext;
 import com.liferay.jethr0.event.github.comment.GitHubComment;
 import com.liferay.jethr0.event.github.pullrequest.GitHubPullRequest;
 import com.liferay.jethr0.job.ForwardPullRequestJobEntity;
 import com.liferay.jethr0.job.JobEntity;
 import com.liferay.jethr0.job.PortalPullRequestJobEntity;
 import com.liferay.jethr0.job.repository.JobEntityRepository;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
 import com.liferay.jethr0.util.StringUtil;
 
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONObject;
 
@@ -61,10 +65,8 @@ public class ForwardGitHubCommentEventHandler
 		return String.valueOf(forwardPullRequestJobEntity);
 	}
 
-	protected ForwardGitHubCommentEventHandler(
-		EventHandlerContext eventHandlerContext, JSONObject messageJSONObject) {
-
-		super(eventHandlerContext, messageJSONObject);
+	protected ForwardGitHubCommentEventHandler(JSONObject messageJSONObject) {
+		super(messageJSONObject);
 	}
 
 	@Override
@@ -82,7 +84,8 @@ public class ForwardGitHubCommentEventHandler
 		portalPullRequestJobEntity.setForwardReceiverUserName(
 			_getForwardReceiverUserName());
 
-		JobEntityRepository jobEntityRepository = getJobEntityRepository();
+		JobEntityRepository jobEntityRepository =
+			Jethr0ContextUtil.getJobEntityRepository();
 
 		jobEntityRepository.update(portalPullRequestJobEntity);
 
@@ -118,6 +121,14 @@ public class ForwardGitHubCommentEventHandler
 		GitHubPullRequest gitHubPullRequest = getGitHubPullRequest();
 
 		gitHubPullRequest.comment(sb.toString());
+
+		if (_log.isInfoEnabled()) {
+			_log.info(
+				StringUtil.combine(
+					"All required test suites have passed or completed for ",
+					gitHubPullRequest.getHTMLURL(), " at ",
+					StringUtil.toString(new Date())));
+		}
 
 		return true;
 	}
@@ -238,10 +249,11 @@ public class ForwardGitHubCommentEventHandler
 		int priority = 3;
 		JobEntity.Type type = JobEntity.Type.FORWARD_PULL_REQUEST;
 
-		JobEntityRepository jobEntityRepository = getJobEntityRepository();
+		JobEntityRepository jobEntityRepository =
+			Jethr0ContextUtil.getJobEntityRepository();
 
 		JobEntity jobEntity = jobEntityRepository.create(
-			name, priority, null, JobEntity.State.OPENED, type);
+			null, name, null, priority, null, JobEntity.State.OPENED, type);
 
 		if (!(jobEntity instanceof ForwardPullRequestJobEntity)) {
 			return null;
@@ -349,7 +361,8 @@ public class ForwardGitHubCommentEventHandler
 		GitHubPullRequest gitHubPullRequest = getGitHubPullRequest();
 
 		String propertyValue = getJenkinsBranchBuildPropertyValue(
-			propertyName, gitHubPullRequest.getBaseRepositoryName());
+			propertyName, gitHubPullRequest.getBaseRepositoryName(),
+			gitHubPullRequest.getBaseBranchName());
 
 		return StringUtil.toSet(propertyValue, ",");
 	}
@@ -366,7 +379,8 @@ public class ForwardGitHubCommentEventHandler
 		GitHubPullRequest gitHubPullRequest = getGitHubPullRequest();
 
 		String propertyValue = getJenkinsBranchBuildPropertyValue(
-			propertyName, gitHubPullRequest.getBaseRepositoryName());
+			propertyName, gitHubPullRequest.getBaseRepositoryName(),
+			gitHubPullRequest.getBaseBranchName());
 
 		return StringUtil.toSet(propertyValue, ",");
 	}
@@ -442,6 +456,9 @@ public class ForwardGitHubCommentEventHandler
 
 		return false;
 	}
+
+	private static final Log _log = LogFactory.getLog(
+		ForwardGitHubCommentEventHandler.class);
 
 	private static final Pattern _pattern = Pattern.compile(
 		"ci:forward(\\:(?<forwardOptions>[^\\s]+))?");

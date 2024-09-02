@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -346,9 +347,10 @@ public class UIItemsBuilder {
 				"senna-off", "true"
 			).build()
 		).setHref(
-			_dlURLHelper.getDownloadURL(
-				_fileEntry, _fileVersion, _themeDisplay, StringPool.BLANK,
-				appendVersion, true)
+			_addDoAsUserIdParameter(
+				_dlURLHelper.getDownloadURL(
+					_fileEntry, _fileVersion, _themeDisplay, StringPool.BLANK,
+					appendVersion, true))
 		).setIcon(
 			"download"
 		).setKey(
@@ -438,6 +440,14 @@ public class UIItemsBuilder {
 						_httpServletRequest,
 						(ItemSelector)_httpServletRequest.getAttribute(
 							ItemSelector.class.getName()));
+
+				if (_fileShortcut != null) {
+					return folderItemSelectorURLProvider.
+						getSelectMoveToFolderURL(
+							_fileShortcut.getRepositoryId(),
+							_fileShortcut.getFolderId(),
+							DLFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+				}
 
 				return folderItemSelectorURLProvider.getSelectMoveToFolderURL(
 					_fileEntry.getRepositoryId(), _fileEntry.getFolderId(),
@@ -654,7 +664,10 @@ public class UIItemsBuilder {
 
 	public boolean isDeleteVersionActionAvailable() throws PortalException {
 		if ((_fileEntry == null) ||
-			(_fileVersion.getStatus() != WorkflowConstants.STATUS_APPROVED) ||
+			((_fileVersion.getStatus() != WorkflowConstants.STATUS_APPROVED) &&
+			 (_fileVersion.getStatus() != WorkflowConstants.STATUS_EXPIRED) &&
+			 (_fileVersion.getStatus() !=
+				 WorkflowConstants.STATUS_SCHEDULED)) ||
 			!_fileEntryDisplayContextHelper.hasDeletePermission() ||
 			!(_fileEntry.getModel() instanceof DLFileEntry)) {
 
@@ -664,7 +677,16 @@ public class UIItemsBuilder {
 		int fileVersionsCount = _fileEntry.getFileVersionsCount(
 			WorkflowConstants.STATUS_APPROVED);
 
-		if (fileVersionsCount > 1) {
+		fileVersionsCount += _fileEntry.getFileVersionsCount(
+			WorkflowConstants.STATUS_SCHEDULED);
+
+		int fileVersionsExpired = _fileEntry.getFileVersionsCount(
+			WorkflowConstants.STATUS_EXPIRED);
+
+		if ((fileVersionsCount > 1) ||
+			((_fileVersion.getStatus() == WorkflowConstants.STATUS_EXPIRED) &&
+			 ((fileVersionsCount == 1) || (fileVersionsExpired > 1)))) {
+
 			return true;
 		}
 
@@ -766,7 +788,9 @@ public class UIItemsBuilder {
 	}
 
 	public boolean isRevertToVersionActionAvailable() throws PortalException {
-		if ((_fileVersion.getStatus() != WorkflowConstants.STATUS_APPROVED) ||
+		if (((_fileVersion.getStatus() != WorkflowConstants.STATUS_APPROVED) &&
+			 (_fileVersion.getStatus() !=
+				 WorkflowConstants.STATUS_SCHEDULED)) ||
 			!_fileEntryDisplayContextHelper.hasUpdatePermission()) {
 
 			return false;
@@ -835,6 +859,17 @@ public class UIItemsBuilder {
 				"Unable to build UIItemsBuilder for " + fileVersion,
 				portalException);
 		}
+	}
+
+	private String _addDoAsUserIdParameter(String url) {
+		if (Validator.isNull(_themeDisplay.getDoAsUserId()) ||
+			Validator.isNull(url)) {
+
+			return url;
+		}
+
+		return HttpComponentsUtil.setParameter(
+			url, "doAsUserId", _themeDisplay.getDoAsUserId());
 	}
 
 	private PortletURL _getActionURL(String mvcActionCommandName) {

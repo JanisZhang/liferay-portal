@@ -31,6 +31,12 @@ public class JenkinsCohortEntityRepository
 			throw new RuntimeException("Invalid Jenkins cohort name: " + name);
 		}
 
+		JenkinsCohortEntity jenkinsCohortEntity = getByName(name);
+
+		if (jenkinsCohortEntity != null) {
+			return jenkinsCohortEntity;
+		}
+
 		JSONObject jsonObject = new JSONObject();
 
 		jsonObject.put("name", name);
@@ -53,6 +59,17 @@ public class JenkinsCohortEntityRepository
 	@Override
 	public JenkinsCohortEntityDALO getEntityDALO() {
 		return _jenkinsCohortEntityDALO;
+	}
+
+	@Override
+	public void initialize() {
+		addAll(_jenkinsCohortEntityDALO.getAll());
+
+		for (JenkinsCohortEntity jenkinsCohortEntity : getAll()) {
+			jenkinsCohortEntity.update();
+
+			update(jenkinsCohortEntity);
+		}
 	}
 
 	@Override

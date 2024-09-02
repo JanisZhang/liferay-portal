@@ -239,17 +239,16 @@ export default function EditAPIEndpoint({
 						pathParameter: localUIData.pathParameter
 							? localUIData.pathParameter
 							: STR_BLANK,
-						pathParameterDescription: localUIData.pathParameterDescription
-							? localUIData.pathParameterDescription
-							: STR_BLANK,
+						pathParameterDescription:
+							localUIData.pathParameterDescription
+								? localUIData.pathParameterDescription
+								: STR_BLANK,
 						...(localUIData.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId && {
 							r_requestAPISchemaToAPIEndpoints_c_apiSchemaId:
 								localUIData.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId,
 						}),
-						...(localUIData.r_responseAPISchemaToAPIEndpoints_c_apiSchemaId && {
-							r_responseAPISchemaToAPIEndpoints_c_apiSchemaId:
-								localUIData.r_responseAPISchemaToAPIEndpoints_c_apiSchemaId,
-						}),
+						r_responseAPISchemaToAPIEndpoints_c_apiSchemaId:
+							localUIData.r_responseAPISchemaToAPIEndpoints_c_apiSchemaId,
 						retrieveType: localUIData.retrieveType,
 						scope: localUIData.scope,
 					},
@@ -310,10 +309,10 @@ export default function EditAPIEndpoint({
 			(fieldKey === 'Filter'
 				? localUIData[`apiEndpointToAPI${fieldKey}s`]?.[0]?.[
 						`oData${fieldKey}` as keyof APIEndpointFilter
-				  ]
+					]
 				: localUIData[`apiEndpointToAPI${fieldKey}s`]?.[0]?.[
 						`oData${fieldKey}` as keyof APIEndpointSort
-				  ])
+					])
 		) {
 			postData<APIEndpointFilter | APIEndpointSort>({
 				data: {
@@ -321,12 +320,12 @@ export default function EditAPIEndpoint({
 						fieldKey === 'Filter'
 							? localUIData[`apiEndpointToAPIFilters`]?.[0][
 									`oData${fieldKey}`
-							  ]
+								]
 							: localUIData[`apiEndpointToAPISorts`]?.[0][
 									`oData${fieldKey}`
-							  ],
-					[`r_apiEndpointToAPI${fieldKey}s_c_apiEndpointId`]: fetchedData
-						.apiEndpoint.id,
+								],
+					[`r_apiEndpointToAPI${fieldKey}s_c_apiEndpointId`]:
+						fetchedData.apiEndpoint.id,
 				},
 				onError: (error: string) => {
 					openToast({
@@ -347,27 +346,26 @@ export default function EditAPIEndpoint({
 						type: 'success',
 					});
 				},
-				url:
-					apiURLPaths[
-						`${fieldKey.toLocaleLowerCase()}s` as keyof APIURLPaths
-					],
+				url: apiURLPaths[
+					`${fieldKey.toLocaleLowerCase()}s` as keyof APIURLPaths
+				],
 			});
 		}
 		else if (
 			(fieldKey === 'Filter'
 				? fetchedData.apiEndpoint?.[`apiEndpointToAPI${fieldKey}s`][0][
 						`oData${fieldKey}` as keyof APIEndpointFilter
-				  ]
+					]
 				: fetchedData.apiEndpoint?.[`apiEndpointToAPI${fieldKey}s`][0][
 						`oData${fieldKey}` as keyof APIEndpointSort
-				  ]) &&
+					]) &&
 			(fieldKey === 'Filter'
 				? localUIData[`apiEndpointToAPI${fieldKey}s`]?.[0]?.[
 						`oData${fieldKey}` as keyof APIEndpointFilter
-				  ]
+					]
 				: localUIData[`apiEndpointToAPI${fieldKey}s`]?.[0]?.[
 						`oData${fieldKey}` as keyof APIEndpointSort
-				  ])
+					])
 		) {
 			updateData<APIEndpointFilter | APIEndpointSort>({
 				dataToUpdate: {
@@ -375,14 +373,14 @@ export default function EditAPIEndpoint({
 						fieldKey === 'Filter'
 							? localUIData[
 									`apiEndpointToAPI${fieldKey}s`
-							  ]?.[0]?.[
+								]?.[0]?.[
 									`oData${fieldKey}` as keyof APIEndpointFilter
-							  ]
+								]
 							: localUIData[
 									`apiEndpointToAPI${fieldKey}s`
-							  ]?.[0]?.[
+								]?.[0]?.[
 									`oData${fieldKey}` as keyof APIEndpointSort
-							  ],
+								],
 				},
 				method: 'PATCH',
 				onError: (error: string) => {
@@ -499,6 +497,7 @@ export default function EditAPIEndpoint({
 		else {
 			setMainEndpointNav('list');
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isDataUnsaved]);
 
@@ -506,6 +505,7 @@ export default function EditAPIEndpoint({
 		setHideManagementButtons(false);
 
 		fetchAPIEndpoint();
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -561,7 +561,8 @@ export default function EditAPIEndpoint({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [fetchedData, isDataUnsaved, localUIData]);
 
-	const APIEndpointHttpMethodName = fetchedData.apiEndpoint?.httpMethod.name?.toUpperCase();
+	const APIEndpointHttpMethodName =
+		fetchedData.apiEndpoint?.httpMethod.name?.toUpperCase();
 	const editAPIEndpointBreadcrumbLabel = `${
 		APIEndpointHttpMethodName ?? APIEndpointHttpMethodName
 	} ${fetchedData.apiEndpoint?.path ?? fetchedData.apiEndpoint?.path}`;

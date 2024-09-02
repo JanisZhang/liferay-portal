@@ -55,9 +55,8 @@ function ImportForm({
 	const [fileFields, setFileFields] = useState();
 	const [fileContent, setFileContent] = useState();
 	const [fieldsSelections, setFieldsSelections] = useState({});
-	const [mappingsToBeEvaluated, setMappingsToBeEvaluated] = useState(
-		mappedFields
-	);
+	const [mappingsToBeEvaluated, setMappingsToBeEvaluated] =
+		useState(mappedFields);
 	const useTemplateMappingRef = useRef();
 
 	const formIsValid = useMemo(() => {
@@ -144,13 +143,23 @@ function ImportForm({
 		function handleFileSchemaUpdate({fileContent, schema}) {
 			setFileContent(fileContent);
 
-			setFileFields(schema);
+			setFileFields(getFirstLevelFieldNames(schema));
 		}
 
 		function handleTemplateSelect({template}) {
 			if (template) {
 				setMappingsToBeEvaluated(template.mappings);
 			}
+		}
+
+		function getFirstLevelFieldNames(schema) {
+			return [
+				...new Set(
+					schema.map((fileField) => {
+						return fileField.split('.')[0];
+					})
+				),
+			];
 		}
 
 		function toggleDownloadTemplateAlert(schema) {
@@ -221,9 +230,9 @@ function ImportForm({
 		<>
 			{formIsVisible && (
 				<div className="card import-mapping-table">
-					<h4 className="card-header">
+					<div className="card-header h4">
 						{Liferay.Language.get('import-mappings')}
-					</h4>
+					</div>
 
 					<div className="card-body p-0">
 						<ClayTable borderless hover={false}>

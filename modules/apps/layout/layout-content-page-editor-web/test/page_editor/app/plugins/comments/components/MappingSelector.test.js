@@ -4,6 +4,7 @@
  */
 
 import {State} from '@liferay/frontend-js-state-web';
+import userEvent from '@testing-library/user-event';
 
 import '@testing-library/jest-dom/extend-expect';
 import {
@@ -13,6 +14,7 @@ import {
 	getByText,
 	queryByText,
 	render,
+	screen,
 } from '@testing-library/react';
 import React from 'react';
 
@@ -22,6 +24,7 @@ import {config} from '../../../../../../src/main/resources/META-INF/resources/pa
 import {useCollectionConfig} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/CollectionItemContext';
 import {StoreAPIContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
 import CollectionService from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/services/CollectionService';
+import getSelectedField from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/getSelectedField';
 import {pageContentsAtom} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/usePageContents';
 import MappingSelector from '../../../../../../src/main/resources/META-INF/resources/page_editor/common/components/MappingSelector';
 
@@ -115,6 +118,12 @@ jest.mock(
 				},
 			])
 		),
+		getInfoItemRelationships: jest.fn(() =>
+			Promise.resolve([
+				{classNameId: 'relationship-1', label: 'Relationship 1'},
+				{classNameId: 'relationship-2', label: 'Relationship 2'},
+			])
+		),
 	})
 );
 
@@ -129,6 +138,11 @@ jest.mock('frontend-js-web', () => ({
 	...jest.requireActual('frontend-js-web'),
 	sub: jest.fn((key, arg) => key.replace('x', arg)),
 }));
+
+jest.mock(
+	'../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/getSelectedField',
+	() => jest.fn(() => null)
+);
 
 function renderMappingSelector({
 	mappedItem = {},
@@ -192,10 +206,13 @@ describe('MappingSelector', () => {
 	it('renders correct selects in content pages', async () => {
 		renderMappingSelector({});
 
-		expect(getByText(document.body, 'item')).toBeInTheDocument();
-		expect(getByText(document.body, 'field')).toBeInTheDocument();
-
-		expect(queryByText(document.body, 'source')).not.toBeInTheDocument();
+		await act(async () => {
+			expect(getByText(document.body, 'item')).toBeInTheDocument();
+			expect(getByText(document.body, 'field')).toBeInTheDocument();
+			expect(
+				queryByText(document.body, 'source')
+			).not.toBeInTheDocument();
+		});
 	});
 
 	it('renders correct selects in display pages', async () => {
@@ -203,8 +220,10 @@ describe('MappingSelector', () => {
 
 		renderMappingSelector({});
 
-		expect(getByText(document.body, 'field')).toBeInTheDocument();
-		expect(getByText(document.body, 'source')).toBeInTheDocument();
+		await act(async () => {
+			expect(getByText(document.body, 'field')).toBeInTheDocument();
+			expect(getByText(document.body, 'source')).toBeInTheDocument();
+		});
 	});
 
 	it('does not render content select when selecting structure as source', async () => {
@@ -216,13 +235,14 @@ describe('MappingSelector', () => {
 
 		const sourceTypeSelect = getByLabelText('source');
 
-		fireEvent.change(sourceTypeSelect, {
-			target: {value: 'structure'},
+		await act(async () => {
+			fireEvent.change(sourceTypeSelect, {
+				target: {value: 'structure'},
+			});
 		});
 
 		expect(getByText('field')).toBeInTheDocument();
 		expect(getByText('source')).toBeInTheDocument();
-
 		expect(queryByText('item')).not.toBeInTheDocument();
 	});
 
@@ -238,8 +258,10 @@ describe('MappingSelector', () => {
 
 		const fieldSelect = getByLabelText(document.body, 'field');
 
-		fireEvent.change(fieldSelect, {
-			target: {value: 'text-field-1'},
+		await act(async () => {
+			fireEvent.change(fieldSelect, {
+				target: {value: 'text-field-1'},
+			});
 		});
 
 		expect(onMappingSelect).toBeCalledWith({
@@ -263,14 +285,16 @@ describe('MappingSelector', () => {
 
 		const sourceTypeSelect = getByLabelText(document.body, 'source');
 
-		fireEvent.change(sourceTypeSelect, {
-			target: {value: 'structure'},
-		});
+		await act(async () => {
+			fireEvent.change(sourceTypeSelect, {
+				target: {value: 'structure'},
+			});
 
-		const fieldSelect = getByLabelText(document.body, 'field');
+			const fieldSelect = getByLabelText(document.body, 'field');
 
-		fireEvent.change(fieldSelect, {
-			target: {value: 'structure-field-1'},
+			fireEvent.change(fieldSelect, {
+				target: {value: 'structure-field-1'},
+			});
 		});
 
 		expect(onMappingSelect).toBeCalledWith({
@@ -288,8 +312,10 @@ describe('MappingSelector', () => {
 
 		const fieldSelect = getByLabelText(document.body, 'field');
 
-		fireEvent.change(fieldSelect, {
-			target: {value: 'unmapped'},
+		await act(async () => {
+			fireEvent.change(fieldSelect, {
+				target: {value: 'unmapped'},
+			});
 		});
 
 		expect(onMappingSelect).toBeCalledWith({});
@@ -351,13 +377,15 @@ describe('MappingSelector', () => {
 
 		const fieldSelect = getByLabelText(document.body, 'field');
 
-		expect(fieldSelect).toBeInTheDocument();
-		expect(
-			getByText(
-				document.body,
-				'no-fields-are-available-for-text-editable'
-			)
-		).toBeInTheDocument();
+		await act(async () => {
+			expect(fieldSelect).toBeInTheDocument();
+			expect(
+				getByText(
+					document.body,
+					'no-fields-are-available-for-text-editable'
+				)
+			).toBeInTheDocument();
+		});
 	});
 
 	it('shows type and subtype label when some item is mapped', async () => {
@@ -371,12 +399,66 @@ describe('MappingSelector', () => {
 			},
 		});
 
-		expect(
-			getByText(document.body, 'Mapped Item Type')
-		).toBeInTheDocument();
+		await act(async () => {
+			expect(
+				getByText(document.body, 'Mapped Item Type')
+			).toBeInTheDocument();
+
+			expect(
+				getByText(document.body, 'Mapped Item Subtype')
+			).toBeInTheDocument();
+		});
+	});
+
+	it('allows selecting relationship in display pages', async () => {
+		Liferay.FeatureFlags['LPD-20213'] = true;
+
+		config.layoutType = LAYOUT_TYPES.display;
+
+		renderMappingSelector({});
+
+		const sourceSelect = screen.getByLabelText('source');
+
+		userEvent.selectOptions(sourceSelect, 'relationship');
+		fireEvent.change(sourceSelect);
 
 		expect(
-			getByText(document.body, 'Mapped Item Subtype')
-		).toBeInTheDocument();
+			screen.getByRole('option', {name: 'relationship'}).selected
+		).toBe(true);
+
+		Liferay.FeatureFlags['LPD-20213'] = false;
+	});
+
+	it('shows a new select for relationships when selecting that source', async () => {
+		Liferay.FeatureFlags['LPD-20213'] = true;
+
+		config.layoutType = LAYOUT_TYPES.display;
+
+		renderMappingSelector({});
+
+		const sourceSelect = screen.getByLabelText('source');
+
+		userEvent.selectOptions(sourceSelect, 'relationship');
+		fireEvent.change(sourceSelect);
+
+		expect(screen.getByLabelText('relationship')).toBeInTheDocument();
+
+		Liferay.FeatureFlags['LPD-20213'] = false;
+	});
+
+	it('shows field type when an item is mapped and a field is selected', async () => {
+		config.layoutType = LAYOUT_TYPES.content;
+
+		getSelectedField.mockImplementation(() => ({
+			typeLabel: 'text',
+		}));
+
+		renderMappingSelector({});
+
+		await act(async () => {
+			expect(
+				screen.getByText('field-type:').parentElement
+			).toHaveTextContent('text');
+		});
 	});
 });

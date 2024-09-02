@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -356,6 +356,8 @@ definition {
 		task ("Assert elements information is organized in Selection panel") {
 			PageEditor.clickConfigurableField(fragmentName = "Fragment Name");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			WaitForVisible(
 				key_sidebarButton = "Browser",
 				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -434,6 +436,8 @@ definition {
 		task ("Assert elements information is organized in Selection panel") {
 			PageEditor.clickConfigurableField(fragmentName = "Fragment Name");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			WaitForVisible(
 				key_sidebarButton = "Browser",
 				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -451,367 +455,10 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-125985. The Page Creater can perform actions on the asset displayed in Content Display via General panel."
-	@priority = 5
-	test PerformActionsOnDisplayedAssetInContentDisplayViaGeneralPanel {
-		property portal.acceptance = "true";
-
-		task ("Add a web content") {
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = ${randomSiteName},
-				title = "Web Content Title");
-		}
-
-		task ("Add a Content Display to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Content Display");
-		}
-
-		task ("Select the web content in Content Display") {
-			PageEditor.editContentDisplay(
-				fragmentName = "Content Display",
-				webcontent = "true",
-				webContentTitle = "Web Content Title");
-		}
-
-		task ("Access to the web content editor via General panel") {
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Item",
-				menuItem = "Edit Item");
-		}
-
-		task ("Edit the web content") {
-			WebContent.addCP(
-				webContentContent = "Web Content Content Edit",
-				webContentTitle = "Web Content Title Edit");
-
-			PortletEntry.publish();
-		}
-
-		task ("View the edited content shown in Content Display") {
-			PageEditor.assertFragmentSidebarLoaded();
-
-			AssertTextEquals(
-				index = 1,
-				locator1 = "WCD#WEB_CONTENT_CONTENT",
-				value1 = "Web Content Content Edit");
-		}
-
-		task ("View the edited title shown in Item field") {
-			PageEditor.gotoConfiguration(fragmentName = "Content Display");
-
-			AssertTextEquals(
-				key_fieldLabel = "Item",
-				locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT",
-				value1 = "Web Content Title Edit");
-		}
-
-		task ("Define the permissions of web content via General panel") {
-			WaitForLiferayEvent.initializeLiferayEventLog();
-
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Item",
-				menuItem = "Edit Item Permissions");
-
-			IFrame.selectPermissionsFrame();
-
-			AssertChecked.assertCheckedNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX");
-
-			Uncheck.uncheckNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX");
-
-			PortletEntry.save();
-
-			IFrame.closeFrame();
-		}
-
-		task ("View the customized permissions of web content via General panel") {
-			WaitForLiferayEvent.initializeLiferayEventLog();
-
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Item",
-				menuItem = "Edit Item Permissions");
-
-			IFrame.selectPermissionsFrame();
-
-			AssertNotChecked.assertNotCheckedNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX");
-
-			IFrame.closeFrame();
-		}
-
-		task ("View the usage of web content via General panel") {
-			WaitForLiferayEvent.initializeLiferayEventLog();
-
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Item",
-				menuItem = "View Item Usages");
-
-			SelectFrame(locator1 = "IFrame#MODAL_BODY");
-
-			AssertElementPresent(
-				locator1 = "AssetLists#ASSET_LIST_USAGES",
-				usageAmount = 1,
-				usageType = "All");
-
-			IFrame.closeFrame();
-		}
-
-		task ("Remove the selected web content via General panel") {
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Item",
-				menuItem = "Remove Item");
-
-			PageEditor.waitForAutoSave();
-
-			AssertAttributeValue(
-				key_fieldLabel = "Item",
-				locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT",
-				value1 = "placeholder",
-				value2 = "No Item Selected");
-		}
-
-		task ("View the default empty message is shown in Content Display") {
-			PageEditor.viewFragmentMessageInfo(fragmentName = "Content Display");
-		}
-	}
-
-	@description = "This is a test for LPS-125985. The Page Creater can perform actions on collection displayed in Collection Display via General panel."
-	@priority = 5
-	test PerformActionsOnDisplayedCollectionInCollectionDisplayViaGeneralPanel {
-		property portal.acceptance = "true";
-
-		task ("Add a vocabulary") {
-			JSONCategory.addVocabulary(
-				groupName = ${randomSiteName},
-				title = "Vocabulary Name");
-		}
-
-		task ("Add a category in vocabulary") {
-			var categoryId = JSONCategory.addCategory(
-				groupName = ${randomSiteName},
-				title = "Category Name",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("Add a web content with category") {
-			JSONWebcontent.addWebContent(
-				assetCategoryIds = ${categoryId},
-				content = "Web Content Content",
-				groupName = ${randomSiteName},
-				title = "Web Content Title");
-		}
-
-		task ("Add a blogs entry") {
-			HeadlessBlog.addBlogEntry(
-				content = "Blogs Entry Content",
-				groupName = ${randomSiteName},
-				title = "Blogs Entry Title");
-		}
-
-		task ("Add a document") {
-			JSONDocument.addFileWithUploadedFile(
-				dmDocumentDescription = "DM Document Description",
-				dmDocumentTitle = "Document Title",
-				groupName = ${randomSiteName},
-				mimeType = "image/jpeg",
-				sourceFileName = "Document_1.jpg");
-		}
-
-		task ("Add a dynamic collection for All Types") {
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = ${siteURLKey});
-
-			AssetListsAdmin.addDynamicSelection(assetListTitle = "Dynamic Collection");
-
-			AssetListsAdmin.configureItemTypeInDynamicCollection(itemType = "All Types");
-		}
-
-		task ("Add a Collection Display to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Collection Display");
-		}
-
-		task ("Select the dynamic collection") {
-			PageEditor.editCollectionDisplay(
-				assetListName = "Dynamic Collection",
-				fragmentName = "Collection Display");
-		}
-
-		task ("View three assets shown in Collection Display") {
-			var n = 1;
-
-			for (var title : list "Document Title,Blogs Entry Title,Web Content Title") {
-				AssertVisible(
-					key_colPosition = 1,
-					key_entryTitle = ${title},
-					key_fragmentName = "Collection Display",
-					key_rowPosition = ${n},
-					locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
-
-				var n = ${n} + 1;
-			}
-		}
-
-		task ("Access to the collection editor via General panel") {
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Collection",
-				menuItem = "Edit Collection");
-
-			ControlMenu.viewHeaderTitle(headerTitle = "Dynamic Collection");
-		}
-
-		task ("Add a category filter rule") {
-			AssetListsAdmin.addCategoriesFilter(
-				categoryNameList = "Category Name",
-				queryAndOperator = "All",
-				queryContains = "Contains");
-		}
-
-		task ("Navigate to page editor") {
-			Navigator.gotoBack();
-
-			PageEditor.assertFragmentSidebarLoaded();
-		}
-
-		task ("View only the web content shown in Collection Display") {
-			AssertVisible(
-				key_colPosition = 1,
-				key_entryTitle = "Web Content Title",
-				key_fragmentName = "Collection Display",
-				key_rowPosition = 1,
-				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
-
-			for (var title : list "Document Title,Blogs Entry Title") {
-				AssertElementNotPresent(
-					key_entryTitle = ${title},
-					locator1 = "PageEditor#COLLECTION_CELL");
-			}
-		}
-
-		task ("View the collection items via General panel") {
-			PageEditor.gotoConfiguration(fragmentName = "Collection Display");
-
-			WaitForLiferayEvent.initializeLiferayEventLog();
-
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Collection",
-				menuItem = "View Items");
-
-			SelectFrame(locator1 = "IFrame#MODAL_BODY");
-
-			LexiconTable.viewTableEntryTitle(tableEntry = "Web Content Title");
-
-			IFrame.closeFrame();
-		}
-
-		task ("Add a new collection item via General panel") {
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Collection",
-				menuItem = "Add Items");
-
-			MenuItem.click(menuItem = "Basic Web Content");
-
-			WebContent.addCP(
-				webContentContent = "Web Content Content 2",
-				webContentTitle = "Web Content Title 2");
-
-			PortletEntry.publish();
-		}
-
-		task ("View the new web content shown in Collection Display") {
-			var n = 1;
-
-			for (var title : list "Web Content Title 2,Web Content Title") {
-				AssertVisible(
-					key_colPosition = 1,
-					key_entryTitle = ${title},
-					key_fragmentName = "Collection Display",
-					key_rowPosition = ${n},
-					locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
-
-				var n = ${n} + 1;
-			}
-		}
-
-		task ("Define the permissions of collection via General panel") {
-			PageEditor.gotoConfiguration(fragmentName = "Collection Display");
-
-			WaitForLiferayEvent.initializeLiferayEventLog();
-
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Collection",
-				menuItem = "Edit Collection Permissions");
-
-			IFrame.selectPermissionsFrame();
-
-			AssertChecked.assertCheckedNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			Uncheck.uncheckNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			PortletEntry.save();
-
-			IFrame.closeFrame();
-		}
-
-		task ("View the customized permissions of collection via General panel") {
-			WaitForLiferayEvent.initializeLiferayEventLog();
-
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Collection",
-				menuItem = "Edit Collection Permissions");
-
-			IFrame.selectPermissionsFrame();
-
-			AssertNotChecked.assertNotCheckedNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			IFrame.closeFrame();
-		}
-
-		task ("Remove the selected collection via General panel") {
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Collection",
-				menuItem = "Remove Collection");
-
-			PageEditor.waitForAutoSave();
-
-			AssertAttributeValue(
-				key_fieldLabel = "Collection",
-				locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT",
-				value1 = "placeholder",
-				value2 = "No Collection Selected");
-		}
-
-		task ("View the default empty message is shown in Collection Display") {
-			PageEditor.viewFragmentMessageInfo(fragmentName = "Collection Display");
-		}
-	}
-
 	@description = "This is a test for LPS-125985. The Page Creater can perform actions on mapped asset via Mapping panel."
 	@priority = 5
 	test PerformActionsOnMappedAssetViaMappingPanel {
 		property portal.acceptance = "true";
-		property testray.component.names = "Item Selector";
 
 		task ("Add a web content") {
 			JSONWebcontent.addWebContent(
@@ -943,27 +590,6 @@ definition {
 				usageType = "All");
 
 			IFrame.closeFrame();
-		}
-
-		task ("Remove the selected web content via Mapping panel") {
-			PageEditor.gotoEllipsisMenuItemInItemSelector(
-				fieldLabel = "Item",
-				menuItem = "Remove Item");
-
-			PageEditor.waitForAutoSave();
-
-			AssertAttributeValue(
-				key_fieldLabel = "Item",
-				locator1 = "PageEditor#ITEM_SELECTOR_CONTENT_INPUT",
-				value1 = "placeholder",
-				value2 = "No Item Selected");
-		}
-
-		task ("View the default inline text is shown in Heading") {
-			PageEditor.viewFragmentEditableText(
-				editableText = "Heading Example",
-				fragmentName = "Heading",
-				id = "element-text");
 		}
 	}
 
@@ -1108,7 +734,6 @@ definition {
 	@priority = 5
 	test ViewDetailsOfMappedAssetsInMappingPanel {
 		property portal.acceptance = "true";
-		property testray.component.names = "Item Selector";
 
 		task ("Add a web content based on Basic Web Content") {
 			JSONWebcontent.addWebContent(
@@ -1204,6 +829,8 @@ definition {
 		task ("Assert elements information is organized in Selection panel") {
 			PageEditor.clickConfigurableField(fragmentName = "Slider");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			WaitForVisible(
 				key_sidebarButton = "Browser",
 				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -1239,6 +866,8 @@ definition {
 		task ("Assert elements information is organized in Selection panel") {
 			PageEditor.clickConfigurableField(fragmentName = "Tabs");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			WaitForVisible(
 				key_sidebarButton = "Browser",
 				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -1263,6 +892,8 @@ definition {
 
 		task ("Assert elements information is organized in Selection panel") {
 			PageEditor.clickConfigurableField(fragmentName = "Tabs");
+
+			PageEditor.gotoTab(tabName = "Browser");
 
 			WaitForVisible(
 				key_sidebarButton = "Browser",
@@ -1289,6 +920,8 @@ definition {
 		task ("Assert elements information is organized in Selection panel") {
 			PageEditor.clickConfigurableField(fragmentName = "Tabs");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			WaitForVisible(
 				key_sidebarButton = "Browser",
 				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
@@ -1303,99 +936,6 @@ definition {
 
 				var n = ${n} + 1;
 			}
-		}
-	}
-
-	@description = "This is a test for LPS-122142. View the visual style of mapped editable field items in Selection panel of content page."
-	@priority = 4
-	test ViewVisualStyleOfMappedEditableFieldItems {
-		property testray.component.names = "Item Selector";
-
-		task ("Add a web content with basic web content") {
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = ${randomSiteName},
-				title = "Web Content Title");
-		}
-
-		task ("Add a Button fragment to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Button");
-		}
-
-		task ("Map the Content field of web content to editable field") {
-			PageEditorMapping.gotoEditableFieldMapping(
-				fragmentName = "Button",
-				id = "link");
-
-			PageEditorMapping.mapEditableFieldToAsset(
-				entryTitle = "Web Content Title",
-				navItem = "Web Content");
-
-			WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
-
-			Select(
-				key_fieldLabel = "Field",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "Content");
-
-			PageEditor.waitForAutoSave();
-		}
-
-		task ("View the visual style of Content item in Selection panel") {
-			AssertCssValue(
-				key_nodeName = "Content",
-				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_NAME",
-				locator2 = "color",
-				value1 = "rgba(149, 76, 255, 1)");
-		}
-
-		task ("Add a Collection Display fragment to page") {
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Collection Display",
-				targetFragmentName = "Button");
-		}
-
-		task ("Select the Highest Rated Assets in Collection Display") {
-			PageEditor.editCollectionDisplay(
-				fragmentName = "Collection Display",
-				infoListProviderName = "Highest Rated Assets");
-		}
-
-		task ("Add a Heading fragment into Collection Display") {
-			PageEditor.addFragmentToCollectionDisplay(
-				collectionName = "Basic Components",
-				entryTitle = "Web Content Title",
-				fragmentName = "Heading");
-		}
-
-		task ("Map the Title field to editable field") {
-			PageEditorMapping.gotoEditableFieldMapping(
-				fragmentName = "Heading",
-				id = "element-text");
-
-			WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
-
-			Select(
-				key_fieldLabel = "Field",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "Title");
-
-			PageEditor.waitForAutoSave();
-		}
-
-		task ("View the visual style of Title item in Selection panel") {
-			AssertCssValue(
-				key_nodeName = "Title",
-				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_NAME",
-				locator2 = "color",
-				value1 = "rgba(149, 76, 255, 1)");
 		}
 	}
 

@@ -42,9 +42,8 @@ function Import({backURL, helpLink, importURL, portletNamespace}: Props) {
 	const [fileName, setFileName] = useState<string | null>(null);
 	const [fileText, setFileText] = useState<string>(FILE_TEXTS.initial);
 	const [importResults, setImportResults] = useState<Results | null>(null);
-	const [importOptionsModalVisible, setImportOptionsModalVisible] = useState<
-		boolean
-	>(false);
+	const [importOptionsModalVisible, setImportOptionsModalVisible] =
+		useState<boolean>(false);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -198,10 +197,7 @@ function Import({backURL, helpLink, importURL, portletNamespace}: Props) {
 				</span>
 
 				{importResults ? (
-					<ImportResults
-						fileName={fileName}
-						importResults={importResults}
-					/>
+					<ImportResults importResults={importResults} />
 				) : (
 					<ClayLayout.Sheet
 						className="c-gap-4 d-flex flex-column"

@@ -91,7 +91,7 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -184,12 +184,12 @@ public class ClientExtensionTopHeadDynamicIncludeTest {
 	}
 
 	private MockHttpServletRequest _getMockHttpServletRequest(Layout layout) {
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
 		themeDisplay.setLayout(layout);
-
-		MockHttpServletRequest mockHttpServletRequest =
-			new MockHttpServletRequest();
 
 		mockHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, themeDisplay);

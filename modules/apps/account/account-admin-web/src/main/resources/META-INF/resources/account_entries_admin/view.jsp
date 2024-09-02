@@ -54,7 +54,8 @@ ViewAccountEntriesManagementToolbarDisplayContext viewAccountEntriesManagementTo
 					cssClass="autofit-col-expand table-title"
 					href="<%= rowURL %>"
 					name="name"
-					value="<%= HtmlUtil.escape(accountEntryDisplay.getName()) %>"
+					truncate="<%= true %>"
+					value="<%= accountEntryDisplay.getName() %>"
 				/>
 
 				<liferay-ui:search-container-column-text

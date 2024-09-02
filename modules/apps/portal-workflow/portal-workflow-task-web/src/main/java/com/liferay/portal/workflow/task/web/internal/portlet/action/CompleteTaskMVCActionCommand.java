@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -21,6 +22,8 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowHandler;
+import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
@@ -61,6 +64,17 @@ public class CompleteTaskMVCActionCommand
 			WebKeys.THEME_DISPLAY);
 
 		try {
+			boolean hideDefaultSuccessMessage = ParamUtil.getBoolean(
+				actionRequest, "hideDefaultSuccessMessage");
+
+			if (hideDefaultSuccessMessage) {
+				SessionMessages.add(
+					actionRequest,
+					_portal.getPortletId(actionRequest) +
+						SessionMessages.
+							KEY_SUFFIX_HIDE_DEFAULT_SUCCESS_MESSAGE);
+			}
+
 			long workflowTaskId = ParamUtil.getLong(
 				actionRequest, "workflowTaskId");
 
@@ -72,10 +86,17 @@ public class CompleteTaskMVCActionCommand
 				themeDisplay.getCompanyId(), workflowTaskId);
 
 			ServiceContext serviceContext = (ServiceContext)workflowContext.get(
-				"serviceContext");
+				WorkflowConstants.CONTEXT_SERVICE_CONTEXT);
 
 			serviceContext.setRequest(
 				_getHttpServletRequest(actionRequest, actionResponse));
+
+			WorkflowHandler<?> workflowHandler =
+				WorkflowHandlerRegistryUtil.getWorkflowHandler(
+					(String)workflowContext.get(
+						WorkflowConstants.CONTEXT_ENTRY_CLASS_NAME));
+
+			workflowHandler.contributeServiceContext(serviceContext);
 
 			workflowContext.put(
 				WorkflowConstants.CONTEXT_USER_ID,

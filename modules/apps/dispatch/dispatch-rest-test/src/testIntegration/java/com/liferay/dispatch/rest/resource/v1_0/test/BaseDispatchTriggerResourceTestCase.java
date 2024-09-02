@@ -32,10 +32,12 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -56,8 +58,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -99,7 +99,7 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 			DispatchTriggerResource.builder();
 
 		dispatchTriggerResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -113,7 +113,32 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DispatchTrigger dispatchTrigger1 = randomDispatchTrigger();
+
+		String json = objectMapper.writeValueAsString(dispatchTrigger1);
+
+		DispatchTrigger dispatchTrigger2 = DispatchTriggerSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(dispatchTrigger1, dispatchTrigger2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		DispatchTrigger dispatchTrigger = randomDispatchTrigger();
+
+		String json1 = objectMapper.writeValueAsString(dispatchTrigger);
+		String json2 = DispatchTriggerSerDes.toJSON(dispatchTrigger);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -128,40 +153,6 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		DispatchTrigger dispatchTrigger1 = randomDispatchTrigger();
-
-		String json = objectMapper.writeValueAsString(dispatchTrigger1);
-
-		DispatchTrigger dispatchTrigger2 = DispatchTriggerSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(dispatchTrigger1, dispatchTrigger2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		DispatchTrigger dispatchTrigger = randomDispatchTrigger();
-
-		String json1 = objectMapper.writeValueAsString(dispatchTrigger);
-		String json2 = DispatchTriggerSerDes.toJSON(dispatchTrigger);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -244,6 +235,8 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject dispatchTriggersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/dispatchTriggers");
@@ -257,6 +250,27 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 
 		dispatchTriggersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/dispatchTriggers");
+
+		Assert.assertEquals(
+			totalCount + 2, dispatchTriggersJSONObject.getLong("totalCount"));
+
+		assertContains(
+			dispatchTrigger1,
+			Arrays.asList(
+				DispatchTriggerSerDes.toDTOs(
+					dispatchTriggersJSONObject.getString("items"))));
+		assertContains(
+			dispatchTrigger2,
+			Arrays.asList(
+				DispatchTriggerSerDes.toDTOs(
+					dispatchTriggersJSONObject.getString("items"))));
+
+		// Using the namespace dispatch_v1_0
+
+		dispatchTriggersJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(new GraphQLField("dispatch_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/dispatch_v1_0",
 			"JSONObject/dispatchTriggers");
 
 		Assert.assertEquals(
@@ -1049,21 +1063,20 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 
 		if (entityFieldName.equals("endDate")) {
 			if (operator.equals("between")) {
+				Date date = dispatchTrigger.getEndDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							dispatchTrigger.getEndDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(dispatchTrigger.getEndDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1183,22 +1196,20 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 
 		if (entityFieldName.equals("startDate")) {
 			if (operator.equals("between")) {
+				Date date = dispatchTrigger.getStartDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							dispatchTrigger.getStartDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							dispatchTrigger.getStartDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1284,7 +1295,8 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1359,12 +1371,12 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1373,11 +1385,16 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1409,6 +1426,24 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1430,16 +1465,6 @@ public abstract class BaseDispatchTriggerResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

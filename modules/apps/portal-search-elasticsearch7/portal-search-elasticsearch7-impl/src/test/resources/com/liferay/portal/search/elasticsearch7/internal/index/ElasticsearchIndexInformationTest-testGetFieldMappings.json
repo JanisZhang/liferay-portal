@@ -14,6 +14,22 @@
 					}
 				},
 				{
+					"template_expando_keyword": {
+						"mapping": {
+							"analyzer": "keyword_lowercase",
+							"fields": {
+								"raw": {
+									"type": "keyword"
+								}
+							},
+							"store": true,
+							"type": "text"
+						},
+						"match": "expando__keyword__*",
+						"match_mapping_type": "string"
+					}
+				},
+				{
 					"template_long_sortable": {
 						"mapping": {
 							"store": true,
@@ -909,25 +925,10 @@
 					}
 				},
 				{
-					"template_expando_keyword": {
-						"mapping": {
-							"analyzer": "keyword_lowercase",
-							"fields": {
-								"raw": {
-									"type": "keyword"
-								}
-							},
-							"store": true,
-							"type": "text"
-						},
-						"match": "expando__keyword__*",
-						"match_mapping_type": "string"
-					}
-				},
-				{
 					"template_ar": {
 						"mapping": {
 							"analyzer": "arabic",
+							"search_analyzer": "liferay_analyzer_ar",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -954,6 +955,7 @@
 					"template_ca": {
 						"mapping": {
 							"analyzer": "catalan",
+							"search_analyzer": "liferay_analyzer_ca",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -993,6 +995,7 @@
 					"template_de": {
 						"mapping": {
 							"analyzer": "german",
+							"search_analyzer": "liferay_analyzer_de",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1086,6 +1089,7 @@
 					"template_fi": {
 						"mapping": {
 							"analyzer": "finnish",
+							"search_analyzer": "liferay_analyzer_fi",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1099,6 +1103,7 @@
 					"template_fr": {
 						"mapping": {
 							"analyzer": "french",
+							"search_analyzer": "liferay_analyzer_fr",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1138,6 +1143,7 @@
 					"template_hu": {
 						"mapping": {
 							"analyzer": "hungarian",
+							"search_analyzer": "liferay_analyzer_hu",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1177,6 +1183,7 @@
 					"template_it": {
 						"mapping": {
 							"analyzer": "italian",
+							"search_analyzer": "liferay_analyzer_it",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1190,6 +1197,7 @@
 					"template_ja": {
 						"mapping": {
 							"analyzer": "kuromoji",
+							"search_analyzer": "liferay_analyzer_ja",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1229,6 +1237,7 @@
 					"template_nl": {
 						"mapping": {
 							"analyzer": "dutch",
+							"search_analyzer": "liferay_analyzer_nl",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1268,6 +1277,7 @@
 					"template_pt": {
 						"mapping": {
 							"analyzer": "portuguese",
+							"search_analyzer": "liferay_analyzer_pt_PT",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1281,6 +1291,7 @@
 					"template_pt_br": {
 						"mapping": {
 							"analyzer": "brazilian",
+							"search_analyzer": "liferay_analyzer_pt_BR",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1319,6 +1330,7 @@
 					"template_sv": {
 						"mapping": {
 							"analyzer": "swedish",
+							"search_analyzer": "liferay_analyzer_sv",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1358,6 +1370,7 @@
 					"template_zh": {
 						"mapping": {
 							"analyzer": "smartcn",
+							"search_analyzer": "liferay_analyzer_zh",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
@@ -1554,6 +1567,14 @@
 					"store": true,
 					"type": "keyword"
 				},
+				"assetInternalCategoryTitles": {
+					"store": true,
+					"type": "keyword"
+				},
+				"assetInternalVocabularyIds": {
+					"store": true,
+					"type": "keyword"
+				},
 				"assetTagId": {
 					"store": true,
 					"type": "keyword"
@@ -1564,6 +1585,11 @@
 				},
 				"assetTagNames": {
 					"fields": {
+						"lowercase": {
+							"normalizer": "lowercase",
+							"store": true,
+							"type": "keyword"
+						},
 						"raw": {
 							"store": true,
 							"type": "keyword"
@@ -1662,6 +1688,13 @@
 					"type": "date"
 				},
 				"emailAddress": {
+					"fields": {
+						"text": {
+							"analyzer": "keyword_lowercase",
+							"search_analyzer": "email_lowercase",
+							"type": "text"
+						}
+					},
 					"store": true,
 					"type": "keyword"
 				},
@@ -1690,6 +1723,10 @@
 					"store": true,
 					"type": "keyword"
 				},
+				"externalReferenceCode": {
+					"store": true,
+					"type": "keyword"
+				},
 				"fileEntryTypeId": {
 					"store": true,
 					"type": "keyword"
@@ -1711,6 +1748,22 @@
 					},
 					"store": true,
 					"type": "geo_point"
+				},
+				"groupAssetCategoryExternalReferenceCodes": {
+					"store": true,
+					"type": "keyword"
+				},
+				"groupAssetInternalCategoryExternalReferenceCodes": {
+					"store": true,
+					"type": "keyword"
+				},
+				"groupAssetVocabularyCategoryExternalReferenceCodes": {
+					"store": true,
+					"type": "keyword"
+				},
+				"groupExternalReferenceCode": {
+					"store": true,
+					"type": "keyword"
 				},
 				"groupId": {
 					"store": true,
@@ -1894,6 +1947,10 @@
 					"store": true,
 					"type": "keyword"
 				},
+				"scopeGroupExternalReferenceCode": {
+					"store": true,
+					"type": "keyword"
+				},
 				"scopeGroupId": {
 					"store": true,
 					"type": "keyword"
@@ -1912,6 +1969,10 @@
 					"type": "keyword"
 				},
 				"status": {
+					"store": true,
+					"type": "keyword"
+				},
+				"statusByUserExternalReferenceCode": {
 					"store": true,
 					"type": "keyword"
 				},
@@ -1949,6 +2010,10 @@
 					"type": "keyword"
 				},
 				"uid": {
+					"store": true,
+					"type": "keyword"
+				},
+				"userExternalReferenceCode": {
 					"store": true,
 					"type": "keyword"
 				},

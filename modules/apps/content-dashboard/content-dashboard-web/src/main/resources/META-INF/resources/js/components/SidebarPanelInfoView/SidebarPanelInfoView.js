@@ -10,6 +10,7 @@ import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClaySticker from '@clayui/sticker';
 import ClayTabs from '@clayui/tabs';
+import {AnalyticsReports} from '@liferay/analytics-reports-js-components-web';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useCallback, useState} from 'react';
@@ -21,13 +22,21 @@ import ManageCollaborators from './ManageCollaborators';
 import Subscribe from './Subscribe';
 import VersionsContent from './VersionsContent';
 
-const TABS = {
+const TABS_1 = {
 	categorization: 1,
 	details: 0,
 	version: 2,
 };
 
+const TABS_2 = {
+	categorization: 2,
+	details: 0,
+	performance: 1,
+	version: 3,
+};
+
 const SidebarPanelInfoView = ({
+	contentPerformanceDataFetchURL,
 	classPK,
 	createDate,
 	description,
@@ -36,7 +45,7 @@ const SidebarPanelInfoView = ({
 	languageTag = 'en',
 	latestVersions = [],
 	modifiedDate,
-	specificFields = {},
+	specificFields = [],
 	subscribe,
 	subType,
 	tags = [],
@@ -49,6 +58,8 @@ const SidebarPanelInfoView = ({
 	viewURLs = [],
 	vocabularies = {},
 }) => {
+	const TABS = Liferay.FeatureFlags['LPD-28830'] ? TABS_2 : TABS_1;
+
 	const [activeTabKeyValue, setActiveTabKeyValue] = useState(TABS.details);
 
 	const [error, setError] = useState(false);
@@ -62,7 +73,13 @@ const SidebarPanelInfoView = ({
 	const hasCategorization =
 		!!tags.length || !!Object.keys(vocabularies).length;
 
-	const showTabs = !!getItemVersionsURL || hasCategorization;
+	const hasPerformanceTab =
+		type === 'Blogs Entry' ||
+		type === 'Document' ||
+		type === 'Web Content Article';
+
+	const showTabs =
+		!!getItemVersionsURL || hasCategorization || hasPerformanceTab;
 
 	const allTabs = !!getItemVersionsURL && hasCategorization;
 
@@ -139,7 +156,8 @@ const SidebarPanelInfoView = ({
 										className={classNames(
 											'sticker-user-icon',
 											{
-												[`user-icon-color-${stickerColor}`]: !user.url,
+												[`user-icon-color-${stickerColor}`]:
+													!user.url,
 											}
 										)}
 										shape="circle"
@@ -180,6 +198,21 @@ const SidebarPanelInfoView = ({
 						>
 							{Liferay.Language.get('details')}
 						</ClayTabs.Item>
+
+						{!!Liferay.FeatureFlags['LPD-28830'] && (
+							<ClayTabs.Item
+								active={activeTabKeyValue === TABS.performance}
+								className="flex-shrink-0"
+								innerProps={{
+									'aria-controls': 'performance',
+								}}
+								onClick={() =>
+									setActiveTabKeyValue(TABS.performance)
+								}
+							>
+								{Liferay.Language.get('performance')}
+							</ClayTabs.Item>
+						)}
 
 						{hasCategorization && (
 							<ClayTabs.Item
@@ -246,7 +279,7 @@ const SidebarPanelInfoView = ({
 				<div>
 					<ClayTabs.Content activeIndex={activeTabKeyValue} fade>
 						<ClayTabs.TabPane
-							aria-labelledby="tab-1"
+							aria-labelledby={`tab-${TABS.details + 1}`}
 							className="flex-shrink-0"
 						>
 							<DetailsContent
@@ -264,11 +297,26 @@ const SidebarPanelInfoView = ({
 							/>
 						</ClayTabs.TabPane>
 
+						{!!Liferay.FeatureFlags['LPD-28830'] &&
+							showTabs &&
+							activeTabKeyValue === TABS.performance && (
+								<ClayTabs.TabPane
+									aria-labelledby={`tab-${TABS.performance + 1}`}
+									className="flex-shrink-0"
+								>
+									<AnalyticsReports
+										contentPerformanceDataFetchURL={
+											contentPerformanceDataFetchURL
+										}
+									/>
+								</ClayTabs.TabPane>
+							)}
+
 						{hasCategorization &&
 							showTabs &&
 							activeTabKeyValue === TABS.categorization && (
 								<ClayTabs.TabPane
-									aria-labelledby="tab-2"
+									aria-labelledby={`tab-${TABS.categorization + 1}`}
 									className="flex-shrink-0"
 								>
 									<Categorization
@@ -280,7 +328,7 @@ const SidebarPanelInfoView = ({
 
 						{showTabs && activeTabKeyValue === TABS.version && (
 							<ClayTabs.TabPane
-								aria-labelledby="tab-2"
+								aria-labelledby={`tab-${TABS.version + 1}`}
 								className="flex-shrink-0"
 							>
 								<VersionsContent
@@ -315,7 +363,7 @@ SidebarPanelInfoView.propTypes = {
 	latestVersions: PropTypes.array.isRequired,
 	modifiedDate: PropTypes.string.isRequired,
 	preview: PropTypes.object,
-	specificFields: PropTypes.object.isRequired,
+	specificFields: PropTypes.array.isRequired,
 	subType: PropTypes.string.isRequired,
 	tags: PropTypes.array,
 	title: PropTypes.string.isRequired,

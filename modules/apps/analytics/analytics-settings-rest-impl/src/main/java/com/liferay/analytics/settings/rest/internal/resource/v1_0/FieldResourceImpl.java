@@ -389,14 +389,18 @@ public class FieldResourceImpl extends BaseFieldResourceImpl {
 		return transform(
 			_expandoColumnLocalService.getColumns(expandoTable.getTableId()),
 			expandoColumn -> {
-				Field field = new Field();
+				Field field = new Field() {
+					{
+						setName(expandoColumn::getName);
+						setRequired(() -> Boolean.FALSE);
+						setSelected(
+							() -> ArrayUtil.contains(
+								syncedNames, expandoColumn.getName()));
+						setType(() -> _getDataType(expandoColumn.getType()));
+					}
+				};
 
-				field.setName(expandoColumn.getName());
-				field.setRequired(false);
-				field.setSelected(
-					ArrayUtil.contains(syncedNames, expandoColumn.getName()));
-				field.setSource(source);
-				field.setType(_getDataType(expandoColumn.getType()));
+				field.setSource(() -> source);
 
 				return field;
 			});
@@ -409,16 +413,23 @@ public class FieldResourceImpl extends BaseFieldResourceImpl {
 		List<Field> fields = new ArrayList<>();
 
 		for (int i = 0; i < names.length; i++) {
-			Field field = new Field();
+			int index = i;
 
-			field.setExample(examples[i]);
-			field.setName(names[i]);
-			field.setRequired(ArrayUtil.contains(requiredNames, names[i]));
-			field.setSelected(
-				ArrayUtil.contains(syncedNames, names[i]) ||
-				field.getRequired());
-			field.setSource(source);
-			field.setType(types[i]);
+			Field field = new Field() {
+				{
+					setExample(() -> examples[index]);
+					setName(() -> names[index]);
+					setRequired(
+						() -> ArrayUtil.contains(requiredNames, names[index]));
+					setSelected(
+						() ->
+							ArrayUtil.contains(syncedNames, names[index]) ||
+							ArrayUtil.contains(requiredNames, names[index]));
+					setType(() -> types[index]);
+				}
+			};
+
+			field.setSource(() -> source);
 
 			fields.add(field);
 		}

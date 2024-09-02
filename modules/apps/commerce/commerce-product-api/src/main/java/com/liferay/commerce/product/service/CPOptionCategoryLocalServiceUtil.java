@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -54,14 +55,29 @@ public class CPOptionCategoryLocalServiceUtil {
 	}
 
 	public static CPOptionCategory addCPOptionCategory(
-			long userId, Map<java.util.Locale, String> titleMap,
+			String externalReferenceCode, long userId,
+			Map<java.util.Locale, String> titleMap,
 			Map<java.util.Locale, String> descriptionMap, double priority,
 			String key,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addCPOptionCategory(
-			userId, titleMap, descriptionMap, priority, key, serviceContext);
+			externalReferenceCode, userId, titleMap, descriptionMap, priority,
+			key, serviceContext);
+	}
+
+	public static CPOptionCategory addOrUpdateCPOptionCategory(
+			String externalReferenceCode, long userId, long cpOptionCategoryId,
+			Map<java.util.Locale, String> titleMap,
+			Map<java.util.Locale, String> descriptionMap, double priority,
+			String key,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addOrUpdateCPOptionCategory(
+			externalReferenceCode, userId, cpOptionCategoryId, titleMap,
+			descriptionMap, priority, key, serviceContext);
 	}
 
 	/**
@@ -235,6 +251,13 @@ public class CPOptionCategoryLocalServiceUtil {
 		return getService().fetchCPOptionCategory(companyId, key);
 	}
 
+	public static CPOptionCategory fetchCPOptionCategoryByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
+
+		return getService().fetchCPOptionCategoryByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
 	/**
 	 * Returns the cp option category with the matching UUID and company.
 	 *
@@ -305,6 +328,14 @@ public class CPOptionCategoryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getCPOptionCategory(companyId, key);
+	}
+
+	public static CPOptionCategory getCPOptionCategoryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().getCPOptionCategoryByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	/**
@@ -383,23 +414,24 @@ public class CPOptionCategoryLocalServiceUtil {
 	}
 
 	public static CPOptionCategory updateCPOptionCategory(
-			long cpOptionCategoryId, Map<java.util.Locale, String> titleMap,
+			String externalReferenceCode, long cpOptionCategoryId,
+			Map<java.util.Locale, String> titleMap,
 			Map<java.util.Locale, String> descriptionMap, double priority,
 			String key)
 		throws PortalException {
 
 		return getService().updateCPOptionCategory(
-			cpOptionCategoryId, titleMap, descriptionMap, priority, key);
+			externalReferenceCode, cpOptionCategoryId, titleMap, descriptionMap,
+			priority, key);
 	}
 
 	public static CPOptionCategoryLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPOptionCategoryLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CPOptionCategoryLocalService _service;
+	private static final Snapshot<CPOptionCategoryLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CPOptionCategoryLocalServiceUtil.class,
+			CPOptionCategoryLocalService.class);
 
 }

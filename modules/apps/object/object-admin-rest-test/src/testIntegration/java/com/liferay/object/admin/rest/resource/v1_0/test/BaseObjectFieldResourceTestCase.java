@@ -36,11 +36,13 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -103,7 +103,7 @@ public abstract class BaseObjectFieldResourceTestCase {
 		ObjectFieldResource.Builder builder = ObjectFieldResource.builder();
 
 		objectFieldResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +117,32 @@ public abstract class BaseObjectFieldResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ObjectField objectField1 = randomObjectField();
+
+		String json = objectMapper.writeValueAsString(objectField1);
+
+		ObjectField objectField2 = ObjectFieldSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(objectField1, objectField2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ObjectField objectField = randomObjectField();
+
+		String json1 = objectMapper.writeValueAsString(objectField);
+		String json2 = ObjectFieldSerDes.toJSON(objectField);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +157,6 @@ public abstract class BaseObjectFieldResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ObjectField objectField1 = randomObjectField();
-
-		String json = objectMapper.writeValueAsString(objectField1);
-
-		ObjectField objectField2 = ObjectFieldSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(objectField1, objectField2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ObjectField objectField = randomObjectField();
-
-		String json1 = objectMapper.writeValueAsString(objectField);
-		String json2 = ObjectFieldSerDes.toJSON(objectField);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -179,6 +170,8 @@ public abstract class BaseObjectFieldResourceTestCase {
 		objectField.setIndexedLanguageId(regex);
 		objectField.setListTypeDefinitionExternalReferenceCode(regex);
 		objectField.setName(regex);
+		objectField.setObjectDefinitionExternalReferenceCode1(regex);
+		objectField.setObjectRelationshipExternalReferenceCode(regex);
 		objectField.setReadOnlyConditionExpression(regex);
 
 		String json = ObjectFieldSerDes.toJSON(objectField);
@@ -193,6 +186,10 @@ public abstract class BaseObjectFieldResourceTestCase {
 		Assert.assertEquals(
 			regex, objectField.getListTypeDefinitionExternalReferenceCode());
 		Assert.assertEquals(regex, objectField.getName());
+		Assert.assertEquals(
+			regex, objectField.getObjectDefinitionExternalReferenceCode1());
+		Assert.assertEquals(
+			regex, objectField.getObjectRelationshipExternalReferenceCode());
 		Assert.assertEquals(
 			regex, objectField.getReadOnlyConditionExpression());
 	}
@@ -491,7 +488,7 @@ public abstract class BaseObjectFieldResourceTestCase {
 			(entityField, objectField1, objectField2) -> {
 				BeanTestUtil.setProperty(
 					objectField1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -970,7 +967,7 @@ public abstract class BaseObjectFieldResourceTestCase {
 			(entityField, objectField1, objectField2) -> {
 				BeanTestUtil.setProperty(
 					objectField1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -1183,7 +1180,11 @@ public abstract class BaseObjectFieldResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteObjectField() throws Exception {
-		ObjectField objectField = testGraphQLDeleteObjectField_addObjectField();
+
+		// No namespace
+
+		ObjectField objectField1 =
+			testGraphQLDeleteObjectField_addObjectField();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -1192,23 +1193,60 @@ public abstract class BaseObjectFieldResourceTestCase {
 						"deleteObjectField",
 						new HashMap<String, Object>() {
 							{
-								put("objectFieldId", objectField.getId());
+								put("objectFieldId", objectField1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteObjectField"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"objectField",
 					new HashMap<String, Object>() {
 						{
-							put("objectFieldId", objectField.getId());
+							put("objectFieldId", objectField1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectField objectField2 =
+			testGraphQLDeleteObjectField_addObjectField();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectField",
+							new HashMap<String, Object>() {
+								{
+									put("objectFieldId", objectField2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectField"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectField",
+						new HashMap<String, Object>() {
+							{
+								put("objectFieldId", objectField2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ObjectField testGraphQLDeleteObjectField_addObjectField()
@@ -1237,6 +1275,8 @@ public abstract class BaseObjectFieldResourceTestCase {
 	public void testGraphQLGetObjectField() throws Exception {
 		ObjectField objectField = testGraphQLGetObjectField_addObjectField();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectField,
@@ -1254,11 +1294,36 @@ public abstract class BaseObjectFieldResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/objectField"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectField,
+				ObjectFieldSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectField",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"objectFieldId",
+												objectField.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectField"))));
 	}
 
 	@Test
 	public void testGraphQLGetObjectFieldNotFound() throws Exception {
 		Long irrelevantObjectFieldId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1272,6 +1337,27 @@ public abstract class BaseObjectFieldResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectField",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectFieldId",
+										irrelevantObjectFieldId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1538,9 +1624,35 @@ public abstract class BaseObjectFieldResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"objectDefinitionExternalReferenceCode1",
+					additionalAssertFieldName)) {
+
+				if (objectField.getObjectDefinitionExternalReferenceCode1() ==
+						null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"objectFieldSettings", additionalAssertFieldName)) {
 
 				if (objectField.getObjectFieldSettings() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"objectRelationshipExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (objectField.getObjectRelationshipExternalReferenceCode() ==
+						null) {
+
 					valid = false;
 				}
 
@@ -1893,11 +2005,43 @@ public abstract class BaseObjectFieldResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"objectDefinitionExternalReferenceCode1",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectField1.
+							getObjectDefinitionExternalReferenceCode1(),
+						objectField2.
+							getObjectDefinitionExternalReferenceCode1())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"objectFieldSettings", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
 						objectField1.getObjectFieldSettings(),
 						objectField2.getObjectFieldSettings())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"objectRelationshipExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectField1.
+							getObjectRelationshipExternalReferenceCode(),
+						objectField2.
+							getObjectRelationshipExternalReferenceCode())) {
 
 					return false;
 				}
@@ -2374,9 +2518,103 @@ public abstract class BaseObjectFieldResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("objectDefinitionExternalReferenceCode1")) {
+			Object object =
+				objectField.getObjectDefinitionExternalReferenceCode1();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("objectFieldSettings")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("objectRelationshipExternalReferenceCode")) {
+			Object object =
+				objectField.getObjectRelationshipExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("readOnly")) {
@@ -2474,7 +2712,8 @@ public abstract class BaseObjectFieldResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -2518,6 +2757,10 @@ public abstract class BaseObjectFieldResourceTestCase {
 				listTypeDefinitionId = RandomTestUtil.randomLong();
 				localized = RandomTestUtil.randomBoolean();
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				objectDefinitionExternalReferenceCode1 = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				objectRelationshipExternalReferenceCode =
+					StringUtil.toLowerCase(RandomTestUtil.randomString());
 				readOnlyConditionExpression = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				required = RandomTestUtil.randomBoolean();
@@ -2548,12 +2791,12 @@ public abstract class BaseObjectFieldResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2562,11 +2805,16 @@ public abstract class BaseObjectFieldResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2598,6 +2846,24 @@ public abstract class BaseObjectFieldResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2619,16 +2885,6 @@ public abstract class BaseObjectFieldResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

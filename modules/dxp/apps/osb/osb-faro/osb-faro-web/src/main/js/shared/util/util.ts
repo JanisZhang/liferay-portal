@@ -19,6 +19,11 @@ import {
 export const isBlank = (value: string | number): boolean =>
 	isNil(value) || (isString(value) && !value.length);
 
+/**
+ * It is deprecated, you should use useQueryRangeSelectors instead.
+ * @param query
+ * @deprecated
+ */
 export const getRangeSelectorsFromQuery = query => {
 	const rangeEnd = get(query, 'rangeEnd', '');
 	const rangeKey = get(query, 'rangeKey', RangeKeyTimeRanges.Last30Days);
@@ -84,8 +89,18 @@ export const getSafeDisplayValue = (
 	defaultValue: string | number = '-'
 ): string | number => (isBlank(value) ? defaultValue : value);
 
-export const getSafeTouchpoint = (touchpoint: string) =>
-	touchpoint !== 'Any' ? decodeURIComponent(touchpoint) : null;
+export const getSafeTouchpoint = (touchpoint: string) => {
+	if (!touchpoint) return null;
+
+	try {
+		const url = new URL(decodeURIComponent(touchpoint));
+		const remainingUrl = url.href.replace(url.origin, '');
+
+		return remainingUrl === '/' ? url.origin : url.origin + remainingUrl;
+	} catch (e) {
+		return touchpoint !== 'Any' ? decodeURIComponent(touchpoint) : null;
+	}
+};
 
 /**
  * Create a Blob object from data string and temporarily attach

@@ -92,7 +92,7 @@ boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.i
 				%>
 
 				<react:component
-					module="admin/js/components/DefaultPage"
+					module="{DefaultPage} from dynamic-data-mapping-form-web"
 					props='<%=
 						HashMapBuilder.<String, Object>put(
 							"dataEngineModule", ddmFormDisplayContext.getDataEngineModule()
@@ -207,14 +207,14 @@ boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.i
 								<div class="locale-actions">
 									<c:choose>
 										<c:when test="<%= ddmFormDisplayContext.isPropagateLanguageSelection() %>">
-											<liferay-ui:language
+											<liferay-site-navigation:language
 												languageId="<%= languageId %>"
 												languageIds="<%= ddmFormDisplayContext.getAvailableLanguageIds() %>"
 												useNamespace="<%= false %>"
 											/>
 										</c:when>
 										<c:otherwise>
-											<liferay-ui:language
+											<liferay-site-navigation:language
 												formAction="<%= currentURL %>"
 												languageId="<%= languageId %>"
 												languageIds="<%= ddmFormDisplayContext.getAvailableLanguageIds() %>"
@@ -258,7 +258,7 @@ boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.i
 
 						<clay:container-fluid>
 							<react:component
-								module="admin/js/util/ShowPartialResultsAlert"
+								module="{ShowPartialResultsAlert} from dynamic-data-mapping-form-web"
 								props='<%=
 									HashMapBuilder.<String, Object>put(
 										"dismissible", true
@@ -280,7 +280,7 @@ boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.i
 							id="<%= ddmFormDisplayContext.getContainerId() %>"
 						>
 							<react:component
-								module="admin/js/FormView"
+								module="{FormView} from dynamic-data-mapping-form-web"
 								props='<%=
 									HashMapBuilder.<String, Object>put(
 										"dataEngineModule", ddmFormDisplayContext.getDataEngineModule()

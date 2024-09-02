@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Shared Dependencies Poi
 Bundle-SymbolicName: com.liferay.shared.dependencies.poi
-Bundle-Version: 3.0.2
+Bundle-Version: 8.0.3
 Import-Package:\
 	!com.github.javaparser.*,\
 	!com.github.luben.zstd.*,\
@@ -18,7 +18,6 @@ Import-Package:\
 	!net.sf.saxon.*,\
 	\
 	!org.apache.batik.*,\
-	!org.apache.commons.collections4.*,\
 	!org.apache.jcp.xml.dsig.internal.dom,\
 	!org.apache.maven.*,\
 	!org.apache.tools.ant.*,\
@@ -33,6 +32,8 @@ Import-Package:\
 	!org.tukaani.xz.*,\
 	\
 	!org.w3c.dom.svg,\
+	\
+	org.apache.xerces.util,\
 	\
 	*
 -exportcontents:\

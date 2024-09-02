@@ -32,6 +32,7 @@ import com.liferay.portal.test.rule.Inject;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -86,6 +87,29 @@ public class CartCommentResourceTest extends BaseCartCommentResourceTestCase {
 	}
 
 	@Override
+	@Test
+	public void testPutCartCommentByExternalReferenceCode() throws Exception {
+		CartComment postCartComment =
+			testPutCartCommentByExternalReferenceCode_addCartComment();
+
+		CartComment randomCartComment = randomCartComment();
+
+		CartComment putCartComment =
+			cartCommentResource.putCartCommentByExternalReferenceCode(
+				postCartComment.getExternalReferenceCode(), randomCartComment);
+
+		assertEquals(randomCartComment, putCartComment);
+		assertValid(putCartComment);
+
+		CartComment getCartComment =
+			cartCommentResource.getCartCommentByExternalReferenceCode(
+				putCartComment.getExternalReferenceCode());
+
+		assertEquals(randomCartComment, getCartComment);
+		assertValid(getCartComment);
+	}
+
+	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"content", "restricted"};
 	}
@@ -109,7 +133,43 @@ public class CartCommentResourceTest extends BaseCartCommentResourceTestCase {
 	}
 
 	@Override
+	protected CartComment
+			testDeleteCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
+		return _addCartComment();
+	}
+
+	@Override
+	protected CartComment
+			testGetCartByExternalReferenceCodeCommentsPage_addCartComment(
+				String externalReferenceCode, CartComment cartComment)
+		throws Exception {
+
+		return cartCommentResource.postCartByExternalReferenceCodeComment(
+			externalReferenceCode, cartComment);
+	}
+
+	@Override
+	protected String
+			testGetCartByExternalReferenceCodeCommentsPage_getExternalReferenceCode()
+		throws Exception {
+
+		CommerceOrder commerceOrder = _getCommerceOrder();
+
+		return commerceOrder.getExternalReferenceCode();
+	}
+
+	@Override
 	protected CartComment testGetCartComment_addCartComment() throws Exception {
+		return _addCartComment();
+	}
+
+	@Override
+	protected CartComment
+			testGetCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
 		return _addCartComment();
 	}
 
@@ -136,10 +196,36 @@ public class CartCommentResourceTest extends BaseCartCommentResourceTestCase {
 	}
 
 	@Override
+	protected CartComment
+			testGraphQLGetCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
+		return _addCartComment();
+	}
+
+	@Override
 	protected CartComment testPatchCartComment_addCartComment()
 		throws Exception {
 
 		return _addCartComment();
+	}
+
+	@Override
+	protected CartComment
+			testPatchCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
+		return _addCartComment();
+	}
+
+	@Override
+	protected CartComment
+			testPostCartByExternalReferenceCodeComment_addCartComment(
+				CartComment cartComment)
+		throws Exception {
+
+		return cartCommentResource.postCartByExternalReferenceCodeComment(
+			_commerceOrder.getExternalReferenceCode(), cartComment);
 	}
 
 	@Override
@@ -156,6 +242,14 @@ public class CartCommentResourceTest extends BaseCartCommentResourceTestCase {
 		return _addCartComment();
 	}
 
+	@Override
+	protected CartComment
+			testPutCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
+		return _addCartComment();
+	}
+
 	private CartComment _addCartComment() throws Exception {
 		CommerceOrderNote commerceOrderNote = _getCommerceOrderNote();
 
@@ -163,6 +257,8 @@ public class CartCommentResourceTest extends BaseCartCommentResourceTestCase {
 			{
 				author = commerceOrderNote.getUserName();
 				content = commerceOrderNote.getContent();
+				externalReferenceCode =
+					commerceOrderNote.getExternalReferenceCode();
 				id = commerceOrderNote.getCommerceOrderNoteId();
 				orderId = commerceOrderNote.getCommerceOrderId();
 				restricted = commerceOrderNote.isRestricted();

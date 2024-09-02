@@ -17,6 +17,7 @@ import React, {useContext, useState} from 'react';
 import formatLocaleWithDashes from '../utils/language/format_locale_with_dashes';
 import formatLocaleWithUnderscores from '../utils/language/format_locale_with_underscores';
 import sub from '../utils/language/sub';
+import {TEST_IDS} from '../utils/testIds';
 import EditERCModal from './EditERCModal';
 import EditTitleModal from './EditTitleModal';
 import ThemeContext from './ThemeContext';
@@ -79,9 +80,8 @@ export default function PageToolbar({
 	titleAndDescriptionEdited,
 	titleI18n,
 }) {
-	const {availableLanguages, defaultLocale, locale, sxpType} = useContext(
-		ThemeContext
-	);
+	const {availableLanguages, defaultLocale, locale, sxpType} =
+		useContext(ThemeContext);
 
 	const [modalFieldFocus, setModalFieldFocus] = useState('title');
 	const [modalVisible, setModalVisible] = useState(false);
@@ -179,7 +179,7 @@ export default function PageToolbar({
 														? title
 														: titleI18n[
 																displayLocale
-														  ]
+															]
 												}
 											>
 												<div className="entry-title text-truncate">
@@ -187,7 +187,7 @@ export default function PageToolbar({
 														? title
 														: titleI18n[
 																displayLocale
-														  ]) || (
+															]) || (
 														<span className="entry-title-blank">
 															{Liferay.Language.get(
 																'untitled'
@@ -224,14 +224,14 @@ export default function PageToolbar({
 														? description
 														: descriptionI18n[
 																displayLocale
-														  ]
+															]
 												}
 											>
 												{(!titleAndDescriptionEdited
 													? description
 													: descriptionI18n[
 															displayLocale
-													  ]) || (
+														]) || (
 													<span className="entry-description-blank">
 														{Liferay.Language.get(
 															'no-description'
@@ -259,7 +259,10 @@ export default function PageToolbar({
 									{Liferay.Language.get('id')}:
 								</span>
 
-								<strong className="text-dark">
+								<strong
+									className="text-dark"
+									data-qa-id={TEST_IDS.ENTITY_ID}
+								>
 									{entityId}
 								</strong>
 							</div>
@@ -295,10 +298,10 @@ export default function PageToolbar({
 													sxpType === 'sxpBlueprint'
 														? Liferay.Language.get(
 																'blueprint'
-														  )
+															)
 														: Liferay.Language.get(
 																'element'
-														  ),
+															),
 												]
 											)}
 										>

@@ -12,6 +12,7 @@ import com.liferay.asset.categories.admin.web.internal.constants.AssetCategories
 import com.liferay.asset.categories.admin.web.internal.item.selector.criterion.AssetVocabularyItemSelectorCriterion;
 import com.liferay.asset.categories.admin.web.internal.util.AssetCategoryTreePathComparator;
 import com.liferay.asset.categories.configuration.AssetCategoriesCompanyConfiguration;
+import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalServiceUtil;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
@@ -29,6 +30,7 @@ import com.liferay.asset.kernel.service.AssetVocabularyServiceUtil;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryServiceUtil;
 import com.liferay.exportimport.kernel.staging.permission.StagingPermissionUtil;
+import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.IconItem;
@@ -155,6 +157,15 @@ public class AssetCategoriesDisplayContext {
 		).buildString();
 	}
 
+	public int getAssetEntryAssetCategoryRelsCountByClassNameId(
+		long assetCategoryId) {
+
+		return AssetEntryAssetCategoryRelLocalServiceUtil.
+			getAssetEntryAssetCategoryRelsCountByClassNameId(
+				assetCategoryId,
+				PortalUtil.getClassNameId(FriendlyURLEntry.class));
+	}
+
 	public String getAssetType(AssetVocabulary vocabulary) {
 		long[] selectedClassNameIds = vocabulary.getSelectedClassNameIds();
 		long[] selectedClassTypePKs = vocabulary.getSelectedClassTypePKs();
@@ -260,7 +271,7 @@ public class AssetCategoriesDisplayContext {
 		}
 
 		categoriesSearchContainer.setOrderByComparator(
-			new AssetCategoryCreateDateComparator(orderByAsc));
+			AssetCategoryCreateDateComparator.getInstance(orderByAsc));
 		categoriesSearchContainer.setOrderByType(orderByType);
 
 		AssetVocabulary vocabulary = getVocabulary();
@@ -502,7 +513,7 @@ public class AssetCategoriesDisplayContext {
 				AssetVocabularyServiceUtil.getGroupVocabularies(
 					company.getGroupId(), false, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS,
-					new AssetVocabularyCreateDateComparator()));
+					AssetVocabularyCreateDateComparator.getInstance(true)));
 		}
 
 		List<DepotEntry> depotEntries =
@@ -517,7 +528,7 @@ public class AssetCategoriesDisplayContext {
 				AssetVocabularyServiceUtil.getGroupVocabularies(
 					group.getGroupId(), false, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS,
-					new AssetVocabularyCreateDateComparator());
+					AssetVocabularyCreateDateComparator.getInstance(true));
 
 			if (ListUtil.isNotEmpty(groupVocabularies)) {
 				_inheritedVocabularies.put(
@@ -643,7 +654,8 @@ public class AssetCategoriesDisplayContext {
 
 		_vocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(
 			_themeDisplay.getScopeGroupId(), false, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, new AssetVocabularyCreateDateComparator());
+			QueryUtil.ALL_POS,
+			AssetVocabularyCreateDateComparator.getInstance(true));
 
 		return _vocabularies;
 	}
@@ -712,7 +724,7 @@ public class AssetCategoriesDisplayContext {
 		}
 
 		vocabulariesSearchContainer.setOrderByComparator(
-			new AssetVocabularyCreateDateComparator(orderByAsc));
+			AssetVocabularyCreateDateComparator.getInstance(orderByAsc));
 		vocabulariesSearchContainer.setOrderByType(orderByType);
 
 		String keywords = _getKeywords();

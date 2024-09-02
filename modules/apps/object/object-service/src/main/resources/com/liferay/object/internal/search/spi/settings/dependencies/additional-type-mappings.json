@@ -1,8 +1,0 @@
-{
-	"properties": {
-		"objectFolderExternalReferenceCode": {
-			"store": true,
-			"type": "keyword"
-		}
-	}
-}

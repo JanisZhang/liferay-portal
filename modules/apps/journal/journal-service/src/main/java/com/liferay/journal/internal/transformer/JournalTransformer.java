@@ -331,7 +331,7 @@ public class JournalTransformer {
 		_addReservedEl(
 			JournalStructureConstants.RESERVED_ARTICLE_SMALL_IMAGE_URL,
 			templateNodes, themeDisplay, tokens,
-			article.getArticleImageURL(themeDisplay));
+			GetterUtil.getString(article.getArticleImageURL(themeDisplay)));
 
 		_addReservedEl(
 			JournalStructureConstants.RESERVED_ARTICLE_TITLE, templateNodes,
@@ -478,7 +478,8 @@ public class JournalTransformer {
 			}
 		}
 		else if (type.equals(DDMFormFieldTypeConstants.SELECT) &&
-				 ddmFormField.isMultiple()) {
+				 ddmFormField.isMultiple() && (dynamicContentElement != null) &&
+				 (dynamicContentElement.element("option") != null)) {
 
 			JSONArray dataJSONArray = JSONFactoryUtil.createJSONArray();
 

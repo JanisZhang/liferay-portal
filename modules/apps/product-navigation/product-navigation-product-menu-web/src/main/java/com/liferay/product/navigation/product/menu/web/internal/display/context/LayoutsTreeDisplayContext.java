@@ -195,8 +195,8 @@ public class LayoutsTreeDisplayContext {
 			PortalUtil.getControlPanelPortletURL(
 				_liferayPortletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
 				PortletRequest.RENDER_PHASE)
-		).setMVCPath(
-			"/select_layout_page_template_entry.jsp"
+		).setMVCRenderCommandName(
+			"/layout_admin/select_layout_page_template_entry"
 		).setRedirect(
 			_getRedirect()
 		).setBackURL(
@@ -619,11 +619,11 @@ public class LayoutsTreeDisplayContext {
 	}
 
 	private List<Long> _getSelectedLayoutPath() throws Exception {
-		long selPlid = _getSelPlid();
-
 		List<Long> selectedLayoutPath = new ArrayList<>();
 
 		selectedLayoutPath.add(LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+
+		long selPlid = _getSelPlid();
 
 		Layout layout = _layoutLocalService.fetchLayout(selPlid);
 

@@ -388,6 +388,47 @@ public class ProductSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _specificationKeySupplier;
 
+	@Schema(example = "1.1")
+	public Double getSpecificationPriority() {
+		if (_specificationPrioritySupplier != null) {
+			specificationPriority = _specificationPrioritySupplier.get();
+
+			_specificationPrioritySupplier = null;
+		}
+
+		return specificationPriority;
+	}
+
+	public void setSpecificationPriority(Double specificationPriority) {
+		this.specificationPriority = specificationPriority;
+
+		_specificationPrioritySupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSpecificationPriority(
+		UnsafeSupplier<Double, Exception> specificationPriorityUnsafeSupplier) {
+
+		_specificationPrioritySupplier = () -> {
+			try {
+				return specificationPriorityUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Double specificationPriority;
+
+	@JsonIgnore
+	private Supplier<Double> _specificationPrioritySupplier;
+
 	@Schema(example = "{en_US=Croatia, hr_HR=Hrvatska, hu_HU=Horvatorszag}")
 	@Valid
 	public Map<String, String> getValue() {
@@ -563,6 +604,18 @@ public class ProductSpecification implements Serializable {
 			sb.append("\"");
 		}
 
+		Double specificationPriority = getSpecificationPriority();
+
+		if (specificationPriority != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"specificationPriority\": ");
+
+			sb.append(specificationPriority);
+		}
+
 		Map<String, String> value = getValue();
 
 		if (value != null) {
@@ -627,7 +680,10 @@ public class ProductSpecification implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

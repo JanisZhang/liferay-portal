@@ -53,6 +53,7 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.settings.SystemSettingsLocator;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
@@ -278,6 +279,25 @@ public class CPTestUtil {
 			ServiceContextTestUtil.getServiceContext(groupId));
 	}
 
+	public static CPDefinition addCPDefinitionFromCatalog(
+			long groupId, String productTypeName, Date displayDate,
+			Date expirationDate, boolean ignoreSKUCombinations,
+			boolean hasDefaultInstance, int status)
+		throws PortalException {
+
+		String defaultSku = null;
+
+		if (hasDefaultInstance) {
+			defaultSku = CPInstanceConstants.DEFAULT_SKU;
+		}
+
+		return _addCPDefinitionWithSku(
+			groupId, productTypeName, displayDate, expirationDate,
+			ignoreSKUCombinations,
+			ServiceContextTestUtil.getServiceContext(groupId), defaultSku,
+			status);
+	}
+
 	public static CPDefinitionOptionRel addCPDefinitionOptionRel(
 			long groupId, long cpDefinitionId, boolean skuContributor,
 			int cpDefinitionOptionValueRelsCount)
@@ -300,6 +320,36 @@ public class CPTestUtil {
 		return CPDefinitionOptionRelLocalServiceUtil.addCPDefinitionOptionRel(
 			cpDefinitionId, cpOptionId, true,
 			ServiceContextTestUtil.getServiceContext(groupId));
+	}
+
+	public static CPDefinitionOptionValueRel addCPDefinitionOptionValueRel(
+			long cpDefinitionId, long cpOptionId, String key, String name,
+			String priceType, boolean required, boolean skuContributor,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		CPDefinitionOptionRel cpDefinitionOptionRel =
+			CPDefinitionOptionRelLocalServiceUtil.fetchCPDefinitionOptionRel(
+				cpDefinitionId, cpOptionId);
+
+		if (cpDefinitionOptionRel == null) {
+			cpDefinitionOptionRel =
+				CPDefinitionOptionRelLocalServiceUtil.addCPDefinitionOptionRel(
+					cpDefinitionId, cpOptionId,
+					RandomTestUtil.randomLocaleStringMap(),
+					RandomTestUtil.randomLocaleStringMap(),
+					CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
+					RandomTestUtil.randomDouble(), false, required,
+					skuContributor, false, priceType, serviceContext);
+		}
+
+		return CPDefinitionOptionValueRelLocalServiceUtil.
+			addCPDefinitionOptionValueRel(
+				cpDefinitionOptionRel.getCPDefinitionOptionRelId(), key,
+				HashMapBuilder.put(
+					LocaleUtil.getDefault(), name
+				).build(),
+				RandomTestUtil.randomDouble(), serviceContext);
 	}
 
 	public static CPDefinitionOptionValueRel
@@ -537,8 +587,8 @@ public class CPTestUtil {
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), "NOME"
 				).build(),
-				incrementalOrderQuantity.scale(), true, 0.0, BigDecimal.ONE,
-				sku);
+				incrementalOrderQuantity.scale(), BigDecimal.ZERO, true, 0.0,
+				BigDecimal.ONE, sku);
 	}
 
 	public static CPInstance addCPInstanceWithRandomSku(long groupId)
@@ -666,6 +716,15 @@ public class CPTestUtil {
 			ServiceContextTestUtil.getServiceContext());
 	}
 
+	public static CPOptionValue addCPOptionValue(CPOption cpOption, String key)
+		throws PortalException {
+
+		return CPOptionValueLocalServiceUtil.addCPOptionValue(
+			cpOption.getCPOptionId(), RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomDouble(), key,
+			ServiceContextTestUtil.getServiceContext());
+	}
+
 	public static CPSpecificationOption addCPSpecificationOption(long groupId)
 		throws PortalException {
 
@@ -673,10 +732,11 @@ public class CPTestUtil {
 			ServiceContextTestUtil.getServiceContext(groupId);
 
 		return CPSpecificationOptionLocalServiceUtil.addCPSpecificationOption(
-			serviceContext.getUserId(), 0,
+			null, serviceContext.getUserId(), 0, 0,
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), false,
-			RandomTestUtil.randomString(), serviceContext);
+			RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
+			serviceContext);
 	}
 
 	public static void buildCPInstances(CPDefinition cpDefinition)
@@ -694,7 +754,11 @@ public class CPTestUtil {
 		CPOptionConfiguration cpOptionConfiguration =
 			_getCPOptionConfiguration();
 
-		return cpOptionConfiguration.allowedCommerceOptionTypes();
+		return ArrayUtil.filter(
+			cpOptionConfiguration.allowedCommerceOptionTypes(),
+			commerceOptionType -> !Objects.equals(
+				CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
+				commerceOptionType));
 	}
 
 	public static String getDefaultCommerceOptionTypeKey(boolean skuContributor)
@@ -886,6 +950,17 @@ public class CPTestUtil {
 			ServiceContext serviceContext, String sku)
 		throws PortalException {
 
+		return _addCPDefinitionWithSku(
+			groupId, productTypeName, null, null, ignoreSKUCombinations,
+			serviceContext, sku, WorkflowConstants.STATUS_DRAFT);
+	}
+
+	private static CPDefinition _addCPDefinitionWithSku(
+			long groupId, String productTypeName, Date displayDate,
+			Date expirationDate, boolean ignoreSKUCombinations,
+			ServiceContext serviceContext, String sku, int status)
+		throws PortalException {
+
 		User user = UserLocalServiceUtil.getUser(serviceContext.getUserId());
 
 		Map<Locale, String> titleMap = RandomTestUtil.randomLocaleStringMap();
@@ -917,8 +992,13 @@ public class CPTestUtil {
 
 		long time = System.currentTimeMillis();
 
-		Date displayDate = new Date(time - Time.HOUR);
-		Date expirationDate = new Date(time + Time.DAY);
+		if (displayDate == null) {
+			displayDate = new Date(time - Time.HOUR);
+		}
+
+		if (expirationDate == null) {
+			expirationDate = new Date(time + Time.DAY);
+		}
 
 		Calendar displayCal = CalendarFactoryUtil.getCalendar(
 			user.getTimeZone());
@@ -962,7 +1042,7 @@ public class CPTestUtil {
 				displayDateHour, displayDateMinute, expirationDateMonth,
 				expirationDateDay, expirationDateYear, expirationDateHour,
 				expirationDateMinute, false, sku, false, 1, null, null, 0L,
-				WorkflowConstants.STATUS_DRAFT, serviceContext);
+				status, serviceContext);
 
 		CPDefinitionInventory cpDefinitionInventory =
 			CPDefinitionInventoryLocalServiceUtil.

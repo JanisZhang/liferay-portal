@@ -5,8 +5,10 @@
 
 import ClayForm, {ClayInput} from '@clayui/form';
 import PropTypes from 'prop-types';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 
+import {DefinitionBuilderContext} from '../../../../../DefinitionBuilderContext';
+import {DisabledGroovyScriptAlert} from '../../../shared-components/DisabledGroovyScriptAlert';
 import SidebarPanel from '../../SidebarPanel';
 
 const TimerInfo = ({
@@ -16,6 +18,11 @@ const TimerInfo = ({
 	timerIdentifier,
 	timersIndex,
 }) => {
+	const {
+		allowScriptContentToBeExecutedOrIncluded,
+		hasGroovyOrJavaScript,
+		scriptManagementConfigurationPortletURL,
+	} = useContext(DefinitionBuilderContext);
 	const [timerDescription, setTimerDescription] = useState([description]);
 	const [timerName, setTimerName] = useState([name]);
 
@@ -34,41 +41,55 @@ const TimerInfo = ({
 				return updatedSections;
 			});
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [timerDescription, timerIdentifier, timerName, timersIndex]);
 
 	return (
-		<SidebarPanel panelTitle={Liferay.Language.get('information')}>
-			<ClayForm.Group>
-				<label htmlFor="timerName">
-					{Liferay.Language.get('name')}
-				</label>
+		<>
+			{!allowScriptContentToBeExecutedOrIncluded &&
+				hasGroovyOrJavaScript && (
+					<DisabledGroovyScriptAlert
+						scriptManagementConfigurationPortletURL={
+							scriptManagementConfigurationPortletURL
+						}
+					/>
+				)}
 
-				<ClayInput
-					id="timerName"
-					onBlur={({target}) => setTimerName(target.value)}
-					onChange={({target}) => setTimerName(target.value)}
-					placeholder={Liferay.Language.get('my-task-timer')}
-					type="text"
-					value={timerName}
-				/>
-			</ClayForm.Group>
+			<SidebarPanel panelTitle={Liferay.Language.get('information')}>
+				<ClayForm.Group>
+					<label htmlFor="timerName">
+						{Liferay.Language.get('name')}
+					</label>
 
-			<ClayForm.Group>
-				<label htmlFor="timerDescription">
-					{Liferay.Language.get('description')}
-				</label>
+					<ClayInput
+						id="timerName"
+						onBlur={({target}) => setTimerName(target.value)}
+						onChange={({target}) => setTimerName(target.value)}
+						placeholder={Liferay.Language.get('my-task-timer')}
+						type="text"
+						value={timerName}
+					/>
+				</ClayForm.Group>
 
-				<ClayInput
-					component="textarea"
-					id="timerDescription"
-					onBlur={({target}) => setTimerDescription(target.value)}
-					onChange={({target}) => setTimerDescription(target.value)}
-					type="text"
-					value={timerDescription}
-				/>
-			</ClayForm.Group>
-		</SidebarPanel>
+				<ClayForm.Group>
+					<label htmlFor="timerDescription">
+						{Liferay.Language.get('description')}
+					</label>
+
+					<ClayInput
+						component="textarea"
+						id="timerDescription"
+						onBlur={({target}) => setTimerDescription(target.value)}
+						onChange={({target}) =>
+							setTimerDescription(target.value)
+						}
+						type="text"
+						value={timerDescription}
+					/>
+				</ClayForm.Group>
+			</SidebarPanel>
+		</>
 	);
 };
 

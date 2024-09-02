@@ -8,8 +8,7 @@ import ClayLabel from '@clayui/label';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClaySticker from '@clayui/sticker';
 import {useIsMounted} from '@liferay/frontend-js-react-web';
-import AddToCart from 'commerce-frontend-js/components/add_to_cart/AddToCart';
-import {isProductPurchasable} from 'commerce-frontend-js/utilities/index';
+import {AddToCartComponent, isProductPurchasable} from 'commerce-frontend-js';
 import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
@@ -111,9 +110,9 @@ function SkuContent({
 					</ClayLabel>
 				</div>
 
-				<h4 className="component-title mb-1">
+				<div className="component-title mb-1">
 					<a href={productURL}>{product.sku}</a>
-				</h4>
+				</div>
 
 				<p className="component-subtitle mb-1">
 					<a href={productURL}>{productName}</a>
@@ -131,7 +130,7 @@ function SkuContent({
 					<>
 						<Price className="mb-1" {...product.price} />
 
-						<AddToCart
+						<AddToCartComponent
 							accountId={accountId}
 							cartId={cartId}
 							cartUUID={orderUUID}
@@ -184,9 +183,9 @@ function DiagramContent({product, productBaseURL}) {
 			)}
 
 			<div className="col">
-				<h4 className="component-title">
+				<div className="component-title">
 					<a href={productURL}>{productName}</a>
-				</h4>
+				</div>
 			</div>
 
 			<div className="col-auto">
@@ -201,7 +200,7 @@ function DiagramContent({product, productBaseURL}) {
 function ExternalContent({product}) {
 	return (
 		<>
-			<h4 className="mb-1">{product.sku || product.name}</h4>
+			<div className="h4 mb-1">{product.sku || product.name}</div>
 
 			{!!product.quantity && (
 				<p className="mb-0">

@@ -178,9 +178,7 @@ definition {
 			task ("Sign in AC") {
 				ACWorkspace.signOut();
 
-				ACLogin.loginAs(emailAddress = ${emailAddress});
-
-				ACWorkspace.openWorkspace();
+				ACUtils.launchAC(emailAddress = ${emailAddress});
 			}
 
 			task ("Go to property and Select the property you are using") {
@@ -347,7 +345,7 @@ definition {
 		}
 
 		task ("Go to admin page") {
-			ACAdmin.goToACAdmin(userScreenNameToResetPassword = "test");
+			ACAdmin.goToACAdmin(userScreenNameToResetPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Go to Server Administration > Change SMTP Server Port") {
@@ -403,7 +401,7 @@ definition {
 			SelectWindow(value1 = "title=Analytics Cloud");
 
 			if (IsElementPresent(locator1 = "ACLogin#EMAIL_LOGIN_FIELD")) {
-				ACLogin.loginAs(emailAddress = ${emailAddress});
+				ACUtils.launchAC(emailAddress = ${emailAddress});
 			}
 
 			ACProperties.assertCurrentActiveProperty(propertyName = ${assignedPropertyName});

@@ -222,9 +222,11 @@ renderResponse.setTitle(headerTitle);
 				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(FileItem.THRESHOLD_SIZE, locale) %>" key="please-enter-valid-content-with-valid-content-size-no-larger-than-x" translateArguments="<%= false %>" />
 			</liferay-ui:error>
 
-			<liferay-ui:error exception="<%= FileExtensionException.class %>">
+			<liferay-ui:error exception="<%= FileExtensionException.InvalidExtension.class %>">
 				<liferay-ui:message key="document-names-must-end-with-one-of-the-following-extensions" /> <%= StringUtil.merge(dlConfiguration.fileExtensions(), StringPool.COMMA_AND_SPACE) %>.
 			</liferay-ui:error>
+
+			<liferay-ui:error exception="<%= FileExtensionException.MismatchExtension.class %>" message="the-file-extension-cannot-be-different-from-the-file-name-extension" />
 
 			<liferay-ui:error exception="<%= FileMimeTypeException.class %>">
 				<liferay-ui:message key="media-files-must-be-one-of-the-following-formats" /> <%= StringUtil.merge(dlPortletInstanceSettings.getMimeTypes(), StringPool.COMMA_AND_SPACE) %>.
@@ -318,7 +320,7 @@ renderResponse.setTitle(headerTitle);
 
 							<c:if test="<%= fileVersion != null %>">
 								<react:component
-									module="document_library/js/FileNameInput.es"
+									module="{FileNameInput} from document-library-web"
 									props='<%=
 										HashMapBuilder.<String, Object>put(
 											"initialValue", fileVersion.getFileName()
@@ -329,6 +331,8 @@ renderResponse.setTitle(headerTitle);
 								/>
 							</c:if>
 						</div>
+
+						<aui:input label="automatically-populate-with-the-uploaded-file-name" name="changeFileName" type="checkbox" value="true" />
 					</c:if>
 
 					<c:if test="<%= (folder == null) || folder.isSupportsMetadata() %>">
@@ -394,7 +398,7 @@ renderResponse.setTitle(headerTitle);
 								<c:if test="<%= showLanguageSelector %>">
 									<div class="mb-3">
 										<react:component
-											module="document_library/js/LanguageSelector"
+											module="{LanguageSelector} from document-library-web"
 											props='<%=
 												HashMapBuilder.<String, Object>put(
 													"ddmStructureIds", DDMStructureUtil.getDDMStructureIds(ddmStructures)
@@ -428,6 +432,7 @@ renderResponse.setTitle(headerTitle);
 												containerId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRenderer" + ddmStructure.getStructureId() %>'
 												dataDefinitionId="<%= ddmStructure.getStructureId() %>"
 												dataRecordValues="<%= ddmFormValuesToMapConverter.convert(ddmFormValues, DDMStructureLocalServiceUtil.getStructure(ddmStructure.getStructureId())) %>"
+												defaultLanguageId="<%= defaultLanguageId %>"
 												languageId="<%= dlEditFileEntryDisplayContext.getDLFileEntryTypeLanguageId(ddmStructure, PortalUtil.getLocale(request)) %>"
 												namespace="<%= liferayPortletResponse.getNamespace() + ddmStructure.getStructureId() + StringPool.UNDERLINE %>"
 												persistDefaultValues="<%= true %>"
@@ -538,12 +543,12 @@ renderResponse.setTitle(headerTitle);
 					</c:if>
 
 					<c:if test="<%= !RepositoryUtil.isExternalRepository(repositoryId) %>">
-						<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label='<%= FeatureFlagManagerUtil.isEnabled("LPD-10701") ? "schedule" : "expiration-date" %>'>
+						<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label='<%= FeatureFlagManagerUtil.isEnabled(themeDisplay.getCompanyId(), "LPD-10701") ? "schedule" : "expiration-date" %>'>
 							<liferay-ui:error exception="<%= FileEntryDisplayDateException.class %>" message="please-enter-a-valid-publish-date" />
 							<liferay-ui:error exception="<%= FileEntryExpirationDateException.class %>" message="please-enter-a-valid-expiration-date" />
 							<liferay-ui:error exception="<%= FileEntryReviewDateException.class %>" message="please-enter-a-valid-review-date" />
 
-							<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPD-10701") %>'>
+							<c:if test='<%= FeatureFlagManagerUtil.isEnabled(themeDisplay.getCompanyId(), "LPD-10701") %>'>
 								<p class="text-secondary">
 									<liferay-ui:message key="set-the-publication-date-and-time-for-your-document-to-be-published-automatically" />
 								</p>
@@ -762,12 +767,26 @@ renderResponse.setTitle(headerTitle);
 				titleElement.value = fileFileName.replace(/\.[^.]*$/, '');
 			}
 
-			if (fileNameElement && !fileNameElement.value) {
+			var autoChangeFileName = document.getElementById(
+				'<portlet:namespace />changeFileName'
+			);
+
+			if (
+				fileNameElement &&
+				(!fileNameElement.value || autoChangeFileName.checked)
+			) {
 				fileNameElement.value = fileFileName;
 			}
 
 			if (urlTitleElement && !urlTitleElement.value) {
-				urlTitleElement.value = fileFileName.replace(/\.[^.]*$/, '');
+				<c:choose>
+					<c:when test="<%= dlEditFileEntryDisplayContext.isFriendlyURLWithExtensionEnabled() %>">
+						urlTitleElement.value = fileFileName;
+					</c:when>
+					<c:otherwise>
+						urlTitleElement.value = fileFileName.replace(/\.[^.]*$/, '');
+					</c:otherwise>
+				</c:choose>
 			}
 		}
 

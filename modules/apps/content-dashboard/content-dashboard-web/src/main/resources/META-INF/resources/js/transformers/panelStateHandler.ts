@@ -3,13 +3,20 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-const {
-	default: SidebarPanelInfoView,
-} = require('../components/SidebarPanelInfoView/SidebarPanelInfoView');
-const {OPEN_PANEL_VALUE} = require('../utils/constants');
-const ActionsComponentPropsTransformer = require('./ActionsComponentPropsTransformer');
+// @ts-ignore
+
+import SidebarPanelInfoView from '../components/SidebarPanelInfoView/SidebarPanelInfoView';
+
+// @ts-ignore
+
+import {OPEN_PANEL_VALUE} from '../utils/constants';
+
+// @ts-ignore
+
+import ActionsComponentPropsTransformer from './ActionsComponentPropsTransformer';
 
 const handlePanelStateFromSession = ({
+	contentPerformanceDataFetchURL,
 	currentRowId,
 	namespace,
 	panelState,
@@ -17,6 +24,7 @@ const handlePanelStateFromSession = ({
 	selectedItemRowId,
 	singlePageApplicationEnabled,
 }: {
+	contentPerformanceDataFetchURL: string;
 	currentRowId: string;
 	namespace: string;
 	panelState: string;
@@ -44,6 +52,7 @@ const handlePanelStateFromSession = ({
 
 	ActionsComponentPropsTransformer.showSidebar({
 		View: SidebarPanelInfoView,
+		contentPerformanceDataFetchURL,
 		fetchURL: selectedItemFetchURL,
 		portletNamespace: namespace,
 		singlePageApplicationEnabled,

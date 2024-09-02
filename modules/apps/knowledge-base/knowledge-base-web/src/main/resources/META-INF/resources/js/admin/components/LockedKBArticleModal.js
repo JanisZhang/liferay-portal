@@ -4,11 +4,23 @@
  */
 
 import ClayButton from '@clayui/button';
+import ClayLink from '@clayui/link';
 import ClayModal, {useModal} from '@clayui/modal';
+import {sub} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-export default function LockedArticleModal({open, portletNamespace}) {
+export default function LockedArticleModal({
+	actionLabel: initialActionLabel,
+	actionURL: initialActionURL,
+	groupAdmin,
+	open,
+	portletNamespace,
+	userName: initialUserName,
+}) {
 	const [showModal, setShowModal] = useState(open);
+	const [actionLabel, setActionLabel] = useState(initialActionLabel);
+	const [actionURL, setActionURL] = useState(initialActionURL);
+	const [userName, setUserName] = useState(initialUserName);
 
 	const handleOnClose = () => {
 		setShowModal(false);
@@ -25,8 +37,11 @@ export default function LockedArticleModal({open, portletNamespace}) {
 			Liferay.component(
 				bridgeComponentId,
 				{
-					open: () => {
+					open: (actionLabel, actionURL, userName) => {
 						setShowModal(true);
+						setActionLabel(actionLabel);
+						setActionURL(actionURL);
+						setUserName(userName);
 					},
 				},
 				{
@@ -50,17 +65,51 @@ export default function LockedArticleModal({open, portletNamespace}) {
 
 					<ClayModal.Body>
 						<p>
-							{Liferay.Language.get(
-								'article-in-edition-description'
-							)}
+							{groupAdmin
+								? sub(
+										Liferay.Language.get(
+											'article-in-edition-by-user-x-description'
+										),
+										userName
+									)
+								: Liferay.Language.get(
+										'article-in-edition-description'
+									)}
 						</p>
 					</ClayModal.Body>
 
 					<ClayModal.Footer
 						last={
-							<ClayButton displayType="primary" onClick={onClose}>
-								{Liferay.Language.get('ok')}
-							</ClayButton>
+							groupAdmin ? (
+								<ClayButton.Group spaced>
+									<ClayButton
+										displayType="secondary"
+										onClick={onClose}
+									>
+										{Liferay.Language.get('cancel')}
+									</ClayButton>
+
+									<ClayLink
+										button={true}
+										displayType="primary"
+										href={actionURL}
+									>
+										{sub(
+											Liferay.Language.get(
+												'take-control-and-x'
+											),
+											actionLabel
+										)}
+									</ClayLink>
+								</ClayButton.Group>
+							) : (
+								<ClayButton
+									displayType="primary"
+									onClick={onClose}
+								>
+									{Liferay.Language.get('ok')}
+								</ClayButton>
+							)
 						}
 					/>
 				</ClayModal>

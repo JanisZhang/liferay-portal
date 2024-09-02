@@ -155,6 +155,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>COLLECTION_ITEM_CONTENT_AT_VIEW_MODE</td>
+	<td>//div[contains(@class,'layout-content')]//div[contains(text(), '${title}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>COLLECTION_ITEM_FALSE_ENTRY</td>
 	<td>//span[contains(@class,'text-truncate')][contains(text(),'false')]</td>
 	<td></td>
@@ -286,7 +291,7 @@
 </tr>
 <tr>
 	<td>EDIT_MODE_SELECTOR</td>
-	<td>//button[contains(@aria-label,'Page Edition Mode')]</td>
+	<td>//button[contains(@aria-label,'Select edit mode, current edit mode:')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -370,7 +375,7 @@
 
 <tr>
 	<td>EXPERIENCE_ACTIVE_LABEL</td>
-	<td>//*[contains(@class, 'text-truncate-inline')]//*[contains(text(),'${key_experienceName}')]/parent::span//span[contains(text(),'Active')]</td>
+	<td>//*[contains(text(),'${key_experienceName}')]/parent::span//span[contains(text(),'Active')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -425,7 +430,7 @@
 </tr>
 <tr>
 	<td>EXPERIENCE_INACTIVE_LABEL</td>
-	<td>//*[contains(@class, 'text-truncate-inline')]//*[contains(text(),'${key_experienceName}')]/parent::span//span[contains(text(),'Inactive')]</td>
+	<td>//*[contains(text(),'${key_experienceName}')]/parent::span//span[contains(text(),'Inactive')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -465,7 +470,7 @@
 </tr>
 <tr>
 	<td>EXPERIENCE_VALUES</td>
-	<td>//span[contains(@class,'text-truncate-inline')]//span[text()='${key_experienceName}']/parent::span/following-sibling::span[text()='${key_segmentName}']</td>
+	<td>//span//span[text()='${key_experienceName}']/parent::span/following-sibling::span[text()='${key_segmentName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -654,7 +659,7 @@
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_CENTER_TEXT</td>
-	<td>//div[contains(@class,'text-center')]//span[@class='text-truncate']</td>
+	<td>//div[contains(@class,'text-center')]//div[@class='c-empty-state-title']</td>
 	<td></td>
 </tr>
 <tr>
@@ -1106,6 +1111,14 @@
 <tr>
 	<td>ACTIVE_TEXT_ALIGN_ICON</td>
 	<td>//button[contains(@class,'collapse-icon-middle')][span[normalize-space()='Text']]//..//button[@aria-pressed='true'][*[name()='svg'][contains(@class,'lexicon-icon-${key_text}')]]</td>
+	<td></td>
+</tr>
+
+<!-- PANEL -->
+
+<tr>
+	<td>PANEL</td>
+	<td>//button[@data-panel-id='${key_panel_id}']</td>
 	<td></td>
 </tr>
 </tbody>

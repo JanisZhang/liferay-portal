@@ -78,6 +78,30 @@ public class FormConfigSerDes {
 			}
 		}
 
+		if (formConfig.getFormType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"formType\": ");
+
+			sb.append("\"");
+
+			sb.append(formConfig.getFormType());
+
+			sb.append("\"");
+		}
+
+		if (formConfig.getNumberOfSteps() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"numberOfSteps\": ");
+
+			sb.append(formConfig.getNumberOfSteps());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -113,6 +137,21 @@ public class FormConfigSerDes {
 				String.valueOf(formConfig.getFormSuccessSubmissionResult()));
 		}
 
+		if (formConfig.getFormType() == null) {
+			map.put("formType", null);
+		}
+		else {
+			map.put("formType", String.valueOf(formConfig.getFormType()));
+		}
+
+		if (formConfig.getNumberOfSteps() == null) {
+			map.put("numberOfSteps", null);
+		}
+		else {
+			map.put(
+				"numberOfSteps", String.valueOf(formConfig.getNumberOfSteps()));
+		}
+
 		return map;
 	}
 
@@ -127,6 +166,26 @@ public class FormConfigSerDes {
 		@Override
 		protected FormConfig[] createDTOArray(int size) {
 			return new FormConfig[size];
+		}
+
+		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "formReference")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "formSuccessSubmissionResult")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "formType")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "numberOfSteps")) {
+				return false;
+			}
+
+			return false;
 		}
 
 		@Override
@@ -145,6 +204,19 @@ public class FormConfigSerDes {
 				if (jsonParserFieldValue != null) {
 					formConfig.setFormSuccessSubmissionResult(
 						(Object)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "formType")) {
+				if (jsonParserFieldValue != null) {
+					formConfig.setFormType(
+						FormConfig.FormType.create(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "numberOfSteps")) {
+				if (jsonParserFieldValue != null) {
+					formConfig.setNumberOfSteps(
+						Integer.valueOf((String)jsonParserFieldValue));
 				}
 			}
 		}
@@ -179,36 +251,7 @@ public class FormConfigSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -218,6 +261,38 @@ public class FormConfigSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

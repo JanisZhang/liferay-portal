@@ -36,10 +36,12 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -60,8 +62,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -102,7 +102,7 @@ public abstract class BaseRegionResourceTestCase {
 		RegionResource.Builder builder = RegionResource.builder();
 
 		regionResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,7 +116,32 @@ public abstract class BaseRegionResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Region region1 = randomRegion();
+
+		String json = objectMapper.writeValueAsString(region1);
+
+		Region region2 = RegionSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(region1, region2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Region region = randomRegion();
+
+		String json1 = objectMapper.writeValueAsString(region);
+		String json2 = RegionSerDes.toJSON(region);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,40 +156,6 @@ public abstract class BaseRegionResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Region region1 = randomRegion();
-
-		String json = objectMapper.writeValueAsString(region1);
-
-		Region region2 = RegionSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(region1, region2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Region region = randomRegion();
-
-		String json1 = objectMapper.writeValueAsString(region);
-		String json2 = RegionSerDes.toJSON(region);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -340,7 +331,7 @@ public abstract class BaseRegionResourceTestCase {
 			(entityField, region1, region2) -> {
 				BeanTestUtil.setProperty(
 					region1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -526,6 +517,8 @@ public abstract class BaseRegionResourceTestCase {
 	public void testGraphQLGetCountryRegionByRegionCode() throws Exception {
 		Region region = testGraphQLGetCountryRegionByRegionCode_addRegion();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				region,
@@ -550,6 +543,36 @@ public abstract class BaseRegionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/countryRegionByRegionCode"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				region,
+				RegionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"countryRegionByRegionCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"countryId",
+												testGraphQLGetCountryRegionByRegionCode_getCountryId(
+													region));
+
+											put(
+												"regionCode",
+												"\"" + region.getRegionCode() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/countryRegionByRegionCode"))));
 	}
 
 	protected Long testGraphQLGetCountryRegionByRegionCode_getCountryId(
@@ -567,6 +590,8 @@ public abstract class BaseRegionResourceTestCase {
 		String irrelevantRegionCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
 
+		// No namespace
+
 		Assert.assertEquals(
 			"Not Found",
 			JSONUtil.getValueAsString(
@@ -580,6 +605,26 @@ public abstract class BaseRegionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"countryRegionByRegionCode",
+							new HashMap<String, Object>() {
+								{
+									put("countryId", irrelevantCountryId);
+									put("regionCode", irrelevantRegionCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -705,7 +750,7 @@ public abstract class BaseRegionResourceTestCase {
 			(entityField, region1, region2) -> {
 				BeanTestUtil.setProperty(
 					region1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -843,6 +888,8 @@ public abstract class BaseRegionResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject regionsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/regions");
@@ -854,6 +901,26 @@ public abstract class BaseRegionResourceTestCase {
 
 		regionsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/regions");
+
+		Assert.assertEquals(
+			totalCount + 2, regionsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			region1,
+			Arrays.asList(
+				RegionSerDes.toDTOs(regionsJSONObject.getString("items"))));
+		assertContains(
+			region2,
+			Arrays.asList(
+				RegionSerDes.toDTOs(regionsJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		regionsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminAddress_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminAddress_v1_0",
 			"JSONObject/regions");
 
 		Assert.assertEquals(
@@ -895,7 +962,10 @@ public abstract class BaseRegionResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteRegion() throws Exception {
-		Region region = testGraphQLDeleteRegion_addRegion();
+
+		// No namespace
+
+		Region region1 = testGraphQLDeleteRegion_addRegion();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -904,23 +974,59 @@ public abstract class BaseRegionResourceTestCase {
 						"deleteRegion",
 						new HashMap<String, Object>() {
 							{
-								put("regionId", region.getId());
+								put("regionId", region1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteRegion"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"region",
 					new HashMap<String, Object>() {
 						{
-							put("regionId", region.getId());
+							put("regionId", region1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Region region2 = testGraphQLDeleteRegion_addRegion();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"deleteRegion",
+							new HashMap<String, Object>() {
+								{
+									put("regionId", region2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminAddress_v1_0",
+				"Object/deleteRegion"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminAddress_v1_0",
+					new GraphQLField(
+						"region",
+						new HashMap<String, Object>() {
+							{
+								put("regionId", region2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Region testGraphQLDeleteRegion_addRegion() throws Exception {
@@ -946,6 +1052,8 @@ public abstract class BaseRegionResourceTestCase {
 	public void testGraphQLGetRegion() throws Exception {
 		Region region = testGraphQLGetRegion_addRegion();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				region,
@@ -961,11 +1069,35 @@ public abstract class BaseRegionResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/region"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				region,
+				RegionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"region",
+									new HashMap<String, Object>() {
+										{
+											put("regionId", region.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/region"))));
 	}
 
 	@Test
 	public void testGraphQLGetRegionNotFound() throws Exception {
 		Long irrelevantRegionId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -979,6 +1111,25 @@ public abstract class BaseRegionResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"region",
+							new HashMap<String, Object>() {
+								{
+									put("regionId", irrelevantRegionId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1578,7 +1729,8 @@ public abstract class BaseRegionResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1639,12 +1791,12 @@ public abstract class BaseRegionResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1653,11 +1805,16 @@ public abstract class BaseRegionResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1689,6 +1846,24 @@ public abstract class BaseRegionResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1710,16 +1885,6 @@ public abstract class BaseRegionResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

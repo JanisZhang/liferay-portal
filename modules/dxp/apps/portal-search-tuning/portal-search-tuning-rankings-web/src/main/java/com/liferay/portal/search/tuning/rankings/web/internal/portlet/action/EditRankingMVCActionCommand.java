@@ -22,7 +22,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.tuning.rankings.constants.ResultRankingsConstants;
 import com.liferay.portal.search.tuning.rankings.helper.RankingHelper;
 import com.liferay.portal.search.tuning.rankings.index.Ranking;
@@ -35,6 +37,7 @@ import com.liferay.portal.search.tuning.rankings.storage.RankingStorageAdapter;
 import com.liferay.portal.search.tuning.rankings.web.internal.constants.ResultRankingsPortletKeys;
 import com.liferay.portal.search.tuning.rankings.web.internal.exception.DuplicateQueryStringException;
 import com.liferay.portal.search.tuning.rankings.web.internal.exception.NotApplicableStatusException;
+import com.liferay.portal.search.tuning.rankings.web.internal.index.Criteria;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.DuplicateQueryStringsDetector;
 
 import java.io.IOException;
@@ -53,6 +56,7 @@ import javax.portlet.ActionResponse;
 import javax.portlet.PortletConfig;
 import javax.portlet.PortletRequest;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -97,6 +101,12 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
+	@Activate
+	protected void activate() {
+		_duplicateQueryStringsDetector = new DuplicateQueryStringsDetector(
+			_queries, _searchEngineAdapter);
+	}
+
 	protected String getIndexName(ActionRequest actionRequest) {
 		return indexNameBuilder.getIndexName(
 			portal.getCompanyId(actionRequest));
@@ -105,9 +115,6 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 	protected RankingIndexName getRankingIndexName() {
 		return rankingIndexNameBuilder.getRankingIndexName(_companyId);
 	}
-
-	@Reference
-	protected DuplicateQueryStringsDetector duplicateQueryStringsDetector;
 
 	@Reference
 	protected IndexNameBuilder indexNameBuilder;
@@ -263,8 +270,8 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 		Ranking ranking, Collection<String> queryStrings) {
 
 		List<String> duplicateQueryStrings =
-			duplicateQueryStringsDetector.detect(
-				duplicateQueryStringsDetector.builder(
+			_duplicateQueryStringsDetector.detect(
+				new Criteria.Builder(
 				).groupExternalReferenceCode(
 					ranking.getGroupExternalReferenceCode()
 				).index(
@@ -665,6 +672,13 @@ public class EditRankingMVCActionCommand extends BaseMVCActionCommand {
 	private static final String _UPDATE_SPECIAL = StringPool.GREATER_THAN;
 
 	private long _companyId;
+	private DuplicateQueryStringsDetector _duplicateQueryStringsDetector;
+
+	@Reference
+	private Queries _queries;
+
+	@Reference
+	private SearchEngineAdapter _searchEngineAdapter;
 
 	private class EditRankingMVCActionRequest {
 

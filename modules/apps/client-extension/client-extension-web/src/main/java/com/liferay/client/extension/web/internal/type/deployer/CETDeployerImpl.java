@@ -5,6 +5,8 @@
 
 package com.liferay.client.extension.web.internal.type.deployer;
 
+import com.liferay.application.list.PanelApp;
+import com.liferay.application.list.adapter.PortletPanelAppAdapter;
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.CommerceCheckoutStepCET;
@@ -12,6 +14,7 @@ import com.liferay.client.extension.type.CustomElementCET;
 import com.liferay.client.extension.type.EditorConfigContributorCET;
 import com.liferay.client.extension.type.IFrameCET;
 import com.liferay.client.extension.type.JSImportMapsEntryCET;
+import com.liferay.client.extension.type.ThemeCSSCET;
 import com.liferay.client.extension.type.deployer.CETDeployer;
 import com.liferay.client.extension.type.deployer.CommerceCETDeployer;
 import com.liferay.client.extension.util.CETUtil;
@@ -25,15 +28,15 @@ import com.liferay.frontend.js.importmaps.extender.JSImportMapsContributor;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
+import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.url.builder.AbsolutePortalURLBuilderFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,8 +62,7 @@ public class CETDeployerImpl implements CETDeployer {
 	public List<ServiceRegistration<?>> deploy(CET cet) {
 		if (Objects.equals(
 				cet.getType(),
-				ClientExtensionEntryConstants.TYPE_COMMERCE_CHECKOUT_STEP) &&
-			FeatureFlagManagerUtil.isEnabled("LPD-15804")) {
+				ClientExtensionEntryConstants.TYPE_COMMERCE_CHECKOUT_STEP)) {
 
 			return _deploy((CommerceCheckoutStepCET)cet);
 		}
@@ -87,6 +89,12 @@ public class CETDeployerImpl implements CETDeployer {
 					ClientExtensionEntryConstants.TYPE_JS_IMPORT_MAPS_ENTRY)) {
 
 			return _deploy((JSImportMapsEntryCET)cet);
+		}
+		else if (Objects.equals(
+					cet.getType(),
+					ClientExtensionEntryConstants.TYPE_THEME_CSS)) {
+
+			return _deploy((ThemeCSSCET)cet);
 		}
 
 		return Collections.emptyList();
@@ -133,6 +141,24 @@ public class CETDeployerImpl implements CETDeployer {
 					FriendlyURLMapper.class,
 					new CETPortletFriendlyURLMapper(
 						friendlyURLMapping, portletId)));
+		}
+
+		if (Validator.isNotNull(customElementCET.getPanelAppOrder()) &&
+			Validator.isNotNull(customElementCET.getPanelCategoryKey())) {
+
+			serviceRegistrations.add(
+				_bundleContext.registerService(
+					PanelApp.class,
+					new PortletPanelAppAdapter(
+						portletId,
+						() -> _portletLocalService.getPortletById(portletId)),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"panel.app.order:Integer",
+						customElementCET.getPanelAppOrder()
+					).put(
+						"panel.category.key",
+						customElementCET.getPanelCategoryKey()
+					).build()));
 		}
 
 		serviceRegistrations.add(
@@ -182,9 +208,7 @@ public class CETDeployerImpl implements CETDeployer {
 		serviceRegistrations.add(
 			_register(
 				Portlet.class,
-				new IFrameCETPortlet(
-					iFrameCET, _absolutePortalURLBuilderFactory, portletId,
-					_portal)));
+				new IFrameCETPortlet(iFrameCET, portletId, _portal)));
 
 		return serviceRegistrations;
 	}
@@ -198,6 +222,16 @@ public class CETDeployerImpl implements CETDeployer {
 				new ClientExtensionJSImportMapsContributor(
 					jsImportMapsEntryCET.getBareSpecifier(), _jsonFactory,
 					jsImportMapsEntryCET.getURL())));
+	}
+
+	private List<ServiceRegistration<?>> _deploy(ThemeCSSCET themeCSSCET) {
+		return Arrays.asList(
+			_bundleContext.registerService(
+				ThemeCSSCET.class, themeCSSCET,
+				HashMapDictionaryBuilder.put(
+					"external.reference.code",
+					themeCSSCET.getExternalReferenceCode()
+				).build()));
 	}
 
 	private String _getPortletId(CET cet) {
@@ -220,9 +254,6 @@ public class CETDeployerImpl implements CETDeployer {
 		_commerceCETDeployerSnapshot = new Snapshot<>(
 			CETDeployer.class, CommerceCETDeployer.class);
 
-	@Reference
-	private AbsolutePortalURLBuilderFactory _absolutePortalURLBuilderFactory;
-
 	private BundleContext _bundleContext;
 
 	@Reference
@@ -230,6 +261,9 @@ public class CETDeployerImpl implements CETDeployer {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortletLocalService _portletLocalService;
 
 	@Reference(
 		target = "(&(release.bundle.symbolic.name=com.liferay.client.extension.web)(release.schema.version>=2.0.0))"

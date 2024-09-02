@@ -74,8 +74,10 @@ const FactorStackList: React.FC<FactorStackListProps> = ({
 					<ClayLayout.Col size={12}>
 						<ClayLayout.Row
 							className={classNames({
-								'align-items-center d-flex justify-content-space-between': !displayVertical,
-								'flex-column justify-content-space-between': displayVertical,
+								'align-items-center d-flex justify-content-space-between':
+									!displayVertical,
+								'flex-column justify-content-space-between':
+									displayVertical,
 							})}
 						>
 							{factorItems?.map((factorItem, factorIndex) => {
@@ -121,9 +123,7 @@ const FactorStackList: React.FC<FactorStackListProps> = ({
 											register={register}
 											registerOptions={{
 												onBlur: (
-													event: React.FocusEvent<
-														HTMLSelectElement
-													>
+													event: React.FocusEvent<HTMLSelectElement>
 												) => {
 													const {
 														target: {value},
@@ -136,15 +136,14 @@ const FactorStackList: React.FC<FactorStackListProps> = ({
 														]?.text;
 
 													const dataToUpdate = {
-														...field,
 														[factorIndex]: {
 															...(field as any)[
 																factorIndex
 															],
-															factorOption: factorOptionName,
-															factorOptionId: Number(
-																value
-															),
+															factorOption:
+																factorOptionName,
+															factorOptionId:
+																Number(value),
 														},
 													};
 

@@ -19,6 +19,7 @@ import com.liferay.commerce.order.rule.service.COREntryLocalService;
 import com.liferay.commerce.price.CommerceProductOptionValueRelativePriceRequest;
 import com.liferay.commerce.price.CommerceProductPriceCalculation;
 import com.liferay.commerce.product.configuration.CPDefinitionOptionRelConfiguration;
+import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.constants.CPDefinitionLinkTypeConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLink;
@@ -40,16 +41,19 @@ import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOptionValue;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuOption;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.TimeZoneUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
@@ -59,9 +63,13 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
 import java.math.BigDecimal;
 
+import java.text.DateFormat;
+
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
+import java.util.TimeZone;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -112,9 +120,7 @@ public class ProductOptionValueDTOConverter
 							return null;
 						}
 
-						if (FeatureFlagManagerUtil.isEnabled(
-								"COMMERCE-11922") &&
-							cpDefinitionOptionRelConfiguration.
+						if (cpDefinitionOptionRelConfiguration.
 								showUnselectableOptions()) {
 
 							Long skuId = (Long)dtoConverterContext.getAttribute(
@@ -189,9 +195,48 @@ public class ProductOptionValueDTOConverter
 					});
 				setKey(cpDefinitionOptionValueRel::getKey);
 				setName(
-					() -> cpDefinitionOptionValueRel.getName(
-						_language.getLanguageId(
-							dtoConverterContext.getLocale())));
+					() -> {
+						if (!Objects.equals(
+								CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
+								cpDefinitionOptionRel.
+									getCommerceOptionTypeKey())) {
+
+							return cpDefinitionOptionValueRel.getName(
+								_language.getLanguageId(
+									dtoConverterContext.getLocale()));
+						}
+
+						String cpDefinitionOptionValueRelKey =
+							cpDefinitionOptionValueRel.getKey();
+
+						String[] parts = cpDefinitionOptionValueRelKey.split(
+							StringPool.DASH);
+
+						TimeZone timeZone = TimeZoneUtil.getTimeZone(
+							_getTimeZoneId(parts));
+
+						Calendar calendar = CalendarFactoryUtil.getCalendar(
+							Integer.valueOf(parts[2]),
+							Integer.valueOf(parts[0]) - 1,
+							Integer.valueOf(parts[1]),
+							Integer.valueOf(parts[3]),
+							Integer.valueOf(parts[4]));
+
+						DateFormat dateFormat = DateFormat.getDateTimeInstance(
+							DateFormat.LONG, DateFormat.SHORT,
+							dtoConverterContext.getLocale());
+
+						return StringBundler.concat(
+							dateFormat.format(calendar.getTime()),
+							StringPool.SPACE, StringPool.OPEN_PARENTHESIS,
+							timeZone.getDisplayName(
+								dtoConverterContext.getLocale()),
+							StringPool.CLOSE_PARENTHESIS,
+							StringPool.COMMA_AND_SPACE, parts[5],
+							StringPool.SPACE,
+							_language.get(
+								dtoConverterContext.getLocale(), parts[6]));
+					});
 				setPreselected(cpDefinitionOptionValueRel::isPreselected);
 				setPrice(
 					() ->
@@ -310,68 +355,60 @@ public class ProductOptionValueDTOConverter
 							return true;
 						}
 
-						if (FeatureFlagManagerUtil.isEnabled(
-								"COMMERCE-11922")) {
+						Long skuId = (Long)dtoConverterContext.getAttribute(
+							"skuId");
 
-							Long skuId = (Long)dtoConverterContext.getAttribute(
-								"skuId");
+						if (Validator.isNull(skuId)) {
+							return true;
+						}
 
-							if (Validator.isNull(skuId)) {
-								return true;
-							}
+						CPInstance selectedCPInstance =
+							_cpInstanceLocalService.fetchCPInstance(skuId);
 
-							CPInstance selectedCPInstance =
-								_cpInstanceLocalService.fetchCPInstance(skuId);
+						if (selectedCPInstance == null) {
+							return true;
+						}
 
-							if (selectedCPInstance == null) {
-								return true;
-							}
+						List<CommerceOptionValue> commerceOptionValues =
+							new ArrayList<>();
 
-							List<CommerceOptionValue> commerceOptionValues =
-								new ArrayList<>();
+						JSONArray jsonArray = _getSelectedSkuOptionsJSONArray(
+							cpDefinitionOptionRel, cpDefinitionOptionValueRel,
+							(SkuOption[])dtoConverterContext.getAttribute(
+								"skuOptions"));
 
-							JSONArray jsonArray =
-								_getSelectedSkuOptionsJSONArray(
-									cpDefinitionOptionRel,
-									cpDefinitionOptionValueRel,
-									(SkuOption[])
-										dtoConverterContext.getAttribute(
-											"skuOptions"));
+						if (jsonArray == null) {
+							jsonArray = _getClonedJSONArray(
+								cpDefinitionOptionRel,
+								cpDefinitionOptionValueRel,
+								selectedCPInstance.getCPInstanceId());
+						}
 
-							if (jsonArray == null) {
-								jsonArray = _getClonedJSONArray(
-									cpDefinitionOptionRel,
-									cpDefinitionOptionValueRel,
-									selectedCPInstance.getCPInstanceId());
-							}
+						if (jsonArray != null) {
+							commerceOptionValues =
+								_commerceOptionValueHelper.
+									getCPDefinitionCommerceOptionValues(
+										cpDefinitionOptionRel.
+											getCPDefinitionId(),
+										jsonArray.toString());
+						}
 
-							if (jsonArray != null) {
-								commerceOptionValues =
-									_commerceOptionValueHelper.
-										getCPDefinitionCommerceOptionValues(
-											cpDefinitionOptionRel.
-												getCPDefinitionId(),
-											jsonArray.toString());
-							}
+						CPDefinition cpDefinition =
+							cpInstance.getCPDefinition();
 
-							CPDefinition cpDefinition =
-								cpInstance.getCPDefinition();
+						if (Validator.isNotNull(
+								_getCOREntryInfoMessage(
+									commerceOptionValues, cpDefinitionOptionRel,
+									cpDefinitionOptionValueRel, cpInstance,
+									cpDefinition.getCProductId(),
+									dtoConverterContext)) ||
+							Validator.isNotNull(
+								_getCPDefinitionLinkInfoMessage(
+									commerceOptionValues,
+									cpDefinitionOptionValueRel.getKey(),
+									cpDefinition, dtoConverterContext))) {
 
-							if (Validator.isNotNull(
-									_getCOREntryInfoMessage(
-										commerceOptionValues,
-										cpDefinitionOptionRel,
-										cpDefinitionOptionValueRel, cpInstance,
-										cpDefinition.getCProductId(),
-										dtoConverterContext)) ||
-								Validator.isNotNull(
-									_getCPDefinitionLinkInfoMessage(
-										commerceOptionValues,
-										cpDefinitionOptionValueRel.getKey(),
-										cpDefinition, dtoConverterContext))) {
-
-								return false;
-							}
+							return false;
 						}
 
 						return true;
@@ -389,10 +426,8 @@ public class ProductOptionValueDTOConverter
 				setVisible(
 					() -> {
 						if (!cpDefinitionOptionRel.isSkuContributor() ||
-							(FeatureFlagManagerUtil.isEnabled(
-								"COMMERCE-11922") &&
-							 cpDefinitionOptionRelConfiguration.
-								 showUnselectableOptions())) {
+							cpDefinitionOptionRelConfiguration.
+								showUnselectableOptions()) {
 
 							return true;
 						}
@@ -706,6 +741,28 @@ public class ProductOptionValueDTOConverter
 		}
 
 		return jsonArray;
+	}
+
+	private String _getTimeZoneId(String[] parts) {
+		if (parts.length <= 8) {
+			return parts[7].toUpperCase();
+		}
+
+		String timeZoneId = StringBundler.concat(
+			com.liferay.portal.kernel.util.StringUtil.upperCaseFirstLetter(
+				parts[7]),
+			StringPool.FORWARD_SLASH,
+			com.liferay.portal.kernel.util.StringUtil.upperCaseFirstLetter(
+				parts[8]));
+
+		if ((parts.length > 9) && Validator.isNotNull(parts[9])) {
+			return StringBundler.concat(
+				timeZoneId, StringPool.UNDERLINE,
+				com.liferay.portal.kernel.util.StringUtil.upperCaseFirstLetter(
+					parts[9]));
+		}
+
+		return timeZoneId;
 	}
 
 	private boolean _updateJSONArray(

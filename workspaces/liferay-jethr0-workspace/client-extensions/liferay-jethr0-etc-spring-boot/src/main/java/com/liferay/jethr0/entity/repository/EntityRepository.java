@@ -16,6 +16,10 @@ import org.json.JSONObject;
  */
 public interface EntityRepository<T extends Entity> {
 
+	public T add(JSONObject jsonObject);
+
+	public boolean contains(long id);
+
 	public T create(JSONObject jsonObject);
 
 	public Set<T> getAll();

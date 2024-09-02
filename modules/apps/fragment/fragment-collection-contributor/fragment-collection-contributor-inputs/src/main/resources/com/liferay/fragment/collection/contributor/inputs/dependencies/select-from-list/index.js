@@ -5,26 +5,32 @@ const dropdownElement = fragmentElement.querySelector('.dropdown-menu');
 const optionListElement = fragmentElement.querySelector('.list-unstyled');
 
 const chooseOptionElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-choose-option-message`
 );
 const labelInputElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-label-input`
 );
 const loadingResultsElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-loading-results-message`
 );
 const noResultsElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-no-results-message`
 );
 const uiInputElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-select-from-list-input`
 );
 const valueInputElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-value-input`
 );
@@ -68,7 +74,7 @@ if (input.value) {
 		if (selectedOptionElement) {
 			optionListElement.setAttribute(
 				'aria-activedescendant',
-				selectedOption.id
+				selectedOptionElement.id
 			);
 		}
 	}
@@ -331,7 +337,9 @@ function setFocusedOption(
 function createOptionElement(option) {
 	const optionElement = document.createElement('li');
 
+	optionElement.dataset.optionLabel = option.textContent;
 	optionElement.dataset.optionValue = option.value;
+
 	// eslint-disable-next-line no-undef
 	optionElement.id = `${fragmentEntryLinkNamespace}-option-${option.value}`;
 	optionElement.textContent = option.textContent;
@@ -358,6 +366,7 @@ function setSelectedOption(optionElement) {
 	closeDropdown();
 
 	const selectedOption = document.getElementById(
+
 		// eslint-disable-next-line no-undef
 		`${fragmentEntryLinkNamespace}-option-${valueInputElement.value}`
 	);
@@ -370,8 +379,8 @@ function setSelectedOption(optionElement) {
 
 	optionElement.classList.add('active');
 
-	labelInputElement.value = optionElement.textContent;
-	uiInputElement.value = optionElement.textContent;
+	labelInputElement.value = optionElement.dataset.optionLabel;
+	uiInputElement.value = optionElement.dataset.optionLabel;
 	valueInputElement.value = optionElement.dataset.optionValue;
 }
 

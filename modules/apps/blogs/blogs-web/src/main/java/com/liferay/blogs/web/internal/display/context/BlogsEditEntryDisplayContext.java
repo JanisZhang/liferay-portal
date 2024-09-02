@@ -6,19 +6,33 @@
 package com.liferay.blogs.web.internal.display.context;
 
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration;
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
+import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.blogs.configuration.BlogsFileUploadsConfiguration;
 import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.item.selector.criterion.BlogsItemSelectorCriterion;
 import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.blogs.settings.BlogsGroupServiceSettings;
 import com.liferay.blogs.web.internal.util.BlogsEntryUtil;
+import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
+import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
+import com.liferay.friendly.url.model.FriendlyURLEntry;
+import com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.DownloadFileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.service.Snapshot;
@@ -27,11 +41,16 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeFormatter;
 import com.liferay.portal.kernel.util.Validator;
@@ -39,9 +58,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
+
+import javax.portlet.PortletRequest;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -52,18 +74,42 @@ public class BlogsEditEntryDisplayContext {
 
 	public BlogsEditEntryDisplayContext(
 		AssetAutoTaggerConfiguration assetAutoTaggerConfiguration,
+		AssetVocabularyLocalService assetVocabularyLocalService,
 		BlogsEntry blogsEntry,
 		BlogsFileUploadsConfiguration blogsFileUploadsConfiguration,
 		BlogsGroupServiceSettings blogsGroupServiceSettings,
-		HttpServletRequest httpServletRequest,
-		LiferayPortletResponse liferayPortletResponse) {
+		HttpServletRequest httpServletRequest, ItemSelector itemSelector,
+		LiferayPortletResponse liferayPortletResponse,
+		SiteConnectedGroupGroupProvider siteConnectedGroupGroupProvider) {
 
 		_assetAutoTaggerConfiguration = assetAutoTaggerConfiguration;
+		_assetVocabularyLocalService = assetVocabularyLocalService;
 		_blogsEntry = blogsEntry;
 		_blogsFileUploadsConfiguration = blogsFileUploadsConfiguration;
 		_blogsGroupServiceSettings = blogsGroupServiceSettings;
 		_httpServletRequest = httpServletRequest;
+		_itemSelector = itemSelector;
 		_liferayPortletResponse = liferayPortletResponse;
+		_siteConnectedGroupGroupProvider = siteConnectedGroupGroupProvider;
+
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+	}
+
+	public JSONArray getAvailableFriendlyURLAssetCategoriesJSONArray()
+		throws PortalException {
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		for (long assetCategoryId :
+				_getAvailableFriendlyURLAssetCategoryIds()) {
+
+			_populateJSONArray(
+				jsonArray,
+				AssetCategoryLocalServiceUtil.getCategory(assetCategoryId));
+		}
+
+		return jsonArray;
 	}
 
 	public BlogsEntry getBlogsEntry() {
@@ -113,6 +159,20 @@ public class BlogsEditEntryDisplayContext {
 		return _getItemSelectorURL(
 			RequestBackedPortletURLFactoryUtil.create(_httpServletRequest),
 			getCoverImageItemSelectorEventName());
+	}
+
+	public JSONArray getCurrentFriendlyURLAssetCategoriesJSONArray()
+		throws PortalException {
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		for (long assetCategoryId : _getCurrentFriendlyURLAssetCategoryIds()) {
+			_populateJSONArray(
+				jsonArray,
+				AssetCategoryLocalServiceUtil.getCategory(assetCategoryId));
+		}
+
+		return jsonArray;
 	}
 
 	public String getDescription() {
@@ -170,6 +230,44 @@ public class BlogsEditEntryDisplayContext {
 			getBlogsEntry(), _httpServletRequest, "entryId");
 
 		return _entryId;
+	}
+
+	public String getFriendlyURL() {
+		FriendlyURLEntry friendlyURLEntry = _getFriendlyURLEntry();
+
+		if (friendlyURLEntry != null) {
+			return friendlyURLEntry.getUrlTitle();
+		}
+
+		return StringPool.BLANK;
+	}
+
+	public String getFriendlyURLSeparatorCompanyConfigurationURL()
+		throws PortalException {
+
+		PermissionChecker permissionChecker =
+			PermissionCheckerFactoryUtil.create(
+				PortalUtil.getUser(_httpServletRequest));
+
+		if (!permissionChecker.isCompanyAdmin()) {
+			return null;
+		}
+
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				_httpServletRequest,
+				ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/configuration_admin/view_configuration_screen"
+		).setRedirect(
+			ParamUtil.getString(
+				_httpServletRequest, "backURL",
+				PortalUtil.getCurrentCompleteURL(_httpServletRequest))
+		).setParameter(
+			"configurationScreenKey",
+			"friendly-url-separator-company-configuration"
+		).buildString();
 	}
 
 	public String[] getImageExtensions() throws ConfigurationException {
@@ -375,6 +473,35 @@ public class BlogsEditEntryDisplayContext {
 		return _allowTrackbacks;
 	}
 
+	public boolean isAutomaticURL() {
+		String uniqueUrlTitle = BlogsEntryLocalServiceUtil.getUniqueUrlTitle(
+			_blogsEntry);
+
+		if (uniqueUrlTitle.equals(getURLTitle())) {
+			FriendlyURLEntry friendlyURLEntry = _getFriendlyURLEntry();
+
+			if (friendlyURLEntry == null) {
+				return true;
+			}
+
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+				PortalUtil.getClassNameId(FriendlyURLEntry.class),
+				friendlyURLEntry.getFriendlyURLEntryId());
+
+			if (assetEntry == null) {
+				return true;
+			}
+
+			List<AssetCategory> assetCategories = assetEntry.getCategories();
+
+			if (assetCategories.isEmpty()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public boolean isAutoTaggingEnabled() {
 		if (getBlogsEntry() == null) {
 			return false;
@@ -423,6 +550,72 @@ public class BlogsEditEntryDisplayContext {
 		return _assetAutoTaggerConfiguration.isUpdateAutoTags();
 	}
 
+	private long[] _getAvailableFriendlyURLAssetCategoryIds() {
+		if (_assetCategoryIds == null) {
+			_assetCategoryIds = ParamUtil.getLongValues(
+				_httpServletRequest, "assetCategoryIds");
+		}
+
+		if (!ArrayUtil.isEmpty(_assetCategoryIds)) {
+			return _assetCategoryIds;
+		}
+
+		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+			PortalUtil.getClassNameId(BlogsEntry.class), getEntryId());
+
+		if (assetEntry == null) {
+			_assetCategoryIds = new long[0];
+		}
+		else {
+			List<Long> assetCategoryIdsList = ListUtil.fromArray(
+				assetEntry.getCategoryIds());
+
+			assetCategoryIdsList.removeAll(
+				ListUtil.fromArray(_getCurrentFriendlyURLAssetCategoryIds()));
+
+			_assetCategoryIds = ArrayUtil.toLongArray(assetCategoryIdsList);
+		}
+
+		return _assetCategoryIds;
+	}
+
+	private long[] _getCurrentFriendlyURLAssetCategoryIds() {
+		if (_friendlyURLAssetCategoryIds == null) {
+			_friendlyURLAssetCategoryIds = ParamUtil.getLongValues(
+				_httpServletRequest, "friendlyURLAssetCategoryIds");
+		}
+
+		if (!ArrayUtil.isEmpty(_friendlyURLAssetCategoryIds)) {
+			return _friendlyURLAssetCategoryIds;
+		}
+
+		FriendlyURLEntry friendlyURLEntry = _getFriendlyURLEntry();
+
+		if (friendlyURLEntry == null) {
+			_friendlyURLAssetCategoryIds = new long[0];
+		}
+		else {
+			AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+				PortalUtil.getClassNameId(FriendlyURLEntry.class),
+				friendlyURLEntry.getFriendlyURLEntryId());
+
+			if (assetEntry == null) {
+				_friendlyURLAssetCategoryIds = new long[0];
+			}
+			else {
+				_friendlyURLAssetCategoryIds = assetEntry.getCategoryIds();
+			}
+		}
+
+		return _friendlyURLAssetCategoryIds;
+	}
+
+	private FriendlyURLEntry _getFriendlyURLEntry() {
+		return FriendlyURLEntryLocalServiceUtil.fetchMainFriendlyURLEntry(
+			PortalUtil.getClassNameId(BlogsEntry.class.getName()),
+			getEntryId());
+	}
+
 	private String _getItemSelectorURL(
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory,
 		String itemSelectedEventName) {
@@ -451,6 +644,17 @@ public class BlogsEditEntryDisplayContext {
 				blogsItemSelectorCriterion, imageItemSelectorCriterion));
 	}
 
+	private void _populateJSONArray(
+		JSONArray jsonArray, AssetCategory assetCategory) {
+
+		jsonArray.put(
+			JSONUtil.put(
+				"label", assetCategory.getTitle(_themeDisplay.getLocale())
+			).put(
+				"value", assetCategory.getCategoryId()
+			));
+	}
+
 	private static final Snapshot<ItemSelector> _itemSelectorSnapshot =
 		new Snapshot<>(
 			BlogsEditEntryDisplayContext.class, ItemSelector.class, null, true);
@@ -458,6 +662,8 @@ public class BlogsEditEntryDisplayContext {
 	private Boolean _allowPingbacks;
 	private Boolean _allowTrackbacks;
 	private final AssetAutoTaggerConfiguration _assetAutoTaggerConfiguration;
+	private long[] _assetCategoryIds;
+	private final AssetVocabularyLocalService _assetVocabularyLocalService;
 	private final BlogsEntry _blogsEntry;
 	private final BlogsFileUploadsConfiguration _blogsFileUploadsConfiguration;
 	private final BlogsGroupServiceSettings _blogsGroupServiceSettings;
@@ -468,10 +674,15 @@ public class BlogsEditEntryDisplayContext {
 	private String _description;
 	private Boolean _emailEntryUpdatedEnabled;
 	private Long _entryId;
+	private long[] _friendlyURLAssetCategoryIds;
 	private final HttpServletRequest _httpServletRequest;
+	private final ItemSelector _itemSelector;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private String _redirect;
+	private final SiteConnectedGroupGroupProvider
+		_siteConnectedGroupGroupProvider;
 	private Long _smallImageFileEntryId;
+	private final ThemeDisplay _themeDisplay;
 	private String _title;
 	private String _urlTitle;
 

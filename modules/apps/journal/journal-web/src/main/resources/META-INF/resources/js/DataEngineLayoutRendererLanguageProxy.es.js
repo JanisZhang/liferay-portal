@@ -30,15 +30,18 @@ export default function ({currentLanguageId, namespace}) {
 			defaultLocaleChangedHandler = Liferay.after(
 				'inputLocalized:defaultLocaleChanged',
 				(event) => {
-					const selectedLanguageId = event.item.getAttribute(
-						'data-value'
-					);
+					const selectedLanguageId =
+						event.item.getAttribute('data-value');
 
 					const defaultLanguageIdInput = document.getElementById(
 						`${namespace}defaultLanguageId`
 					);
 
 					defaultLanguageIdInput.value = selectedLanguageId;
+
+					Liferay.fire('journal:defaultLocaleChanged', {
+						item: event.item,
+					});
 				}
 			);
 

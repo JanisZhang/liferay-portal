@@ -1,9 +1,9 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.111.0",
+		"@clayui/button": "3.116.0",
 		"@clayui/icon": "3.111.0",
-		"@clayui/modal": "3.111.0",
+		"@clayui/modal": "3.117.0",
 		"@liferay/frontend-js-react-web": "*",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
@@ -14,10 +14,10 @@
 	"name": "@liferay/flags-taglib",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "6.1.16"
+	"version": "6.1.24"
 }

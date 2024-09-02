@@ -108,12 +108,12 @@ export default {
 	},
 
 	markItemForDeletion({
-		itemId,
+		itemIds,
 		onNetworkStatus,
 		portletIds = [],
 		segmentsExperienceId,
 	}: {
-		itemId: string;
+		itemIds: string[];
 		onNetworkStatus: OnNetworkStatus;
 		portletIds?: string[];
 		segmentsExperienceId: string;
@@ -125,7 +125,7 @@ export default {
 			config.markItemForDeletionURL,
 			{
 				body: {
-					itemId,
+					itemIds,
 					portletIds,
 					segmentsExperienceId,
 				},
@@ -250,12 +250,12 @@ export default {
 
 	updateItemConfig({
 		itemConfig,
-		itemId,
+		itemIds,
 		onNetworkStatus,
 		segmentsExperienceId,
 	}: {
 		itemConfig: LayoutDataItem['config'];
-		itemId: string;
+		itemIds: string[];
 		onNetworkStatus: OnNetworkStatus;
 		segmentsExperienceId: string;
 	}) {
@@ -267,7 +267,7 @@ export default {
 			{
 				body: {
 					itemConfig: JSON.stringify(itemConfig),
-					itemId,
+					itemIds,
 					segmentsExperienceId,
 				},
 			},

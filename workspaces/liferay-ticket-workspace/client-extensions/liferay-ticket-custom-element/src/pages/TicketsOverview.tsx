@@ -1,4 +1,5 @@
 /* eslint-disable quote-props */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -9,7 +10,7 @@ import {Option, Picker} from '@clayui/core';
 import {ClayInput} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
-import {useState} from 'react';
+import React, {useState} from 'react';
 import {QueryClient, useMutation, useQueryClient} from 'react-query';
 
 import {RecentActivity} from '../components/RecentActivity';

@@ -222,8 +222,7 @@ public class FragmentDropZoneMVCActionCommandTest {
 			"itemId", fragmentLayoutStructureItem.getItemId());
 
 		jsonObject = ReflectionTestUtil.invoke(
-			_duplicateItemMVCActionCommand,
-			"_addDuplicateFragmentEntryLinkToLayoutDataJSONObject",
+			_duplicateItemMVCActionCommand, "doTransactionalCommand",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			mockLiferayPortletActionRequest,
 			new MockLiferayPortletActionResponse());
@@ -376,11 +375,11 @@ public class FragmentDropZoneMVCActionCommandTest {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				StringUtil.randomString(), StringPool.BLANK, serviceContext);
 
 		return _fragmentEntryLocalService.addFragmentEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(),
 			StringUtil.randomString(), StringUtil.randomString(),
 			RandomTestUtil.randomString(),

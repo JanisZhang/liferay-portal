@@ -661,6 +661,14 @@ public class CPDefinitionOptionRelLocalServiceImpl
 					cpInstanceOptionValueRel.getCPDefinitionOptionValueRelId());
 
 			cpDefinitionOptionValueRelKeys.add(
+				cpDefinitionOptionRel.getName(
+					cpDefinitionOptionRel.getDefaultLanguageId()));
+
+			cpDefinitionOptionValueRelKeys.add(
+				cpDefinitionOptionValueRel.getName(
+					cpDefinitionOptionRel.getDefaultLanguageId()));
+
+			cpDefinitionOptionValueRelKeys.add(
 				cpDefinitionOptionValueRel.getKey());
 		}
 

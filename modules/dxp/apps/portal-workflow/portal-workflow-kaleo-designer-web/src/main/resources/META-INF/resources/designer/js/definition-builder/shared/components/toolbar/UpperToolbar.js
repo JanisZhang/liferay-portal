@@ -16,6 +16,7 @@ import {isEdge, isNode} from 'react-flow-renderer';
 
 import {DefinitionBuilderContext} from '../../../DefinitionBuilderContext';
 import {defaultLanguageId} from '../../../constants';
+import {detectGroovyOrJavaScript} from '../../../diagram-builder/util/detectGroovyOrJavaScript';
 import {xmlNamespace} from '../../../source-builder/constants';
 import DeserializeUtil from '../../../source-builder/deserializeUtil';
 import {serializeDefinition} from '../../../source-builder/serializeUtil';
@@ -26,6 +27,7 @@ import {
 	saveDefinitionRequest,
 } from '../../../util/fetchUtil';
 import {isObjectEmpty} from '../../../util/utils';
+import {GroovyScriptWarningModal} from './GroovyScriptWarningModal';
 
 export default function UpperToolbar({
 	displayNames,
@@ -37,33 +39,39 @@ export default function UpperToolbar({
 		active,
 		alertMessage,
 		alertType,
-		blockingErrors,
+		allowScriptContentToBeExecutedOrIncluded,
+		blockingError,
 		currentEditor,
 		definitionDescription,
 		definitionName,
 		definitionTitle,
 		definitionTitleTranslations,
 		elements,
+		scriptManagementConfigurationPortletURL,
 		selectedLanguageId,
 		setAlertMessage,
 		setAlertType,
-		setBlockingErrors,
+		setBlockingError,
 		setDefinitionDescription,
 		setDefinitionName,
 		setDefinitionTitle,
 		setDefinitionTitleTranslations,
 		setDeserialize,
 		setElements,
+		setHadGroovyOrJavaScriptBefore,
+		setHasGroovyOrJavaScript,
 		setSelectedLanguageId,
 		setShowAlert,
 		setShowDefinitionInfo,
-		setShowInvalidContentMessage,
 		setSourceView,
-		setVersion,
+		setWorkflowDefinitionVersions,
 		showAlert,
 		sourceView,
-		version,
+		workflowDefinitionVersions,
 	} = useContext(DefinitionBuilderContext);
+
+	const [showGroovyScriptWarningModal, setShowGroovyScriptWarningModal] =
+		useState(false);
 
 	const [translations, setTranslations] = useState(
 		definitionTitleTranslations
@@ -89,18 +97,18 @@ export default function UpperToolbar({
 	);
 
 	const errorTitle = () => {
-		if (blockingErrors.errorType === 'duplicated') {
+		if (blockingError.errorType === 'duplicated') {
 			return Liferay.Language.get(
 				'you-have-the-same-name-in-two-nodes'
 			).slice(0, -1);
 		}
-		else if (blockingErrors.errorType === 'emptyField') {
+		else if (blockingError.errorType === 'emptyField') {
 			return Liferay.Language.get('some-fields-need-to-be-filled').slice(
 				0,
 				-1
 			);
 		}
-		else if (blockingErrors.errorType === 'assignment') {
+		else if (blockingError.errorType === 'assignment') {
 			return Liferay.Language.get('warning');
 		}
 		else {
@@ -108,19 +116,35 @@ export default function UpperToolbar({
 		}
 	};
 
-	const getXMLContent = (exporting) => {
-		let currentDescription;
-		let currentElements;
-		let currentName;
-		let xmlContent;
+	const getXMLContent = () => {
+		if (!sourceView) {
+			const xmlDefinition = serializeDefinition(
+				xmlNamespace,
+				{
+					description: definitionDescription,
+					name: definitionName,
+					version: workflowDefinitionVersions.length,
+				},
+				elements.filter(isNode),
+				elements.filter(isEdge)
+			);
 
-		if (currentEditor && !exporting) {
-			xmlContent = currentEditor.getData();
+			return (
+				XMLUtil.validateDefinition(xmlDefinition) && {
+					metadata: {
+						description: definitionDescription,
+						name: definitionName,
+						version: workflowDefinitionVersions.length,
+					},
+					xmlDefinition,
+				}
+			);
 		}
 		else {
-			if (sourceView) {
+			const xmlDefinition = currentEditor.getData();
+
+			if (XMLUtil.validateDefinition(xmlDefinition)) {
 				const deserializeUtil = new DeserializeUtil();
-				const xmlDefinition = currentEditor.getData();
 
 				deserializeUtil.updateXMLDefinition(
 					encodeURIComponent(xmlDefinition)
@@ -128,34 +152,24 @@ export default function UpperToolbar({
 
 				const metadata = deserializeUtil.getMetadata();
 
-				currentName = metadata.name;
-				setDefinitionName(currentName);
+				setDefinitionName(metadata.name);
+				setDefinitionDescription(metadata.description);
+				setElements(deserializeUtil.getElements());
 
-				currentDescription = metadata.description;
-				setDefinitionDescription(currentDescription);
-
-				currentElements = deserializeUtil.getElements();
-				setElements(currentElements);
+				return {metadata, xmlDefinition};
 			}
-			else {
-				currentDescription = definitionDescription;
-				currentElements = elements;
-			}
-
-			xmlContent = serializeDefinition(
-				xmlNamespace,
-				{
-					description: currentDescription,
-					name: currentName,
-					version,
-				},
-				currentElements.filter(isNode),
-				currentElements.filter(isEdge),
-				exporting
-			);
 		}
 
-		return xmlContent;
+		return false;
+	};
+
+	const handleInvalidXMLBlockingError = () => {
+		setBlockingError(() => ({
+			errorMessage: Liferay.Language.get(
+				'please-select-a-valid-xml-file'
+			),
+			errorType: 'invalidXML',
+		}));
 	};
 
 	const onSelectedLanguageIdChange = (id) => {
@@ -164,7 +178,8 @@ export default function UpperToolbar({
 		}
 	};
 
-	const definitionNotPublished = version === 0 || !active;
+	const definitionNotPublished =
+		!workflowDefinitionVersions.length || !active;
 
 	const redirectToSavedDefinition = (name, version) => {
 		const definitionURL = new URL(window.location.href);
@@ -178,101 +193,135 @@ export default function UpperToolbar({
 		window.location.replace(definitionURL);
 	};
 
-	const publishDefinition = () => {
+	const saveOrPublishDefinition = async (
+		localStorageKeyName,
+		saveOrPublishDefinitionRequest,
+		successAlertMessage
+	) => {
+		if (blockingError.errorType !== '') {
+			setAlert(blockingError.errorMessage, 'danger', true);
+
+			return;
+		}
+
+		const validXMLDefinition = getXMLContent();
+
+		if (!validXMLDefinition) {
+			handleInvalidXMLBlockingError();
+
+			return;
+		}
+
+		const {
+			metadata: {name, version},
+			xmlDefinition,
+		} = validXMLDefinition;
+
+		const publishedOrSavedDefinitionResponse =
+			await saveOrPublishDefinitionRequest({
+				active,
+				content: xmlDefinition,
+				name,
+				title: definitionTitle,
+				title_i18n: definitionTitleTranslations,
+				version,
+			});
+
+		const publishedOrSavedDefinitionResponseJSON =
+			await publishedOrSavedDefinitionResponse.json();
+
+		if (!publishedOrSavedDefinitionResponse.ok) {
+			setAlert(
+				publishedOrSavedDefinitionResponseJSON.title,
+				'danger',
+				true
+			);
+
+			return;
+		}
+
+		if (!allowScriptContentToBeExecutedOrIncluded) {
+			setHadGroovyOrJavaScriptBefore(false);
+		}
+
+		setDefinitionName(publishedOrSavedDefinitionResponseJSON.name);
+
+		setWorkflowDefinitionVersions((prevValues) => [
+			{
+				creatorName:
+					publishedOrSavedDefinitionResponseJSON.creator?.name,
+				dateCreated:
+					publishedOrSavedDefinitionResponseJSON.dateModified,
+				version: String(
+					parseInt(publishedOrSavedDefinitionResponseJSON.version, 10)
+				),
+			},
+			...prevValues,
+		]);
+
+		if (publishedOrSavedDefinitionResponseJSON.version === '1') {
+			localStorage.setItem(
+				localStorageKeyName,
+				true,
+				localStorage.TYPES.FUNCTIONAL
+			);
+			redirectToSavedDefinition(
+				publishedOrSavedDefinitionResponseJSON.name,
+				publishedOrSavedDefinitionResponseJSON.version
+			);
+
+			return;
+		}
+
+		setAlert(successAlertMessage, 'success', true);
+
+		return;
+	};
+
+	const publishDefinition = async () => {
+		if (
+			!allowScriptContentToBeExecutedOrIncluded &&
+			detectGroovyOrJavaScript(elements, setHasGroovyOrJavaScript)
+		) {
+			setShowGroovyScriptWarningModal(true);
+
+			return;
+		}
+
 		if (!definitionTitle) {
 			setAlert(
 				Liferay.Language.get('name-workflow-before-publish'),
 				'danger',
 				true
 			);
-		}
-		else if (blockingErrors.errorType !== '') {
-			setAlert(blockingErrors.errorMessage, 'danger', true);
-		}
-		else {
-			let alertMessage;
 
-			if (definitionNotPublished) {
-				alertMessage = Liferay.Language.get(
-					'workflow-published-successfully'
-				);
-			}
-			else {
-				alertMessage = Liferay.Language.get(
-					'workflow-updated-successfully'
-				);
-			}
-
-			publishDefinitionRequest({
-				active,
-				content: getXMLContent(true),
-				name: definitionName,
-				title: definitionTitle,
-				title_i18n: definitionTitleTranslations,
-				version,
-			}).then((response) => {
-				if (response.ok) {
-					response.json().then(({name, version}) => {
-						setDefinitionName(name);
-						setVersion(parseInt(version, 10));
-						if (version === '1') {
-							localStorage.setItem(
-								'firstPublished',
-								true,
-								localStorage.TYPES.FUNCTIONAL
-							);
-							redirectToSavedDefinition(name, version);
-						}
-						else {
-							setAlert(alertMessage, 'success', true);
-						}
-					});
-				}
-				else {
-					response.json().then(({title}) => {
-						setAlert(title, 'danger', true);
-					});
-				}
-			});
+			return;
 		}
+
+		saveOrPublishDefinition(
+			'firstPublished',
+			publishDefinitionRequest,
+			definitionNotPublished
+				? Liferay.Language.get('workflow-published-successfully')
+				: Liferay.Language.get('workflow-updated-successfully')
+		);
 	};
 
-	const saveDefinition = () => {
-		if (blockingErrors.errorType !== '') {
-			setAlert(blockingErrors.errorMessage, 'danger', true);
+	const saveDefinition = async () => {
+		if (
+			!allowScriptContentToBeExecutedOrIncluded &&
+			detectGroovyOrJavaScript(elements, setHasGroovyOrJavaScript)
+		) {
+			setShowGroovyScriptWarningModal(true);
+
+			return;
 		}
-		else {
-			saveDefinitionRequest({
-				active,
-				content: getXMLContent(true),
-				name: definitionName,
-				title: definitionTitle,
-				title_i18n: definitionTitleTranslations,
-				version,
-			}).then((response) => {
-				if (response.ok) {
-					response.json().then(({name, version}) => {
-						setDefinitionName(name);
-						setVersion(parseInt(version, 10));
-						if (version === '1') {
-							localStorage.setItem(
-								'firstSaved',
-								true,
-								localStorage.TYPES.FUNCTIONAL
-							);
-							redirectToSavedDefinition(name, version);
-						}
-						else {
-							setAlert(
-								Liferay.Language.get('workflow-saved'),
-								'success',
-								true
-							);
-						}
-					});
-				}
-			});
-		}
+
+		saveOrPublishDefinition(
+			'firstSaved',
+			saveDefinitionRequest,
+			Liferay.Language.get('workflow-saved')
+		);
 	};
 
 	useEffect(() => {
@@ -321,6 +370,7 @@ export default function UpperToolbar({
 				}));
 			}
 		});
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [definitionTitle, elements]);
 
@@ -342,20 +392,28 @@ export default function UpperToolbar({
 			);
 			localStorage.removeItem('firstPublished');
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
-		if (blockingErrors.errorType === 'assignment') {
-			setAlert(blockingErrors.errorMessage, 'warning', true);
+		if (blockingError.errorType === 'assignment') {
+			setAlert(blockingError.errorMessage, 'warning', true);
 		}
+		else if (blockingError.errorType === 'invalidXML') {
+			setAlert(blockingError.errorMessage, 'danger', true);
+		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [blockingErrors]);
+	}, [blockingError]);
 
 	const resetAlert = () => {
 		setShowAlert(false);
-		if (blockingErrors.errorType === 'assignment') {
-			setBlockingErrors({errorType: ''});
+		if (
+			blockingError.errorType === 'assignment' ||
+			blockingError.errorType === 'invalidXML'
+		) {
+			setBlockingError({errorType: ''});
 		}
 	};
 
@@ -395,9 +453,12 @@ export default function UpperToolbar({
 							/>
 						</ClayToolbar.Item>
 
-						{version !== 0 && (
+						{workflowDefinitionVersions.length !== 0 && (
 							<ClayToolbar.Item>
 								<ClayButtonWithIcon
+									aria-label={Liferay.Language.get(
+										'definition-info'
+									)}
 									displayType="secondary"
 									onClick={() =>
 										setShowDefinitionInfo(
@@ -405,16 +466,21 @@ export default function UpperToolbar({
 										)
 									}
 									symbol="info-circle-open"
+									title={Liferay.Language.get(
+										'definition-info'
+									)}
 								/>
 							</ClayToolbar.Item>
 						)}
 
 						<ClayToolbar.Item>
 							<ClayButton
+								aria-label={Liferay.Language.get('cancel')}
 								displayType="secondary"
 								onClick={() => {
 									window.history.back();
 								}}
+								title={Liferay.Language.get('cancel')}
 							>
 								{Liferay.Language.get('cancel')}
 							</ClayButton>
@@ -423,9 +489,11 @@ export default function UpperToolbar({
 						{definitionNotPublished && (
 							<ClayToolbar.Item>
 								<ClayButton
+									aria-label={Liferay.Language.get('save')}
 									disabled={isView}
 									displayType="secondary"
 									onClick={saveDefinition}
+									title={Liferay.Language.get('save')}
 								>
 									{Liferay.Language.get('save')}
 								</ClayButton>
@@ -434,9 +502,19 @@ export default function UpperToolbar({
 
 						<ClayToolbar.Item>
 							<ClayButton
+								aria-label={
+									definitionNotPublished
+										? Liferay.Language.get('publish')
+										: Liferay.Language.get('update')
+								}
 								disabled={isView}
 								displayType="primary"
 								onClick={publishDefinition}
+								title={
+									definitionNotPublished
+										? Liferay.Language.get('publish')
+										: Liferay.Language.get('update')
+								}
 							>
 								{definitionNotPublished
 									? Liferay.Language.get('publish')
@@ -447,6 +525,9 @@ export default function UpperToolbar({
 						<ClayToolbar.Item>
 							{sourceView ? (
 								<ClayButtonWithIcon
+									aria-label={Liferay.Language.get(
+										'diagram-view'
+									)}
 									displayType="secondary"
 									onClick={() => {
 										if (
@@ -458,7 +539,7 @@ export default function UpperToolbar({
 											setDeserialize(true);
 										}
 										else {
-											setShowInvalidContentMessage(true);
+											handleInvalidXMLBlockingError();
 										}
 									}}
 									symbol="rules"
@@ -466,6 +547,9 @@ export default function UpperToolbar({
 								/>
 							) : (
 								<ClayButtonWithIcon
+									aria-label={Liferay.Language.get(
+										'source-view'
+									)}
 									displayType="secondary"
 									onClick={() => setSourceView(true)}
 									symbol="code"
@@ -492,6 +576,17 @@ export default function UpperToolbar({
 						{alertMessage}
 					</ClayAlert>
 				</ClayAlert.ToastContainer>
+			)}
+
+			{showGroovyScriptWarningModal && (
+				<GroovyScriptWarningModal
+					scriptManagementConfigurationPortletURL={
+						scriptManagementConfigurationPortletURL
+					}
+					setShowGroovyScriptWarningModal={() => {
+						setShowGroovyScriptWarningModal(false);
+					}}
+				/>
 			)}
 		</>
 	);

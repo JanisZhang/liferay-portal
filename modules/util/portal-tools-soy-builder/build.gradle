@@ -1,5 +1,8 @@
 apply plugin: "com.liferay.maven.plugin.builder"
 
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
 buildPluginDescriptor {
 	ext {
 		autoClean = false
@@ -12,6 +15,10 @@ buildPluginDescriptor {
 
 configurations {
 	mavenDistribution
+}
+
+copyCSS {
+	mustRunAfter buildPluginDescriptor
 }
 
 dependencies {
@@ -50,5 +57,5 @@ test {
 	systemProperty "maven.debug", System.properties["maven.debug"]
 	systemProperty "maven.repo.local", System.properties["maven.repo.local"]
 	systemProperty "repository.url", System.properties["repository.url"]
-	systemProperty "soy.builder.version", jar.version
+	systemProperty "soy.builder.version", jar.archiveVersion.get()
 }

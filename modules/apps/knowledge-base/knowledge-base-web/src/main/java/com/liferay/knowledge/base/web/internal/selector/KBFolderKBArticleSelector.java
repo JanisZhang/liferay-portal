@@ -145,8 +145,9 @@ public class KBFolderKBArticleSelector implements KBArticleSelector {
 	protected boolean isDescendant(KBArticle kbArticle, KBFolder kbFolder)
 		throws PortalException {
 
-		if (kbFolder.getKbFolderId() ==
-				KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+		if ((kbFolder.getKbFolderId() ==
+				KBFolderConstants.DEFAULT_PARENT_FOLDER_ID) ||
+			(kbFolder.getKbFolderId() == kbArticle.getKbFolderId())) {
 
 			return true;
 		}
@@ -192,7 +193,7 @@ public class KBFolderKBArticleSelector implements KBArticleSelector {
 		if ((kbFolder == null) && (kbArticlesCount == 0)) {
 			kbFolder = _kbFolderService.fetchFirstChildKBFolder(
 				groupId, ancestorKBFolder.getKbFolderId(),
-				new KBFolderNameComparator(false));
+				KBFolderNameComparator.getInstance(false));
 		}
 
 		if (kbFolder == null) {
@@ -233,7 +234,7 @@ public class KBFolderKBArticleSelector implements KBArticleSelector {
 		if ((kbFolder == null) && (kbArticlesCount == 0)) {
 			kbFolder = _kbFolderService.fetchFirstChildKBFolder(
 				groupId, ancestorKBFolder.getKbFolderId(),
-				new KBFolderNameComparator(false));
+				KBFolderNameComparator.getInstance(false));
 		}
 
 		if (kbFolder == null) {

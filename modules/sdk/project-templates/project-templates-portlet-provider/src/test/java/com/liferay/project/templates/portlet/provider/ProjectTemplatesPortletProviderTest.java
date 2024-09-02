@@ -43,7 +43,7 @@ public class ProjectTemplatesPortletProviderTest
 			new Object[][] {
 				{"dxp", "7.0.10.17"}, {"dxp", "7.1.10.7"}, {"dxp", "7.2.10.7"},
 				{"portal", "7.3.7"}, {"portal", "7.4.3.56"},
-				{"portal", "7.4.3.86"}
+				{"portal", "7.4.3.86"}, {"dxp", "2024.q1.1"}
 			});
 	}
 
@@ -138,27 +138,20 @@ public class ProjectTemplatesPortletProviderTest
 
 		File mavenModulesDir = new File(mavenWorkspaceDir, "modules");
 
-		String newTemplate = "false";
+		boolean newTemplate = false;
 
-		if (_liferayVersion.startsWith("7.4")) {
-			String qualifiedVersion = _liferayVersion.substring(
-				_liferayVersion.lastIndexOf(".") + 1);
+		if (_liferayVersion.equals("7.4.3.86") ||
+			VersionUtil.isLiferayQuarterlyVersion(_liferayVersion)) {
 
-			if (_liferayProduct.equals("dxp")) {
-				qualifiedVersion = qualifiedVersion.substring(1);
-			}
-
-			if (Integer.valueOf(qualifiedVersion) > 71) {
-				newTemplate = "true";
-			}
+			newTemplate = true;
 		}
 
 		File mavenProjectDir = buildTemplateWithMaven(
 			mavenModulesDir, mavenModulesDir, template, name, "com.test",
 			mavenExecutor, "-DclassName=ProviderTest",
 			"-DliferayProduct=" + _liferayProduct,
-			"-DnewTemplate=" + newTemplate,
-			"-DliferayVersion=" + _liferayVersion, "-Dpackage=provider.test");
+			"-DliferayVersion=" + _liferayVersion,
+			"-DnewTemplate=" + newTemplate, "-Dpackage=provider.test");
 
 		if (!_liferayVersion.startsWith("7.0")) {
 			testContains(

@@ -58,15 +58,15 @@ const ProjectSelection = () => {
 		dispatch,
 	] = useGetAppContext();
 
-	const {handleGetApp, isFreeApp, loading} = useOutletContext<
-		GetAppOutletContext
-	>();
+	const {handleGetApp, isFreeApp, loading} =
+		useOutletContext<GetAppOutletContext>();
 
 	const {properties} = useContext(MarketplaceContext);
 
-	const userProjects = useMemo(() => resourceRequest?.userProjects ?? [], [
-		resourceRequest?.userProjects,
-	]);
+	const userProjects = useMemo(
+		() => resourceRequest?.userProjects ?? [],
+		[resourceRequest?.userProjects]
+	);
 
 	if (isLoading) {
 		return <ClayLoadingIndicator />;
@@ -147,9 +147,9 @@ const ProjectSelection = () => {
 						title: (
 							<div className="d-flex">
 								<div>
-									<h5 className="m-0 project-selection-page-title-text">
+									<div className="h5 m-0 project-selection-page-title-text">
 										{project.rootProjectId.toUpperCase()}
-									</h5>
+									</div>
 
 									<p className="m-0 project-selection-page-description-text">
 										{getCardContent(project)}
@@ -174,7 +174,7 @@ const ProjectSelection = () => {
 				leftRadio
 				onSelect={(radioOption: RadioOption<ConsoleUserProject>) =>
 					dispatch({
-						payload: (radioOption.value as unknown) as string,
+						payload: radioOption.value as unknown as string,
 						type: 'SET_PROJECT',
 					})
 				}
@@ -186,6 +186,7 @@ const ProjectSelection = () => {
 				<a
 					className="font-weight-bold project-selection-page-link"
 					href={properties.contactSupportUrl}
+					target="_blank"
 				>
 					{i18n.translate('contact-support')}
 				</a>

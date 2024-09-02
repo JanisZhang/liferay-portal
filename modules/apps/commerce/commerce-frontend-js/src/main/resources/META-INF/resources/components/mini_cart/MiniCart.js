@@ -35,6 +35,8 @@ import {regenerateOrderDetailURL, summaryDataMapper} from './util/index';
 import {DEFAULT_LABELS} from './util/labels';
 import {resolveCartViews} from './util/views';
 
+import './mini_cart.scss';
+
 const CartResource = ServiceProvider.DeliveryCartAPI('v1');
 
 function MiniCart({
@@ -68,11 +70,21 @@ function MiniCart({
 	const closeCart = () => {
 		setIsOpen(false);
 
+		if (toggleable) {
+			document.body.classList.remove('overflow-hidden');
+		}
+
 		if (editedItem) {
 			setEditedItem(null);
 		}
 	};
-	const openCart = () => setIsOpen(true);
+	const openCart = () => {
+		if (toggleable) {
+			document.body.classList.add('overflow-hidden');
+		}
+
+		setIsOpen(true);
+	};
 
 	const [replacementSKUList, setReplacementSKUList] = useState([]);
 
@@ -105,7 +117,7 @@ function MiniCart({
 							? regenerateOrderDetailURL(
 									updatedCart.orderUUID,
 									currentURLs.siteDefaultURL
-							  )
+								)
 							: new URL(orderDetailURL),
 					};
 
@@ -134,7 +146,7 @@ function MiniCart({
 						cartState.cartItems.filter(
 							({replacedSku: replacedSKU}) => Boolean(replacedSKU)
 						)
-				  )
+					)
 				: null,
 		[cartState.cartItems]
 	);

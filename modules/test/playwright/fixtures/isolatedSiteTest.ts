@@ -3,34 +3,32 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {mergeTests, test} from '@playwright/test';
+import {mergeTests} from '@playwright/test';
 
 import {ApiHelpers} from '../helpers/ApiHelpers';
 import getRandomString from '../utils/getRandomString';
-import {loginTest} from './loginTest';
+import {backendPageTest} from './backendPageTest';
 
-const isolatedSiteFixture = test.extend<{
+const test = mergeTests(backendPageTest);
+
+const isolatedSiteTest = test.extend<{
 	site: Site;
 }>({
 	site: [
-		async ({page}, use) => {
-			await page.goto('/');
+		async ({backendPage}, use) => {
+			await backendPage.goto('/');
 
-			const apiHelpers = new ApiHelpers(page);
+			const apiHelpers = new ApiHelpers(backendPage);
 
-			let site;
+			let site: Site;
 
 			try {
 
 				// Create site and go Site Settings
 
-				site = await apiHelpers.headlessSite.createSite(
-					getRandomString()
-				);
-
-				await page.goto(
-					`/group${site.friendlyUrlPath}/~/control_panel/manage/-/site/settings`
-				);
+				site = await apiHelpers.headlessSite.createSite({
+					name: getRandomString(),
+				});
 
 				await use(site);
 			}
@@ -51,7 +49,5 @@ const isolatedSiteFixture = test.extend<{
 		{auto: true},
 	],
 });
-
-const isolatedSiteTest = mergeTests(loginTest(), isolatedSiteFixture);
 
 export {isolatedSiteTest};

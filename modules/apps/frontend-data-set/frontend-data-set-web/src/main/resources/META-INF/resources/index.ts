@@ -22,7 +22,6 @@ export declare function FrontendDataSet({
 	formName,
 	header,
 	id,
-	initialSelectedItemsValues,
 	inlineAddingSettings,
 	inlineEditingSettings,
 	items,
@@ -36,6 +35,7 @@ export declare function FrontendDataSet({
 	overrideEmptyResultView,
 	pagination,
 	portletId,
+	selectedItems,
 	selectedItemsKey,
 	selectionType,
 	showManagementBar,
@@ -79,9 +79,9 @@ export interface IInlineEditingSettings {
 
 export interface IActionsDropdown extends IBaseActions {
 	loading: boolean;
-	menuActive: boolean;
+	menuActive?: boolean;
 	onClick: Function;
-	onMenuActiveChange: Function;
+	onMenuActiveChange?: Function;
 	setLoading: Function;
 }
 
@@ -116,6 +116,7 @@ export interface IItemsActions {
 
 export interface IItemActionsData {
 	confirmationMessage?: string;
+	disableHeader?: boolean;
 	errorMessage?: string;
 	id?: string | number;
 	method?: 'delete' | 'get' | 'patch' | 'post';
@@ -130,9 +131,12 @@ export interface IQuickActions extends IBaseActions {
 	onClick: Function;
 }
 
-type TSorting = {
+export type TSort = {
+	active?: boolean;
+	default?: boolean;
 	direction?: 'asc' | 'desc';
 	key?: string;
+	label?: string;
 };
 
 type TViews = {
@@ -176,7 +180,6 @@ export interface IFrontendDataSetProps {
 		title?: string;
 	};
 	id: string;
-	initialSelectedItemsValues?: any[];
 	inlineAddingSettings?: {
 		apiURL: string;
 		defaultBodyContent: object;
@@ -197,13 +200,14 @@ export interface IFrontendDataSetProps {
 		initialPageNumber?: number;
 	};
 	portletId?: string;
+	selectedItems?: any[];
 	selectedItemsKey?: string;
 	selectionType?: 'single' | 'multiple';
 	showManagementBar?: boolean;
 	showPagination?: boolean;
 	showSearch?: boolean;
 	sidePanelId?: string;
-	sorts?: TSorting[];
+	sorts?: TSort[];
 	style?: 'default' | 'fluid' | 'stacked';
 	views: TViews[];
 	viewsTitle?: string;
@@ -215,6 +219,8 @@ export {
 } from './FrontendDataSetContext';
 export {INTERNAL_CELL_RENDERERS as FDS_INTERNAL_CELL_RENDERERS} from './cell_renderers/InternalCellRenderer';
 export {
+	FDS_ARRAY_FIELD_NAME_DELIMITER,
+	FDS_ARRAY_FIELD_NAME_PARENT_SUFFIX,
 	FDS_NESTED_FIELD_NAME_DELIMITER,
 	FDS_NESTED_FIELD_NAME_PARENT_SUFFIX,
 } from './constants';

@@ -1,24 +1,24 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/autocomplete": "3.111.0",
-		"@clayui/button": "3.111.0",
-		"@clayui/core": "3.111.0",
-		"@clayui/date-picker": "3.111.0",
-		"@clayui/drop-down": "3.111.0",
-		"@clayui/empty-state": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/autocomplete": "3.118.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/core": "3.118.0",
+		"@clayui/date-picker": "3.118.0",
+		"@clayui/drop-down": "3.118.0",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/label": "3.111.0",
 		"@clayui/layout": "3.111.0",
-		"@clayui/list": "3.111.0",
+		"@clayui/list": "3.118.0",
 		"@clayui/loading-indicator": "3.111.0",
 		"@clayui/management-toolbar": "3.111.0",
-		"@clayui/modal": "3.111.0",
-		"@clayui/multi-select": "3.111.0",
-		"@clayui/panel": "3.111.0",
-		"@clayui/popover": "3.111.0",
-		"@clayui/tooltip": "3.111.0",
+		"@clayui/modal": "3.117.0",
+		"@clayui/multi-select": "3.118.0",
+		"@clayui/panel": "3.116.0",
+		"@clayui/popover": "3.116.1",
+		"@clayui/tooltip": "3.116.0",
 		"@liferay/frontend-js-codemirror-web": "*",
 		"classnames": "2.3.1",
 		"frontend-editor-ckeditor-web": "*",
@@ -30,13 +30,22 @@
 		"react-dnd-html5-backend": "11.1.1",
 		"text-mask-core": "^5.1.2"
 	},
-	"main": "index.js",
+	"jest": {
+		"setupFiles": [
+			"<rootDir>/jest-setup.config.js"
+		],
+		"testMatch": [
+			"<rootDir>/src/main/resources/META-INF/resources/tests/**/*.spec.*"
+		]
+	},
+	"main": "index.ts",
 	"name": "@liferay/object-js-components-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "1.0.70"
+	"version": "1.0.82"
 }

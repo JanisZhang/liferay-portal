@@ -49,6 +49,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.security.script.management.test.rule.ScriptManagementConfigurationTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.upload.test.util.UploadTestUtil;
@@ -81,7 +82,9 @@ public class ExecuteInfoItemActionStrutsActionTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			ScriptManagementConfigurationTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -110,7 +113,7 @@ public class ExecuteInfoItemActionStrutsActionTest {
 			RandomTestUtil.randomString());
 		_fileName = _file.createTempFileName("action-executed-", "txt");
 		_layout = _layoutLocalService.addLayout(
-			_user.getUserId(), _group.getGroupId(), false,
+			null, _user.getUserId(), _group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 0,
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), Collections.emptyMap(),
@@ -163,7 +166,7 @@ public class ExecuteInfoItemActionStrutsActionTest {
 	private ObjectDefinition _addObjectDefinition() throws Exception {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				_user.getUserId(), 0, false, false, false,
+				_user.getUserId(), 0, false, true, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",

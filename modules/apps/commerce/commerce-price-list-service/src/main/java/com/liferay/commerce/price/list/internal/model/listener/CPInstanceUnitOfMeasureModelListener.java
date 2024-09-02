@@ -52,6 +52,8 @@ public class CPInstanceUnitOfMeasureModelListener
 							cpInstance.getCPInstanceUuid(), null,
 							StringPool.BLANK)) {
 
+					commercePriceEntry.setPricingQuantity(
+						cpInstanceUnitOfMeasure.getPricingQuantity());
 					commercePriceEntry.setQuantity(
 						cpInstanceUnitOfMeasure.getIncrementalOrderQuantity());
 					commercePriceEntry.setUnitOfMeasureKey(
@@ -100,6 +102,7 @@ public class CPInstanceUnitOfMeasureModelListener
 								getIncrementalOrderQuantity(),
 							cpInstanceUnitOfMeasure.getKey())) {
 
+					commercePriceEntry.setPricingQuantity(null);
 					commercePriceEntry.setQuantity(null);
 					commercePriceEntry.setUnitOfMeasureKey(null);
 
@@ -138,6 +141,16 @@ public class CPInstanceUnitOfMeasureModelListener
 			int compare = originalIncrementalOrderQuantity.compareTo(
 				incrementalOrderQuantity);
 
+			BigDecimal pricingQuantity =
+				cpInstanceUnitOfMeasure.getPricingQuantity();
+
+			if (compare == 0) {
+				BigDecimal originalPricingQuantity =
+					originalCPInstanceUnitOfMeasure.getPricingQuantity();
+
+				compare = originalPricingQuantity.compareTo(pricingQuantity);
+			}
+
 			if (!StringUtil.equals(
 					originalUnitOfMeasureKey, unitOfMeasureKey) ||
 				(compare != 0)) {
@@ -151,6 +164,7 @@ public class CPInstanceUnitOfMeasureModelListener
 							originalIncrementalOrderQuantity,
 							originalUnitOfMeasureKey)) {
 
+					commercePriceEntry.setPricingQuantity(pricingQuantity);
 					commercePriceEntry.setQuantity(incrementalOrderQuantity);
 					commercePriceEntry.setUnitOfMeasureKey(unitOfMeasureKey);
 

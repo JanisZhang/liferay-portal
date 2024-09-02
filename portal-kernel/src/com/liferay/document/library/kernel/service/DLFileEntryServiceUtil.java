@@ -122,6 +122,14 @@ public class DLFileEntryServiceUtil {
 		getService().deleteFileEntry(groupId, folderId, title);
 	}
 
+	public static void deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		getService().deleteFileEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	public static void deleteFileVersion(long fileEntryId, String version)
 		throws PortalException {
 
@@ -267,11 +275,11 @@ public class DLFileEntryServiceUtil {
 	}
 
 	public static DLFileEntry getFileEntryByExternalReferenceCode(
-			long groupId, String externalReferenceCode)
+			String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		return getService().getFileEntryByExternalReferenceCode(
-			groupId, externalReferenceCode);
+			externalReferenceCode, groupId);
 	}
 
 	public static DLFileEntry getFileEntryByFileName(

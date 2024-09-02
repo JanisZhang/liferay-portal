@@ -82,6 +82,8 @@ public class NewEnvTestRule implements TestRule {
 
 		builder.setArguments(createArguments(description));
 		builder.setBootstrapClassPath(CLASS_PATH);
+		builder.setJavaExecutable(
+			System.getProperty("java.home") + "/bin/java");
 		builder.setRuntimeClassPath(CLASS_PATH);
 
 		setEnvironment(builder, description);
@@ -144,6 +146,16 @@ public class NewEnvTestRule implements TestRule {
 	protected List<String> createArguments(Description description) {
 		List<String> arguments = new ArrayList<>();
 
+		RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+
+		for (String jvmArg : runtimeMXBean.getInputArguments()) {
+			if (jvmArg.startsWith("--add-opens") ||
+				jvmArg.contains("java.locale.providers")) {
+
+				arguments.add(jvmArg);
+			}
+		}
+
 		Class<?> testClass = description.getTestClass();
 
 		NewEnv.JVMArgsLine jvmArgsLine = testClass.getAnnotation(
@@ -166,6 +178,7 @@ public class NewEnvTestRule implements TestRule {
 			arguments.add("-Djvm.debug=true");
 		}
 
+		arguments.add("-Dnet.bytebuddy.experimental=true");
 		arguments.add("-Dsun.zip.disableMemoryMapping=true");
 
 		String whipAgentLine = System.getProperty("whip.agent");

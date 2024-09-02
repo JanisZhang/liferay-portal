@@ -38,21 +38,22 @@ export default class SidePanel extends React.Component {
 			active: null,
 			closeButtonStyle: null,
 			currentURL: props.url || null,
+			disableHeader: props.disableHeader || true,
 			iframeHandlerModalId: subscribeModal(),
 			loading: true,
 			menuCoverTopDistance: 0,
 			moving: false,
 			onAfterSubmit: props.onAfterSubmit || null,
 			size: props.size || this.defaultSize,
+			title: props.title || undefined,
 			topDistance: 0,
 			visible: !!props.visible,
 			wrapper:
 				document.querySelector(this.props.wrapperSelector) ||
 				document.querySelector('body'),
 		};
-		this.handleIframeClickOnSubmit = this.handleIframeClickOnSubmit.bind(
-			this
-		);
+		this.handleIframeClickOnSubmit =
+			this.handleIframeClickOnSubmit.bind(this);
 		this.handleIframeSubmit = this.handleIframeSubmit.bind(this);
 		this.handleContentLoaded = this.handleContentLoaded.bind(this);
 		this.close = this.close.bind(this);
@@ -93,7 +94,9 @@ export default class SidePanel extends React.Component {
 
 		exposeSidePanel(this.props.id, () => ({
 			activeMenuItem: this.state.active,
+			disableHeader: this.state.disableHeader,
 			size: this.state.size,
+			title: this.state.title,
 			url: this.state.currentURL,
 			visible: this.state.visible,
 		}));
@@ -107,8 +110,13 @@ export default class SidePanel extends React.Component {
 		this.open(event.url, event.slug);
 
 		this.setState({
+			disableHeader:
+				event.disableHeader !== undefined
+					? event.disableHeader
+					: this.state.disableHeader,
 			onAfterSubmit: event.onSubmit || null,
 			size: event.size || this.defaultSize,
+			title: event.title,
 		});
 	}
 
@@ -127,9 +135,10 @@ export default class SidePanel extends React.Component {
 		}
 
 		if (this.iframeRef.current?.contentWindow) {
-			const nestedIframe = this.iframeRef.current.contentDocument.querySelector(
-				'.side-panel iframe'
-			);
+			const nestedIframe =
+				this.iframeRef.current.contentDocument.querySelector(
+					'.side-panel iframe'
+				);
 
 			if (
 				!nestedIframe ||
@@ -197,7 +206,8 @@ export default class SidePanel extends React.Component {
 			},
 			() => {
 				if (this.iframeRef.current?.contentWindow) {
-					this.iframeRef.current.contentWindow.location = this.state.currentURL;
+					this.iframeRef.current.contentWindow.location =
+						this.state.currentURL;
 				}
 			}
 		);
@@ -310,9 +320,8 @@ export default class SidePanel extends React.Component {
 				});
 			}
 
-			const submitButton = iframeDocument.querySelector(
-				'[type="submit"]'
-			);
+			const submitButton =
+				iframeDocument.querySelector('[type="submit"]');
 
 			if (submitButton) {
 				submitButton.addEventListener(
@@ -382,21 +391,29 @@ export default class SidePanel extends React.Component {
 						/>
 					)}
 
-					<ClayButton
-						aria-label={Liferay.Language.get('close')}
-						className={classNames(
-							'fds-side-panel-close',
-							this.state.closeButtonStyle === 'simple' &&
-								'fds-side-panel-close-simple',
-							this.state.closeButtonStyle === 'menu' &&
-								'fds-side-panel-close-menu'
-						)}
-						displayType="monospaced"
-						onClick={() => this.close()}
-						title={Liferay.Language.get('close')}
-					>
-						<ClayIcon symbol="times" />
-					</ClayButton>
+					{!this.state.disableHeader && (
+						<div className="fds-side-panel-header">
+							<div className="fds-side-panel-title">
+								<h3 className="mb-0">{this.state.title}</h3>
+							</div>
+
+							<ClayButton
+								aria-label={Liferay.Language.get('close')}
+								className={classNames(
+									'fds-side-panel-close',
+									this.state.closeButtonStyle === 'simple' &&
+										'fds-side-panel-close-simple',
+									this.state.closeButtonStyle === 'menu' &&
+										'fds-side-panel-close-menu'
+								)}
+								displayType="monospaced"
+								onClick={() => this.close()}
+								title={Liferay.Language.get('close')}
+							>
+								<ClayIcon symbol="times" />
+							</ClayButton>
+						</div>
+					)}
 
 					<div className="tab-content">
 						<div className="loader">

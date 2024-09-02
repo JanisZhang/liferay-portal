@@ -48,7 +48,8 @@ public class InfoField<T extends InfoFieldType> implements InfoFieldSetEntry {
 			Objects.equals(
 				_builder._labelInfoLocalizedValue,
 				infoField._builder._labelInfoLocalizedValue) &&
-			Objects.equals(_builder._name, infoField._builder._name)) {
+			Objects.equals(_builder._name, infoField._builder._name) &&
+			Objects.equals(_builder._uniqueId, infoField._builder._uniqueId)) {
 
 			return true;
 		}
@@ -109,6 +110,10 @@ public class InfoField<T extends InfoFieldType> implements InfoFieldSetEntry {
 		return _builder._readOnly;
 	}
 
+	public boolean isRepeatable() {
+		return _builder._repeatable;
+	}
+
 	public boolean isRequired() {
 		return _builder._required;
 	}
@@ -145,6 +150,7 @@ public class InfoField<T extends InfoFieldType> implements InfoFieldSetEntry {
 		private String _name;
 		private String _namespace;
 		private boolean _readOnly;
+		private boolean _repeatable;
 		private boolean _required;
 		private String _uniqueId;
 
@@ -197,6 +203,12 @@ public class InfoField<T extends InfoFieldType> implements InfoFieldSetEntry {
 
 		public FinalStep<T> readOnly(boolean readOnly) {
 			_builder._readOnly = readOnly;
+
+			return this;
+		}
+
+		public FinalStep<T> repeatable(boolean repeatable) {
+			_builder._repeatable = repeatable;
 
 			return this;
 		}

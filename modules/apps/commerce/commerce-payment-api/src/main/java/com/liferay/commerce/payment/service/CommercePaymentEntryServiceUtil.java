@@ -7,6 +7,7 @@ package com.liferay.commerce.payment.service;
 
 import com.liferay.commerce.payment.model.CommercePaymentEntry;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -33,7 +34,7 @@ public class CommercePaymentEntryServiceUtil {
 	public static CommercePaymentEntry addCommercePaymentEntry(
 			long classNameId, long classPK, long commerceChannelId,
 			java.math.BigDecimal amount, String callbackURL, String cancelURL,
-			String currencyCode, String languageId, String note,
+			String currencyCode, String languageId, String note, String payload,
 			String paymentIntegrationKey, int paymentIntegrationType,
 			String reasonKey, String transactionCode, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -41,9 +42,9 @@ public class CommercePaymentEntryServiceUtil {
 
 		return getService().addCommercePaymentEntry(
 			classNameId, classPK, commerceChannelId, amount, callbackURL,
-			cancelURL, currencyCode, languageId, note, paymentIntegrationKey,
-			paymentIntegrationType, reasonKey, transactionCode, type,
-			serviceContext);
+			cancelURL, currencyCode, languageId, note, payload,
+			paymentIntegrationKey, paymentIntegrationType, reasonKey,
+			transactionCode, type, serviceContext);
 	}
 
 	public static CommercePaymentEntry addOrUpdateCommercePaymentEntry(
@@ -51,18 +52,18 @@ public class CommercePaymentEntryServiceUtil {
 			long commerceChannelId, java.math.BigDecimal amount,
 			String callbackURL, String cancelURL, String currencyCode,
 			String errorMessages, String languageId, String note,
-			String paymentIntegrationKey, int paymentIntegrationType,
-			int paymentStatus, String reasonKey, String redirectURL,
-			String transactionCode, int type,
+			String payload, String paymentIntegrationKey,
+			int paymentIntegrationType, int paymentStatus, String reasonKey,
+			String redirectURL, String transactionCode, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addOrUpdateCommercePaymentEntry(
 			externalReferenceCode, classNameId, classPK, commerceChannelId,
 			amount, callbackURL, cancelURL, currencyCode, errorMessages,
-			languageId, note, paymentIntegrationKey, paymentIntegrationType,
-			paymentStatus, reasonKey, redirectURL, transactionCode, type,
-			serviceContext);
+			languageId, note, payload, paymentIntegrationKey,
+			paymentIntegrationType, paymentStatus, reasonKey, redirectURL,
+			transactionCode, type, serviceContext);
 	}
 
 	public static CommercePaymentEntry deleteCommercePaymentEntry(
@@ -107,6 +108,14 @@ public class CommercePaymentEntryServiceUtil {
 			companyId, classNameId, classPK, start, end, orderByComparator);
 	}
 
+	public static int getCommercePaymentEntriesCount(
+			long companyId, long classNameId, long classPK, int type)
+		throws PortalException {
+
+		return getService().getCommercePaymentEntriesCount(
+			companyId, classNameId, classPK, type);
+	}
+
 	public static CommercePaymentEntry getCommercePaymentEntry(
 			long commercePaymentEntryId)
 		throws PortalException {
@@ -142,16 +151,17 @@ public class CommercePaymentEntryServiceUtil {
 			long commerceChannelId, java.math.BigDecimal amount,
 			String callbackURL, String cancelURL, String currencyCode,
 			String errorMessages, String languageId, String note,
-			String paymentIntegrationKey, int paymentIntegrationType,
-			int paymentStatus, String reasonKey, String redirectURL,
-			String transactionCode, int type)
+			String payload, String paymentIntegrationKey,
+			int paymentIntegrationType, int paymentStatus, String reasonKey,
+			String redirectURL, String transactionCode, int type)
 		throws PortalException {
 
 		return getService().updateCommercePaymentEntry(
 			externalReferenceCode, commercePaymentEntryId, commerceChannelId,
 			amount, callbackURL, cancelURL, currencyCode, errorMessages,
-			languageId, note, paymentIntegrationKey, paymentIntegrationType,
-			paymentStatus, reasonKey, redirectURL, transactionCode, type);
+			languageId, note, payload, paymentIntegrationKey,
+			paymentIntegrationType, paymentStatus, reasonKey, redirectURL,
+			transactionCode, type);
 	}
 
 	public static CommercePaymentEntry updateExternalReferenceCode(
@@ -177,13 +187,12 @@ public class CommercePaymentEntryServiceUtil {
 	}
 
 	public static CommercePaymentEntryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommercePaymentEntryService service) {
-		_service = service;
-	}
-
-	private static volatile CommercePaymentEntryService _service;
+	private static final Snapshot<CommercePaymentEntryService>
+		_serviceSnapshot = new Snapshot<>(
+			CommercePaymentEntryServiceUtil.class,
+			CommercePaymentEntryService.class);
 
 }

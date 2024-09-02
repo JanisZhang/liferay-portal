@@ -96,7 +96,7 @@ public class DLFileVersionConstraintResolver
 			_dlFileVersionLocalService.getFileVersions(
 				dlFileVersion.getFileEntryId(), WorkflowConstants.STATUS_ANY);
 
-		fileVersions.sort(new DLFileVersionVersionComparator(true));
+		fileVersions.sort(DLFileVersionVersionComparator.getInstance(true));
 
 		String newFileVersion = null;
 		DLFileVersion previousFileVersion = null;
@@ -180,8 +180,9 @@ public class DLFileVersionConstraintResolver
 			String newStoreFileName = entry.getValue();
 
 			try (InputStream inputStream = DLStoreUtil.getFileAsStream(
-					dlFileEntry.getCompanyId(), dlFileEntry.getRepositoryId(),
-					dlFileEntry.getName(), oldStoreFileName)) {
+					dlFileEntry.getCompanyId(),
+					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName(),
+					oldStoreFileName)) {
 
 				DLStoreUtil.addFile(
 					DLStoreRequest.builder(

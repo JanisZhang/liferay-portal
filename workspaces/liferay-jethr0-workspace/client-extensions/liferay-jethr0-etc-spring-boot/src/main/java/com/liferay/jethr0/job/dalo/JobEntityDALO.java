@@ -9,6 +9,7 @@ import com.liferay.jethr0.entity.dalo.BaseEntityDALO;
 import com.liferay.jethr0.entity.factory.EntityFactory;
 import com.liferay.jethr0.job.JobEntity;
 import com.liferay.jethr0.job.JobEntityFactory;
+import com.liferay.jethr0.routine.RoutineEntity;
 import com.liferay.jethr0.util.StringUtil;
 
 import java.util.Arrays;
@@ -25,10 +26,21 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class JobEntityDALO extends BaseEntityDALO<JobEntity> {
 
+	@Override
+	public EntityFactory<JobEntity> getEntityFactory() {
+		return _jobEntityFactory;
+	}
+
+	public Set<JobEntity> getJobsByRoutine(RoutineEntity routineEntity) {
+		return getAll(
+			"r_routineToJobs_c_routineId eq '" + routineEntity.getId() + "'",
+			null, null);
+	}
+
 	public Set<JobEntity> getJobsByState(JobEntity.State... states) {
 		Set<JobEntity> jobEntities = new HashSet<>();
 
-		String filter = null;
+		String filterString = null;
 
 		if (states.length > 0) {
 			Set<String> stateQueries = new HashSet<>();
@@ -37,12 +49,12 @@ public class JobEntityDALO extends BaseEntityDALO<JobEntity> {
 				stateQueries.add("(state eq '" + state.getKey() + "')");
 			}
 
-			filter = StringUtil.join(" or ", stateQueries);
+			filterString = StringUtil.join(" or ", stateQueries);
 		}
 
 		List<JobEntity.State> statesList = Arrays.asList(states);
 
-		for (JobEntity jobEntity : getAll(filter, null)) {
+		for (JobEntity jobEntity : getAll(filterString, null, null)) {
 			if (!statesList.contains(jobEntity.getState())) {
 				continue;
 			}
@@ -51,11 +63,6 @@ public class JobEntityDALO extends BaseEntityDALO<JobEntity> {
 		}
 
 		return jobEntities;
-	}
-
-	@Override
-	protected EntityFactory<JobEntity> getEntityFactory() {
-		return _jobEntityFactory;
 	}
 
 	@Autowired

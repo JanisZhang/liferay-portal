@@ -20,53 +20,27 @@ import {
 	useItemLocalConfig,
 	useUpdateItemLocalConfig,
 } from '../../../../../../app/contexts/LocalConfigContext';
-import {
-	useDispatch,
-	useSelector,
-} from '../../../../../../app/contexts/StoreContext';
+import {useSelector} from '../../../../../../app/contexts/StoreContext';
 import selectLanguageId from '../../../../../../app/selectors/selectLanguageId';
-import updateFormItemConfig from '../../../../../../app/thunks/updateFormItemConfig';
 import {formIsMapped} from '../../../../../../app/utils/formIsMapped';
 import {formIsRestricted} from '../../../../../../app/utils/formIsRestricted';
 import {formIsUnavailable} from '../../../../../../app/utils/formIsUnavailable';
 import {getEditableLocalizedValue} from '../../../../../../app/utils/getEditableLocalizedValue';
 import {setIn} from '../../../../../../app/utils/setIn';
+import {useSaveFormConfig} from '../../../../../../app/utils/useSaveFormConfig';
 import CurrentLanguageFlag from '../../../../../../common/components/CurrentLanguageFlag';
 import DisplayPageSelector from '../../../../../../common/components/DisplayPageSelector';
 import {LayoutSelector} from '../../../../../../common/components/LayoutSelector';
 import {CommonStyles} from './CommonStyles';
 import ContainerDisplayOptions from './ContainerDisplayOptions';
 import FormMappingOptions from './FormMappingOptions';
+import FormMultistepOptions from './FormMultistepOptions';
 
 export function FormGeneralPanel({item}) {
 	const isMounted = useIsMounted();
-	const dispatch = useDispatch();
 	const updateItemLocalConfig = useUpdateItemLocalConfig();
 
-	const onValueSelect = useCallback(
-		(nextConfig) => {
-			const isMapping = Boolean(nextConfig.classNameId);
-
-			if (isMapping) {
-				updateItemLocalConfig(item.itemId, {
-					loading: true,
-					showMessagePreview: false,
-				});
-			}
-
-			dispatch(
-				updateFormItemConfig({
-					itemConfig: nextConfig,
-					itemId: item.itemId,
-				})
-			).then(() =>
-				updateItemLocalConfig(item.itemId, {
-					loading: false,
-				})
-			);
-		},
-		[dispatch, item.itemId, updateItemLocalConfig]
-	);
+	const saveFormConfig = useSaveFormConfig(item);
 
 	useEffect(() => {
 		return () => {
@@ -102,13 +76,51 @@ export function FormGeneralPanel({item}) {
 
 	return (
 		<>
-			<FormOptions item={item} onValueSelect={onValueSelect} />
+			<FormOptions item={item} onValueSelect={saveFormConfig} />
 
-			<CommonStyles
-				commonStylesValues={item.config.styles || {}}
-				item={item}
-				role={COMMON_STYLES_ROLES.general}
-			/>
+			{formIsMapped(item) && (
+				<div className="mb-3 panel-group-sm">
+					<ClayPanel
+						collapsable
+						defaultExpanded
+						displayTitle={Liferay.Language.get(
+							'actions-after-submit'
+						)}
+						displayType="unstyled"
+						showCollapseIcon
+					>
+						<ClayPanel.Body>
+							<SuccessInteractionOptions
+								item={item}
+								onValueSelect={saveFormConfig}
+							/>
+						</ClayPanel.Body>
+					</ClayPanel>
+				</div>
+			)}
+
+			<div className="mb-3 panel-group-sm">
+				<ClayPanel
+					collapsable
+					defaultExpanded
+					displayTitle={Liferay.Language.get('frame')}
+					displayType="unstyled"
+					showCollapseIcon
+				>
+					<ClayPanel.Body>
+						{formIsMapped(item) ? (
+							<ContainerDisplayOptions item={item} />
+						) : null}
+
+						<CommonStyles
+							commonStylesValues={item.config.styles || {}}
+							embedInCollapsableSection={false}
+							item={item}
+							role={COMMON_STYLES_ROLES.general}
+						/>
+					</ClayPanel.Body>
+				</ClayPanel>
+			</div>
 		</>
 	);
 }
@@ -129,16 +141,12 @@ function FormOptions({item, onValueSelect}) {
 						onValueSelect={onValueSelect}
 					/>
 
-					{formIsMapped(item) && (
-						<>
-							<SuccessInteractionOptions
-								item={item}
-								onValueSelect={onValueSelect}
-							/>
-
-							<ContainerDisplayOptions item={item} />
-						</>
-					)}
+					{formIsMapped(item) && Liferay.FeatureFlags['LPD-10727'] ? (
+						<FormMultistepOptions
+							item={item}
+							onValueSelect={onValueSelect}
+						/>
+					) : null}
 				</ClayPanel.Body>
 			</ClayPanel>
 		</div>
@@ -208,7 +216,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 				: {
 						...interactionConfig,
 						...config,
-				  };
+					};
 
 			onValueSelect({successMessage: nextConfig});
 		},
@@ -229,7 +237,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 		<>
 			<SelectField
 				field={{
-					label: Liferay.Language.get('success-interaction'),
+					label: Liferay.Language.get('success-action'),
 					name: 'source',
 					typeOptions: {
 						validValues: SUCCESS_MESSAGE_OPTIONS,
@@ -287,7 +295,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 					<ClayForm.Group small>
 						<ClayToggle
 							label={Liferay.Language.get(
-								'preview-embedded-message'
+								'preview-success-message'
 							)}
 							onToggle={(checked) =>
 								updateItemLocalConfig(item.itemId, {
@@ -358,7 +366,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 						<CheckboxField
 							field={{
 								label: Liferay.Language.get(
-									'show-notification-when-form-is-submitted'
+									'show-notification-after-submit'
 								),
 								name: 'showNotification',
 							}}

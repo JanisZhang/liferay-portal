@@ -22,7 +22,7 @@ if (commerceOrder != null) {
 	</c:when>
 	<c:when test="<%= Validator.isNotNull(couponCode) %>">
 		<div class="coupon-code-header">
-			<h5><liferay-ui:message key="coupon-code" /></h5>
+			<div class="h5"><liferay-ui:message key="coupon-code" /></div>
 		</div>
 
 		<div class="coupon-code-body">
@@ -59,7 +59,7 @@ if (commerceOrder != null) {
 								window.location.reload();
 							}
 							else {
-								new Liferay.Notification({
+								Liferay.Util.openToast({
 									closeable: true,
 									delay: {
 										hide: 5000,
@@ -113,7 +113,7 @@ if (commerceOrder != null) {
 								window.location.reload();
 							}
 							else {
-								new Liferay.Notification({
+								Liferay.Util.openToast({
 									closeable: true,
 									delay: {
 										hide: 5000,

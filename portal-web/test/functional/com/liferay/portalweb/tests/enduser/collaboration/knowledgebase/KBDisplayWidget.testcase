@@ -1,4 +1,4 @@
-@component-name = "portal-knowledge-base"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
@@ -127,6 +127,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanDeleteArticle {
+		property portal.release = "quarantine";
+
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",

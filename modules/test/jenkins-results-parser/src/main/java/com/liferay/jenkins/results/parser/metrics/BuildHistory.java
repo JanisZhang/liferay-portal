@@ -31,19 +31,19 @@ public class BuildHistory {
 		_startTime = startTime;
 	}
 
-	public void addBuildDataJSONObject(BuildJSONObject buildJSONObject) {
-		_buildJSONObjects.add(buildJSONObject);
+	public void addBuildJSONObject(BuildJSONObject buildJSONObject) {
+		_addData(buildJSONObject);
 
-		if (buildJSONObject.isTopLevelBuild()) {
-			_topLevelBuildURLs.add(buildJSONObject.getURL());
-		}
+		Timeline timeline = _getTimeline();
+
+		timeline.addData(buildJSONObject);
 	}
 
-	public void addBuildDataJSONObjects(
+	public void addBuildJSONObjects(
 		Collection<BuildJSONObject> buildJSONObjects) {
 
 		for (BuildJSONObject buildJSONObject : buildJSONObjects) {
-			addBuildDataJSONObject(buildJSONObject);
+			addBuildJSONObject(buildJSONObject);
 		}
 	}
 
@@ -51,12 +51,38 @@ public class BuildHistory {
 		return _topLevelBuildURLs.contains(url);
 	}
 
-	public Set<BuildJSONObject> getBuildDataJSONObjects() {
-		return _buildJSONObjects;
+	public Map<String, Long> getDailyInvokedBuilds() {
+		return _dailyInvokedBuilds;
+	}
+
+	public Map<String, Long> getDailyInvokedTopLevelBuilds() {
+		return _dailyInvokedTopLevelBuilds;
+	}
+
+	public Map<String, Long> getDailyTotalBuildDurations() {
+		return _dailyTotalBuildDurations;
+	}
+
+	public Map<String, Long> getDailyTotalQueueTime() {
+		return _dailyTotalTopLevelQueueTime;
+	}
+
+	public Map<String, Long> getDailyTotalTopLevelBuildDurations() {
+		return _dailyTotalTopLevelBuildDurations;
 	}
 
 	public long getDuration() {
 		return _duration;
+	}
+
+	public long getInvokedBuildCount() {
+		long totalInvokedBuildCount = 0;
+
+		for (Long invokedBuildCount : _dailyInvokedBuilds.values()) {
+			totalInvokedBuildCount += invokedBuildCount;
+		}
+
+		return totalInvokedBuildCount;
 	}
 
 	public String getName() {
@@ -67,10 +93,12 @@ public class BuildHistory {
 		return _startTime;
 	}
 
-	public JSONArray getTableJSONArray(String firstColumnHeader) {
-		Table table = _getTable(firstColumnHeader);
+	public JSONArray getTableJSONArray(
+		String groupIdentifierName, int intervalDays) {
 
-		return table.getJSONArray();
+		Table table = _getTable(groupIdentifierName);
+
+		return table.getJSONArray(intervalDays);
 	}
 
 	public JSONObject getTimelineJSONObject() {
@@ -83,37 +111,209 @@ public class BuildHistory {
 		return _topLevelBuildURLs;
 	}
 
-	protected static class Timeline {
+	public void merge(BuildHistory buildHistory) {
+		_mergeMap(_dailyInvokedBuilds, buildHistory.getDailyInvokedBuilds());
+		_mergeMap(
+			_dailyInvokedTopLevelBuilds,
+			buildHistory.getDailyInvokedTopLevelBuilds());
+		_mergeMap(
+			_dailyTotalBuildDurations,
+			buildHistory.getDailyTotalBuildDurations());
+		_mergeMap(
+			_dailyTotalTopLevelBuildDurations,
+			buildHistory.getDailyTotalTopLevelBuildDurations());
+		_mergeMap(
+			_dailyTotalTopLevelQueueTime,
+			buildHistory.getDailyTotalQueueTime());
 
-		public static final long TIMELINE_SAMPLE_PERIOD_MINUTES = 10;
-
-		public static JSONArray getTimeJSONArray(
-			long duration, long startTime) {
-
-			int size = getTimelineSize(duration);
-
-			long[] timeMillis = new long[size];
-
-			for (int i = 0; i < timeMillis.length; i++) {
-				if (i == 0) {
-					timeMillis[i] = startTime;
-
-					continue;
-				}
-
-				timeMillis[i] = timeMillis[i - 1] + (duration / size);
-			}
-
-			return new JSONArray(timeMillis);
+		if (buildHistory.getDuration() > _duration) {
+			setDuration(buildHistory.getDuration());
 		}
 
-		public static int getTimelineSize(long duration) {
-			return (int)
-				(duration /
-					TimeUnit.MINUTES.toMillis(TIMELINE_SAMPLE_PERIOD_MINUTES));
+		if (buildHistory.getStartTime() < _startTime) {
+			setStartTime(buildHistory.getStartTime());
+		}
+
+		_topLevelBuildURLs.addAll(buildHistory.getTopLevelBuildURLs());
+	}
+
+	public void setDuration(long duration) {
+		_duration = duration;
+	}
+
+	public void setStartTime(long startTime) {
+		_startTime = startTime;
+	}
+
+	protected static JSONArray getTimeJSONArray(long duration, long startTime) {
+		int size = _getTimelineSize(duration);
+
+		long[] timeMillis = new long[size];
+
+		for (int i = 0; i < timeMillis.length; i++) {
+			if (i == 0) {
+				timeMillis[i] = startTime;
+
+				continue;
+			}
+
+			timeMillis[i] = timeMillis[i - 1] + (duration / size);
+		}
+
+		return new JSONArray(timeMillis);
+	}
+
+	protected class Table {
+
+		public JSONArray getJSONArray(int intervalDays) {
+			JSONArray jsonArray = new JSONArray();
+
+			String[][] dateStringsArray = _split(
+				JenkinsResultsParserUtil.getDateStrings(
+					getStartTime(), getDuration()),
+				intervalDays);
+
+			String[] dateStrings = new String[dateStringsArray.length];
+
+			Long[] averageTopLevelBuildDurations =
+				new Long[dateStringsArray.length];
+			Long[] invokedBuilds = new Long[dateStringsArray.length];
+			Long[] invokedTopLevelBuilds = new Long[dateStringsArray.length];
+			Long[] totalServerDurations = new Long[dateStringsArray.length];
+
+			for (int i = 0; i < dateStringsArray.length; i++) {
+				dateStrings[i] = dateStringsArray[i][0];
+
+				invokedBuilds[i] = _getTotalValue(
+					_dailyInvokedBuilds, dateStringsArray[i]);
+				invokedTopLevelBuilds[i] = _getTotalValue(
+					_dailyInvokedTopLevelBuilds, dateStringsArray[i]);
+				totalServerDurations[i] = _getTotalValue(
+					_dailyTotalBuildDurations, dateStringsArray[i]);
+
+				long topLevelBuildDuration = _getTotalValue(
+					_dailyTotalTopLevelBuildDurations, dateStringsArray[i]);
+
+				averageTopLevelBuildDurations[i] = _getQuotient(
+					topLevelBuildDuration, invokedTopLevelBuilds[i]);
+			}
+
+			List<List<Object>> rows = new ArrayList<>();
+
+			rows.add(
+				new ArrayList<Object>() {
+					{
+						add(_groupIdentifierName);
+						add("Metric");
+						addAll(Arrays.asList(dateStrings));
+					}
+				});
+
+			rows.add(
+				new ArrayList<Object>() {
+					{
+						add(getName());
+						add("Invoked Builds");
+						addAll(Arrays.asList(invokedBuilds));
+					}
+				});
+
+			rows.add(
+				new ArrayList<Object>() {
+					{
+						add(getName());
+						add("Invoked Top Level Builds");
+						addAll(Arrays.asList(invokedTopLevelBuilds));
+					}
+				});
+
+			rows.add(
+				new ArrayList<Object>() {
+					{
+						add(getName());
+						add("Average Top Level Build Duration");
+						addAll(Arrays.asList(averageTopLevelBuildDurations));
+					}
+				});
+
+			rows.add(
+				new ArrayList<Object>() {
+					{
+						add(getName());
+						add("Total Server Duration");
+						addAll(Arrays.asList(totalServerDurations));
+					}
+				});
+
+			for (List<Object> row : rows) {
+				jsonArray.put(new JSONArray(row));
+			}
+
+			return jsonArray;
+		}
+
+		protected Table(String groupIdentifierName) {
+			_groupIdentifierName = groupIdentifierName;
+		}
+
+		private final String _groupIdentifierName;
+
+	}
+
+	protected class Timeline {
+
+		public void addData(BuildJSONObject buildJSONObject) {
+			long buildStartTime = buildJSONObject.getStartTime();
+
+			int startIndex = _getIndex(buildStartTime);
+
+			long buildDuration = buildJSONObject.getDuration();
+
+			long relativeStartTime = buildStartTime - _startTime;
+
+			long relativeEndTime = relativeStartTime + buildDuration;
+
+			long timelineSamplePeriodMillis = TimeUnit.MINUTES.toMillis(
+				_TIMELINE_SAMPLE_PERIOD_MINUTES);
+
+			if ((relativeStartTime >
+					((_size - 1) * timelineSamplePeriodMillis)) ||
+				((relativeStartTime >
+					(startIndex * timelineSamplePeriodMillis)) &&
+				 (relativeEndTime <
+					 ((startIndex + 1) * timelineSamplePeriodMillis)))) {
+
+				return;
+			}
+
+			if (relativeEndTime > (startIndex * timelineSamplePeriodMillis)) {
+				int endIndex = _getIndex(buildStartTime + buildDuration);
+
+				if (startIndex < (_size - 1)) {
+					startIndex++;
+				}
+
+				for (int i = startIndex; i <= endIndex; i++) {
+					_buildCounts[i]++;
+
+					if (containsTopLevelBuildURL(buildJSONObject.getURL())) {
+						_topLevelBuildCounts[i]++;
+					}
+				}
+
+				_totalBuildTime[startIndex] += buildDuration;
+
+				long queueDuration = buildJSONObject.getQueueDuration();
+
+				_totalQueueTime[startIndex] += queueDuration;
+
+				_buildCountsForAverage[startIndex]++;
+			}
 		}
 
 		public JSONObject getJSONObject() {
+			_calculateAverages();
+
 			JSONObject jsonObject = new JSONObject();
 
 			jsonObject.put(
@@ -131,66 +331,21 @@ public class BuildHistory {
 			return jsonObject;
 		}
 
-		protected Timeline(
-			BuildHistory buildHistory, long duration, long startTime) {
-
-			_duration = duration;
-			_startTime = startTime;
-
-			_size = getTimelineSize(duration);
-
-			_buildCounts = new long[_size];
-
-			_name = buildHistory.getName();
-			_topLevelBuildCounts = new long[_size];
-
-			Set<BuildJSONObject> buildJSONObjects =
-				buildHistory.getBuildDataJSONObjects();
-
-			long[] buildCountsForAverage = new long[_size];
-			long[] totalBuildTime = new long[_size];
-			long[] totalQueueTime = new long[_size];
-
-			for (BuildJSONObject buildJSONObject : buildJSONObjects) {
-				long buildDuration = buildJSONObject.getDuration();
-
-				if (buildDuration < (5 * 60 * 1000)) {
-					continue;
-				}
-
-				long buildStartTime = buildJSONObject.getStartTime();
-				long queueDuration = buildJSONObject.getQueueDuration();
-
-				int startIndex = _getIndex(buildStartTime);
-
-				totalBuildTime[startIndex] += buildDuration;
-				totalQueueTime[startIndex] += queueDuration;
-
-				buildCountsForAverage[startIndex]++;
-
-				int endIndex =
-					startIndex + _getDurationIndexSize(buildDuration);
-
-				if (endIndex > (_size - 1)) {
-					endIndex = _size - 1;
-				}
-
-				for (int i = startIndex; i < endIndex; i++) {
-					_buildCounts[i]++;
-
-					if (buildHistory.containsTopLevelBuildURL(
-							buildJSONObject.getURL())) {
-
-						_topLevelBuildCounts[i]++;
-					}
-				}
-			}
+		protected Timeline() {
+			_size = _getTimelineSize(_duration);
 
 			_averageBuildTime = new long[_size];
 			_averageQueueTime = new long[_size];
+			_buildCounts = new long[_size];
+			_buildCountsForAverage = new long[_size];
+			_topLevelBuildCounts = new long[_size];
+			_totalBuildTime = new long[_size];
+			_totalQueueTime = new long[_size];
+		}
 
+		private void _calculateAverages() {
 			for (int i = 0; i < _size; i++) {
-				if (buildCountsForAverage[i] == 0) {
+				if (_buildCountsForAverage[i] == 0) {
 					_averageBuildTime[i] = 0;
 					_averageQueueTime[i] = 0;
 
@@ -198,27 +353,10 @@ public class BuildHistory {
 				}
 
 				_averageBuildTime[i] =
-					totalBuildTime[i] / buildCountsForAverage[i];
+					_totalBuildTime[i] / _buildCountsForAverage[i];
 				_averageQueueTime[i] =
-					totalQueueTime[i] / buildCountsForAverage[i];
+					_totalQueueTime[i] / _buildCountsForAverage[i];
 			}
-		}
-
-		private int _getDurationIndexSize(long duration) {
-			long durationIndexSize = getTimelineSize(duration);
-
-			long timelineSamplePeriodMillis = TimeUnit.MINUTES.toMillis(
-				TIMELINE_SAMPLE_PERIOD_MINUTES);
-
-			long roundingSize = timelineSamplePeriodMillis / 2;
-
-			long durationRemainder = duration % timelineSamplePeriodMillis;
-
-			if (durationRemainder >= roundingSize) {
-				durationIndexSize++;
-			}
-
-			return (int)durationIndexSize;
 		}
 
 		private int _getIndex(long timeMillis) {
@@ -238,178 +376,57 @@ public class BuildHistory {
 		private final long[] _averageBuildTime;
 		private final long[] _averageQueueTime;
 		private final long[] _buildCounts;
-		private final long _duration;
-		private final String _name;
+		private final long[] _buildCountsForAverage;
 		private final int _size;
-		private final long _startTime;
 		private final long[] _topLevelBuildCounts;
+		private final long[] _totalBuildTime;
+		private final long[] _totalQueueTime;
 
 	}
 
-	protected class Table {
+	private static int _getTimelineSize(long duration) {
+		return (int)
+			(duration /
+				TimeUnit.MINUTES.toMillis(_TIMELINE_SAMPLE_PERIOD_MINUTES));
+	}
 
-		public JSONArray getJSONArray() {
-			JSONArray jsonArray = new JSONArray();
+	private void _addData(BuildJSONObject buildJSONObject) {
+		String dateString = buildJSONObject.getStartDateString();
 
-			for (List<Object> row : _rows) {
-				jsonArray.put(new JSONArray(row));
-			}
+		_addData(_dailyInvokedBuilds, dateString, 1L);
+		_addData(
+			_dailyTotalBuildDurations, dateString,
+			buildJSONObject.getDuration());
 
-			return jsonArray;
+		if (buildJSONObject.isTopLevelBuild()) {
+			_topLevelBuildURLs.add(buildJSONObject.getURL());
+
+			_addData(_dailyInvokedTopLevelBuilds, dateString, 1L);
+			_addData(
+				_dailyTotalTopLevelBuildDurations, dateString,
+				buildJSONObject.getDuration());
+			_addData(
+				_dailyTotalTopLevelQueueTime, dateString,
+				buildJSONObject.getQueueDuration());
+		}
+	}
+
+	private void _addData(Map<String, Long> dataMap, String key, Long value) {
+		if (!dataMap.containsKey(key)) {
+			dataMap.put(key, value);
+
+			return;
 		}
 
-		protected Table(final String firstColumnHeader) {
-			Set<BuildJSONObject> buildJSONObjects = getBuildDataJSONObjects();
+		dataMap.put(key, dataMap.get(key) + value);
+	}
 
-			Map<String, List<BuildJSONObject>> groupedBuildDataJSONObjectsMap =
-				new TreeMap<>();
-
-			final String[] dateStrings =
-				JenkinsResultsParserUtil.getDateStrings(
-					getStartTime(), getDuration());
-
-			for (String dateString : dateStrings) {
-				groupedBuildDataJSONObjectsMap.put(
-					dateString, new ArrayList<BuildJSONObject>());
-			}
-
-			for (BuildJSONObject buildJSONObject : buildJSONObjects) {
-				String startDateString = buildJSONObject.getStartDateString();
-
-				if (!groupedBuildDataJSONObjectsMap.containsKey(
-						startDateString)) {
-
-					continue;
-				}
-
-				List<BuildJSONObject> groupedBuildJSONObjects =
-					groupedBuildDataJSONObjectsMap.get(startDateString);
-
-				groupedBuildJSONObjects.add(buildJSONObject);
-			}
-
-			int size = groupedBuildDataJSONObjectsMap.size();
-
-			_averageTopLevelBuildDurations = new Long[size];
-			_averageTopLevelQueueDurations = new Long[size];
-			_invokedBuilds = new Long[size];
-			_invokedTopLevelBuilds = new Long[size];
-			_totalServerDurations = new Long[size];
-
-			int index = 0;
-
-			for (List<BuildJSONObject> groupedBuildJSONObjects :
-					groupedBuildDataJSONObjectsMap.values()) {
-
-				long buildsInvoked = 0;
-				long topLevelBuildsInvoked = 0;
-				long totalTopLevelBuildDuration = 0;
-				long totalDownstreamBuildDuration = 0;
-				long totalTopLevelQueueDuration = 0;
-
-				for (BuildJSONObject buildJSONObject :
-						groupedBuildJSONObjects) {
-
-					if (containsTopLevelBuildURL(buildJSONObject.getURL())) {
-						topLevelBuildsInvoked++;
-
-						totalTopLevelBuildDuration +=
-							buildJSONObject.getDuration();
-
-						totalTopLevelQueueDuration +=
-							buildJSONObject.getQueueDuration();
-					}
-					else {
-						buildsInvoked++;
-
-						totalDownstreamBuildDuration +=
-							buildJSONObject.getDuration();
-					}
-				}
-
-				_invokedBuilds[index] = buildsInvoked;
-				_invokedTopLevelBuilds[index] = topLevelBuildsInvoked;
-
-				if (topLevelBuildsInvoked != 0) {
-					_averageTopLevelBuildDurations[index] =
-						totalTopLevelBuildDuration / topLevelBuildsInvoked;
-
-					_averageTopLevelQueueDurations[index] =
-						totalTopLevelQueueDuration / topLevelBuildsInvoked;
-				}
-				else {
-					_averageTopLevelBuildDurations[index] = 0L;
-					_averageTopLevelQueueDurations[index] = 0L;
-				}
-
-				_totalServerDurations[index] =
-					totalTopLevelBuildDuration + totalDownstreamBuildDuration;
-
-				index++;
-			}
-
-			_rows.add(
-				new ArrayList<Object>() {
-					{
-						add(firstColumnHeader);
-						add("Metric");
-						addAll(Arrays.asList(dateStrings));
-					}
-				});
-
-			_rows.add(
-				new ArrayList<Object>() {
-					{
-						add(getName());
-						add("Invoked Builds");
-						addAll(Arrays.asList(_invokedBuilds));
-					}
-				});
-
-			_rows.add(
-				new ArrayList<Object>() {
-					{
-						add(getName());
-						add("Invoked Top Level Builds");
-						addAll(Arrays.asList(_invokedTopLevelBuilds));
-					}
-				});
-
-			_rows.add(
-				new ArrayList<Object>() {
-					{
-						add(getName());
-						add("Average Top Level Build Duration");
-						addAll(Arrays.asList(_averageTopLevelBuildDurations));
-					}
-				});
-
-			_rows.add(
-				new ArrayList<Object>() {
-					{
-						add(getName());
-						add("Average Top Level Duration in Queue");
-						addAll(Arrays.asList(_averageTopLevelQueueDurations));
-					}
-				});
-
-			_rows.add(
-				new ArrayList<Object>() {
-					{
-						add(getName());
-						add("Total Server Duration");
-						addAll(Arrays.asList(_totalServerDurations));
-					}
-				});
+	private Long _getQuotient(Long value1, Long value2) {
+		if (value1 == 0L) {
+			return value1;
 		}
 
-		private final Long[] _averageTopLevelBuildDurations;
-		private final Long[] _averageTopLevelQueueDurations;
-		private final Long[] _invokedBuilds;
-		private final Long[] _invokedTopLevelBuilds;
-		private final List<List<Object>> _rows = new ArrayList<>();
-		private final Long[] _totalServerDurations;
-
+		return value1 / value2;
 	}
 
 	private Table _getTable(String firstColumnHeader) {
@@ -422,16 +439,74 @@ public class BuildHistory {
 
 	private Timeline _getTimeline() {
 		if (_timeline == null) {
-			_timeline = new Timeline(this, getDuration(), getStartTime());
+			_timeline = new Timeline();
 		}
 
 		return _timeline;
 	}
 
-	private final Set<BuildJSONObject> _buildJSONObjects = new HashSet<>();
-	private final long _duration;
+	private Long _getTotalValue(
+		Map<String, Long> dailyValueMap, String... dateStrings) {
+
+		long totalValue = 0L;
+
+		for (String dateString : dateStrings) {
+			if (dailyValueMap.containsKey(dateString)) {
+				totalValue += dailyValueMap.get(dateString);
+			}
+		}
+
+		return totalValue;
+	}
+
+	private void _mergeMap(
+		Map<String, Long> dataMap1, Map<String, Long> dataMap2) {
+
+		for (Map.Entry<String, Long> entry : dataMap2.entrySet()) {
+			String key = entry.getKey();
+
+			Long currentValue = dataMap1.get(key);
+
+			dataMap1.put(
+				key,
+				(currentValue == null) ? entry.getValue() :
+					entry.getValue() + currentValue);
+		}
+	}
+
+	private String[][] _split(String[] array, int size) {
+		int count = (int)Math.ceil((double)array.length / size);
+
+		String[][] arrays = new String[count][];
+
+		for (int i = 0; i < count; ++i) {
+			int start = i * size;
+
+			int length = Math.min(array.length - start, size);
+
+			String[] curArray = new String[length];
+
+			System.arraycopy(array, start, curArray, 0, length);
+
+			arrays[i] = curArray;
+		}
+
+		return arrays;
+	}
+
+	private static final long _TIMELINE_SAMPLE_PERIOD_MINUTES = 15;
+
+	private final Map<String, Long> _dailyInvokedBuilds = new TreeMap<>();
+	private final Map<String, Long> _dailyInvokedTopLevelBuilds =
+		new TreeMap<>();
+	private final Map<String, Long> _dailyTotalBuildDurations = new TreeMap<>();
+	private final Map<String, Long> _dailyTotalTopLevelBuildDurations =
+		new TreeMap<>();
+	private final Map<String, Long> _dailyTotalTopLevelQueueTime =
+		new TreeMap<>();
+	private long _duration;
 	private final String _name;
-	private final long _startTime;
+	private long _startTime;
 	private Table _table;
 	private Timeline _timeline;
 	private final Set<String> _topLevelBuildURLs = new HashSet<>();

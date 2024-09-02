@@ -1,4 +1,5 @@
 /* eslint-disable no-case-declarations */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -10,59 +11,58 @@ import {STORAGE_KEYS} from '~/core/Storage';
 
 import {useFetch} from '../hooks/useFetch';
 import useStorage from '../hooks/useStorage';
-import {
-	APIResponse,
-	TestrayDispatchTrigger,
-	UserAccount,
-} from '../services/rest';
-import {testrayDispatchTriggerImpl} from '../services/rest/TestrayDispatchTrigger';
+import {UserAccount} from '../services/rest';
 import {ActionMap} from '../types';
 
+export type BuildId = number | null;
 export type RunId = number | null;
+
+export type AutofillBuild = {
+	buildA?: BuildId;
+	buildB?: BuildId;
+};
 
 export type CompareRuns = {
 	runA?: RunId;
 	runB?: RunId;
-	runId?: RunId;
 };
 
 type InitialState = {
+	autofillBuild: AutofillBuild;
 	compareRuns: CompareRuns;
 	myUserAccount?: UserAccount;
 	runNumber: number;
-	testrayDispatchTriggers: APIResponse<TestrayDispatchTrigger>;
 };
 
 const initialState: InitialState = {
+	autofillBuild: {
+		buildA: null,
+		buildB: null,
+	},
 	compareRuns: {
 		runA: null,
 		runB: null,
 	},
 	myUserAccount: undefined,
 	runNumber: 0,
-	testrayDispatchTriggers: {
-		actions: {},
-		facets: [],
-		items: [],
-		lastPage: 1,
-		page: 1,
-		pageSize: 1,
-		totalCount: 1,
-	},
 };
 
 export const enum TestrayTypes {
+	SET_BUILD_A = 'SET_BUILD_A',
+	SET_BUILD_B = 'SET_BUILD_B',
 	SET_MY_USER_ACCOUNT = 'SET_MY_USER_ACCOUNT',
-	SET_RUN = 'SET_RUN',
+
 	SET_RUN_A = 'SET_RUN_A',
 	SET_RUN_B = 'SET_RUN_B',
 }
 
 type TestrayPayload = {
+	[TestrayTypes.SET_BUILD_A]: BuildId;
+	[TestrayTypes.SET_BUILD_B]: BuildId;
 	[TestrayTypes.SET_MY_USER_ACCOUNT]: {
 		account: UserAccount;
 	};
-	[TestrayTypes.SET_RUN]: number;
+
 	[TestrayTypes.SET_RUN_A]: RunId;
 	[TestrayTypes.SET_RUN_B]: RunId;
 };
@@ -73,7 +73,7 @@ export const TestrayContext = createContext<
 	[
 		InitialState,
 		(param: AppActions) => void,
-		KeyedMutator<UserAccount> | null
+		KeyedMutator<UserAccount> | null,
 	]
 >([initialState, () => null, null]);
 
@@ -85,6 +85,18 @@ const reducer = (state: InitialState, action: AppActions) => {
 			return {
 				...state,
 				myUserAccount: account,
+			};
+
+		case TestrayTypes.SET_BUILD_A:
+			return {
+				...state,
+				autofillBuild: {...state.autofillBuild, buildA: action.payload},
+			};
+
+		case TestrayTypes.SET_BUILD_B:
+			return {
+				...state,
+				autofillBuild: {...state.autofillBuild, buildB: action.payload},
 			};
 
 		case TestrayTypes.SET_RUN_A:
@@ -99,15 +111,6 @@ const reducer = (state: InitialState, action: AppActions) => {
 				compareRuns: {...state.compareRuns, runB: action.payload},
 			};
 
-		case TestrayTypes.SET_RUN: {
-			const runNumber = action.payload;
-
-			return {
-				...state,
-				runNumber,
-			};
-		}
-
 		default:
 			return state;
 	}
@@ -116,7 +119,14 @@ const reducer = (state: InitialState, action: AppActions) => {
 const TestrayContextProvider: React.FC<{
 	children: ReactNode;
 }> = ({children}) => {
-	const [storageValue, setStorageValue] = useStorage<{
+	const [autofillBuildValue, setAutofillBuildValue] = useStorage<{
+		autofillBuild: AutofillBuild;
+	}>(STORAGE_KEYS.AUTO_FILL, {
+		initialValue: initialState,
+		storageType: 'temporary',
+	});
+
+	const [compareRunsValue, setcompareRunsValue] = useStorage<{
 		compareRuns: CompareRuns;
 	}>(STORAGE_KEYS.COMPARE_RUNS, {
 		initialValue: initialState,
@@ -125,17 +135,8 @@ const TestrayContextProvider: React.FC<{
 
 	const [state, dispatch] = useReducer(reducer, {
 		...initialState,
-		compareRuns: storageValue?.compareRuns,
-	});
-
-	const {data: testrayDispatchTriggers} = useFetch<
-		APIResponse<TestrayDispatchTrigger>
-	>(testrayDispatchTriggerImpl.resource, {
-		params: {
-			aggregationTerms: 'dueStatus',
-			pageSize: 10,
-			sort: 'dateCreated:asc',
-		},
+		autofillBuild: autofillBuildValue?.autofillBuild,
+		compareRuns: compareRunsValue?.compareRuns,
 	});
 
 	const {data: myUserAccount, mutate} = useFetch('/my-user-account', {
@@ -148,7 +149,6 @@ const TestrayContextProvider: React.FC<{
 			givenName: user?.givenName,
 			id: user?.id,
 			image: user.image,
-			jiraAuthorization: user?.jiraAuthorization,
 			name: user.name,
 			roleBriefs: user?.roleBriefs,
 			userGroupBriefs: user?.userGroupBriefs,
@@ -158,11 +158,25 @@ const TestrayContextProvider: React.FC<{
 
 	const compareRuns = useMemo(() => state.compareRuns, [state.compareRuns]);
 
+	const autofillBuild = useMemo(
+		() => state.autofillBuild,
+		[state.autofillBuild]
+	);
+
 	useEffect(() => {
 		if (compareRuns) {
-			setStorageValue({compareRuns});
+			setcompareRunsValue({compareRuns});
 		}
-	}, [setStorageValue, compareRuns]);
+
+		if (autofillBuild) {
+			setAutofillBuildValue({autofillBuild});
+		}
+	}, [
+		autofillBuild,
+		compareRuns,
+		setAutofillBuildValue,
+		setcompareRunsValue,
+	]);
 
 	useEffect(() => {
 		if (myUserAccount) {
@@ -180,9 +194,6 @@ const TestrayContextProvider: React.FC<{
 			value={[
 				{
 					...state,
-					testrayDispatchTriggers: testrayDispatchTriggers as APIResponse<
-						TestrayDispatchTrigger
-					>,
 				},
 				dispatch,
 				mutate,

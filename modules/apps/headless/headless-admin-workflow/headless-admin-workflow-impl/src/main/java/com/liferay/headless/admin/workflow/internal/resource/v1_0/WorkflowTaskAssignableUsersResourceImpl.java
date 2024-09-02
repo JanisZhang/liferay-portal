@@ -62,7 +62,7 @@ public class WorkflowTaskAssignableUsersResourceImpl
 
 							if (commonAssignableUsers == null) {
 								commonAssignableUsers = new TreeSet<>(
-									new UserFirstNameComparator(true));
+									UserFirstNameComparator.getInstance(true));
 
 								commonAssignableUsers.addAll(assignableUsers);
 							}
@@ -95,10 +95,10 @@ public class WorkflowTaskAssignableUsersResourceImpl
 			new WorkflowTaskAssignableUser();
 
 		workflowTaskAssignableUser.setAssignableUsers(
-			transformToArray(
+			() -> transformToArray(
 				assignableUsers, user -> AssigneeUtil.toAssignee(_portal, user),
 				Assignee.class));
-		workflowTaskAssignableUser.setWorkflowTaskId(workflowTaskId);
+		workflowTaskAssignableUser.setWorkflowTaskId(() -> workflowTaskId);
 
 		return workflowTaskAssignableUser;
 	}

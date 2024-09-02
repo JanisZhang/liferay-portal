@@ -5,7 +5,6 @@
 
 package com.liferay.portal.instances.internal.configuration;
 
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.instances.service.PortalInstancesLocalService;
 import com.liferay.portal.kernel.exception.NoSuchCompanyException;
@@ -14,9 +13,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.util.PortalInstances;
 
 import java.util.Map;
 
@@ -61,18 +60,18 @@ public class PortalInstancesConfigurationFactory {
 		}
 
 		if (company == null) {
-			company = _companyLocalService.addCompany(
-				null, webId, virtualHostname, mx, maxUsers, active, null, null,
-				null, null, null, null);
-
-			try (SafeCloseable safeCloseable =
-					CompanyThreadLocal.setWithSafeCloseable(
-						company.getCompanyId())) {
-
-				_portalInstancesLocalService.initializePortalInstance(
-					company.getCompanyId(),
-					portalInstancesConfiguration.siteInitializerKey());
-			}
+			PortalInstances.addCompany(
+				portalInstancesConfiguration.siteInitializerKey(),
+				() -> _companyLocalService.addCompany(
+					null, webId, virtualHostname, mx, maxUsers,
+					portalInstancesConfiguration.active(),
+					portalInstancesConfiguration.addDefaultAdminUser(),
+					portalInstancesConfiguration.adminPassword(),
+					portalInstancesConfiguration.adminScreenName(),
+					portalInstancesConfiguration.adminEmailAddress(),
+					portalInstancesConfiguration.adminFirstName(),
+					portalInstancesConfiguration.adminMiddleName(),
+					portalInstancesConfiguration.adminLastName()));
 		}
 		else {
 			if (company.getCompanyId() ==
@@ -107,7 +106,7 @@ public class PortalInstancesConfigurationFactory {
 	@Reference
 	private CompanyLocalService _companyLocalService;
 
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED)
+	@Reference(target = ModuleServiceLifecycle.PORTLETS_INITIALIZED)
 	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	@Reference

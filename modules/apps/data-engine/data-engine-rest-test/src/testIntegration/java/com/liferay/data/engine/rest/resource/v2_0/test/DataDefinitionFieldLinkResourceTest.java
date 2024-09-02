@@ -14,8 +14,8 @@ import com.liferay.data.engine.rest.client.resource.v2_0.DataDefinitionResource;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataDefinitionTestUtil;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.content.type.test.util.ModelResourceActionTestUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
-import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
@@ -42,9 +42,8 @@ public class DataDefinitionFieldLinkResourceTest
 	}
 
 	@AfterClass
-	public static void tearDownClass() {
-		ModelResourceActionTestUtil.deleteModelResourceAction(
-			_resourceActionLocalService, _resourceActions);
+	public static void tearDownClass() throws Exception {
+		ModelResourceActionTestUtil.deleteModelResourceAction(_resourceActions);
 	}
 
 	@Before
@@ -60,7 +59,7 @@ public class DataDefinitionFieldLinkResourceTest
 			DataDefinitionResource.builder();
 
 		_dataDefinitionResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", TestPropsValues.USER_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,9 +115,6 @@ public class DataDefinitionFieldLinkResourceTest
 
 		return _dataDefinition.getId();
 	}
-
-	@Inject
-	private static ResourceActionLocalService _resourceActionLocalService;
 
 	@Inject
 	private static ResourceActions _resourceActions;

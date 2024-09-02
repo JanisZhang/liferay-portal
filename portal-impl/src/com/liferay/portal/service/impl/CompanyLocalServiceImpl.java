@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.exception.NoSuchVirtualHostException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RequiredCompanyException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.instance.lifecycle.PortalInstanceLifecycleManager;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -190,12 +191,13 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	 * @param  active whether the company is active
 	 * @return the company
 	 */
+	@Override
 	public Company addCompany(
 			Long companyId, String webId, String virtualHostname, String mx,
-			int maxUsers, boolean active, String defaultAdminPassword,
-			String defaultAdminScreenName, String defaultAdminEmailAddress,
-			String defaultAdminFirstName, String defaultAdminMiddleName,
-			String defaultAdminLastName)
+			int maxUsers, boolean active, boolean addDefaultAdminUser,
+			String defaultAdminPassword, String defaultAdminScreenName,
+			String defaultAdminEmailAddress, String defaultAdminFirstName,
+			String defaultAdminMiddleName, String defaultAdminLastName)
 		throws PortalException {
 
 		// Company
@@ -281,28 +283,30 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 					updatedCompany = _checkCompany(updatedCompany);
 
-					_userLocalService.addDefaultAdminUser(
-						updatedCompany.getCompanyId(),
-						GetterUtil.getString(
-							defaultAdminPassword,
-							PropsValues.DEFAULT_ADMIN_PASSWORD),
-						GetterUtil.getString(
-							defaultAdminScreenName,
-							PropsValues.DEFAULT_ADMIN_SCREEN_NAME),
-						GetterUtil.getString(
-							defaultAdminEmailAddress,
-							PropsValues.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX +
-								"@" + mx),
-						guestUser.getLocale(),
-						GetterUtil.getString(
-							defaultAdminFirstName,
-							PropsValues.DEFAULT_ADMIN_FIRST_NAME),
-						GetterUtil.getString(
-							defaultAdminMiddleName,
-							PropsValues.DEFAULT_ADMIN_MIDDLE_NAME),
-						GetterUtil.getString(
-							defaultAdminLastName,
-							PropsValues.DEFAULT_ADMIN_LAST_NAME));
+					if (addDefaultAdminUser) {
+						_userLocalService.addDefaultAdminUser(
+							updatedCompany.getCompanyId(),
+							GetterUtil.getString(
+								defaultAdminPassword,
+								PropsValues.DEFAULT_ADMIN_PASSWORD),
+							GetterUtil.getString(
+								defaultAdminScreenName,
+								PropsValues.DEFAULT_ADMIN_SCREEN_NAME),
+							GetterUtil.getString(
+								defaultAdminEmailAddress,
+								PropsValues.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX +
+									"@" + mx),
+							guestUser.getLocale(),
+							GetterUtil.getString(
+								defaultAdminFirstName,
+								PropsValues.DEFAULT_ADMIN_FIRST_NAME),
+							GetterUtil.getString(
+								defaultAdminMiddleName,
+								PropsValues.DEFAULT_ADMIN_MIDDLE_NAME),
+							GetterUtil.getString(
+								defaultAdminLastName,
+								PropsValues.DEFAULT_ADMIN_LAST_NAME));
+					}
 
 					// Guest user must have the Guest role
 
@@ -345,13 +349,14 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		}
 	}
 
+	@Override
 	public Company addDBPartitionCompany(
-			long companyId, String name, String virtualHostName, String webId)
+			long companyId, String name, String virtualHostname, String webId)
 		throws PortalException {
 
 		if (!DBPartition.isPartitionEnabled()) {
 			throw new UnsupportedOperationException(
-				"Database partition must be enabled");
+				"Database partitioning must be enabled");
 		}
 
 		if (companyId == PortalInstancePool.getDefaultCompanyId()) {
@@ -383,15 +388,19 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 						company = companyPersistence.update(company);
 					}
 
-					if (Validator.isNotNull(virtualHostName) &&
+					String lowerCaseVirtualHostname = StringUtil.toLowerCase(
+						StringUtil.trim(virtualHostname));
+
+					if (Validator.isNotNull(lowerCaseVirtualHostname) &&
 						!StringUtil.equals(
-							company.getVirtualHostname(), virtualHostName)) {
+							company.getVirtualHostname(),
+							lowerCaseVirtualHostname)) {
 
 						validateVirtualHost(
-							company.getWebId(), virtualHostName);
+							company.getWebId(), lowerCaseVirtualHostname);
 
 						company = updateVirtualHostname(
-							companyId, virtualHostName);
+							companyId, lowerCaseVirtualHostname);
 					}
 
 					if (Validator.isNotNull(webId) &&
@@ -404,24 +413,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 						company = companyPersistence.update(company);
 					}
 
-					preregisterCompany(company);
-
-					_resourceActionLocalService.checkResourceActions();
-
-					TransactionCommitCallbackUtil.registerCallback(
-						() -> {
-							Company dbPartitionCompany =
-								companyPersistence.findByPrimaryKey(companyId);
-
-							registerCompany(dbPartitionCompany);
-
-							PortalInstances.initCompany(
-								dbPartitionCompany, true);
-
-							return null;
-						});
-
-					return company;
+					return _addDBPartitionCompany(company);
 				});
 		}
 		catch (Throwable throwable) {
@@ -491,6 +483,125 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	}
 
 	@Override
+	public Company copyDBPartitionCompany(
+			long fromCompanyId, Long toCompanyId, String name,
+			String virtualHostname, String webId)
+		throws PortalException {
+
+		if (!DBPartition.isPartitionEnabled()) {
+			throw new UnsupportedOperationException(
+				"Database partitioning must be enabled");
+		}
+
+		Company fromCompany = companyPersistence.findByPrimaryKey(
+			fromCompanyId);
+
+		if (fromCompany == null) {
+			throw new IllegalArgumentException(
+				"Company ID " + fromCompanyId + " does not exist");
+		}
+
+		if (fromCompanyId == PortalInstancePool.getDefaultCompanyId()) {
+			throw new IllegalArgumentException(
+				"Company ID " + fromCompanyId + " is the default company ID");
+		}
+
+		if (toCompanyId == null) {
+			toCompanyId = _getNextCompanyId();
+		}
+		else if ((toCompanyId == 0) ||
+				 ArrayUtil.contains(
+					 PortalInstancePool.getCompanyIds(), toCompanyId)) {
+
+			throw new IllegalArgumentException(
+				"Company ID " + toCompanyId + " already exists");
+		}
+
+		if (Validator.isNull(name)) {
+			throw new IllegalArgumentException("Name must not be null");
+		}
+
+		if (Validator.isNull(virtualHostname)) {
+			throw new IllegalArgumentException(
+				"Virtual hostname must not be null");
+		}
+
+		if (Validator.isNull(webId)) {
+			throw new IllegalArgumentException("Web ID must not be null");
+		}
+
+		validateName(toCompanyId, name);
+
+		String lowerCaseVirtualHostname = StringUtil.toLowerCase(
+			StringUtil.trim(virtualHostname));
+
+		validateVirtualHost(webId, lowerCaseVirtualHostname);
+
+		validateWebId(webId);
+
+		SafeCloseable safeCloseable1 =
+			PortalInstances.setCopyInProcessCompanyId(fromCompanyId);
+
+		try {
+			DBPartitionUtil.copyDBPartition(fromCompanyId, toCompanyId);
+		}
+		catch (Throwable throwable) {
+			safeCloseable1.close();
+
+			throw throwable;
+		}
+
+		SafeCloseable safeCloseable2 = CompanyThreadLocal.setWithSafeCloseable(
+			toCompanyId);
+
+		long companyId = toCompanyId;
+
+		try {
+			return _transactionAwareInvoke(
+				() -> {
+					Company company = fromCompany.cloneWithOriginalValues();
+
+					company.setCompanyId(companyId);
+					company.setWebId(webId);
+					company.setName(name);
+					company.setNew(true);
+
+					company = companyPersistence.update(company);
+
+					company = updateVirtualHostname(
+						company.getCompanyId(), lowerCaseVirtualHostname);
+
+					return _addDBPartitionCompany(company);
+				});
+		}
+		catch (Throwable throwable) {
+			try {
+				_transactionAwareInvoke(
+					() -> {
+						DBPartitionUtil.removeDBPartition(companyId);
+
+						return null;
+					});
+			}
+			finally {
+				safeCloseable1.close();
+				safeCloseable2.close();
+			}
+
+			throw new PortalException(throwable);
+		}
+		finally {
+			TransactionCommitCallbackUtil.registerCallback(
+				() -> {
+					safeCloseable1.close();
+					safeCloseable2.close();
+
+					return null;
+				});
+		}
+	}
+
+	@Override
 	public Company deleteCompany(Company company) throws PortalException {
 		return deleteCompany(company.getCompanyId());
 	}
@@ -534,12 +645,13 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		return company;
 	}
 
+	@Override
 	public Company extractDBPartitionCompany(long companyId)
 		throws PortalException {
 
 		if (!DBPartition.isPartitionEnabled()) {
 			throw new UnsupportedOperationException(
-				"Database partition must be enabled");
+				"Database partitioning must be enabled");
 		}
 
 		if (companyId == PortalInstancePool.getDefaultCompanyId()) {
@@ -1416,6 +1528,8 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		Company company = companyPersistence.findByPrimaryKey(companyId);
 
+		preunregisterCompany(company);
+
 		if (DBPartition.isPartitionEnabled()) {
 			_clearCompanyCache(companyId, true);
 			_clearVirtualHostCache(companyId);
@@ -1433,8 +1547,6 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 			return company;
 		}
-
-		preunregisterCompany(company);
 
 		companyPersistence.remove(company);
 
@@ -1468,6 +1580,12 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		String[] systemGroups = PortalUtil.getSystemGroups();
 
 		for (String groupName : systemGroups) {
+			if (groupName.equals(GroupConstants.CMS) &&
+				!FeatureFlagManagerUtil.isEnabled("LPD-17809")) {
+
+				continue;
+			}
+
 			deleteGroupActionableDynamicQuery.deleteGroup(
 				_groupLocalService.getGroup(companyId, groupName));
 		}
@@ -2022,6 +2140,30 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 	}
 
+	private Company _addDBPartitionCompany(Company company)
+		throws PortalException {
+
+		preregisterCompany(company);
+
+		_resourceActionLocalService.checkResourceActions();
+
+		_portletLocalService.checkPortlets(company.getCompanyId());
+
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				Company dbPartitionCompany =
+					companyPersistence.findByPrimaryKey(company.getCompanyId());
+
+				registerCompany(dbPartitionCompany);
+
+				PortalInstances.initCompany(dbPartitionCompany, true);
+
+				return null;
+			});
+
+		return company;
+	}
+
 	private void _addDemoSettings(Company company) throws PortalException {
 		updateVirtualHostname(company.getCompanyId(), "demo.liferay.net");
 
@@ -2323,7 +2465,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		}
 
 		List<Group> groups = _groupLocalService.dslQuery(
-			DSLQueryFactoryUtil.selectDistinct(
+			DSLQueryFactoryUtil.select(
 				GroupTable.INSTANCE
 			).from(
 				GroupTable.INSTANCE

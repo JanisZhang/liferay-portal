@@ -6,6 +6,11 @@
 			<category name="Bug Prevention" />
 			<description name="Checks the URL in `artifact.properties` files." />
 		</check>
+		<check name="GoogleFontsCheck">
+			<category name="Miscellaneous" />
+			<description name="Checks that we do not use Google fonts." />
+			<property name="enabled" value="false" />
+		</check>
 		<check name="IncorrectFileLocationCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that `/src/*/java/` only contains `.java` files." />
@@ -120,11 +125,11 @@
 		</check>
 		<check name="BNDLiferayRelengBundleCheck">
 			<category name="Bug Prevention" />
-			<description name="Checks if `.lfrbuild-release-src` file exists for DXP module with `Liferay-Releng-Bundle: true`" />
+			<description name="Checks if `.lfrbuild-release-src` file exists for DXP module with `Liferay-Releng-Bundle: true`." />
 		</check>
 		<check name="BNDLiferayRelengCategoryCheck">
 			<category name="Bug Prevention" />
-			<description name="Validates `Liferay-Releng-Category` properties" />
+			<description name="Validates `Liferay-Releng-Category` properties." />
 		</check>
 		<check name="BNDWebContextPathCheck">
 			<category name="Bug Prevention" />
@@ -258,7 +263,6 @@
 		<check name="GradleDependenciesCheck">
 			<category name="Performance" />
 			<description name="Checks that modules are not depending on other modules." />
-			<property name="checkPetraDependencies" value="true" />
 			<property name="checkTestIntegrationCompileDependencies" value="false" />
 		</check>
 		<check name="GradleDependencyArtifactsCheck">
@@ -289,6 +293,11 @@
 			<category name="Bug Prevention" />
 			<description name="Checks values of properties `sourceCompatibility` and `targetCompatibility` in gradle build files." />
 		</check>
+		<check name="GradleMissingDependenciesForUpgradeJava21Check">
+			<category name="Bug Prevention" />
+			<description name="Checks missing dependencies for upgrade Java 21 in gradle build files." />
+			<property name="enabled" value="false" />
+		</check>
 		<check name="GradleMissingJarManifestTaskCheck">
 			<category name="Bug Prevention" />
 			<description name="Finds missing `jarManifest` task when using `jarPatched` task in gradle build files." />
@@ -309,6 +318,7 @@
 		<check name="GradleRestClientDependenciesCheck">
 			<category name="Bug Prevention" />
 			<description name="Validates the project dependencies `.*-rest-client` can only be used for `testIntegrationImplementation`." />
+			<property name="enabled" value="false" />
 		</check>
 		<check name="GradleStylingCheck">
 			<category name="Styling" />
@@ -344,6 +354,10 @@
 		<check name="GradleCommerceDependenciesCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks the modules that are outside of Commerce are not allowed to depend on Commerce modules." />
+		</check>
+		<check name="GradlePetraModuleDependenciesCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that dependencies in `petra` moudule can only contains `petra` dependencies." />
 		</check>
 	</source-processor>
 	<source-processor name="GroovySourceProcessor">
@@ -385,7 +399,7 @@
 		</check>
 		<check name="IfStatementCheck">
 			<category name="Styling" />
-			<description name="Finds empty if-statements and consecutive if-statements with identical bodies" />
+			<description name="Finds empty if-statements and consecutive if-statements with identical bodies." />
 			<property name="enabled" value="false" />
 		</check>
 		<check name="Java2HTMLCheck">
@@ -426,7 +440,7 @@
 		</check>
 		<check name="JavaCollapseImportsCheck">
 			<category name="Performance" />
-			<description name="Collapses imports that use wildcard" />
+			<description name="Collapses imports that use wildcard." />
 		</check>
 		<check name="JavaCollatorUtilCheck">
 			<category name="Bug Prevention" />
@@ -471,6 +485,10 @@
 		<check name="JavaEmptyLinesCheck">
 			<category name="Styling" />
 			<description name="Finds missing and unnecessary empty lines." />
+		</check>
+		<check name="JavaEntityModelToEntityFieldsMapCallCheck">
+			<category name="Styling" />
+			<description name="Sorts parameters in EntityModel.toEntityFieldsMap call." />
 		</check>
 		<check name="JavaExceptionCheck">
 			<category name="Naming Conventions" />
@@ -612,7 +630,7 @@
 		</check>
 		<check name="JavaUpgradeModelPermissionsCheck">
 			<category name="Upgrade" />
-			<description name="Replace setGroupPermissions and setGuestPermissions by new implementation" />
+			<description name="Replace setGroupPermissions and setGuestPermissions by new implementation." />
 		</check>
 		<check name="MethodCallsOrderCheck">
 			<category name="Styling" />
@@ -691,6 +709,11 @@
 			<category name="Bug Prevention" />
 			<description name="Finds calls to deprecated classes `com.liferay.portal.kernel.util.CharPool` and `com.liferay.portal.kernel.util.StringPool`." />
 		</check>
+		<check name="JavaFeatureFlagManagerUtilCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds cases where `FeatureFlagManagerUtil.isEnabled` should be used." />
+			<property name="enabled" value="false" />
+		</check>
 		<check name="JavaFinderCacheCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that the method `BasePersistenceImpl.fetchByPrimaryKey` is overridden, when using `FinderPath`." />
@@ -698,11 +721,6 @@
 		<check name="JavaFinderImplCustomSQLCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that hardcoded SQL values in `*FinderImpl` classes match the SQL in the `.xml` file in the `custom-sql` directory." />
-		</check>
-		<check name="JavaGetFeatureFlagCheck">
-			<category name="Bug Prevention" />
-			<description name="Checks that `FeatureFlagManagerUtil.isEnabled` should be used (instead of `PropsUtil.get` in `GetterUtil.getBoolean`)." />
-			<property name="enabled" value="false" />
 		</check>
 		<check name="JavaHelperUtilCheck">
 			<category name="Naming Conventions" />
@@ -814,6 +832,10 @@
 			<category name="Bug Prevention" />
 			<description name="Checks that a `*Tag` class has a `set*` and `get*` or `is*` method for each attribute." />
 		</check>
+		<check name="JavaTestInfoAnnotationCheck">
+			<category name="Styling" />
+			<description name="Sorts the values in `@TestInfo` annotation." />
+		</check>
 		<check name="JavaTestMethodAnnotationsCheck">
 			<category name="Naming Conventions" />
 			<description name="Checks if methods with test annotations follow the naming conventions." />
@@ -834,6 +856,10 @@
 			<category name="Bug Prevention" />
 			<description name="Performs several checks on `alter` calls in Upgrade classes." />
 		</check>
+		<check name="JavaUpgradeAlterColumnCallsOrderCheck">
+			<category name="Styling" />
+			<description name="Sorts method calls for altering table columns." />
+		</check>
 		<check name="JavaUpgradeClassCheck">
 			<category name="Bug Prevention" />
 			<description name="Performs several checks on Upgrade classes." />
@@ -849,16 +875,22 @@
 		</check>
 		<check name="JavaUpgradeEmptyLinesCheck">
 			<category name="Styling" />
-			<description name="Finds missing and unnecessary empty lines in Upgrade classes." />
+			<description name="Finds missing and unnecessary empty lines in upgrade classes." />
 		</check>
 		<check name="JavaUpgradeIndexCheck">
 			<category name="Bug Prevention" />
 			<description name="Finds cases where the service builder indexes are updated manually in Upgrade classes. This is not needed because Liferay takes care of it." />
 			<property name="enabled" value="false" />
 		</check>
-		<check name="JavaUpgradeProcessFactoryCheck">
-			<category name="Styling" />
-			<description name="Sorts and groups method calls." />
+		<check name="JavaUpgradeMissingCTCollectionIdDuringUpdateCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds missing `ctCollectionId` in where clause during update." />
+			<property name="enabled" value="false" />
+		</check>
+		<check name="JavaUpgradeMissingTestCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds missing integration tests for upgrade classes." />
+			<property name="enabled" value="false" />
 		</check>
 		<check name="JavaUpgradeVersionCheck">
 			<category name="Bug Prevention" />
@@ -992,7 +1024,7 @@
 		</check>
 		<check name="JSONUpgradeLiferayThemePackageJSONCheck">
 			<category name="Upgrade" />
-			<description name="Upgrade the `package.json` of a Liferay Theme to make it compatible with Liferay 7.4" />
+			<description name="Upgrade the `package.json` of a Liferay Theme to make it compatible with Liferay 7.4." />
 		</check>
 		<check name="JSONValidationCheck">
 			<category name="Bug Prevention" />
@@ -1026,6 +1058,10 @@
 			<category name="Styling" />
 			<description name="Sorts by `roleName` in `page.json` files." />
 		</check>
+		<check name="JSONReplacementsFileCheck">
+			<category name="Styling" />
+			<description name="Sorts by `issueKey`, `from` and `to` in `replacements.json` file." />
+		</check>
 		<check name="JSONResourcePermissionsFileCheck">
 			<category name="Styling" />
 			<description name="Sorts by `resourceName` and `roleName` in `resource-permissions.json` files." />
@@ -1046,7 +1082,7 @@
 		</check>
 		<check name="IfStatementCheck">
 			<category name="Styling" />
-			<description name="Finds empty if-statements and consecutive if-statements with identical bodies" />
+			<description name="Finds empty if-statements and consecutive if-statements with identical bodies." />
 			<property name="enabled" value="false" />
 		</check>
 		<check name="IllegalImportsCheck">
@@ -1333,11 +1369,29 @@
 
 		<check name="LibraryVulnerabilitiesCheck">
 			<category name="Bug Prevention" />
-			<description name="Checks the introduction of libraries and third party components with known vulnerabilities" />
+			<description name="Checks the introduction of libraries and third party components with known vulnerabilities." />
 			<property name="enabled" value="false" />
 		</check>
 	</source-processor>
+	<source-processor name="ListSourceProcessor">
+
+		<!-- Liferay Source Checks -->
+
+		<check name="ListStylingCheck">
+			<category name="Styling" />
+			<description name="Applies rules to enforce consistency in code style." />
+		</check>
+	</source-processor>
 	<source-processor name="MarkdownSourceProcessor">
+		<check name="MarkdownBreakingChangesAmendmentsFileCheck">
+			<category name="Styling" />
+			<description name="Checks that breaking changes amendments should contain the schematized breaking changes in `BREAKING_CHANGES_AMENDMENTS.markdown` file." />
+			<property name="enabled" value="false" />
+		</check>
+		<check name="MarkdownEmptyLinesCheck">
+			<category name="Styling" />
+			<description name="Finds missing and unnecessary empty lines." />
+		</check>
 		<check name="MarkdownFileExtensionCheck">
 			<category name="Styling" />
 			<description name="Finds `markdown` files with `.md` extension (use `.markdown`)." />
@@ -1396,6 +1450,11 @@
 		<check name="PoshiPropertiesOrderCheck">
 			<category name="Styling" />
 			<description name="Sorts the values of properties in `.testcase` file." />
+		</check>
+		<check name="PoshiPropsUtilCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds cases where `PropsUtil.get` should be inlined." />
+			<property name="enabled" value="false" />
 		</check>
 		<check name="PoshiSmokeTestCheck">
 			<category name="Bug Prevention" />
@@ -1526,6 +1585,10 @@
 			<category name="Bug Prevention" />
 			<description name="Verifies property value of `build.include.dirs` in `build.properties`." />
 		</check>
+		<check name="PropertiesPlaywrightTestCheck">
+			<category name="Bug Prevention" />
+			<description name="Performs several checks on `test.properties` for Playwright test." />
+		</check>
 		<check name="PropertiesReleaseBuildCheck">
 			<category name="Bug Prevention" />
 			<description name="Verifies that the information in `release.properties` matches the information in `ReleaseInfo.java`." />
@@ -1627,6 +1690,13 @@
 			<property name="allowTrailingEmptyLines" value="true" />
 			<property name="enabled" value="false" />
 		</check>
+
+		<!-- Liferay Source Checks -->
+
+		<check name="TSConfigFileCheck">
+			<category name="Bug Prevention" />
+			<description name="Finds missing `test.properties` files." />
+		</check>
 	</source-processor>
 	<source-processor name="TXTSourceProcessor">
 		<check name="TXTEmptyLinesCheck">
@@ -1639,14 +1709,18 @@
 		</check>
 	</source-processor>
 	<source-processor name="UpgradeSourceProcessor">
+		<check name="UpgradeBNDDeclarativeServicesCheck">
+			<category name="Upgrade" />
+			<description name="Adds `-dsannotations-options: inherit` to `bnd.bnd` if it does not yet exist." />
+		</check>
 		<check name="UpgradeBNDIncludeResourceCheck">
 			<category name="Upgrade" />
-			<description name="Checks if the property value `-includeresource` or `Include-Resource` exists and removes it" />
+			<description name="Checks if the property value `-includeresource` or `Include-Resource` exists and removes it." />
 			<weight>1</weight>
 		</check>
 		<check name="UpgradeCatchAllCheck">
 			<category name="Upgrade" />
-			<description name="Performs replacements on Liferay's outdated code" />
+			<description name="Performs replacements on Liferay's outdated code." />
 			<weight>2</weight>
 		</check>
 		<check name="UpgradeCatchAllJavaImportsCheck">
@@ -1673,26 +1747,34 @@
 			<category name="Upgrade" />
 			<description name="Replaces methods referring to class `AssetEntryAssetCategory` in class `AssetCategoryLocalService` with equivalent methods in class `AssetEntryAssetCategoryRelLocalService`." />
 		</check>
+		<check name="UpgradeJavaBaseFragmentCollectionContributorExtendedClassesCheck">
+			<category name="Upgrade" />
+			<description name="Adds FragmentCollectionKey to Component annotation in classes that extend `BaseFragmentCollectionContributor`" />
+		</check>
 		<check name="UpgradeJavaBaseModelListenerCheck">
 			<category name="Upgrade" />
-			<description name="Add parameter in the onAfterUpdate and onBeforeUpdate methods of the BaseModelListener class" />
+			<description name="Add parameter in the onAfterUpdate and onBeforeUpdate methods of the BaseModelListener class." />
 		</check>
 		<check name="UpgradeJavaBasePanelAppExtendedClassesCheck">
 			<category name="Upgrade" />
-			<description name="Replace the setPortlet method with getPortlet" />
+			<description name="Replace the setPortlet method with getPortlet." />
 		</check>
 		<check name="UpgradeJavaCheck">
 			<category name="Upgrade" />
-			<description name="Performs upgrade checks for `java` files" />
+			<description name="Performs upgrade checks for `java` files." />
 			<weight>3</weight>
 		</check>
 		<check name="UpgradeJavaCommerceOrderValidatorCheck">
 			<category name="Upgrade" />
-			<description name="Replace the parameter Int for BigDecimal of method validate of 'CommerceOrderValidator' interface" />
+			<description name="Replace the parameter Int for BigDecimal of method validate of 'CommerceOrderValidator' interface." />
 		</check>
 		<check name="UpgradeJavaDDMFormValuesSerializerTrackerCheck">
 			<category name="Upgrade" />
 			<description name="Replaces the references of `DDMFormValuesSerializerTracker` class and also its methods usages." />
+		</check>
+		<check name="UpgradeJavaDisplayPageInfoItemCapabilityCheck">
+			<category name="Upgrade" />
+			<description name="Replace all references of DisplayPageInfoItemCapability to InfoItemCapability" />
 		</check>
 		<check name="UpgradeJavaFacetedSearcherCheck">
 			<category name="Upgrade" />
@@ -1700,32 +1782,40 @@
 		</check>
 		<check name="UpgradeJavaFDSActionProviderCheck">
 			<category name="Upgrade" />
-			<description name="Reorder parameters in the getDropdownItems method of the FDSDataProvider interface" />
+			<description name="Reorder parameters in the getDropdownItems method of the FDSDataProvider interface." />
 			<weight>1</weight>
 		</check>
 		<check name="UpgradeJavaFDSDataProviderCheck">
 			<category name="Upgrade" />
-			<description name="Reorder parameters in the getItems and getItemsCount methods of the FDSDataProvider interface" />
+			<description name="Reorder parameters in the getItems and getItemsCount methods of the FDSDataProvider interface." />
 			<weight>1</weight>
+		</check>
+		<check name="UpgradeJavaFinderImplCheck">
+			<category name="Upgrade" />
+			<description name="Add Component annotation to `*FinderImpl.java` file." />
 		</check>
 		<check name="UpgradeJavaGetFDSTableSchemaParameterCheck">
 			<category name="Upgrade" />
-			<description name="Fill the new parameter of the method 'getFDSTableSchema' of 'FDSTableSchema'" />
+			<description name="Fill the new parameter of the method 'getFDSTableSchema' of 'FDSTableSchema'." />
 			<weight>1</weight>
 		</check>
 		<check name="UpgradeJavaGetFileMethodCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of method from 'getFile' to 'getFileAsStream', and include a method 'FileUtil.createTempFile'" />
+			<description name="Run code migration of method from 'getFile' to 'getFileAsStream', and include a method 'FileUtil.createTempFile'." />
 		</check>
 		<check name="UpgradeJavaGetLayoutDisplayPageObjectProviderCheck">
 			<category name="Upgrade" />
-			<description name="Replace parameter type long by ItemInfoReference in the getLayoutDisplayPageObjectProvider method" />
+			<description name="Replace parameter type long by ItemInfoReference in the getLayoutDisplayPageObjectProvider method." />
 			<weight>1</weight>
 		</check>
 		<check name="UpgradeJavaGetLayoutDisplayPageProviderCheck">
 			<category name="Upgrade" />
-			<description name="Replace getLayoutDisplayPageProvider by getLayoutDisplayPageProviderByClassName" />
+			<description name="Replace getLayoutDisplayPageProvider by getLayoutDisplayPageProviderByClassName." />
 			<weight>2</weight>
+		</check>
+		<check name="UpgradeJavaLocalServiceImplCheck">
+			<category name="Upgrade" />
+			<description name="Add Component annotation to `*LocalServiceImpl.java` file." />
 		</check>
 		<check name="UpgradeJavaMultiVMPoolUtilCheck">
 			<category name="Upgrade" />
@@ -1733,11 +1823,11 @@
 		</check>
 		<check name="UpgradeJavaPortletIdMethodCheck">
 			<category name="Upgrade" />
-			<description name="Replace the 'document.get(Field.PORTLET_ID)' by the new interface 'PortletProviderUtil.getPortletId'" />
+			<description name="Replace the 'document.get(Field.PORTLET_ID)' by the new interface 'PortletProviderUtil.getPortletId'." />
 		</check>
 		<check name="UpgradeJavaPortletSharedSearchSettingsCheck">
 			<category name="Upgrade" />
-			<description name="Replaces the Optional return type of the methods `getParameterValues` and `getPortletPreferences` of `PortletSharedSearchSettings` class" />
+			<description name="Replaces the Optional return type of the methods `getParameterValues` and `getPortletPreferences` of `PortletSharedSearchSettings` class." />
 		</check>
 		<check name="UpgradeJavaSchedulerEntryImplConstructorCheck">
 			<category name="Upgrade" />
@@ -1745,76 +1835,80 @@
 		</check>
 		<check name="UpgradeJavaScreenContributorClassCheck">
 			<category name="Upgrade" />
-			<description name="Replace class `PortalSettingsConfigurationScreenContributor` by `ConfigurationScreenWrapper` and create an inner class" />
+			<description name="Replace class `PortalSettingsConfigurationScreenContributor` by `ConfigurationScreenWrapper` and create an inner class." />
+		</check>
+		<check name="UpgradeJavaServiceImplCheck">
+			<category name="Upgrade" />
+			<description name="Add Component annotation to `*ServiceImpl.java` file." />
 		</check>
 		<check name="UpgradeJavaServiceReferenceAnnotationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration to replace '@ServiceReference' by '@Reference'" />
+			<description name="Run code migration to replace '@ServiceReference' by '@Reference'." />
 		</check>
 		<check name="UpgradeJavaStorageTypeAwareCheck">
 			<category name="Upgrade" />
-			<description name="Run code to delete StorageTypeAware interface" />
+			<description name="Run code to delete StorageTypeAware interface." />
 		</check>
 		<check name="UpgradeJSPFieldSetGroupCheck">
 			<category name="Upgrade" />
-			<description name="Run code to remove 'fieldset-group' tag" />
+			<description name="Run code to remove 'fieldset-group' tag." />
 		</check>
 		<check name="UpgradePortletFTLCheck">
 			<category name="Upgrade" />
-			<description name="Include the CSS classes 'cadmin' and include for impression of 'right cadmin' in 'portlet.ftl' file" />
+			<description name="Include the CSS classes 'cadmin' and include for impression of 'right cadmin' in 'portlet.ftl' file." />
 		</check>
 		<check name="UpgradeRejectedExecutionHandlerCheck">
 			<category name="Upgrade" />
-			<description name="Replace Liferay's RejectedExecutionHandler with Java's RejectedExecutionHandler" />
+			<description name="Replace Liferay's RejectedExecutionHandler with Java's RejectedExecutionHandler." />
 		</check>
 		<check name="UpgradeSCSSMixinsCheck">
 			<category name="Upgrade" />
-			<description name="Replace outdated mixins (e.g. media-query, respond-to, etc.)" />
+			<description name="Replace outdated mixins (e.g. media-query, respond-to, etc.)." />
 		</check>
 		<check name="UpgradeSCSSNodeSassPatternsCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of Dart Sass deprecated patterns (e.g., the division operation using the '/' character, the interpolation syntax, etc.)" />
+			<description name="Run code migration of Dart Sass deprecated patterns (e.g., the division operation using the '/' character, the interpolation syntax, etc.)." />
 		</check>
 		<check name="UpgradeSetResultsSetTotalMethodCheck">
 			<category name="Upgrade" />
-			<description name="Replaces methods setResults and setTotal from SearchContainer with the method setResultsAndTotal only" />
+			<description name="Replaces methods setResults and setTotal from SearchContainer with the method setResultsAndTotal only." />
 		</check>
 		<check name="UpgradeVelocityCommentMigrationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of comments from a Velocity file to a Freemarker file with the syntax replacements" />
+			<description name="Run code migration of comments from a Velocity file to a Freemarker file with the syntax replacements." />
 		</check>
 		<check name="UpgradeVelocityFileImportMigrationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of file import from a Velocity file to a Freemarker file with the syntax replacements" />
+			<description name="Run code migration of file import from a Velocity file to a Freemarker file with the syntax replacements." />
 		</check>
 		<check name="UpgradeVelocityForeachMigrationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of references to Foreach statement from a Velocity file to a Freemarker file with the syntax replacements" />
+			<description name="Run code migration of references to Foreach statement from a Velocity file to a Freemarker file with the syntax replacements." />
 		</check>
 		<check name="UpgradeVelocityIfStatementsMigrationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of references to If statements from a Velocity file to a Freemarker file with the syntax replacements" />
+			<description name="Run code migration of references to If statements from a Velocity file to a Freemarker file with the syntax replacements." />
 		</check>
 		<check name="UpgradeVelocityLiferayTaglibReferenceMigrationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of references to specific Liferay taglib from a Velocity file to a Freemarker file with the syntax replacements" />
+			<description name="Run code migration of references to specific Liferay taglib from a Velocity file to a Freemarker file with the syntax replacements." />
 			<weight>1</weight>
 		</check>
 		<check name="UpgradeVelocityMacroDeclarationMigrationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of references to Macro statement from a Velocity file to a Freemarker file with the syntax replacements" />
+			<description name="Run code migration of references to Macro statement from a Velocity file to a Freemarker file with the syntax replacements." />
 		</check>
 		<check name="UpgradeVelocityMacroReferenceMigrationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of references to a custom Macro statement from a Velocity file to a Freemarker file with the syntax replacements" />
+			<description name="Run code migration of references to a custom Macro statement from a Velocity file to a Freemarker file with the syntax replacements." />
 		</check>
 		<check name="UpgradeVelocityVariableReferenceMigrationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of references to variables from a Velocity file to a Freemarker file with the syntax replacements" />
+			<description name="Run code migration of references to variables from a Velocity file to a Freemarker file with the syntax replacements." />
 		</check>
 		<check name="UpgradeVelocityVariableSetMigrationCheck">
 			<category name="Upgrade" />
-			<description name="Run code migration of set variables from a Velocity file to a Freemarker file with the syntax replacements" />
+			<description name="Run code migration of set variables from a Velocity file to a Freemarker file with the syntax replacements." />
 		</check>
 	</source-processor>
 	<source-processor name="XMLSourceProcessor">
@@ -1953,6 +2047,10 @@
 			<category name="Upgrade" />
 			<description name="Checks and upgrades the compatibility version in `*.xml` file." />
 		</check>
+		<check name="XMLUpgradeDeclarativeServicesCheck">
+			<category name="Upgrade" />
+			<description name="Sets dependency-injector to ds in `service.xml` file." />
+		</check>
 		<check name="XMLUpgradeDTDVersionCheck">
 			<category name="Upgrade" />
 			<description name="Checks and upgrades the DTD version in `*.xml` file." />
@@ -1969,6 +2067,10 @@
 			<category name="Styling" />
 			<description name="Checks the file name of workflow definition files." />
 			<property name="enabled" value="false" />
+		</check>
+		<check name="XMLWorkflowDefinitionFileStylingCheck">
+			<category name="Styling" />
+			<description name="Applies rules to enforce consistency in code style in `*workflow-definition.xml` files." />
 		</check>
 
 		<!-- Liferay Source Checks -->

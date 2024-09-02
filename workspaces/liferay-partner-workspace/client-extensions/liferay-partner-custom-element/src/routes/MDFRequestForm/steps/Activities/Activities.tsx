@@ -11,6 +11,7 @@ import {useCallback, useEffect, useState} from 'react';
 
 import PRMForm from '../../../../common/components/PRMForm';
 import PRMFormikPageProps from '../../../../common/components/PRMFormik/interfaces/prmFormikPageProps';
+import useSetTouchedOnForms from '../../../../common/hooks/useSetTouchedOnForms';
 import MDFRequest from '../../../../common/interfaces/mdfRequest';
 import isObjectEmpty from '../../../../common/utils/isObjectEmpty';
 import {StepType} from '../../enums/stepType';
@@ -32,7 +33,6 @@ const Activities = ({
 	onSaveAsDraft,
 }: PRMFormikPageProps & MDFRequestStepProps & IProps) => {
 	const {
-		errors,
 		isSubmitting,
 		isValid,
 		setFieldValue,
@@ -41,12 +41,13 @@ const Activities = ({
 		...formikHelpers
 	} = useFormikContext<MDFRequest>();
 
+	const errors = formikHelpers.errors;
+
 	const [currentActivityIndex, setCurrentActivityIndex] = useState<
 		number | undefined
 	>();
-	const [currentActivityIndexEdit, setCurrentActivityIndexEdit] = useState<
-		number
-	>();
+	const [currentActivityIndexEdit, setCurrentActivityIndexEdit] =
+		useState<number>();
 
 	const [isDraft, setIsDraft] = useState(false);
 
@@ -80,15 +81,34 @@ const Activities = ({
 	useEffect(() => {
 		setFieldValue('maxDateActivity', maxDateActivity);
 		setFieldValue('minDateActivity', minDateActivity);
-		setFieldValue('totalCostOfExpense', totalCostOfExpense);
+		setFieldValue(
+			'convertedTotalCostOfExpense',
+			totalCostOfExpense / values.currencyExchangeRate
+		);
 		setFieldValue('totalMDFRequestAmount', totalMDFRequestAmount);
+		setFieldValue(
+			'convertedTotalMDFRequestAmount',
+			totalMDFRequestAmount / values.currencyExchangeRate
+		);
 	}, [
 		maxDateActivity,
 		minDateActivity,
 		setFieldValue,
 		totalCostOfExpense,
 		totalMDFRequestAmount,
+		values.currencyExchangeRate,
 	]);
+
+	const {isButtonClicked, setIsButtonClicked} = useSetTouchedOnForms(
+		useCallback(
+			(currentIsButtonClicked) =>
+				(!isObjectEmpty(activityErrors) && currentIsButtonClicked) ||
+				(!isObjectEmpty(activityErrors) &&
+					currentActivityIndexEdit !== undefined),
+			[activityErrors, currentActivityIndexEdit]
+		),
+		formikHelpers
+	);
 
 	const onEdit = (index: number) => {
 		arrayHelpers.push(values.activities[index]);
@@ -98,6 +118,8 @@ const Activities = ({
 	};
 
 	const onPreviousForm = useCallback(() => {
+		setIsButtonClicked(false);
+
 		if (currentActivityIndex !== undefined) {
 			arrayHelpers.remove(currentActivityIndex);
 
@@ -105,10 +127,24 @@ const Activities = ({
 		}
 
 		setCurrentActivityIndexEdit(undefined);
-	}, [arrayHelpers, currentActivityIndex]);
+	}, [arrayHelpers, currentActivityIndex, setIsButtonClicked]);
 
 	const onContinueForm = () => {
 		if (currentActivityIndex === undefined) {
+			for (let index = 0; index < values.activities.length; index++) {
+				setFieldValue(
+					`activities[${index}].convertedTotalCostOfExpense`,
+					values.activities[index].totalCostOfExpense /
+						values.currencyExchangeRate
+				);
+
+				setFieldValue(
+					`activities[${index}].convertedMDFRequestAmount`,
+					values.activities[index].mdfRequestAmount /
+						values.currencyExchangeRate
+				);
+			}
+
 			onContinue?.(formikHelpers, StepType.REVIEW);
 
 			return;
@@ -119,6 +155,8 @@ const Activities = ({
 
 	const onRemove = (index: number) => {
 		setFieldValue(`activities[${index}].removed`, true);
+
+		arrayHelpers.remove(index);
 	};
 
 	const hasActivityErrorsByIndex = (index: number): boolean =>
@@ -134,8 +172,36 @@ const Activities = ({
 			onSaveAsDraft?.(values, formikHelpers);
 			setIsDraft(false);
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isDraft]);
+
+	const handleOnClick = () => {
+		setIsButtonClicked(true);
+		window.scrollTo({
+			behavior: (isValid ? 'instant' : 'smooth') as ScrollBehavior,
+			top: 0,
+		});
+		if (
+			(isObjectEmpty(activityErrors as Object) && isButtonClicked) ||
+			isObjectEmpty(activityErrors as Object)
+		) {
+			setIsButtonClicked(false);
+			onContinueForm();
+		}
+	};
+
+	const isEditFormWithError =
+		!isObjectEmpty(activityErrors as Object) &&
+		currentActivityIndexEdit !== undefined;
+
+	const isNewFormWithError =
+		!isObjectEmpty(activityErrors as Object) && isButtonClicked;
+
+	const isDisabledSubmittedButton =
+		currentActivityIndex !== undefined
+			? isNewFormWithError || isEditFormWithError
+			: !isValid;
 
 	return (
 		<PRMForm
@@ -151,8 +217,10 @@ const Activities = ({
 				<Form
 					claimPercent={values.claimPercent}
 					currency={values.currency}
+					currencyExchangeRate={values.currencyExchangeRate}
 					currentActivity={values.activities[currentActivityIndex]}
 					currentActivityIndex={currentActivityIndex}
+					isButtonClicked={isButtonClicked}
 					setFieldValue={setFieldValue}
 				/>
 			) : (
@@ -208,12 +276,8 @@ const Activities = ({
 
 					<Button
 						className="inline-item inline-item-after"
-						disabled={
-							currentActivityIndex !== undefined
-								? !isObjectEmpty(activityErrors as Object)
-								: !isValid
-						}
-						onClick={onContinueForm}
+						disabled={isDisabledSubmittedButton}
+						onClick={() => handleOnClick()}
 					>
 						Continue
 						{isSubmitting && (

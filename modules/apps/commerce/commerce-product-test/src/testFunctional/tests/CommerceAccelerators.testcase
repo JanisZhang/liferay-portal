@@ -114,7 +114,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "testuser@liferay.com");
 		}
@@ -232,7 +232,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "testuser@liferay.com");
 		}
@@ -332,7 +332,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "testuser@liferay.com");
 		}
@@ -416,7 +416,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -617,7 +617,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "testuser@liferay.com");
 		}
@@ -686,7 +686,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "testuser@liferay.com");
 		}
@@ -845,7 +845,6 @@ definition {
 	test DeactivateCommerceAccount {
 		property portal.acceptance = "false";
 		property portal.release = "quarantine";
-		property portal.upstream = "quarantine";
 
 		// Quarantined because of COMMERCE-9825
 
@@ -877,7 +876,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -890,10 +889,7 @@ definition {
 
 		CommerceLogin.miniumLogoutPG();
 
-		CommerceLogin.miniumLogin(
-			password = "test",
-			urlAppend = "web/minium",
-			userEmailAddress = "test@liferay.com");
+		CommerceLogin.miniumLogin(urlAppend = "web/minium");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
 
@@ -902,23 +898,13 @@ definition {
 		CommerceLogin.miniumLogoutPG();
 
 		CommerceLogin.miniumLogin(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
 
 		Click(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
 
 		AssertElementPresent(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_NO_ACCOUNTS_WERE_FOUND");
-
-		CommerceAcceleratorsInitializer.changeProductsSorting(sortingType = "Name Ascending");
-
-		CommerceAcceleratorsInitializer.viewDisabledAddToCartButton(productName = "ABS Sensor");
-
-		CommerceAcceleratorsInitializer.viewAllAccountsFromAccountSelector();
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#EMPTY_INFO",
-			value1 = "No accounts were found.");
 	}
 
 	@description = "This is a workaround for an issue with Minium's sidebar on CI"
@@ -954,7 +940,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -967,10 +953,7 @@ definition {
 
 		User.logoutPG();
 
-		CommerceLogin.miniumLogin(
-			password = "test",
-			urlAppend = "web/minium",
-			userEmailAddress = "test@liferay.com");
+		CommerceLogin.miniumLogin(urlAppend = "web/minium");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
 
@@ -979,7 +962,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
 
@@ -1157,7 +1140,6 @@ definition {
 	test MiniumSiteFullFlow {
 		property portal.acceptance = "false";
 		property portal.release = "quarantine";
-		property portal.upstream = "quarantine";
 
 		// Quarantined because of COMMERCE-9825
 
@@ -1195,7 +1177,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -1234,10 +1216,7 @@ definition {
 
 		CommerceLogin.miniumLogoutPG();
 
-		CommerceLogin.miniumLogin(
-			password = "test",
-			urlAppend = "web/minium",
-			userEmailAddress = "test@liferay.com");
+		CommerceLogin.miniumLogin(urlAppend = "web/minium");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
 
@@ -1325,7 +1304,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -1366,10 +1345,7 @@ definition {
 
 		User.logoutPG();
 
-		CommerceLogin.miniumLogin(
-			password = "test",
-			urlAppend = "web/minium",
-			userEmailAddress = "test@liferay.com");
+		CommerceLogin.miniumLogin(urlAppend = "web/minium");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
 
@@ -1479,7 +1455,7 @@ definition {
 		CommerceLogin.speedwellLogout();
 
 		CommerceLogin.speedwellLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/speedwell",
 			userEmailAddress = "buyer@liferay.com");
@@ -1516,10 +1492,7 @@ definition {
 
 		CommerceLogin.speedwellLogout();
 
-		CommerceLogin.speedwellLogin(
-			password = "test",
-			urlAppend = "web/speedwell",
-			userEmailAddress = "test@liferay.com");
+		CommerceLogin.speedwellLogin(urlAppend = "web/speedwell");
 
 		Refresh();
 

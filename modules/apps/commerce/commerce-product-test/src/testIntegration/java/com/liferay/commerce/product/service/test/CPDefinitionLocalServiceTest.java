@@ -12,7 +12,6 @@ import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.constants.CPInstanceConstants;
 import com.liferay.commerce.product.model.CPDefinition;
-import com.liferay.commerce.product.model.CPDefinitionLocalization;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.model.CProduct;
@@ -36,7 +35,10 @@ import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -44,6 +46,8 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.math.BigDecimal;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.frutilla.FrutillaRule;
@@ -359,49 +363,91 @@ public class CPDefinitionLocalServiceTest {
 	}
 
 	@Test
-	public void testAvoidMaliciousCodeInCPDefinitionFields() throws Exception {
+	public void testAddExpiredCPDefinition() throws Exception {
 		frutillaRule.scenario(
-			"Add product definition with clean fields"
+			"Add product definition"
 		).given(
 			"I add a product definition"
 		).when(
-			"I try to set malicious value in fields"
+			"expirationDate is passed current date"
+		).and(
+			"neverExpire is false"
 		).then(
-			"The value is escaped."
+			"product definition should save expirationDate and have a status " +
+				"of expired"
 		);
 
+		long time = System.currentTimeMillis();
+
+		Date displayDate = new Date(time - Time.YEAR);
+		Date expirationDate = new Date(time - Time.MONTH);
+
+		Calendar expirationCalendar = CalendarFactoryUtil.getCalendar(
+			_user.getTimeZone());
+
+		expirationCalendar.setTime(expirationDate);
+
 		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
-			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME, false,
-			false);
-
-		String testString =
-			"'\"></option><img src=x onerror=alert(document.location)>";
-
-		CPDefinitionLocalization cpDefinitionLocalization =
-			_cpDefinitionLocalService.updateCPDefinitionLocalization(
-				cpDefinition, cpDefinition.getDefaultLanguageId(), testString,
-				testString, testString, testString, testString, testString);
-
-		String expectedString = "'&quot;&gt;<img src=\"x\">";
+			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME,
+			displayDate, expirationDate, false, false,
+			WorkflowConstants.STATUS_EXPIRED);
 
 		Assert.assertEquals(
-			"Expected name", expectedString,
-			cpDefinitionLocalization.getName());
+			WorkflowConstants.STATUS_EXPIRED, cpDefinition.getStatus());
+
 		Assert.assertEquals(
-			"Expected short description", expectedString,
-			cpDefinitionLocalization.getShortDescription());
+			_portal.getDate(
+				expirationCalendar.get(Calendar.MONTH),
+				expirationCalendar.get(Calendar.DATE),
+				expirationCalendar.get(Calendar.YEAR),
+				expirationCalendar.get(Calendar.HOUR_OF_DAY),
+				expirationCalendar.get(Calendar.MINUTE), _user.getTimeZone(),
+				null),
+			cpDefinition.getExpirationDate());
+	}
+
+	@Test
+	public void testAddFutureExpiredCPDefinition() throws Exception {
+		frutillaRule.scenario(
+			"Add product definition"
+		).given(
+			"I add a product definition"
+		).when(
+			"expirationDate is in a future date"
+		).and(
+			"neverExpire is false"
+		).then(
+			"product definition should save expirationDate and have a status " +
+				"of approved"
+		);
+
+		long time = System.currentTimeMillis();
+
+		Date displayDate = new Date(time);
+		Date expirationDate = new Date(time + Time.YEAR);
+
+		Calendar expirationCalendar = CalendarFactoryUtil.getCalendar(
+			_user.getTimeZone());
+
+		expirationCalendar.setTime(expirationDate);
+
+		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
+			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME,
+			displayDate, expirationDate, false, false,
+			WorkflowConstants.STATUS_APPROVED);
+
 		Assert.assertEquals(
-			"Expected description", expectedString,
-			cpDefinitionLocalization.getDescription());
+			WorkflowConstants.STATUS_APPROVED, cpDefinition.getStatus());
+
 		Assert.assertEquals(
-			"Expected metaTitle", expectedString,
-			cpDefinitionLocalization.getMetaTitle());
-		Assert.assertEquals(
-			"Expected metaDescription", expectedString,
-			cpDefinitionLocalization.getMetaDescription());
-		Assert.assertEquals(
-			"Expected metaKeywords", expectedString,
-			cpDefinitionLocalization.getMetaKeywords());
+			_portal.getDate(
+				expirationCalendar.get(Calendar.MONTH),
+				expirationCalendar.get(Calendar.DATE),
+				expirationCalendar.get(Calendar.YEAR),
+				expirationCalendar.get(Calendar.HOUR_OF_DAY),
+				expirationCalendar.get(Calendar.MINUTE), _user.getTimeZone(),
+				null),
+			cpDefinition.getExpirationDate());
 	}
 
 	@Test
@@ -530,6 +576,126 @@ public class CPDefinitionLocalServiceTest {
 		Assert.assertEquals("ERC", cProduct.getExternalReferenceCode());
 	}
 
+	@Test
+	public void testUpdateExpiredCPDefinitionWithStatusExpired()
+		throws Exception {
+
+		frutillaRule.scenario(
+			"Add product definition"
+		).given(
+			"I add a product definition"
+		).when(
+			"expirationDate is in the past"
+		).and(
+			"neverExpire is false"
+		).then(
+			"product definition should not update expirationDate and have a " +
+				"status of expired"
+		);
+
+		long time = System.currentTimeMillis();
+
+		Date displayDate = new Date(time - Time.YEAR);
+		Date expirationDate = new Date(time - Time.MONTH);
+
+		Calendar expirationCalendar1 = CalendarFactoryUtil.getCalendar(
+			_user.getTimeZone());
+
+		expirationCalendar1.setTime(expirationDate);
+
+		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
+			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME,
+			displayDate, expirationDate, false, false,
+			WorkflowConstants.STATUS_APPROVED);
+
+		cpDefinition = _cpDefinitionLocalService.updateStatus(
+			_user.getUserId(), cpDefinition.getCPDefinitionId(),
+			WorkflowConstants.STATUS_EXPIRED, _serviceContext, null);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, cpDefinition.getStatus());
+
+		Calendar expirationCalendar2 = CalendarFactoryUtil.getCalendar(
+			_user.getTimeZone());
+
+		expirationCalendar2.setTime(cpDefinition.getExpirationDate());
+
+		Assert.assertEquals(
+			_portal.getDate(
+				expirationCalendar1.get(Calendar.MONTH),
+				expirationCalendar1.get(Calendar.DATE),
+				expirationCalendar1.get(Calendar.YEAR),
+				expirationCalendar1.get(Calendar.HOUR_OF_DAY),
+				expirationCalendar1.get(Calendar.MINUTE), _user.getTimeZone(),
+				null),
+			_portal.getDate(
+				expirationCalendar2.get(Calendar.MONTH),
+				expirationCalendar2.get(Calendar.DATE),
+				expirationCalendar2.get(Calendar.YEAR),
+				expirationCalendar2.get(Calendar.HOUR_OF_DAY),
+				expirationCalendar2.get(Calendar.MINUTE), _user.getTimeZone(),
+				null));
+	}
+
+	@Test
+	public void testUpdateFutureExpiredCPDefinitionWithStatusExpired()
+		throws Exception {
+
+		frutillaRule.scenario(
+			"Add product definition"
+		).given(
+			"I add a product definition"
+		).when(
+			"expirationDate is in a future date"
+		).and(
+			"neverExpire is false"
+		).then(
+			"product definition should update expirationDate to current date " +
+				"and have a status of expired"
+		);
+
+		long time = System.currentTimeMillis();
+
+		Date displayDate = new Date(time);
+		Date expirationDate = new Date(time + Time.YEAR);
+
+		CPDefinition cpDefinition = CPTestUtil.addCPDefinitionFromCatalog(
+			_commerceCatalog.getGroupId(), SimpleCPTypeConstants.NAME,
+			displayDate, expirationDate, false, false,
+			WorkflowConstants.STATUS_APPROVED);
+
+		cpDefinition = _cpDefinitionLocalService.updateStatus(
+			_user.getUserId(), cpDefinition.getCPDefinitionId(),
+			WorkflowConstants.STATUS_EXPIRED, _serviceContext, null);
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_EXPIRED, cpDefinition.getStatus());
+
+		Calendar displayDateCalendar = CalendarFactoryUtil.getCalendar(
+			_user.getTimeZone());
+
+		displayDateCalendar.setTime(displayDate);
+
+		Calendar expirationCalendar = CalendarFactoryUtil.getCalendar(
+			_user.getTimeZone());
+
+		expirationCalendar.setTime(cpDefinition.getExpirationDate());
+
+		Assert.assertEquals(
+			_portal.getDate(
+				displayDateCalendar.get(Calendar.MONTH),
+				displayDateCalendar.get(Calendar.DATE),
+				displayDateCalendar.get(Calendar.YEAR),
+				displayDateCalendar.get(Calendar.HOUR_OF_DAY), 0,
+				_user.getTimeZone(), null),
+			_portal.getDate(
+				expirationCalendar.get(Calendar.MONTH),
+				expirationCalendar.get(Calendar.DATE),
+				expirationCalendar.get(Calendar.YEAR),
+				expirationCalendar.get(Calendar.HOUR_OF_DAY), 0,
+				_user.getTimeZone(), null));
+	}
+
 	@Rule
 	public final FrutillaRule frutillaRule = new FrutillaRule();
 
@@ -556,6 +722,9 @@ public class CPDefinitionLocalServiceTest {
 
 	@Inject
 	private CPOptionLocalService _cpOptionLocalService;
+
+	@Inject
+	private Portal _portal;
 
 	private ServiceContext _serviceContext;
 

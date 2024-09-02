@@ -35,12 +35,12 @@
 </tr>
 <tr>
 	<td>CHECKBOX_WITH_CUSTOM_CLASS_AND_ID</td>
-	<td>//input[@type='checkbox' and @id='customId' and contains(@class,'custom-css-class')]</td>
+	<td>//input[@type='checkbox' and @data-qa-id='clayCustomCheckbox01' and contains(@class,'custom-css-class')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CHECKBOX_SELECTABLE_IMAGE_CARD</td>
-	<td>//h4[contains(text(), '${key_header}')]//following::div[contains(@id,'image-card-icon-block')]//input[contains(@type,'checkbox')]</td>
+	<td>//div[contains(@class,'h4') and contains(text(), '${key_header}')]//following::div[contains(@data-qa-id,'image-card-icon-block')]//input[contains(@type,'checkbox')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -50,17 +50,17 @@
 </tr>
 <tr>
 	<td>CARD_ACTIVE</td>
-	<td>//h4[contains(text(), '${key_header}')]//following::div[contains(@class,'active file-card')]</td>
+	<td>//div[contains(@class,'h4') and contains(text(), '${key_header}')]//following::div[contains(@class,'active file-card')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>KEBAB_DROPDOWN_CARD_OPTION</td>
-	<td>//h4[contains(text(), '${key_header}')]//following::div[contains(@id,'image-card-icon-block')]//button[contains(@class, 'dropdown-toggle')]</td>
+	<td>//div[contains(@class,'h4') and contains(text(), '${key_header}')]//following::div[contains(@data-qa-id,'image-card-icon-block')]//button[contains(@class, 'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>TITLE_CARD</td>
-	<td>//h4[contains(text(), '${key_header}')]//following::a[contains(text(),'${key_title}')]</td>
+	<td>//div[contains(@class,'h4') and contains(text(), '${key_header}')]//following::a[contains(text(),'${key_title}')]</td>
 	<td></td>
 </tr>
 <tr>

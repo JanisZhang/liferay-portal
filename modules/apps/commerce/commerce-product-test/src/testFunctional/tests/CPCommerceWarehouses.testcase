@@ -301,7 +301,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -474,7 +474,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -543,7 +543,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -629,7 +629,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -655,10 +655,7 @@ definition {
 
 		User.logoutPG();
 
-		CommerceLogin.miniumLogin(
-			password = "test",
-			urlAppend = "web/minium",
-			userEmailAddress = "test@liferay.com");
+		CommerceLogin.miniumLogin(urlAppend = "web/minium");
 
 		CommerceOrders.openOrdersAdmin();
 
@@ -777,7 +774,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -801,10 +798,7 @@ definition {
 
 		User.logoutPG();
 
-		CommerceLogin.miniumLogin(
-			password = "test",
-			urlAppend = "web/minium",
-			userEmailAddress = "test@liferay.com");
+		CommerceLogin.miniumLogin(urlAppend = "web/minium");
 
 		CommerceOrders.openOrdersAdmin();
 
@@ -1055,6 +1049,9 @@ definition {
 
 		for (var warehouse : list "Italy,United States - Northeast,United States - Southwest") {
 			var key_inventoryName = ${warehouse};
+
+			WaitForElementPresent(locator1 = "CommerceEntry#INVENTORY_INPUT");
+
 			var inventoryValue = selenium.getElementValue("CommerceEntry#INVENTORY_INPUT");
 
 			var quantity = ${quantity} + ${inventoryValue};

@@ -31,9 +31,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -354,6 +357,26 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return sb.toString();
 	}
 
+	public boolean testAnalyticsCloud() {
+		if (_testAnalyticsCloud != null) {
+			return _testAnalyticsCloud;
+		}
+
+		for (SegmentTestClassGroup segmentTestClassGroup :
+				getSegmentTestClassGroups()) {
+
+			if (segmentTestClassGroup.testAnalyticsCloud()) {
+				_testAnalyticsCloud = true;
+
+				return _testAnalyticsCloud;
+			}
+		}
+
+		_testAnalyticsCloud = false;
+
+		return _testAnalyticsCloud;
+	}
+
 	protected BatchTestClassGroup(
 		JSONObject jsonObject, PortalTestClassJob portalTestClassJob) {
 
@@ -466,6 +489,67 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return globs;
 	}
 
+	protected List<JobProperty> getJobProperties(
+		File file, String basePropertyName, JobProperty.Type jobType,
+		Set<File> traversedPropertyFileSet) {
+
+		List<JobProperty> jobPropertiesList = new ArrayList<>();
+
+		File modulesBaseDir = new File(
+			portalGitWorkingDirectory.getWorkingDirectory(), "modules");
+
+		if ((file == null) || file.equals(modulesBaseDir) ||
+			JenkinsResultsParserUtil.isPoshiFile(file)) {
+
+			return jobPropertiesList;
+		}
+
+		if (!file.isDirectory()) {
+			file = file.getParentFile();
+		}
+
+		File testPropertiesFile = new File(file, "test.properties");
+
+		if (traversedPropertyFileSet == null) {
+			traversedPropertyFileSet = new HashSet<>();
+		}
+
+		if (testPropertiesFile.exists() &&
+			!traversedPropertyFileSet.contains(testPropertiesFile)) {
+
+			JobProperty jobProperty = getJobProperty(
+				basePropertyName, file, jobType);
+
+			String jobPropertyValue = jobProperty.getValue();
+
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(jobPropertyValue) &&
+				!jobPropertiesList.contains(jobProperty)) {
+
+				jobPropertiesList.add(jobProperty);
+			}
+
+			traversedPropertyFileSet.add(testPropertiesFile);
+		}
+
+		JobProperty ignoreParentsJobProperty = getJobProperty(
+			"ignoreParents[" + getTestSuiteName() + "]", file,
+			JobProperty.Type.MODULE_TEST_DIR);
+
+		boolean ignoreParents = Boolean.valueOf(
+			ignoreParentsJobProperty.getValue());
+
+		if (ignoreParents) {
+			return jobPropertiesList;
+		}
+
+		jobPropertiesList.addAll(
+			getJobProperties(
+				file.getParentFile(), basePropertyName, jobType,
+				traversedPropertyFileSet));
+
+		return jobPropertiesList;
+	}
+
 	protected JobProperty getJobProperty(String basePropertyName) {
 		return _getJobProperty(basePropertyName, null, null, null, null, true);
 	}
@@ -522,6 +606,15 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		return _getJobProperty(
 			basePropertyName, testSuiteName, testBatchName, null, type, true);
+	}
+
+	protected JobProperty getJobProperty(
+		String basePropertyName, String testSuiteName, String testBatchName,
+		String ruleName, File testBaseDir, JobProperty.Type type) {
+
+		return _getJobProperty(
+			basePropertyName, testSuiteName, testBatchName, ruleName,
+			testBaseDir, type, true);
 	}
 
 	protected List<PathMatcher> getPathMatchers(
@@ -790,6 +883,10 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 					"Row length does not match headers length");
 			}
 
+			if (_csvReportRows.contains(csvReportRow)) {
+				return;
+			}
+
 			_csvReportRows.add(csvReportRow);
 		}
 
@@ -820,6 +917,28 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 				for (String string : strings) {
 					add(string);
 				}
+			}
+
+			@Override
+			public boolean equals(Object object) {
+				if (this == object) {
+					return true;
+				}
+
+				if (!(object instanceof Row) ||
+					!Objects.equals(toString(), object.toString())) {
+
+					return false;
+				}
+
+				return true;
+			}
+
+			@Override
+			public int hashCode() {
+				String string = toString();
+
+				return string.hashCode();
 			}
 
 			@Override
@@ -924,6 +1043,20 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		return JobPropertyFactory.newJobProperty(
 			basePropertyName, testSuiteName, testBatchName, getJob(),
+			testBaseDir, type, useBasePropertyName);
+	}
+
+	private JobProperty _getJobProperty(
+		String basePropertyName, String testSuiteName, String testBatchName,
+		String ruleName, File testBaseDir, JobProperty.Type type,
+		boolean useBasePropertyName) {
+
+		if (testBatchName == null) {
+			testBatchName = getBatchName();
+		}
+
+		return JobPropertyFactory.newJobProperty(
+			basePropertyName, testSuiteName, testBatchName, ruleName, getJob(),
 			testBaseDir, type, useBasePropertyName);
 	}
 
@@ -1177,5 +1310,6 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	private final List<JobProperty> _jobProperties = new ArrayList<>();
 	private final List<SegmentTestClassGroup> _segmentTestClassGroups =
 		new ArrayList<>();
+	private Boolean _testAnalyticsCloud;
 
 }

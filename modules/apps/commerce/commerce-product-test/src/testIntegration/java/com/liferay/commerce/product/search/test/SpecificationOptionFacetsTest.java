@@ -98,7 +98,7 @@ public class SpecificationOptionFacetsTest {
 
 		CPOptionCategory cpOptionCategory =
 			_cpOptionCategoryLocalService.addCPOptionCategory(
-				serviceContext.getUserId(),
+				RandomTestUtil.randomString(), serviceContext.getUserId(),
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomDouble(), RandomTestUtil.randomString(),
@@ -106,11 +106,12 @@ public class SpecificationOptionFacetsTest {
 
 		CPSpecificationOption cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
-				serviceContext.getUserId(),
-				cpOptionCategory.getCPOptionCategoryId(),
+				RandomTestUtil.randomString(), serviceContext.getUserId(),
+				cpOptionCategory.getCPOptionCategoryId(), 0,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
-				RandomTestUtil.randomString(), serviceContext);
+				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
+				serviceContext);
 
 		_cpDefinitionSpecificationOptionValueLocalService.
 			addCPDefinitionSpecificationOptionValue(
@@ -175,7 +176,7 @@ public class SpecificationOptionFacetsTest {
 
 		CPOptionCategory cpOptionCategory =
 			_cpOptionCategoryLocalService.addCPOptionCategory(
-				serviceContext.getUserId(),
+				RandomTestUtil.randomString(), serviceContext.getUserId(),
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomDouble(), RandomTestUtil.randomString(),
@@ -183,11 +184,11 @@ public class SpecificationOptionFacetsTest {
 
 		CPSpecificationOption cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
-				serviceContext.getUserId(),
-				cpOptionCategory.getCPOptionCategoryId(),
+				RandomTestUtil.randomString(), serviceContext.getUserId(),
+				cpOptionCategory.getCPOptionCategoryId(), 0,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), false,
-				RandomTestUtil.randomString(), serviceContext);
+				RandomTestUtil.randomString(), 0, serviceContext);
 
 		_cpDefinitionSpecificationOptionValueLocalService.
 			addCPDefinitionSpecificationOptionValue(

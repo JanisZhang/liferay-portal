@@ -1,4 +1,4 @@
-@component-name = "portal-web-forms-and-data-lists"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -52,6 +52,10 @@ definition {
 					optionName = "Option${optionNumbers}",
 					optionValue = "Option ${optionNumbers}",
 					rowNumber = ${row});
+
+				if (${number} != 3) {
+					FormFields.clickAddOptionButton();
+				}
 
 				var row = ${row} + 1;
 			}

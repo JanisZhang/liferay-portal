@@ -11,10 +11,10 @@ import {
 	API,
 	FormError,
 	Input,
-	REQUIRED_MSG,
-	getLocalizableLabel,
+	constantsUtils,
 	invalidateLocalizableLabelRequired,
 	openToast,
+	stringUtils,
 	useForm,
 } from '@liferay/object-js-components-web';
 import {InputLocalized} from 'frontend-js-components-web';
@@ -29,6 +29,7 @@ interface ModalEditObjectFolderProps {
 	id: number;
 	initialLabel?: LocalizedValue<string>;
 	name?: string;
+	onAfterSubmit: (value: ObjectFolder) => void;
 }
 
 type TInitialValues = {
@@ -43,12 +44,12 @@ export function ModalEditObjectFolder({
 	id,
 	initialLabel,
 	name,
+	onAfterSubmit,
 }: ModalEditObjectFolderProps) {
 	const [error, setError] = useState<string>('');
 
-	const [selectedLocale, setSelectedLocale] = useState<
-		Liferay.Language.Locale
-	>(defaultLanguageId);
+	const [selectedLocale, setSelectedLocale] =
+		useState<Liferay.Language.Locale>(defaultLanguageId);
 
 	const {observer, onClose} = useModal({
 		onClose: () => handleOnClose(),
@@ -64,19 +65,18 @@ export function ModalEditObjectFolder({
 		const objectFolder: Partial<ObjectFolder> = values;
 
 		try {
-			await API.save({
+			const editedObjectFolder = await API.save<ObjectFolder>({
 				item: objectFolder,
 				method: 'PATCH',
+				returnValue: true,
 				url: `/o/object-admin/v1.0/object-folders/${id}`,
 			});
-
-			onClose();
 
 			openToast({
 				message: sub(
 					Liferay.Language.get('x-was-saved-successfully'),
 					`<strong>${Liferay.Util.escapeHTML(
-						getLocalizableLabel(
+						stringUtils.getLocalizableLabel(
 							defaultLanguageId,
 							objectFolder.label,
 							objectFolder.name
@@ -86,7 +86,9 @@ export function ModalEditObjectFolder({
 				type: 'success',
 			});
 
-			setTimeout(() => window.location.reload(), 1000);
+			onClose();
+
+			onAfterSubmit(editedObjectFolder as ObjectFolder);
 		}
 		catch (error) {
 			setError((error as Error).message);
@@ -97,11 +99,11 @@ export function ModalEditObjectFolder({
 		const errors: FormError<TInitialValues> = {};
 
 		if (invalidateLocalizableLabelRequired(values.label)) {
-			errors.label = REQUIRED_MSG;
+			errors.label = constantsUtils.REQUIRED_MSG;
 		}
 
 		if (!values.externalReferenceCode) {
-			errors.externalReferenceCode = REQUIRED_MSG;
+			errors.externalReferenceCode = constantsUtils.REQUIRED_MSG;
 		}
 
 		return errors;
@@ -129,6 +131,7 @@ export function ModalEditObjectFolder({
 						<InputLocalized
 							error={errors.label}
 							label={Liferay.Language.get('label')}
+							name="objectFolderLabel"
 							onChange={(label) => setValues({label})}
 							onSelectedLocaleChange={setSelectedLocale}
 							required

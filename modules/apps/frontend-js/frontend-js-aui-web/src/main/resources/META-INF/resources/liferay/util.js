@@ -1,4 +1,5 @@
 /* eslint-disable @liferay/aui/no-one */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -60,12 +61,13 @@
 							const Layout = Liferay.Layout;
 
 							if (Layout) {
-								instance._dragListener = Layout.getLayoutHandler().on(
-									'drag:start',
-									() => {
-										instance.fire('save');
-									}
-								);
+								instance._dragListener =
+									Layout.getLayoutHandler().on(
+										'drag:start',
+										() => {
+											instance.fire('save');
+										}
+									);
 							}
 
 							const title = instance.get('node');
@@ -73,9 +75,8 @@
 							instance._titleListener = title.on(
 								'mouseupoutside',
 								(event) => {
-									const editable = Util._getEditableInstance(
-										title
-									);
+									const editable =
+										Util._getEditableInstance(title);
 
 									if (
 										!editable
@@ -523,6 +524,7 @@
 			// eslint-disable-next-line prefer-object-spread
 			config = Object.assign(
 				{},
+
 				// eslint-disable-next-line prefer-object-spread
 				Object.assign({}, currentTarget.dataset),
 				config
@@ -750,6 +752,7 @@
 		Util,
 		'afterIframeLoaded',
 		(event) => {
+
 			// eslint-disable-next-line @liferay/aui/no-node
 			const nodeInstances = A.Node._instances;
 
@@ -846,6 +849,7 @@
 			const defaultValues = {
 				eventName: 'selectStructure',
 			};
+
 			// eslint-disable-next-line @liferay/aui/no-merge
 			config = A.merge(defaultValues, config);
 
@@ -1125,14 +1129,14 @@
 							const defaultIconsTpl =
 								A.ToolbarRenderer.prototype.TEMPLATES.icon;
 
-							A.ToolbarRenderer.prototype.TEMPLATES.icon = Liferay.Util.getLexiconIconTpl(
-								'{cssClass}'
-							);
+							A.ToolbarRenderer.prototype.TEMPLATES.icon =
+								Liferay.Util.getLexiconIconTpl('{cssClass}');
 
 							editable._comboBox.icons.destroy();
 							editable._comboBox._renderIcons();
 
-							A.ToolbarRenderer.prototype.TEMPLATES.icon = defaultIconsTpl;
+							A.ToolbarRenderer.prototype.TEMPLATES.icon =
+								defaultIconsTpl;
 						}
 					});
 
@@ -1187,6 +1191,7 @@
 
 				const editURL = new Liferay.Util.PortletURL.createPortletURL(
 					config.uri,
+
 					// eslint-disable-next-line @liferay/aui/no-merge
 					A.merge(
 						{
@@ -1212,109 +1217,6 @@
 							['destroy', 'visibleChange'],
 							detachSelectionOnHideFn
 						)
-					);
-
-					Liferay.on('destroyPortlet', destroyDialog);
-				});
-			}
-		},
-		['aui-base', 'liferay-util-window']
-	);
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by `openSelectionModal`
-	 */
-	Liferay.provide(
-		Util,
-		'selectEntity',
-		(config, callback) => {
-			const dialog = Util.getWindow(config.id);
-
-			const eventName = config.eventName || config.id;
-
-			const eventHandles = [Liferay.on(eventName, callback)];
-
-			const selectedData = config.selectedData;
-
-			if (selectedData) {
-				config.dialog.destroyOnHide = true;
-			}
-
-			const detachSelectionOnHideFn = function (event) {
-				if (!event.newVal) {
-					new A.EventHandle(eventHandles).detach();
-				}
-			};
-
-			const syncAssets = function (event) {
-				const currentWindow = event.currentTarget.node.get(
-					'contentWindow.document'
-				);
-
-				const selectorButtons = currentWindow.all(
-					'.lfr-search-container-wrapper .selector-button'
-				);
-
-				if (selectedData) {
-					// eslint-disable-next-line @liferay/aui/no-each
-					A.each(selectorButtons, (item) => {
-						let assetEntryId =
-							item.attr('data-entityid') ||
-							item.attr('data-entityname');
-
-						const assetGroupId = item.attr('data-groupid');
-
-						if (assetGroupId) {
-							assetEntryId = assetGroupId + '-' + assetEntryId;
-						}
-
-						const disabled = selectedData.includes(assetEntryId);
-
-						if (disabled) {
-							item.attr('data-prevent-selection', true);
-						}
-						else {
-							item.removeAttribute('data-prevent-selection');
-						}
-
-						Util.toggleDisabled(item, disabled);
-					});
-				}
-			};
-
-			if (dialog) {
-				eventHandles.push(
-					dialog.after(
-						['destroy', 'visibleChange'],
-						detachSelectionOnHideFn
-					)
-				);
-
-				dialog.show();
-			}
-			else {
-				const destroyDialog = function (event) {
-					const dialogId = config.id;
-
-					const dialogWindow = Util.getWindow(dialogId);
-
-					if (
-						dialogWindow &&
-						Util.getPortletId(dialogId) === event.portletId
-					) {
-						dialogWindow.destroy();
-
-						Liferay.detach('destroyPortlet', destroyDialog);
-					}
-				};
-
-				Util.openWindow(config, (dialogWindow) => {
-					eventHandles.push(
-						dialogWindow.after(
-							['destroy', 'visibleChange'],
-							detachSelectionOnHideFn
-						),
-						dialogWindow.iframe.after(['load'], syncAssets)
 					);
 
 					Liferay.on('destroyPortlet', destroyDialog);

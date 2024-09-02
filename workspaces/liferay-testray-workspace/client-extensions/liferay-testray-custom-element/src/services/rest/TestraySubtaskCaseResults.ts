@@ -5,94 +5,30 @@
 
 import Rest from '../../core/Rest';
 import yupSchema from '../../schema/yup';
-import {TestraySubTaskCaseResult} from './types';
+import {TestrayCaseResult} from './types';
 
 type SubtaskCaseResultForm = typeof yupSchema.subtaskToCaseResult.__outputType;
 
 class TestraySubtaskCaseResultImpl extends Rest<
 	SubtaskCaseResultForm,
-	TestraySubTaskCaseResult
+	TestrayCaseResult
 > {
 	constructor() {
 		super({
 			adapter: ({
-				caseResultId: r_caseResultToSubtasksCasesResults_c_caseResultId,
 				issues,
-				name,
-				subtaskId: r_subtaskToSubtasksCasesResults_c_subtaskId,
+				subtaskId: r_subtaskToCaseResults_c_subtaskId,
 			}) => ({
 				issues,
-				name,
-				r_caseResultToSubtasksCasesResults_c_caseResultId,
-				r_subtaskToSubtasksCasesResults_c_subtaskId,
+				r_subtaskToCaseResults_c_subtaskId,
 			}),
 			nestedFields:
-				'caseResult.case,caseResult.component.team,caseResult.build.routine,caseResult.build.project,caseResult.run,subtask.user',
-			transformData: (subtaskCaseResult) => ({
-				caseResult: subtaskCaseResult?.r_caseResultToSubtasksCasesResults_c_caseResult
-					? {
-							...subtaskCaseResult?.r_caseResultToSubtasksCasesResults_c_caseResult,
-							build: subtaskCaseResult
-								.r_caseResultToSubtasksCasesResults_c_caseResult
-								?.r_buildToCaseResult_c_build
-								? {
-										...subtaskCaseResult
-											.r_caseResultToSubtasksCasesResults_c_caseResult
-											?.r_buildToCaseResult_c_build,
-
-										project:
-											subtaskCaseResult
-												.r_caseResultToSubtasksCasesResults_c_caseResult
-												?.r_buildToCaseResult_c_build
-												?.r_projectToBuilds_c_project,
-										routine:
-											subtaskCaseResult
-												.r_caseResultToSubtasksCasesResults_c_caseResult
-												?.r_buildToCaseResult_c_build
-												?.r_routineToBuilds_c_routine,
-								  }
-								: undefined,
-							case:
-								subtaskCaseResult
-									?.r_caseResultToSubtasksCasesResults_c_caseResult
-									.r_caseToCaseResult_c_case,
-							component: subtaskCaseResult
-								.r_caseResultToSubtasksCasesResults_c_caseResult
-								?.r_componentToCaseResult_c_component
-								? {
-										...subtaskCaseResult
-											.r_caseResultToSubtasksCasesResults_c_caseResult
-											?.r_componentToCaseResult_c_component,
-										team:
-											subtaskCaseResult
-												.r_caseResultToSubtasksCasesResults_c_caseResult
-												?.r_componentToCaseResult_c_component
-												.r_teamToComponents_c_team,
-								  }
-								: undefined,
-							run:
-								subtaskCaseResult
-									?.r_caseResultToSubtasksCasesResults_c_caseResult
-									.r_runToCaseResult_c_run,
-					  }
-					: undefined,
-				id: subtaskCaseResult.id,
-				name: '',
-				subTask: subtaskCaseResult?.r_subtaskToSubtasksCasesResults_c_subtask
-					? {
-							...subtaskCaseResult?.r_subtaskToSubtasksCasesResults_c_subtask,
-							task:
-								subtaskCaseResult
-									.r_subtaskToSubtasksCasesResults_c_subtask
-									?.r_taskToSubtasks_c_task,
-							user:
-								subtaskCaseResult
-									.r_subtaskToSubtasksCasesResults_c_subtask
-									?.r_userToSubtasks_user,
-					  }
-					: undefined,
+				'case.caseType,component.team.name,team,build.project,build.routine,run,user,subtask',
+			transformData: (caseResult) => ({
+				...caseResult,
+				id: caseResult.testrayCaseResultId ?? 0,
 			}),
-			uri: 'subtaskscasesresultses',
+			uri: 'caseresults',
 		});
 	}
 }

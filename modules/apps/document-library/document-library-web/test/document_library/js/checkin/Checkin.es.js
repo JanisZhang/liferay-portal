@@ -8,7 +8,7 @@ import {fireEvent, render} from '@testing-library/react';
 import React from 'react';
 import {act} from 'react-dom/test-utils';
 
-import Checkin from '../../../../src/main/resources/META-INF/resources/document_library/js/checkin/Checkin.es';
+import Checkin from '../../../../src/main/resources/META-INF/resources/js/document_library/checkin/Checkin.es';
 
 const bridgeComponentId = '_portletNamespace_DocumentLibraryCheckinModal';
 const dlVersionNumberIncreaseValues = {
@@ -90,13 +90,11 @@ describe('Checkin', () => {
 					beforeEach(async () => {
 						const saveButton = await result.findByText('save');
 
-						const changeLogField = await result.findByLabelText(
-							'version-notes'
-						);
+						const changeLogField =
+							await result.findByLabelText('version-notes');
 
-						const minorVersionRadio = await result.findByLabelText(
-							'minor-version'
-						);
+						const minorVersionRadio =
+							await result.findByLabelText('minor-version');
 
 						act(() => {
 							fireEvent.change(changeLogField, {
@@ -134,9 +132,9 @@ describe('Checkin', () => {
 					callback = jest.fn();
 
 					return act(() =>
-						Liferay.componentReady(
-							bridgeComponentId
-						).then(({open}) => open(callback))
+						Liferay.componentReady(bridgeComponentId).then(
+							({open}) => open(callback)
+						)
 					);
 				});
 

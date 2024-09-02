@@ -30,6 +30,11 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 		? `${myUserAccount?.givenName} ${myUserAccount?.familyName}`
 		: Liferay.ThemeDisplay.getUserName();
 
+	const logout = () => {
+		fetch(`${window.location.origin}/c/portal/logout`);
+		window.location.href = 'https://login.liferay.com/login/signout';
+	};
+
 	return (
 		<div className="tr-sidebar__content__footer">
 			<div className="d-flex justify-content-end">
@@ -42,7 +47,8 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 							className={classNames(
 								'tr-sidebar__content__footer__forwardicon',
 								{
-									'tr-sidebar__content__footer__forwardicon--expand': expanded,
+									'tr-sidebar__content__footer__forwardicon--expand':
+										expanded,
 								}
 							)}
 						/>
@@ -65,8 +71,10 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 								className={classNames(
 									'tr-sidebar__content__list__item',
 									{
-										'tr-sidebar__content__list__item--expand': expanded,
-										'tr-sidebar__content__list__item--normal': !expanded,
+										'tr-sidebar__content__list__item--expand':
+											expanded,
+										'tr-sidebar__content__list__item--normal':
+											!expanded,
 									}
 								)}
 							>
@@ -81,7 +89,8 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 									className={classNames(
 										'tr-sidebar__content__list__item__text',
 										{
-											'tr-sidebar__content__list__item__text--expanded': expanded,
+											'tr-sidebar__content__list__item__text--expanded':
+												expanded,
 										}
 									)}
 								>
@@ -107,7 +116,7 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 							{
 								icon: 'logout',
 								label: i18n.translate('sign-out'),
-								path: `${window.location.origin}/c/portal/logout`,
+								onClick: () => logout(),
 							},
 						],
 						title: '',
@@ -125,7 +134,8 @@ const SidebarFooter: React.FC<SidebarProps> = ({expanded, onClick}) => {
 									className={classNames(
 										'tr-sidebar__content__footer__avatar',
 										{
-											'tr-sidebar__content__footer__avatar--expanded': expanded,
+											'tr-sidebar__content__footer__avatar--expanded':
+												expanded,
 										}
 									)}
 									displayName

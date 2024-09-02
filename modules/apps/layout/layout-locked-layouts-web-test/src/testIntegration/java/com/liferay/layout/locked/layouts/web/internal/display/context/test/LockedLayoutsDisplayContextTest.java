@@ -41,7 +41,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.lock.model.Lock;
 import com.liferay.portal.lock.service.LockLocalService;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portlet.test.MockLiferayPortletContext;
@@ -66,7 +65,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Mikel Lorza
  */
-@FeatureFlags("LPS-180328")
 @RunWith(Arquillian.class)
 public class LockedLayoutsDisplayContextTest {
 
@@ -257,7 +255,7 @@ public class LockedLayoutsDisplayContextTest {
 		throws Exception {
 
 		_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(), 0, 0, 0,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0, 0,
 			RandomTestUtil.randomString(), type, 0, true, 0, plid, 0,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
@@ -336,13 +334,15 @@ public class LockedLayoutsDisplayContextTest {
 	}
 
 	private Layout _getDraftLayout(String type) throws Exception {
-		if (Objects.equals(LayoutConstants.TYPE_ASSET_DISPLAY, type)) {
+		if (Objects.equals(LayoutConstants.TYPE_ASSET_DISPLAY, type) ||
+			Objects.equals(LayoutConstants.TYPE_UTILITY, type)) {
+
 			_serviceContext.setAttribute(
 				"layout.instanceable.allowed", Boolean.TRUE);
 		}
 
 		Layout layout = _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 0,
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), Collections.emptyMap(),
@@ -372,7 +372,7 @@ public class LockedLayoutsDisplayContextTest {
 	}
 
 	private Layout _getDraftLayoutUtilityPageEntry() throws Exception {
-		Layout draftLayout = _getDraftLayout();
+		Layout draftLayout = _getDraftLayout(LayoutConstants.TYPE_UTILITY);
 
 		_layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 			null, _serviceContext.getUserId(),

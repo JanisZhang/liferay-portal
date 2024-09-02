@@ -11,7 +11,10 @@ import com.liferay.jethr0.environment.EnvironmentEntity;
 import com.liferay.jethr0.jenkins.node.JenkinsNodeEntity;
 import com.liferay.jethr0.job.JobEntity;
 import com.liferay.jethr0.task.TaskEntity;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
 import com.liferay.jethr0.util.StringUtil;
+
+import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,6 +90,14 @@ public abstract class BaseBuildEntity
 	@Override
 	public Set<BuildEntity> getChildBuildEntities() {
 		return _childBuildEntities;
+	}
+
+	@Override
+	public URL getEntityURL() {
+		return StringUtil.toURL(
+			StringUtil.combine(
+				Jethr0ContextUtil.getLiferayPortalURL(), "/#/builds/",
+				getId()));
 	}
 
 	@Override
@@ -213,6 +224,7 @@ public abstract class BaseBuildEntity
 		return _name;
 	}
 
+	@Override
 	public Set<BuildEntity> getParentBuildEntities() {
 		return _parentBuildEntities;
 	}
@@ -311,27 +323,25 @@ public abstract class BaseBuildEntity
 	}
 
 	@Override
-	public void setState(State state) {
-		_state = state;
-	}
-
-	protected BaseBuildEntity(JSONObject jsonObject) {
-		super(jsonObject);
+	public void setJSONObject(JSONObject jsonObject) {
+		super.setJSONObject(jsonObject);
 
 		_initialBuild = jsonObject.optBoolean("initialBuild");
 		_jenkinsJobName = jsonObject.getString("jenkinsJobName");
 		_jobEntityId = jsonObject.optLong("r_jobToBuilds_c_jobId");
 		_name = jsonObject.getString("name");
-		_state = State.get(jsonObject.getJSONObject("state"));
+		_state = State.get(jsonObject.get("state"));
 
-		String paramaters = jsonObject.getString("parameters");
+		String parameters = jsonObject.getString("parameters");
 
-		if (StringUtil.isNullOrEmpty(paramaters)) {
+		if (StringUtil.isNullOrEmpty(parameters)) {
 			return;
 		}
 
+		_parameters = new HashMap<>();
+
 		try {
-			JSONArray parametersJSONArray = new JSONArray(paramaters);
+			JSONArray parametersJSONArray = new JSONArray(parameters);
 
 			for (int i = 0; i < parametersJSONArray.length(); i++) {
 				JSONObject parameterJSONObject =
@@ -347,6 +357,15 @@ public abstract class BaseBuildEntity
 				_log.warn(jsonException);
 			}
 		}
+	}
+
+	@Override
+	public void setState(State state) {
+		_state = state;
+	}
+
+	protected BaseBuildEntity(JSONObject jsonObject) {
+		super(jsonObject);
 	}
 
 	private Set<BuildEntity> _getAllChildBuildEntities() {
@@ -413,12 +432,12 @@ public abstract class BaseBuildEntity
 	private static final Log _log = LogFactory.getLog(BaseBuildEntity.class);
 
 	private final Set<BuildEntity> _childBuildEntities = new HashSet<>();
-	private final boolean _initialBuild;
+	private boolean _initialBuild;
 	private String _jenkinsJobName;
 	private JobEntity _jobEntity;
 	private long _jobEntityId;
-	private final String _name;
-	private final Map<String, String> _parameters = new HashMap<>();
+	private String _name;
+	private Map<String, String> _parameters;
 	private final Set<BuildEntity> _parentBuildEntities = new HashSet<>();
 	private State _state;
 

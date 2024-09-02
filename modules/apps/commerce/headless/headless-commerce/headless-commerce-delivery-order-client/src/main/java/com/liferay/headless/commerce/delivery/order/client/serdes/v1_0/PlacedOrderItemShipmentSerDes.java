@@ -142,6 +142,21 @@ public class PlacedOrderItemShipmentSerDes {
 			sb.append("\"");
 		}
 
+		if (placedOrderItemShipment.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(placedOrderItemShipment.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (placedOrderItemShipment.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -364,6 +379,16 @@ public class PlacedOrderItemShipmentSerDes {
 					placedOrderItemShipment.getEstimatedShippingDate()));
 		}
 
+		if (placedOrderItemShipment.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(
+					placedOrderItemShipment.getExternalReferenceCode()));
+		}
+
 		if (placedOrderItemShipment.getId() == null) {
 			map.put("id", null);
 		}
@@ -488,6 +513,77 @@ public class PlacedOrderItemShipmentSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "accountId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "author")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "carrier")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "createDate")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "estimatedDeliveryDate")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "estimatedShippingDate")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "modifiedDate")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "quantity")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippingAddressId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippingMethodId")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "shippingOptionName")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "supplierShipment")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "trackingNumber")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "trackingURL")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "unitOfMeasureKey")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			PlacedOrderItemShipment placedOrderItemShipment,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
@@ -530,6 +626,14 @@ public class PlacedOrderItemShipmentSerDes {
 				if (jsonParserFieldValue != null) {
 					placedOrderItemShipment.setEstimatedShippingDate(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					placedOrderItemShipment.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -638,36 +742,7 @@ public class PlacedOrderItemShipmentSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -677,6 +752,38 @@ public class PlacedOrderItemShipmentSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

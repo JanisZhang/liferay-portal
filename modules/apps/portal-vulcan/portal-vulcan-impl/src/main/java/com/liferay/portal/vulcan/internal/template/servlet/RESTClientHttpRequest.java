@@ -5,7 +5,6 @@
 
 package com.liferay.portal.vulcan.internal.template.servlet;
 
-import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
@@ -37,7 +36,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpUpgradeHandler;
@@ -53,6 +51,8 @@ public class RESTClientHttpRequest implements HttpServletRequest {
 		HttpServletRequest httpServletRequest) {
 
 		_attributes = HashMapBuilder.<String, Object>put(
+			RESTClientHttpRequest.class.getName(), true
+		).put(
 			WebKeys.USER,
 			() -> {
 				if (contextObjects.containsKey("user")) {
@@ -77,12 +77,25 @@ public class RESTClientHttpRequest implements HttpServletRequest {
 				HttpSession httpSession =
 					PortalSessionThreadLocal.getHttpSession();
 
-				if (httpSession != null) {
-					return (String)httpSession.getAttribute(
-						WebKeys.AUTHENTICATION_TOKEN + "#CSRF");
+				if (httpSession == null) {
+					return null;
 				}
 
-				return null;
+				String csrfToken = (String)httpSession.getAttribute(
+					WebKeys.AUTHENTICATION_TOKEN + "#CSRF");
+
+				if (csrfToken == null) {
+					return null;
+				}
+
+				httpSession = httpServletRequest.getSession(false);
+
+				if (httpSession != null) {
+					httpSession.setAttribute(
+						WebKeys.AUTHENTICATION_TOKEN + "#CSRF", csrfToken);
+				}
+
+				return csrfToken;
 			}
 		).build();
 		_httpServletRequest = httpServletRequest;
@@ -352,18 +365,6 @@ public class RESTClientHttpRequest implements HttpServletRequest {
 
 	@Override
 	public HttpSession getSession(boolean create) {
-		HttpServletRequestWrapper httpServletRequestWrapper =
-			(HttpServletRequestWrapper)_httpServletRequest;
-
-		ServletRequest servletRequest = httpServletRequestWrapper.getRequest();
-
-		if (servletRequest instanceof DynamicServletRequest) {
-			DynamicServletRequest dynamicServletRequest =
-				(DynamicServletRequest)servletRequest;
-
-			return dynamicServletRequest.getSession(create);
-		}
-
 		return _httpServletRequest.getSession(create);
 	}
 

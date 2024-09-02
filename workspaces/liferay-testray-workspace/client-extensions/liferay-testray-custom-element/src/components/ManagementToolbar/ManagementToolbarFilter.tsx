@@ -4,8 +4,8 @@
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
-import ClayPopover from '@clayui/popover';
 import classNames from 'classnames';
 import {
 	useCallback,
@@ -15,19 +15,24 @@ import {
 	useRef,
 	useState,
 } from 'react';
-import {useLocation, useNavigate} from 'react-router-dom';
+import {useHotkeys} from 'react-hotkeys-hook';
+import {useLocation, useNavigate, useParams} from 'react-router-dom';
+import useSWR from 'swr';
 import {ListViewContext, ListViewTypes} from '~/context/ListViewContext';
 import SearchBuilder from '~/core/SearchBuilder';
 import useFormActions from '~/hooks/useFormActions';
-import useQueryParams from '~/hooks/useQueryParams';
+import useUpdateUrlParams from '~/hooks/useUpdateUrlParams';
 import i18n from '~/i18n';
 import {FilterSchema} from '~/schema/filter';
+import fetcher from '~/services/fetcher';
+import {safeJSONParse} from '~/util';
 
 import Form from '../Form';
 import {RendererFields} from '../Form/Renderer';
 
 type ManagementToolbarFilterProps = {
 	applyFilters?: boolean;
+	customFilterFields?: {[key: string]: string};
 	filterSchema?: FilterSchema;
 };
 
@@ -35,61 +40,39 @@ type Option = {label: string; value: string};
 
 type FilterBodyProps = {
 	applyFilters?: boolean;
-	buttonRef: React.RefObject<HTMLButtonElement>;
+	customFilterFields?: {[key: string]: string};
 	filterSchema: FilterSchema | undefined;
-	setPosition: React.Dispatch<React.SetStateAction<number>>;
-	setVisible: React.Dispatch<React.SetStateAction<boolean>>;
-	visible: boolean;
+
+	isVisible: boolean;
+	setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const FilterBody: React.FC<FilterBodyProps> = ({
 	applyFilters = true,
-	buttonRef,
+	customFilterFields,
 	filterSchema,
-	setPosition,
-	setVisible,
-	visible,
+	isVisible,
+	setIsVisible,
 }) => {
 	const [filter, setFilter] = useState('');
-	const {updateUrlParams} = useQueryParams();
+	const updateUrlParams = useUpdateUrlParams();
 
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		const timeout = setTimeout(() => {
-			if (visible) {
+			if (isVisible) {
 				inputRef?.current?.focus();
 			}
 		}, 100);
 
 		return () => clearTimeout(timeout);
-	}, [visible]);
+	}, [isVisible]);
 
-	const fields = useMemo(() => filterSchema?.fields as RendererFields[], [
-		filterSchema?.fields,
-	]);
-
-	useEffect(() => {
-		const container = document.querySelector('.tr-main__body__page');
-
-		const scrollHandler = () => {
-			const screenHeight = (container as any)?.offsetHeight;
-			const buttonRelativePosition =
-				buttonRef?.current?.getBoundingClientRect().bottom ?? 0;
-
-			const calculatePosition = screenHeight - buttonRelativePosition;
-
-			const position = calculatePosition > 0 ? calculatePosition : 1;
-
-			setPosition(position);
-		};
-
-		container?.addEventListener('scroll', scrollHandler);
-
-		return () => {
-			container?.removeEventListener('scroll', scrollHandler);
-		};
-	}, [buttonRef, setPosition]);
+	const fields = useMemo(
+		() => filterSchema?.fields as RendererFields[],
+		[filterSchema?.fields]
+	);
 
 	const initialFilters = useMemo(() => {
 		const initialValues: {[key: string]: string} = {};
@@ -105,6 +88,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 	const [listViewContext, dispatch] = useContext(ListViewContext);
 	const location = useLocation();
 	const navigate = useNavigate();
+	const params = useParams();
 	const [form, setForm] = useState(() => ({
 		...initialFilters,
 		...listViewContext.filters.filter,
@@ -122,7 +106,6 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 
 	const handleRemoveItemFromFilter = useCallback(() => {
 		const searchParams = new URLSearchParams(location.search);
-
 		searchParams.delete('filter');
 		searchParams.delete('filterSchema');
 
@@ -130,6 +113,57 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 			search: `?${searchParams.toString()}`,
 		});
 	}, [location.search, navigate]);
+
+	const paramsMemoized = useMemo(() => {
+		const testrayModalParams = document.getElementById(
+			'testray-modal-params'
+		);
+
+		if (testrayModalParams) {
+			return testrayModalParams.textContent;
+		}
+
+		return JSON.stringify({...params, ...customFilterFields});
+	}, [params, customFilterFields]);
+
+	const fieldsMemoized = useMemo(() => filterSchema?.fields, [filterSchema]);
+
+	const {data: fieldOptions = {}, isLoading} = useSWR(
+		filterSchema?.fields?.length ? `/filter-${filterSchema?.name}` : null,
+		async () => {
+			const parameters = safeJSONParse(paramsMemoized);
+
+			const fieldsWithResource = fieldsMemoized?.filter(
+				({resource}) => resource
+			);
+
+			const _fieldOptions: any = {};
+
+			if (fieldsWithResource) {
+				await Promise.all(
+					fieldsWithResource.map((field) =>
+						fetcher(
+							(typeof field.resource === 'function'
+								? field.resource(parameters)
+								: field.resource) as string
+						)
+					)
+				).then((results) =>
+					results.forEach((result, index) => {
+						const field = fieldsWithResource[index];
+
+						if (field.transformData) {
+							const parsedValue = field.transformData(result);
+
+							_fieldOptions[field.name] = parsedValue;
+						}
+					})
+				);
+			}
+
+			return _fieldOptions;
+		}
+	);
 
 	const onApply = useCallback(() => {
 		const filterCleaned = SearchBuilder.removeEmptyFilter(form);
@@ -147,11 +181,17 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 		});
 
 		const filters = Object.keys(filterCleaned).map((key) => {
+			const field = fields?.find(({name}) => name === key);
+
+			const valueOption =
+				field?.name.includes('teamToComponents/name') ||
+				field?.name.includes('componentToCaseResult/name');
+
 			if (Array.isArray(filterCleaned[key])) {
 				return {
 					name: key,
-					value: (filterCleaned as any)[key].map(
-						(options: Option) => options.value || options
+					value: (filterCleaned as any)[key].map((options: Option) =>
+						valueOption ? options?.label : options?.value || options
 					),
 				};
 			}
@@ -177,6 +217,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 			updateUrlParams({
 				filter: JSON.stringify(formattedFilter),
 				filterSchema: filterSchema?.name as string,
+				page: '1',
 			});
 		}
 
@@ -189,7 +230,7 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 			type: ListViewTypes.SET_FILTERS,
 		});
 
-		setVisible(false);
+		setIsVisible(false);
 	}, [
 		applyFilters,
 		dispatch,
@@ -197,13 +238,23 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 		filterSchema,
 		form,
 		handleRemoveItemFromFilter,
-		setVisible,
+		setIsVisible,
 		updateUrlParams,
 	]);
 
+	useEffect(() => {
+		const searchParams = new URLSearchParams(location.search);
+
+		if (!searchParams.get('filter')) {
+			setForm(initialFilters);
+		}
+	}, [initialFilters, location.search]);
+
+	useHotkeys('enter', onApply, {enabled: true}, [fields, form]);
+
 	return (
 		<div className="align-content-between d-flex flex-column">
-			<div className="dropdown-header">
+			<ClayDropDown.Section className="dropdown-header">
 				{fields.length > 1 && (
 					<>
 						<p className="font-weight-bold my-2">
@@ -230,91 +281,96 @@ const FilterBody: React.FC<FilterBodyProps> = ({
 						<Form.Divider />
 					</>
 				)}
-			</div>
+			</ClayDropDown.Section>
 
 			<div className="management-toolbar-body">
-				<div className="popover-filter-content">
+				<div className="dropdown-filter-content" tabIndex={1}>
 					<Form.Renderer
+						fieldOptions={fieldOptions}
 						fields={fields}
 						filter={filter}
 						filterSchema={filterSchema?.name as string}
 						form={form}
+						isLoading={isLoading}
+						onApply={onApply}
 						onChange={onChange}
 					/>
 				</div>
 			</div>
 
-			<div className="popover-footer">
-				<Form.Divider />
-				<ClayButton onClick={onApply}>
+			<ClayDropDown.Section className="dropdown-footer">
+				<ClayButton className="mt-2" onClick={onApply}>
 					{i18n.translate('apply')}
 				</ClayButton>
 				<ClayButton
-					className="ml-3"
+					className="ml-3 mt-2"
 					disabled={clearDisabled}
 					displayType="secondary"
 					onClick={onClear}
 				>
 					{i18n.translate('clear')}
 				</ClayButton>
-			</div>
+			</ClayDropDown.Section>
 		</div>
 	);
 };
 
-const MENU_POPOVER_HEIGHT = 580;
-
 const ManagementToolbarFilter: React.FC<ManagementToolbarFilterProps> = ({
 	applyFilters = true,
+	customFilterFields,
 	filterSchema,
 }) => {
-	const [visible, setVisible] = useState(false);
-	const ref = useRef<HTMLButtonElement>(null);
+	const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-	const [position, setPosition] = useState<number>(MENU_POPOVER_HEIGHT);
+	const [isVisible, setIsVisible] = useState(false);
 
-	const popoverAlignPosition =
-		position < MENU_POPOVER_HEIGHT ? 'top-right' : 'bottom-right';
+	const hasOneFilter = filterSchema?.fields?.length === 1;
+
+	const handleExpand = (
+		event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+	) => {
+		buttonRef.current = event.target as HTMLButtonElement;
+
+		setIsVisible((isVisible) => !isVisible);
+	};
 
 	return (
-		<ClayPopover
-			alignPosition={popoverAlignPosition}
-			className={classNames('popover-management-toolbar', {
-				'popover-management-toolbar-small':
-					filterSchema?.fields?.length === 1,
-			})}
-			closeOnClickOutside
-			disableScroll
-			onShowChange={setVisible}
-			show={visible && position > 0}
-			trigger={
-				<ClayButton
-					className="management-toolbar-buttons nav-link"
-					displayType="unstyled"
-					ref={ref}
+		<>
+			<ClayButton
+				className="management-toolbar-buttons nav-link"
+				displayType="unstyled"
+				onClick={handleExpand}
+			>
+				<span>
+					<ClayIcon
+						className="inline-item inline-item-after inline-item-before"
+						symbol="filter"
+					/>
+				</span>
+			</ClayButton>
+			{isVisible && (
+				<ClayDropDown.Menu
+					active={isVisible}
+					alignElementRef={buttonRef}
+					alignmentPosition={3}
+					className={classNames('dropdown-management-toolbar', {
+						'dropdown-management-toolbar-small': hasOneFilter,
+					})}
+					closeOnClickOutside
+					onActiveChange={() =>
+						setIsVisible((isVisible) => !isVisible)
+					}
 				>
-					<span className="navbar-breakpoint-down-d-none">
-						<ClayIcon
-							className="inline-item inline-item-after inline-item-before"
-							symbol="filter"
-						/>
-					</span>
-
-					<span className="navbar-breakpoint-d-none">
-						<ClayIcon symbol="filter" />
-					</span>
-				</ClayButton>
-			}
-		>
-			<FilterBody
-				applyFilters={applyFilters}
-				buttonRef={ref}
-				filterSchema={filterSchema}
-				setPosition={setPosition}
-				setVisible={setVisible}
-				visible={visible}
-			/>
-		</ClayPopover>
+					<FilterBody
+						applyFilters={applyFilters}
+						customFilterFields={customFilterFields}
+						filterSchema={filterSchema}
+						isVisible={isVisible}
+						setIsVisible={setIsVisible}
+					/>
+				</ClayDropDown.Menu>
+			)}
+		</>
 	);
 };
 

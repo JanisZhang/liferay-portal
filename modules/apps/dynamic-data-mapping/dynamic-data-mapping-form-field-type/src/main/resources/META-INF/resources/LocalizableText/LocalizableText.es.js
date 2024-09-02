@@ -6,7 +6,7 @@
 import {ClayInput} from '@clayui/form';
 import React, {useEffect, useState} from 'react';
 
-import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import FieldBase from '../FieldBase/ReactFieldBase.es';
 import LocalesDropdown from '../util/localizable/LocalesDropdown';
 import {
 	convertValueToJSON,
@@ -35,6 +35,7 @@ const LocalizableText = ({
 	editingLocale = INITIAL_EDITING_LOCALE,
 	fieldName,
 	id,
+	label,
 	name,
 	onFieldBlurred,
 	onFieldChanged = () => {},
@@ -45,13 +46,11 @@ const LocalizableText = ({
 	readOnly,
 	value,
 }) => {
-	const [currentAvailableLocales, setCurrentAvailableLocales] = useState(
-		availableLocales
-	);
+	const [currentAvailableLocales, setCurrentAvailableLocales] =
+		useState(availableLocales);
 
-	const [currentEditingLocale, setCurrentEditingLocale] = useState(
-		editingLocale
-	);
+	const [currentEditingLocale, setCurrentEditingLocale] =
+		useState(editingLocale);
 
 	const [currentValue, setCurrentValue] = useState(value);
 
@@ -110,16 +109,19 @@ const LocalizableText = ({
 				value: currentValue,
 			})
 		);
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [defaultLocale, fieldName]);
 
 	return (
 		<ClayInput.Group>
 			<InputComponent
+				dir={Liferay.Language.direction[currentEditingLocale.localeId]}
 				displayStyle={displayStyle}
 				fieldName={fieldName}
 				id={id}
 				inputValue={inputValue}
+				label={label}
 				name={name}
 				onFieldBlurred={onFieldBlurred}
 				onFieldChanged={(event) => {
@@ -199,6 +201,7 @@ const Main = ({
 	editingLocale,
 	fieldName,
 	id,
+	label,
 	name,
 	onBlur,
 	onChange,
@@ -210,7 +213,13 @@ const Main = ({
 	value = {},
 	...otherProps
 }) => (
-	<FieldBase {...otherProps} id={id} name={name} readOnly={readOnly}>
+	<FieldBase
+		{...otherProps}
+		id={id}
+		label={label}
+		name={name}
+		readOnly={readOnly}
+	>
 		<LocalizableText
 			{...transformAvailableLocalesAndValue({
 				availableLocales,
@@ -221,6 +230,7 @@ const Main = ({
 			editingLocale={editingLocale}
 			fieldName={fieldName}
 			id={id}
+			label={label}
 			name={name}
 			onFieldBlurred={onBlur}
 			onFieldChanged={({event, value}) => onChange(event, value)}

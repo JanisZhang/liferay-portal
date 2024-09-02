@@ -1,10 +1,10 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/layout": "3.111.0",
-		"@clayui/multi-select": "3.111.0",
+		"@clayui/multi-select": "3.118.0",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
 		"react": "16.12.0"
@@ -13,11 +13,10 @@
 	"name": "portal-search-synonyms-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"storybook": "liferay-npm-scripts storybook",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "3.0.59"
+	"version": "3.0.71"
 }

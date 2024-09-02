@@ -27,12 +27,14 @@ import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.AssumeTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.model.impl.CompanyImpl;
 import com.liferay.portal.model.impl.VirtualHostImpl;
 import com.liferay.portal.test.rule.Inject;
@@ -42,6 +44,8 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+
+import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -64,7 +68,9 @@ public abstract class BaseDBPartitionTestCase {
 	public static void assume() {
 		Assume.assumeTrue(DBPartition.isPartitionEnabled());
 
-		db = DBManagerUtil.getDB();
+		if (db == null) {
+			db = DBManagerUtil.getDB();
+		}
 
 		Assume.assumeTrue(db.isSupportsDBPartition());
 	}
@@ -82,15 +88,26 @@ public abstract class BaseDBPartitionTestCase {
 
 			for (long companyId : COMPANY_IDS) {
 				DBPartitionUtil.addDBPartition(companyId);
+
+				PortalInstancePool.add(
+					new CompanyImpl() {
+						{
+							setCompanyId(companyId);
+							setWebId("Test" + companyId);
+						}
+					});
 			}
 
-			_clearCaches();
+			_clearCaches(COMPANY_IDS);
 		}
 		finally {
 			ReflectionTestUtil.setFieldValue(
 				CurrentConnectionUtil.class, "_currentConnection",
 				defaultCurrentConnection);
 		}
+
+		DBPartitionUtil.forEachCompanyId(
+			companyId -> _resourceActionLocalService.checkResourceActions());
 	}
 
 	protected static void createControlTable(String tableName)
@@ -98,6 +115,13 @@ public abstract class BaseDBPartitionTestCase {
 
 		db.runSQL(
 			"create table " + tableName + " (testColumn bigint primary key)");
+
+		if (_controlTableNames == null) {
+			_controlTableNames = ReflectionTestUtil.getFieldValue(
+				DBInspector.class, "_controlTableNames");
+		}
+
+		_controlTableNames.add(StringUtil.toLowerCase(TEST_CONTROL_TABLE_NAME));
 	}
 
 	protected static void createIndex(String tableName) throws Exception {
@@ -127,7 +151,17 @@ public abstract class BaseDBPartitionTestCase {
 						"delete from VirtualHost where companyId = " +
 							companyId);
 				}
+
+				PortalInstancePool.remove(companyId);
 			}
+		}
+	}
+
+	protected static void dropControlTable(String tableName) throws Exception {
+		db.runSQL("drop table if exists " + tableName);
+
+		if (_controlTableNames != null) {
+			_controlTableNames.remove(StringUtil.toLowerCase(tableName));
 		}
 	}
 
@@ -292,7 +326,7 @@ public abstract class BaseDBPartitionTestCase {
 				preparedStatement1.executeUpdate();
 
 				preparedStatement2.setLong(1, 0L);
-				preparedStatement2.setLong(2, RandomTestUtil.nextLong());
+				preparedStatement2.setLong(2, RandomTestUtil.randomLong());
 				preparedStatement2.setLong(3, companyId);
 				preparedStatement2.setLong(4, 0L);
 				preparedStatement2.setString(5, "test" + companyId);
@@ -300,19 +334,36 @@ public abstract class BaseDBPartitionTestCase {
 
 				preparedStatement2.executeUpdate();
 			}
+
+			Company company = new CompanyImpl();
+
+			company.setCompanyId(companyId);
+			company.setWebId("Test" + companyId);
+
+			PortalInstancePool.add(company);
 		}
+	}
+
+	protected static boolean isCopyableQuartzTable(String tableName) {
+		return ReflectionTestUtil.invoke(
+			DBPartitionUtil.class, "_isCopyableQuartzTable",
+			new Class<?>[] {String.class}, tableName);
 	}
 
 	protected static void removeDBPartitions() throws Exception {
 		removeDBPartitions(COMPANY_IDS);
-
-		_clearCaches();
 	}
 
 	protected static void removeDBPartitions(long[] companyIds)
 		throws Exception {
 
 		_executeOnDBPartitions(companyIds, DBPartitionUtil::removeDBPartition);
+
+		for (long companyId : companyIds) {
+			PortalInstancePool.remove(companyId);
+		}
+
+		_clearCaches(companyIds);
 	}
 
 	protected static void setUpClass() throws Exception {
@@ -329,14 +380,26 @@ public abstract class BaseDBPartitionTestCase {
 			DBPartitionUtil.class, "_defaultPartitionName");
 	}
 
+	protected static void setUpDBPartitions() throws Exception {
+		addDBPartitions();
+
+		insertPartitionRequiredData();
+
+		insertPartitionData();
+	}
+
+	protected static void tearDownDBPartitions() throws Exception {
+		deletePartitionRequiredData();
+
+		removeDBPartitions();
+	}
+
 	protected void createAndPopulateControlTable(String tableName)
 		throws Exception {
 
-		try (Statement statement = connection.createStatement()) {
-			statement.execute(
-				"create table " + tableName +
-					" (testColumn bigint primary key)");
+		createControlTable(tableName);
 
+		try (Statement statement = connection.createStatement()) {
 			statement.execute("insert into " + tableName + " values (1)");
 		}
 	}
@@ -383,11 +446,11 @@ public abstract class BaseDBPartitionTestCase {
 	@Inject
 	protected static Portal portal;
 
-	private static void _clearCaches() throws Exception {
+	private static void _clearCaches(long[] companyIds) throws Exception {
 		EntityCacheUtil.clearCache(CompanyImpl.class);
 		EntityCacheUtil.clearCache(VirtualHostImpl.class);
 
-		for (long companyId : COMPANY_IDS) {
+		for (long companyId : companyIds) {
 			PortalCacheHelperUtil.removePortalCaches(
 				PortalCacheManagerNames.MULTI_VM, companyId);
 		}
@@ -418,5 +481,10 @@ public abstract class BaseDBPartitionTestCase {
 				defaultCurrentConnection);
 		}
 	}
+
+	private static Set<String> _controlTableNames;
+
+	@Inject
+	private static ResourceActionLocalService _resourceActionLocalService;
 
 }

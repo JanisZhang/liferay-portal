@@ -7,12 +7,12 @@ package com.liferay.jethr0.job;
 
 import com.liferay.jethr0.bui1d.BuildEntity;
 import com.liferay.jethr0.entity.BaseEntity;
-import com.liferay.jethr0.git.branch.GitBranchEntity;
+import com.liferay.jethr0.git.commit.GitCommitEntity;
 import com.liferay.jethr0.jenkins.cohort.JenkinsCohortEntity;
-import com.liferay.jethr0.job.definition.JobDefinition;
-import com.liferay.jethr0.job.definition.JobDefinitionFactory;
+import com.liferay.jethr0.routine.RoutineEntity;
 import com.liferay.jethr0.task.TaskEntity;
 import com.liferay.jethr0.testsuite.TestSuiteEntity;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
 import com.liferay.jethr0.util.StringUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
@@ -52,16 +52,6 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 	}
 
 	@Override
-	public void addGitBranchEntities(Set<GitBranchEntity> gitBranchEntities) {
-		addRelatedEntities(gitBranchEntities);
-	}
-
-	@Override
-	public void addGitBranchEntity(GitBranchEntity gitBranchEntity) {
-		addRelatedEntity(gitBranchEntity);
-	}
-
-	@Override
 	public void addJenkinsCohortEntities(
 		Set<JenkinsCohortEntity> jenkinsCohortEntities) {
 
@@ -96,13 +86,30 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 	}
 
 	@Override
+	public boolean getBlessed() {
+		return _blessed;
+	}
+
+	@Override
 	public Set<BuildEntity> getBuildEntities() {
 		return getRelatedEntities(BuildEntity.class);
 	}
 
 	@Override
-	public Set<GitBranchEntity> getGitBranchEntities() {
-		return getRelatedEntities(GitBranchEntity.class);
+	public URL getEntityURL() {
+		return StringUtil.toURL(
+			StringUtil.combine(
+				Jethr0ContextUtil.getLiferayPortalURL(), "/#/jobs/", getId()));
+	}
+
+	@Override
+	public GitCommitEntity getGitCommitEntity() {
+		return _gitCommitEntity;
+	}
+
+	@Override
+	public long getGitCommitEntityId() {
+		return _gitCommitEntityId;
 	}
 
 	@Override
@@ -147,17 +154,18 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 
 		JobEntity.Type type = getType();
 
-		JobDefinition jobDefinition = JobDefinitionFactory.newJobDefinition(
-			type);
-
 		jsonObject.put(
-			"definition", jobDefinition.getJSONObject()
+			"blessed", getBlessed()
 		).put(
 			"name", getName()
 		).put(
-			"parameters", String.valueOf(_getParametersJSONObject())
+			"parameters", String.valueOf(_getParametersJSONArray())
 		).put(
 			"priority", getPriority()
+		).put(
+			"r_gitCommitToJobs_c_gitCommitId", getGitCommitEntityId()
+		).put(
+			"r_routineToJobs_c_routineId", getRoutineEntityId()
 		).put(
 			"startDate", StringUtil.toString(getStartDate())
 		).put(
@@ -187,6 +195,16 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 	@Override
 	public int getPriority() {
 		return _priority;
+	}
+
+	@Override
+	public RoutineEntity getRoutineEntity() {
+		return _routineEntity;
+	}
+
+	@Override
+	public long getRoutineEntityId() {
+		return _routineEntityId;
 	}
 
 	@Override
@@ -225,18 +243,6 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 	}
 
 	@Override
-	public void removeGitBranchEntities(
-		Set<GitBranchEntity> gitBranchEntities) {
-
-		removeRelatedEntities(gitBranchEntities);
-	}
-
-	@Override
-	public void removeGitBranchEntity(GitBranchEntity gitBranchEntity) {
-		removeRelatedEntity(gitBranchEntity);
-	}
-
-	@Override
 	public void removeJenkinsCohortEntities(
 		Set<JenkinsCohortEntity> jenkinsCohortEntities) {
 
@@ -250,6 +256,7 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 		removeRelatedEntity(jenkinsCohortEntity);
 	}
 
+	@Override
 	public void removeTaskEntities(Set<TaskEntity> taskEntities) {
 		removeRelatedEntities(taskEntities);
 	}
@@ -272,13 +279,77 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 	}
 
 	@Override
+	public void setBlessed(boolean blessed) {
+		_blessed = blessed;
+	}
+
+	@Override
+	public void setGitCommitEntity(GitCommitEntity gitCommitEntity) {
+		_gitCommitEntity = gitCommitEntity;
+
+		if (_gitCommitEntity != null) {
+			_gitCommitEntityId = _gitCommitEntity.getId();
+		}
+		else {
+			_gitCommitEntityId = 0;
+		}
+	}
+
+	@Override
 	public void setJenkinsBranchURL(URL jenkinsBranchURL) {
 		setParameterValue("jenkinsBranchURL", String.valueOf(jenkinsBranchURL));
 	}
 
 	@Override
+	public void setJSONObject(JSONObject jsonObject) {
+		super.setJSONObject(jsonObject);
+
+		_blessed = jsonObject.optBoolean("blessed");
+		_gitCommitEntityId = jsonObject.optLong(
+			"r_gitCommitToJobs_c_gitCommitId");
+		_name = jsonObject.getString("name");
+		_parameters = new HashMap<>();
+		_priority = jsonObject.optInt("priority");
+		_routineEntityId = jsonObject.optLong("r_routineToJobs_c_routineId");
+		_startDate = StringUtil.toDate(jsonObject.optString("startDate"));
+		_state = State.get(jsonObject.get("state"));
+		_type = Type.get(jsonObject.get("type"));
+
+		String parameters = jsonObject.getString("parameters");
+
+		if (StringUtil.isNullOrEmpty(parameters)) {
+			return;
+		}
+
+		try {
+			JSONArray parametersJSONArray = new JSONArray(parameters);
+
+			for (int i = 0; i < parametersJSONArray.length(); i++) {
+				JSONObject parameterJSONObject =
+					parametersJSONArray.getJSONObject(i);
+
+				_parameters.put(
+					parameterJSONObject.getString("key"),
+					parameterJSONObject.getString("value"));
+			}
+		}
+		catch (JSONException jsonException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(jsonException);
+			}
+		}
+	}
+
+	@Override
 	public void setName(String name) {
 		_name = name;
+	}
+
+	@Override
+	public void setParameters(Map<String, String> parameters) {
+		_parameters.clear();
+
+		_parameters.putAll(parameters);
 	}
 
 	@Override
@@ -289,6 +360,18 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 	@Override
 	public void setPriority(int priority) {
 		_priority = priority;
+	}
+
+	@Override
+	public void setRoutineEntity(RoutineEntity routineEntity) {
+		_routineEntity = routineEntity;
+
+		if (_routineEntity != null) {
+			_routineEntityId = _routineEntity.getId();
+		}
+		else {
+			_routineEntityId = 0;
+		}
 	}
 
 	@Override
@@ -303,31 +386,6 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 
 	protected BaseJobEntity(JSONObject jsonObject) {
 		super(jsonObject);
-
-		_name = jsonObject.getString("name");
-		_priority = jsonObject.optInt("priority");
-		_startDate = StringUtil.toDate(jsonObject.optString("startDate"));
-		_state = State.get(jsonObject.getJSONObject("state"));
-		_type = Type.get(jsonObject.getJSONObject("type"));
-
-		String parameters = jsonObject.getString("parameters");
-
-		if (StringUtil.isNullOrEmpty(parameters)) {
-			return;
-		}
-
-		try {
-			JSONObject parametersJSONObject = new JSONObject(parameters);
-
-			for (String key : parametersJSONObject.keySet()) {
-				_parameters.put(key, parametersJSONObject.getString(key));
-			}
-		}
-		catch (JSONException jsonException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(jsonException);
-			}
-		}
 	}
 
 	protected String getBranchURLGroupValue(URL branchURL, String groupName) {
@@ -481,21 +539,28 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 		return initialBuildParametersJSONArray;
 	}
 
-	private JSONObject _getParametersJSONObject() {
-		JSONObject parametersJSONObject = new JSONObject();
+	private JSONArray _getParametersJSONArray() {
+		JSONArray parametersJSONArray = new JSONArray();
 
 		if (_parameters.isEmpty()) {
-			return parametersJSONObject;
+			return parametersJSONArray;
 		}
 
 		Set<String> parameterNames = new TreeSet<>(_parameters.keySet());
 
 		for (String parameterName : parameterNames) {
-			parametersJSONObject.put(
-				parameterName, _parameters.get(parameterName));
+			JSONObject parameterJSONObject = new JSONObject();
+
+			parameterJSONObject.put(
+				"key", parameterName
+			).put(
+				"value", _parameters.get(parameterName)
+			);
+
+			parametersJSONArray.put(parameterJSONObject);
 		}
 
-		return parametersJSONObject;
+		return parametersJSONArray;
 	}
 
 	private static final Log _log = LogFactory.getLog(BaseJobEntity.class);
@@ -504,11 +569,16 @@ public abstract class BaseJobEntity extends BaseEntity implements JobEntity {
 		"https://github.com/(?<userName>[^/]+)/(?<repositoryName>[^/]+)/tree/" +
 			"(?<branchName>[^/]+)");
 
+	private boolean _blessed;
+	private GitCommitEntity _gitCommitEntity;
+	private long _gitCommitEntityId;
 	private String _name;
-	private final Map<String, String> _parameters = new HashMap<>();
+	private Map<String, String> _parameters;
 	private int _priority;
+	private RoutineEntity _routineEntity;
+	private long _routineEntityId;
 	private Date _startDate;
 	private State _state;
-	private final Type _type;
+	private Type _type;
 
 }

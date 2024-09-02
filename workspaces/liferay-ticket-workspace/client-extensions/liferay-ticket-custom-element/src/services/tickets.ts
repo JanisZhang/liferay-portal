@@ -1,4 +1,5 @@
 /* eslint-disable quote-props */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -24,11 +25,12 @@ export type FetchTicketsQueryKey = {
 			page: number;
 			pageSize: number;
 			search?: string;
-		}
+		},
 	];
 };
 
-const LIST_TYPE_DEFINITIONS: ListTypeDefinitions = await fetchListTypeDefinitions();
+const LIST_TYPE_DEFINITIONS: ListTypeDefinitions =
+	await fetchListTypeDefinitions();
 
 const TICKET_SUBJECTS = [
 	'My Object Definition Is Not Deploying in My Batch Client Extension',
@@ -108,21 +110,16 @@ export async function generateNewTicket() {
 }
 
 export async function updateTicketStatus(ticket: Ticket) {
-	ticket.payload.ticketStatus =
-		LIST_TYPE_DEFINITIONS[J3Y7_STATUSES].entriesMap[ticket.ticketStatus];
-
-	if (!ticket.payload.r_userToJ3Y7Ticket_userId) {
-		delete ticket.payload.r_userToJ3Y7Ticket_userId;
-	}
-
-	if (!ticket.payload.r_j3y7TicketToJ3Y7Ticket_c_j3y7TicketId) {
-		delete ticket.payload.r_j3y7TicketToJ3Y7Ticket_c_j3y7TicketId;
-	}
-
 	const result = await request(
 		`/o/c/j3y7tickets/${ticket.id}`,
-		'PUT',
-		JSON.stringify(ticket.payload)
+		'PATCH',
+		JSON.stringify({
+			id: ticket.id,
+			ticketStatus:
+				LIST_TYPE_DEFINITIONS[J3Y7_STATUSES].entriesMap[
+					ticket.ticketStatus
+				],
+		})
 	);
 
 	if (result.ok) {

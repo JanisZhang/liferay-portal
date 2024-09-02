@@ -68,7 +68,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReader;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -100,7 +99,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 /**
  * @author Lourdes Fernández Besada
  */
-@FeatureFlags("LPS-187793")
 @RunWith(Arquillian.class)
 public class SitemapManagerTest {
 
@@ -765,8 +763,8 @@ public class SitemapManagerTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				_group.getCreatorUserId(), _group.getGroupId(), 0, classNameId,
-				classTypeId, RandomTestUtil.randomString(),
+				null, _group.getCreatorUserId(), _group.getGroupId(), 0,
+				classNameId, classTypeId, RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,
 				0, 0, 0, _serviceContext);
 

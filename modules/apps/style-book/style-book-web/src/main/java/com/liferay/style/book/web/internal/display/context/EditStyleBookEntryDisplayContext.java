@@ -218,7 +218,8 @@ public class EditStyleBookEntryDisplayContext {
 							_themeDisplay.getCompanyGroupId()
 						},
 						0, Math.min(fragmentCollectionsCount, 4),
-						new FragmentCollectionCreateDateComparator(false));
+						FragmentCollectionCreateDateComparator.getInstance(
+							false));
 
 				JSONObject[] fragmentCollectionContributorJSONObjects =
 					new JSONObject[0];
@@ -300,12 +301,11 @@ public class EditStyleBookEntryDisplayContext {
 
 		Group group = _themeDisplay.getScopeGroup();
 
-		LayoutSet layoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(
-			_themeDisplay.getSiteGroupId(), group.isLayoutSetPrototype());
-
 		FrontendTokenDefinition frontendTokenDefinition =
 			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
-				layoutSet.getThemeId());
+				LayoutSetLocalServiceUtil.fetchLayoutSet(
+					_themeDisplay.getSiteGroupId(),
+					group.isLayoutSetPrototype()));
 
 		if (frontendTokenDefinition != null) {
 			return frontendTokenDefinition.getJSONObject(
@@ -355,8 +355,8 @@ public class EditStyleBookEntryDisplayContext {
 							_getPreviewItemsGroupId(), layoutTypes,
 							WorkflowConstants.STATUS_APPROVED, 0,
 							Math.min(total, 4),
-							new LayoutPageTemplateEntryModifiedDateComparator(
-								false)),
+							LayoutPageTemplateEntryModifiedDateComparator.
+								getInstance(false)),
 					layoutPageTemplateEntry -> JSONUtil.put(
 						"name", layoutPageTemplateEntry.getName()
 					).put(
@@ -401,7 +401,7 @@ public class EditStyleBookEntryDisplayContext {
 				List<Layout> layouts =
 					LayoutLocalServiceUtil.getPublishedLayouts(
 						_getPreviewItemsGroupId(), 0, Math.min(total, 4),
-						new LayoutModifiedDateComparator(false));
+						LayoutModifiedDateComparator.getInstance(false));
 
 				return JSONUtil.putAll(
 					(JSONObject[])TransformUtil.transformToArray(

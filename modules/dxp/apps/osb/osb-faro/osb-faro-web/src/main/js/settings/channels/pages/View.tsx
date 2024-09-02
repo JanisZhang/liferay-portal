@@ -12,7 +12,7 @@ import Form, {
 } from 'shared/components/form';
 import HelpBlock from 'shared/components/form/HelpBlock';
 import RadioGroup from 'shared/components/RadioGroup';
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import StatesRenderer from 'shared/components/states-renderer/StatesRenderer';
 import SyncedStripe from '../components/SyncedStripe';
 import TitleEditor from 'shared/components/TitleEditor';
@@ -20,7 +20,7 @@ import UserList from '../components/UserList';
 import {addAlert} from 'shared/actions/alerts';
 import {Alert, IPaginationUnsorted} from 'shared/types';
 import {close, modalTypes, open} from 'shared/actions/modals';
-import {compose, withCurrentUser} from 'shared/hoc';
+import {compose} from 'shared/hoc';
 import {connect, ConnectedProps} from 'react-redux';
 import {RootState} from 'shared/store';
 import {Routes, toRoute} from 'shared/util/router';
@@ -30,8 +30,8 @@ import {setBackURL} from 'shared/actions/settings';
 import {sub} from 'shared/util/lang';
 import {UNAUTHORIZED_ACCESS} from 'shared/util/request';
 import {updateDefaultChannelId} from 'shared/actions/preferences';
-import {User} from 'shared/util/records';
-import {useRequest} from 'shared/hooks';
+import {useCurrentUser} from 'shared/hooks/useCurrentUser';
+import {useRequest} from 'shared/hooks/useRequest';
 
 const {channelPermissionTypes} = Constants;
 
@@ -103,7 +103,6 @@ interface IViewProps
 		PropsFromRedux,
 		IPaginationUnsorted {
 	channel?: Channel;
-	currentUser: User;
 	groupId: string;
 	history: {
 		push: (value: string) => void;
@@ -115,7 +114,6 @@ const View: React.FC<IViewProps> = ({
 	addAlert,
 	channel,
 	close,
-	currentUser,
 	defaultChannelId,
 	groupId,
 	history,
@@ -125,19 +123,8 @@ const View: React.FC<IViewProps> = ({
 	updateDefaultChannelId,
 	...otherProps
 }) => {
-	useEffect(() => {
-		const {createTime, id, name} = channel;
+	const currentUser = useCurrentUser();
 
-		analytics.track(
-			'Viewed Property Dashboard - Test',
-			{
-				channelId: id,
-				channelName: name,
-				createTime
-			},
-			{ip: '0'}
-		);
-	}, []);
 	const [name, setName] = useState(channel.name);
 	const [permissionType, setPermissionType] = useState(
 		channel.permissionType
@@ -539,4 +526,4 @@ const View: React.FC<IViewProps> = ({
 	);
 };
 
-export default compose<any>(withCurrentUser, connector)(ViewContainer);
+export default compose<any>(connector)(ViewContainer);

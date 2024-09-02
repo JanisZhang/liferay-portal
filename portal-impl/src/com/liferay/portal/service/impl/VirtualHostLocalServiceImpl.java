@@ -5,6 +5,7 @@
 
 package com.liferay.portal.service.impl;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -16,9 +17,11 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.VirtualHost;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.CompanyPersistence;
 import com.liferay.portal.kernel.service.persistence.GroupPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutSetPersistence;
@@ -36,6 +39,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -121,7 +125,34 @@ public class VirtualHostLocalServiceImpl
 
 	@Override
 	public List<VirtualHost> getVirtualHosts(long companyId, long layoutSetId) {
-		return virtualHostPersistence.findByC_L(companyId, layoutSetId);
+		if (_perCompanyInMemoryFilterLimit <= 0) {
+			return virtualHostPersistence.findByC_L(companyId, layoutSetId);
+		}
+
+		List<VirtualHost> virtualHosts = virtualHostPersistence.findByCompanyId(
+			companyId);
+
+		if (virtualHosts.size() > _perCompanyInMemoryFilterLimit) {
+			_perCompanyInMemoryFilterLimit = 0;
+		}
+
+		List<VirtualHost> filteredVirtualHosts = null;
+
+		for (VirtualHost virtualHost : virtualHosts) {
+			if (virtualHost.getLayoutSetId() == layoutSetId) {
+				if (filteredVirtualHosts == null) {
+					filteredVirtualHosts = new ArrayList<>(virtualHosts.size());
+				}
+
+				filteredVirtualHosts.add(virtualHost);
+			}
+		}
+
+		if (filteredVirtualHosts == null) {
+			return Collections.emptyList();
+		}
+
+		return filteredVirtualHosts;
 	}
 
 	@Override
@@ -185,7 +216,14 @@ public class VirtualHostLocalServiceImpl
 			}
 
 			if (virtualHost == null) {
-				long virtualHostId = counterLocalService.increment();
+				long virtualHostId = 0;
+
+				try (SafeCloseable safeCloseable =
+						CompanyThreadLocal.setWithSafeCloseable(
+							CompanyConstants.SYSTEM)) {
+
+					virtualHostId = counterLocalService.increment();
+				}
 
 				virtualHost = virtualHostPersistence.create(virtualHostId);
 
@@ -283,5 +321,8 @@ public class VirtualHostLocalServiceImpl
 
 	@BeanReference(type = LayoutSetPersistence.class)
 	private LayoutSetPersistence _layoutSetPersistence;
+
+	private volatile int _perCompanyInMemoryFilterLimit =
+		PropsValues.VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT;
 
 }

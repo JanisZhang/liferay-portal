@@ -940,6 +940,7 @@
 		<column name="key" type="String" />
 		<column localized="true" name="name" type="String" />
 		<column name="precision" type="int" />
+		<column name="pricingQuantity" type="BigDecimal" />
 		<column name="primary" type="boolean" />
 		<column name="priority" type="double" />
 		<column name="rate" type="BigDecimal" />
@@ -1066,7 +1067,7 @@
 			<finder-column name="key" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="CPOptionCategory" remote-service="true" uuid="true">
+	<entity external-reference-code="company" local-service="true" name="CPOptionCategory" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -1182,7 +1183,7 @@
 			<finder-column name="groupId" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="CPSpecificationOption" remote-service="true" uuid="true">
+	<entity external-reference-code="company" local-service="true" name="CPSpecificationOption" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -1199,16 +1200,18 @@
 		<!-- Other fields -->
 
 		<column name="CPOptionCategoryId" type="long" />
+		<column name="listTypeDefinitionId" type="long" />
 		<column localized="true" name="title" type="String" />
 		<column localized="true" name="description" type="String" />
 		<column name="facetable" type="boolean" />
 		<column name="key" type="String" />
+		<column name="priority" type="double" />
 		<column name="lastPublishDate" type="Date" />
 
 		<!-- Order -->
 
-		<order by="asc">
-			<order-column name="title" />
+		<order by="desc">
+			<order-column name="priority" />
 		</order>
 
 		<!-- Finder methods -->
@@ -1218,6 +1221,9 @@
 		</finder>
 		<finder name="CPOptionCategoryId" return-type="Collection">
 			<finder-column name="CPOptionCategoryId" />
+		</finder>
+		<finder name="ListTypeDefinitionId" return-type="Collection">
+			<finder-column name="listTypeDefinitionId" />
 		</finder>
 		<finder name="C_K" return-type="CPSpecificationOption" unique="true">
 			<finder-column name="companyId" />
@@ -1289,12 +1295,18 @@
 		<exception>CPDefinitionSubscriptionLength</exception>
 		<exception>CPDisplayLayoutEntry</exception>
 		<exception>CPDisplayLayoutEntryUuid</exception>
+		<exception>CPInstanceCost</exception>
 		<exception>CPInstanceDeliverySubscriptionLength</exception>
+		<exception>CPInstanceDepth</exception>
 		<exception>CPInstanceDiscontinuedDate</exception>
 		<exception>CPInstanceDisplayDate</exception>
 		<exception>CPInstanceExpirationDate</exception>
+		<exception>CPInstanceHeight</exception>
 		<exception>CPInstanceJson</exception>
 		<exception>CPInstanceMaxPriceValue</exception>
+		<exception>CPInstanceMinPriceValue</exception>
+		<exception>CPInstancePrice</exception>
+		<exception>CPInstancePromoPrice</exception>
 		<exception>CPInstanceReplacementCPInstanceUuid</exception>
 		<exception>CPInstanceSku</exception>
 		<exception>CPInstanceSubscriptionLength</exception>
@@ -1303,6 +1315,8 @@
 		<exception>CPInstanceUnitOfMeasureName</exception>
 		<exception>CPInstanceUnitOfMeasureRate</exception>
 		<exception>CPInstanceUnitOfMeasureSku</exception>
+		<exception>CPInstanceWeight</exception>
+		<exception>CPInstanceWidth</exception>
 		<exception>CPMeasurementUnitType</exception>
 		<exception>CPOptionCategoryKey</exception>
 		<exception>CPOptionKey</exception>

@@ -48,24 +48,26 @@ export function ScopeContainer({
 	sites,
 	values,
 }: ScopeContainerProps) {
-	const [
-		selectedPanelCategoryValue,
-		setSelectedPanelCategoryValue,
-	] = useState('');
+	const [selectedPanelCategoryValue, setSelectedPanelCategoryValue] =
+		useState('');
 
 	const setPanelCategoryKey = (
 		sites: Scope[],
 		panelCategoryValue: string
 	) => {
-		sites.forEach(({items}) => {
-			const selectedPanelCategory = items.find(
-				({value}) => value === panelCategoryValue
-			);
+		let selectedPanelCategory: string = '';
 
-			if (selectedPanelCategory) {
-				setSelectedPanelCategoryValue(selectedPanelCategory.value);
-			}
-		});
+		sites.find(({items}) =>
+			items.find(({value}) => {
+				if (value === panelCategoryValue) {
+					selectedPanelCategory = value;
+
+					return true;
+				}
+			})
+		);
+
+		setSelectedPanelCategoryValue(selectedPanelCategory);
 	};
 
 	useEffect(() => {
@@ -73,8 +75,9 @@ export function ScopeContainer({
 			values.scope === 'company' ? companies : sites,
 			values.panelCategoryKey as string
 		);
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [values.scope, companies, sites]);
+	}, [values.id, values.scope, companies, sites]);
 
 	return (
 		<>
@@ -88,6 +91,7 @@ export function ScopeContainer({
 					isLinkedObjectDefinition
 				}
 				error={errors.titleObjectFieldId}
+				id="lfr-objects__object-scope-container-scope"
 				items={SCOPE_OPTIONS}
 				label={Liferay.Language.get('scope')}
 				onSelectionChange={(value) => {
@@ -118,7 +122,7 @@ export function ScopeContainer({
 					isLinkedObjectDefinition
 				}
 				error={errors.titleObjectFieldId}
-				id="objectDetailsScopeContainer"
+				id="lfr-objects__object-scope-container-panel-link"
 				items={values.scope === 'company' ? companies : sites}
 				label={Liferay.Language.get('panel-link')}
 				onSelectionChange={(value) => {

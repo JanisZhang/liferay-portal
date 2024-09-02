@@ -208,7 +208,7 @@ public class CustomSQLImpl implements CustomSQL {
 		BiFunction<Expression<String>, String, Predicate> operatorBiFunction,
 		String[] values) {
 
-		if ((values == null) || (values.length == 0)) {
+		if (ArrayUtil.isEmpty(values)) {
 			return null;
 		}
 
@@ -693,8 +693,6 @@ public class CustomSQLImpl implements CustomSQL {
 	@Activate
 	protected void activate(BundleContext bundleContext) throws SQLException {
 		_bundleContext = bundleContext;
-
-		_portal.initCustomSQL();
 
 		String functionIsNull = _portal.getCustomSQLFunctionIsNull();
 		String functionIsNotNull = _portal.getCustomSQLFunctionIsNotNull();

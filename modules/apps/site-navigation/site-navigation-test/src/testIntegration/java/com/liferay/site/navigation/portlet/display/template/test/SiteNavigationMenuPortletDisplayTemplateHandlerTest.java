@@ -111,7 +111,7 @@ public class SiteNavigationMenuPortletDisplayTemplateHandlerTest {
 				).build());
 
 			_siteNavigationMenuItemService.addSiteNavigationMenuItem(
-				_group.getGroupId(),
+				null, _group.getGroupId(),
 				siteNavigationMenu.getSiteNavigationMenuId(), 0,
 				SiteNavigationMenuItemTypeConstants.LAYOUT,
 				UnicodePropertiesBuilder.create(
@@ -135,7 +135,7 @@ public class SiteNavigationMenuPortletDisplayTemplateHandlerTest {
 				"</#if>");
 
 			DDMTemplate ddmTemplate = _ddmTemplateLocalService.addTemplate(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				_portal.getClassNameId(NavItem.class.getName()), 0,
 				_portal.getClassNameId(_CLASS_NAME_PORTLET_DISPLAY_TEMPLATE),
 				RandomTestUtil.randomString(),

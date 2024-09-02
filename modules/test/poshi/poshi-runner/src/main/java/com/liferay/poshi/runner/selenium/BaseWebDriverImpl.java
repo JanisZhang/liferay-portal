@@ -448,7 +448,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void assertHTMLSourceTextNotPresent(String value) throws Exception {
 		if (isHTMLSourceTextPresent(value)) {
 			throw new Exception(
-				"Pattern \"" + value + "\" does exists in the HTML source");
+				"Pattern \"" + value + "\" exists in the HTML source");
 		}
 	}
 
@@ -456,7 +456,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void assertHTMLSourceTextPresent(String value) throws Exception {
 		if (!isHTMLSourceTextPresent(value)) {
 			throw new Exception(
-				"Pattern \"" + value + "\" does not exists in the HTML source");
+				"Pattern \"" + value + "\" does not exist in the HTML source");
 		}
 	}
 
@@ -1366,6 +1366,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		return LiferaySeleniumUtil.getNumberIncrement(value);
 	}
 
+	@Override
 	public String getOcularBaselineImageDirName() {
 		return _OCULAR_BASELINE_IMAGE_DIR_NAME;
 	}
@@ -2226,6 +2227,19 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
+	public Map<String, Object> returnCDPCommand(
+		String commandName, Map<String, Object> commandParameters) {
+
+		Augmenter augmenter = new Augmenter();
+
+		WebDriver webDriver = augmenter.augment(getWebDriver());
+
+		HasCdp hasCdp = (HasCdp)webDriver;
+
+		return hasCdp.executeCdpCommand(commandName, commandParameters);
+	}
+
+	@Override
 	public void rightClick(String locator) {
 		WebElement webElement = getWebElement(locator);
 
@@ -2534,6 +2548,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		_primaryTestSuiteName = primaryTestSuiteName;
 	}
 
+	@Override
 	public void setTestName(String testName) {
 		_testName = testName;
 	}
@@ -3348,7 +3363,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void waitForPopUp(String windowID, String timeout) {
 		int wait = 0;
 
-		if (timeout.equals("")) {
+		if (timeout.equals("") || timeout.equals("null")) {
 			wait = 30;
 		}
 		else {

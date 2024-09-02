@@ -11,43 +11,45 @@ const submitDocuments = async (
 	mdfClaim: MDFClaim,
 	claimParentFolderId: number
 ) => {
-	if (
-		mdfClaim.reimbursementInvoice &&
-		!mdfClaim.reimbursementInvoice.documentId
-	) {
-		mdfClaim.reimbursementInvoice.documentId = await uploadDocument(
-			mdfClaim.reimbursementInvoice,
+	if (mdfClaim.reimbursementInvoices?.length) {
+		mdfClaim.reimbursementInvoices = await uploadDocuments(
+			mdfClaim.reimbursementInvoices,
 			claimParentFolderId
 		);
 	}
 
 	if (mdfClaim.activities?.length) {
 		for (const activity of mdfClaim.activities) {
-			if (activity.eventProgram && !activity.eventProgram.documentId) {
-				activity.eventProgram.documentId = await uploadDocument(
-					activity.eventProgram,
+			if (
+				activity.eventProgramFile &&
+				!activity.eventProgramFile.documentId
+			) {
+				activity.eventProgramFile.documentId = await uploadDocument(
+					activity.eventProgramFile,
 					claimParentFolderId
 				);
 			}
 
 			if (
-				activity.listOfQualifiedLeads &&
-				!activity.listOfQualifiedLeads.documentId
+				activity.listOfQualifiedLeadsFile &&
+				!activity.listOfQualifiedLeadsFile.documentId
 			) {
-				activity.listOfQualifiedLeads.documentId = await uploadDocument(
-					activity.listOfQualifiedLeads,
-					claimParentFolderId
-				);
+				activity.listOfQualifiedLeadsFile.documentId =
+					await uploadDocument(
+						activity.listOfQualifiedLeadsFile,
+						claimParentFolderId
+					);
 			}
 
 			if (
-				activity.telemarketingScript &&
-				!activity.telemarketingScript.documentId
+				activity.telemarketingScriptFile &&
+				!activity.telemarketingScriptFile.documentId
 			) {
-				activity.telemarketingScript.documentId = await uploadDocument(
-					activity.telemarketingScript,
-					claimParentFolderId
-				);
+				activity.telemarketingScriptFile.documentId =
+					await uploadDocument(
+						activity.telemarketingScriptFile,
+						claimParentFolderId
+					);
 			}
 
 			if (activity.proofOfPerformance?.allContents?.length) {
@@ -58,17 +60,19 @@ const submitDocuments = async (
 			}
 
 			if (activity.proofOfPerformance?.eventCollaterals?.length) {
-				activity.proofOfPerformance.eventCollaterals = await uploadDocuments(
-					activity.proofOfPerformance.eventCollaterals,
-					claimParentFolderId
-				);
+				activity.proofOfPerformance.eventCollaterals =
+					await uploadDocuments(
+						activity.proofOfPerformance.eventCollaterals,
+						claimParentFolderId
+					);
 			}
 
 			if (activity.proofOfPerformance?.eventInvitations?.length) {
-				activity.proofOfPerformance.eventInvitations = await uploadDocuments(
-					activity.proofOfPerformance.eventInvitations,
-					claimParentFolderId
-				);
+				activity.proofOfPerformance.eventInvitations =
+					await uploadDocuments(
+						activity.proofOfPerformance.eventInvitations,
+						claimParentFolderId
+					);
 			}
 
 			if (activity.proofOfPerformance?.eventPhotos?.length) {
@@ -87,9 +91,9 @@ const submitDocuments = async (
 
 			if (activity.budgets?.length) {
 				for (const budget of activity.budgets) {
-					if (budget.invoice && !budget.invoice.documentId) {
-						budget.invoice.documentId = await uploadDocument(
-							budget.invoice,
+					if (budget.invoiceFile && !budget.invoiceFile.documentId) {
+						budget.invoiceFile.documentId = await uploadDocument(
+							budget.invoiceFile,
 							claimParentFolderId
 						);
 					}

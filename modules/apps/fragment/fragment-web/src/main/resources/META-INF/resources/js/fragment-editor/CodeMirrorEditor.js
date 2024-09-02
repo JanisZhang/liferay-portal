@@ -4,7 +4,7 @@
  */
 
 import ClayIcon from '@clayui/icon';
-import CodeMirror from '@liferay/frontend-js-codemirror-web';
+import {CodeMirror} from '@liferay/frontend-js-codemirror-web';
 import {CodeMirrorKeyboardMessage} from 'frontend-js-components-web';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 
@@ -159,10 +159,15 @@ const escapeChars = (string) => string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
 
 const noop = () => {};
 
-const FixedText = ({helpText, text = ''}) => {
+const FixedText = ({helpText, texts = []}) => {
 	return (
 		<div className="source-editor__fixed-text">
-			<code className="source-editor__fixed-text__content">{text}</code>
+			<code
+				className="source-editor__fixed-text__content"
+				style={{whiteSpace: 'pre-line'}}
+			>
+				{texts.join('\n')}
+			</code>
 
 			{helpText && (
 				<span
@@ -186,7 +191,7 @@ const CodeMirrorEditor = ({
 	onChange = noop,
 	mode = 'html',
 	codeFooterText,
-	codeHeaderText,
+	codeHeaderTexts,
 	codeHeaderHelpText,
 	content = '',
 	readOnly,
@@ -335,10 +340,10 @@ const CodeMirrorEditor = ({
 				</nav>
 			)}
 
-			{(codeHeaderHelpText || codeHeaderText) && (
+			{(codeHeaderHelpText || codeHeaderTexts) && (
 				<FixedText
 					helpText={codeHeaderHelpText}
-					text={codeHeaderText}
+					texts={codeHeaderTexts}
 				/>
 			)}
 
@@ -353,14 +358,14 @@ const CodeMirrorEditor = ({
 							? null
 							: Liferay.Language.get(
 									'use-ctrl-m-to-enable-or-disable-the-tab-key'
-							  )
+								)
 					}
 					className="codemirror-editor-wrapper h-100"
 					ref={ref}
 				></div>
 			</div>
 
-			{codeFooterText && <FixedText text={codeFooterText} />}
+			{codeFooterText && <FixedText texts={[codeFooterText]} />}
 		</>
 	);
 };

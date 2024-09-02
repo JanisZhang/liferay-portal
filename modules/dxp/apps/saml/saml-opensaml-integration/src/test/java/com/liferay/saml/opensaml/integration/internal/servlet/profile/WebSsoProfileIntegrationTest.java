@@ -5,6 +5,9 @@
 
 package com.liferay.saml.opensaml.integration.internal.servlet.profile;
 
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.cache.test.util.TestPortalCache;
+import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cookies.CookiesManager;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
@@ -143,8 +146,20 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 			_webSsoProfileImpl, "localEntityManager",
 			keyStoreLocalEntityManager);
 		ReflectionTestUtil.setFieldValue(_webSsoProfileImpl, "portal", portal);
+
+		PortalCache<String, String> portalCache = new TestPortalCache<>(
+			StringPool.BLANK);
+
+		ReflectionTestUtil.setFieldValue(
+			_relayStateHelperImpl, "_redirectsToRelayStateTokensPortalCache",
+			portalCache);
+		ReflectionTestUtil.setFieldValue(
+			_relayStateHelperImpl, "_relayStateTokensToRedirectsPortalCache",
+			portalCache);
+
 		ReflectionTestUtil.setFieldValue(
 			_webSsoProfileImpl, "_relayStateHelper", _relayStateHelperImpl);
+
 		ReflectionTestUtil.setFieldValue(
 			_webSsoProfileImpl, "samlBindingProvider", samlBindingProvider);
 		ReflectionTestUtil.setFieldValue(
@@ -166,9 +181,6 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 			getMockPortletService(
 				SamlSpIdpConnectionLocalServiceUtil.class,
 				SamlSpIdpConnectionLocalService.class));
-
-		ReflectionTestUtil.invoke(
-			_relayStateHelperImpl, "activate", new Class<?>[0]);
 
 		_webSsoProfileImpl.activate(
 			SystemBundleUtil.getBundleContext(), new HashMap<String, Object>());
@@ -351,7 +363,7 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 		HttpSession mockHttpSession = mockHttpServletRequest.getSession();
 
 		SamlSsoRequestContext samlSsoRequestContext = new SamlSsoRequestContext(
-			SP_ENTITY_ID, RELAY_STATE, null, userLocalService);
+			SP_ENTITY_ID, RELAY_STATE, null);
 
 		mockHttpSession.setAttribute(
 			SamlWebKeys.SAML_SSO_REQUEST_CONTEXT, samlSsoRequestContext);
@@ -869,7 +881,7 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 		samlPeerEntityContext.setEntityId(SP_ENTITY_ID);
 
 		SamlSsoRequestContext samlSsoRequestContext = new SamlSsoRequestContext(
-			SP_ENTITY_ID, null, idpMessageContext, userLocalService);
+			SP_ENTITY_ID, null, idpMessageContext);
 
 		DateTime dateTime = new DateTime(DateTimeZone.UTC);
 
@@ -901,7 +913,7 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 		samlPeerEntityContext.setEntityId(SP_ENTITY_ID);
 
 		SamlSsoRequestContext samlSsoRequestContext = new SamlSsoRequestContext(
-			SP_ENTITY_ID, null, idpMessageContext, userLocalService);
+			SP_ENTITY_ID, null, idpMessageContext);
 
 		DateTime dateTime = new DateTime(DateTimeZone.UTC);
 
@@ -933,7 +945,7 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 		samlPeerEntityContext.setEntityId(SP_ENTITY_ID);
 
 		SamlSsoRequestContext samlSsoRequestContext = new SamlSsoRequestContext(
-			SP_ENTITY_ID, null, idpMessageContext, userLocalService);
+			SP_ENTITY_ID, null, idpMessageContext);
 
 		Conditions conditions = _webSsoProfileImpl.getSuccessConditions(
 			samlSsoRequestContext, null, null);
@@ -1082,7 +1094,7 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 		samlPeerEntityContext.setEntityId(SP_ENTITY_ID);
 
 		SamlSsoRequestContext samlSsoRequestContext = new SamlSsoRequestContext(
-			SP_ENTITY_ID, null, idpMessageContext, userLocalService);
+			SP_ENTITY_ID, null, idpMessageContext);
 
 		Conditions conditions = _webSsoProfileImpl.getSuccessConditions(
 			samlSsoRequestContext, null, null);
@@ -1226,8 +1238,7 @@ public class WebSsoProfileIntegrationTest extends BaseSamlTestCase {
 
 		SamlSsoRequestContext samlSsoRequestContext = new SamlSsoRequestContext(
 			samlPeerEntityContext.getEntityId(),
-			samlBindingContext.getRelayState(), messageContext,
-			userLocalService);
+			samlBindingContext.getRelayState(), messageContext);
 
 		SAMLSelfEntityContext samlSelfEntityContext =
 			messageContext.getSubcontext(SAMLSelfEntityContext.class);

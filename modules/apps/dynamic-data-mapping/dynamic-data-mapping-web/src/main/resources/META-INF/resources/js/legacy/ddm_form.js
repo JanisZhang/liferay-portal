@@ -206,10 +206,11 @@ AUI.add(
 					);
 				}
 
-				const templateResourceURL = Liferay.Util.PortletURL.createResourceURL(
-					themeDisplay.getLayoutURL(),
-					templateResourceParameters
-				);
+				const templateResourceURL =
+					Liferay.Util.PortletURL.createResourceURL(
+						themeDisplay.getLayoutURL(),
+						templateResourceParameters
+					);
 
 				return templateResourceURL.toString();
 			},
@@ -443,9 +444,8 @@ AUI.add(
 					newField.get('fields').forEach((item) => {
 						const name = item.get('name');
 
-						const originalChildField = originalField.getFirstFieldByName(
-							name
-						);
+						const originalChildField =
+							originalField.getFirstFieldByName(name);
 
 						if (originalChildField) {
 							instance._addFieldValidation(
@@ -734,9 +734,8 @@ AUI.add(
 					const localizationMap = instance.get('localizationMap');
 
 					if (Lang.isUndefined(localizationMap[locale])) {
-						const predefinedValue = instance.getPredefinedValueByLocale(
-							locale
-						);
+						const predefinedValue =
+							instance.getPredefinedValueByLocale(locale);
 
 						if (predefinedValue) {
 							return predefinedValue;
@@ -747,9 +746,8 @@ AUI.add(
 						if (defaultLocale && localizationMap[defaultLocale]) {
 							const name = instance.get('name');
 
-							const field = instance.getFieldByNameInFieldDefinition(
-								name
-							);
+							const field =
+								instance.getFieldByNameInFieldDefinition(name);
 
 							if (field) {
 								const type = field.type;
@@ -856,9 +854,8 @@ AUI.add(
 
 					const name = instance.get('name');
 
-					const field = instance.getFieldByNameInFieldDefinition(
-						name
-					);
+					const field =
+						instance.getFieldByNameInFieldDefinition(name);
 
 					let predefinedValue;
 
@@ -877,6 +874,7 @@ AUI.add(
 						if (
 							type === 'select' &&
 							(predefinedValue === '[""]' ||
+
 								// eslint-disable-next-line @liferay/aui/no-object
 								!A.Object.isEmpty(localizationMap))
 						) {
@@ -1192,9 +1190,8 @@ AUI.add(
 
 					const triggerMenu = A.one('#' + fieldsNamespace + 'Menu');
 
-					const listContainer = triggerMenu.getData(
-						'menuListContainer'
-					);
+					const listContainer =
+						triggerMenu.getData('menuListContainer');
 
 					if (!labelItem && listContainer) {
 						labelItem = listContainer.one(labelItemSelector);
@@ -1202,6 +1199,7 @@ AUI.add(
 
 					if (
 						labelItem &&
+
 						// eslint-disable-next-line @liferay/aui/no-object
 						!A.Object.isEmpty(localizationMap) &&
 						Object.prototype.hasOwnProperty.call(
@@ -1235,6 +1233,7 @@ AUI.add(
 						let value;
 
 						if (instance.get('localizable')) {
+
 							// eslint-disable-next-line @liferay/aui/no-object
 							if (!A.Object.isEmpty(localizationMap)) {
 								value =
@@ -1255,6 +1254,7 @@ AUI.add(
 							if (
 								(dataType === 'double' ||
 									dataType === 'number') &&
+
 								// eslint-disable-next-line @liferay/aui/no-object
 								!A.Object.isEmpty(localizationMap)
 							) {
@@ -1286,9 +1286,8 @@ AUI.add(
 							!Object.keys(fieldJSON.value).length &&
 							instance.getValue() !== null
 						) {
-							fieldJSON.value[
-								instance.getDefaultLocale()
-							] = instance.getValue();
+							fieldJSON.value[instance.getDefaultLocale()] =
+								instance.getValue();
 						}
 
 						if (instance.get('localizable')) {
@@ -1505,9 +1504,8 @@ AUI.add(
 					if (datePicker) {
 						const selectedDate = datePicker.getDate();
 
-						const formattedDate = A.DataType.Date.format(
-							selectedDate
-						);
+						const formattedDate =
+							A.DataType.Date.format(selectedDate);
 
 						const inputNode = instance.getInputNode();
 
@@ -1701,10 +1699,11 @@ AUI.add(
 						'p_p_state': 'pop_up',
 					};
 
-					const documentLibraryURL = Liferay.Util.PortletURL.createPortletURL(
-						themeDisplay.getLayoutRelativeControlPanelURL(),
-						documentLibraryParameters
-					);
+					const documentLibraryURL =
+						Liferay.Util.PortletURL.createPortletURL(
+							themeDisplay.getLayoutRelativeControlPanelURL(),
+							documentLibraryParameters
+						);
 
 					return documentLibraryURL.toString();
 				},
@@ -1833,6 +1832,263 @@ AUI.add(
 		});
 
 		FieldTypes['ddm-documentlibrary'] = DocumentLibraryField;
+
+		const JournalArticleField = A.Component.create({
+			EXTENDS: Field,
+
+			prototype: {
+				_getWebContentSelectorURL() {
+					const instance = this;
+
+					const form = instance.getForm();
+
+					const webContentSelectorURL = form.get(
+						'webContentSelectorURL'
+					);
+
+					return webContentSelectorURL
+						? webContentSelectorURL
+						: instance._getWebContentURL(
+								'com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion'
+							);
+				},
+
+				_getWebContentURL(criteria) {
+					const instance = this;
+
+					const container = instance.get('container');
+
+					const portletNamespace = instance.get('portletNamespace');
+
+					const criterionJSON = {
+						desiredItemSelectorReturnTypes:
+							'com.liferay.item.selector.criteria.JournalArticleItemSelectorReturnType',
+					};
+
+					const webContentParameters = {
+						'0_json': JSON.stringify(criterionJSON),
+						criteria,
+						'itemSelectedEventName':
+							portletNamespace + 'selectWebContent',
+						'p_p_auth': container.getData('itemSelectorAuthToken'),
+						'p_p_id': Liferay.PortletKeys.ITEM_SELECTOR,
+						'p_p_mode': 'view',
+						'p_p_state': 'pop_up',
+					};
+
+					const webContentURL =
+						Liferay.Util.PortletURL.createPortletURL(
+							themeDisplay.getLayoutRelativeControlPanelURL(),
+							webContentParameters
+						);
+
+					return webContentURL.toString();
+				},
+
+				_handleButtonsClick(event) {
+					const instance = this;
+
+					if (!instance.get('readOnly')) {
+						const currentTarget = event.currentTarget;
+
+						if (currentTarget.test('.select-button')) {
+							instance._handleSelectButtonClick(event);
+						}
+						else if (currentTarget.test('.clear-button')) {
+							instance._handleClearButtonClick(event);
+						}
+					}
+				},
+
+				_handleClearButtonClick() {
+					const instance = this;
+
+					instance.setValue('');
+
+					instance._hideMessage();
+				},
+
+				_handleSelectButtonClick() {
+					const instance = this;
+
+					const portletNamespace = instance.get('portletNamespace');
+
+					Liferay.Util.openSelectionModal({
+						onSelect: (selectedItem) => {
+							if (selectedItem) {
+								const itemValue = JSON.parse(
+									selectedItem.value
+								);
+
+								instance.setValue({
+									className: itemValue.className,
+									classPK: itemValue.classPK,
+									title: itemValue.title || '',
+									titleMap: itemValue.titleMap,
+								});
+
+								instance._hideMessage();
+							}
+						},
+						selectEventName: portletNamespace + 'selectWebContent',
+						title: Liferay.Language.get('journal-article'),
+						url: instance._getWebContentSelectorURL(),
+					});
+				},
+
+				_hideMessage() {
+					const instance = this;
+
+					const container = instance.get('container');
+
+					const message = container.one(
+						'#' + instance.getInputName() + 'Message'
+					);
+
+					if (message) {
+						message.addClass('hide');
+					}
+
+					const formGroup = container.one(
+						'#' + instance.getInputName() + 'FormGroup'
+					);
+
+					formGroup.removeClass('has-warning');
+				},
+
+				_validateField(fieldNode) {
+					const instance = this;
+
+					const liferayForm = instance.get('liferayForm');
+
+					if (liferayForm) {
+						const formValidator = liferayForm.formValidator;
+
+						if (formValidator) {
+							formValidator.validateField(fieldNode);
+						}
+					}
+				},
+
+				getParsedValue(value) {
+					if (Lang.isString(value)) {
+						if (value !== '') {
+							value = JSON.parse(value);
+						}
+						else {
+							value = {};
+						}
+					}
+
+					return value;
+				},
+
+				getRuleInputName() {
+					const instance = this;
+
+					const inputName = instance.getInputName();
+
+					return inputName + 'Title';
+				},
+
+				initializer() {
+					const instance = this;
+
+					const container = instance.get('container');
+
+					container.delegate(
+						'click',
+						instance._handleButtonsClick,
+						'> .form-group .btn',
+						instance
+					);
+				},
+
+				setValue(value) {
+					const instance = this;
+
+					const parsedValue = instance.getParsedValue(value);
+
+					if (!parsedValue.className && !parsedValue.classPK) {
+						value = '';
+					}
+					else {
+						value = JSON.stringify(parsedValue);
+					}
+
+					JournalArticleField.superclass.setValue.call(
+						instance,
+						value
+					);
+
+					instance.syncUI();
+				},
+
+				showNotice(message) {
+					Liferay.Util.openToast({
+						message,
+						type: 'warning',
+					});
+				},
+
+				syncReadOnlyUI() {
+					const instance = this;
+
+					const readOnly = instance.getReadOnly();
+
+					const container = instance.get('container');
+
+					const selectButtonNode = container.one(
+						'#' + instance.getInputName() + 'SelectButton'
+					);
+
+					selectButtonNode.attr('disabled', readOnly);
+
+					const clearButtonNode = container.one(
+						'#' + instance.getInputName() + 'ClearButton'
+					);
+
+					clearButtonNode.attr('disabled', readOnly);
+				},
+
+				syncUI() {
+					const instance = this;
+
+					const parsedValue = instance.getParsedValue(
+						instance.getValue()
+					);
+
+					const titleNode = A.one(
+						'input[name=' + instance.getInputName() + 'Title]'
+					);
+
+					const parsedTitleMap = instance.getParsedValue(
+						parsedValue.titleMap
+					);
+
+					if (parsedTitleMap) {
+						const journalTitle =
+							parsedTitleMap[instance.get('displayLocale')];
+
+						if (journalTitle) {
+							parsedValue.title = journalTitle;
+						}
+					}
+
+					titleNode.val(parsedValue.title || '');
+
+					instance._validateField(titleNode);
+
+					const clearButtonNode = A.one(
+						'#' + instance.getInputName() + 'ClearButton'
+					);
+
+					clearButtonNode.toggle(!!parsedValue.classPK);
+				},
+			},
+		});
+
+		FieldTypes['ddm-journal-article'] = JournalArticleField;
 
 		const LinkToPageField = A.Component.create({
 			EXTENDS: Field,
@@ -2081,13 +2337,14 @@ AUI.add(
 							zIndex: Liferay.zIndex.OVERLAY,
 						});
 
-						instance.viewer.TPL_CLOSE = instance.viewer.TPL_CLOSE.replace(
-							/<\s*span[^>]*>(.*?)<\s*\/\s*span>/,
-							Liferay.Util.getLexiconIconTpl(
-								'times',
-								'icon-monospaced'
-							)
-						);
+						instance.viewer.TPL_CLOSE =
+							instance.viewer.TPL_CLOSE.replace(
+								/<\s*span[^>]*>(.*?)<\s*\/\s*span>/,
+								Liferay.Util.getLexiconIconTpl(
+									'times',
+									'icon-monospaced'
+								)
+							);
 
 						const TPL_PLAYER_PAUSE =
 							'<span>' +
@@ -2214,10 +2471,11 @@ AUI.add(
 						'p_p_state': 'pop_up',
 					};
 
-					const documentLibraryURL = Liferay.Util.PortletURL.createPortletURL(
-						themeDisplay.getLayoutRelativeControlPanelURL(),
-						documentLibraryParameters
-					);
+					const documentLibraryURL =
+						Liferay.Util.PortletURL.createPortletURL(
+							themeDisplay.getLayoutRelativeControlPanelURL(),
+							documentLibraryParameters
+						);
 
 					return documentLibraryURL.toString();
 				},
@@ -2439,42 +2697,41 @@ AUI.add(
 					const editorComponentName =
 						instance.getInputName() + 'Editor';
 
-					Liferay.componentReady(editorComponentName).then(function (
-						editor
-					) {
-						if (isNode(editor)) {
-							TextHTMLField.superclass.setValue.apply(
-								instance,
-								arguments
-							);
-						}
-						else {
-							const localizationMap = instance.get(
-								'localizationMap'
-							);
+					Liferay.componentReady(editorComponentName).then(
+						function (editor) {
+							if (isNode(editor)) {
+								TextHTMLField.superclass.setValue.apply(
+									instance,
+									arguments
+								);
+							}
+							else {
+								const localizationMap =
+									instance.get('localizationMap');
 
-							if (
-								value ===
-									instance.getFieldDefinition()
-										.predefinedValue[
-										instance.get('displayLocale')
-									] ||
-								value ===
-									localizationMap[
-										instance.get('displayLocale')
-									] ||
-								(!localizationMap[
-									instance.get('displayLocale')
-								] &&
+								if (
+									value ===
+										instance.getFieldDefinition()
+											.predefinedValue[
+											instance.get('displayLocale')
+										] ||
 									value ===
 										localizationMap[
-											instance.getDefaultLocale()
-										])
-							) {
-								editor.setHTML(value);
+											instance.get('displayLocale')
+										] ||
+									(!localizationMap[
+										instance.get('displayLocale')
+									] &&
+										value ===
+											localizationMap[
+												instance.getDefaultLocale()
+											])
+								) {
+									editor.setHTML(value);
+								}
 							}
 						}
-					});
+					);
 				},
 
 				syncReadOnlyUI() {
@@ -2845,26 +3102,26 @@ AUI.add(
 					const liferayForm = instance.get('liferayForm');
 
 					if (liferayForm) {
-						const validatorRules = liferayForm.formValidator.get(
-							'rules'
-						);
+						const validatorRules =
+							liferayForm.formValidator.get('rules');
 
 						if (event.type === 'liferay-ddm-field:repeat') {
 							const originalField = event.originalField;
 
-							const originalFieldRuleInputName = originalField.getRuleInputName();
+							const originalFieldRuleInputName =
+								originalField.getRuleInputName();
 
 							let originalFieldRules =
 								validatorRules[originalFieldRuleInputName];
 
 							if (originalFieldRules) {
-								validatorRules[
-									field.getRuleInputName()
-								] = originalFieldRules;
+								validatorRules[field.getRuleInputName()] =
+									originalFieldRules;
 							}
 
 							if (field.get('dataType') === 'image') {
-								const originalAltRuleInputName = originalField.getAltRuleInputName();
+								const originalAltRuleInputName =
+									originalField.getAltRuleInputName();
 
 								originalFieldRules =
 									validatorRules[originalAltRuleInputName];
@@ -2903,9 +3160,8 @@ AUI.add(
 
 					const definition = instance.get('definition');
 
-					definition.defaultLanguageId = event.item.getAttribute(
-						'data-value'
-					);
+					definition.defaultLanguageId =
+						event.item.getAttribute('data-value');
 
 					instance.set('definition', definition);
 				},
@@ -3046,9 +3302,8 @@ AUI.add(
 				fillEmptyLocales(instance, fields, availableLanguageIds) {
 					fields.forEach((field) => {
 						if (field.get('localizable')) {
-							const localizationMap = field.get(
-								'localizationMap'
-							);
+							const localizationMap =
+								field.get('localizationMap');
 
 							const defaultLocale = field.getDefaultLocale();
 
@@ -3125,16 +3380,14 @@ AUI.add(
 				) {
 					const instance = this;
 
-					const newFieldLocalizations = repeatedField.get(
-						'localizationMap'
-					);
+					const newFieldLocalizations =
+						repeatedField.get('localizationMap');
 
 					let totalLocalizations = {};
 
 					if (originalField) {
-						totalLocalizations = originalField.get(
-							'localizationMap'
-						);
+						totalLocalizations =
+							originalField.get('localizationMap');
 					}
 
 					const currentLocale = repeatedField.get('displayLocale');
@@ -3159,9 +3412,8 @@ AUI.add(
 								localizationValue = repeatedField.getValue();
 							}
 
-							newFieldLocalizations[
-								localization
-							] = localizationValue;
+							newFieldLocalizations[localization] =
+								localizationValue;
 						}
 					});
 
@@ -3279,8 +3531,8 @@ AUI.add(
 							);
 						}
 
-						repeatableInstance = new Liferay.DDM.RepeatableSortableList(
-							{
+						repeatableInstance =
+							new Liferay.DDM.RepeatableSortableList({
 								dd: {
 									plugins: ddPlugins,
 								},
@@ -3298,11 +3550,13 @@ AUI.add(
 								sortCondition(event) {
 									const dropNode = event.drop.get('node');
 
-									const dropNodeAncestor = dropNode.ancestor();
+									const dropNodeAncestor =
+										dropNode.ancestor();
 
 									const dragNode = event.drag.get('node');
 
-									const dragNodeAncestor = dragNode.ancestor();
+									const dragNodeAncestor =
+										dragNode.ancestor();
 
 									let retVal =
 										dropNode.getData('fieldName') ===
@@ -3317,8 +3571,7 @@ AUI.add(
 
 									return retVal;
 								},
-							}
-						);
+							});
 
 						repeatableInstance.after(
 							'drag:align',
@@ -3334,9 +3587,8 @@ AUI.add(
 							)
 						);
 
-						instance.repeatableInstances[
-							treeName
-						] = repeatableInstance;
+						instance.repeatableInstances[treeName] =
+							repeatableInstance;
 					}
 					else {
 						repeatableInstance.add(fieldContainer);
@@ -3402,9 +3654,8 @@ AUI.add(
 
 					instance.finalizeRepeatableFieldLocalizations();
 
-					const ddmFormValuesInput = instance.get(
-						'ddmFormValuesInput'
-					);
+					const ddmFormValuesInput =
+						instance.get('ddmFormValuesInput');
 
 					ddmFormValuesInput.val(JSON.stringify(instance.toJSON()));
 				},

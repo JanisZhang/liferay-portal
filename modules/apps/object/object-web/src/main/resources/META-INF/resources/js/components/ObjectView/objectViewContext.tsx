@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {getLocalizableLabel} from '@liferay/object-js-components-web';
+import {stringUtils} from '@liferay/object-js-components-web';
 import React, {createContext, useContext, useReducer} from 'react';
 
 import {defaultLanguageId} from '../../utils/constants';
@@ -178,11 +178,8 @@ export type TAction =
 const viewReducer = (state: TState, action: TAction) => {
 	switch (action.type) {
 		case TYPES.ADD_OBJECT_VIEW: {
-			const {
-				creationLanguageId,
-				objectFields,
-				objectView,
-			} = action.payload;
+			const {creationLanguageId, objectFields, objectView} =
+				action.payload;
 
 			const {
 				objectViewColumns,
@@ -235,7 +232,7 @@ const viewReducer = (state: TState, action: TAction) => {
 						newObjectViewColumns.push({
 							...viewColumn,
 							defaultSort: false,
-							fieldLabel: getLocalizableLabel(
+							fieldLabel: stringUtils.getLocalizableLabel(
 								creationLanguageId,
 								objectField.label,
 								objectField.name
@@ -253,7 +250,7 @@ const viewReducer = (state: TState, action: TAction) => {
 						if (objectField.name === sortColumn.objectFieldName) {
 							newObjectViewSortColumns.push({
 								...sortColumn,
-								fieldLabel: getLocalizableLabel(
+								fieldLabel: stringUtils.getLocalizableLabel(
 									creationLanguageId,
 									objectField.label,
 									objectField.name
@@ -279,55 +276,51 @@ const viewReducer = (state: TState, action: TAction) => {
 				}
 			);
 
-			const newObjectViewFilterColumns = (objectViewFilterColumns as TInitialFilterColumn[]).map(
-				(filterColumn) => {
-					const definition = filterColumn.json
-						? JSON.parse(filterColumn.json)
-						: null;
-					const filterType = filterColumn.filterType;
-					const objectFieldName = filterColumn.objectFieldName;
-					const objectField = newObjectFields.find(
-						(field: ObjectField) => {
-							if (field.name === objectFieldName) {
-								return field;
-							}
-						}
-					);
-					const valueList = [];
-					let valueSummary = filterColumn.valueSummary?.split(',');
-
-					valueSummary = valueSummary?.map((item) => item.trim());
-
-					if (valueSummary && filterType) {
-						for (
-							let i = 0;
-							i < definition[filterType].length;
-							i++
-						) {
-							valueList.push({
-								label: valueSummary[i],
-								value: definition[filterType][i],
-							});
+			const newObjectViewFilterColumns = (
+				objectViewFilterColumns as TInitialFilterColumn[]
+			).map((filterColumn) => {
+				const definition = filterColumn.json
+					? JSON.parse(filterColumn.json)
+					: null;
+				const filterType = filterColumn.filterType;
+				const objectFieldName = filterColumn.objectFieldName;
+				const objectField = newObjectFields.find(
+					(field: ObjectField) => {
+						if (field.name === objectFieldName) {
+							return field;
 						}
 					}
+				);
+				const valueList = [];
+				let valueSummary = filterColumn.valueSummary?.split(',');
 
-					return {
-						...filterColumn,
-						definition,
-						fieldLabel: objectField
-							? getLocalizableLabel(
-									creationLanguageId,
-									objectField.label,
-									objectField.name
-							  )
-							: '',
-						filterBy: objectFieldName,
-						filterType,
-						objectFieldBusinessType: objectField?.businessType,
-						valueList,
-					};
+				valueSummary = valueSummary?.map((item) => item.trim());
+
+				if (valueSummary && filterType) {
+					for (let i = 0; i < definition[filterType].length; i++) {
+						valueList.push({
+							label: valueSummary[i],
+							value: definition[filterType][i],
+						});
+					}
 				}
-			);
+
+				return {
+					...filterColumn,
+					definition,
+					fieldLabel: objectField
+						? stringUtils.getLocalizableLabel(
+								creationLanguageId,
+								objectField.label,
+								objectField.name
+							)
+						: '',
+					filterBy: objectFieldName,
+					filterType,
+					objectFieldBusinessType: objectField?.businessType,
+					valueList,
+				};
+			});
 
 			let newObjectViewName = objectView.name;
 
@@ -368,7 +361,7 @@ const viewReducer = (state: TState, action: TAction) => {
 					return {
 						...item,
 						defaultSort: defaultSortColumn ? true : false,
-						fieldLabel: getLocalizableLabel(
+						fieldLabel: stringUtils.getLocalizableLabel(
 							creationLanguageId,
 							item.label,
 							item.name
@@ -392,12 +385,8 @@ const viewReducer = (state: TState, action: TAction) => {
 			};
 		}
 		case TYPES.ADD_OBJECT_VIEW_FILTER_COLUMN: {
-			const {
-				creationLanguageId,
-				filterType,
-				objectFieldName,
-				valueList,
-			} = action.payload;
+			const {creationLanguageId, filterType, objectFieldName, valueList} =
+				action.payload;
 
 			const labels: LocalizedValue<string>[] = [];
 			let objectFieldBusinessType;
@@ -428,11 +417,14 @@ const viewReducer = (state: TState, action: TAction) => {
 											label: string;
 											value: string;
 										}) => item.value
-								  )
+									)
 								: [],
-					  }
+						}
 					: null,
-				fieldLabel: getLocalizableLabel(creationLanguageId, label),
+				fieldLabel: stringUtils.getLocalizableLabel(
+					creationLanguageId,
+					label
+				),
 				filterBy: label[defaultLanguageId],
 				filterType: filterTypeValue,
 				label,
@@ -499,7 +491,10 @@ const viewReducer = (state: TState, action: TAction) => {
 			const [label] = labels;
 
 			const newSortColumnItem: TObjectViewSortColumn = {
-				fieldLabel: getLocalizableLabel(creationLanguageId, label),
+				fieldLabel: stringUtils.getLocalizableLabel(
+					creationLanguageId,
+					label
+				),
 				label,
 				objectFieldName,
 				sortOrder: selectedObjetSortValue,
@@ -687,9 +682,11 @@ const viewReducer = (state: TState, action: TAction) => {
 				}
 			});
 
-			const sortColumn = newState.objectView?.objectViewSortColumns.filter(
-				(sortColumn) => sortColumn.objectFieldName !== objectFieldName
-			);
+			const sortColumn =
+				newState.objectView?.objectViewSortColumns.filter(
+					(sortColumn) =>
+						sortColumn.objectFieldName !== objectFieldName
+				);
 
 			const newSortColumn = sortColumn.map((sortColumn, index) => {
 				return {
@@ -757,9 +754,9 @@ const viewReducer = (state: TState, action: TAction) => {
 											? valueList.map(
 													(item: LabelValueObject) =>
 														item.value
-											  )
+												)
 											: [],
-								  }
+									}
 								: null,
 							filterType: filterTypeValue,
 							valueList: filterTypeValue ? valueList : [],

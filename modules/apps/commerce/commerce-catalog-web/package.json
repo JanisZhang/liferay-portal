@@ -1,0 +1,15 @@
+{
+	"dependencies": {
+		"commerce-frontend-js": "*",
+		"frontend-js-web": "*"
+	},
+	"main": "js/index.js",
+	"name": "@liferay/commerce-catalog-web",
+	"private": true,
+	"scripts": {
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
+	},
+	"version": "4.0.58"
+}

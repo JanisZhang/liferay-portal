@@ -37,14 +37,17 @@ const initialFormValues: MDFRequest = {
 	additionalOption: {},
 	claimPercent: 0,
 	company: {},
+	convertedTotalCostOfExpense: 0,
+	convertedTotalMDFRequestAmount: 0,
 	currency: {},
+	currencyExchangeRate: 0,
 	liferayBusinessSalesGoals: [],
 	maxDateActivity: '',
 	mdfRequestStatus: Status.DRAFT,
 	minDateActivity: '',
 	overallCampaignDescription: '',
 	overallCampaignName: '',
-	partnerCountry: {},
+	partnerCountries: [],
 	submitted: false,
 	targetAudienceRoles: [],
 	targetMarkets: [],
@@ -97,7 +100,7 @@ const MDFRequestForm = () => {
 
 	const hasPermissionShowForm = mdfRequestId
 		? (hasPermissionToAccess && currentMDFRequestHasValidStatus) ||
-		  hasPermissionToByPass
+			hasPermissionToByPass
 		: hasPermissionToAccess;
 
 	const onCancel = () => history.back();
@@ -143,7 +146,7 @@ const MDFRequestForm = () => {
 									(action) =>
 										action !==
 										PermissionActionType.UPDATE_WO_CHANGE_STATUS
-							  )
+								)
 							: true
 					)
 				}
@@ -175,7 +178,7 @@ const MDFRequestForm = () => {
 									(action) =>
 										action !==
 										PermissionActionType.UPDATE_WO_CHANGE_STATUS
-							  )
+								)
 							: true
 					)
 				}
@@ -204,7 +207,7 @@ const MDFRequestForm = () => {
 									(action) =>
 										action !==
 										PermissionActionType.UPDATE_WO_CHANGE_STATUS
-							  )
+								)
 							: true
 					)
 				}
@@ -262,7 +265,7 @@ const MDFRequestForm = () => {
 								(action) =>
 									action !==
 									PermissionActionType.UPDATE_WO_CHANGE_STATUS
-						  )
+							)
 						: true
 				)
 			}

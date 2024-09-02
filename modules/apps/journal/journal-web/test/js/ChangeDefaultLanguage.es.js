@@ -44,9 +44,19 @@ describe('ChangeDefaultLanguage', () => {
 	});
 
 	it('render', () => {
+		Liferay.FeatureFlags['LPD-11228'] = true;
+
 		const {getByText} = _renderChangeDefaultLanguageComponent();
 
+		expect(
+			getByText(
+				"changing-the-default-language-will-reset-the-article's-history-making-previous-changes-untrackable"
+			)
+		).toBeInTheDocument();
+
 		expect(getByText('change')).toBeTruthy();
+
+		Liferay.FeatureFlags['LPD-11228'] = false;
 	});
 
 	it('render the default language', () => {
@@ -58,11 +68,8 @@ describe('ChangeDefaultLanguage', () => {
 	});
 
 	it('change default language', async () => {
-		const {
-			findByText,
-			getByText,
-			getByTitle,
-		} = _renderChangeDefaultLanguageComponent();
+		const {findByText, getByText, getByTitle} =
+			_renderChangeDefaultLanguageComponent();
 
 		fireEvent.click(getByTitle('es_ES'));
 

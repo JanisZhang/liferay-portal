@@ -6,12 +6,16 @@
 package com.liferay.wiki.web.internal.workflow;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.LayoutConstants;
+import com.liferay.portal.kernel.portlet.PortletURLFactory;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.BaseWorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
+import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiPageLocalService;
 
@@ -19,6 +23,9 @@ import java.io.Serializable;
 
 import java.util.Locale;
 import java.util.Map;
+
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -32,6 +39,24 @@ import org.osgi.service.component.annotations.Reference;
 	service = WorkflowHandler.class
 )
 public class WikiPageWorkflowHandler extends BaseWorkflowHandler<WikiPage> {
+
+	@Override
+	public void contributeServiceContext(ServiceContext serviceContext) {
+		PortletURL portletURL = null;
+
+		if (serviceContext.getPlid() == LayoutConstants.DEFAULT_PLID) {
+			portletURL = _portal.getControlPanelPortletURL(
+				serviceContext.getRequest(), WikiPortletKeys.WIKI_ADMIN,
+				PortletRequest.RENDER_PHASE);
+		}
+		else {
+			portletURL = _portletURLFactory.create(
+				serviceContext.getRequest(), WikiPortletKeys.WIKI,
+				serviceContext.getPlid(), PortletRequest.RENDER_PHASE);
+		}
+
+		serviceContext.setAttribute("baseDiffsURL", portletURL.toString());
+	}
 
 	@Override
 	public String getClassName() {
@@ -72,6 +97,12 @@ public class WikiPageWorkflowHandler extends BaseWorkflowHandler<WikiPage> {
 		return _wikiPageLocalService.updateStatus(
 			userId, page, status, serviceContext, workflowContext);
 	}
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private PortletURLFactory _portletURLFactory;
 
 	@Reference
 	private WikiPageLocalService _wikiPageLocalService;

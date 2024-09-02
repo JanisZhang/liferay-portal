@@ -5,8 +5,10 @@
 
 import {FRAGMENT_ENTRY_TYPES} from '../../config/constants/fragmentEntryTypes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
+import {getStepperChild} from '../../utils/getStepperChild';
 import {formIsMapped} from '../formIsMapped';
-import {hasFormParent} from '../hasFormParent';
+import {getFormParent} from '../getFormParent';
+import {isMultistepForm} from '../isMultistepForm';
 import {isUnmappedCollection} from '../isUnmappedCollection';
 
 const LAYOUT_DATA_CHECK_ALLOWED_CHILDREN = {
@@ -45,8 +47,19 @@ const LAYOUT_DATA_CHECK_ALLOWED_CHILDREN = {
 					LAYOUT_DATA_ITEM_TYPES.dropZone,
 					LAYOUT_DATA_ITEM_TYPES.row,
 					LAYOUT_DATA_ITEM_TYPES.fragment,
-			  ].includes(child.type)
+				].includes(child.type)
 			: false,
+	[LAYOUT_DATA_ITEM_TYPES.formStep]: (child) =>
+		[
+			LAYOUT_DATA_ITEM_TYPES.collection,
+			LAYOUT_DATA_ITEM_TYPES.container,
+			LAYOUT_DATA_ITEM_TYPES.dropZone,
+			LAYOUT_DATA_ITEM_TYPES.row,
+			LAYOUT_DATA_ITEM_TYPES.fragment,
+			LAYOUT_DATA_ITEM_TYPES.form,
+		].includes(child.type),
+	[LAYOUT_DATA_ITEM_TYPES.formStepContainer]: (child) =>
+		[LAYOUT_DATA_ITEM_TYPES.formStep].includes(child.type),
 	[LAYOUT_DATA_ITEM_TYPES.row]: (child) =>
 		[LAYOUT_DATA_ITEM_TYPES.column].includes(child.type),
 	[LAYOUT_DATA_ITEM_TYPES.column]: (child) =>
@@ -77,20 +90,48 @@ const LAYOUT_DATA_CHECK_ALLOWED_CHILDREN = {
  * @param {{current: object}} layoutDataRef
  * @return {boolean}
  */
-export default function checkAllowedChild(child, parent, layoutDataRef) {
+export default function checkAllowedChild(
+	child,
+	parent,
+	layoutDataRef,
+	fragmentEntryLinksRef
+) {
 	if (isUnmappedCollection(parent) || isUnmappedForm(parent)) {
 		return false;
 	}
 
 	if (child.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
-		if (
-			child.fragmentEntryType === FRAGMENT_ENTRY_TYPES.input &&
-			!hasFormParent(parent, layoutDataRef.current)
-		) {
-			return false;
+		if (child.fieldTypes?.includes('stepper')) {
+			if (parent.type !== LAYOUT_DATA_ITEM_TYPES.form) {
+				return false;
+			}
+
+			const existingStepper = getStepperChild(
+				parent,
+				layoutDataRef.current,
+				fragmentEntryLinksRef.current
+			);
+
+			if (existingStepper && existingStepper.itemId !== child.itemId) {
+				return false;
+			}
+		}
+		else if (child.fragmentEntryType === FRAGMENT_ENTRY_TYPES.input) {
+			const form = getFormParent(parent, layoutDataRef.current);
+
+			if (!form) {
+				return false;
+			}
+
+			if (
+				isMultistepForm(form) &&
+				parent.type !== LAYOUT_DATA_ITEM_TYPES.formStep
+			) {
+				return false;
+			}
 		}
 
-		if (parent.type === LAYOUT_DATA_ITEM_TYPES.form && child.isWidget) {
+		if (getFormParent(parent, layoutDataRef.current) && child.isWidget) {
 			return false;
 		}
 	}

@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useLocation, useNavigate, useParams} from 'react-router-dom';
+import ClayIcon from '@clayui/icon';
+import {ClayTooltipProvider} from '@clayui/tooltip';
+import {useParams} from 'react-router-dom';
 
 import Container from '../../../components/Layout/Container';
 import ListView, {ListViewProps} from '../../../components/ListView';
@@ -14,7 +16,6 @@ import {FormModal} from '../../../hooks/useFormModal';
 import i18n from '../../../i18n';
 import {testrayCaseImpl} from '../../../services/rest';
 import {Action} from '../../../types';
-import dayjs from '../../../util/date';
 import useCaseActions from './useCaseActions';
 
 type CaseListViewProps = {
@@ -36,14 +37,11 @@ const CaseListView: React.FC<CaseListViewProps> = ({
 	tableProps,
 	variables,
 }) => {
-	const {pathname} = useLocation();
-	const navigate = useNavigate();
-
 	return (
 		<ListView
 			forceRefetch={formModal?.forceRefetch}
 			managementToolbarProps={{
-				addButton: () => navigate('create', {state: {back: pathname}}),
+				applyFilters: true,
 				filterSchema: 'cases',
 				title: i18n.translate('cases'),
 			}}
@@ -52,47 +50,57 @@ const CaseListView: React.FC<CaseListViewProps> = ({
 				actions,
 				columns: [
 					{
-						key: 'dateCreated',
-						render: (dateCreated) =>
-							dayjs(dateCreated).format('lll'),
-						value: i18n.translate('create-date'),
+						clickable: true,
+						key: 'flaky',
+						render: (_, {flaky, name}) => (
+							<>
+								{flaky && (
+									<ClayTooltipProvider>
+										<span
+											className="tr-table__row__flaky-icon"
+											data-tooltip-align="top"
+											title={i18n.translate(
+												'this-is-a-possible-flaky-test'
+											)}
+										>
+											<ClayIcon symbol="flag-full" />
+										</span>
+									</ClayTooltipProvider>
+								)}
+								{name}
+							</>
+						),
+						value: i18n.translate('case'),
 					},
 					{
-						key: 'dateModified',
-						render: (dateModified) =>
-							dayjs(dateModified).format('lll'),
-						value: i18n.translate('modified-date'),
-					},
-					{
+						clickable: true,
 						key: 'priority',
 						sorteable: true,
 						value: i18n.translate('priority'),
 					},
 					{
+						clickable: true,
 						key: 'caseType',
 						render: (caseType) => caseType?.name,
 						value: i18n.translate('case-type'),
 					},
 					{
 						clickable: true,
-						key: 'name',
-						size: 'md',
-						sorteable: true,
-						value: i18n.translate('case-name'),
-					},
-					{
 						key: 'team',
 						render: (_, {component}) => component?.team?.name,
 						value: i18n.translate('team'),
 					},
 					{
+						clickable: true,
 						key: 'component',
 						render: (component) => component?.name,
 						value: i18n.translate('component'),
 					},
 					{
+						clickable: true,
 						key: 'description',
-						render: (description) => description,
+						render: (description) =>
+							description === 'null' ? '' : description,
 						value: i18n.translate('description'),
 					},
 					{key: 'issues', value: i18n.translate('issues')},

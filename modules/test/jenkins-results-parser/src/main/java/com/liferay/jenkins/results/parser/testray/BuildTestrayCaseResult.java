@@ -45,6 +45,17 @@ public abstract class BuildTestrayCaseResult extends TestrayCaseResult {
 	}
 
 	@Override
+	public long getDuration() {
+		Build build = getBuild();
+
+		if (build == null) {
+			return 0;
+		}
+
+		return build.getDuration();
+	}
+
+	@Override
 	public Status getStatus() {
 		Build build = getBuild();
 
@@ -74,22 +85,6 @@ public abstract class BuildTestrayCaseResult extends TestrayCaseResult {
 			return null;
 		}
 
-		for (URL testrayAttachmentURL : build.getTestrayAttachmentURLs()) {
-			String testrayAttachmentURLString = String.valueOf(
-				testrayAttachmentURL);
-
-			if (!testrayAttachmentURLString.contains(key)) {
-				continue;
-			}
-
-			TestrayAttachment testrayAttachment = new DefaultTestrayAttachment(
-				this, name, key, testrayAttachmentURL);
-
-			_testrayAttachments.put(key, testrayAttachment);
-
-			return _testrayAttachments.get(key);
-		}
-
 		if (TestrayS3Bucket.hasGoogleApplicationCredentials()) {
 			for (URL testrayS3AttachmentURL :
 					build.getTestrayS3AttachmentURLs()) {
@@ -108,6 +103,22 @@ public abstract class BuildTestrayCaseResult extends TestrayCaseResult {
 
 				return _testrayAttachments.get(key);
 			}
+		}
+
+		for (URL testrayAttachmentURL : build.getTestrayAttachmentURLs()) {
+			String testrayAttachmentURLString = String.valueOf(
+				testrayAttachmentURL);
+
+			if (!testrayAttachmentURLString.contains(key)) {
+				continue;
+			}
+
+			TestrayAttachment testrayAttachment = new DefaultTestrayAttachment(
+				this, name, key, testrayAttachmentURL);
+
+			_testrayAttachments.put(key, testrayAttachment);
+
+			return _testrayAttachments.get(key);
 		}
 
 		return null;
@@ -218,11 +229,27 @@ public abstract class BuildTestrayCaseResult extends TestrayCaseResult {
 			return null;
 		}
 
-		TestrayAttachment testrayAttachment = _uploadDefaultTestrayAttachment(
+		TestrayAttachment testrayAttachment = _uploadS3TestrayAttachment(
 			name, key, file);
 
-		if (testrayAttachment == null) {
-			testrayAttachment = _uploadS3TestrayAttachment(name, key, file);
+		try {
+			String testrayServerTypes =
+				JenkinsResultsParserUtil.getBuildProperty(
+					"testray.server.types");
+
+			TestrayAttachment defaultTestrayAttachment = null;
+
+			if (testrayServerTypes.contains("RSYNC")) {
+				defaultTestrayAttachment = _uploadDefaultTestrayAttachment(
+					name, key, file);
+			}
+
+			if (testrayAttachment == null) {
+				testrayAttachment = defaultTestrayAttachment;
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 
 		if (testrayAttachment == null) {

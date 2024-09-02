@@ -12,7 +12,7 @@
 <tbody>
 <tr>
 	<td>REQUEST_SUPPRESSED_OPTIONS</td>
-	<td>//h4[contains(.,'${key_optionName}')]/../..//*[contains(@class,'button-root') and contains(.,'${key_optionValue}')]</td>
+	<td>//div[text()='${key_optionName}']/../..//*[contains(@class,'button-root') and contains(.,'${key_optionValue}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -47,7 +47,7 @@
 </tr>
 <tr>
 	<td>SELECT_USER</td>
-	<td>//button[contains(@class,'dropdown-item')]</td>
+	<td>//*[contains(@class,'dropdown-item')and text()='${key_optionName}']</td>
 	<td></td>
 </tr>
 <tr>

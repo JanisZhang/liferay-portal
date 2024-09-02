@@ -46,17 +46,11 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8336 | Test Summary: Search for a Page in Pages list"
 	@priority = 5
 	test CanSearchPageInPagesList {
+		property test.run.type = "single";
+
 		task ("Add pages") {
 			for (var layoutName : list "AC Page 2,AC Page 3") {
 				ACUtils.addPage(layoutName = ${layoutName});
-
-				Navigator.gotoSitePage(
-					pageName = ${layoutName},
-					siteName = "Site Name");
-
-				ACUtils.addWidgetToPage(
-					layoutName = ${layoutName},
-					widgetName = "Blogs");
 			}
 		}
 
@@ -88,8 +82,8 @@ definition {
 
 			for (var pageName : list "AC Page,AC Page 2,AC Page 3") {
 				ACUtils.navigateToSitePage(
-					actionType = "View Blog",
-					documentTitleList = "Blogs AC Title",
+					actionType = "View WC",
+					documentTitleList = "1,2,3,4",
 					pageName = ${pageName},
 					siteName = "Site Name");
 			}
@@ -122,15 +116,15 @@ definition {
 
 			ACUtils.searchBar(searchItem = "AC Page");
 
-			ACUtils.viewNameList(nameList = ${pageNameList});
+			ACUtils.viewPartialNameList(nameList = ${pageNameList});
 
 			ACUtils.searchBar(searchItem = 2);
 
-			ACUtils.viewNameList(nameList = "AC Page 2 - Site Name - ${dataSourceName}");
+			ACUtils.viewPartialNameList(nameList = "AC Page 2 - Site Name - ${dataSourceName}");
 
 			ACUtils.searchBar(searchItem = 3);
 
-			ACUtils.viewNameList(nameList = "AC Page 3 - Site Name - ${dataSourceName}");
+			ACUtils.viewPartialNameList(nameList = "AC Page 3 - Site Name - ${dataSourceName}");
 		}
 	}
 
@@ -319,75 +313,12 @@ definition {
 		}
 	}
 
-	@description = "Feature ID: Legacy | Automation ID: LRAC-8341 | Test Summary: Filter Page Table by Last Year"
-	@ignore = "true"
-	@priority = 3
-	test PeriodFilterLastYearPageTable {
-
-		// AC Refactor: Test needs data from past dates to assert
-		// AC Refactor ticket: LRAC-8934
-
-		task ("Get site assigned property name") {
-			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
-		}
-
-		task ("Visit the site page") {
-			ACUtils.navigateToSitePage(
-				pageName = "AC Page",
-				siteName = "Site Name");
-		}
-
-		task ("Switch to new property in AC") {
-			ACUtils.launchAC();
-
-			ACProperties.switchProperty(propertyName = ${propertyName});
-		}
-
-		task ("Select Pages tab and set a 24h time filter") {
-			ACNavigation.switchTab(tabName = "Pages");
-
-			ACTimeFilter.clickTimeFilterButton();
-
-			ACTimeFilter.setLast24Hours();
-		}
-
-		// Can't assert that the filter is working properly, data not present on time
-
-		task ("Assert that the visited page is present on 24h time filter") {
-			ACUtils.assertItemsName(itemList = "AC Page");
-		}
-
-		task ("Set time period filter to Last Year") {
-			ACTimeFilter.clickTimeFilterButton();
-
-			ACTimeFilter.setLastYear();
-		}
-
-		task ("Assert that the 24h filter page is not present on Last Year filter") {
-			ACUtils.assertItemsNameNotPresent(itemList = "AC Page");
-		}
-
-		// Can't assert that the filter is working properly without past data
-
-		task ("Assert that the right page is present on Last Year filter") {
-			ACUtils.assertItemsName(itemList = "Last Year Page");
-		}
-	}
-
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8111 | Test Summary: Assert the pages list shows a list of pages"
 	@priority = 5
 	test ShowsListOfPages {
 		task ("Add pages") {
 			for (var layoutName : list "AC Page 2,AC Page 3") {
 				ACUtils.addPage(layoutName = ${layoutName});
-
-				Navigator.gotoSitePage(
-					pageName = ${layoutName},
-					siteName = "Site Name");
-
-				ACUtils.addWidgetToPage(
-					layoutName = ${layoutName},
-					widgetName = "Blogs");
 			}
 		}
 
@@ -415,8 +346,8 @@ definition {
 
 			for (var pageName : list "AC Page,AC Page 2,AC Page 3") {
 				ACUtils.navigateToSitePage(
-					actionType = "View Blog",
-					documentTitleList = "Blogs AC Title",
+					actionType = "View WC",
+					documentTitleList = "1,2,3,4",
 					pageName = ${pageName},
 					siteName = "Site Name");
 			}

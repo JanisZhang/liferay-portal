@@ -7,8 +7,8 @@ package com.liferay.depot.service.base;
 
 import com.liferay.depot.model.DepotAppCustomization;
 import com.liferay.depot.service.DepotAppCustomizationLocalService;
-import com.liferay.depot.service.DepotAppCustomizationLocalServiceUtil;
 import com.liferay.depot.service.persistence.DepotAppCustomizationPersistence;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -31,7 +31,9 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -64,7 +66,7 @@ public abstract class DepotAppCustomizationLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DepotAppCustomizationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DepotAppCustomizationLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DepotAppCustomizationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.depot.service.DepotAppCustomizationLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -401,14 +403,14 @@ public abstract class DepotAppCustomizationLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		DepotAppCustomizationLocalServiceUtil.setService(null);
 	}
 
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
 			DepotAppCustomizationLocalService.class,
-			IdentifiableOSGiService.class, PersistedModelLocalService.class
+			IdentifiableOSGiService.class, CTService.class,
+			PersistedModelLocalService.class
 		};
 	}
 
@@ -416,9 +418,6 @@ public abstract class DepotAppCustomizationLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		depotAppCustomizationLocalService =
 			(DepotAppCustomizationLocalService)aopProxy;
-
-		DepotAppCustomizationLocalServiceUtil.setService(
-			depotAppCustomizationLocalService);
 	}
 
 	/**
@@ -431,8 +430,23 @@ public abstract class DepotAppCustomizationLocalServiceBaseImpl
 		return DepotAppCustomizationLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<DepotAppCustomization> getCTPersistence() {
+		return depotAppCustomizationPersistence;
+	}
+
+	@Override
+	public Class<DepotAppCustomization> getModelClass() {
 		return DepotAppCustomization.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<DepotAppCustomization>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(depotAppCustomizationPersistence);
 	}
 
 	protected String getModelClassName() {

@@ -29,6 +29,14 @@ public class HeaderTag extends IncludeTag {
 		return _actions;
 	}
 
+	public String getAdditionalStatusLabel() {
+		return _additionalStatusLabel;
+	}
+
+	public String getAdditionalStatusLabelStyle() {
+		return _additionalStatusLabelStyle;
+	}
+
 	public String getAssignerModalUrl() {
 		return _assignerModalUrl;
 	}
@@ -47,6 +55,10 @@ public class HeaderTag extends IncludeTag {
 
 	public String getCssClasses() {
 		return _cssClasses;
+	}
+
+	public long getDisplayBeanId() {
+		return _displayBeanId;
 	}
 
 	public List<DropdownItem> getDropdownItems() {
@@ -101,6 +113,16 @@ public class HeaderTag extends IncludeTag {
 		_actions = actions;
 	}
 
+	public void setAdditionalStatusLabel(String additionalStatusLabel) {
+		_additionalStatusLabel = additionalStatusLabel;
+	}
+
+	public void setAdditionalStatusLabelStyle(
+		String additionalStatusLabelStyle) {
+
+		_additionalStatusLabelStyle = additionalStatusLabelStyle;
+	}
+
 	public void setAssignerModalUrl(String assignerModalUrl) {
 		_assignerModalUrl = assignerModalUrl;
 	}
@@ -115,6 +137,10 @@ public class HeaderTag extends IncludeTag {
 
 	public void setCssClasses(String cssClasses) {
 		_cssClasses = cssClasses;
+	}
+
+	public void setDisplayBeanId(long displayBeanId) {
+		_displayBeanId = displayBeanId;
 	}
 
 	public void setDropdownItems(List<DropdownItem> dropdownItems) {
@@ -179,10 +205,13 @@ public class HeaderTag extends IncludeTag {
 		super.cleanUp();
 
 		_actions = null;
+		_additionalStatusLabel = null;
+		_additionalStatusLabelStyle = null;
 		_assignerModalUrl = null;
 		_bean = null;
 		_beanIdLabel = null;
 		_cssClasses = null;
+		_displayBeanId = 0;
 		_dropdownItems = null;
 		_externalReferenceCode = null;
 		_externalReferenceCodeEditUrl = null;
@@ -217,12 +246,20 @@ public class HeaderTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-commerce:header:actions", _actions);
 		httpServletRequest.setAttribute(
+			"liferay-commerce:header:additionalStatusLabel",
+			_additionalStatusLabel);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:header:additionalStatusLabelStyle",
+			_additionalStatusLabelStyle);
+		httpServletRequest.setAttribute(
 			"liferay-commerce:header:assignerModalUrl", _assignerModalUrl);
 		httpServletRequest.setAttribute("liferay-commerce:header:bean", _bean);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:header:beanIdLabel", _beanIdLabel);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:header:cssClasses", _cssClasses);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:header:displayBeanId", _displayBeanId);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:header:dropdownItems", _dropdownItems);
 		httpServletRequest.setAttribute(
@@ -257,10 +294,13 @@ public class HeaderTag extends IncludeTag {
 	private static final String _PAGE = "/header/page.jsp";
 
 	private List<HeaderActionModel> _actions;
+	private String _additionalStatusLabel;
+	private String _additionalStatusLabelStyle;
 	private String _assignerModalUrl;
 	private Object _bean;
 	private String _beanIdLabel;
 	private String _cssClasses;
+	private long _displayBeanId;
 	private List<DropdownItem> _dropdownItems;
 	private String _externalReferenceCode;
 	private String _externalReferenceCodeEditUrl;

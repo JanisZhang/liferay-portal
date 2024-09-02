@@ -9,6 +9,7 @@ import {useNavigate} from 'react-router-dom';
 import {useDeliveryProduct} from '../../hooks/data/useProduct';
 import zodSchema from '../../schema/zod';
 import {getUrlParam} from '../../utils/getUrlParam';
+import {isCloudProduct} from '../../utils/productUtils';
 import {StepType} from './enums/stepType';
 import useGetResourceInfo from './hooks/useGetResourceInfo';
 
@@ -53,11 +54,11 @@ export type ActionMap<M extends {[index: string]: any}> = {
 	[Key in keyof M]: M[Key] extends undefined
 		? {
 				type: Key;
-		  }
+			}
 		: {
 				payload: M[Key];
 				type: Key;
-		  };
+			};
 };
 
 const initialState: InitialState = {
@@ -242,11 +243,7 @@ const GetAppContextProvider: React.FC<GetAppContextProviderProps> = ({
 	const [state, dispatch] = useReducer(reducer, initialState);
 	const {data: product} = useDeliveryProduct(getUrlParam('productId') ?? '');
 
-	const isCloudApp =
-		product?.productSpecifications?.some(
-			({specificationKey, value}) =>
-				specificationKey === 'type' && value === 'cloud'
-		) ?? false;
+	const isCloudApp = isCloudProduct(product);
 
 	const appResourceInfo = useGetResourceInfo({
 		product,
@@ -310,6 +307,10 @@ const GetAppContextProvider: React.FC<GetAppContextProviderProps> = ({
 
 		if (paymentMethod === 'pay') {
 			return state.payment.eulaCheckbox;
+		}
+
+		if (paymentMethod === 'trial') {
+			return isAddressValid;
 		}
 
 		if (paymentMethod === 'order') {

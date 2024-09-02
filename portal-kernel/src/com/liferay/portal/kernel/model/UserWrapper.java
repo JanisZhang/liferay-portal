@@ -358,13 +358,6 @@ public class UserWrapper
 	}
 
 	@Override
-	public void addRemotePreference(
-		com.liferay.portal.kernel.util.RemotePreference remotePreference) {
-
-		model.addRemotePreference(remotePreference);
-	}
-
-	@Override
 	public User cloneWithOriginalValues() {
 		return wrap(model.cloneWithOriginalValues());
 	}
@@ -399,6 +392,20 @@ public class UserWrapper
 	@Override
 	public boolean getAgreedToTermsOfUse() {
 		return model.getAgreedToTermsOfUse();
+	}
+
+	@Override
+	public java.util.List<Group> getAllGroups()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getAllGroups();
+	}
+
+	@Override
+	public java.util.List<Role> getAllRoles()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getAllRoles();
 	}
 
 	/**
@@ -749,6 +756,32 @@ public class UserWrapper
 	}
 
 	@Override
+	public java.util.List<Group> getInheritedGroups()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getInheritedGroups();
+	}
+
+	@Override
+	public java.util.List<Role> getInheritedRoles()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getInheritedRoles();
+	}
+
+	@Override
+	public java.util.List<Group> getInheritedSiteGroups()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getInheritedSiteGroups();
+	}
+
+	@Override
+	public java.util.List<Role> getInheritedSiteRoles() {
+		return model.getInheritedSiteRoles();
+	}
+
+	@Override
 	public String getInitials() {
 		return model.getInitials();
 	}
@@ -979,6 +1012,29 @@ public class UserWrapper
 	}
 
 	@Override
+	public java.util.List<Organization> getOrganizations(
+			boolean includeAdministrative, boolean includeParentOrganizations)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getOrganizations(
+			includeAdministrative, includeParentOrganizations);
+	}
+
+	@Override
+	public java.util.List<Group> getOrganizationsGroups()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getOrganizationsGroups();
+	}
+
+	@Override
+	public java.util.List<Role> getOrganizationsRoles()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getOrganizationsRoles();
+	}
+
+	@Override
 	public String getOriginalEmailAddress() {
 		return model.getOriginalEmailAddress();
 	}
@@ -1115,20 +1171,6 @@ public class UserWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.util.RemotePreference getRemotePreference(
-		String name) {
-
-		return model.getRemotePreference(name);
-	}
-
-	@Override
-	public Iterable<com.liferay.portal.kernel.util.RemotePreference>
-		getRemotePreferences() {
-
-		return model.getRemotePreferences();
-	}
-
-	@Override
 	public long[] getRoleIds() {
 		return model.getRoleIds();
 	}
@@ -1160,6 +1202,13 @@ public class UserWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getSiteGroups(includeAdministrative);
+	}
+
+	@Override
+	public java.util.List<Role> getSiteRoles()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getSiteRoles();
 	}
 
 	/**
@@ -1222,6 +1271,13 @@ public class UserWrapper
 	@Override
 	public long[] getUserGroupIds() {
 		return model.getUserGroupIds();
+	}
+
+	@Override
+	public java.util.List<UserGroupRole> getUserGroupRoles()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getUserGroupRoles();
 	}
 
 	@Override
@@ -1413,6 +1469,11 @@ public class UserWrapper
 	}
 
 	@Override
+	public boolean isPasswordResetRequired() {
+		return model.isPasswordResetRequired();
+	}
+
+	@Override
 	public boolean isReminderQueryComplete() {
 		return model.isReminderQueryComplete();
 	}
@@ -1600,6 +1661,16 @@ public class UserWrapper
 	@Override
 	public void setGreeting(String greeting) {
 		model.setGreeting(greeting);
+	}
+
+	@Override
+	public void setGroup(Group group) {
+		model.setGroup(group);
+	}
+
+	@Override
+	public void setGroupId(long groupId) {
+		model.setGroupId(groupId);
 	}
 
 	@Override

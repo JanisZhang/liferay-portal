@@ -9,6 +9,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.CamelCaseUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -24,6 +25,7 @@ import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parse
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.ResourceTestCaseOpenAPIParser;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.util.OpenAPIParserUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.util.ConfigUtil;
+import com.liferay.portal.tools.rest.builder.internal.freemarker.util.OpenAPIUtil;
 import com.liferay.portal.tools.rest.builder.internal.yaml.config.Application;
 import com.liferay.portal.tools.rest.builder.internal.yaml.config.ConfigYAML;
 import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Components;
@@ -278,24 +280,29 @@ public class FreeMarkerTool {
 
 		Map<String, Schema> schemas = getSchemas(openAPIYAML);
 
-		for (Map.Entry<String, Schema> entry : schemas.entrySet()) {
-			Schema schema = entry.getValue();
+		Schema schema = schemas.get(schemaName);
 
-			if (schema.getOneOfSchemas() == null) {
+		if (schema == null) {
+			return null;
+		}
+
+		List<Schema> allOfSchemas = schema.getAllOfSchemas();
+
+		if (allOfSchemas == null) {
+			return null;
+		}
+
+		for (Schema allOfSchema : allOfSchemas) {
+			if (allOfSchema.getReference() == null) {
 				continue;
 			}
 
-			for (Schema oneOfSchema : schema.getOneOfSchemas()) {
-				Map<String, Schema> propertySchemas =
-					oneOfSchema.getPropertySchemas();
+			String referenceName = getReferenceName(allOfSchema.getReference());
 
-				Set<String> keys = propertySchemas.keySet();
+			allOfSchema = schemas.get(referenceName);
 
-				Iterator<String> iterator = keys.iterator();
-
-				if (StringUtil.equalsIgnoreCase(schemaName, iterator.next())) {
-					return entry.getKey();
-				}
+			if (allOfSchema.getDiscriminator() != null) {
+				return referenceName;
 			}
 		}
 
@@ -429,6 +436,27 @@ public class FreeMarkerTool {
 
 	public String getGraphQLMutationName(String methodName) {
 		return GraphQLNamingUtil.getGraphQLMutationName(methodName);
+	}
+
+	public String getGraphQLNamespace(
+		ConfigYAML configYAML, OpenAPIYAML openAPIYAML) {
+
+		Application application = configYAML.getApplication();
+
+		String baseURI = application.getBaseURI();
+
+		if (baseURI.startsWith("/")) {
+			baseURI = baseURI.substring(1);
+		}
+
+		int index = baseURI.indexOf("-rest");
+
+		if (index != -1) {
+			baseURI = baseURI.substring(0, index);
+		}
+
+		return CamelCaseUtil.toCamelCase(
+			baseURI + "_" + OpenAPIUtil.escapeVersion(openAPIYAML));
 	}
 
 	public String getGraphQLParameters(
@@ -723,6 +751,10 @@ public class FreeMarkerTool {
 		}
 
 		return null;
+	}
+
+	public String getReferenceName(String reference) {
+		return OpenAPIParserUtil.getReferenceName(reference);
 	}
 
 	public String getResourceArguments(

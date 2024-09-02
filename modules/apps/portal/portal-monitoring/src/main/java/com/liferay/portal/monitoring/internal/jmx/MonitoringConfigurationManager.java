@@ -9,8 +9,6 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.monitoring.Level;
 import com.liferay.portal.kernel.monitoring.MethodSignature;
 import com.liferay.portal.kernel.monitoring.MonitoringControl;
-import com.liferay.portal.kernel.monitoring.PortalMonitoringControl;
-import com.liferay.portal.kernel.monitoring.PortletMonitoringControl;
 import com.liferay.portal.kernel.monitoring.ServiceMonitoringControl;
 import com.liferay.portal.monitoring.internal.configuration.MonitoringConfiguration;
 
@@ -32,7 +30,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.portal.monitoring.internal.configuration.MonitoringConfiguration",
-	enabled = false,
 	property = {
 		"jmx.objectname=com.liferay.portal.monitoring:classification=monitoring_service,name=MonitoringConfigurationManager",
 		"jmx.objectname.cache.key=MonitoringProcessorManager"
@@ -94,37 +91,37 @@ public class MonitoringConfigurationManager
 
 	@Override
 	public boolean isMonitorPortalRequest() {
-		return _portalMonitoringControl.isMonitorPortalRequest();
+		return _monitoringConfiguration.monitorPortalRequest();
 	}
 
 	@Override
 	public boolean isMonitorPortletActionRequest() {
-		return _portletMonitoringControl.isMonitorPortletActionRequest();
+		return _monitoringConfiguration.monitorPortletActionRequest();
 	}
 
 	@Override
 	public boolean isMonitorPortletEventRequest() {
-		return _portletMonitoringControl.isMonitorPortletEventRequest();
+		return _monitoringConfiguration.monitorPortletEventRequest();
 	}
 
 	@Override
 	public boolean isMonitorPortletHeaderRequest() {
-		return _portletMonitoringControl.isMonitorPortletHeaderRequest();
+		return _monitoringConfiguration.monitorPortletHeaderRequest();
 	}
 
 	@Override
 	public boolean isMonitorPortletRenderRequest() {
-		return _portletMonitoringControl.isMonitorPortletRenderRequest();
+		return _monitoringConfiguration.monitorPortletRenderRequest();
 	}
 
 	@Override
 	public boolean isMonitorPortletResourceRequest() {
-		return _portletMonitoringControl.isMonitorPortletResourceRequest();
+		return _monitoringConfiguration.monitorPortletResourceRequest();
 	}
 
 	@Override
 	public boolean isMonitorServiceRequest() {
-		return _serviceMonitoringControl.isMonitorServiceRequest();
+		return _monitoringConfiguration.monitorServiceRequest();
 	}
 
 	@Override
@@ -139,98 +136,17 @@ public class MonitoringConfigurationManager
 		_monitoringControl.setLevel(namespace, level);
 	}
 
-	@Override
-	public void setMonitorPortalRequest(boolean monitorPortalRequest) {
-		_portalMonitoringControl.setMonitorPortalRequest(monitorPortalRequest);
-	}
-
-	@Override
-	public void setMonitorPortletActionRequest(
-		boolean monitorPortletActionRequest) {
-
-		_portletMonitoringControl.setMonitorPortletActionRequest(
-			monitorPortletActionRequest);
-	}
-
-	@Override
-	public void setMonitorPortletEventRequest(
-		boolean monitorPortletEventRequest) {
-
-		_portletMonitoringControl.setMonitorPortletEventRequest(
-			monitorPortletEventRequest);
-	}
-
-	@Override
-	public void setMonitorPortletHeaderRequest(
-		boolean monitoringPortletHeaderRequest) {
-
-		_portletMonitoringControl.setMonitorPortletHeaderRequest(
-			monitoringPortletHeaderRequest);
-	}
-
-	@Override
-	public void setMonitorPortletRenderRequest(
-		boolean monitorPortletRenderRequest) {
-
-		_portletMonitoringControl.setMonitorPortletRenderRequest(
-			monitorPortletRenderRequest);
-	}
-
-	@Override
-	public void setMonitorPortletRequests(boolean monitorPortletRequests) {
-		setMonitorPortletActionRequest(monitorPortletRequests);
-		setMonitorPortletEventRequest(monitorPortletRequests);
-		setMonitorPortletHeaderRequest(monitorPortletRequests);
-		setMonitorPortletRenderRequest(monitorPortletRequests);
-		setMonitorPortletResourceRequest(monitorPortletRequests);
-	}
-
-	@Override
-	public void setMonitorPortletResourceRequest(
-		boolean monitorPortletResourceRequest) {
-
-		_portletMonitoringControl.setMonitorPortletResourceRequest(
-			monitorPortletResourceRequest);
-	}
-
-	@Override
-	public void setMonitorServiceRequest(boolean monitorServiceRequest) {
-		_serviceMonitoringControl.setMonitorServiceRequest(
-			monitorServiceRequest);
-	}
-
 	@Activate
 	@Modified
 	protected void activate(Map<String, Object> properties) {
 		_monitoringConfiguration = ConfigurableUtil.createConfigurable(
 			MonitoringConfiguration.class, properties);
-
-		setMonitorPortalRequest(
-			_monitoringConfiguration.monitorPortalRequest());
-		setMonitorPortletActionRequest(
-			_monitoringConfiguration.monitorPortletActionRequest());
-		setMonitorPortletEventRequest(
-			_monitoringConfiguration.monitorPortletEventRequest());
-		setMonitorPortletHeaderRequest(
-			_monitoringConfiguration.monitorPortletHeaderRequest());
-		setMonitorPortletRenderRequest(
-			_monitoringConfiguration.monitorPortletRenderRequest());
-		setMonitorPortletResourceRequest(
-			_monitoringConfiguration.monitorPortletResourceRequest());
-		setMonitorServiceRequest(
-			_monitoringConfiguration.monitorServiceRequest());
 	}
 
 	private volatile MonitoringConfiguration _monitoringConfiguration;
 
 	@Reference
 	private MonitoringControl _monitoringControl;
-
-	@Reference
-	private PortalMonitoringControl _portalMonitoringControl;
-
-	@Reference
-	private PortletMonitoringControl _portletMonitoringControl;
 
 	@Reference
 	private ServiceMonitoringControl _serviceMonitoringControl;

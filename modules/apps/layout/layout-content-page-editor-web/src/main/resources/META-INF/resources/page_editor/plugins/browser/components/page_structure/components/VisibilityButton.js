@@ -22,6 +22,7 @@ import useHasRequiredChild from '../../../../../app/utils/useHasRequiredChild';
 
 export default function VisibilityButton({
 	className,
+	disabled,
 	dispatch,
 	node,
 	selectedViewportSize,
@@ -43,16 +44,17 @@ export default function VisibilityButton({
 				'page-editor__page-structure__tree-node__visibility-button ' +
 					className,
 				{
-					'page-editor__page-structure__tree-node__visibility-button--visible': visible,
+					'page-editor__page-structure__tree-node__visibility-button--visible':
+						visible,
 				}
 			)}
-			disabled={node.isMasterItem || node.hiddenAncestor}
+			disabled={disabled}
 			displayType="unstyled"
 			onClick={(event) => {
 				event.stopPropagation();
 				updateItemStyle({
 					dispatch,
-					itemId: node.id,
+					itemIds: [node.id],
 					selectedViewportSize,
 					styleName: 'display',
 					styleValue: node.hidden ? 'block' : 'none',

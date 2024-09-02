@@ -5,19 +5,10 @@
 
 import {act, fireEvent, render, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Color from 'dynamic-data-mapping-form-field-type/ColorPicker/ColorPicker.es';
-import Date from 'dynamic-data-mapping-form-field-type/DatePicker/DatePicker.es';
-import DocumentLibrary from 'dynamic-data-mapping-form-field-type/DocumentLibrary/DocumentLibrary.es';
-import Grid from 'dynamic-data-mapping-form-field-type/Grid/Grid.es';
-import Image from 'dynamic-data-mapping-form-field-type/ImagePicker/ImagePicker.es';
-import Numeric from 'dynamic-data-mapping-form-field-type/Numeric/Numeric';
-import RichText from 'dynamic-data-mapping-form-field-type/RichText/RichText.es';
-import Select from 'dynamic-data-mapping-form-field-type/Select/Select';
-import Text from 'dynamic-data-mapping-form-field-type/Text/Text.es';
 import React from 'react';
 
-import {Editor} from '../../../../../../src/main/resources/META-INF/resources/data_layout_builder/js/components/rules/editor/Editor.es';
-import {DEFAULT_RULE} from '../../../../../../src/main/resources/META-INF/resources/data_layout_builder/js/components/rules/editor/config.es';
+import {Editor} from '../../../../../../src/main/resources/META-INF/resources/js/components/rules/editor/Editor.es';
+import {DEFAULT_RULE} from '../../../../../../src/main/resources/META-INF/resources/js/components/rules/editor/config.es';
 import {
 	FIELDS,
 	FIELDS_TYPES,
@@ -108,6 +99,59 @@ const defaultProps = (fieldsList = FIELDS) => {
 	};
 };
 
+jest.mock('frontend-js-web', () => ({
+	...jest.requireActual('frontend-js-web'),
+	loadModule: jest.fn((fieldModule) => {
+		const {
+			ColorPicker,
+			DatePicker,
+			DocumentLibrary,
+			Grid,
+			ImagePicker,
+			Numeric,
+			RichText,
+			Select,
+			Text,
+		} = jest.requireActual('dynamic-data-mapping-form-field-type');
+
+		let component = null;
+
+		switch (fieldModule) {
+			case 'color':
+				component = ColorPicker;
+				break;
+			case 'date':
+				component = DatePicker;
+				break;
+			case 'grid':
+				component = Grid;
+				break;
+			case 'image':
+				component = ImagePicker;
+				break;
+			case 'numeric':
+				component = Numeric;
+				break;
+			case 'rich_text':
+				component = RichText;
+				break;
+			case 'select':
+				component = Select;
+				break;
+			case 'text':
+				component = Text;
+				break;
+			case 'document_library':
+				component = DocumentLibrary;
+				break;
+			default:
+				break;
+		}
+
+		return Promise.resolve(component);
+	}),
+}));
+
 describe('Editor', () => {
 	const originalLiferayLoader = window.Liferay.Loader;
 
@@ -117,47 +161,10 @@ describe('Editor', () => {
 	});
 
 	beforeAll(() => {
+		jest.setTimeout(30000);
+
 		Liferay.Language.direction = {
 			en_US: 'rtl',
-		};
-
-		window.Liferay = {
-			...window.Liferay,
-			Loader: {
-				require: ([fieldModule], resolve) => {
-					switch (fieldModule) {
-						case 'color':
-							resolve({default: Color});
-							break;
-						case 'date':
-							resolve({default: Date});
-							break;
-						case 'grid':
-							resolve({default: Grid});
-							break;
-						case 'image':
-							resolve({default: Image});
-							break;
-						case 'numeric':
-							resolve({default: Numeric});
-							break;
-						case 'rich_text':
-							resolve({default: RichText});
-							break;
-						case 'select':
-							resolve({default: Select});
-							break;
-						case 'text':
-							resolve({default: Text});
-							break;
-						case 'document_library':
-							resolve({default: DocumentLibrary});
-							break;
-						default:
-							break;
-					}
-				},
-			},
 		};
 	});
 
@@ -364,19 +371,22 @@ describe('Editor', () => {
 							fireEvent.click(getByText('value'));
 						});
 
+						if (type === 'rich_text') {
+							expect(
+								document.querySelectorAll(selector)
+							).toBeTruthy();
+
+							return;
+						}
+
 						await waitFor(() => {
-							document
+							const fieldElement = document
 								.querySelectorAll('.timeline-item')[1]
 								.querySelectorAll('.ddm-field')[3]
 								.querySelector(selector);
-						});
 
-						expect(
-							document
-								.querySelectorAll('.timeline-item')[1]
-								.querySelectorAll('.ddm-field')[3]
-								.querySelector(selector)
-						).toBeTruthy();
+							expect(fieldElement).toBeTruthy();
+						});
 					}
 				);
 
@@ -437,9 +447,10 @@ describe('Editor', () => {
 						fireEvent.click(getByText('other-field'));
 					});
 
-					const allFields = STRING_DATATYPE_FIELDS.concat(
-						NUMBER_TYPE_FIELDS
-					).concat(UPLOAD_TYPE_FIELD);
+					const allFields =
+						STRING_DATATYPE_FIELDS.concat(
+							NUMBER_TYPE_FIELDS
+						).concat(UPLOAD_TYPE_FIELD);
 
 					const otherValueButton = await waitFor(() => {
 						return getByTestId('field-right-id');
@@ -593,9 +604,10 @@ describe('Editor', () => {
 			it.each(['show', 'require', 'enable'])(
 				'shows all fields on target dropdown when the type is %p',
 				async (type) => {
-					const fields = STRING_DATATYPE_FIELDS.concat(
-						NUMBER_TYPE_FIELDS
-					).concat(UPLOAD_TYPE_FIELD);
+					const fields =
+						STRING_DATATYPE_FIELDS.concat(
+							NUMBER_TYPE_FIELDS
+						).concat(UPLOAD_TYPE_FIELD);
 					const props = defaultProps();
 					const {getByText, queryAllByText} = render(
 						<Editor

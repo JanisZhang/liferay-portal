@@ -33,14 +33,18 @@ public class PendingCommerceOrderTableFDSView extends BaseTableFDSView {
 			_fdsTableSchemaBuilderFactory.create();
 
 		return fdsTableSchemaBuilder.add(
-			"date", "create-date",
-			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
-		).add(
-			"orderId", "order-id"
+			"title", "order-id",
+			fdsTableSchemaField -> fdsTableSchemaField.setContentRenderer(
+				"actionLink")
 		).add(
 			"orderType", "order-type"
 		).add(
+			"externalReferenceCode", "erc"
+		).add(
 			"purchaseOrderNumber", "purchase-order-number"
+		).add(
+			"date", "create-date",
+			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
 		).add(
 			_addAccountNameStringFDSTableSchemaField()
 		).add(
@@ -58,8 +62,11 @@ public class PendingCommerceOrderTableFDSView extends BaseTableFDSView {
 		StringFDSTableSchemaField stringFDSTableSchemaField =
 			new StringFDSTableSchemaField();
 
-		stringFDSTableSchemaField.setFieldName("accountName");
-		stringFDSTableSchemaField.setLabel("account");
+		stringFDSTableSchemaField.setFieldName(
+			"accountName"
+		).setLabel(
+			"account"
+		);
 		stringFDSTableSchemaField.setTruncate(true);
 
 		return stringFDSTableSchemaField;

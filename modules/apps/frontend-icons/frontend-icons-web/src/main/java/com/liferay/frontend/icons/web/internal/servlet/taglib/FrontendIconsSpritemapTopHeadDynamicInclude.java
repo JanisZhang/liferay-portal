@@ -35,7 +35,7 @@ public class FrontendIconsSpritemapTopHeadDynamicInclude
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		StringBundler sb = new StringBundler(5);
+		StringBundler sb = new StringBundler(10);
 
 		sb.append("<script");
 		sb.append(
@@ -44,23 +44,19 @@ public class FrontendIconsSpritemapTopHeadDynamicInclude
 		sb.append(" data-senna-track=\"temporary\">");
 		sb.append("var Liferay = window.Liferay || {};");
 		sb.append("Liferay.Icons = Liferay.Icons || {};");
+		sb.append("Liferay.Icons.controlPanelSpritemap = '");
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		sb.append(
-			StringBundler.concat(
-				"Liferay.Icons.controlPanelSpritemap = '",
-				themeDisplay.getPathControlPanelSpritemap(), "';"));
-		sb.append(
-			StringBundler.concat(
-				"Liferay.Icons.spritemap = '",
-				themeDisplay.getPathThemeSpritemap(), "';"));
+		sb.append(themeDisplay.getPathControlPanelSpritemap());
 
-		sb.append("</script>");
+		sb.append("'; Liferay.Icons.spritemap = '");
+		sb.append(themeDisplay.getPathThemeSpritemap());
+		sb.append("';</script>\n");
 
-		printWriter.println(sb);
+		printWriter.write(sb.toString());
 	}
 
 	@Override

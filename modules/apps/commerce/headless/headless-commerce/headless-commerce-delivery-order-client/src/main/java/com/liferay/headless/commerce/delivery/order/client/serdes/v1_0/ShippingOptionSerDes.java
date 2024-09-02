@@ -70,6 +70,20 @@ public class ShippingOptionSerDes {
 			sb.append("\"");
 		}
 
+		if (shippingOption.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(shippingOption.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (shippingOption.getLabel() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -133,6 +147,15 @@ public class ShippingOptionSerDes {
 				String.valueOf(shippingOption.getAmountFormatted()));
 		}
 
+		if (shippingOption.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(shippingOption.getExternalReferenceCode()));
+		}
+
 		if (shippingOption.getLabel() == null) {
 			map.put("label", null);
 		}
@@ -164,6 +187,29 @@ public class ShippingOptionSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "amount")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "amountFormatted")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "label")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "name")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			ShippingOption shippingOption, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -177,6 +223,14 @@ public class ShippingOptionSerDes {
 			else if (Objects.equals(jsonParserFieldName, "amountFormatted")) {
 				if (jsonParserFieldValue != null) {
 					shippingOption.setAmountFormatted(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					shippingOption.setExternalReferenceCode(
 						(String)jsonParserFieldValue);
 				}
 			}
@@ -222,36 +276,7 @@ public class ShippingOptionSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -261,6 +286,38 @@ public class ShippingOptionSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

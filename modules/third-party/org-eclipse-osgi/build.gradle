@@ -8,6 +8,10 @@ dependencies {
 	compileOnly group: "org.eclipse.platform", name: "org.eclipse.osgi", transitive: false, version: "3.13.0"
 }
 
+jarSources {
+	mustRunAfter patch
+}
+
 patch {
 	ext {
 		autoClean = false
@@ -31,7 +35,9 @@ patch {
 	fileNames "org/eclipse/osgi/internal/loader/sources/NullPackageSource.java"
 	fileNames "org/eclipse/osgi/internal/loader/sources/PackageSource.java"
 	fileNames "org/eclipse/osgi/internal/log/LoggerContextTargetMap.java"
+	fileNames "org/eclipse/osgi/internal/serviceregistry/FilteredServiceListener.java"
 	fileNames "org/eclipse/osgi/internal/serviceregistry/ServiceFactoryUse.java"
+	fileNames "org/eclipse/osgi/internal/serviceregistry/ServiceProperties.java"
 	fileNames "org/eclipse/osgi/internal/serviceregistry/ServiceRegistrationImpl.java"
 	fileNames "org/eclipse/osgi/internal/serviceregistry/ServiceRegistry.java"
 	fileNames "org/eclipse/osgi/internal/weaving/WeavingHookConfigurator.java"

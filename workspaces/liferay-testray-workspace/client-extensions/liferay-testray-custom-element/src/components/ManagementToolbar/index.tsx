@@ -15,12 +15,14 @@ import {TableProps} from '../Table';
 import ManagementToolbarLeft from './ManagementToolbarLeft';
 import ManagementToolbarResultsBar from './ManagementToolbarResultsBar';
 import ManagementToolbarRight from './ManagementToolbarRight';
+import ManagementToolbarSearch from './ManagementToolbarSearch';
 
 export type ManagementToolbarProps = {
 	actions: any;
 	addButton?: () => void;
 	applyFilters?: boolean;
 	buttons?: ReactNode | ((actions: any) => ReactNode);
+	customFilterFields?: {[key: string]: string};
 	display?: {
 		columns?: boolean;
 	};
@@ -29,7 +31,8 @@ export type ManagementToolbarProps = {
 	 * Check out the file {src/schema/filter.ts}
 	 */
 	filterSchema?: FilterSchemaOption;
-	tableProps: Pick<TableProps, 'columns'>;
+	hasSearch?: boolean;
+	tableProps?: Pick<TableProps, 'columns'>;
 	title?: string;
 	totalItems: number;
 };
@@ -39,8 +42,10 @@ const ManagementToolbar: React.FC<ManagementToolbarProps> = ({
 	addButton,
 	applyFilters = true,
 	buttons,
+	customFilterFields,
 	display,
 	filterSchema,
+	hasSearch = false,
 	tableProps,
 	title,
 	totalItems,
@@ -63,12 +68,15 @@ const ManagementToolbar: React.FC<ManagementToolbarProps> = ({
 							? buttons(actions)
 							: buttons
 					}
-					columns={tableProps.columns}
+					columns={tableProps?.columns}
+					customFilterFields={customFilterFields}
 					disabled={disabled}
 					display={display}
 					filterSchema={(filterSchemas as any)[filterSchema ?? '']}
 				/>
 			</ClayManagementToolbar>
+
+			{!!hasSearch && <ManagementToolbarSearch />}
 
 			{!!filters.entries?.filter(({value}) => value).length && (
 				<ManagementToolbarResultsBar totalItems={totalItems} />

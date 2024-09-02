@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -51,18 +52,19 @@ public class FragmentEntryLocalServiceUtil {
 	}
 
 	public static FragmentEntry addFragmentEntry(
-			long userId, long groupId, long fragmentCollectionId,
-			String fragmentEntryKey, String name, String css, String html,
-			String js, boolean cacheable, String configuration, String icon,
-			long previewFileEntryId, boolean readOnly, int type,
-			String typeOptions, int status,
+			String externalReferenceCode, long userId, long groupId,
+			long fragmentCollectionId, String fragmentEntryKey, String name,
+			String css, String html, String js, boolean cacheable,
+			String configuration, String icon, long previewFileEntryId,
+			boolean readOnly, int type, String typeOptions, int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFragmentEntry(
-			userId, groupId, fragmentCollectionId, fragmentEntryKey, name, css,
-			html, js, cacheable, configuration, icon, previewFileEntryId,
-			readOnly, type, typeOptions, status, serviceContext);
+			externalReferenceCode, userId, groupId, fragmentCollectionId,
+			fragmentEntryKey, name, css, html, js, cacheable, configuration,
+			icon, previewFileEntryId, readOnly, type, typeOptions, status,
+			serviceContext);
 	}
 
 	public static FragmentEntry checkout(
@@ -150,6 +152,13 @@ public class FragmentEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().deleteFragmentEntry(fragmentEntryId);
+	}
+
+	public static FragmentEntry deleteFragmentEntry(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteFragmentEntry(externalReferenceCode, groupId);
 	}
 
 	/**
@@ -583,13 +592,12 @@ public class FragmentEntryLocalServiceUtil {
 	}
 
 	public static FragmentEntryLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(FragmentEntryLocalService service) {
-		_service = service;
-	}
-
-	private static volatile FragmentEntryLocalService _service;
+	private static final Snapshot<FragmentEntryLocalService> _serviceSnapshot =
+		new Snapshot<>(
+			FragmentEntryLocalServiceUtil.class,
+			FragmentEntryLocalService.class);
 
 }

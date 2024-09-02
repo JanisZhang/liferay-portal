@@ -175,7 +175,8 @@ export const ACTIONS = {
 					const assignmentsRedirectURL = createRenderURL(
 						basePortletURL,
 						{
-							mvcRenderCommandName: '/users_admin/view',
+							mvcRenderCommandName:
+								'/users_admin/organizations_view_tree',
 							organizationId,
 							screenNavigationCategoryKey: 'organizations',
 							usersListView: 'tree',
@@ -190,7 +191,8 @@ export const ACTIONS = {
 
 					const editAssignmentURL = createActionURL(basePortletURL, {
 						'addUserIds': values.join(','),
-						'assignmentsRedirect': assignmentsRedirectURL.toString(),
+						'assignmentsRedirect':
+							assignmentsRedirectURL.toString(),
 						'javax.portlet.action':
 							'/users_admin/edit_organization_assignments',
 						organizationId,

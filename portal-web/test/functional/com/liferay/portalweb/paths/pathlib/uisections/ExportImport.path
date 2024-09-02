@@ -27,7 +27,7 @@
 </tr>
 <tr>
 	<td>VALIDATION_ERROR_MESSAGE_HEADER</td>
-	<td>//h4[@class='upload-error-message']</td>
+	<td>//div[contains(@class,'upload-error-message')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -55,12 +55,12 @@
 </tr>
 <tr>
 	<td>CURRENT_AND_PREVIOUS_STATUS</td>
-	<td>//tr[contains(.,'${key_larFileName}')]/td[2]//h5</td>
+	<td>//tr[contains(.,'${key_larFileName}')]/td[2]//div[contains(@class,'h5')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>CURRENT_AND_PREVIOUS_STATUS_1</td>
-	<td>//tr[1]/td[2]//h5 | //span[contains(@data-qa-id,'processResult')]</td>
+	<td>//tr[1]/td[2]//div[contains(@class,'h5')] | //span[contains(@data-qa-id,'processResult')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -101,7 +101,7 @@
 </tr>
 <tr>
 	<td>CONTENT_CHOOSE_CONTENT_SUB_SUBCONTENT_CHECKBOX</td>
-	<td>//div[contains(@class,'widget-content-expanded') and contains(.,'${key_contentName}')]//div[contains(@class,'modal-body')]//ul/li[@class='handler-control' and contains(.,'${key_subContent}')]//input[contains(@data-name,'${key_subSubContent}')]</td>
+	<td>//ul/li[@class='handler-control' and contains(.,'${key_contentName}')]//input[@data-name='${key_subSubContent}']</td>
 	<td></td>
 </tr>
 <tr>

@@ -6,7 +6,11 @@
 package com.liferay.portal.workflow.kaleo.service;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
+
+import java.util.List;
 
 /**
  * Provides the remote service utility for KaleoDefinition. This utility wraps
@@ -37,6 +41,20 @@ public class KaleoDefinitionServiceUtil {
 			name, title, description, content, scope, version, serviceContext);
 	}
 
+	public static KaleoDefinition getKaleoDefinition(long kaleoDefinitionId)
+		throws PortalException {
+
+		return getService().getKaleoDefinition(kaleoDefinitionId);
+	}
+
+	public static KaleoDefinition getKaleoDefinition(
+			String name,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().getKaleoDefinition(name, serviceContext);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -44,6 +62,26 @@ public class KaleoDefinitionServiceUtil {
 	 */
 	public static String getOSGiServiceIdentifier() {
 		return getService().getOSGiServiceIdentifier();
+	}
+
+	public static List<KaleoDefinition> getScopeKaleoDefinitions(
+			String scope, boolean active, int start, int end,
+			OrderByComparator<KaleoDefinition> orderByComparator,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().getScopeKaleoDefinitions(
+			scope, active, start, end, orderByComparator, serviceContext);
+	}
+
+	public static List<KaleoDefinition> getScopeKaleoDefinitions(
+			String scope, int start, int end,
+			OrderByComparator<KaleoDefinition> orderByComparator,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().getScopeKaleoDefinitions(
+			scope, start, end, orderByComparator, serviceContext);
 	}
 
 	public static KaleoDefinition updateKaleoDefinition(
@@ -57,13 +95,11 @@ public class KaleoDefinitionServiceUtil {
 	}
 
 	public static KaleoDefinitionService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(KaleoDefinitionService service) {
-		_service = service;
-	}
-
-	private static volatile KaleoDefinitionService _service;
+	private static final Snapshot<KaleoDefinitionService> _serviceSnapshot =
+		new Snapshot<>(
+			KaleoDefinitionServiceUtil.class, KaleoDefinitionService.class);
 
 }

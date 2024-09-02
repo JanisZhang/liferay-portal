@@ -7,6 +7,7 @@ package com.liferay.object.service.impl;
 
 import com.liferay.dynamic.data.mapping.expression.CreateExpressionRequest;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
+import com.liferay.notification.constants.NotificationConstants;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.service.NotificationTemplateLocalService;
 import com.liferay.object.action.executor.ObjectActionExecutor;
@@ -17,6 +18,7 @@ import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.exception.DuplicateObjectActionExternalReferenceCodeException;
+import com.liferay.object.exception.LockedObjectActionException;
 import com.liferay.object.exception.ObjectActionConditionExpressionException;
 import com.liferay.object.exception.ObjectActionErrorMessageException;
 import com.liferay.object.exception.ObjectActionExecutorKeyException;
@@ -46,6 +48,7 @@ import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.lock.LockManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
@@ -65,6 +68,8 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
+import com.liferay.portal.security.script.management.configuration.helper.ScriptManagementConfigurationHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -295,6 +300,14 @@ public class ObjectActionLocalServiceImpl
 	}
 
 	@Override
+	public List<ObjectAction> getObjectActions(
+		boolean active, String objectActionExecutorKey) {
+
+		return objectActionPersistence.findByA_OAEK(
+			active, objectActionExecutorKey);
+	}
+
+	@Override
 	public List<ObjectAction> getObjectActions(long objectDefinitionId) {
 		return objectActionPersistence.findByObjectDefinitionId(
 			objectDefinitionId);
@@ -382,15 +395,70 @@ public class ObjectActionLocalServiceImpl
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
-	public ObjectAction updateStatus(long objectActionId, int status)
+	public synchronized ObjectAction updateStatus(
+			long objectActionId, int status)
 		throws PortalException {
 
-		ObjectAction objectAction = objectActionPersistence.findByPrimaryKey(
-			objectActionId);
+		boolean locked = LockManagerUtil.isLocked(
+			ObjectAction.class.getName(), objectActionId);
 
-		objectAction.setStatus(status);
+		if (locked) {
+			throw new LockedObjectActionException(
+				String.format(
+					"Unable to update the status of object action %d because " +
+						"it is being updated by another thread",
+					objectActionId));
+		}
 
-		return objectActionPersistence.update(objectAction);
+		try {
+			LockManagerUtil.lock(
+				ObjectAction.class.getName(), String.valueOf(objectActionId),
+				PortalUUIDUtil.generate());
+
+			ObjectAction objectAction =
+				objectActionPersistence.findByPrimaryKey(objectActionId);
+
+			objectAction.setStatus(status);
+
+			return objectActionPersistence.update(objectAction);
+		}
+		finally {
+			LockManagerUtil.unlock(
+				ObjectAction.class.getName(), objectActionId);
+		}
+	}
+
+	private boolean _isUsePreferredLanguageForGuestsSupported(
+			String objectActionExecutorKey, String objectActionTriggerKey,
+			UnicodeProperties parametersUnicodeProperties)
+		throws PortalException {
+
+		if (!Objects.equals(
+				objectActionExecutorKey,
+				ObjectActionExecutorConstants.KEY_NOTIFICATION)) {
+
+			return false;
+		}
+
+		NotificationTemplate notificationTemplate =
+			_notificationTemplateLocalService.getNotificationTemplate(
+				GetterUtil.getLong(
+					parametersUnicodeProperties.get("notificationTemplateId")));
+
+		if (Objects.equals(
+				notificationTemplate.getType(),
+				NotificationConstants.TYPE_EMAIL) &&
+			(Objects.equals(
+				objectActionTriggerKey,
+				ObjectActionTriggerConstants.KEY_ON_AFTER_ADD) ||
+			 Objects.equals(
+				 objectActionTriggerKey,
+				 ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private void _validateErrorMessage(
@@ -495,6 +563,16 @@ public class ObjectActionLocalServiceImpl
 			}
 
 			return;
+		}
+
+		if (Objects.equals(
+				ObjectActionExecutorConstants.KEY_GROOVY,
+				objectActionExecutorKey) &&
+			!_scriptManagementConfigurationHelper.
+				isAllowScriptContentToBeExecutedOrIncluded()) {
+
+			throw new ObjectActionExecutorKeyException(
+				"Groovy script based object actions are not allowed");
 		}
 
 		ObjectActionExecutor objectActionExecutor =
@@ -678,8 +756,7 @@ public class ObjectActionLocalServiceImpl
 					ObjectActionExecutorConstants.KEY_ADD_OBJECT_ENTRY) &&
 				 (!objectDefinition.isActive() ||
 				  !objectDefinition.isApproved()) &&
-				 !(objectDefinition.isModifiable() &&
-				   objectDefinition.isSystem()))) {
+				 !objectDefinition.isModifiableAndSystem())) {
 
 				errorMessageKeys.put("objectDefinitionId", "invalid");
 			}
@@ -744,6 +821,17 @@ public class ObjectActionLocalServiceImpl
 								getNotificationTemplateId()));
 				}
 			}
+
+			if (Objects.isNull(
+					parametersUnicodeProperties.get(
+						"usePreferredLanguageForGuests")) &&
+				_isUsePreferredLanguageForGuestsSupported(
+					objectActionExecutorKey, objectActionTriggerKey,
+					parametersUnicodeProperties)) {
+
+				parametersUnicodeProperties.put(
+					"usePreferredLanguageForGuests", "true");
+			}
 		}
 		else if (Objects.equals(
 					objectActionExecutorKey,
@@ -752,6 +840,18 @@ public class ObjectActionLocalServiceImpl
 			if (Validator.isNull(parametersUnicodeProperties.get("url"))) {
 				errorMessageKeys.put("url", "required");
 			}
+		}
+
+		if (!Objects.isNull(
+				parametersUnicodeProperties.get(
+					"usePreferredLanguageForGuests")) &&
+			!_isUsePreferredLanguageForGuestsSupported(
+				objectActionExecutorKey, objectActionTriggerKey,
+				parametersUnicodeProperties)) {
+
+			throw new ObjectActionParametersException(
+				"The parameter \"usePreferredLanguageForGuests\" is invalid " +
+					"for this object action");
 		}
 
 		if (MapUtil.isNotEmpty(errorMessageKeys)) {
@@ -888,6 +988,10 @@ public class ObjectActionLocalServiceImpl
 
 	@Reference
 	private ResourceActions _resourceActions;
+
+	@Reference
+	private ScriptManagementConfigurationHelper
+		_scriptManagementConfigurationHelper;
 
 	@Reference
 	private TreeFactory _treeFactory;

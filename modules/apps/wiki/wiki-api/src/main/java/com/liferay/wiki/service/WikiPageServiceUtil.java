@@ -6,6 +6,7 @@
 package com.liferay.wiki.service;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.wiki.model.WikiPage;
 
@@ -188,7 +189,7 @@ public class WikiPageServiceUtil {
 	 * reference code
 	 *
 	 * @param groupId the primary key of the group
-	 * @param externalReferenceCode the wiki page external reference code
+	 * @param externalReferenceCode the wiki page's external reference code
 	 * @return the latest matching wiki page, or <code>null</code> if no
 	 matching wiki page could be found
 	 */
@@ -224,7 +225,7 @@ public class WikiPageServiceUtil {
 	 * reference code
 	 *
 	 * @param groupId the primary key of the group
-	 * @param externalReferenceCode the wiki page external reference code
+	 * @param externalReferenceCode the wiki page's external reference code
 	 * @return the latest matching wiki page
 	 * @throws PortalException if a portal exception occurred
 	 */
@@ -457,13 +458,10 @@ public class WikiPageServiceUtil {
 	}
 
 	public static WikiPageService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(WikiPageService service) {
-		_service = service;
-	}
-
-	private static volatile WikiPageService _service;
+	private static final Snapshot<WikiPageService> _serviceSnapshot =
+		new Snapshot<>(WikiPageServiceUtil.class, WikiPageService.class);
 
 }

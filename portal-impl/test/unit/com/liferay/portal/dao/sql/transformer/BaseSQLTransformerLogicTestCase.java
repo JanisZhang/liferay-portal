@@ -25,6 +25,13 @@ public abstract class BaseSQLTransformerLogicTestCase {
 	}
 
 	@Test
+	public void testReplaceAggregation() {
+		Assert.assertEquals(
+			getAggregationTransformedSQL(),
+			sqlTransformer.transform(getAggregationOriginalSQL()));
+	}
+
+	@Test
 	public void testReplaceBitwiseCheck() {
 		Assert.assertEquals(
 			getBitwiseCheckTransformedSQL(),
@@ -59,6 +66,13 @@ public abstract class BaseSQLTransformerLogicTestCase {
 		Assert.assertEquals(
 			getCastLongTransformedSQL(),
 			sqlTransformer.transform(getCastLongOriginalSQL()));
+	}
+
+	@Test
+	public void testReplaceCastText() {
+		Assert.assertEquals(
+			getCastTextTransformedSQL(),
+			sqlTransformer.transform(getCastTextOriginalSQL()));
 	}
 
 	@Test
@@ -157,6 +171,14 @@ public abstract class BaseSQLTransformerLogicTestCase {
 		Assert.assertEquals(sql, sqlTransformer.transform(sql));
 	}
 
+	protected String getAggregationOriginalSQL() {
+		return "select foo from Foo order by AGGREGATION_STRING_MIN(foo)";
+	}
+
+	protected String getAggregationTransformedSQL() {
+		return "select foo from Foo order by MIN(foo)";
+	}
+
 	protected String getBitwiseCheckOriginalSQL() {
 		return "select BITAND(foo, bar) from Foo";
 	}
@@ -174,23 +196,32 @@ public abstract class BaseSQLTransformerLogicTestCase {
 	}
 
 	protected String getCastClobTextOriginalSQL() {
-		return "select CAST_CLOB_TEXT(foo) from Foo";
+		return "select CAST_CLOB_TEXT(foo || (CAST_CLOB_TEXT(foo) || (bar || " +
+			"foo))), CAST_CLOB_TEXT(foo || (bar || foo)) from Foo";
 	}
 
 	protected String getCastClobTextTransformedSQL() {
-		return getCastClobTextOriginalSQL();
+		return "select foo || (foo || (bar || foo)), foo || (bar || foo) " +
+			"from Foo";
 	}
 
 	protected String getCastLongOriginalSQL() {
-		return "select CONVERT(foo, SQL_BIGINT) from Foo";
+		return "select CAST_LONG(1 + (CAST_LONG(foo) - (bar x 2))), " +
+			"CAST_LONG(foo + (bar x 3)) from Foo";
 	}
 
 	protected String getCastLongTransformedSQL() {
-		return getCastLongOriginalSQL();
+		return "select 1 + (foo - (bar x 2)), foo + (bar x 3) from Foo";
 	}
 
 	protected String getCastTextOriginalSQL() {
-		return "select CAST_TEXT(foo) from Foo";
+		return "select CAST_TEXT(foo || (CAST_TEXT(foo) || (bar || foo))), " +
+			"CAST_TEXT(foo || (bar || foo)) from Foo";
+	}
+
+	protected String getCastTextTransformedSQL() {
+		return "select foo || (foo || (bar || foo)), foo || (bar || foo) " +
+			"from Foo";
 	}
 
 	protected String getCrossJoinOriginalSQL() {
@@ -205,9 +236,7 @@ public abstract class BaseSQLTransformerLogicTestCase {
 		return "DROP_TABLE_IF_EXISTS(Foo)";
 	}
 
-	protected String getDropTableIfExistsTextTransformedSQL() {
-		return getDropTableIfExistsTextOriginalSQL();
-	}
+	protected abstract String getDropTableIfExistsTextTransformedSQL();
 
 	protected String getInstrOriginalSQL() {
 		return "select INSTR(foo) from Foo";
@@ -221,9 +250,7 @@ public abstract class BaseSQLTransformerLogicTestCase {
 		return "select INTEGER_DIV(foo, bar) from Foo";
 	}
 
-	protected String getIntegerDivisionTransformedSQL() {
-		return getIntegerDivisionOriginalSQL();
-	}
+	protected abstract String getIntegerDivisionTransformedSQL();
 
 	protected String getModOriginalSQL() {
 		return "select MOD(foo, bar) from Foo";
@@ -237,9 +264,7 @@ public abstract class BaseSQLTransformerLogicTestCase {
 		return "select [$NULL_DATE$] from Foo";
 	}
 
-	protected String getNullDateTransformedSQL() {
-		return getNullDateOriginalSQL();
-	}
+	protected abstract String getNullDateTransformedSQL();
 
 	protected String getReplaceOriginalSQL() {
 		return "select replace(foo) from Foo";
@@ -250,7 +275,7 @@ public abstract class BaseSQLTransformerLogicTestCase {
 	}
 
 	protected String getSubstrOriginalSQL() {
-		return "select foo from Foo";
+		return "select SUBSTR(foo) from Foo";
 	}
 
 	protected String getSubstrTransformedSQL() {

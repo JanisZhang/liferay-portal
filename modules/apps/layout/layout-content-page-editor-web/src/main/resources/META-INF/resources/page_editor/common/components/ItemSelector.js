@@ -4,7 +4,7 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
-import {Align, ClayDropDownWithItems} from '@clayui/drop-down';
+import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayForm, {ClayInput} from '@clayui/form';
 import classNames from 'classnames';
 import {useId} from 'frontend-js-components-web';
@@ -62,6 +62,7 @@ export default function ItemSelector({
 			eventName: eventName || `${config.portletNamespace}selectInfoItem`,
 			itemSelectorURL: itemSelectorURL || config.infoItemSelectorURL,
 			modalProps,
+			selectedItem,
 			transformValueCallback,
 		});
 	}, [
@@ -70,6 +71,7 @@ export default function ItemSelector({
 		modalProps,
 		onItemSelect,
 		onBeforeItemSelect,
+		selectedItem,
 		transformValueCallback,
 	]);
 
@@ -89,12 +91,16 @@ export default function ItemSelector({
 		});
 
 		if (quickMappedInfoItems.length) {
-			transformedMappedItems = quickMappedInfoItems.map(
-				transformMappedItem
-			);
+			transformedMappedItems =
+				quickMappedInfoItems.map(transformMappedItem);
 		}
 		else if (pageContents.length) {
-			transformedMappedItems = pageContents.map(transformMappedItem);
+			transformedMappedItems = pageContents
+				.filter(
+					(pageContent) =>
+						pageContent.type !== Liferay.Language.get('collection')
+				)
+				.map(transformMappedItem);
 		}
 
 		if (transformedMappedItems.length) {
@@ -190,7 +196,8 @@ export default function ItemSelector({
 					<ClayInput
 						aria-describedby={helpText ? helpTextId : null}
 						className={classNames({
-							'page-editor__item-selector__content-input': showEditControls,
+							'page-editor__item-selector__content-input':
+								showEditControls,
 						})}
 						id={itemSelectorInputId}
 						placeholder={sub(
@@ -208,7 +215,6 @@ export default function ItemSelector({
 					(mappedItemsMenu.length ? (
 						<ClayInput.GroupItem shrink>
 							<ClayDropDownWithItems
-								alignmentPosition={Align.BottomRight}
 								items={mappedItemsMenu}
 								menuElementAttrs={{
 									containerProps: {
@@ -242,7 +248,6 @@ export default function ItemSelector({
 				{showEditControls && selectedItem?.title && (
 					<ClayInput.GroupItem shrink>
 						<ClayDropDownWithItems
-							alignmentPosition={Align.BottomRight}
 							items={optionsMenu}
 							menuElementAttrs={{
 								containerProps: {

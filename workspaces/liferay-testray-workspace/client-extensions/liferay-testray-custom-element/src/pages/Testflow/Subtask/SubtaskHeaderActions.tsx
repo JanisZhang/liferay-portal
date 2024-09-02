@@ -4,31 +4,40 @@
  */
 
 import ClayButton from '@clayui/button';
+import {useAtom} from 'jotai';
 import {useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import {taskSidebarRefresh} from '~/hooks/useSidebarTask';
 
 import AssignModal from '../../../components/AssignModal';
 import useFormModal from '../../../hooks/useFormModal';
 import i18n from '../../../i18n';
 import {Liferay} from '../../../services/liferay';
-import {TestraySubTask, UserAccount} from '../../../services/rest';
-import {testraySubTaskImpl} from '../../../services/rest/TestraySubtask';
-import {SubTaskStatuses} from '../../../util/statuses';
+import {TestraySubtask, UserAccount} from '../../../services/rest';
+import {testraySubtaskImpl} from '../../../services/rest/TestraySubtask';
+import {SubtaskStatuses} from '../../../util/statuses';
 import SubtaskCompleteModal from './SubtaskCompleteModal';
+
+type SubtaskHeaderActionsProps = {
+	setForceRefetch: React.Dispatch<React.SetStateAction<number>>;
+};
 
 type OutletContext = {
 	data: {
-		testraySubtask: TestraySubTask;
+		testraySubtask: TestraySubtask;
 	};
 	mutate: {
-		mutateSubtask: KeyedMutator<TestraySubTask>;
+		mutateSubtask: KeyedMutator<TestraySubtask>;
 	};
 	revalidate: {
 		revalidateSubtask: () => void;
 	};
 };
 
-const SubtaskHeaderActions = () => {
+const SubtaskHeaderActions: React.FC<SubtaskHeaderActionsProps> = ({
+	setForceRefetch,
+}) => {
+	const [, setTaskSidebarRefresh] = useAtom(taskSidebarRefresh);
 	const {
 		data: {testraySubtask},
 		mutate: {mutateSubtask},
@@ -36,9 +45,13 @@ const SubtaskHeaderActions = () => {
 	} = useOutletContext<OutletContext>();
 	const {modal: assignUserModal} = useFormModal({
 		onSave: (user: UserAccount) =>
-			testraySubTaskImpl
+			testraySubtaskImpl
 				.assignTo(testraySubtask, user.id)
-				.then(mutateSubtask),
+				.then(mutateSubtask)
+				.then(() => {
+					setTaskSidebarRefresh(new Date().getTime());
+					setForceRefetch(new Date().getTime());
+				}),
 	});
 
 	const {modal: completeModal} = useFormModal();
@@ -50,11 +63,12 @@ const SubtaskHeaderActions = () => {
 			<SubtaskCompleteModal
 				modal={completeModal}
 				revalidateSubtask={revalidateSubtask}
+				setForceRefetch={setForceRefetch}
 				subtask={testraySubtask}
 			/>
 
-			{[SubTaskStatuses.COMPLETE, SubTaskStatuses.OPEN].includes(
-				testraySubtask.dueStatus.key as SubTaskStatuses
+			{[SubtaskStatuses.COMPLETE, SubtaskStatuses.OPEN].includes(
+				testraySubtask.dueStatus?.key as SubtaskStatuses
 			) ? (
 				<ClayButton
 					className="mb-3 ml-3"
@@ -62,7 +76,7 @@ const SubtaskHeaderActions = () => {
 					onClick={() => assignUserModal.open()}
 				>
 					{i18n.translate(
-						testraySubtask.dueStatus.key === SubTaskStatuses.OPEN
+						testraySubtask.dueStatus?.key === SubtaskStatuses.OPEN
 							? 'assign-and-begin-analysis'
 							: 'assign-and-reanalyze'
 					)}
@@ -99,9 +113,13 @@ const SubtaskHeaderActions = () => {
 					<ClayButton
 						displayType="secondary"
 						onClick={() =>
-							testraySubTaskImpl
+							testraySubtaskImpl
 								.returnToOpen(testraySubtask)
 								.then(mutateSubtask)
+								.then(() => {
+									setTaskSidebarRefresh(new Date().getTime());
+									setForceRefetch(new Date().getTime());
+								})
 						}
 					>
 						{i18n.translate('return-to-open')}

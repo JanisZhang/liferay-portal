@@ -6,8 +6,9 @@
 import {useState} from 'react';
 
 export default function usePagination() {
-	const [activeDelta, setActiveDelta] = useState<number>(20);
-	const [activePage, setActivePage] = useState<number>(1);
+	const [pageSize, setPageSize] = useState<number>(20);
+
+	const [page, setPage] = useState<number>(1);
 
 	const deltas = [
 		{
@@ -25,10 +26,10 @@ export default function usePagination() {
 	];
 
 	return {
-		activeDelta,
-		activePage,
+		activeDelta: pageSize,
+		activePage: page,
 		deltas,
-		onDeltaChange: setActiveDelta,
-		onPageChange: setActivePage,
+		onDeltaChange: setPageSize,
+		onPageChange: setPage,
 	};
 }

@@ -753,24 +753,6 @@ public class UserLocalServiceWrapper
 		return _userLocalService.createUser(userId);
 	}
 
-	/**
-	 * Decrypts the user's primary key and password from their encrypted forms.
-	 * Used for decrypting a user's credentials from the values stored in an
-	 * automatic login cookie.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param name the encrypted primary key of the user
-	 * @param password the encrypted password of the user
-	 * @return the user's primary key and password
-	 */
-	@Override
-	public com.liferay.portal.kernel.util.KeyValuePair decryptUserId(
-			long companyId, String name, String password)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _userLocalService.decryptUserId(companyId, name, password);
-	}
-
 	@Override
 	public void deleteGroupUser(long groupId, long userId) {
 		_userLocalService.deleteGroupUser(groupId, userId);
@@ -2616,22 +2598,18 @@ public class UserLocalServiceWrapper
 			user, emailAddress, serviceContext);
 	}
 
-	/**
-	 * Sends the password email to the user with the email address. The content
-	 * of this email can be specified in <code>portal.properties</code> with the
-	 * <code>admin.email.password</code> keys.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param emailAddress the user's email address
-	 * @param fromName the name of the individual that the email should be from
-	 * @param fromAddress the address of the individual that the email should be
-	 from
-	 * @param subject the email subject. If <code>null</code>, the subject
-	 specified in <code>portal.properties</code> will be used.
-	 * @param body the email body. If <code>null</code>, the body specified in
-	 <code>portal.properties</code> will be used.
-	 * @param serviceContext the service context to be applied
-	 */
+	@Override
+	public boolean sendEmailUserCreationAttempt(
+			long companyId, String emailAddress, String fromName,
+			String fromAddress, String subject, String body,
+			ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.sendEmailUserCreationAttempt(
+			companyId, emailAddress, fromName, fromAddress, subject, body,
+			serviceContext);
+	}
+
 	@Override
 	public boolean sendPassword(
 			long companyId, String emailAddress, String fromName,
@@ -2723,6 +2701,18 @@ public class UserLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _userLocalService.sendPasswordByUserId(userId);
+	}
+
+	@Override
+	public boolean sendPasswordLockout(
+			long companyId, String emailAddress, String fromName,
+			String fromAddress, String subject, String body,
+			ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.sendPasswordLockout(
+			companyId, emailAddress, fromName, fromAddress, subject, body,
+			serviceContext);
 	}
 
 	@Override
@@ -3128,6 +3118,13 @@ public class UserLocalServiceWrapper
 		return _userLocalService.updateLastLogin(userId, loginIP);
 	}
 
+	@Override
+	public User updateLastLogin(User user, String loginIP)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.updateLastLogin(user, loginIP);
+	}
+
 	/**
 	 * Updates whether the user is locked out from logging in.
 	 *
@@ -3380,6 +3377,14 @@ public class UserLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _userLocalService.updateStatus(userId, status, serviceContext);
+	}
+
+	@Override
+	public User updateStatus(
+			User user, int status, ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userLocalService.updateStatus(user, status, serviceContext);
 	}
 
 	/**

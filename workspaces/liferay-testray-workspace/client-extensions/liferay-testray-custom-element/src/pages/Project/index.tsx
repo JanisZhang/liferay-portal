@@ -15,7 +15,7 @@ type ProjectsProps = {
 };
 
 const Projects: React.FC<ProjectsProps> = ({PageContainer = Container}) => {
-	const {actions, navigate} = useProjectActions();
+	const {actions} = useProjectActions();
 
 	useHeader({
 		dropdown: [],
@@ -32,8 +32,14 @@ const Projects: React.FC<ProjectsProps> = ({PageContainer = Container}) => {
 	return (
 		<PageContainer>
 			<ListView
+				initialContext={{
+					sort: {
+						direction: 'ASC',
+						key: 'name',
+					},
+				}}
 				managementToolbarProps={{
-					addButton: () => navigate('/project/create'),
+					applyFilters: true,
 					display: {columns: false},
 					title: i18n.translate('projects'),
 				}}

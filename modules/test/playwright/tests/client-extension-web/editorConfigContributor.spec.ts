@@ -6,113 +6,141 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
+import {featureFlagsTest} from '../../fixtures/featureFlagsTest';
+import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {liferayConfig} from '../../liferay.config';
+import getRandomString from '../../utils/getRandomString';
+import getPageDefinition from '../layout-content-page-editor-web/utils/getPageDefinition';
+import getWidgetDefinition from '../layout-content-page-editor-web/utils/getWidgetDefinition';
 import {clientExtensionsPageTest} from './fixtures/clientExtensionsPageTest';
-import {newEditorConfigContributorPageTest} from './fixtures/newEditorConfigContributorPageTest';
+import {editEditorConfigContributorPageTest} from './fixtures/editEditorConfigContributorPageTest';
+import {editorSamplesPageTest} from './fixtures/editorSamplesPageTest';
 
 export const test = mergeTests(
 	apiHelpersTest,
 	clientExtensionsPageTest,
-	loginTest(),
-	newEditorConfigContributorPageTest
+	editEditorConfigContributorPageTest,
+	editorSamplesPageTest,
+	featureFlagsTest({
+		'LPS-178052': true,
+	}),
+	isolatedSiteTest,
+	loginTest()
 );
 
-test('Editor config contributor client extension is disabled if FF is set to false', async ({
-	apiHelpers,
+test('Create, edit and delete editor config contributor client extension @LPS-186870', async ({
 	clientExtensionsPage,
+	editEditorConfigContributorPage,
 }) => {
-	await apiHelpers.featureFlag.updateFeatureFlag('LPS-186870', false);
+	await editEditorConfigContributorPage.goto();
 
-	await clientExtensionsPage.goto();
+	const sampleName1 = getRandomString();
 
-	await clientExtensionsPage.newClientExtensionButton.click();
+	await editEditorConfigContributorPage.nameInput.fill(sampleName1);
 
-	await expect(
-		clientExtensionsPage.editorConfigContributorMenuItem
-	).not.toBeAttached();
-});
+	await editEditorConfigContributorPage.descriptionContentEditable.isEditable();
 
-test('Create, edit and delete editor config contributor client extension', async ({
-	apiHelpers,
-	clientExtensionsPage,
-	newEditorConfigContributorPage,
-}) => {
-	await apiHelpers.featureFlag.updateFeatureFlag('LPS-186870', true);
-
-	await clientExtensionsPage.goto();
-
-	await clientExtensionsPage.newClientExtensionButton.click();
-
-	await clientExtensionsPage.editorConfigContributorMenuItem.click();
-
-	const sampleName1 = 'Sample Name 1';
-
-	await newEditorConfigContributorPage.nameInput.fill(sampleName1);
-
-	await newEditorConfigContributorPage.descriptionEditable.isEditable();
-
-	await newEditorConfigContributorPage.descriptionEditable.fill(
+	await editEditorConfigContributorPage.descriptionContentEditable.fill(
 		'Sample Description'
 	);
 
-	await newEditorConfigContributorPage.urlInput.fill(
+	await editEditorConfigContributorPage.urlInput.fill(
 		'https://www.liferay.com'
 	);
 
-	await newEditorConfigContributorPage.portletNamesInput.fill(
+	await editEditorConfigContributorPage.portletNamesInput.fill(
 		'Sample Portlet Name'
 	);
 
-	await newEditorConfigContributorPage.editorNamesInput.fill(
+	await editEditorConfigContributorPage.editorNamesInput.fill(
 		'Sample Editor Names'
 	);
 
-	await newEditorConfigContributorPage.editorConfigKeysInput.fill(
+	await editEditorConfigContributorPage.editorConfigKeysInput.fill(
 		'Sample Editor Config Keys'
 	);
 
-	await newEditorConfigContributorPage.publishButton.click();
+	await editEditorConfigContributorPage.publish();
 
-	await clientExtensionsPage.openItemActionsDropdown({text: sampleName1});
+	await clientExtensionsPage.editClientExtension(sampleName1);
 
-	await clientExtensionsPage.itemEditButton.click();
+	// Synchronize test to avoid flakiness
 
-	const sampleName2 = 'Sample Name 2';
+	expect(editEditorConfigContributorPage.descriptionCKEditor).toBeVisible();
 
-	await newEditorConfigContributorPage.nameInput.click();
+	const sampleName2 = getRandomString();
 
-	await newEditorConfigContributorPage.nameInput.fill(sampleName2);
+	await editEditorConfigContributorPage.nameInput.fill(sampleName2);
 
-	await newEditorConfigContributorPage.publishButton.click();
+	await editEditorConfigContributorPage.publish();
 
-	await clientExtensionsPage.openItemActionsDropdown({text: sampleName2});
-
-	clientExtensionsPage.page.on('dialog', (dialog) => dialog.accept());
-
-	await clientExtensionsPage.itemDeleteButton.click();
+	await editEditorConfigContributorPage.clientExtensionsPage.deleteClientExtension(
+		sampleName2
+	);
 });
 
-/**
- * This test requires manual setup:
- *
- *     1. Run `gradle build` in /workspaces/liferay-sample-workspace/client-extensions/liferay-sample-editor-config-contributor
- *     2. Copy `liferay-sample-editor-config-contributor.zip` from /dist to @LIFERAY_HOME/osgi/client-extensions
- *
- * We are skipping the test until we automate these steps.
- */
-test.skip('Add a toolbar button to a CKEditor, by applying editor config contributor client extension', async ({
-	apiHelpers,
-	newEditorConfigContributorPage,
+test('Add a toolbar button to a CKEditor, by applying editor config contributor client extension @LPS-186870', async ({
+	editEditorConfigContributorPage: newEditorConfigContributorPage,
 }) => {
-	await apiHelpers.featureFlag.updateFeatureFlag('LPS-186870', true);
-
 	await newEditorConfigContributorPage.goto();
 
 	await expect(
-		newEditorConfigContributorPage.descriptionEditable
+		newEditorConfigContributorPage.descriptionContentEditable
 	).toBeEditable();
 
 	await expect(
 		newEditorConfigContributorPage.aiCreatorEditorToolbarButton
 	).toBeVisible();
+});
+
+test('Add a toolbar button to an Alloy Editor @LPD-11056', async ({
+	apiHelpers,
+	editorSamplesPage,
+	page,
+	site,
+}) => {
+	let layout: Layout;
+
+	await test.step('Create page with CKEditor sample widget', async () => {
+		const widgetDefinition = getWidgetDefinition({
+			id: getRandomString(),
+			widgetName:
+				'com_liferay_editor_ckeditor_sample_web_internal_portlet_CKEditorSamplePortlet',
+		});
+
+		layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([widgetDefinition]),
+			siteId: site.id,
+			title: getRandomString(),
+		});
+	});
+
+	await test.step('Navigate to the page with Alloy Editor sample', async () => {
+		await page.goto(
+			`${liferayConfig.environment.baseUrl}/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`
+		);
+
+		await expect(
+			editorSamplesPage.balloonEditorContainer.getByText('Lorem ipsum')
+		).toBeInViewport();
+
+		await editorSamplesPage.selectTab({tabLabel: 'Alloy'});
+
+		await expect(
+			editorSamplesPage.alloyEditorContainer.getByText('Lorem ipsum')
+		).toBeInViewport();
+	});
+
+	await test.step('Check if client extenstion is applied', async () => {
+		await editorSamplesPage.alloyEditorContainer
+			.getByText('Lorem ipsum')
+			.selectText();
+
+		await expect(
+			editorSamplesPage.alloyEditorToolbarContainer.getByTitle(
+				'Insert Video'
+			)
+		).toBeInViewport();
+	});
 });

@@ -15,7 +15,7 @@ task buildLexiconIcons(type: Copy)
 task buildTheme
 task publishNodeModule(type: PublishNodeModuleTask)
 
-String alloyUIVersion = "3.1.0-deprecated.117"
+String alloyUIVersion = "3.1.0-deprecated.118"
 
 String fontAwesomeVersion = "3.2.1"
 
@@ -212,8 +212,23 @@ classes {
 	dependsOn buildTheme
 }
 
+copyCSS {
+	mustRunAfter buildAlloyUITheme
+	mustRunAfter buildClay
+	mustRunAfter buildClayIcons
+	mustRunAfter buildLexiconIcons
+}
+
 dependencies {
 	alloyUI group: "com.liferay.webjars", name: "com.liferay.webjars.alloy-ui", transitive: false, version: alloyUIVersion
+}
+
+jarSources {
+	mustRunAfter buildAlloyUITheme
+	mustRunAfter buildClay
+	mustRunAfter buildClayFonts
+	mustRunAfter buildClayIcons
+	mustRunAfter buildLexiconIcons
 }
 
 publishNodeModule {

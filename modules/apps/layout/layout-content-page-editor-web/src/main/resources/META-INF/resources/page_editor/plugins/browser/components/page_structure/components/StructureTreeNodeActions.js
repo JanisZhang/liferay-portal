@@ -14,11 +14,14 @@ import {flushSync} from 'react-dom';
 
 import SaveFragmentCompositionModal from '../../../../../app/components/SaveFragmentCompositionModal';
 import hasDropZoneChild from '../../../../../app/components/layout_data_items/hasDropZoneChild';
-import {FRAGMENT_ENTRY_TYPES} from '../../../../../app/config/constants/fragmentEntryTypes';
 import {ITEM_ACTIVATION_ORIGINS} from '../../../../../app/config/constants/itemActivationOrigins';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../app/config/constants/layoutDataItemTypes';
-import {useSelectItem} from '../../../../../app/contexts/ControlsContext';
+import {
+	useSelectItem,
+	useSelectMultipleItems,
+} from '../../../../../app/contexts/ControlsContext';
 import {useSetMovementText} from '../../../../../app/contexts/KeyboardMovementContext';
+import {useSetEditedNodeId} from '../../../../../app/contexts/ShortcutContext';
 import {
 	useDispatch,
 	useSelector,
@@ -33,14 +36,11 @@ import {
 	FORM_ERROR_TYPES,
 	getFormErrorDescription,
 } from '../../../../../app/utils/getFormErrorDescription';
+import isInputFragment from '../../../../../app/utils/isInputFragment';
 import updateItemStyle from '../../../../../app/utils/updateItemStyle';
 import useHasRequiredChild from '../../../../../app/utils/useHasRequiredChild';
 
-export default function StructureTreeNodeActions({
-	item,
-	setEditingNodeId,
-	visible,
-}) {
+export default function StructureTreeNodeActions({disabled, item, visible}) {
 	const [active, setActive] = useState(false);
 
 	const [openSaveModal, setOpenSaveModal] = useState(false);
@@ -68,11 +68,13 @@ export default function StructureTreeNodeActions({
 				aria-haspopup="true"
 				aria-label={Liferay.Language.get('options')}
 				className={classNames(
-					'ml-0 page-editor__page-structure__tree-node__actions-button',
+					'ml-0 page-editor__page-structure__tree-node__actions-button position-relative',
 					{
-						'page-editor__page-structure__tree-node__actions-button--visible': visible,
+						'page-editor__page-structure__tree-node__actions-button--visible':
+							visible,
 					}
 				)}
+				disabled={disabled}
 				displayType="unstyled"
 				onClick={(event) => {
 					event.stopPropagation();
@@ -87,6 +89,17 @@ export default function StructureTreeNodeActions({
 				}
 				title={Liferay.Language.get('options')}
 			>
+				{active ? (
+					<div
+						className="position-absolute"
+						style={{
+							height: '50px',
+							transform: 'translateX(-10px, -10px)',
+							width: '50px',
+						}}
+					/>
+				) : null}
+
 				<ClayIcon symbol="ellipsis-v" />
 			</ClayButton>
 
@@ -103,7 +116,6 @@ export default function StructureTreeNodeActions({
 					<ActionList
 						item={item}
 						setActive={updateActive}
-						setEditingNodeId={setEditingNodeId}
 						setOpenSaveModal={setOpenSaveModal}
 					/>
 				)}
@@ -119,21 +131,22 @@ export default function StructureTreeNodeActions({
 	);
 }
 
-const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
+const ActionList = ({item, setActive, setOpenSaveModal}) => {
 	const dispatch = useDispatch();
 	const hasRequiredChild = useHasRequiredChild(item.id);
 	const selectItem = useSelectItem();
+	const selectMultipleItems = useSelectMultipleItems();
+	const setEditedNodeId = useSetEditedNodeId();
 	const setText = useSetMovementText();
 	const widgets = useSelector((state) => state.widgets);
+
+	const selectItems = Liferay.FeatureFlags['LPD-18221']
+		? selectMultipleItems
+		: selectItem;
 
 	const {fragmentEntryLinks, layoutData, selectedViewportSize} = useSelector(
 		(state) => state
 	);
-
-	const isInputFragment =
-		item.type === LAYOUT_DATA_ITEM_TYPES.fragment &&
-		fragmentEntryLinks[item.config.fragmentEntryLinkId]
-			.fragmentEntryType === FRAGMENT_ENTRY_TYPES.input;
 
 	const isHidden = item.config.styles.display === 'none';
 
@@ -143,13 +156,13 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 		if (
 			item.type !== LAYOUT_DATA_ITEM_TYPES.dropZone &&
 			!hasDropZoneChild(item, layoutData) &&
-			!isInputFragment
+			!isInputFragment(item, fragmentEntryLinks)
 		) {
 			items.push({
 				action: () => {
 					updateItemStyle({
 						dispatch,
-						itemId: item.id,
+						itemIds: [item.id],
 						selectedViewportSize,
 						styleName: 'display',
 						styleValue: isHidden ? 'block' : 'none',
@@ -202,8 +215,8 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 				action: () => {
 					dispatch(
 						duplicateItem({
-							itemId: item.id,
-							selectItem,
+							itemIds: [item.id],
+							selectItems,
 						})
 					);
 
@@ -217,7 +230,7 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 		if (canBeRenamed(item)) {
 			items.push({
 				action: () => {
-					setEditingNodeId(item.id);
+					setEditedNodeId(item.id);
 				},
 				label: Liferay.Language.get('rename'),
 			});
@@ -232,8 +245,8 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 				action: () => {
 					dispatch(
 						deleteItem({
-							itemId: item.id,
-							selectItem,
+							itemIds: [item.id],
+							selectItems,
 						})
 					);
 
@@ -249,16 +262,16 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 		dispatch,
 		fragmentEntryLinks,
 		hasRequiredChild,
-		isInputFragment,
 		item,
 		layoutData,
 		selectedViewportSize,
 		selectItem,
 		widgets,
+		setEditedNodeId,
 		setOpenSaveModal,
 		setText,
 		isHidden,
-		setEditingNodeId,
+		selectItems,
 	]);
 
 	return (

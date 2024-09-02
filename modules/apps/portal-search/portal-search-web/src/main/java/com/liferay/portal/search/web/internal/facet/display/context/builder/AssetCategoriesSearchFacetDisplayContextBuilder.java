@@ -158,13 +158,11 @@ public class AssetCategoriesSearchFacetDisplayContextBuilder
 		_selectedCategoryIds = TransformUtil.transformToList(
 			parameterValues,
 			parameterValue -> {
-				long categoryId = GetterUtil.getLong(parameterValue);
-
-				if (categoryId <= 0) {
+				if (parameterValue.equals(StringPool.BLANK)) {
 					return null;
 				}
 
-				return categoryId;
+				return GetterUtil.getLong(parameterValue);
 			});
 	}
 

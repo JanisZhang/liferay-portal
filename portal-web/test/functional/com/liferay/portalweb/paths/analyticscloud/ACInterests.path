@@ -12,7 +12,7 @@
 <tbody>
 <tr>
 	<td>INTERESTS_TABLE</td>
-	<td>//h5[contains(.,'Interests')]/../..//span[contains(@class,'title') and contains(.,'${key_interestName}')]</td>
+	<td>//div[contains(@class,'h5') and contains(.,'Interests')]/../..//span[contains(@class,'title') and contains(.,'${key_interestName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -23,11 +23,6 @@
 <tr>
 	<td>INTEREST_ORDER_BY_SEGMENT_MEMBERS</td>
 	<td>//span[text()='Segment Members']/parent::a[contains(@href,'orderByField')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NO_INTEREST_TITLE</td>
-	<td>//h4[@class='no-results-title']</td>
 	<td></td>
 </tr>
 
@@ -68,7 +63,7 @@
 </tr>
 <tr>
 	<td>INTEREST_ACTIVE_MEMBERS_PERCENTAGE</td>
-	<td>//tr[contains(.,'${key_interestTopic}')]/td[@class='table-column-text-end']/h4</td>
+	<td>//tr[contains(.,'${key_interestTopic}')]/td[@class='table-column-text-end']//div</td>
 	<td></td>
 </tr>
 <tr>
@@ -81,7 +76,7 @@
 
 <tr>
 	<td>INTEREST_HEADER</td>
-	<td>//h5[contains(.,'Interest')]/span[contains(@class,'interest-name') and contains(.,'${key_interestTopic}')]</td>
+	<td>//div[contains(@class,'h5') and contains(.,'Interest')]/span[contains(@class,'interest-name') and contains(.,'${key_interestTopic}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -92,11 +87,6 @@
 <tr>
 	<td>INTEREST_DETAIL_ORDER_BY_PAGE_TITLE</td>
 	<td>//span[text()='Page Title']/parent::a[contains(@href,'orderByField')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>TAB_NAME</td>
-	<td>//ul[contains(@class,'nav-root')]//h4[text()='${key_tabName}']</td>
 	<td></td>
 </tr>
 <tr>

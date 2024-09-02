@@ -139,14 +139,16 @@ exports[`AccessTokenList should render 1`] = `
             <div
               class="align-items-start d-flex flex-column justify-content-between"
             >
-              <h4
-                class="mb-4"
+              <div
+                class="h4 mb-4"
               >
                 Token Information
-              </h4>
-              <h5>
+              </div>
+              <div
+                class="h5"
+              >
                 Root Endpoint:
-              </h5>
+              </div>
               <span
                 class="text-secondary"
               >

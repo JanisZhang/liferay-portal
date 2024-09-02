@@ -141,6 +141,15 @@ public class LayoutUtilityPageEntryLocalServiceWrapper
 			LayoutUtilityPageEntryId);
 	}
 
+	@Override
+	public LayoutUtilityPageEntry deleteLayoutUtilityPageEntry(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutUtilityPageEntryLocalService.deleteLayoutUtilityPageEntry(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -393,6 +402,26 @@ public class LayoutUtilityPageEntryLocalServiceWrapper
 			groupId, type, start, end, orderByComparator);
 	}
 
+	@Override
+	public java.util.List<LayoutUtilityPageEntry> getLayoutUtilityPageEntries(
+		long groupId, String keyword, String[] types, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<LayoutUtilityPageEntry>
+			orderByComparator) {
+
+		return _layoutUtilityPageEntryLocalService.getLayoutUtilityPageEntries(
+			groupId, keyword, types, start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<LayoutUtilityPageEntry> getLayoutUtilityPageEntries(
+		long groupId, String[] types, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<LayoutUtilityPageEntry>
+			orderByComparator) {
+
+		return _layoutUtilityPageEntryLocalService.getLayoutUtilityPageEntries(
+			groupId, types, start, end, orderByComparator);
+	}
+
 	/**
 	 * Returns all the layout utility page entries matching the UUID and company.
 	 *
@@ -446,6 +475,20 @@ public class LayoutUtilityPageEntryLocalServiceWrapper
 	public int getLayoutUtilityPageEntriesCount(long groupId) {
 		return _layoutUtilityPageEntryLocalService.
 			getLayoutUtilityPageEntriesCount(groupId);
+	}
+
+	@Override
+	public int getLayoutUtilityPageEntriesCount(
+		long groupId, String keyword, String[] types) {
+
+		return _layoutUtilityPageEntryLocalService.
+			getLayoutUtilityPageEntriesCount(groupId, keyword, types);
+	}
+
+	@Override
+	public int getLayoutUtilityPageEntriesCount(long groupId, String[] types) {
+		return _layoutUtilityPageEntryLocalService.
+			getLayoutUtilityPageEntriesCount(groupId, types);
 	}
 
 	/**

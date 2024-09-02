@@ -39,6 +39,7 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -99,7 +100,7 @@ public abstract class BaseWishListResourceTestCase {
 		WishListResource.Builder builder = WishListResource.builder();
 
 		wishListResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -113,7 +114,32 @@ public abstract class BaseWishListResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		WishList wishList1 = randomWishList();
+
+		String json = objectMapper.writeValueAsString(wishList1);
+
+		WishList wishList2 = WishListSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(wishList1, wishList2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		WishList wishList = randomWishList();
+
+		String json1 = objectMapper.writeValueAsString(wishList);
+		String json2 = WishListSerDes.toJSON(wishList);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -128,40 +154,6 @@ public abstract class BaseWishListResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		WishList wishList1 = randomWishList();
-
-		String json = objectMapper.writeValueAsString(wishList1);
-
-		WishList wishList2 = WishListSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(wishList1, wishList2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		WishList wishList = randomWishList();
-
-		String json1 = objectMapper.writeValueAsString(wishList);
-		String json2 = WishListSerDes.toJSON(wishList);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -179,6 +171,215 @@ public abstract class BaseWishListResourceTestCase {
 		wishList = WishListSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, wishList.getName());
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeWishListsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetChannelByExternalReferenceCodeWishListsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetChannelByExternalReferenceCodeWishListsPage_getIrrelevantExternalReferenceCode();
+
+		Page<WishList> page =
+			wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+				externalReferenceCode, null, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			WishList irrelevantWishList =
+				testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantWishList());
+
+			page =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					irrelevantExternalReferenceCode, null,
+					Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantWishList, (List<WishList>)page.getItems());
+			assertValid(
+				page,
+				testGetChannelByExternalReferenceCodeWishListsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		WishList wishList1 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		WishList wishList2 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		page = wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+			externalReferenceCode, null, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(wishList1, (List<WishList>)page.getItems());
+		assertContains(wishList2, (List<WishList>)page.getItems());
+		assertValid(
+			page,
+			testGetChannelByExternalReferenceCodeWishListsPage_getExpectedActions(
+				externalReferenceCode));
+
+		wishListResource.deleteWishList(wishList1.getId());
+
+		wishListResource.deleteWishList(wishList2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetChannelByExternalReferenceCodeWishListsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetChannelByExternalReferenceCodeWishListsPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetChannelByExternalReferenceCodeWishListsPage_getExternalReferenceCode();
+
+		Page<WishList> wishListPage =
+			wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+				externalReferenceCode, null, null);
+
+		int totalCount = GetterUtil.getInteger(wishListPage.getTotalCount());
+
+		WishList wishList1 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		WishList wishList2 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		WishList wishList3 =
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				externalReferenceCode, randomWishList());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<WishList> page1 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(wishList1, (List<WishList>)page1.getItems());
+
+			Page<WishList> page2 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(wishList2, (List<WishList>)page2.getItems());
+
+			Page<WishList> page3 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(wishList3, (List<WishList>)page3.getItems());
+		}
+		else {
+			Page<WishList> page1 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(1, totalCount + 2));
+
+			List<WishList> wishLists1 = (List<WishList>)page1.getItems();
+
+			Assert.assertEquals(
+				wishLists1.toString(), totalCount + 2, wishLists1.size());
+
+			Page<WishList> page2 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<WishList> wishLists2 = (List<WishList>)page2.getItems();
+
+			Assert.assertEquals(wishLists2.toString(), 1, wishLists2.size());
+
+			Page<WishList> page3 =
+				wishListResource.getChannelByExternalReferenceCodeWishListsPage(
+					externalReferenceCode, null,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(wishList1, (List<WishList>)page3.getItems());
+			assertContains(wishList2, (List<WishList>)page3.getItems());
+			assertContains(wishList3, (List<WishList>)page3.getItems());
+		}
+	}
+
+	protected WishList
+			testGetChannelByExternalReferenceCodeWishListsPage_addWishList(
+				String externalReferenceCode, WishList wishList)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeWishListsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetChannelByExternalReferenceCodeWishListsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testPostChannelByExternalReferenceCodeWishList()
+		throws Exception {
+
+		WishList randomWishList = randomWishList();
+
+		WishList postWishList =
+			testPostChannelByExternalReferenceCodeWishList_addWishList(
+				randomWishList);
+
+		assertEquals(randomWishList, postWishList);
+		assertValid(postWishList);
+	}
+
+	protected WishList
+			testPostChannelByExternalReferenceCodeWishList_addWishList(
+				WishList wishList)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -375,7 +576,10 @@ public abstract class BaseWishListResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteWishList() throws Exception {
-		WishList wishList = testGraphQLDeleteWishList_addWishList();
+
+		// No namespace
+
+		WishList wishList1 = testGraphQLDeleteWishList_addWishList();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -384,23 +588,60 @@ public abstract class BaseWishListResourceTestCase {
 						"deleteWishList",
 						new HashMap<String, Object>() {
 							{
-								put("wishListId", wishList.getId());
+								put("wishListId", wishList1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteWishList"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"wishList",
 					new HashMap<String, Object>() {
 						{
-							put("wishListId", wishList.getId());
+							put("wishListId", wishList1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		WishList wishList2 = testGraphQLDeleteWishList_addWishList();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceDeliveryCatalog_v1_0",
+						new GraphQLField(
+							"deleteWishList",
+							new HashMap<String, Object>() {
+								{
+									put("wishListId", wishList2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
+				"Object/deleteWishList"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceDeliveryCatalog_v1_0",
+					new GraphQLField(
+						"wishList",
+						new HashMap<String, Object>() {
+							{
+								put("wishListId", wishList2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected WishList testGraphQLDeleteWishList_addWishList()
@@ -429,6 +670,8 @@ public abstract class BaseWishListResourceTestCase {
 	public void testGraphQLGetWishList() throws Exception {
 		WishList wishList = testGraphQLGetWishList_addWishList();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				wishList,
@@ -444,11 +687,35 @@ public abstract class BaseWishListResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/wishList"))));
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				wishList,
+				WishListSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceDeliveryCatalog_v1_0",
+								new GraphQLField(
+									"wishList",
+									new HashMap<String, Object>() {
+										{
+											put("wishListId", wishList.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceDeliveryCatalog_v1_0",
+						"Object/wishList"))));
 	}
 
 	@Test
 	public void testGraphQLGetWishListNotFound() throws Exception {
 		Long irrelevantWishListId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -462,6 +729,25 @@ public abstract class BaseWishListResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceDeliveryCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceDeliveryCatalog_v1_0",
+						new GraphQLField(
+							"wishList",
+							new HashMap<String, Object>() {
+								{
+									put("wishListId", irrelevantWishListId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -936,7 +1222,8 @@ public abstract class BaseWishListResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -993,12 +1280,12 @@ public abstract class BaseWishListResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1007,11 +1294,16 @@ public abstract class BaseWishListResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1043,6 +1335,24 @@ public abstract class BaseWishListResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1064,16 +1374,6 @@ public abstract class BaseWishListResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

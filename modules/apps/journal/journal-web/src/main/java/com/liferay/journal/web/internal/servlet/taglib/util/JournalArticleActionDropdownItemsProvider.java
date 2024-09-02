@@ -138,7 +138,7 @@ public class JournalArticleActionDropdownItemsProvider {
 						_getEditArticleActionUnsafeConsumer()
 					).add(
 						() ->
-							FeatureFlagManagerUtil.isEnabled("LPS-141392") &&
+							FeatureFlagManagerUtil.isEnabled("LPD-11228") &&
 							hasUpdatePermission && _article.isDraft() &&
 							_article.hasApprovedVersion(),
 						_getDiscardDraftActionUnsafeConsumer()
@@ -600,8 +600,7 @@ public class JournalArticleActionDropdownItemsProvider {
 
 			String label = "edit";
 
-			if (FeatureFlagManagerUtil.isEnabled("LPS-196768") &&
-				!JournalArticleLocalServiceUtil.isLatestVersion(
+			if (!JournalArticleLocalServiceUtil.isLatestVersion(
 					_article.getGroupId(), _article.getArticleId(),
 					_article.getVersion())) {
 
@@ -812,11 +811,16 @@ public class JournalArticleActionDropdownItemsProvider {
 		if (AssetDisplayPageUtil.hasAssetDisplayPage(
 				_themeDisplay.getScopeGroupId(), assetEntry)) {
 
+			ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+				new ClassPKInfoItemIdentifier(assetEntry.getClassPK());
+
+			classPKInfoItemIdentifier.setVersion(
+				String.valueOf(_article.getVersion()));
+
 			String previewURL =
 				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
 					new InfoItemReference(
-						assetEntry.getClassName(),
-						new ClassPKInfoItemIdentifier(assetEntry.getClassPK())),
+						assetEntry.getClassName(), classPKInfoItemIdentifier),
 					_themeDisplay);
 
 			previewURL = HttpComponentsUtil.addParameter(

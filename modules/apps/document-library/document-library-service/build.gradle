@@ -13,11 +13,12 @@ dependencies {
 	compileOnly group: "org.osgi", name: "org.osgi.service.cm", version: "1.6.0"
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.4.0"
 	compileOnly group: "org.osgi", name: "osgi.core", version: "6.0.0"
-	compileOnly group: "org.springframework", name: "spring-context", version: "5.2.24.RELEASE"
+	compileOnly group: "org.springframework", name: "spring-context", version: "5.3.39"
 	compileOnly project(":apps:asset:asset-api")
 	compileOnly project(":apps:asset:asset-auto-tagger-api")
 	compileOnly project(":apps:asset:asset-display-page-api")
 	compileOnly project(":apps:bulk:bulk-selection-api")
+	compileOnly project(":apps:change-tracking:change-tracking-api")
 	compileOnly project(":apps:change-tracking:change-tracking-spi")
 	compileOnly project(":apps:change-tracking:change-tracking-store-api")
 	compileOnly project(":apps:changeset:changeset-api")

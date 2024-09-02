@@ -36,6 +36,7 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -96,7 +97,7 @@ public abstract class BaseWebUrlResourceTestCase {
 		WebUrlResource.Builder builder = WebUrlResource.builder();
 
 		webUrlResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -110,7 +111,32 @@ public abstract class BaseWebUrlResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		WebUrl webUrl1 = randomWebUrl();
+
+		String json = objectMapper.writeValueAsString(webUrl1);
+
+		WebUrl webUrl2 = WebUrlSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(webUrl1, webUrl2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		WebUrl webUrl = randomWebUrl();
+
+		String json1 = objectMapper.writeValueAsString(webUrl);
+		String json2 = WebUrlSerDes.toJSON(webUrl);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -125,40 +151,6 @@ public abstract class BaseWebUrlResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		WebUrl webUrl1 = randomWebUrl();
-
-		String json = objectMapper.writeValueAsString(webUrl1);
-
-		WebUrl webUrl2 = WebUrlSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(webUrl1, webUrl2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		WebUrl webUrl = randomWebUrl();
-
-		String json1 = objectMapper.writeValueAsString(webUrl);
-		String json2 = WebUrlSerDes.toJSON(webUrl);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -178,6 +170,250 @@ public abstract class BaseWebUrlResourceTestCase {
 
 		Assert.assertEquals(regex, webUrl.getUrl());
 		Assert.assertEquals(regex, webUrl.getUrlType());
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeWebUrlsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetAccountByExternalReferenceCodeWebUrlsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetAccountByExternalReferenceCodeWebUrlsPage_getIrrelevantExternalReferenceCode();
+
+		Page<WebUrl> page =
+			webUrlResource.getAccountByExternalReferenceCodeWebUrlsPage(
+				externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			WebUrl irrelevantWebUrl =
+				testGetAccountByExternalReferenceCodeWebUrlsPage_addWebUrl(
+					irrelevantExternalReferenceCode, randomIrrelevantWebUrl());
+
+			page = webUrlResource.getAccountByExternalReferenceCodeWebUrlsPage(
+				irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantWebUrl, (List<WebUrl>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeWebUrlsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		WebUrl webUrl1 =
+			testGetAccountByExternalReferenceCodeWebUrlsPage_addWebUrl(
+				externalReferenceCode, randomWebUrl());
+
+		WebUrl webUrl2 =
+			testGetAccountByExternalReferenceCodeWebUrlsPage_addWebUrl(
+				externalReferenceCode, randomWebUrl());
+
+		page = webUrlResource.getAccountByExternalReferenceCodeWebUrlsPage(
+			externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(webUrl1, (List<WebUrl>)page.getItems());
+		assertContains(webUrl2, (List<WebUrl>)page.getItems());
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeWebUrlsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeWebUrlsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected WebUrl testGetAccountByExternalReferenceCodeWebUrlsPage_addWebUrl(
+			String externalReferenceCode, WebUrl webUrl)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeWebUrlsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetAccountByExternalReferenceCodeWebUrlsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetAccountWebUrlsPage() throws Exception {
+		Long accountId = testGetAccountWebUrlsPage_getAccountId();
+		Long irrelevantAccountId =
+			testGetAccountWebUrlsPage_getIrrelevantAccountId();
+
+		Page<WebUrl> page = webUrlResource.getAccountWebUrlsPage(accountId);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantAccountId != null) {
+			WebUrl irrelevantWebUrl = testGetAccountWebUrlsPage_addWebUrl(
+				irrelevantAccountId, randomIrrelevantWebUrl());
+
+			page = webUrlResource.getAccountWebUrlsPage(irrelevantAccountId);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantWebUrl, (List<WebUrl>)page.getItems());
+			assertValid(
+				page,
+				testGetAccountWebUrlsPage_getExpectedActions(
+					irrelevantAccountId));
+		}
+
+		WebUrl webUrl1 = testGetAccountWebUrlsPage_addWebUrl(
+			accountId, randomWebUrl());
+
+		WebUrl webUrl2 = testGetAccountWebUrlsPage_addWebUrl(
+			accountId, randomWebUrl());
+
+		page = webUrlResource.getAccountWebUrlsPage(accountId);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(webUrl1, (List<WebUrl>)page.getItems());
+		assertContains(webUrl2, (List<WebUrl>)page.getItems());
+		assertValid(
+			page, testGetAccountWebUrlsPage_getExpectedActions(accountId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountWebUrlsPage_getExpectedActions(Long accountId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected WebUrl testGetAccountWebUrlsPage_addWebUrl(
+			Long accountId, WebUrl webUrl)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountWebUrlsPage_getAccountId() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected Long testGetAccountWebUrlsPage_getIrrelevantAccountId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetOrganizationByExternalReferenceCodeWebUrlsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetOrganizationByExternalReferenceCodeWebUrlsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetOrganizationByExternalReferenceCodeWebUrlsPage_getIrrelevantExternalReferenceCode();
+
+		Page<WebUrl> page =
+			webUrlResource.getOrganizationByExternalReferenceCodeWebUrlsPage(
+				externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			WebUrl irrelevantWebUrl =
+				testGetOrganizationByExternalReferenceCodeWebUrlsPage_addWebUrl(
+					irrelevantExternalReferenceCode, randomIrrelevantWebUrl());
+
+			page =
+				webUrlResource.
+					getOrganizationByExternalReferenceCodeWebUrlsPage(
+						irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantWebUrl, (List<WebUrl>)page.getItems());
+			assertValid(
+				page,
+				testGetOrganizationByExternalReferenceCodeWebUrlsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		WebUrl webUrl1 =
+			testGetOrganizationByExternalReferenceCodeWebUrlsPage_addWebUrl(
+				externalReferenceCode, randomWebUrl());
+
+		WebUrl webUrl2 =
+			testGetOrganizationByExternalReferenceCodeWebUrlsPage_addWebUrl(
+				externalReferenceCode, randomWebUrl());
+
+		page = webUrlResource.getOrganizationByExternalReferenceCodeWebUrlsPage(
+			externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(webUrl1, (List<WebUrl>)page.getItems());
+		assertContains(webUrl2, (List<WebUrl>)page.getItems());
+		assertValid(
+			page,
+			testGetOrganizationByExternalReferenceCodeWebUrlsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrganizationByExternalReferenceCodeWebUrlsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected WebUrl
+			testGetOrganizationByExternalReferenceCodeWebUrlsPage_addWebUrl(
+				String externalReferenceCode, WebUrl webUrl)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrganizationByExternalReferenceCodeWebUrlsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetOrganizationByExternalReferenceCodeWebUrlsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
 	}
 
 	@Test
@@ -252,6 +488,94 @@ public abstract class BaseWebUrlResourceTestCase {
 
 	protected String
 			testGetOrganizationWebUrlsPage_getIrrelevantOrganizationId()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testGetUserAccountByExternalReferenceCodeWebUrlsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetUserAccountByExternalReferenceCodeWebUrlsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetUserAccountByExternalReferenceCodeWebUrlsPage_getIrrelevantExternalReferenceCode();
+
+		Page<WebUrl> page =
+			webUrlResource.getUserAccountByExternalReferenceCodeWebUrlsPage(
+				externalReferenceCode);
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			WebUrl irrelevantWebUrl =
+				testGetUserAccountByExternalReferenceCodeWebUrlsPage_addWebUrl(
+					irrelevantExternalReferenceCode, randomIrrelevantWebUrl());
+
+			page =
+				webUrlResource.getUserAccountByExternalReferenceCodeWebUrlsPage(
+					irrelevantExternalReferenceCode);
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(irrelevantWebUrl, (List<WebUrl>)page.getItems());
+			assertValid(
+				page,
+				testGetUserAccountByExternalReferenceCodeWebUrlsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		WebUrl webUrl1 =
+			testGetUserAccountByExternalReferenceCodeWebUrlsPage_addWebUrl(
+				externalReferenceCode, randomWebUrl());
+
+		WebUrl webUrl2 =
+			testGetUserAccountByExternalReferenceCodeWebUrlsPage_addWebUrl(
+				externalReferenceCode, randomWebUrl());
+
+		page = webUrlResource.getUserAccountByExternalReferenceCodeWebUrlsPage(
+			externalReferenceCode);
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(webUrl1, (List<WebUrl>)page.getItems());
+		assertContains(webUrl2, (List<WebUrl>)page.getItems());
+		assertValid(
+			page,
+			testGetUserAccountByExternalReferenceCodeWebUrlsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetUserAccountByExternalReferenceCodeWebUrlsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	protected WebUrl
+			testGetUserAccountByExternalReferenceCodeWebUrlsPage_addWebUrl(
+				String externalReferenceCode, WebUrl webUrl)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetUserAccountByExternalReferenceCodeWebUrlsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetUserAccountByExternalReferenceCodeWebUrlsPage_getIrrelevantExternalReferenceCode()
 		throws Exception {
 
 		return null;
@@ -350,6 +674,8 @@ public abstract class BaseWebUrlResourceTestCase {
 	public void testGraphQLGetWebUrl() throws Exception {
 		WebUrl webUrl = testGraphQLGetWebUrl_addWebUrl();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				webUrl,
@@ -365,11 +691,34 @@ public abstract class BaseWebUrlResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/webUrl"))));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertTrue(
+			equals(
+				webUrl,
+				WebUrlSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminUser_v1_0",
+								new GraphQLField(
+									"webUrl",
+									new HashMap<String, Object>() {
+										{
+											put("webUrlId", webUrl.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessAdminUser_v1_0",
+						"Object/webUrl"))));
 	}
 
 	@Test
 	public void testGraphQLGetWebUrlNotFound() throws Exception {
 		Long irrelevantWebUrlId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -383,6 +732,25 @@ public abstract class BaseWebUrlResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminUser_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminUser_v1_0",
+						new GraphQLField(
+							"webUrl",
+							new HashMap<String, Object>() {
+								{
+									put("webUrlId", irrelevantWebUrlId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -863,7 +1231,8 @@ public abstract class BaseWebUrlResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -921,12 +1290,12 @@ public abstract class BaseWebUrlResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -935,11 +1304,16 @@ public abstract class BaseWebUrlResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -971,6 +1345,24 @@ public abstract class BaseWebUrlResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -992,16 +1384,6 @@ public abstract class BaseWebUrlResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

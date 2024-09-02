@@ -6,6 +6,8 @@
 package com.liferay.portal.search.tuning.rankings.web.internal.storage;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
+import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.tuning.rankings.index.Ranking;
 import com.liferay.portal.search.tuning.rankings.index.RankingBuilderFactory;
 import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexName;
@@ -13,6 +15,7 @@ import com.liferay.portal.search.tuning.rankings.storage.RankingStorageAdapter;
 import com.liferay.portal.search.tuning.rankings.web.internal.index.RankingIndexWriter;
 import com.liferay.portal.search.tuning.rankings.web.internal.storage.helper.RankingJSONStorageHelper;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -22,6 +25,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = RankingStorageAdapter.class)
 public class RankingStorageAdapterImpl implements RankingStorageAdapter {
 
+	@Override
 	public String create(Ranking ranking, RankingIndexName rankingIndexName) {
 		String rankingDocumentId = rankingJSONStorageHelper.addJSONStorageEntry(
 			ranking);
@@ -30,35 +34,48 @@ public class RankingStorageAdapterImpl implements RankingStorageAdapter {
 
 		rankingBuilder.rankingDocumentId(rankingDocumentId);
 
-		rankingIndexWriter.create(rankingIndexName, rankingBuilder.build());
+		_rankingIndexWriter.create(rankingIndexName, rankingBuilder.build());
 
 		return rankingDocumentId;
 	}
 
+	@Override
 	public void delete(
 			String rankingDocumentId, RankingIndexName rankingIndexName)
 		throws PortalException {
 
 		rankingJSONStorageHelper.deleteJSONStorageEntry(rankingDocumentId);
 
-		rankingIndexWriter.remove(rankingIndexName, rankingDocumentId);
+		_rankingIndexWriter.remove(rankingIndexName, rankingDocumentId);
 	}
 
+	@Override
 	public void update(Ranking ranking, RankingIndexName rankingIndexName)
 		throws PortalException {
 
 		rankingJSONStorageHelper.updateJSONStorageEntry(ranking);
 
-		rankingIndexWriter.update(rankingIndexName, ranking);
+		_rankingIndexWriter.update(rankingIndexName, ranking);
+	}
+
+	@Activate
+	protected void activate() {
+		_rankingIndexWriter = new RankingIndexWriter(
+			_documentBuilderFactory, _searchEngineAdapter);
 	}
 
 	@Reference
 	protected RankingBuilderFactory rankingBuilderFactory;
 
 	@Reference
-	protected RankingIndexWriter rankingIndexWriter;
+	protected RankingJSONStorageHelper rankingJSONStorageHelper;
 
 	@Reference
-	protected RankingJSONStorageHelper rankingJSONStorageHelper;
+	private DocumentBuilderFactory _documentBuilderFactory;
+
+	private RankingIndexWriter _rankingIndexWriter;
+
+	@Reference
+	private SearchEngineAdapter _searchEngineAdapter;
 
 }

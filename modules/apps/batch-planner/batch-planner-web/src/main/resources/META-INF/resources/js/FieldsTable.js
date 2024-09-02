@@ -24,9 +24,8 @@ import getFieldsFromSchema from './getFieldsFromSchema';
 
 function FieldsTable({portletNamespace}) {
 	const [fields, setFields] = useState([]);
-	const [selectedExportFileFormat, setSelectedExportFileFormat] = useState(
-		''
-	);
+	const [selectedExportFileFormat, setSelectedExportFileFormat] =
+		useState('');
 	const [selectedFields, setSelectedFields] = useState([]);
 	const useTemplateMappingRef = useRef();
 
@@ -116,9 +115,9 @@ function FieldsTable({portletNamespace}) {
 
 	return (
 		<div className="card d-flex flex-column">
-			<h4 className="card-header py-3">
+			<div className="card-header h4 py-3">
 				{Liferay.Language.get('fields')}
-			</h4>
+			</div>
 
 			<ClayAlert
 				className="m-3"

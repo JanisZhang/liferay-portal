@@ -27,6 +27,7 @@ import getReplaceCurrentURL from './utils/getReplaceCurrentURL';
 import {postCartByPaymentMethod} from './utils/postCartByPaymentMethod';
 
 import './styles/index.scss';
+import {Analytics} from '../../core/Analytics';
 import i18n from '../../i18n';
 import {Liferay} from '../../liferay/liferay';
 
@@ -46,7 +47,10 @@ const getProductBasePriceAndTrial = (
 	}
 
 	const {isFreeApp} = getProductPriceModel(product);
-	const skus = (product.skus as unknown) as DeliverySKU[];
+
+	const skus = (product.skus as unknown as DeliverySKU[])?.filter(
+		({purchasable}) => purchasable
+	);
 
 	if (isFreeApp) {
 		return {
@@ -128,7 +132,7 @@ const GetAppOutlet = () => {
 	const navigate = useNavigate();
 
 	const productBasePriceAndTrial = getProductBasePriceAndTrial(
-		(product as unknown) as DeliveryProduct,
+		product as unknown as DeliveryProduct,
 		isCloudApp
 	);
 
@@ -180,10 +184,16 @@ const GetAppOutlet = () => {
 				? await cartUtil.updateCart(orderId, {
 						...cart,
 						cartItems: cartUtil.cartItems,
-				  })
+					})
 				: await postCartByPaymentMethod(cart, channel.id);
 
 			await postCheckoutCart({cartId: cartResponse.id});
+
+			Analytics.track('APP_PURCHASE', {
+				isFreeApp,
+				paymentMethod,
+				productName: product.name,
+			});
 
 			await postEmailAppInformation({
 				dashboardLink: getReplaceCurrentURL(
@@ -202,18 +212,12 @@ const GetAppOutlet = () => {
 				`${encodeURIComponent(cartResponse.id)}`
 			);
 
-			if (paymentMethod === PaymentMethod.PAY) {
-				const paymentMethodURL = await getPaymentMethodURL(
-					cartResponse.id,
-					nextStepsCallbackURL
-				);
+			const paymentMethodURL = await getPaymentMethodURL(
+				cartResponse.id,
+				nextStepsCallbackURL
+			);
 
-				window.location.href = paymentMethodURL;
-
-				return;
-			}
-
-			window.location.href = nextStepsCallbackURL;
+			window.location.href = paymentMethodURL || nextStepsCallbackURL;
 		}
 		catch (error) {
 			console.error('Unable to handleGetApp', error);

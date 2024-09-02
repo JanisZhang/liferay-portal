@@ -5,17 +5,13 @@
 
 package com.liferay.journal.web.internal.portlet.action;
 
-import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.journal.constants.JournalPortletKeys;
-import com.liferay.journal.web.internal.display.context.JournalDisplayContext;
 import com.liferay.journal.web.internal.display.context.JournalEditArticleDisplayContext;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.trash.TrashHelper;
 
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -43,25 +39,16 @@ public class EditArticleMVCRenderCommand implements MVCRenderCommand {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
-			renderRequest);
-
-		LiferayPortletResponse liferayPortletResponse =
-			_portal.getLiferayPortletResponse(renderResponse);
-
-		JournalDisplayContext journalDisplayContext =
-			JournalDisplayContext.create(
-				httpServletRequest,
-				_portal.getLiferayPortletRequest(renderRequest),
-				liferayPortletResponse, _assetDisplayPageFriendlyURLProvider,
-				_trashHelper);
-
 		try {
+			HttpServletRequest httpServletRequest =
+				_portal.getHttpServletRequest(renderRequest);
+
 			renderRequest.setAttribute(
 				JournalEditArticleDisplayContext.class.getName(),
 				new JournalEditArticleDisplayContext(
-					httpServletRequest, liferayPortletResponse,
-					journalDisplayContext.getArticle()));
+					httpServletRequest,
+					_portal.getLiferayPortletResponse(renderResponse),
+					ActionUtil.getArticle(httpServletRequest)));
 
 			return "/edit_article.jsp";
 		}
@@ -83,13 +70,6 @@ public class EditArticleMVCRenderCommand implements MVCRenderCommand {
 		EditArticleMVCRenderCommand.class);
 
 	@Reference
-	private AssetDisplayPageFriendlyURLProvider
-		_assetDisplayPageFriendlyURLProvider;
-
-	@Reference
 	private Portal _portal;
-
-	@Reference
-	private TrashHelper _trashHelper;
 
 }

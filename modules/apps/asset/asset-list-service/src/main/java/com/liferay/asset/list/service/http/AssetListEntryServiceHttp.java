@@ -120,7 +120,8 @@ public class AssetListEntryServiceHttp {
 	}
 
 	public static com.liferay.asset.list.model.AssetListEntry addAssetListEntry(
-			HttpPrincipal httpPrincipal, long groupId, String title, int type,
+			HttpPrincipal httpPrincipal, String externalReferenceCode,
+			long groupId, String title, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -130,7 +131,8 @@ public class AssetListEntryServiceHttp {
 				_addAssetListEntryParameterTypes2);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, title, type, serviceContext);
+				methodKey, externalReferenceCode, groupId, title, type,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -162,8 +164,8 @@ public class AssetListEntryServiceHttp {
 
 	public static com.liferay.asset.list.model.AssetListEntry
 			addDynamicAssetListEntry(
-				HttpPrincipal httpPrincipal, long groupId, String title,
-				String typeSettings,
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long groupId, String title, String typeSettings,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -173,7 +175,8 @@ public class AssetListEntryServiceHttp {
 				_addDynamicAssetListEntryParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, title, typeSettings, serviceContext);
+				methodKey, externalReferenceCode, groupId, title, typeSettings,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -205,8 +208,8 @@ public class AssetListEntryServiceHttp {
 
 	public static com.liferay.asset.list.model.AssetListEntry
 			addManualAssetListEntry(
-				HttpPrincipal httpPrincipal, long groupId, String title,
-				long[] assetEntryIds,
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long groupId, String title, long[] assetEntryIds,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -216,7 +219,8 @@ public class AssetListEntryServiceHttp {
 				_addManualAssetListEntryParameterTypes4);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, title, assetEntryIds, serviceContext);
+				methodKey, externalReferenceCode, groupId, title, assetEntryIds,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -438,6 +442,49 @@ public class AssetListEntryServiceHttp {
 		}
 	}
 
+	public static com.liferay.asset.list.model.AssetListEntry
+			fetchAssetListEntryByExternalReferenceCode(
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AssetListEntryServiceUtil.class,
+				"fetchAssetListEntryByExternalReferenceCode",
+				_fetchAssetListEntryByExternalReferenceCodeParameterTypes10);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, externalReferenceCode, groupId);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.asset.list.model.AssetListEntry)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
 	public static java.util.List<com.liferay.asset.list.model.AssetListEntry>
 		getAssetListEntries(
 			HttpPrincipal httpPrincipal, long groupId, int start, int end,
@@ -448,7 +495,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntries",
-				_getAssetListEntriesParameterTypes10);
+				_getAssetListEntriesParameterTypes11);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, start, end, orderByComparator);
@@ -486,7 +533,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntries",
-				_getAssetListEntriesParameterTypes11);
+				_getAssetListEntriesParameterTypes12);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, title, start, end, orderByComparator);
@@ -523,7 +570,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntries",
-				_getAssetListEntriesParameterTypes12);
+				_getAssetListEntriesParameterTypes13);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, start, end, orderByComparator);
@@ -561,7 +608,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntries",
-				_getAssetListEntriesParameterTypes13);
+				_getAssetListEntriesParameterTypes14);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, title, start, end, orderByComparator);
@@ -599,7 +646,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntries",
-				_getAssetListEntriesParameterTypes14);
+				_getAssetListEntriesParameterTypes15);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, assetEntrySubtype, assetEntryType, start,
@@ -638,7 +685,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntries",
-				_getAssetListEntriesParameterTypes15);
+				_getAssetListEntriesParameterTypes16);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, title, assetEntrySubtype, assetEntryType,
@@ -677,7 +724,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntries",
-				_getAssetListEntriesParameterTypes16);
+				_getAssetListEntriesParameterTypes17);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, title, assetEntryTypes, start, end,
@@ -716,7 +763,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntries",
-				_getAssetListEntriesParameterTypes17);
+				_getAssetListEntriesParameterTypes18);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, assetEntryTypes, start, end,
@@ -750,7 +797,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntriesCount",
-				_getAssetListEntriesCountParameterTypes18);
+				_getAssetListEntriesCountParameterTypes19);
 
 			MethodHandler methodHandler = new MethodHandler(methodKey, groupId);
 
@@ -781,7 +828,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntriesCount",
-				_getAssetListEntriesCountParameterTypes19);
+				_getAssetListEntriesCountParameterTypes20);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, title);
@@ -813,7 +860,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntriesCount",
-				_getAssetListEntriesCountParameterTypes20);
+				_getAssetListEntriesCountParameterTypes21);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds);
@@ -845,7 +892,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntriesCount",
-				_getAssetListEntriesCountParameterTypes21);
+				_getAssetListEntriesCountParameterTypes22);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, title);
@@ -878,7 +925,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntriesCount",
-				_getAssetListEntriesCountParameterTypes22);
+				_getAssetListEntriesCountParameterTypes23);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, assetEntrySubtype, assetEntryType);
@@ -911,7 +958,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntriesCount",
-				_getAssetListEntriesCountParameterTypes23);
+				_getAssetListEntriesCountParameterTypes24);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, title, assetEntrySubtype, assetEntryType);
@@ -944,7 +991,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntriesCount",
-				_getAssetListEntriesCountParameterTypes24);
+				_getAssetListEntriesCountParameterTypes25);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, title, assetEntryTypes);
@@ -977,7 +1024,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntriesCount",
-				_getAssetListEntriesCountParameterTypes25);
+				_getAssetListEntriesCountParameterTypes26);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupIds, assetEntryTypes);
@@ -1010,7 +1057,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntry",
-				_getAssetListEntryParameterTypes26);
+				_getAssetListEntryParameterTypes27);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, assetListEntryId);
@@ -1050,10 +1097,53 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "getAssetListEntry",
-				_getAssetListEntryParameterTypes27);
+				_getAssetListEntryParameterTypes28);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, assetListEntryKey);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return (com.liferay.asset.list.model.AssetListEntry)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
+	public static com.liferay.asset.list.model.AssetListEntry
+			getAssetListEntryByExternalReferenceCode(
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				AssetListEntryServiceUtil.class,
+				"getAssetListEntryByExternalReferenceCode",
+				_getAssetListEntryByExternalReferenceCodeParameterTypes29);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, externalReferenceCode, groupId);
 
 			Object returnObj = null;
 
@@ -1092,7 +1182,7 @@ public class AssetListEntryServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class,
 				"getAssetListEntryByUuidAndGroupId",
-				_getAssetListEntryByUuidAndGroupIdParameterTypes28);
+				_getAssetListEntryByUuidAndGroupIdParameterTypes30);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, uuid, groupId);
@@ -1133,7 +1223,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "moveAssetEntrySelection",
-				_moveAssetEntrySelectionParameterTypes29);
+				_moveAssetEntrySelectionParameterTypes31);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, assetListEntryId, segmentsEntryId, position,
@@ -1172,7 +1262,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "updateAssetListEntry",
-				_updateAssetListEntryParameterTypes30);
+				_updateAssetListEntryParameterTypes32);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, assetListEntryId, segmentsEntryId, typeSettings,
@@ -1211,7 +1301,7 @@ public class AssetListEntryServiceHttp {
 		try {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class, "updateAssetListEntry",
-				_updateAssetListEntryParameterTypes31);
+				_updateAssetListEntryParameterTypes33);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, assetListEntryId, title);
@@ -1253,7 +1343,7 @@ public class AssetListEntryServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				AssetListEntryServiceUtil.class,
 				"updateAssetListEntryTypeSettings",
-				_updateAssetListEntryTypeSettingsParameterTypes32);
+				_updateAssetListEntryTypeSettingsParameterTypes34);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, assetListEntryId, segmentsEntryId, typeSettings);
@@ -1297,17 +1387,17 @@ public class AssetListEntryServiceHttp {
 		};
 	private static final Class<?>[] _addAssetListEntryParameterTypes2 =
 		new Class[] {
-			long.class, String.class, int.class,
+			String.class, long.class, String.class, int.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _addDynamicAssetListEntryParameterTypes3 =
 		new Class[] {
-			long.class, String.class, String.class,
+			String.class, long.class, String.class, String.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _addManualAssetListEntryParameterTypes4 =
 		new Class[] {
-			long.class, String.class, long[].class,
+			String.class, long.class, String.class, long[].class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _deleteAssetEntrySelectionParameterTypes5 =
@@ -1320,81 +1410,87 @@ public class AssetListEntryServiceHttp {
 		new Class[] {long.class, long.class};
 	private static final Class<?>[] _fetchAssetListEntryParameterTypes9 =
 		new Class[] {long.class};
-	private static final Class<?>[] _getAssetListEntriesParameterTypes10 =
+	private static final Class<?>[]
+		_fetchAssetListEntryByExternalReferenceCodeParameterTypes10 =
+			new Class[] {String.class, long.class};
+	private static final Class<?>[] _getAssetListEntriesParameterTypes11 =
 		new Class[] {
 			long.class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getAssetListEntriesParameterTypes11 =
+	private static final Class<?>[] _getAssetListEntriesParameterTypes12 =
 		new Class[] {
 			long.class, String.class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getAssetListEntriesParameterTypes12 =
+	private static final Class<?>[] _getAssetListEntriesParameterTypes13 =
 		new Class[] {
 			long[].class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getAssetListEntriesParameterTypes13 =
+	private static final Class<?>[] _getAssetListEntriesParameterTypes14 =
 		new Class[] {
 			long[].class, String.class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getAssetListEntriesParameterTypes14 =
+	private static final Class<?>[] _getAssetListEntriesParameterTypes15 =
 		new Class[] {
 			long[].class, String.class, String.class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getAssetListEntriesParameterTypes15 =
+	private static final Class<?>[] _getAssetListEntriesParameterTypes16 =
 		new Class[] {
 			long[].class, String.class, String.class, String.class, int.class,
 			int.class, com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getAssetListEntriesParameterTypes16 =
+	private static final Class<?>[] _getAssetListEntriesParameterTypes17 =
 		new Class[] {
 			long[].class, String.class, String[].class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getAssetListEntriesParameterTypes17 =
+	private static final Class<?>[] _getAssetListEntriesParameterTypes18 =
 		new Class[] {
 			long[].class, String[].class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _getAssetListEntriesCountParameterTypes18 =
-		new Class[] {long.class};
 	private static final Class<?>[] _getAssetListEntriesCountParameterTypes19 =
-		new Class[] {long.class, String.class};
-	private static final Class<?>[] _getAssetListEntriesCountParameterTypes20 =
-		new Class[] {long[].class};
-	private static final Class<?>[] _getAssetListEntriesCountParameterTypes21 =
-		new Class[] {long[].class, String.class};
-	private static final Class<?>[] _getAssetListEntriesCountParameterTypes22 =
-		new Class[] {long[].class, String.class, String.class};
-	private static final Class<?>[] _getAssetListEntriesCountParameterTypes23 =
-		new Class[] {long[].class, String.class, String.class, String.class};
-	private static final Class<?>[] _getAssetListEntriesCountParameterTypes24 =
-		new Class[] {long[].class, String.class, String[].class};
-	private static final Class<?>[] _getAssetListEntriesCountParameterTypes25 =
-		new Class[] {long[].class, String[].class};
-	private static final Class<?>[] _getAssetListEntryParameterTypes26 =
 		new Class[] {long.class};
+	private static final Class<?>[] _getAssetListEntriesCountParameterTypes20 =
+		new Class[] {long.class, String.class};
+	private static final Class<?>[] _getAssetListEntriesCountParameterTypes21 =
+		new Class[] {long[].class};
+	private static final Class<?>[] _getAssetListEntriesCountParameterTypes22 =
+		new Class[] {long[].class, String.class};
+	private static final Class<?>[] _getAssetListEntriesCountParameterTypes23 =
+		new Class[] {long[].class, String.class, String.class};
+	private static final Class<?>[] _getAssetListEntriesCountParameterTypes24 =
+		new Class[] {long[].class, String.class, String.class, String.class};
+	private static final Class<?>[] _getAssetListEntriesCountParameterTypes25 =
+		new Class[] {long[].class, String.class, String[].class};
+	private static final Class<?>[] _getAssetListEntriesCountParameterTypes26 =
+		new Class[] {long[].class, String[].class};
 	private static final Class<?>[] _getAssetListEntryParameterTypes27 =
+		new Class[] {long.class};
+	private static final Class<?>[] _getAssetListEntryParameterTypes28 =
 		new Class[] {long.class, String.class};
 	private static final Class<?>[]
-		_getAssetListEntryByUuidAndGroupIdParameterTypes28 = new Class[] {
+		_getAssetListEntryByExternalReferenceCodeParameterTypes29 =
+			new Class[] {String.class, long.class};
+	private static final Class<?>[]
+		_getAssetListEntryByUuidAndGroupIdParameterTypes30 = new Class[] {
 			String.class, long.class
 		};
-	private static final Class<?>[] _moveAssetEntrySelectionParameterTypes29 =
+	private static final Class<?>[] _moveAssetEntrySelectionParameterTypes31 =
 		new Class[] {long.class, long.class, int.class, int.class};
-	private static final Class<?>[] _updateAssetListEntryParameterTypes30 =
+	private static final Class<?>[] _updateAssetListEntryParameterTypes32 =
 		new Class[] {
 			long.class, long.class, String.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
-	private static final Class<?>[] _updateAssetListEntryParameterTypes31 =
+	private static final Class<?>[] _updateAssetListEntryParameterTypes33 =
 		new Class[] {long.class, String.class};
 	private static final Class<?>[]
-		_updateAssetListEntryTypeSettingsParameterTypes32 = new Class[] {
+		_updateAssetListEntryTypeSettingsParameterTypes34 = new Class[] {
 			long.class, long.class, String.class
 		};
 

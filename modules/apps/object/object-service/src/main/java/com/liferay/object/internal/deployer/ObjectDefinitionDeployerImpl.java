@@ -60,7 +60,6 @@ import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -75,7 +74,6 @@ import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
@@ -91,10 +89,10 @@ import com.liferay.user.associated.data.anonymizer.UADAnonymizer;
 import com.liferay.user.associated.data.display.UADDisplay;
 import com.liferay.user.associated.data.exporter.UADExporter;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -191,43 +189,82 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 			return ReflectionUtil.throwException(exception);
 		}
 
-		ObjectEntryModelIndexerWriterContributor
-			objectEntryModelIndexerWriterContributor =
-				new ObjectEntryModelIndexerWriterContributor(
-					_dynamicQueryBatchIndexingActionableFactory,
-					objectDefinition.getObjectDefinitionId(),
-					_objectEntryLocalService);
-		ObjectEntryModelSummaryContributor objectEntryModelSummaryContributor =
-			new ObjectEntryModelSummaryContributor();
+		List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<>();
 
-		List<ServiceRegistration<?>> serviceRegistrations = ListUtil.fromArray(
-			_bundleContext.registerService(
-				KeywordQueryContributor.class,
-				new ObjectEntryKeywordQueryContributor(
-					_objectFieldLocalService, _objectViewLocalService),
-				HashMapDictionaryBuilder.<String, Object>put(
-					"component.name",
-					ObjectEntryKeywordQueryContributor.class.getName()
-				).put(
-					"indexer.class.name", objectDefinition.getClassName()
-				).build()),
-			_bundleContext.registerService(
-				ModelDocumentContributor.class,
-				new ObjectEntryModelDocumentContributor(
-					_accountEntryOrganizationRelLocalService,
-					objectDefinition.getClassName(),
-					_objectDefinitionLocalService, _objectEntryLocalService,
-					_objectFieldLocalService),
-				HashMapDictionaryBuilder.<String, Object>put(
-					"indexer.class.name", objectDefinition.getClassName()
-				).build()),
-			_bundleContext.registerService(
-				ModelPreFilterContributor.class,
-				new ObjectEntryModelPreFilterContributor(
-					_workflowStatusModelPreFilterContributor),
-				HashMapDictionaryBuilder.<String, Object>put(
-					"indexer.class.name", objectDefinition.getClassName()
-				).build()),
+		if (objectDefinition.isEnableIndexSearch()) {
+			ObjectEntryModelIndexerWriterContributor
+				objectEntryModelIndexerWriterContributor =
+					new ObjectEntryModelIndexerWriterContributor(
+						_dynamicQueryBatchIndexingActionableFactory,
+						objectDefinition.getObjectDefinitionId(),
+						_objectEntryLocalService);
+			ObjectEntryModelSummaryContributor
+				objectEntryModelSummaryContributor =
+					new ObjectEntryModelSummaryContributor();
+
+			Collections.addAll(
+				serviceRegistrations,
+				_bundleContext.registerService(
+					KeywordQueryContributor.class,
+					new ObjectEntryKeywordQueryContributor(
+						_objectFieldLocalService, _objectViewLocalService),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"component.name",
+						ObjectEntryKeywordQueryContributor.class.getName()
+					).put(
+						"indexer.class.name", objectDefinition.getClassName()
+					).build()),
+				_bundleContext.registerService(
+					ModelDocumentContributor.class,
+					new ObjectEntryModelDocumentContributor(
+						_accountEntryOrganizationRelLocalService,
+						objectDefinition.getClassName(),
+						_objectDefinitionLocalService, _objectEntryLocalService,
+						_objectFieldLocalService),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"indexer.class.name", objectDefinition.getClassName()
+					).build()),
+				_bundleContext.registerService(
+					ModelPreFilterContributor.class,
+					new ObjectEntryModelPreFilterContributor(
+						_workflowStatusModelPreFilterContributor),
+					HashMapDictionaryBuilder.<String, Object>put(
+						"indexer.class.name", objectDefinition.getClassName()
+					).build()),
+				_bundleContext.registerService(
+					ModelSearchConfigurator.class,
+					new ModelSearchConfigurator<ObjectEntry>() {
+
+						@Override
+						public String getClassName() {
+							return objectDefinition.getClassName();
+						}
+
+						@Override
+						public long getCompanyId() {
+							return objectDefinition.getCompanyId();
+						}
+
+						@Override
+						public ModelIndexerWriterContributor<ObjectEntry>
+							getModelIndexerWriterContributor() {
+
+							return objectEntryModelIndexerWriterContributor;
+						}
+
+						@Override
+						public ModelSummaryContributor
+							getModelSummaryContributor() {
+
+							return objectEntryModelSummaryContributor;
+						}
+
+					},
+					null));
+		}
+
+		Collections.addAll(
+			serviceRegistrations,
 			_bundleContext.registerService(
 				NotificationHandler.class,
 				new ObjectDefinitionNotificationHandler(objectDefinition),
@@ -293,36 +330,6 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				HashMapDictionaryBuilder.<String, Object>put(
 					"model.class.name", objectDefinition.getClassName()
 				).build()),
-			_bundleContext.registerService(
-				ModelSearchConfigurator.class,
-				new ModelSearchConfigurator<ObjectEntry>() {
-
-					@Override
-					public String getClassName() {
-						return objectDefinition.getClassName();
-					}
-
-					@Override
-					public long getCompanyId() {
-						return objectDefinition.getCompanyId();
-					}
-
-					@Override
-					public ModelIndexerWriterContributor<ObjectEntry>
-						getModelIndexerWriterContributor() {
-
-						return objectEntryModelIndexerWriterContributor;
-					}
-
-					@Override
-					public ModelSummaryContributor
-						getModelSummaryContributor() {
-
-						return objectEntryModelSummaryContributor;
-					}
-
-				},
-				null),
 			_objectRelatedModelsProviderRegistrarHelper.register(
 				_bundleContext, objectDefinition,
 				new ObjectEntryMtoMObjectRelatedModelsProviderImpl(
@@ -379,28 +386,6 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 					).build()));
 		}
 
-		try {
-			for (Locale locale : LanguageUtil.getAvailableLocales()) {
-				String languageId = LocaleUtil.toLanguageId(locale);
-
-				_ploEntryLocalService.addOrUpdatePLOEntry(
-					objectDefinition.getCompanyId(),
-					objectDefinition.getUserId(),
-					"model.resource." + objectDefinition.getResourceName(),
-					languageId, objectDefinition.getPluralLabel(locale));
-				_ploEntryLocalService.addOrUpdatePLOEntry(
-					objectDefinition.getCompanyId(),
-					objectDefinition.getUserId(),
-					"model.resource.com.liferay.object.model." +
-						"ObjectDefinition#" +
-							objectDefinition.getObjectDefinitionId(),
-					languageId, objectDefinition.getLabel(locale));
-			}
-		}
-		catch (PortalException portalException) {
-			return ReflectionUtil.throwException(portalException);
-		}
-
 		ObjectLayout objectLayout =
 			_objectLayoutLocalService.fetchDefaultObjectLayout(
 				objectDefinition.getObjectDefinitionId());
@@ -426,17 +411,6 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 		}
 
 		return serviceRegistrations;
-	}
-
-	@Override
-	public void undeploy(ObjectDefinition objectDefinition) {
-		_ploEntryLocalService.deletePLOEntries(
-			objectDefinition.getCompanyId(),
-			"model.resource." + objectDefinition.getResourceName());
-		_ploEntryLocalService.deletePLOEntries(
-			objectDefinition.getCompanyId(),
-			"model.resource.com.liferay.object.model.ObjectDefinition#" +
-				objectDefinition.getObjectDefinitionId());
 	}
 
 	private String _getServiceRegistrationKey(

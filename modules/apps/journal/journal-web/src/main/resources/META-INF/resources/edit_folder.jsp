@@ -23,7 +23,7 @@ boolean workflowEnabled = WorkflowHandlerRegistryUtil.getWorkflowHandler(Journal
 List<WorkflowDefinition> workflowDefinitions = null;
 
 if (workflowEnabled) {
-	workflowDefinitions = WorkflowDefinitionManagerUtil.getActiveWorkflowDefinitions(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	workflowDefinitions = WorkflowDefinitionManagerUtil.liberalGetActiveWorkflowDefinitions(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 }
 
 String languageId = LocaleUtil.toLanguageId(locale);
@@ -56,13 +56,7 @@ renderResponse.setTitle(title);
 <liferay-util:buffer
 	var="removeButton"
 >
-	<button
-		aria-label='<%= LanguageUtil.get(request, "remove") %>'
-		class="btn btn-monospaced btn-outline-borderless btn-outline-secondary float-right modify-link"
-		data-rowId="REMOVE_BUTTON_ROW_ID"
-		title='<%= LanguageUtil.get(request, "remove") %>'
-		type="button"
-	>
+	<button aria-label="<%= LanguageUtil.get(request, "remove") %>" class="btn btn-monospaced btn-outline-borderless btn-outline-secondary float-right modify-link" data-rowId="REMOVE_BUTTON_ROW_ID" title="<%= LanguageUtil.get(request, "remove") %>" type="button">
 		<clay:icon
 			symbol="times-circle"
 		/>
@@ -312,7 +306,7 @@ renderResponse.setTitle(title);
 									"workflowEnabled", workflowEnabled
 								).build()
 							%>'
-							module="js/SelectDDMStructureButton"
+							module="{SelectDDMStructureButton} from journal-web"
 						/>
 					</div>
 				</c:if>

@@ -3,7 +3,7 @@
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" change-tracking-enabled="true" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.asset.list">
 	<namespace>AssetList</namespace>
-	<entity local-service="true" name="AssetListEntry" remote-service="true" uuid="true">
+	<entity external-reference-code="group" local-service="true" name="AssetListEntry" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -108,6 +108,9 @@
 
 		<finder name="AssetListEntryId" return-type="Collection">
 			<finder-column name="assetListEntryId" />
+		</finder>
+		<finder name="AssetEntryId" return-type="Collection">
+			<finder-column name="assetEntryId" />
 		</finder>
 		<finder name="A_S" return-type="Collection">
 			<finder-column name="assetListEntryId" />

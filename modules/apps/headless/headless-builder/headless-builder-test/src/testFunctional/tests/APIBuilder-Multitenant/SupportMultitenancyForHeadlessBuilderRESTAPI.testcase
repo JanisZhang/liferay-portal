@@ -4,8 +4,7 @@ definition {
 	property custom.properties = "feature.flag.LPS-178642=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -32,7 +31,7 @@ definition {
 				virtualHost = "www.able.com");
 
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com",
 				virtualHostsURL = "http://www.able.com:8080");
 		}

@@ -59,22 +59,20 @@ const populateNotificationsData = (
 									accountRoles.items
 								);
 
-								const roleKey =
+								const roleName =
 									element?.data?.notifications?.recipients[
 										index
-									]?.[0]?.roleKey;
+									]?.[0]?.roleName;
 
-								if (!roleKey) {
+								if (!roleName) {
 									return;
 								}
 
 								const roleNames = [];
 
-								roleKey.forEach((key) => {
+								roleName.forEach((name) => {
 									const role = items.find(
-										(item) =>
-											item.externalReferenceCode ===
-												key || item.displayName === key
+										(item) => item.name === name
 									);
 
 									if (
@@ -108,20 +106,19 @@ const populateNotificationsData = (
 					) {
 						const sectionsData = [];
 
-						let filterTypeRetrieveUsersBy = Object.keys(
-							recipient
-						)[1];
-						const keywordRetrieveUsersBy = Object.values(
-							recipient
-						)[1];
+						let filterTypeRetrieveUsersBy =
+							Object.keys(recipient)[1];
+						const keywordRetrieveUsersBy =
+							Object.values(recipient)[1];
 
 						if (filterTypeRetrieveUsersBy === 'screenName') {
 							filterTypeRetrieveUsersBy = 'alternateName';
 						}
 						else if (filterTypeRetrieveUsersBy === 'userId') {
-							filterTypeRetrieveUsersBy = filterTypeRetrieveUsersBy
-								.toLocaleLowerCase()
-								.replace('user', '');
+							filterTypeRetrieveUsersBy =
+								filterTypeRetrieveUsersBy
+									.toLocaleLowerCase()
+									.replace('user', '');
 						}
 
 						retrieveUsersBy(
@@ -152,7 +149,7 @@ const populateNotificationsData = (
 					}
 				});
 			}
-			if (element.data?.taskTimers?.timerNotifications[0]) {
+			if (element.data?.taskTimers?.timerNotifications[0]?.recipients) {
 				const recipients =
 					element.data.taskTimers.timerNotifications[0].recipients;
 
@@ -200,26 +197,24 @@ const populateNotificationsData = (
 									accountRoles.items
 								);
 
-								let roleKey =
+								let roleName =
 									element?.data?.taskTimers
 										?.timerNotifications[0]?.recipients[
 										index
-									]?.[0]?.roleKey;
+									]?.[0]?.roleName;
 
-								if (!roleKey) {
+								if (!roleName) {
 									return;
 								}
 
-								if (!Array.isArray(roleKey)) {
-									roleKey = [roleKey];
+								if (!Array.isArray(roleName)) {
+									roleName = [roleName];
 								}
 								const roleNames = [];
 
-								roleKey.forEach((key) => {
+								roleName.forEach((name) => {
 									const role = items.find(
-										(item) =>
-											item.externalReferenceCode ===
-												key || item.displayName === key
+										(item) => item.name === name
 									);
 
 									if (
@@ -252,20 +247,19 @@ const populateNotificationsData = (
 							recipient.screenName ||
 							recipient.userId)
 					) {
-						let filterTypeRetrieveUsersBy = Object.keys(
-							recipient
-						)[1];
-						const keywordRetrieveUsersBy = Object.values(
-							recipient
-						)[1];
+						let filterTypeRetrieveUsersBy =
+							Object.keys(recipient)[1];
+						const keywordRetrieveUsersBy =
+							Object.values(recipient)[1];
 
 						if (filterTypeRetrieveUsersBy === 'screenName') {
 							filterTypeRetrieveUsersBy = 'alternateName';
 						}
 						else if (filterTypeRetrieveUsersBy === 'userId') {
-							filterTypeRetrieveUsersBy = filterTypeRetrieveUsersBy
-								.toLocaleLowerCase()
-								.replace('user', '');
+							filterTypeRetrieveUsersBy =
+								filterTypeRetrieveUsersBy
+									.toLocaleLowerCase()
+									.replace('user', '');
 						}
 
 						retrieveUsersBy(

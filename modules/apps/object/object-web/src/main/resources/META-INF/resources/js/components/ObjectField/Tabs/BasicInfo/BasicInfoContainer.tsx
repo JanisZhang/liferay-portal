@@ -72,11 +72,11 @@ export function BasicInfoContainer({
 		<div
 			className={classNames({
 				'lfr-objects__edit-object-field-card-content': !modelBuilder,
-				'lfr-objects__edit-object-field-model-builder-panel': modelBuilder,
+				'lfr-objects__edit-object-field-model-builder-panel':
+					modelBuilder,
 			})}
 		>
 			<InputLocalized
-				disableFlag={readOnly}
 				disabled={readOnly}
 				error={errors.label}
 				label={Liferay.Language.get('label')}

@@ -14,7 +14,7 @@ import {addAlert} from 'shared/actions/alerts';
 import {Alert, FilterByType} from 'shared/types';
 import {ALERT_CONFIG_MAP, AlertTypes} from 'shared/components/Alert';
 import {close, modalTypes, open} from 'shared/actions/modals';
-import {compose, withCurrentUser} from 'shared/hoc';
+import {compose} from 'shared/hoc';
 import {connect, ConnectedProps} from 'react-redux';
 import {createOrderIOMap} from 'shared/util/pagination';
 import {
@@ -24,8 +24,7 @@ import {
 } from 'shared/util/pagination';
 import {Link} from 'react-router-dom';
 import {OrderedMap} from 'immutable';
-import {OrderParams, User} from 'shared/util/records';
-import {RootState} from 'shared/store';
+import {OrderParams} from 'shared/util/records';
 import {
 	Routes,
 	SEGMENT_STATE,
@@ -37,7 +36,9 @@ import {segmentsListColumns} from 'shared/util/table-columns';
 import {SegmentStates, SegmentTypes, Sizes} from 'shared/util/constants';
 import {setUriQueryValues} from 'shared/util/router';
 import {sub} from 'shared/util/lang';
-import {useQueryPagination} from 'shared/hooks';
+import {useCurrentUser} from 'shared/hooks/useCurrentUser';
+import {useQueryPagination} from 'shared/hooks/useQueryPagination';
+import {useTimeZone} from 'shared/hooks/useTimeZone';
 
 export interface FetchSegmentsParams {
 	channelId: string;
@@ -76,24 +77,12 @@ function fetchDisabledSegments(
 	});
 }
 
-const connector = connect(
-	(store: RootState, {groupId}: {groupId: string}) => ({
-		timeZoneId: store.getIn([
-			'projects',
-			groupId,
-			'data',
-			'timeZone',
-			'timeZoneId'
-		])
-	}),
-	{addAlert, close, open}
-);
+const connector = connect(null, {addAlert, close, open});
 
 type PropsFromRedux = ConnectedProps<typeof connector>;
 
 interface IListProps extends PropsFromRedux {
 	channelId: string;
-	currentUser: User;
 	groupId: string;
 	history: any;
 }
@@ -102,12 +91,12 @@ export const List: React.FC<IListProps> = ({
 	addAlert,
 	channelId,
 	close,
-	currentUser,
 	groupId,
 	history,
-	open,
-	timeZoneId
+	open
 }) => {
+	const {timeZoneId} = useTimeZone();
+	const currentUser = useCurrentUser();
 	const _tableRef = useRef<HTMLDivElement & SearchableEntityTable>();
 
 	const {delta, orderIOMap, page, query} = useQueryPagination({
@@ -225,11 +214,11 @@ export const List: React.FC<IListProps> = ({
 		open(modalTypes.CONFIRMATION_MODAL, {
 			message: (
 				<div>
-					<h4 className='text-secondary'>
+					<div className='h4 text-secondary'>
 						{Liferay.Language.get(
 							'are-you-sure-you-want-to-delete-this-segment'
 						)}
-					</h4>
+					</div>
 
 					<p>
 						{Liferay.Language.get(
@@ -316,9 +305,7 @@ export const List: React.FC<IListProps> = ({
 					groupId
 				})
 			),
-			label: Liferay.Language.get('dynamic-segment'),
-			onClick: () =>
-				analytics.track('Dynamic Segment Creation - Clicked Create')
+			label: Liferay.Language.get('dynamic-segment')
 		},
 		{
 			href: setUriQueryValues(
@@ -328,9 +315,7 @@ export const List: React.FC<IListProps> = ({
 					groupId
 				})
 			),
-			label: Liferay.Language.get('static-segment'),
-			onClick: () =>
-				analytics.track('Static Segment Creation - Clicked Create')
+			label: Liferay.Language.get('static-segment')
 		}
 	];
 
@@ -396,4 +381,4 @@ export const List: React.FC<IListProps> = ({
 	);
 };
 
-export default compose(connector, withCurrentUser)(List);
+export default compose(connector)(List);

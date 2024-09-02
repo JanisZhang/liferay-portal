@@ -3,23 +3,59 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useContext} from 'react';
+import {useMemo} from 'react';
 import {useParams} from 'react-router-dom';
 import ProgressBar from '~/components/ProgressBar';
-import {TestrayContext, TestrayTypes} from '~/context/TestrayContext';
+import {useFetch} from '~/hooks/useFetch';
 
 import Container from '../../../../../../components/Layout/Container';
 import ListView from '../../../../../../components/ListView';
 import SearchBuilder from '../../../../../../core/SearchBuilder';
 import i18n from '../../../../../../i18n';
-import {testrayRunImpl} from '../../../../../../services/rest';
+import {
+	APIResponse,
+	TestrayFactor,
+	testrayFactorRest,
+	testrayRunImpl,
+} from '../../../../../../services/rest';
 import RunFormModal from './RunFormModal';
 import useRunActions from './useRunActions';
 
+const getCategoryName = (name = '') =>
+	name
+		.replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) =>
+			index === 0 ? word.toLowerCase() : word.toUpperCase()
+		)
+		.replace(/\s+/g, '');
+
 const Runs = () => {
 	const {actions, formModal} = useRunActions();
-	const {buildId} = useParams();
-	const [, dispatch] = useContext(TestrayContext);
+	const {buildId, routineId} = useParams();
+
+	const {data: factorsData} = useFetch<APIResponse<TestrayFactor>>(
+		testrayFactorRest.resource,
+		{
+			params: {
+				filter: SearchBuilder.eq('routineId', routineId as string),
+				pageSize: 100,
+			},
+			transformData: (response) =>
+				testrayFactorRest.transformDataFromList(response),
+		}
+	);
+
+	const factorItems = useMemo(
+		() => factorsData?.items || [],
+		[factorsData?.items]
+	);
+
+	const factorCategoryName = factorItems
+		.map(({factorCategory}) => ({
+			clickable: true,
+			key: getCategoryName(factorCategory?.name) as string,
+			value: i18n.translate(`${factorCategory?.name}`),
+		}))
+		.sort((a: any, b: any) => a?.value?.localeCompare(b?.value));
 
 	return (
 		<Container className="mt-4">
@@ -32,131 +68,115 @@ const Runs = () => {
 						total: false,
 						untested: false,
 					},
-					columnsFixed: ['number'],
+					columnsFixed: ['testrayRunNumber'],
 				}}
 				managementToolbarProps={{
 					addButton: () => formModal.modal.open(),
+					applyFilters: true,
 					filterSchema: 'buildRuns',
 					title: i18n.translate('runs'),
 				}}
-				resource="/runs"
+				resource={`/testray-status-metrics/by-testray-buildId/${buildId}/testray-runs-metrics`}
 				tableProps={{
 					actions,
 					columns: [
 						{
 							clickable: true,
-							key: 'number',
+							key: 'testrayRunNumber',
 							render: (number) =>
 								number?.toString().padStart(2, '0'),
 							value: i18n.translate('run'),
 						},
+						...factorCategoryName,
 						{
 							clickable: true,
-							key: 'applicationServer',
-							value: i18n.translate('application-server'),
+							key: 'untested',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.untested,
+
+							value: i18n.translate('untested'),
 						},
 						{
 							clickable: true,
-							key: 'browser',
-							value: i18n.translate('browser'),
-						},
-						{
-							clickable: true,
-							key: 'database',
-							value: i18n.translate('database'),
-						},
-						{
-							clickable: true,
-							key: 'javaJDK',
-							value: 'javaJDK',
-						},
-						{
-							clickable: true,
-							key: 'operatingSystem',
-							value: i18n.translate('operating-system'),
-						},
-						{
-							clickable: true,
-							key: 'caseResultFailed',
-							value: i18n.translate('failed'),
-						},
-						{
-							clickable: true,
-							key: 'caseResultBlocked',
-							value: i18n.translate('blocked'),
-						},
-						{
-							clickable: true,
-							key: 'caseResultsInProgress',
+							key: 'in-progress',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.inProgress,
 							value: i18n.translate('in-progress'),
 						},
 						{
 							clickable: true,
-							key: 'caseResultPassed',
+							key: 'passed',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.passed,
 							value: i18n.translate('passed'),
 						},
 						{
 							clickable: true,
-							key: 'caseResultTestFix',
+							key: 'failed',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.failed,
+							value: i18n.translate('failed'),
+						},
+						{
+							clickable: true,
+							key: 'blocked',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.blocked,
+							value: i18n.translate('blocked'),
+						},
+						{
+							clickable: true,
+							key: 'test-fix',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.testfix,
 							value: i18n.translate('test-fix'),
 						},
 						{
 							clickable: true,
 							key: 'total',
-							render: (_, testrayRun) =>
-								[
-									testrayRun?.caseResultBlocked,
-									testrayRun?.caseResultFailed,
-									testrayRun?.caseResultInProgress,
-									testrayRun?.caseResultIncomplete,
-									testrayRun?.caseResultPassed,
-									testrayRun?.caseResultTestFix,
-									testrayRun?.caseResultUntested,
-								].reduce(
-									(previousValue, currentValue) =>
-										previousValue + currentValue
-								),
-							size: 'sm',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.total,
 							value: i18n.translate('total'),
 						},
 						{
-							key: 'metrics',
-							render: (_, testrayRun) => (
+							clickable: true,
+							key: 'testrayStatusMetric',
+							render: (testrayStatusMetric) => (
 								<ProgressBar
+									chartOrder={[
+										'passed',
+										'failed',
+										'blocked',
+										'test_fix',
+										'incomplete',
+									]}
 									items={{
-										blocked: testrayRun?.caseResultBlocked,
-										failed: testrayRun?.caseResultFailed,
+										blocked: testrayStatusMetric?.blocked,
+										failed: testrayStatusMetric?.failed,
 										incomplete:
-											testrayRun?.caseResultIncomplete,
-										passed: testrayRun?.caseResultPassed,
-										test_fix: testrayRun?.caseResultTestFix,
+											testrayStatusMetric?.untested +
+											testrayStatusMetric?.inProgress,
+										passed: testrayStatusMetric?.passed,
+										test_fix: testrayStatusMetric?.testfix,
 									}}
 								/>
 							),
+							size: 'sm',
 							value: i18n.translate('metrics'),
 							width: '300',
 						},
 					],
-					navigateTo: (run) =>
+					navigateTo: ({testrayRunId}) =>
 						`..?${new URLSearchParams({
 							filter: JSON.stringify({
-								'runToCaseResult/id': [run.id],
+								testrayRunId: [testrayRunId],
 							}),
 							filterSchema: 'buildResults',
 						})}`,
-					onClickRow(item) {
-						dispatch({
-							payload: item.number,
-							type: TestrayTypes.SET_RUN,
-						});
-					},
 				}}
 				transformData={(response) =>
 					testrayRunImpl.transformDataFromList(response)
 				}
-				variables={{
-					filter: SearchBuilder.eq('buildId', buildId as string),
-				}}
 			/>
 
 			<RunFormModal modal={formModal.modal} />

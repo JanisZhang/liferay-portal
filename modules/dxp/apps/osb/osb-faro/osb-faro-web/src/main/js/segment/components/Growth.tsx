@@ -47,7 +47,7 @@ import {OrderByDirections, RangeKeyTimeRanges} from 'shared/util/constants';
 import {OrderedMap} from 'immutable';
 import {OrderParams} from 'shared/util/records';
 import {sub} from 'shared/util/lang';
-import {useStatefulPagination} from 'shared/hooks';
+import {useStatefulPagination} from 'shared/hooks/useStatefulPagination';
 
 const {
 	greyjoy: CHART_BLACK,
@@ -401,7 +401,7 @@ export const SegmentGrowthChart: React.FC<ISegmentGrowthChartProps> = ({
 					<Legend
 						align='left'
 						formatter={(value, {count}) => (
-							<span>
+							<span className='legend-text-color'>
 								{`${value}:`}
 
 								<b className='ml-1'>{count}</b>
@@ -544,7 +544,7 @@ export const SegmentGrowthChart: React.FC<ISegmentGrowthChartProps> = ({
 
 export const SelectedPointInfo: React.FC = () => (
 	<div className='selected-point-info'>
-		<h4>{Liferay.Language.get('known-members')}</h4>
+		<div className='h4'>{Liferay.Language.get('known-members')}</div>
 	</div>
 );
 

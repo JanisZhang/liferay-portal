@@ -18,15 +18,14 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.VirtualHost;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
-import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.VirtualHostLocalService;
-import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -65,11 +64,27 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 		VirtualHost virtualHost = _virtualHostLocalService.fetchVirtualHost(
 			host);
 
+		long companyId = 0;
+
+		if (virtualHost != null) {
+			companyId = virtualHost.getCompanyId();
+		}
+		else {
+			companyId = PortalInstancePool.getDefaultCompanyId();
+		}
+
+		PermissionChecker permissionChecker = _getPermissionChecker(
+			companyId, dynamicServletRequest);
+
+		if (permissionChecker == null) {
+			return;
+		}
+
 		String currentURL = _portal.getCurrentURL(dynamicServletRequest);
 
 		if (Validator.isNull(currentURL)) {
 			_addVirtualHostAttributesAndParameters(
-				dynamicServletRequest, null, virtualHost);
+				dynamicServletRequest, null, permissionChecker, virtualHost);
 
 			return;
 		}
@@ -92,7 +107,7 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 
 		if (Validator.isNull(currentURL)) {
 			_addVirtualHostAttributesAndParameters(
-				dynamicServletRequest, null, virtualHost);
+				dynamicServletRequest, null, permissionChecker, virtualHost);
 
 			return;
 		}
@@ -117,7 +132,8 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 			currentURL.equals(StringPool.SLASH)) {
 
 			_addVirtualHostAttributesAndParameters(
-				dynamicServletRequest, languageId, virtualHost);
+				dynamicServletRequest, languageId, permissionChecker,
+				virtualHost);
 
 			return;
 		}
@@ -128,7 +144,8 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 			(urlParts.length != 4)) {
 
 			_addVirtualHostAttributesAndParameters(
-				dynamicServletRequest, languageId, virtualHost);
+				dynamicServletRequest, languageId, permissionChecker,
+				virtualHost);
 
 			return;
 		}
@@ -140,18 +157,10 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 			  _PRIVATE_USER_SERVLET_MAPPING.equals(urlPrefix))) {
 
 			_addVirtualHostAttributesAndParameters(
-				dynamicServletRequest, languageId, virtualHost);
+				dynamicServletRequest, languageId, permissionChecker,
+				virtualHost);
 
 			return;
-		}
-
-		long companyId = 0;
-
-		if (virtualHost != null) {
-			companyId = virtualHost.getCompanyId();
-		}
-		else {
-			companyId = PortalInstancePool.getDefaultCompanyId();
 		}
 
 		Group group = _groupLocalService.fetchFriendlyURLGroup(
@@ -159,28 +168,18 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 
 		if (group == null) {
 			_addVirtualHostAttributesAndParameters(
-				dynamicServletRequest, languageId, virtualHost);
+				dynamicServletRequest, languageId, permissionChecker,
+				virtualHost);
 
 			return;
 		}
-
-		User user = _getUser(group.getCompanyId(), dynamicServletRequest);
-
-		if (user == null) {
-			_addVirtualHostAttributesAndParameters(
-				dynamicServletRequest, languageId, virtualHost);
-
-			return;
-		}
-
-		PermissionChecker permissionChecker = _permissionCheckerFactory.create(
-			user);
 
 		Layout layout = _getFirstLayout(group.getGroupId(), permissionChecker);
 
 		if (layout == null) {
 			_addVirtualHostAttributesAndParameters(
-				dynamicServletRequest, languageId, virtualHost);
+				dynamicServletRequest, languageId, permissionChecker,
+				virtualHost);
 
 			return;
 		}
@@ -206,27 +205,15 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 
 	private void _addVirtualHostAttributesAndParameters(
 		DynamicServletRequest dynamicServletRequest, String languageId,
-		VirtualHost virtualHost) {
+		PermissionChecker permissionChecker, VirtualHost virtualHost) {
 
 		if ((virtualHost == null) || (virtualHost.getLayoutSetId() == 0)) {
 			return;
 		}
 
-		LayoutSet layoutSet = null;
-
 		try {
-			layoutSet = _layoutSetLocalService.getLayoutSet(
+			LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
 				virtualHost.getLayoutSetId());
-
-			User user = _getUser(
-				layoutSet.getCompanyId(), dynamicServletRequest);
-
-			if (user == null) {
-				return;
-			}
-
-			PermissionChecker permissionChecker =
-				_permissionCheckerFactory.create(user);
 
 			Layout layout = _getFirstLayout(
 				layoutSet.getGroupId(), permissionChecker);
@@ -246,38 +233,39 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 	private Layout _getFirstLayout(
 		long groupId, PermissionChecker permissionChecker) {
 
-		Layout layout = _getFirstLayout(groupId, permissionChecker, false);
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
 
-		if (layout != null) {
-			return layout;
-		}
+		try {
+			PermissionThreadLocal.setPermissionChecker(permissionChecker);
 
-		return _getFirstLayout(groupId, permissionChecker, true);
-	}
+			Layout layout = _layoutService.fetchFirstLayout(
+				groupId, false, false);
 
-	private Layout _getFirstLayout(
-		long groupId, PermissionChecker permissionChecker,
-		boolean privateLayout) {
-
-		for (Layout layout :
-				_layoutLocalService.getLayouts(groupId, privateLayout)) {
-
-			if (_hasViewPermission(layout, permissionChecker)) {
+			if (layout != null) {
 				return layout;
 			}
-		}
 
-		return null;
+			return _layoutService.fetchFirstLayout(groupId, true, false);
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+		}
 	}
 
-	private User _getUser(
+	private PermissionChecker _getPermissionChecker(
 		long companyId, DynamicServletRequest dynamicServletRequest) {
 
 		try {
 			User user = _portal.getUser(dynamicServletRequest);
 
+			if (user == null) {
+				user = _userLocalService.fetchGuestUser(companyId);
+			}
+
 			if (user != null) {
-				return user;
+				return _permissionCheckerFactory.create(user);
 			}
 		}
 		catch (PortalException portalException) {
@@ -286,26 +274,7 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 			}
 		}
 
-		return _userLocalService.fetchGuestUser(companyId);
-	}
-
-	private boolean _hasViewPermission(
-		Layout layout, PermissionChecker permissionChecker) {
-
-		try {
-			if (LayoutPermissionUtil.contains(
-					permissionChecker, layout, ActionKeys.VIEW)) {
-
-				return true;
-			}
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
-			}
-		}
-
-		return false;
+		return null;
 	}
 
 	private static final String _PRIVATE_GROUP_SERVLET_MAPPING =
@@ -324,7 +293,7 @@ public class CommonStatusLayoutUtilityPageEntryRequestContributor
 	private GroupLocalService _groupLocalService;
 
 	@Reference
-	private LayoutLocalService _layoutLocalService;
+	private LayoutService _layoutService;
 
 	@Reference
 	private LayoutSetLocalService _layoutSetLocalService;

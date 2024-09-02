@@ -215,6 +215,9 @@ components:
                     type: string
                 billingAddress:
                     $ref: "#/components/schemas/BillingAddress"
+                billingAddressExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
                 billingAddressId:
                     example: 31130
                     format: int64
@@ -251,6 +254,9 @@ components:
                     example: Orders delivery terms description
                     readOnly: true
                     type: string
+                deliveryTermExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
                 deliveryTermId:
                     example: 30130
                     format: int64
@@ -275,6 +281,9 @@ components:
                 modifiedDate:
                     example: 2017-08-21
                     format: date
+                    type: string
+                name:
+                    example: Order Name
                     type: string
                 orderDate:
                     example: 2017-07-21
@@ -315,6 +324,9 @@ components:
                     example: Orders payment terms description
                     readOnly: true
                     type: string
+                paymentTermExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
                 paymentTermId:
                     example: 30130
                     format: int64
@@ -336,6 +348,9 @@ components:
                     type: string
                 shippingAddress:
                     $ref: "#/components/schemas/ShippingAddress"
+                shippingAddressExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
                 shippingAddressId:
                     example: 31130
                     format: int64
@@ -753,6 +768,9 @@ components:
                     example: "1234123124"
                     readOnly: true
                     type: string
+                replacedSkuExternalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
                 replacedSkuId:
                     format: int64
                     type: integer
@@ -767,6 +785,9 @@ components:
                     type: number
                 shippingAddress:
                     $ref: "#/components/schemas/ShippingAddress"
+                shippingAddressExternalReferenceCode:
+                    example: AB-34098-789-N
+                    type: string
                 shippingAddressId:
                     example: 31130
                     format: int64
@@ -1390,7 +1411,7 @@ info:
         name: Commerce Team
     description:
         "Liferay Commerce Admin Order API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.admin.order.client', and version '4.0.38'."
+        artifact ID 'com.liferay.headless.commerce.admin.order.client', and version '4.0.43'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -5824,10 +5845,14 @@ paths:
                             $ref: "#/components/schemas/Order"
                 required: true
             responses:
-                202:
-                    description:
-                        Async
-                204:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Order"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Order"
                     description:
                         Updated
                 400:
@@ -6709,10 +6734,14 @@ paths:
                             $ref: "#/components/schemas/Order"
                 required: true
             responses:
-                202:
-                    description:
-                        Async
-                204:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Order"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Order"
                     description:
                         Updated
                 400:

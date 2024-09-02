@@ -35,10 +35,12 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -59,8 +61,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -102,7 +102,7 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 			ReplenishmentItemResource.builder();
 
 		replenishmentItemResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -116,7 +116,33 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ReplenishmentItem replenishmentItem1 = randomReplenishmentItem();
+
+		String json = objectMapper.writeValueAsString(replenishmentItem1);
+
+		ReplenishmentItem replenishmentItem2 = ReplenishmentItemSerDes.toDTO(
+			json);
+
+		Assert.assertTrue(equals(replenishmentItem1, replenishmentItem2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ReplenishmentItem replenishmentItem = randomReplenishmentItem();
+
+		String json1 = objectMapper.writeValueAsString(replenishmentItem);
+		String json2 = ReplenishmentItemSerDes.toJSON(replenishmentItem);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -131,41 +157,6 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ReplenishmentItem replenishmentItem1 = randomReplenishmentItem();
-
-		String json = objectMapper.writeValueAsString(replenishmentItem1);
-
-		ReplenishmentItem replenishmentItem2 = ReplenishmentItemSerDes.toDTO(
-			json);
-
-		Assert.assertTrue(equals(replenishmentItem1, replenishmentItem2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ReplenishmentItem replenishmentItem = randomReplenishmentItem();
-
-		String json1 = objectMapper.writeValueAsString(replenishmentItem);
-		String json2 = ReplenishmentItemSerDes.toJSON(replenishmentItem);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -256,6 +247,8 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 		ReplenishmentItem replenishmentItem =
 			testGraphQLGetReplenishmentItemByExternalReferenceCode_addReplenishmentItem();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				replenishmentItem,
@@ -277,6 +270,33 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/replenishmentItemByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertTrue(
+			equals(
+				replenishmentItem,
+				ReplenishmentItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminInventory_v1_0",
+								new GraphQLField(
+									"replenishmentItemByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													replenishmentItem.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminInventory_v1_0",
+						"Object/replenishmentItemByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -285,6 +305,8 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -300,6 +322,27 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"replenishmentItemByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -382,7 +425,10 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteReplenishmentItem() throws Exception {
-		ReplenishmentItem replenishmentItem =
+
+		// No namespace
+
+		ReplenishmentItem replenishmentItem1 =
 			testGraphQLDeleteReplenishmentItem_addReplenishmentItem();
 
 		Assert.assertTrue(
@@ -394,11 +440,12 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 							{
 								put(
 									"replenishmentItemId",
-									replenishmentItem.getId());
+									replenishmentItem1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteReplenishmentItem"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"replenishmentItem",
@@ -406,13 +453,54 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 						{
 							put(
 								"replenishmentItemId",
-								replenishmentItem.getId());
+								replenishmentItem1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		ReplenishmentItem replenishmentItem2 =
+			testGraphQLDeleteReplenishmentItem_addReplenishmentItem();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"deleteReplenishmentItem",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"replenishmentItemId",
+										replenishmentItem2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminInventory_v1_0",
+				"Object/deleteReplenishmentItem"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminInventory_v1_0",
+					new GraphQLField(
+						"replenishmentItem",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"replenishmentItemId",
+									replenishmentItem2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ReplenishmentItem
@@ -447,6 +535,8 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 		ReplenishmentItem replenishmentItem =
 			testGraphQLGetReplenishmentItem_addReplenishmentItem();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				replenishmentItem,
@@ -464,11 +554,37 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/replenishmentItem"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertTrue(
+			equals(
+				replenishmentItem,
+				ReplenishmentItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminInventory_v1_0",
+								new GraphQLField(
+									"replenishmentItem",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"replenishmentItemId",
+												replenishmentItem.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminInventory_v1_0",
+						"Object/replenishmentItem"))));
 	}
 
 	@Test
 	public void testGraphQLGetReplenishmentItemNotFound() throws Exception {
 		Long irrelevantReplenishmentItemId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -484,6 +600,27 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminInventory_v1_0",
+						new GraphQLField(
+							"replenishmentItem",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"replenishmentItemId",
+										irrelevantReplenishmentItemId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -729,6 +866,8 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject replenishmentItemsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/replenishmentItems");
@@ -742,6 +881,29 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 
 		replenishmentItemsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/replenishmentItems");
+
+		Assert.assertEquals(
+			totalCount + 2, replenishmentItemsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			replenishmentItem1,
+			Arrays.asList(
+				ReplenishmentItemSerDes.toDTOs(
+					replenishmentItemsJSONObject.getString("items"))));
+		assertContains(
+			replenishmentItem2,
+			Arrays.asList(
+				ReplenishmentItemSerDes.toDTOs(
+					replenishmentItemsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminInventory_v1_0
+
+		replenishmentItemsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminInventory_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminInventory_v1_0",
 			"JSONObject/replenishmentItems");
 
 		Assert.assertEquals(
@@ -1437,22 +1599,20 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 
 		if (entityFieldName.equals("availabilityDate")) {
 			if (operator.equals("between")) {
+				Date date = replenishmentItem.getAvailabilityDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							replenishmentItem.getAvailabilityDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							replenishmentItem.getAvailabilityDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1637,7 +1797,8 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1704,12 +1865,12 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1718,11 +1879,16 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1754,6 +1920,24 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1775,16 +1959,6 @@ public abstract class BaseReplenishmentItemResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

@@ -107,11 +107,16 @@ public class MockContactsEngineClientImpl
 	}
 
 	@Override
-	public long getIndividualsCount(
-		FaroProject faroProject, boolean includeAnonymousUsers) {
+	public long getIdentitiesCount(FaroProject faroProject) {
+		return contactsEngineClient.getIdentitiesCount(faroProject);
+	}
 
-		return contactsEngineClient.getIndividualsCount(
-			faroProject, includeAnonymousUsers);
+	@Override
+	public long getIndividualsCreatedBetweenCount(
+		FaroProject faroProject, Date endDate, Date startDate) {
+
+		return contactsEngineClient.getIndividualsCreatedBetweenCount(
+			faroProject, endDate, startDate);
 	}
 
 	@Override
@@ -120,6 +125,11 @@ public class MockContactsEngineClientImpl
 
 		return contactsEngineClient.getIndividualsCreatedSinceCount(
 			faroProject, startDate);
+	}
+
+	@Override
+	public Date getLastSeenDate(FaroProject faroProject) {
+		return contactsEngineClient.getLastSeenDate(faroProject);
 	}
 
 	@Override

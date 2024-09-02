@@ -21,4 +21,6 @@ public interface CommercePaymentEntryRefundType {
 
 	public int getPriority();
 
+	public boolean isEnabled();
+
 }

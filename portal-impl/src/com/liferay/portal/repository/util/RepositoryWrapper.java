@@ -69,12 +69,13 @@ public class RepositoryWrapper implements Repository {
 
 	@Override
 	public FileShortcut addFileShortcut(
-			long userId, long folderId, long toFileEntryId,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			long toFileEntryId, ServiceContext serviceContext)
 		throws PortalException {
 
 		return _repository.addFileShortcut(
-			userId, folderId, toFileEntryId, serviceContext);
+			externalReferenceCode, userId, folderId, toFileEntryId,
+			serviceContext);
 	}
 
 	@Override
@@ -543,6 +544,13 @@ public class RepositoryWrapper implements Repository {
 
 		return _repository.getRepositoryFileEntriesCount(
 			userId, rootFolderId, mimeTypes, status);
+	}
+
+	@Override
+	public List<FileShortcut> getRepositoryFileShortcuts(long groupId)
+		throws PortalException {
+
+		return _repository.getRepositoryFileShortcuts(groupId);
 	}
 
 	@Override

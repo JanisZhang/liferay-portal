@@ -19,42 +19,44 @@ import {
 import useSuiteCaseFilter from './useSuiteCaseFilter';
 import useSuiteCasesActions from './useSuiteCasesActions';
 
-const transformData = (isSmartSuite: boolean) => (
-	response: APIResponse<TestrayCase> | APIResponse<TestraySuiteCase>
-): APIResponse<TestraySuiteCase> => {
-	let items: TestraySuiteCase[] = (response?.items as any) || [];
+const transformData =
+	(isSmartSuite: boolean) =>
+	(
+		response: APIResponse<TestrayCase> | APIResponse<TestraySuiteCase>
+	): APIResponse<TestraySuiteCase> => {
+		let items: TestraySuiteCase[] = (response?.items as any) || [];
 
-	if (isSmartSuite) {
-		items = (items as any[]).map((testrayCase) => ({
-			...testrayCase,
-			case: {
+		if (isSmartSuite) {
+			items = (items as any[]).map((testrayCase) => ({
 				...testrayCase,
-				component: testrayCase.r_componentToCases_c_component,
-			},
-			id: testrayCase.id,
-		}));
-	}
-	else {
-		items = (items as any[]).map((suiteCase) => ({
-			...suiteCase,
-			case: suiteCase.r_caseToSuitesCases_c_case
-				? {
-						...suiteCase.r_caseToSuitesCases_c_case,
-						component:
-							suiteCase.r_caseToSuitesCases_c_case
-								.r_componentToCases_c_component,
-				  }
-				: undefined,
-			id: suiteCase.id,
-			suite: suiteCase.r_suiteToSuitesCases_c_suite,
-		}));
-	}
+				case: {
+					...testrayCase,
+					component: testrayCase.r_componentToCases_c_component,
+				},
+				id: testrayCase.id,
+			}));
+		}
+		else {
+			items = (items as any[]).map((suiteCase) => ({
+				...suiteCase,
+				case: suiteCase.r_caseToSuitesCases_c_case
+					? {
+							...suiteCase.r_caseToSuitesCases_c_case,
+							component:
+								suiteCase.r_caseToSuitesCases_c_case
+									.r_componentToCases_c_component,
+						}
+					: undefined,
+				id: suiteCase.id,
+				suite: suiteCase.r_suiteToSuitesCases_c_suite,
+			}));
+		}
 
-	return {
-		...response,
-		items,
+		return {
+			...response,
+			items,
+		};
 	};
-};
 
 type SuiteCasesTableProps = {
 	isSmartSuite: boolean;
@@ -78,7 +80,7 @@ const SuitesCasesTable: React.FC<SuiteCasesTableProps> = ({
 	return (
 		<ListView
 			forceRefetch={suiteCaseActions.formModal.forceRefetch}
-			managementToolbarProps={{visible: false}}
+			managementToolbarProps={{applyFilters: true, visible: false}}
 			resource={
 				isSmartSuite
 					? testrayCaseImpl.resource

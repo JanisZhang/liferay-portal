@@ -1,4 +1,5 @@
 {
+	"enableIndexSearch": false,
 	"label": {
 		"en_US": "Testray Case"
 	},
@@ -36,6 +37,17 @@
 			"name": "descriptionType",
 			"required": false,
 			"type": "String"
+		},
+		{
+			"DBType": "Boolean",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Flaky"
+			},
+			"name": "flaky",
+			"required": false,
+			"type": "Boolean"
 		},
 		{
 			"DBType": "Integer",

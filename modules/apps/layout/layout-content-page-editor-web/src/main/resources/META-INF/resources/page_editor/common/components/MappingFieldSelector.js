@@ -36,7 +36,7 @@ export default function MappingFieldSelector({
 
 	return (
 		<ClayForm.Group
-			className={classNames('mb-2 mt-3', className, {
+			className={classNames('mb-0 mt-3', className, {
 				'has-warning': hasWarnings,
 			})}
 			small
@@ -45,6 +45,7 @@ export default function MappingFieldSelector({
 
 			<ClaySelect
 				aria-describedby={fieldTypeId}
+				className="mb-2"
 				disabled={!(fields && !!fields.length)}
 				id={mappingSelectorFieldSelectId}
 				onChange={onValueSelect}
@@ -88,7 +89,7 @@ export default function MappingFieldSelector({
 			</ClaySelect>
 
 			{selectedField && (
-				<p className="mt-2 text-3" id={fieldTypeId}>
+				<p className="mb-0 text-2" id={fieldTypeId}>
 					<b>{Liferay.Language.get('field-type')}: </b>
 
 					{` ${selectedField.typeLabel}`}

@@ -8,7 +8,7 @@ import ClayIcon from '@clayui/icon';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
 import React, {useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
 import i18n from '~/i18n';
 
@@ -27,6 +27,7 @@ export type Column<T = any> = {
 		item: T,
 		mutate: KeyedMutator<APIResponse<T>>
 	) => String | React.ReactNode;
+	selectable?: boolean;
 	size?: 'sm' | 'md' | 'lg' | 'xl' | 'none';
 	sorteable?: boolean;
 	truncate?: boolean;
@@ -38,7 +39,7 @@ export type TableProps<T = any> = {
 	actions?: Action[];
 	allRowsChecked?: boolean;
 	bodyVerticalAlignment?: 'bottom' | 'middle' | 'top';
-	columns: Column<T>[];
+	columns?: Column<T>[];
 	highlight?: (item: T) => boolean;
 	items: T[];
 	mutate: KeyedMutator<T>;
@@ -54,7 +55,7 @@ export type TableProps<T = any> = {
 	rowSelectable?: boolean;
 	rowWrap?: boolean;
 	selectedRows?: number[];
-	sort?: Sort;
+	sort?: Sort | Sort[];
 };
 
 const Table: React.FC<TableProps> = ({
@@ -85,15 +86,10 @@ const Table: React.FC<TableProps> = ({
 
 	const displayActionColumn = !!filteredActions.length;
 
-	const {
-		contextMenuState,
-		handleContext,
-		setContextMenuState,
-	} = useContextMenu(displayActionColumn);
+	const {contextMenuState, handleContext, setContextMenuState} =
+		useContextMenu(displayActionColumn);
 
 	const [sorted, setSorted] = useState<SortDirection>(SortOption.ASC);
-
-	const navigate = useNavigate();
 
 	const changeSort = (key: string) => {
 		onSort(key, sorted);
@@ -107,8 +103,15 @@ const Table: React.FC<TableProps> = ({
 			return '';
 		}
 
-		if (sort.key === key) {
-			return sort.direction === SortOption.ASC
+		let selectedSort = sort;
+
+		if (Array.isArray(selectedSort)) {
+			selectedSort =
+				selectedSort.find((_sort) => _sort.key === key) || ({} as Sort);
+		}
+
+		if (selectedSort?.key === key) {
+			return selectedSort.direction === SortOption.ASC
 				? 'caret-top-l'
 				: 'caret-bottom-l';
 		}
@@ -139,7 +142,7 @@ const Table: React.FC<TableProps> = ({
 							</ClayTable.Cell>
 						)}
 
-						{columns.map((column, index) => (
+						{columns?.map((column, index) => (
 							<ClayTable.Cell headingTitle key={index}>
 								<span className="d-flex justify-content-between">
 									<span
@@ -199,7 +202,7 @@ const Table: React.FC<TableProps> = ({
 								<ClayTable.Cell>
 									<ClayCheckbox
 										aria-label={columns
-											.map((column) => {
+											?.map((column) => {
 												const getValue = (
 													value: any
 												) => {
@@ -208,8 +211,9 @@ const Table: React.FC<TableProps> = ({
 															value
 														)
 													) {
-														return (value?.props as any)
-															?.children;
+														return (
+															value?.props as any
+														)?.children;
 													}
 
 													return value;
@@ -227,7 +231,7 @@ const Table: React.FC<TableProps> = ({
 																},
 																mutate
 															)
-													  )
+														)
 													: item[column.key];
 
 												return `${column.value}: ${
@@ -244,49 +248,56 @@ const Table: React.FC<TableProps> = ({
 								</ClayTable.Cell>
 							)}
 
-							{columns.map((column, columnIndex) => (
-								<ClayTable.Cell
-									className={classNames('text-dark', {
-										'cursor-pointer': column.clickable,
-										[`table-cell-minw-${column.width}`]: column.width,
-										'table-cell-expand':
-											column.size === 'sm',
-										'table-cell-expand-small':
-											column.size === 'xl',
-										'table-cell-expand-smaller':
-											column.size === 'lg',
-										'table-cell-expand-smallest':
-											column.size === 'md',
-									})}
-									expanded={column.truncate}
-									key={columnIndex}
-									onClick={() => {
-										if (column.clickable) {
+							{columns?.map((column, columnIndex) => {
+								const Wrapper =
+									column.selectable ||
+									(column.clickable && navigateTo)
+										? Link
+										: (props: any) => <div {...props} />;
+
+								return (
+									<ClayTable.Cell
+										className={classNames('text-dark', {
+											'cursor-pointer': column.clickable,
+											[`table-cell-minw-${column.width}`]:
+												column.width,
+											'table-cell-expand':
+												column.size === 'sm',
+											'table-cell-expand-small':
+												column.size === 'xl',
+											'table-cell-expand-smaller':
+												column.size === 'lg',
+											'table-cell-expand-smallest':
+												column.size === 'md',
+										})}
+										expanded={column.truncate}
+										key={columnIndex}
+										onClick={() => {
 											if (onClickRow) {
 												onClickRow(item);
 											}
-
-											if (navigateTo) {
-												navigate(
-													navigateTo(item).toString()
-												);
+										}}
+										truncate={column.truncate}
+									>
+										<Wrapper
+											className="text-dark"
+											to={
+												navigateTo?.(
+													item
+												)?.toString() as string
 											}
-										}
-									}}
-									truncate={column.truncate}
-								>
-									{column.render
-										? column.render(
-												item[column.key],
-												{
-													...item,
-													rowIndex,
-												},
-												mutate
-										  )
-										: item[column.key]}
-								</ClayTable.Cell>
-							))}
+										>
+											{column.render
+												? column.render(
+														item[column.key],
+														{...item, rowIndex},
+														mutate
+													)
+												: item[column.key]}
+										</Wrapper>
+									</ClayTable.Cell>
+								);
+							})}
 						</ClayTable.Row>
 					))}
 				</ClayTable.Body>

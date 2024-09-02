@@ -28,7 +28,7 @@ export default class DetailsCard extends React.PureComponent {
 		const individual = entity.toJS();
 
 		const {
-			dateCreated,
+			firstActivityDate,
 			id,
 			name,
 			properties: {email, jobTitle}
@@ -39,17 +39,17 @@ export default class DetailsCard extends React.PureComponent {
 				<Card.Body>
 					<Avatar circle entity={individual} size='xl' />
 
-					{name && <h4>{name}</h4>}
+					{name && <div className='h4'>{name}</div>}
 
 					{jobTitle && <div className='job-title'>{jobTitle}</div>}
 
 					{email && <div className='email'>{email}</div>}
 
-					{dateCreated && (
+					{firstActivityDate && (
 						<div className='first-seen'>
 							{sub(Liferay.Language.get('first-seen-x'), [
 								formatDateToTimeZone(
-									dateCreated,
+									firstActivityDate,
 									'LL',
 									timeZoneId
 								)

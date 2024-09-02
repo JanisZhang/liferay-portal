@@ -26,13 +26,13 @@ if (ListUtil.isNotEmpty(selectedAMImageConfigurationEntries)) {
 		<c:when test="<%= selectedConfigurationEntriesSize == 1 %>">
 			<div class="autofit-row sidebar-section">
 				<div class="autofit-col autofit-col-expand">
-					<h4 class="component-title">
+					<div class="component-title">
 						<%= HtmlUtil.escape(amImageConfigurationEntry.getName()) %>
-					</h4>
+					</div>
 
-					<h5 class="component-subtitle">
+					<div class="component-subtitle">
 						<liferay-ui:message key="image-resolution" />
-					</h5>
+					</div>
 				</div>
 
 				<div class="autofit-col">
@@ -48,14 +48,14 @@ if (ListUtil.isNotEmpty(selectedAMImageConfigurationEntries)) {
 		<c:when test="<%= selectedConfigurationEntriesSize > 1 %>">
 			<div class="autofit-row sidebar-section">
 				<div class="autofit-col autofit-col-expand">
-					<h4 class="component-title"><liferay-ui:message arguments="<%= selectedConfigurationEntriesSize %>" key="x-items-are-selected" /></h4>
+					<div class="component-title"><liferay-ui:message arguments="<%= selectedConfigurationEntriesSize %>" key="x-items-are-selected" /></div>
 				</div>
 			</div>
 		</c:when>
 		<c:otherwise>
 			<div class="autofit-row sidebar-section">
 				<div class="autofit-col autofit-col-expand">
-					<h4 class="component-title"><liferay-ui:message key="adaptive-media" /></h4>
+					<div class="component-title"><liferay-ui:message key="adaptive-media" /></div>
 				</div>
 			</div>
 		</c:otherwise>
@@ -92,8 +92,7 @@ if (ListUtil.isNotEmpty(selectedAMImageConfigurationEntries)) {
 
 							<%
 							int adaptedImages = AMImageEntryLocalServiceUtil.getAMImageEntriesCount(themeDisplay.getCompanyId(), amImageConfigurationEntry.getUUID());
-
-							int totalImages = AMImageEntryLocalServiceUtil.getExpectedAMImageEntriesCount(themeDisplay.getCompanyId());
+							int totalImages = GetterUtil.getInteger(request.getAttribute(AMWebKeys.TOTAL_IMAGES));
 							%>
 
 							<%= Math.min(adaptedImages, totalImages) %>/<%= totalImages %>

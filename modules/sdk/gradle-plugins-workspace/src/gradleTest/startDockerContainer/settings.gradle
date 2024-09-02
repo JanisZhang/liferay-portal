@@ -4,7 +4,7 @@ import java.net.InetAddress
 
 buildscript {
 	dependencies {
-		classpath fileTree(dir: pluginClasspathDir, include: "*.jar")
+		classpath fileTree(dir: pluginClasspathDir, exclude: "biz.aQute.bnd-6.4.0.jar", include: "*.jar")
 	}
 }
 
@@ -15,7 +15,7 @@ gradle.liferayWorkspace {
 
 	dockerContainerId = hostName + "startdockercontainer"
 	dockerImageId = hostName + "startdockercontainer"
-	product = "portal-7.4-ga8"
+	product = "portal-7.3-ga8"
 }
 
 gradle.projectsEvaluated {

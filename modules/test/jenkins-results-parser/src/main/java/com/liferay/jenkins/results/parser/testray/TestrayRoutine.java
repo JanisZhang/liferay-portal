@@ -13,19 +13,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -33,64 +25,18 @@ import org.json.JSONObject;
  */
 public class TestrayRoutine {
 
-	public TestrayRoutine(
-		TestrayProject testrayProject, JSONObject jsonObject) {
-
-		_testrayProject = testrayProject;
-		_jsonObject = jsonObject;
-
-		_testrayServer = testrayProject.getTestrayServer();
-
-		String urlString = JenkinsResultsParserUtil.combine(
-			String.valueOf(_testrayServer.getURL()),
-			"/home/-/testray/builds?testrayRoutineId=",
-			String.valueOf(getID()));
-
-		try {
-			_url = new URL(urlString);
-		}
-		catch (MalformedURLException malformedURLException) {
-			throw new RuntimeException(
-				"Invalid Testray project URL " + urlString,
-				malformedURLException);
-		}
-	}
-
-	public TestrayRoutine(URL testrayRoutineURL) {
-		Matcher matcher = _testrayRoutineURLPattern.matcher(
-			testrayRoutineURL.toString());
-
-		if (!matcher.find()) {
-			throw new RuntimeException(
-				"Invalid Routine URL " + testrayRoutineURL);
-		}
-
-		_url = testrayRoutineURL;
-
-		String serverURL = matcher.group("serverURL");
-
-		_testrayServer = TestrayFactory.newTestrayServer(
-			matcher.group("serverURL"));
-
-		try {
-			JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
-				JenkinsResultsParserUtil.combine(
-					serverURL, "/home/-/testray/routines/",
-					matcher.group("routineID"), ".json"),
-				_testrayServer.getHTTPAuthorization());
-
-			_jsonObject = jsonObject.getJSONObject("data");
-
-			_testrayProject = _testrayServer.getTestrayProjectByID(
-				Long.parseLong(_jsonObject.getString("testrayProjectId")));
-		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
-		}
-	}
+	public static final String[] FIELD_NAMES = {
+		"dateCreated", "dateModified", "id", "name", "routineToProjects"
+	};
 
 	public TestrayBuild createTestrayBuild(
 		TestrayProductVersion testrayProductVersion, String buildName) {
+
+		TestrayBuild testrayBuild = getTestrayBuildByName(buildName);
+
+		if (testrayBuild != null) {
+			return testrayBuild;
+		}
 
 		return createTestrayBuild(
 			testrayProductVersion, buildName, null, null, null);
@@ -100,75 +46,62 @@ public class TestrayRoutine {
 		TestrayProductVersion testrayProductVersion, String buildName,
 		Date buildDate, String buildDescription, String buildSHA) {
 
-		if (testrayProductVersion == null) {
-			throw new RuntimeException("Please set a Testray product version");
+		TestrayBuild testrayBuild = getTestrayBuildByName(buildName);
+
+		if (testrayBuild != null) {
+			return testrayBuild;
 		}
 
-		if (JenkinsResultsParserUtil.isNullOrEmpty(buildName)) {
-			throw new RuntimeException("Please set a Testray build name");
+		JSONObject requestJSONObject = new JSONObject();
+
+		if (buildDate == null) {
+			buildDate = new Date();
 		}
 
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("name=");
-		sb.append(buildName);
-		sb.append("&testrayProductVersionId=");
-		sb.append(testrayProductVersion.getID());
-		sb.append("&testrayRoutineId=");
-		sb.append(getID());
-
-		if (buildDate != null) {
-			String buildDateString = JenkinsResultsParserUtil.toDateString(
-				buildDate, "MM-dd'T'HH:mm:ss.SSS'Z'", "America/Los_Angeles");
-
-			sb.append("&createDate=");
-			sb.append(buildDateString);
-			sb.append("&dueDate=");
-			sb.append(buildDateString);
-			sb.append("&modifiedDate=");
-			sb.append(buildDateString);
+		if ((buildDescription != null) && (buildDescription.length() >= 280)) {
+			buildDescription = buildDescription.substring(0, 280);
 		}
 
-		if (!JenkinsResultsParserUtil.isNullOrEmpty(buildDescription)) {
-			sb.append("&description=");
-			sb.append(buildDescription);
-		}
-
-		if (!JenkinsResultsParserUtil.isNullOrEmpty(buildSHA)) {
-			sb.append("&gitHash=");
-			sb.append(buildSHA);
-		}
-
-		String buildAddURL = JenkinsResultsParserUtil.combine(
-			String.valueOf(_testrayServer.getURL()),
-			"/web/guest/home/-/testray/builds/add.json");
+		requestJSONObject.put(
+			"description", buildDescription
+		).put(
+			"dueDate",
+			JenkinsResultsParserUtil.toDateString(
+				buildDate, "yyy-MM-dd'T'HH:mm:ss.SSS'Z'", "America/Los_Angeles")
+		).put(
+			"dueStatus", "ACTIVATED"
+		).put(
+			"gitHash", buildSHA
+		).put(
+			"name", buildName
+		).put(
+			"r_productVersionToBuilds_c_productVersionId",
+			testrayProductVersion.getID()
+		).put(
+			"r_projectToBuilds_c_projectId", _testrayProject.getID()
+		).put(
+			"r_routineToBuilds_c_routineId", getID()
+		);
 
 		try {
-			JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
-				buildAddURL, 2, 5, sb.toString(),
-				_testrayServer.getHTTPAuthorization());
+			JSONObject responseJSONObject = new JSONObject(
+				_testrayServer.requestPost(
+					"/o/c/builds", requestJSONObject.toString()));
 
-			if (jsonObject.has("data")) {
-				return new TestrayBuild(this, jsonObject.getJSONObject("data"));
-			}
-
-			String message = jsonObject.optString("message", "");
-
-			if (!message.equals("The build name already exists.")) {
-				throw new RuntimeException("Failed to create a Testray build");
-			}
+			return getTestrayBuildByID(responseJSONObject.getLong("id"));
 		}
 		catch (IOException ioException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(ioException);
-			}
+			throw new RuntimeException(
+				requestJSONObject.toString(), ioException);
 		}
-
-		return getTestrayBuildByName(buildName);
 	}
 
 	public long getID() {
-		return _jsonObject.getLong("testrayRoutineId");
+		return _jsonObject.getLong("id");
+	}
+
+	public JSONObject getJSONObject() {
+		return _jsonObject;
 	}
 
 	public String getName() {
@@ -176,30 +109,26 @@ public class TestrayRoutine {
 	}
 
 	public TestrayBuild getTestrayBuildByID(long buildID) {
-		if (_testrayBuildsByID.containsKey(buildID)) {
-			return _testrayBuildsByID.get(buildID);
+		TestrayBuild testrayBuild = _testrayServer.getTestrayBuildByID(buildID);
+
+		if (testrayBuild != null) {
+			return testrayBuild;
 		}
 
-		String buildAPIURL = JenkinsResultsParserUtil.combine(
-			String.valueOf(_testrayServer.getURL()),
-			"/web/guest/home/-/testray/builds/view.json?id=",
-			String.valueOf(buildID));
+		String filter = JenkinsResultsParserUtil.combine(
+			"id eq '", String.valueOf(buildID), "' and ",
+			"r_routineToBuilds_c_routineId eq '", String.valueOf(getID()), "'");
 
 		try {
-			JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
-				buildAPIURL, true, _testrayServer.getHTTPAuthorization());
+			List<JSONObject> entityJSONObjects = _testrayServer.requestGraphQL(
+				"builds", TestrayBuild.FIELD_NAMES, filter, null, 1, 1);
 
-			if (!jsonObject.has("data")) {
+			if (entityJSONObjects.isEmpty()) {
 				return null;
 			}
 
-			JSONObject dataJSONObject = jsonObject.getJSONObject("data");
-
-			TestrayBuild testrayBuild = new TestrayBuild(this, dataJSONObject);
-
-			_addToTestrayBuildMaps(testrayBuild);
-
-			return testrayBuild;
+			return TestrayFactory.newTestrayBuild(
+				this, entityJSONObjects.get(0));
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
@@ -209,161 +138,85 @@ public class TestrayRoutine {
 	public TestrayBuild getTestrayBuildByName(
 		String buildName, String... names) {
 
-		if (_testrayBuildsByName.containsKey(buildName)) {
-			return _testrayBuildsByName.get(buildName);
-		}
+		String filter = JenkinsResultsParserUtil.combine(
+			"name eq '", buildName, "' and ",
+			"r_routineToBuilds_c_routineId eq '", String.valueOf(getID()), "'");
 
-		int current = 1;
+		try {
+			List<JSONObject> entityJSONObjects = _testrayServer.requestGraphQL(
+				"builds", TestrayBuild.FIELD_NAMES, filter, null, 1, 1);
 
-		StringBuilder sb = new StringBuilder();
-
-		for (String name : names) {
-			sb.append("&name=");
-			sb.append(JenkinsResultsParserUtil.fixURL(name));
-		}
-
-		while (true) {
-			try {
-				String buildAPIURL = JenkinsResultsParserUtil.combine(
-					String.valueOf(_testrayServer.getURL()),
-					"/home/-/testray/builds.json?cur=", String.valueOf(current),
-					"&delta=", String.valueOf(_DELTA), sb.toString(),
-					"&orderByCol=testrayBuildId&testrayRoutineId=",
-					String.valueOf(getID()));
-
-				JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
-					buildAPIURL, true, _testrayServer.getHTTPAuthorization());
-
-				JSONArray dataJSONArray = jsonObject.getJSONArray("data");
-
-				if (dataJSONArray.length() == 0) {
-					break;
-				}
-
-				for (int i = 0; i < dataJSONArray.length(); i++) {
-					JSONObject dataJSONObject = dataJSONArray.getJSONObject(i);
-
-					TestrayBuild testrayBuild = new TestrayBuild(
-						this, dataJSONObject);
-
-					_addToTestrayBuildMaps(testrayBuild);
-
-					if (_testrayBuildsByName.containsKey(buildName)) {
-						return _testrayBuildsByName.get(buildName);
-					}
-				}
-
-				current++;
+			if (entityJSONObjects.isEmpty()) {
+				return null;
 			}
-			catch (IOException ioException) {
-				throw new RuntimeException(ioException);
-			}
-		}
 
-		return null;
+			return TestrayFactory.newTestrayBuild(
+				this, entityJSONObjects.get(0));
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
 	}
 
 	public List<TestrayBuild> getTestrayBuilds() {
-		return getTestrayBuilds(_DELTA);
+		return getTestrayBuilds(200);
 	}
 
 	public List<TestrayBuild> getTestrayBuilds(
 		int maxSize, String... nameFilters) {
 
-		int current = 1;
+		List<TestrayBuild> testrayBuilds = new ArrayList<>();
 
 		StringBuilder sb = new StringBuilder();
 
+		sb.append("r_routineToBuilds_c_routineId eq '");
+		sb.append(getID());
+		sb.append("'");
+
 		if ((nameFilters != null) && (nameFilters.length > 0)) {
-			for (String nameFilter : nameFilters) {
-				if (JenkinsResultsParserUtil.isNullOrEmpty(nameFilter)) {
-					continue;
-				}
+			sb.append(" and (");
 
-				sb.append("&name=");
+			for (int i = 0; i < nameFilters.length; i++) {
+				sb.append("contains(name, '");
+				sb.append(nameFilters[i]);
+				sb.append("')");
 
-				if (nameFilter.contains("-")) {
-					sb.append("%22");
-					sb.append(nameFilter);
-					sb.append("%22");
-				}
-				else {
-					sb.append(nameFilter);
+				if (i < (nameFilters.length - 1)) {
+					sb.append(" or ");
 				}
 			}
+
+			sb.append(")");
 		}
 
-		while ((current * _DELTA) <= maxSize) {
-			try {
-				String buildAPIURL = JenkinsResultsParserUtil.combine(
-					String.valueOf(_testrayServer.getURL()),
-					"/home/-/testray/builds.json?cur=", String.valueOf(current),
-					"&delta=", String.valueOf(_DELTA), sb.toString(),
-					"&orderByCol=testrayBuildId&testrayRoutineId=",
-					String.valueOf(getID()));
+		try {
+			List<JSONObject> entityJSONObjects = _testrayServer.requestGraphQL(
+				"builds", TestrayBuild.FIELD_NAMES, sb.toString(),
+				"dateCreated:desc", maxSize, 0);
 
-				JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
-					buildAPIURL, true, _testrayServer.getHTTPAuthorization());
-
-				JSONArray dataJSONArray = jsonObject.getJSONArray("data");
-
-				if (dataJSONArray.length() == 0) {
-					break;
-				}
-
-				for (int i = 0; i < dataJSONArray.length(); i++) {
-					JSONObject dataJSONObject = dataJSONArray.getJSONObject(i);
-
-					TestrayBuild testrayBuild = new TestrayBuild(
-						this, dataJSONObject);
-
-					if (_testrayBuildsByID.containsKey(testrayBuild.getID())) {
-						break;
-					}
-
-					_addToTestrayBuildMaps(testrayBuild);
-				}
-			}
-			catch (IOException ioException) {
-				throw new RuntimeException(ioException);
-			}
-			finally {
-				current++;
+			for (JSONObject entityJSONObject : entityJSONObjects) {
+				testrayBuilds.add(
+					TestrayFactory.newTestrayBuild(this, entityJSONObject));
 			}
 		}
-
-		List<TestrayBuild> testrayBuilds = new ArrayList<>();
-
-		for (TestrayBuild testrayBuild : _testrayBuildsByID.values()) {
-			String testrayBuildName = testrayBuild.getName();
-
-			if ((nameFilters != null) && (nameFilters.length > 0)) {
-				boolean matches = true;
-
-				for (String nameFilter : nameFilters) {
-					if (JenkinsResultsParserUtil.isNullOrEmpty(nameFilter) ||
-						testrayBuildName.contains(nameFilter)) {
-
-						continue;
-					}
-
-					matches = false;
-
-					break;
-				}
-
-				if (!matches) {
-					continue;
-				}
-			}
-
-			testrayBuilds.add(testrayBuild);
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
 		}
 
 		return testrayBuilds;
 	}
 
 	public TestrayProject getTestrayProject() {
+		if (_testrayProject != null) {
+			return _testrayProject;
+		}
+
+		JSONObject projectJSONObject = _jsonObject.getJSONObject(
+			"routineToProjects");
+
+		_testrayProject = _testrayServer.getTestrayProjectByID(
+			projectJSONObject.getLong("id"));
+
 		return _testrayProject;
 	}
 
@@ -372,30 +225,96 @@ public class TestrayRoutine {
 	}
 
 	public URL getURL() {
-		return _url;
+		if (url != null) {
+			return url;
+		}
+
+		try {
+			url = new URL(
+				JenkinsResultsParserUtil.combine(
+					String.valueOf(_testrayProject.getURL()), "/",
+					String.valueOf(getID())));
+		}
+		catch (MalformedURLException malformedURLException) {
+			throw new RuntimeException(malformedURLException);
+		}
+
+		return url;
 	}
 
-	private void _addToTestrayBuildMaps(TestrayBuild testrayBuild) {
-		_testrayBuildsByID.put(testrayBuild.getID(), testrayBuild);
-		_testrayBuildsByName.put(testrayBuild.getName(), testrayBuild);
+	public void setJSONObject(JSONObject jsonObject) {
+		_jsonObject = jsonObject;
 	}
 
-	private static final int _DELTA = 200;
+	protected TestrayRoutine(
+		TestrayProject testrayProject, JSONObject jsonObject) {
 
-	private static final Log _log = LogFactory.getLog(TestrayRoutine.class);
+		_testrayProject = testrayProject;
+
+		_testrayServer = testrayProject.getTestrayServer();
+
+		_jsonObject = jsonObject;
+	}
+
+	protected TestrayRoutine(
+		TestrayServer testrayServer, JSONObject jsonObject) {
+
+		_testrayServer = testrayServer;
+		_jsonObject = jsonObject;
+	}
+
+	protected TestrayRoutine(URL url) {
+		setURL(url);
+	}
+
+	protected void setTestrayProject(TestrayProject testrayProject) {
+		_testrayProject = testrayProject;
+	}
+
+	protected void setTestrayServer(TestrayServer testrayServer) {
+		_testrayServer = testrayServer;
+	}
+
+	protected void setURL(URL url) {
+		this.url = url;
+
+		Matcher matcher = _testrayRoutineURLPattern.matcher(url.toString());
+
+		if (!matcher.find()) {
+			throw new RuntimeException("Invalid routine URL " + url);
+		}
+
+		TestrayServer testrayServer = TestrayFactory.newTestrayServer(
+			matcher.group("serverURL"));
+
+		setTestrayServer(testrayServer);
+
+		String filter = JenkinsResultsParserUtil.combine(
+			"id eq '", matcher.group("routineID"), "'");
+
+		try {
+			List<JSONObject> entityJSONObjects = testrayServer.requestGraphQL(
+				"routines", TestrayRoutine.FIELD_NAMES, filter, null, 1, 1);
+
+			if (entityJSONObjects.isEmpty()) {
+				return;
+			}
+
+			setJSONObject(entityJSONObjects.get(0));
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+	}
+
+	protected URL url;
 
 	private static final Pattern _testrayRoutineURLPattern = Pattern.compile(
-		JenkinsResultsParserUtil.combine(
-			"(?<serverURL>https://[^/]+)/home/-/testray/builds\\?",
-			"testrayRoutineId=(?<routineID>\\d+)"));
+		"(?<serverURL>https://[^/]+)/#/project/(?<projectID>\\d+)/routines/" +
+			"(?<routineID>\\d+)");
 
-	private final JSONObject _jsonObject;
-	private final Map<Long, TestrayBuild> _testrayBuildsByID = new TreeMap<>(
-		Collections.reverseOrder());
-	private final Map<String, TestrayBuild> _testrayBuildsByName =
-		new HashMap<>();
-	private final TestrayProject _testrayProject;
-	private final TestrayServer _testrayServer;
-	private final URL _url;
+	private JSONObject _jsonObject;
+	private TestrayProject _testrayProject;
+	private TestrayServer _testrayServer;
 
 }

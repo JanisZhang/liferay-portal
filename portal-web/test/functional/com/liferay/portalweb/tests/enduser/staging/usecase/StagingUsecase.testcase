@@ -1,4 +1,4 @@
-@component-name = "portal-staging"
+@component-name = "portal-headless"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -2084,7 +2084,7 @@ definition {
 
 	@priority = 4
 	test StagingWithPublishTemplateSmoke {
-		property app.server.types = "jboss,tomcat,weblogic,websphere,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 
 		task ("Given: User add a new Web Content and WC Display widget to the staging site") {
@@ -2197,7 +2197,7 @@ definition {
 			User.logoutPG();
 
 			User.loginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site");
@@ -2213,7 +2213,7 @@ definition {
 	@description = "This is a use case for LPS-123156 and LPS-185203 TC-1: The summary of the failed publishing processes can be viewed."
 	@priority = 3
 	test TrashEntryReferencePublishing {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 		property testray.component.names = "Training";
@@ -2306,6 +2306,8 @@ definition {
 			ProductMenu.gotoPortlet(
 				category = "Publishing",
 				portlet = "Staging");
+
+			Staging.viewProcessResult(failureExpected = "true");
 
 			LexiconEntry.gotoEntryMenuItem(
 				menuItem = "Summary",

@@ -265,7 +265,7 @@ public class DLServiceVerifyProcessTest extends BaseVerifyProcessTestCase {
 		FileEntry fileEntry = addFileEntry(parentFolder.getFolderId());
 
 		FileShortcut fileShortcut = DLAppLocalServiceUtil.addFileShortcut(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			parentFolder.getFolderId(), fileEntry.getFileEntryId(),
 			serviceContext);
 
@@ -416,7 +416,7 @@ public class DLServiceVerifyProcessTest extends BaseVerifyProcessTestCase {
 
 		DLFileEntryType dlFileEntryType =
 			DLFileEntryTypeLocalServiceUtil.addFileEntryType(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				ddmStructure.getStructureId(), null,
 				Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 				Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),

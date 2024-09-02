@@ -45,6 +45,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alessio Antonio Rendina
+ * @author Crescenzo Rega
  */
 public class CommercePaymentEntryDisplayContext {
 
@@ -148,7 +149,8 @@ public class CommercePaymentEntryDisplayContext {
 		getCommercePaymentEntryRefundTypes() {
 
 		return _commercePaymentEntryRefundTypeRegistry.
-			getCommercePaymentEntryRefundTypes();
+			getCommercePaymentEntryRefundTypes(
+				_commercePaymentRequestHelper.getCompanyId());
 	}
 
 	public String getCurrencyCode() {
@@ -257,6 +259,14 @@ public class CommercePaymentEntryDisplayContext {
 		}
 
 		return _relatedCommercePaymentEntry.getLanguageId();
+	}
+
+	public String getPayload() {
+		if (_relatedCommercePaymentEntry == null) {
+			return StringPool.BLANK;
+		}
+
+		return _relatedCommercePaymentEntry.getPayload();
 	}
 
 	public String getPaymentDate() {

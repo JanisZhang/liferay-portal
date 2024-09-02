@@ -56,6 +56,20 @@ public class SpecificationSerDes {
 			sb.append(_toJSON(specification.getDescription()));
 		}
 
+		if (specification.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(specification.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (specification.getFacetable() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -90,6 +104,16 @@ public class SpecificationSerDes {
 			sb.append("\"");
 		}
 
+		if (specification.getListTypeDefinitionId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"listTypeDefinitionId\": ");
+
+			sb.append(specification.getListTypeDefinitionId());
+		}
+
 		if (specification.getOptionCategory() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -98,6 +122,16 @@ public class SpecificationSerDes {
 			sb.append("\"optionCategory\": ");
 
 			sb.append(String.valueOf(specification.getOptionCategory()));
+		}
+
+		if (specification.getPriority() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"priority\": ");
+
+			sb.append(specification.getPriority());
 		}
 
 		if (specification.getTitle() != null) {
@@ -137,6 +171,15 @@ public class SpecificationSerDes {
 				"description", String.valueOf(specification.getDescription()));
 		}
 
+		if (specification.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(specification.getExternalReferenceCode()));
+		}
+
 		if (specification.getFacetable() == null) {
 			map.put("facetable", null);
 		}
@@ -158,6 +201,15 @@ public class SpecificationSerDes {
 			map.put("key", String.valueOf(specification.getKey()));
 		}
 
+		if (specification.getListTypeDefinitionId() == null) {
+			map.put("listTypeDefinitionId", null);
+		}
+		else {
+			map.put(
+				"listTypeDefinitionId",
+				String.valueOf(specification.getListTypeDefinitionId()));
+		}
+
 		if (specification.getOptionCategory() == null) {
 			map.put("optionCategory", null);
 		}
@@ -165,6 +217,13 @@ public class SpecificationSerDes {
 			map.put(
 				"optionCategory",
 				String.valueOf(specification.getOptionCategory()));
+		}
+
+		if (specification.getPriority() == null) {
+			map.put("priority", null);
+		}
+		else {
+			map.put("priority", String.valueOf(specification.getPriority()));
 		}
 
 		if (specification.getTitle() == null) {
@@ -191,6 +250,43 @@ public class SpecificationSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "description")) {
+				return true;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "facetable")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "key")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "listTypeDefinitionId")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "optionCategory")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "priority")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "title")) {
+				return true;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			Specification specification, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -198,8 +294,15 @@ public class SpecificationSerDes {
 			if (Objects.equals(jsonParserFieldName, "description")) {
 				if (jsonParserFieldValue != null) {
 					specification.setDescription(
-						(Map)SpecificationSerDes.toMap(
-							(String)jsonParserFieldValue));
+						(Map<String, String>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					specification.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "facetable")) {
@@ -218,6 +321,14 @@ public class SpecificationSerDes {
 					specification.setKey((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "listTypeDefinitionId")) {
+
+				if (jsonParserFieldValue != null) {
+					specification.setListTypeDefinitionId(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "optionCategory")) {
 				if (jsonParserFieldValue != null) {
 					specification.setOptionCategory(
@@ -225,11 +336,16 @@ public class SpecificationSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "priority")) {
+				if (jsonParserFieldValue != null) {
+					specification.setPriority(
+						Double.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "title")) {
 				if (jsonParserFieldValue != null) {
 					specification.setTitle(
-						(Map)SpecificationSerDes.toMap(
-							(String)jsonParserFieldValue));
+						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
 		}
@@ -264,36 +380,7 @@ public class SpecificationSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -303,6 +390,38 @@ public class SpecificationSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

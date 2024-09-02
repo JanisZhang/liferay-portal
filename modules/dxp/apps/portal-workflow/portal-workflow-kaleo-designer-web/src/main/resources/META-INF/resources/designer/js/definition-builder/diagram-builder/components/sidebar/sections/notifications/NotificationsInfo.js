@@ -67,16 +67,22 @@ const NotificationsInfo = ({
 
 	const notificationTypesOptions = [
 		{
-			checked: notificationTypeEmail,
-			label: Liferay.Language.get('email'),
-			type: 'checkbox',
-			value: 'email',
-		},
-		{
-			checked: notificationTypeUserNotification,
-			label: Liferay.Language.get('user-notification'),
-			type: 'checkbox',
-			value: 'userNotification',
+			children: [
+				{
+					checked: notificationTypeEmail,
+					label: Liferay.Language.get('email'),
+					type: 'checkbox',
+					value: 'email',
+				},
+				{
+					checked: notificationTypeUserNotification,
+					label: Liferay.Language.get('user-notification'),
+					type: 'checkbox',
+					value: 'userNotification',
+				},
+			],
+			label: '',
+			value: 'notificationTypes',
 		},
 	];
 
@@ -139,8 +145,8 @@ const NotificationsInfo = ({
 				...previousItem.data.notifications.recipients,
 			];
 
-			newRecipients[notificationIndex] = {
-				...newRecipients[notificationIndex],
+			newRecipients[notificationIndex][0] = {
+				...newRecipients[notificationIndex][0],
 				assignmentType: ['roleId'],
 				roleId: role.id,
 				sectionsData: {
@@ -169,11 +175,10 @@ const NotificationsInfo = ({
 				...previousItem.data.notifications.recipients,
 			];
 
-			newRecipients[notificationIndex] = {
-				...newRecipients[notificationIndex],
+			newRecipients[notificationIndex][0] = {
+				...newRecipients[notificationIndex][0],
 				assignmentType: ['roleType'],
 				autoCreate: values.map(({autoCreate}) => autoCreate),
-				roleKey: values.map(({roleKey}) => roleKey),
 				roleName: values.map(({roleName}) => roleName),
 				roleType: values.map(({roleType}) => roleType),
 			};
@@ -197,8 +202,8 @@ const NotificationsInfo = ({
 				...previousItem.data.notifications.recipients,
 			];
 
-			newRecipients[notificationIndex] = {
-				...newRecipients[notificationIndex],
+			newRecipients[notificationIndex][0] = {
+				...newRecipients[notificationIndex][0],
 				assignmentType: ['scriptedRecipient'],
 				script: [target.value],
 			};
@@ -285,10 +290,12 @@ const NotificationsInfo = ({
 					notificationTypes: initialValues.notificationTypesValues,
 					recipients: !previousItem.data.notifications?.recipients
 						? [
-								{
-									assignmentType: ['user'],
-								},
-						  ]
+								[
+									{
+										assignmentType: ['user'],
+									},
+								],
+							]
 						: [...previousItem.data.notifications.recipients],
 					template: initialValues.templateValues,
 					templateLanguage: initialValues.templateLanguageValues,
@@ -318,8 +325,8 @@ const NotificationsInfo = ({
 				...previousItem.data.notifications.recipients,
 			];
 
-			newRecipients[notificationIndex] = {
-				...newRecipients[notificationIndex],
+			newRecipients[notificationIndex][0] = {
+				...newRecipients[notificationIndex][0],
 				assignmentType: ['user'],
 				emailAddress: values.map(({emailAddress}) => emailAddress),
 				sectionsData: values.map((values) => values),
@@ -359,50 +366,46 @@ const NotificationsInfo = ({
 	useEffect(() => {
 		if (selectedItem.data.notifications) {
 			setSelectedItem((previousItem) => {
-				let recipientDetails = {};
+				const recipientDetails = {};
 
 				if (recipientType === 'assetCreator') {
-					recipientDetails = {assignmentType: ['user']};
+					recipientDetails.assignmentType = ['user'];
 
 					if (
 						selectedItem.data.notifications.recipients[
 							notificationIndex
-						]
+						]?.[0]
 					) {
 						delete selectedItem.data.notifications?.recipients?.[
 							notificationIndex
-						].emailAddress;
+						][0].emailAddress;
 					}
 				}
 				else if (recipientType === 'taskAssignees') {
-					recipientDetails = {assignmentType: ['taskAssignees']};
+					recipientDetails.assignmentType = ['taskAssignees'];
 				}
-
-				const currentRecipient = {
-					...recipientDetails,
-				};
 
 				if (
 					previousItem.data.notifications.recipients[
 						notificationIndex
-					]
+					]?.[0]
 				) {
 					previousItem.data.notifications.recipients[
 						notificationIndex
-					] = {
+					][0] = {
 						...previousItem.data.notifications.recipients[
 							notificationIndex
-						],
-						...currentRecipient,
+						][0],
+						...recipientDetails,
 					};
 				}
 				else {
 					previousItem.data.notifications.recipients[
 						notificationIndex
-					] = currentRecipient;
+					] = [recipientDetails];
 				}
 
-				return previousItem;
+				return {...previousItem};
 			});
 		}
 
@@ -429,7 +432,6 @@ const NotificationsInfo = ({
 				sectionsData.push({
 					autoCreate: recipients?.autoCreate?.[i],
 					identifier: `${Date.now()}-${i}`,
-					roleKey: recipients?.roleKey[i],
 					roleName: recipients?.roleName?.[i],
 					roleType: recipients?.roleType?.[i],
 				});
@@ -467,14 +469,14 @@ const NotificationsInfo = ({
 					setSelectedItem((previousItem) => {
 						previousItem.data.notifications.recipients[
 							notificationIndex
-						] = {
+						][0] = {
 							...previousItem.data.notifications.recipients[
 								notificationIndex
-							],
+							][0],
 							scriptLanguage: [scriptLanguage],
 						};
 
-						return previousItem;
+						return {...previousItem};
 					})
 				}
 				identifier={identifier}

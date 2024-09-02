@@ -3,21 +3,15 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useOutletContext} from 'react-router-dom';
-import SearchBuilder from '~/core/SearchBuilder';
-import {TestrayBuild, testrayComponentImpl} from '~/services/rest';
+import {useParams} from 'react-router-dom';
 
 import Container from '../../../../../components/Layout/Container';
 import ListView from '../../../../../components/ListView';
 import ProgressBar from '../../../../../components/ProgressBar';
 import i18n from '../../../../../i18n';
 
-type OutletContext = {
-	testrayBuild: TestrayBuild;
-};
-
 const Components = () => {
-	const {testrayBuild} = useOutletContext<OutletContext>();
+	const {buildId} = useParams();
 
 	return (
 		<Container className="mt-4">
@@ -29,112 +23,108 @@ const Components = () => {
 						test_fix: false,
 						untested: false,
 					},
-					columnsFixed: ['name'],
+					columnsFixed: ['testrayComponentName'],
 				}}
 				managementToolbarProps={{
+					applyFilters: true,
 					filterSchema: 'buildComponents',
 					title: i18n.translate('component'),
 				}}
-				resource={`/components?filter=${SearchBuilder.eq(
-					'componentToCaseResult/r_buildToCaseResult_c_buildId',
-					testrayBuild.id
-				)}`}
+				resource={`/testray-status-metrics/by-testray-buildId/${buildId}/testray-components-metrics`}
 				tableProps={{
 					columns: [
 						{
 							clickable: true,
-							key: 'name',
+							key: 'testrayComponentName',
 							size: 'lg',
 							value: i18n.translate('component'),
 						},
 						{
 							clickable: true,
-							key: 'caseResultUntested',
-							size: 'md',
+							key: 'untested',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.untested,
 							value: i18n.translate('untested'),
 						},
 						{
 							clickable: true,
-							key: 'caseResultFailed',
-							size: 'md',
+							key: 'failed',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.failed,
 							value: i18n.translate('failed'),
 						},
 						{
 							clickable: true,
-							key: 'caseResultBlocked',
-							size: 'md',
+							key: 'blocked',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.blocked,
 							value: i18n.translate('blocked'),
 						},
 						{
 							clickable: true,
-							key: 'caseResultInProgress',
-							size: 'md',
+							key: 'in-progress',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.inProgress,
 							value: i18n.translate('in-progress'),
 						},
 						{
 							clickable: true,
-							key: 'caseResultPassed',
-							size: 'md',
+							key: 'passed',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.passed,
 							value: i18n.translate('passed'),
 						},
 						{
 							clickable: true,
-							key: 'caseResultTestFix',
-							size: 'md',
+							key: 'test-fix',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.testfix,
 							value: i18n.translate('test-fix'),
 						},
 						{
 							clickable: true,
 							key: 'total',
-							render: (_, testrayComponent) =>
-								[
-									testrayComponent?.caseResultBlocked,
-									testrayComponent?.caseResultFailed,
-									testrayComponent?.caseResultInProgress,
-									testrayComponent?.caseResultPassed,
-									testrayComponent?.caseResultTestFix,
-									testrayComponent?.caseResultUntested,
-								].reduce(
-									(previousValue, currentValue) =>
-										previousValue + currentValue
-								),
-							size: 'md',
+							render: (_, {testrayStatusMetric}) =>
+								testrayStatusMetric.total,
 							value: i18n.translate('total'),
 						},
 						{
-							key: 'metrics',
-							render: (_, testrayComponent) => (
+							clickable: true,
+							key: 'testrayStatusMetric',
+							render: (testrayStatusMetric) => (
 								<ProgressBar
+									chartOrder={[
+										'passed',
+										'failed',
+										'blocked',
+										'test_fix',
+										'incomplete',
+									]}
 									items={{
-										blocked:
-											testrayComponent?.caseResultBlocked,
-										failed:
-											testrayComponent?.caseResultFailed,
+										blocked: testrayStatusMetric?.blocked,
+										failed: testrayStatusMetric?.failed,
 										incomplete:
-											testrayComponent?.caseResultIncomplete,
-										passed:
-											testrayComponent?.caseResultPassed,
-										test_fix:
-											testrayComponent?.caseResultTestFix,
+											testrayStatusMetric?.untested +
+											testrayStatusMetric?.inProgress,
+										passed: testrayStatusMetric?.passed,
+										test_fix: testrayStatusMetric?.testfix,
 									}}
 								/>
 							),
+							size: 'sm',
 							value: i18n.translate('metrics'),
 							width: '300',
 						},
 					],
 
-					navigateTo: (componet) =>
+					navigateTo: ({testrayComponentId}) =>
 						`..?${new URLSearchParams({
 							filter: JSON.stringify({
-								'componentToCaseResult/id': [componet.id],
+								testrayComponentIds: [testrayComponentId],
 							}),
 							filterSchema: 'buildResults',
 						})}`,
 				}}
-				transformData={(response) =>
-					testrayComponentImpl.transformDataFromList(response)
-				}
 			/>
 		</Container>
 	);

@@ -6,10 +6,10 @@
 package com.liferay.object.definition.util;
 
 import com.liferay.batch.engine.unit.BatchEngineUnitThreadLocal;
+import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.tools.DBUpgrader;
 import com.liferay.portal.util.PortalInstances;
 
 import java.util.Map;
@@ -54,9 +54,8 @@ public class ObjectDefinitionUtil {
 	}
 
 	public static boolean isInvokerBundleAllowed() {
-		if (DBUpgrader.isUpgradeClient() ||
-			PortalInstances.isCurrentCompanyInDeletionProcess() ||
-			PortalRunMode.isTestMode()) {
+		if (PortalInstances.isCurrentCompanyInDeletionProcess() ||
+			PortalRunMode.isTestMode() || StartupHelperUtil.isUpgrading()) {
 
 			return true;
 		}
@@ -87,8 +86,8 @@ public class ObjectDefinitionUtil {
 	}
 
 	private static final String[] _ALLOWED_INVOKER_BUNDLE_SYMBOLIC_NAMES = {
-		"com.liferay.commerce.service",
-		"com.liferay.frontend.data.set.views.web",
+		"com.liferay.commerce.service", "com.liferay.cookies.impl",
+		"com.liferay.frontend.data.set.admin.web",
 		"com.liferay.headless.builder.impl", "com.liferay.list.type.service",
 		"com.liferay.notification.service", "com.liferay.object.service"
 	};
@@ -111,7 +110,7 @@ public class ObjectDefinitionUtil {
 		).put(
 			"CommerceReturn", "/commerce-returns"
 		).put(
-			"CommerceReturnItem", "/commerce-return-Items"
+			"CommerceReturnItem", "/commerce-return-items"
 		).put(
 			"FDSAction", "/data-set-manager/actions"
 		).put(
@@ -122,17 +121,25 @@ public class ObjectDefinitionUtil {
 		).put(
 			"FDSDateFilter", "/data-set-manager/date-filters"
 		).put(
-			"FDSDynamicFilter", "/data-set-manager/dynamic-filters"
+			"FDSDynamicFilter", "/data-set-manager/selection-filters"
 		).put(
 			"FDSEntry", "/data-set-manager/entries"
 		).put(
-			"FDSField", "/data-set-manager/fields"
+			"FDSField", "/data-set-manager/table-sections"
 		).put(
 			"FDSListSection", "/data-set-manager/list-sections"
 		).put(
 			"FDSSort", "/data-set-manager/sorts"
 		).put(
-			"FDSView", "/data-set-manager/views"
+			"FDSView", "/data-set-manager/data-sets"
+		).put(
+			"FunctionalCookieEntry", "/functional-cookies-entries"
+		).put(
+			"NecessaryCookieEntry", "/necessary-cookies-entries"
+		).put(
+			"PerformanceCookieEntry", "/performance-cookies-entries"
+		).put(
+			"PersonalizationCookieEntry", "/personalization-cookies-entries"
 		).build();
 	private static final Map<String, String>
 		_allowedUnmodifiableSystemObjectDefinitionNames = HashMapBuilder.put(
@@ -141,6 +148,8 @@ public class ObjectDefinitionUtil {
 			"Address", "L_POSTAL_ADDRESS"
 		).put(
 			"CommerceOrder", "L_COMMERCE_ORDER"
+		).put(
+			"CommerceOrderItem", "L_COMMERCE_ORDER_ITEM"
 		).put(
 			"CommercePricingClass", "L_COMMERCE_PRODUCT_GROUP"
 		).put(

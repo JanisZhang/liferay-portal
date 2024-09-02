@@ -8,7 +8,13 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String backURL = ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL()));
+String backURL = ParamUtil.getString(
+	request, "backURL",
+	URLBuilder.create(
+		String.valueOf(renderResponse.createRenderURL())
+	).setParameter(
+		"objectFolderName", "Default"
+	).build());
 ObjectDefinitionsDetailsDisplayContext objectDefinitionsDetailsDisplayContext = (ObjectDefinitionsDetailsDisplayContext)request.getAttribute(ObjectWebKeys.OBJECT_DEFINITIONS_DETAILS_DISPLAY_CONTEXT);
 ObjectDefinitionsFieldsDisplayContext objectDefinitionsFieldsDisplayContext = (ObjectDefinitionsFieldsDisplayContext)request.getAttribute(ObjectWebKeys.OBJECT_DEFINITIONS_FIELD_DISPLAY_CONTEXT);
 ObjectDefinitionsRelationshipsDisplayContext objectDefinitionsRelationshipsDisplayContext = (ObjectDefinitionsRelationshipsDisplayContext)request.getAttribute(ObjectWebKeys.OBJECT_DEFINITIONS_RELATIONSHIP_DISPLAY_CONTEXT);
@@ -23,7 +29,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "object-model-builder"));
 
 <div>
 	<react:component
-		module="js/components/ModelBuilder/index"
+		module="{ModelBuilder} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"baseResourceURL", String.valueOf(baseResourceURL)
@@ -52,6 +58,8 @@ renderResponse.setTitle(LanguageUtil.get(request, "object-model-builder"));
 			).put(
 				"viewApiURL", "/o/object-admin/v1.0/object-definitions"
 			).put(
+				"viewObjectDefinitionsURL", backURL
+			).put(
 				"workflowStatuses", LocalizedJSONArrayUtil.getWorkflowStatusJSONArray(locale)
 			).build()
 		%>'
@@ -60,6 +68,6 @@ renderResponse.setTitle(LanguageUtil.get(request, "object-model-builder"));
 
 <div>
 	<react:component
-		module="js/components/ExpressionBuilderModal"
+		module="{ExpressionBuilderModal} from object-web"
 	/>
 </div>

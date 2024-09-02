@@ -211,9 +211,9 @@ export const SUPPORTED_OPERATORS_MAP = {
 			name: CustomFunctionOperators.EventsFilterByCount
 		},
 		{
-			key: NotOperators.NotActivitiesFilterByCount,
+			key: NotOperators.NotEventsFilterByCount,
 			label: Liferay.Language.get('has-not-fragment'),
-			name: NotOperators.NotActivitiesFilterByCount
+			name: NotOperators.NotEventsFilterByCount
 		}
 	],
 	[PropertyTypes.Interest]: [
@@ -440,7 +440,9 @@ export const STRING_OPTIONS = [
 
 export const STRING_OPERATOR_LABELS_MAP = {
 	[FunctionalOperators.Contains]: Liferay.Language.get('contains-fragment'),
-	[NotOperators.NotContains]: Liferay.Language.get('not-contains-fragment'),
+	[NotOperators.NotContains]: Liferay.Language.get(
+		'does-not-contain-fragment'
+	),
 	[RelationalOperators.EQ]: Liferay.Language.get('is-fragment'),
 	[RelationalOperators.NE]: Liferay.Language.get('is-not-fragment')
 };
@@ -527,7 +529,7 @@ export const TIME_CONJUNCTION_OPTIONS = [
 ];
 
 export const ACTIVITY_KEY = 'activityKey';
-export const EVENT_KEY = 'eventDefinitionId';
+export const EVENT_KEY = 'eventId';
 
 export const TIME_PERIOD_OPTIONS = [
 	{

@@ -27,11 +27,13 @@ interface Category {
 }
 
 export default function openCategorySelectionModal({
+	onSelect,
 	portletNamespace,
 	redirectURL,
 	selectCategoryURL,
 	title,
 }: {
+	onSelect?: (selectedItems: Record<string, Category>) => void;
 	portletNamespace: string;
 	redirectURL: string;
 	selectCategoryURL: string;
@@ -43,22 +45,34 @@ export default function openCategorySelectionModal({
 		iframeBodyCssClass: '',
 		multiple: true,
 		onSelect: (selectedItems: Record<string, Category>) => {
+			if (onSelect) {
+				onSelect(selectedItems);
+
+				return;
+			}
+
 			if (!Object.keys(selectedItems).length) {
 				return;
 			}
 
-			let url = redirectURL;
+			const url = new URL(redirectURL);
+
+			const resetCurParam = `_${url.searchParams.get('p_p_id')}_resetCur`;
+
+			url.searchParams.set(resetCurParam, 'true');
 
 			const assetCategories = Object.keys(selectedItems);
 
+			let finalURL = url.href;
+
 			assetCategories.forEach((assetCategory) => {
-				url = addParams(
+				finalURL = addParams(
 					`${portletNamespace}assetCategoryId=${selectedItems[assetCategory].categoryId}`,
-					url
+					finalURL
 				);
 			});
 
-			navigate(url);
+			navigate(finalURL);
 		},
 		selectEventName: `${portletNamespace}selectedAssetCategory`,
 		size: 'md',

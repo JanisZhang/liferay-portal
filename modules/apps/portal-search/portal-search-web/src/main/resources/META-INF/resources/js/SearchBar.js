@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-export default function ({namespace: portletNamespace}) {
-	const form = document.getElementById(`${portletNamespace}fm`);
+import {FacetUtil} from './FacetUtil';
+
+export default function ({formId, initialKeywords, retainFacetSelections}) {
+	const form = document.getElementById(formId);
 
 	if (!form) {
 		return;
@@ -19,9 +21,29 @@ export default function ({namespace: portletNamespace}) {
 
 	const keywordsInput = form.querySelector('.search-bar-keywords-input');
 
+	const keywordsInputSearchButton = form.querySelector(
+		'.search-bar-submit-button'
+	);
+
 	const resetStartPage = form.querySelector('.search-bar-reset-start-page');
 
 	const scopeSelect = form.querySelector('.search-bar-scope-select');
+
+	function enableKeywordsInput() {
+		if (keywordsInput) {
+			keywordsInput.disabled = false;
+			keywordsInput.classList.remove('disabled');
+		}
+
+		if (keywordsInputSearchButton) {
+			keywordsInputSearchButton.disabled = false;
+		}
+
+		if (scopeSelect) {
+			scopeSelect.disabled = false;
+			scopeSelect.classList.remove('disabled');
+		}
+	}
 
 	function getKeywords() {
 		if (!keywordsInput) {
@@ -61,9 +83,24 @@ export default function ({namespace: portletNamespace}) {
 
 	function search() {
 		if (isSubmitEnabled()) {
+			const keywords = getKeywords();
 			const searchURL = form.action;
 
-			const queryString = updateQueryString(document.location.search);
+			let queryString = updateQueryString(document.location.search);
+
+			/*
+			 * Refer to LPD-19994 for acceptance criteria regarding
+			 * retaining facet selections across searches. Default behavior
+			 * is to clear all facet selections after searching a new
+			 * keyword.
+			 */
+
+			if (
+				(initialKeywords !== keywords || keywords === '') &&
+				!retainFacetSelections
+			) {
+				queryString = FacetUtil.removeAllFacetParameters(queryString);
+			}
 
 			document.location.href = searchURL + queryString;
 		}
@@ -77,6 +114,8 @@ export default function ({namespace: portletNamespace}) {
 	}
 
 	form.addEventListener('submit', onSubmit);
+
+	enableKeywordsInput();
 
 	return {
 		dispose() {

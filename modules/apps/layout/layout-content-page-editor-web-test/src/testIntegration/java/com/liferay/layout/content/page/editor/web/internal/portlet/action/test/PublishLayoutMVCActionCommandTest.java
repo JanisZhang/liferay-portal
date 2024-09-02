@@ -138,7 +138,8 @@ public class PublishLayoutMVCActionCommandTest {
 				fragmentEntryLink.getFragmentEntryLinkId());
 
 		layoutStructure.markLayoutStructureItemForDeletion(
-			portletLayoutStructureItem.getItemId(), Collections.emptyList());
+			Collections.singletonList(portletLayoutStructureItem.getItemId()),
+			Collections.emptyList());
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
@@ -177,10 +178,12 @@ public class PublishLayoutMVCActionCommandTest {
 				layoutStructure.getMainItemId(), 0, 3);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
-			layoutStructureItem1.getItemId(), Collections.emptyList());
+			Collections.singletonList(layoutStructureItem1.getItemId()),
+			Collections.emptyList());
 
 		layoutStructure.markLayoutStructureItemForDeletion(
-			layoutStructureItem2.getItemId(), Collections.emptyList());
+			Collections.singletonList(layoutStructureItem2.getItemId()),
+			Collections.emptyList());
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
@@ -277,7 +280,7 @@ public class PublishLayoutMVCActionCommandTest {
 			ServiceContextThreadLocal.pushServiceContext(serviceContext);
 
 			Layout originalLayout = _layoutLocalService.addLayout(
-				user.getUserId(), _group.getGroupId(), false,
+				null, user.getUserId(), _group.getGroupId(), false,
 				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 				RandomTestUtil.randomString(), StringPool.BLANK,
 				StringPool.BLANK, LayoutConstants.TYPE_PORTLET, false,
@@ -437,12 +440,12 @@ public class PublishLayoutMVCActionCommandTest {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(), null, serviceContext);
 
 		FragmentEntry fragmentEntry =
 			_fragmentEntryLocalService.addFragmentEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				fragmentCollection.getFragmentCollectionId(), null,
 				RandomTestUtil.randomString(), null, html, null, false, null,
 				null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
@@ -554,8 +557,7 @@ public class PublishLayoutMVCActionCommandTest {
 		throws PortalException {
 
 		_userLocalService.updateStatus(
-			user.getUserId(), WorkflowConstants.STATUS_INACTIVE,
-			serviceContext);
+			user, WorkflowConstants.STATUS_INACTIVE, serviceContext);
 
 		_userLocalService.deleteUser(user.getUserId());
 

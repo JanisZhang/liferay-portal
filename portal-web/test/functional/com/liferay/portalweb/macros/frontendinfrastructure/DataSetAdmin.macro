@@ -50,15 +50,15 @@ definition {
 			}
 
 			if (isSet(title)) {
-				if (IsElementPresent(key_fieldName = "add-here-the-title-of-the-modal", locator1 = "DataSet#PRESELECT_VALUE_INPUT")) {
+				if (IsElementPresent(key_fieldName = "Add the title of the modal.", locator1 = "DataSet#PRESELECT_VALUE_INPUT")) {
 					Type(
-						key_fieldName = "add-here-the-title-of-the-modal",
+						key_fieldName = "Add the title of the modal.",
 						locator1 = "DataSet#PRESELECT_VALUE_INPUT",
 						value1 = ${title});
 				}
 				else {
 					Type(
-						key_fieldName = "add-here-the-title-of-the-side-panel",
+						key_fieldName = "Add the title of the side panel.",
 						locator1 = "DataSet#PRESELECT_VALUE_INPUT",
 						value1 = ${title});
 				}
@@ -324,7 +324,7 @@ definition {
 			key_viewName = ${dataSetViewName});
 
 		if (isSet(key_fieldList)) {
-			DataSetAdmin.goToTab(tabName = "Fields");
+			DataSetAdmin.goToTab(tabName = "Visualization Modes");
 
 			DataSetAdmin.addFields(key_fieldList = ${key_fieldList});
 		}
@@ -600,7 +600,7 @@ definition {
 
 	@summary = "Default summary"
 	macro deleteAllDataSetViews() {
-		var dataSetViewsIdList = JSONDataSet._getDataSetViewsIds();
+		var dataSetViewsIdList = JSONDataSet._getDataSetIds();
 
 		if (${dataSetViewsIdList} != "") {
 			JSONDataSet._deleteFDSViews();
@@ -742,15 +742,15 @@ definition {
 		}
 
 		if (isSet(newTitle)) {
-			if (IsElementPresent(key_fieldName = "add-here-the-title-of-the-modal", locator1 = "DataSet#PRESELECT_VALUE_INPUT")) {
+			if (IsElementPresent(key_fieldName = "Add the title of the modal.", locator1 = "DataSet#PRESELECT_VALUE_INPUT")) {
 				Type(
-					key_fieldName = "add-here-the-title-of-the-modal",
+					key_fieldName = "Add the title of the modal.",
 					locator1 = "DataSet#PRESELECT_VALUE_INPUT",
 					value1 = ${newTitle});
 			}
 			else {
 				Type(
-					key_fieldName = "add-here-the-title-of-the-side-panel",
+					key_fieldName = "Add the title of the side panel.",
 					locator1 = "DataSet#PRESELECT_VALUE_INPUT",
 					value1 = ${newTitle});
 			}
@@ -919,14 +919,14 @@ definition {
 
 	@summary = "Default summary"
 	macro goToDataSetAdminPage() {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_frontend_data_set_views_web_internal_portlet_FDSViewsPortlet");
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_frontend_data_set_admin_web_internal_portlet_FDSAdminPortlet");
 	}
 
 	@summary = "Default summary"
 	macro goToDataSetViewAdminPage(dataSetName = null) {
 		var dataSetEntryId = JSONDataSet._getDataSetEntryIdByName(dataSetName = ${dataSetName});
 
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_frontend_data_set_views_web_internal_portlet_FDSViewsPortlet&p_p_lifecycle=0&_com_liferay_frontend_data_set_views_web_internal_portlet_FDSViewsPortlet_mvcPath=%2Ffds_views.jsp&_com_liferay_frontend_data_set_views_web_internal_portlet_FDSViewsPortlet_fdsEntryId=${dataSetEntryId}");
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_frontend_data_set_admin_web_internal_portlet_FDSAdminPortlet&p_p_lifecycle=0&_com_liferay_frontend_data_set_admin_web_internal_portlet_FDSAdminPortlet_mvcPath=%2Ffds_views.jsp&_com_liferay_frontend_data_set_admin_web_internal_portlet_FDSAdminPortlet_fdsEntryId=${dataSetEntryId}");
 	}
 
 	@summary = "Default summary"

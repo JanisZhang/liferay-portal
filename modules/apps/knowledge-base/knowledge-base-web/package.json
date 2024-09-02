@@ -1,17 +1,17 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.111.0",
-		"@clayui/core": "3.111.0",
-		"@clayui/date-picker": "3.111.0",
-		"@clayui/drop-down": "3.111.0",
-		"@clayui/empty-state": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/core": "3.118.0",
+		"@clayui/date-picker": "3.118.0",
+		"@clayui/drop-down": "3.118.0",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/link": "3.111.0",
-		"@clayui/list": "3.111.0",
+		"@clayui/list": "3.118.0",
 		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/modal": "3.111.0",
+		"@clayui/modal": "3.117.0",
 		"classnames": "2.3.1",
 		"date-fns": "2.29.3",
 		"frontend-js-web": "*",
@@ -23,10 +23,10 @@
 	"name": "knowledge-base-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "5.0.119"
+	"version": "5.0.131"
 }

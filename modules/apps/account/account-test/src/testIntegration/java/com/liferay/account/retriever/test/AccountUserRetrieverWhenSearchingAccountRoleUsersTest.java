@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.comparator.UserIdComparator;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -54,8 +54,9 @@ public class AccountUserRetrieverWhenSearchingAccountRoleUsersTest {
 		_accountEntry2 = AccountEntryTestUtil.addAccountEntry();
 
 		_accountRole = _accountRoleLocalService.addAccountRole(
-			TestPropsValues.getUserId(), _accountEntry1.getAccountEntryId(),
-			RandomTestUtil.randomString(), null, null);
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			_accountEntry1.getAccountEntryId(), RandomTestUtil.randomString(),
+			null, null);
 	}
 
 	@Test
@@ -117,18 +118,20 @@ public class AccountUserRetrieverWhenSearchingAccountRoleUsersTest {
 			_accountUserRetriever.searchAccountRoleUsers(
 				_accountEntry1.getAccountEntryId(),
 				_accountRole.getAccountRoleId(), StringPool.BLANK,
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, new UserIdComparator());
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				UserIdComparator.getInstance(false));
 
 		Assert.assertEquals(
 			accountRoleUsers.size(), baseModelSearchResult.getLength());
 		Assert.assertEquals(
-			ListUtil.sort(accountRoleUsers, new UserIdComparator()),
+			ListUtil.sort(
+				accountRoleUsers, UserIdComparator.getInstance(false)),
 			baseModelSearchResult.getBaseModels());
 
 		baseModelSearchResult = _accountUserRetriever.searchAccountRoleUsers(
 			_accountEntry1.getAccountEntryId(), _accountRole.getAccountRoleId(),
 			keywords, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			new UserIdComparator());
+			UserIdComparator.getInstance(false));
 
 		Assert.assertEquals(1, baseModelSearchResult.getLength());
 
@@ -153,7 +156,7 @@ public class AccountUserRetrieverWhenSearchingAccountRoleUsersTest {
 			_accountUserRetriever.searchAccountRoleUsers(
 				_accountEntry1.getAccountEntryId(),
 				_accountRole.getAccountRoleId(), keywords, 1, 2,
-				new UserIdComparator(true));
+				UserIdComparator.getInstance(true));
 
 		Assert.assertEquals(_users.size(), baseModelSearchResult.getLength());
 
@@ -165,10 +168,10 @@ public class AccountUserRetrieverWhenSearchingAccountRoleUsersTest {
 		baseModelSearchResult = _accountUserRetriever.searchAccountRoleUsers(
 			_accountEntry1.getAccountEntryId(), _accountRole.getAccountRoleId(),
 			keywords, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			new UserIdComparator(false));
+			UserIdComparator.getInstance(false));
 
 		Assert.assertEquals(
-			ListUtil.sort(_users, new UserIdComparator(false)),
+			ListUtil.sort(_users, UserIdComparator.getInstance(false)),
 			baseModelSearchResult.getBaseModels());
 	}
 

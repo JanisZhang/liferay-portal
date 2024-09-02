@@ -405,6 +405,23 @@ definition {
 	}
 
 	@summary = "Default summary"
+	macro assertViewerSegmentsCard(segmentNameList) {
+		ACUtils.waitForLoading();
+
+		for (var segmentName : list ${segmentNameList}) {
+			var key_segmentName = ${segmentName};
+
+			while ((IsElementNotPresent(locator1 = "ACUtils#VIEWER_SEGMENTS_CHART")) && (maxIterations = "50")) {
+				TestUtils.hardRefresh();
+
+				ACUtils.waitForLoading();
+			}
+
+			AssertElementPresent(locator1 = "ACUtils#VIEWER_SEGMENTS_CHART");
+		}
+	}
+
+	@summary = "Default summary"
 	macro assertXAxisTimedGraph(parentName = null) {
 		var key_parentName = ${parentName};
 
@@ -791,6 +808,8 @@ definition {
 
 		Open(value1 = ${analyticsCloudURL});
 
+		WaitForPageLoad();
+
 		if (!(isSet(emailAddress))) {
 			var emailAddress = "test@liferay.com";
 		}
@@ -815,6 +834,14 @@ definition {
 		WaitForPageLoad();
 
 		ACUtils.waitForLoading();
+
+		if ((IsElementNotPresent(locator1 = "ACLogin#EMAIL_LOGIN_FIELD")) || (IsElementNotPresent(locator1 = "ACWorkspace#FARO_DEMO_WORKSPACE"))) {
+			Refresh();
+
+			WaitForPageLoad();
+
+			ACUtils.waitForLoading();
+		}
 
 		if (IsElementNotPresent(locator1 = "ACWorkspace#FARO_DEMO_WORKSPACE")) {
 			ACLogin.loginAs(
@@ -862,7 +889,7 @@ definition {
 
 		if (IsElementNotPresent(locator1 = "ApplicationsMenu#APPLICATIONS_MENU")) {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = ${userEmailAddress});
 		}
 	}
@@ -888,26 +915,36 @@ definition {
 
 			if (${actionType} == "View Blog") {
 				BlogsNavigator.gotoPG(entryTitle = ${documentTitle});
+
+				ACUtils.waitForSendingRequest();
 			}
 
 			if (${actionType} == "Comment Blog") {
 				BlogsNavigator.gotoPG(entryTitle = ${documentTitle});
 
 				Comments.addPG(entryComment = ${commentText});
+
+				ACUtils.waitForSendingRequest(time = 10000);
 			}
 
 			if (${actionType} == "View DM") {
 				DMNavigator.gotoDocumentPG(dmDocumentTitle = ${documentTitle});
+
+				ACUtils.waitForSendingRequest();
 			}
 
 			if (${actionType} == "Download DM") {
 				DMDocument.downloadPG(dmDocumentTitle = ${documentTitle});
+
+				ACUtils.waitForSendingRequest();
 			}
 
 			if (${actionType} == "Comment DM") {
 				DMNavigator.gotoDocumentPG(dmDocumentTitle = ${documentTitle});
 
 				Comments.addPG(entryComment = ${commentText});
+
+				ACUtils.waitForSendingRequest();
 			}
 
 			if (${actionType} == "View Form") {
@@ -928,17 +965,20 @@ definition {
 					fieldValue = ${submitText});
 
 				FormPortlet.submitLocalizedSuccessfully(buttonName = "Submit");
+
+				ACUtils.waitForSendingRequest();
 			}
 		}
 	}
 
 	@summary = "Default summary"
-	macro navigateToSitePageWithUser(actionType = null, submitText = null, emailList = null, documentTitleList = null, siteName = null, pageName = null) {
+	macro navigateToSitePageWithUser(actionType = null, commentText = null, submitText = null, emailList = null, documentTitleList = null, siteName = null, pageName = null) {
 		for (var email : list ${emailList}) {
 			User.logoutAndLoginPG(userLoginEmailAddress = ${email});
 
 			ACUtils.navigateToSitePage(
 				actionType = ${actionType},
+				commentText = ${commentText},
 				documentTitleList = ${documentTitleList},
 				pageName = ${pageName},
 				siteName = ${siteName},
@@ -1025,6 +1065,8 @@ definition {
 				locator1 = "ACSettings#SEARCH_BAR",
 				value1 = "\ENTER");
 		}
+
+		ACUtils.waitForLoading();
 	}
 
 	@summary = "Default summary"
@@ -1068,7 +1110,9 @@ definition {
 			ABTest.terminateTest();
 		}
 
-		ABTest.deleteABTest();
+		if (IsElementNotPresent(locator1 = "ABTest#IMAGE_EMPTY_STATE")) {
+			ABTest.deleteABTest();
+		}
 	}
 
 	@summary = "Default summary"
@@ -1166,11 +1210,15 @@ definition {
 
 			WaitForPageLoad();
 
+			ACUtils.waitForLoading();
+
 			while ((IsElementNotPresent(locator1 = "ACUtils#NAME_LIST")) && (maxIterations = "50")) {
 				ACSegments.searchSegment(findSegment = ${name});
 
 				ACUtils.clearSearchBar();
 			}
+
+			ACUtils.waitForLoading();
 
 			AssertTextEquals(
 				locator1 = "ACUtils#NAME_LIST",
@@ -1201,11 +1249,15 @@ definition {
 
 			WaitForPageLoad();
 
+			ACUtils.waitForLoading();
+
 			while ((IsElementPresent(locator1 = "ACUtils#NAME_LIST")) && (maxIterations = "50")) {
 				ACSegments.searchSegment(findSegment = ${name});
 
 				ACUtils.clearSearchBar();
 			}
+
+			ACUtils.waitForLoading();
 
 			AssertElementNotPresent(locator1 = "ACUtils#NAME_LIST");
 		}

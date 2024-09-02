@@ -186,6 +186,15 @@ class App extends EventEmitter {
 		this.popstateScrollTop = 0;
 
 		/**
+		 * Whether to preload CSS files prior to surface flipping so that FOUC
+		 * does not happen.
+		 * @type {!Boolean}
+		 * @default false
+		 * @protected
+		 */
+		this.preloadCSS = !!config?.preloadCSS;
+
+		/**
 		 * Holds the redirect path containing the query parameters.
 		 * @type {?string}
 		 * @protected
@@ -403,6 +412,7 @@ class App extends EventEmitter {
 		if (!this.pendingNavigate && path === this.activePath) {
 			return this.activeScreen;
 		}
+
 		/* jshint newcap: false */
 		let screen = this.screens[path];
 		if (!screen) {
@@ -485,8 +495,21 @@ class App extends EventEmitter {
 					this.extractParams(route, path)
 				);
 			})
-			.then(() => nextScreen.flip(this.surfaces))
-			.then(() => nextScreen.evaluateStyles(this.surfaces))
+			.then(() =>
+				this.preloadCSS
+					? nextScreen.preloadStyles(this.surfaces)
+					: Promise.resolve()
+			)
+			.then(() =>
+				this.preloadCSS
+					? nextScreen.evaluateStyles(this.surfaces)
+					: nextScreen.flip(this.surfaces)
+			)
+			.then(() =>
+				this.preloadCSS
+					? nextScreen.flip(this.surfaces)
+					: nextScreen.evaluateStyles(this.surfaces)
+			)
 			.then(() => nextScreen.evaluateScripts(this.surfaces))
 			.then(() => this.maybeUpdateScrollPositionState_())
 			.then(() => this.syncScrollPositionSyncThenAsync_())
@@ -501,7 +524,8 @@ class App extends EventEmitter {
 				this.navigationStrategy = NavigationStrategy.IMMEDIATE;
 
 				if (this.scheduledNavigationQueue.length) {
-					const scheduledNavigation = this.scheduledNavigationQueue.shift();
+					const scheduledNavigation =
+						this.scheduledNavigationQueue.shift();
 					this.maybeNavigate_(
 						scheduledNavigation.href,
 						scheduledNavigation
@@ -1061,9 +1085,8 @@ class App extends EventEmitter {
 			event.capturedFormButtonElement = document.activeElement;
 		}
 		else {
-			event.capturedFormButtonElement = form.querySelector(
-				buttonSelector
-			);
+			event.capturedFormButtonElement =
+				form.querySelector(buttonSelector);
 		}
 		this.maybeNavigate_(form.action, event);
 	}

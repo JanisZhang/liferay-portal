@@ -36,7 +36,7 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 	Arrays.sort(classNameIds);
 	%>
 
-	<aui:select label="item-type" name="TypeSettingsProperties--anyAssetType--" title="item-type">
+	<aui:select helpMessage="changing-this-setting-will-reset-all-mappings-for-this-collection" label="item-type" name="TypeSettingsProperties--anyAssetType--" title="item-type">
 		<aui:option label='<%= StringPool.DASH + LanguageUtil.get(request, "not-selected") + StringPool.DASH %>' selected="<%= editAssetListDisplayContext.isNoAssetTypeSelected() %>" value="" />
 
 		<optgroup label="<liferay-ui:message key="single-item-type" />">
@@ -96,7 +96,7 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 			continue;
 		}
 
-		classTypes.sort(new ClassTypeNameComparator(true));
+		classTypes.sort(new ClassTypeNameComparator(locale));
 
 		classTypesAssetRendererFactories.add(assetRendererFactory);
 
@@ -138,7 +138,7 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 	%>
 
 		<div class='asset-subtype <%= (assetSelectedClassTypeIds.length < 1) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace /><%= className %>Options">
-			<aui:select label='<%= LanguageUtil.get(request, "item-subtype") %>' name='<%= "TypeSettingsProperties--anyClassType" + className + "--" %>'>
+			<aui:select helpMessage="changing-this-setting-will-reset-all-mappings-for-this-collection" label='<%= LanguageUtil.get(request, "item-subtype") %>' name='<%= "TypeSettingsProperties--anyClassType" + className + "--" %>'>
 				<aui:option label='<%= StringPool.DASH + LanguageUtil.get(request, "not-selected") + StringPool.DASH %>' selected="<%= editAssetListDisplayContext.isNoAssetTypeSelected() %>" value="" />
 
 				<optgroup label="<%= LanguageUtil.get(request, "single-item-subtype") %>">
@@ -197,9 +197,9 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 							<span class="asset-subtypefields-popup" id="<portlet:namespace /><%= classType.getClassTypeId() %>_<%= className %>PopUpButton">
 								<clay:button
 									borderless="<%= false %>"
+									data-href="<%= selectStructureFieldURL.toString() %>"
 									disabled="<%= !editAssetListDisplayContext.isSubtypeFieldsFilterEnabled() %>"
 									displayType="secondary"
-									data-href="<%= selectStructureFieldURL.toString() %>"
 									label="select"
 									type="button"
 								/>

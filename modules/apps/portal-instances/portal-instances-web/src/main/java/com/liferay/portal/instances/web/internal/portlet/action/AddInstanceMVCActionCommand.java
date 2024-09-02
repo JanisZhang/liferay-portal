@@ -5,7 +5,6 @@
 
 package com.liferay.portal.instances.web.internal.portlet.action;
 
-import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.instances.service.PortalInstancesLocalService;
 import com.liferay.portal.instances.web.internal.constants.PortalInstancesPortletKeys;
 import com.liferay.portal.kernel.exception.CompanyMxException;
@@ -20,13 +19,12 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyService;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.util.PortalInstances;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -134,22 +132,13 @@ public class AddInstanceMVCActionCommand extends BaseMVCActionCommand {
 		String defaultAdminLastName = ParamUtil.getString(
 			actionRequest, "defaultAdminLastName", null);
 
-		Company company = _companyService.addCompany(
-			webId, virtualHostname, mx, maxUsers, active, defaultAdminPassword,
-			defaultAdminScreenName, defaultAdminEmailAddress,
-			defaultAdminFirstName, defaultAdminMiddleName,
-			defaultAdminLastName);
-
-		String siteInitializerKey = ParamUtil.getString(
-			actionRequest, "siteInitializerKey");
-
-		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(
-					company.getCompanyId())) {
-
-			_portalInstancesLocalService.initializePortalInstance(
-				company.getCompanyId(), siteInitializerKey);
-		}
+		PortalInstances.addCompany(
+			ParamUtil.getString(actionRequest, "siteInitializerKey"),
+			() -> _companyService.addCompany(
+				webId, virtualHostname, mx, maxUsers, active,
+				defaultAdminPassword, defaultAdminScreenName,
+				defaultAdminEmailAddress, defaultAdminFirstName,
+				defaultAdminMiddleName, defaultAdminLastName));
 
 		_synchronizePortalInstances();
 	}

@@ -14,6 +14,11 @@
 		<name>account-selector</name>
 		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.AccountSelectorTag</tag-class>
 		<body-content>empty</body-content>
+		<attribute>
+			<name>cssClasses</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 	</tag>
 	<tag>
 		<name>add-to-cart</name>
@@ -167,6 +172,16 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>additionalStatusLabel</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>additionalStatusLabelStyle</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>assignerModalUrl</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -185,6 +200,11 @@
 		</attribute>
 		<attribute>
 			<name>cssClasses</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>displayBeanId</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -252,6 +272,11 @@
 		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.InfoBoxTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
+			<name>actionContext</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>actionLabel</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -281,6 +306,11 @@
 		<name>mini-cart</name>
 		<tag-class>com.liferay.commerce.frontend.taglib.servlet.taglib.MiniCartTag</tag-class>
 		<body-content>empty</body-content>
+		<attribute>
+			<name>cssClasses</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 		<attribute>
 			<name>displayTotalItemsQuantity</name>
 			<required>false</required>

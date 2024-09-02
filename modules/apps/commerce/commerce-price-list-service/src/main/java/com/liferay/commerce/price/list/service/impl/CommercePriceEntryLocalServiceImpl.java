@@ -10,6 +10,7 @@ import com.liferay.commerce.price.list.exception.CommercePriceEntryDisplayDateEx
 import com.liferay.commerce.price.list.exception.CommercePriceEntryExpirationDateException;
 import com.liferay.commerce.price.list.exception.CommercePriceEntryUnitOfMeasureKeyException;
 import com.liferay.commerce.price.list.exception.CommercePriceListMaxPriceValueException;
+import com.liferay.commerce.price.list.exception.CommercePriceListMinPriceValueException;
 import com.liferay.commerce.price.list.exception.DuplicateCommercePriceEntryException;
 import com.liferay.commerce.price.list.exception.NoSuchPriceEntryException;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
@@ -17,7 +18,6 @@ import com.liferay.commerce.price.list.model.CommercePriceEntryTable;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.model.CommercePriceListTable;
 import com.liferay.commerce.price.list.service.base.CommercePriceEntryLocalServiceBaseImpl;
-import com.liferay.commerce.price.list.service.persistence.CommercePriceListFinder;
 import com.liferay.commerce.price.list.service.persistence.CommercePriceListPersistence;
 import com.liferay.commerce.product.exception.NoSuchCPInstanceException;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -182,10 +182,11 @@ public class CommercePriceEntryLocalServiceImpl
 		commercePriceEntry.setDiscountLevel3(discountLevel3);
 		commercePriceEntry.setDiscountLevel4(discountLevel4);
 		commercePriceEntry.setDisplayDate(displayDate);
-		commercePriceEntry.setExpandoBridgeAttributes(serviceContext);
 		commercePriceEntry.setExpirationDate(expirationDate);
 		commercePriceEntry.setPrice(price);
 		commercePriceEntry.setPriceOnApplication(priceOnApplication);
+		commercePriceEntry.setPricingQuantity(
+			_getPricingQuantity(cpInstanceId, unitOfMeasureKey));
 		commercePriceEntry.setPromoPrice(promoPrice);
 		commercePriceEntry.setQuantity(
 			_getQuantity(cpInstanceId, unitOfMeasureKey));
@@ -201,6 +202,7 @@ public class CommercePriceEntryLocalServiceImpl
 
 		commercePriceEntry.setStatusByUserId(user.getUserId());
 		commercePriceEntry.setStatusDate(serviceContext.getModifiedDate(date));
+		commercePriceEntry.setExpandoBridgeAttributes(serviceContext);
 
 		commercePriceEntry = commercePriceEntryPersistence.update(
 			commercePriceEntry);
@@ -583,8 +585,18 @@ public class CommercePriceEntryLocalServiceImpl
 	}
 
 	@Override
+	public List<CommercePriceEntry> getInstanceCommercePriceEntries(
+		String cpInstanceUuid, int start, int end,
+		OrderByComparator<CommercePriceEntry> orderByComparator) {
+
+		return commercePriceEntryPersistence.findByCPInstanceUuid(
+			cpInstanceUuid, start, end, orderByComparator);
+	}
+
+	@Override
 	public int getInstanceCommercePriceEntriesCount(String cpInstanceUuid) {
-		return _commercePriceListFinder.countByCPInstanceUuid(cpInstanceUuid);
+		return commercePriceEntryPersistence.countByCPInstanceUuid(
+			cpInstanceUuid);
 	}
 
 	@Override
@@ -658,6 +670,7 @@ public class CommercePriceEntryLocalServiceImpl
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
+	@Override
 	public CommercePriceEntry updateCommercePriceEntry(
 			long commercePriceEntryId, boolean bulkPricing,
 			boolean discountDiscovery, BigDecimal discountLevel1,
@@ -716,9 +729,10 @@ public class CommercePriceEntryLocalServiceImpl
 		commercePriceEntry.setDiscountLevel4(discountLevel4);
 		commercePriceEntry.setDisplayDate(displayDate);
 		commercePriceEntry.setExpirationDate(expirationDate);
-		commercePriceEntry.setExpandoBridgeAttributes(serviceContext);
 		commercePriceEntry.setPrice(price);
 		commercePriceEntry.setPriceOnApplication(priceOnApplication);
+		commercePriceEntry.setPricingQuantity(
+			_getPricingQuantity(cpInstanceId, unitOfMeasureKey));
 		commercePriceEntry.setPromoPrice(promoPrice);
 		commercePriceEntry.setQuantity(
 			_getQuantity(cpInstanceId, unitOfMeasureKey));
@@ -734,6 +748,7 @@ public class CommercePriceEntryLocalServiceImpl
 
 		commercePriceEntry.setStatusByUserId(user.getUserId());
 		commercePriceEntry.setStatusDate(serviceContext.getModifiedDate(date));
+		commercePriceEntry.setExpandoBridgeAttributes(serviceContext);
 
 		commercePriceEntry = commercePriceEntryPersistence.update(
 			commercePriceEntry);
@@ -998,6 +1013,24 @@ public class CommercePriceEntryLocalServiceImpl
 		);
 	}
 
+	private BigDecimal _getPricingQuantity(
+		long cpInstanceId, String unitOfMeasureKey) {
+
+		if (Validator.isBlank(unitOfMeasureKey) || (cpInstanceId == 0)) {
+			return null;
+		}
+
+		CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
+			_cpInstanceUnitOfMeasureLocalService.fetchCPInstanceUnitOfMeasure(
+				cpInstanceId, unitOfMeasureKey);
+
+		if (cpInstanceUnitOfMeasure == null) {
+			return null;
+		}
+
+		return cpInstanceUnitOfMeasure.getPricingQuantity();
+	}
+
 	private BigDecimal _getQuantity(
 		long cpInstanceId, String unitOfMeasureKey) {
 
@@ -1129,7 +1162,7 @@ public class CommercePriceEntryLocalServiceImpl
 			BigDecimal price, BigDecimal discountLevel1,
 			BigDecimal discountLevel2, BigDecimal discountLevel3,
 			BigDecimal discountLevel4)
-		throws CommercePriceListMaxPriceValueException {
+		throws PortalException {
 
 		BigDecimal maxValue = BigDecimal.valueOf(
 			GetterUtil.getDouble(CommercePriceConstants.PRICE_VALUE_MAX));
@@ -1145,6 +1178,22 @@ public class CommercePriceEntryLocalServiceImpl
 			 (discountLevel4.compareTo(maxValue) > 0))) {
 
 			throw new CommercePriceListMaxPriceValueException();
+		}
+
+		BigDecimal minValue = BigDecimal.valueOf(
+			GetterUtil.getDouble(CommercePriceConstants.PRICE_VALUE_MIN));
+
+		if (((price != null) && (price.compareTo(minValue) < 0)) ||
+			((discountLevel1 != null) &&
+			 (discountLevel1.compareTo(minValue) < 0)) ||
+			((discountLevel2 != null) &&
+			 (discountLevel2.compareTo(minValue) < 0)) ||
+			((discountLevel3 != null) &&
+			 (discountLevel3.compareTo(minValue) < 0)) ||
+			((discountLevel4 != null) &&
+			 (discountLevel4.compareTo(minValue) < 0))) {
+
+			throw new CommercePriceListMinPriceValueException();
 		}
 	}
 
@@ -1183,9 +1232,6 @@ public class CommercePriceEntryLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommercePriceEntryLocalServiceImpl.class);
-
-	@Reference
-	private CommercePriceListFinder _commercePriceListFinder;
 
 	@Reference
 	private CommercePriceListPersistence _commercePriceListPersistence;

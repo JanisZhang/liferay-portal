@@ -5,9 +5,12 @@
 
 package com.liferay.portal.db.partition.internal.operation;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.db.partition.internal.configuration.DBPartitionInsertVirtualInstanceConfiguration;
 import com.liferay.portal.instances.service.PortalInstancesLocalService;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 
@@ -29,6 +32,12 @@ import org.osgi.service.component.annotations.Reference;
 public class DBPartitionInsertVirtualInstanceOperation
 	extends BaseVirtualInstanceOperation {
 
+	@Override
+	public String getOperationCompletedMessage(long companyId) {
+		return "Virtual instance with company ID " + companyId +
+			" imported successfully";
+	}
+
 	@Activate
 	protected void activate(Map<String, Object> properties) {
 		onVirtualInstance(
@@ -40,9 +49,15 @@ public class DBPartitionInsertVirtualInstanceOperation
 							properties);
 
 				long companyId =
-					dBPartitionInsertVirtualInstanceConfiguration.companyId();
+					dBPartitionInsertVirtualInstanceConfiguration.
+						partitionCompanyId();
 
 				if (_companyLocalService.fetchCompany(companyId) != null) {
+					_log.error(
+						StringBundler.concat(
+							"Virtual instance with company ID ", companyId,
+							" already exists"));
+
 					return null;
 				}
 
@@ -59,6 +74,9 @@ public class DBPartitionInsertVirtualInstanceOperation
 			},
 			properties);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DBPartitionInsertVirtualInstanceOperation.class);
 
 	@Reference
 	private CompanyLocalService _companyLocalService;

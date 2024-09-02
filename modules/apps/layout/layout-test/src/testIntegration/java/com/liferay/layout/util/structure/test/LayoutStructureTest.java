@@ -12,8 +12,15 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.layout.util.structure.ColumnLayoutStructureItem;
+import com.liferay.layout.util.structure.ContainerStyledLayoutStructureItem;
+import com.liferay.layout.util.structure.FormStepContainerStyledLayoutStructureItem;
+import com.liferay.layout.util.structure.FormStepLayoutStructureItem;
+import com.liferay.layout.util.structure.FormStyledLayoutStructureItem;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
+import com.liferay.layout.util.structure.RowStyledLayoutStructureItem;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -32,7 +39,11 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import java.io.IOException;
+
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -63,10 +74,10 @@ public class LayoutStructureTest {
 
 		ServiceContextThreadLocal.pushServiceContext(serviceContext);
 
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+		_layout = LayoutTestUtil.addTypeContentLayout(_group);
 
 		_fragmentEntry = _fragmentEntryLocalService.addFragmentEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(), 0,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 			StringUtil.randomString(), StringUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), false, "{fieldSets: []}", null, 0,
@@ -75,17 +86,764 @@ public class LayoutStructureTest {
 
 		long defaultSegmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				_layout.getPlid());
 
 		_fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				_fragmentEntry.getFragmentEntryId(),
-				defaultSegmentsExperienceId, layout.getPlid(),
+				defaultSegmentsExperienceId, _layout.getPlid(),
 				_fragmentEntry.getCss(), _fragmentEntry.getHtml(),
 				_fragmentEntry.getJs(), _fragmentEntry.getConfiguration(), null,
 				StringPool.BLANK, 0, null, _fragmentEntry.getType(),
 				serviceContext);
+	}
+
+	@Test
+	public void testChangeFormType() throws IOException {
+		LayoutStructure layoutStructure = LayoutStructure.of(_readLayoutData());
+
+		layoutStructure.updateFormStyledLayoutStructureItemFormType(
+			"formId", "multistep", 3);
+
+		FormStyledLayoutStructureItem formStyledLayoutStructureItem =
+			(FormStyledLayoutStructureItem)
+				layoutStructure.getLayoutStructureItem("formId");
+
+		List<String> childrenItemIds =
+			formStyledLayoutStructureItem.getChildrenItemIds();
+
+		Assert.assertEquals(
+			childrenItemIds.toString(), 1, childrenItemIds.size());
+
+		FormStepContainerStyledLayoutStructureItem
+			formStepContainerStyledLayoutStructureItem =
+				(FormStepContainerStyledLayoutStructureItem)
+					layoutStructure.getLayoutStructureItem(
+						childrenItemIds.get(0));
+
+		childrenItemIds =
+			formStepContainerStyledLayoutStructureItem.getChildrenItemIds();
+
+		Assert.assertEquals(
+			childrenItemIds.toString(), 3, childrenItemIds.size());
+
+		FormStepLayoutStructureItem formStepLayoutStructureItem =
+			(FormStepLayoutStructureItem)layoutStructure.getLayoutStructureItem(
+				childrenItemIds.get(0));
+
+		childrenItemIds = formStepLayoutStructureItem.getChildrenItemIds();
+
+		Assert.assertEquals("containerId", childrenItemIds.get(0));
+	}
+
+	@Test
+	public void testChangeFormTypeToSimple() throws IOException {
+		LayoutStructure layoutStructure = LayoutStructure.of(_readLayoutData());
+
+		layoutStructure.updateFormStyledLayoutStructureItemFormType(
+			"formId", "multistep", 3);
+
+		layoutStructure.updateFormStyledLayoutStructureItemFormType(
+			"formId", "simple", 3);
+
+		FormStyledLayoutStructureItem formStyledLayoutStructureItem =
+			(FormStyledLayoutStructureItem)
+				layoutStructure.getLayoutStructureItem("formId");
+
+		List<String> childrenItemIds =
+			formStyledLayoutStructureItem.getChildrenItemIds();
+
+		Assert.assertEquals(
+			childrenItemIds.toString(), 1, childrenItemIds.size());
+
+		LayoutStructureItem layoutStructureItem =
+			layoutStructure.getLayoutStructureItem(childrenItemIds.get(0));
+
+		Assert.assertTrue(
+			layoutStructureItem instanceof ContainerStyledLayoutStructureItem);
+
+		Assert.assertEquals("containerId", layoutStructureItem.getItemId());
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testCopyColumnLayoutStructureItem() {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerStyledLayoutStructureItem1 =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem rowStyledLayoutStructureItem1 =
+			layoutStructure.addRowStyledLayoutStructureItem(
+				containerStyledLayoutStructureItem1.getItemId(), 0, 1);
+
+		LayoutStructureItem columnLayoutStructureItem =
+			layoutStructure.addColumnLayoutStructureItem(
+				rowStyledLayoutStructureItem1.getItemId(), 0);
+
+		layoutStructure.copyLayoutStructureItems(
+			Collections.singletonList(columnLayoutStructureItem.getItemId()),
+			rootLayoutStructureItem.getItemId());
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testCopyDropZoneLayoutStructureItem() {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem dropZoneLayoutStructureItem =
+			layoutStructure.addDropZoneLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		layoutStructure.copyLayoutStructureItems(
+			Collections.singletonList(dropZoneLayoutStructureItem.getItemId()),
+			rootLayoutStructureItem.getItemId());
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testCopyFormStepLayoutStructureItem() {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem formStyledLayoutStructureItem =
+			layoutStructure.addFormStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem formStepContainerStyledLayoutStructureItem =
+			layoutStructure.addFormStepContainerStyledLayoutStructureItem(
+				formStyledLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem formStepLayoutStructureItem =
+			layoutStructure.addFormStepLayoutStructureItem(
+				formStepContainerStyledLayoutStructureItem.getItemId(), 0);
+
+		layoutStructure.copyLayoutStructureItems(
+			Collections.singletonList(formStepLayoutStructureItem.getItemId()),
+			rootLayoutStructureItem.getItemId());
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testCopyFragmentDropZoneLayoutStructureItem() throws Exception {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem fragmentDropZoneLayoutStructureItem =
+			layoutStructure.addFragmentDropZoneLayoutStructureItem(
+				fragmentStyledLayoutStructureItem.getItemId(), 0);
+
+		layoutStructure.copyLayoutStructureItems(
+			Collections.singletonList(
+				fragmentDropZoneLayoutStructureItem.getItemId()),
+			rootLayoutStructureItem.getItemId());
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testCopyLayoutStructureItemsWithCollectionItemAsParent() {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem collectionStyledLayoutStructureItem =
+			layoutStructure.addCollectionStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		List<String> childrenItemIds =
+			collectionStyledLayoutStructureItem.getChildrenItemIds();
+
+		layoutStructure.copyLayoutStructureItems(
+			Collections.singletonList(rootLayoutStructureItem.getItemId()),
+			childrenItemIds.get(0));
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testCopyLayoutStructureItemsWithParentItemAsChildrenOfItemId()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem rowStyledLayoutStructureItem =
+			layoutStructure.addRowStyledLayoutStructureItem(
+				containerStyledLayoutStructureItem.getItemId(), 0, 1);
+
+		LayoutStructureItem columnLayoutStructureItem =
+			layoutStructure.addColumnLayoutStructureItem(
+				rowStyledLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		layoutStructure.addFragmentStyledLayoutStructureItem(
+			fragmentEntryLink.getFragmentEntryLinkId(),
+			columnLayoutStructureItem.getItemId(), 0);
+
+		layoutStructure.copyLayoutStructureItems(
+			Collections.singletonList(
+				containerStyledLayoutStructureItem.getItemId()),
+			columnLayoutStructureItem.getItemId());
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithCollectionStyledLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem collectionStyledLayoutStructureItem =
+			layoutStructure.addCollectionStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem.getItemId()),
+				collectionStyledLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 0, copiedLayoutStructureItems,
+			collectionStyledLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithColumnLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem rowStyledLayoutStructureItem =
+			layoutStructure.addRowStyledLayoutStructureItem(
+				containerStyledLayoutStructureItem.getItemId(), 0, 1);
+
+		LayoutStructureItem columnLayoutStructureItem =
+			layoutStructure.addColumnLayoutStructureItem(
+				rowStyledLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				columnLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem.getItemId()),
+				columnLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 0, copiedLayoutStructureItems, columnLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithContainerStyledLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem rowStyledLayoutStructureItem =
+			layoutStructure.addRowStyledLayoutStructureItem(
+				containerStyledLayoutStructureItem.getItemId(), 0, 1);
+
+		LayoutStructureItem columnLayoutStructureItem =
+			layoutStructure.addColumnLayoutStructureItem(
+				rowStyledLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				columnLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem.getItemId()),
+				containerStyledLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 0, copiedLayoutStructureItems,
+			containerStyledLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithDropZoneLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem dropZoneLayoutStructureItem =
+			layoutStructure.addDropZoneLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				dropZoneLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem.getItemId()),
+				dropZoneLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 0, copiedLayoutStructureItems, dropZoneLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithFormStepContainerStyledLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem formStyledLayoutStructureItem =
+			layoutStructure.addFormStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem formStepContainerStyledLayoutStructureItem =
+			layoutStructure.addFormStepContainerStyledLayoutStructureItem(
+				formStyledLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem formStepLayoutStructureItem =
+			layoutStructure.addFormStepLayoutStructureItem(
+				formStepContainerStyledLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				formStepLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem.getItemId()),
+				formStepContainerStyledLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 1, copiedLayoutStructureItems, formStyledLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithFormStepLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem formStyledLayoutStructureItem =
+			layoutStructure.addFormStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem formStepContainerStyledLayoutStructureItem =
+			layoutStructure.addFormStepContainerStyledLayoutStructureItem(
+				formStyledLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem formStepLayoutStructureItem =
+			layoutStructure.addFormStepLayoutStructureItem(
+				formStepContainerStyledLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				formStepLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem.getItemId()),
+				formStepLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 0, copiedLayoutStructureItems, formStepLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithFormStyledLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem formStyledLayoutStructureItem =
+			layoutStructure.addFormStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				formStyledLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem.getItemId()),
+				formStyledLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 0, copiedLayoutStructureItems, formStyledLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithFragmentDropZoneLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		FragmentEntryLink fragmentEntryLink1 = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem1 =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink1.getFragmentEntryLinkId(),
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem fragmentDropZoneLayoutStructureItem =
+			layoutStructure.addFragmentDropZoneLayoutStructureItem(
+				fragmentStyledLayoutStructureItem1.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink2 = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem2 =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink2.getFragmentEntryLinkId(),
+				fragmentDropZoneLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem2.getItemId()),
+				fragmentDropZoneLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 0, copiedLayoutStructureItems,
+			fragmentDropZoneLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithFragmentStyledLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		FragmentEntryLink fragmentEntryLink1 = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem1 =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink1.getFragmentEntryLinkId(),
+				rootLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink2 = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem2 =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink2.getFragmentEntryLinkId(),
+				rootLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem2.getItemId()),
+				fragmentStyledLayoutStructureItem1.getItemId());
+
+		_assertParentLayoutStructureItem(
+			3, 2, copiedLayoutStructureItems, rootLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithRootLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				rootLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem.getItemId()),
+				rootLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 0, copiedLayoutStructureItems, rootLayoutStructureItem);
+	}
+
+	@Test
+	public void testCopyLayoutStructureItemWithRowStyledLayoutStructureItemAsParent()
+		throws Exception {
+
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem rowStyledLayoutStructureItem =
+			layoutStructure.addRowStyledLayoutStructureItem(
+				containerStyledLayoutStructureItem.getItemId(), 0, 1);
+
+		LayoutStructureItem columnLayoutStructureItem =
+			layoutStructure.addColumnLayoutStructureItem(
+				rowStyledLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink.getFragmentEntryLinkId(),
+				columnLayoutStructureItem.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					fragmentStyledLayoutStructureItem.getItemId()),
+				rowStyledLayoutStructureItem.getItemId());
+
+		_assertParentLayoutStructureItem(
+			2, 1, copiedLayoutStructureItems,
+			containerStyledLayoutStructureItem);
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testCopyLayoutStructureItemWithSameItemIdAndParentItemId() {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		layoutStructure.copyLayoutStructureItems(
+			Collections.singletonList(rootLayoutStructureItem.getItemId()),
+			rootLayoutStructureItem.getItemId());
+	}
+
+	@Test
+	public void testCopyMultipleLayoutStructureItems() throws Exception {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem rowStyledLayoutStructureItem =
+			layoutStructure.addRowStyledLayoutStructureItem(
+				containerStyledLayoutStructureItem.getItemId(), 0, 2);
+
+		LayoutStructureItem columnLayoutStructureItem1 =
+			layoutStructure.addColumnLayoutStructureItem(
+				rowStyledLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink1 = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem1 =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink1.getFragmentEntryLinkId(),
+				columnLayoutStructureItem1.getItemId(), 0);
+
+		LayoutStructureItem columnLayoutStructureItem2 =
+			layoutStructure.addColumnLayoutStructureItem(
+				rowStyledLayoutStructureItem.getItemId(), 1);
+
+		FragmentEntryLink fragmentEntryLink2 = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem2 =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink2.getFragmentEntryLinkId(),
+				columnLayoutStructureItem2.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Arrays.asList(
+					fragmentStyledLayoutStructureItem1.getItemId(),
+					fragmentStyledLayoutStructureItem2.getItemId()),
+				containerStyledLayoutStructureItem.getItemId());
+
+		Assert.assertEquals(
+			copiedLayoutStructureItems.toString(), 2,
+			copiedLayoutStructureItems.size());
+
+		_assertFragmentStyledLayoutStructureItem(
+			(FragmentStyledLayoutStructureItem)copiedLayoutStructureItems.get(
+				0),
+			(FragmentStyledLayoutStructureItem)
+				fragmentStyledLayoutStructureItem1);
+
+		_assertFragmentStyledLayoutStructureItem(
+			(FragmentStyledLayoutStructureItem)copiedLayoutStructureItems.get(
+				1),
+			(FragmentStyledLayoutStructureItem)
+				fragmentStyledLayoutStructureItem2);
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testCopyRootLayoutStructureItem() {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		layoutStructure.copyLayoutStructureItems(
+			Collections.singletonList(rootLayoutStructureItem.getItemId()),
+			containerStyledLayoutStructureItem.getItemId());
+	}
+
+	@Test
+	public void testCopySingleLayoutStructureItem() throws Exception {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		LayoutStructureItem rowStyledLayoutStructureItem =
+			layoutStructure.addRowStyledLayoutStructureItem(
+				containerStyledLayoutStructureItem.getItemId(), 0, 2);
+
+		LayoutStructureItem columnLayoutStructureItem1 =
+			layoutStructure.addColumnLayoutStructureItem(
+				rowStyledLayoutStructureItem.getItemId(), 0);
+
+		FragmentEntryLink fragmentEntryLink1 = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem1 =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink1.getFragmentEntryLinkId(),
+				columnLayoutStructureItem1.getItemId(), 0);
+
+		LayoutStructureItem columnLayoutStructureItem2 =
+			layoutStructure.addColumnLayoutStructureItem(
+				rowStyledLayoutStructureItem.getItemId(), 1);
+
+		FragmentEntryLink fragmentEntryLink2 = _addFragmentEntryLink();
+
+		LayoutStructureItem fragmentStyledLayoutStructureItem2 =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
+				fragmentEntryLink2.getFragmentEntryLinkId(),
+				columnLayoutStructureItem2.getItemId(), 0);
+
+		List<LayoutStructureItem> copiedLayoutStructureItems =
+			layoutStructure.copyLayoutStructureItems(
+				Collections.singletonList(
+					rowStyledLayoutStructureItem.getItemId()),
+				containerStyledLayoutStructureItem.getItemId());
+
+		Assert.assertEquals(
+			copiedLayoutStructureItems.toString(), 5,
+			copiedLayoutStructureItems.size());
+
+		Assert.assertTrue(
+			copiedLayoutStructureItems.get(0) instanceof
+				RowStyledLayoutStructureItem);
+		Assert.assertTrue(
+			copiedLayoutStructureItems.get(1) instanceof
+				ColumnLayoutStructureItem);
+
+		_assertFragmentStyledLayoutStructureItem(
+			(FragmentStyledLayoutStructureItem)copiedLayoutStructureItems.get(
+				2),
+			(FragmentStyledLayoutStructureItem)
+				fragmentStyledLayoutStructureItem1);
+
+		Assert.assertTrue(
+			copiedLayoutStructureItems.get(3) instanceof
+				ColumnLayoutStructureItem);
+
+		_assertFragmentStyledLayoutStructureItem(
+			(FragmentStyledLayoutStructureItem)copiedLayoutStructureItems.get(
+				4),
+			(FragmentStyledLayoutStructureItem)
+				fragmentStyledLayoutStructureItem2);
 	}
 
 	@Test
@@ -113,7 +871,8 @@ public class LayoutStructureTest {
 				columnLayoutStructureItem.getItemId(), 0);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
-			fragmentStyledLayoutStructureItem.getItemId(),
+			Collections.singletonList(
+				fragmentStyledLayoutStructureItem.getItemId()),
 			Collections.emptyList());
 
 		Assert.assertEquals(
@@ -156,7 +915,8 @@ public class LayoutStructureTest {
 			columnLayoutStructureItem.getItemId(), 0);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
-			columnLayoutStructureItem.getItemId(), Collections.emptyList());
+			Collections.singletonList(columnLayoutStructureItem.getItemId()),
+			Collections.emptyList());
 
 		Assert.assertEquals(
 			0,
@@ -198,7 +958,8 @@ public class LayoutStructureTest {
 			columnLayoutStructureItem.getItemId(), 0);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
-			rowStyledLayoutStructureItem.getItemId(), Collections.emptyList());
+			Collections.singletonList(rowStyledLayoutStructureItem.getItemId()),
+			Collections.emptyList());
 
 		Assert.assertEquals(
 			0,
@@ -240,7 +1001,8 @@ public class LayoutStructureTest {
 			columnLayoutStructureItem.getItemId(), 0);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
-			containerStyledLayoutStructureItem.getItemId(),
+			Collections.singletonList(
+				containerStyledLayoutStructureItem.getItemId()),
 			Collections.emptyList());
 
 		Assert.assertEquals(
@@ -259,6 +1021,68 @@ public class LayoutStructureTest {
 					_group.getGroupId(), _fragmentEntry.getFragmentEntryId()));
 	}
 
+	private FragmentEntryLink _addFragmentEntryLink() throws Exception {
+		long defaultSegmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				_layout.getPlid());
+
+		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
+			null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+			_fragmentEntry.getFragmentEntryId(), defaultSegmentsExperienceId,
+			_layout.getPlid(), _fragmentEntry.getCss(),
+			_fragmentEntry.getHtml(), _fragmentEntry.getJs(),
+			_fragmentEntry.getConfiguration(), null, StringPool.BLANK, 0, null,
+			_fragmentEntry.getType(),
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+	}
+
+	private void _assertFragmentStyledLayoutStructureItem(
+		FragmentStyledLayoutStructureItem
+			copiedFragmentStyledLayoutStructureItem,
+		FragmentStyledLayoutStructureItem
+			originalFragmentStyledLayoutStructureItem) {
+
+		Assert.assertEquals(
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				copiedFragmentStyledLayoutStructureItem.
+					getFragmentEntryLinkId()),
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				originalFragmentStyledLayoutStructureItem.
+					getFragmentEntryLinkId()));
+	}
+
+	private void _assertParentLayoutStructureItem(
+		int expectedChildrenItemIds, int childIndex,
+		List<LayoutStructureItem> copiedLayoutStructureItems,
+		LayoutStructureItem parentLayoutStructureItem) {
+
+		Assert.assertEquals(
+			copiedLayoutStructureItems.toString(), 1,
+			copiedLayoutStructureItems.size());
+
+		LayoutStructureItem layoutStructureItem =
+			copiedLayoutStructureItems.get(0);
+
+		Assert.assertEquals(
+			layoutStructureItem.getParentItemId(),
+			parentLayoutStructureItem.getItemId());
+
+		List<String> childrenItemIds =
+			parentLayoutStructureItem.getChildrenItemIds();
+
+		Assert.assertEquals(
+			childrenItemIds.toString(), expectedChildrenItemIds,
+			childrenItemIds.size());
+		Assert.assertEquals(
+			childrenItemIds.get(childIndex), layoutStructureItem.getItemId());
+	}
+
+	private String _readLayoutData() throws IOException {
+		return StringUtil.read(
+			LayoutStructureTest.class.getResourceAsStream(
+				"dependencies/layout_data_with_form.json"));
+	}
+
 	private FragmentEntry _fragmentEntry;
 	private FragmentEntryLink _fragmentEntryLink;
 
@@ -270,6 +1094,8 @@ public class LayoutStructureTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	private Layout _layout;
 
 	@Inject
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;

@@ -7,38 +7,58 @@ import {useEffect, useState} from 'react';
 
 import {Filters} from '../../../common/utils/constants/filters';
 import {getCamelCase} from '../../../common/utils/getCamelCase';
-import getSearchFilterTerm from '../../../common/utils/getSearchFilterTerm';
 import {INITIAL_FILTER} from '../utils/constants/initialFilter';
 import getActivityPeriodFilterTerm from '../utils/getActivityPeriodFilterTerm';
 
 export default function useFilters(
 	openRequestFilter: boolean,
-	isChannel?: boolean
+	urlParams: URLSearchParams,
+	sort: string,
+	isChannel?: boolean,
+	nestedFields?: string
 ) {
-	const [filters, setFilters] = useState(
-		(JSON.parse(
-			sessionStorage.getItem('requestFilters')!
-		) as typeof INITIAL_FILTER) || INITIAL_FILTER
-	);
+	const [filters, setFilters] = useState(() => {
+		const initialFilter: typeof INITIAL_FILTER =
+			structuredClone(INITIAL_FILTER);
 
-	const [filtersTerm, setFilterTerm] = useState('');
+		if (urlParams.get('enddate')) {
+			initialFilter.activityPeriod.dates.endDate =
+				urlParams.get('enddate')!;
+		}
+
+		if (urlParams.get('startdate')) {
+			initialFilter.activityPeriod.dates.startDate =
+				urlParams.get('startdate')!;
+		}
+
+		if (urlParams.getAll('partner').length) {
+			initialFilter.partner.value = urlParams.getAll('partner')!;
+		}
+
+		if (urlParams.get('search')) {
+			initialFilter.searchTerm = urlParams.get('search')!;
+		}
+
+		if (urlParams.getAll('status').length) {
+			initialFilter.status.value = urlParams.getAll('status')!;
+		}
+
+		return initialFilter;
+	});
 
 	const mdfRequestRoleFilter = isChannel
 		? openRequestFilter
 			? Filters.MDF_REQUEST_LISTING.channelsOpen
 			: Filters.MDF_REQUEST_LISTING.channelsCompleted
 		: openRequestFilter
-		? Filters.MDF_REQUEST_LISTING.partnersOpen
-		: Filters.MDF_REQUEST_LISTING.partnersCompleted;
+			? Filters.MDF_REQUEST_LISTING.partnersOpen
+			: Filters.MDF_REQUEST_LISTING.partnersCompleted;
 
-	const onFilter = (newFilters: Partial<typeof INITIAL_FILTER>) =>
-		setFilters((previousFilters) => ({...previousFilters, ...newFilters}));
-
-	sessionStorage.setItem('requestFilters', JSON.stringify(filters));
-	sessionStorage.setItem(
-		'openRequestFilter',
-		JSON.stringify(openRequestFilter)
-	);
+	const onFilter = (newFilters: Partial<typeof INITIAL_FILTER>) => {
+		setFilters((previousFilters) => {
+			return {...previousFilters, ...newFilters};
+		});
+	};
 
 	useEffect(() => {
 		let initialFilter = '';
@@ -59,6 +79,31 @@ export default function useFilters(
 				initialFilter,
 				filters.activityPeriod
 			);
+
+			if (filters.activityPeriod?.dates.endDate) {
+				urlParams.set('enddate', filters.activityPeriod?.dates.endDate);
+			}
+			else {
+				urlParams.delete('enddate');
+			}
+
+			if (filters.activityPeriod?.dates.startDate) {
+				urlParams.set(
+					'startdate',
+					filters.activityPeriod?.dates.startDate
+				);
+			}
+			else {
+				urlParams.delete('startdate');
+			}
+		}
+		else {
+			urlParams.delete('enddate');
+			urlParams.delete('startdate');
+		}
+
+		if (nestedFields) {
+			urlParams.set('nestedFields', nestedFields);
 		}
 
 		if (filters.status.value.length) {
@@ -87,27 +132,34 @@ export default function useFilters(
 			initialFilter = initialFilter
 				? initialFilter.concat(` and (${partnerFilter})`)
 				: initialFilter.concat(`(${partnerFilter})`);
-		}
 
-		if (filters.searchTerm) {
-			initialFilter = initialFilter.concat(
-				getSearchFilterTerm(filters.searchTerm)
+			urlParams.delete('partner');
+
+			filters.partner.value.forEach((value) =>
+				urlParams.append('partner', value)
 			);
+		}
+		else {
+			urlParams.delete('partner');
 		}
 
 		onFilter({
 			hasValue: hasFilter,
 		});
 
-		setFilterTerm(initialFilter);
+		urlParams.set('filter', initialFilter);
+		urlParams.set('sort', sort);
 	}, [
 		filters.activityPeriod,
 		filters.searchTerm,
 		filters.status,
 		filters.partner,
-		setFilters,
 		mdfRequestRoleFilter,
+		nestedFields,
+		setFilters,
+		sort,
+		urlParams,
 	]);
 
-	return {filters, filtersTerm, onFilter, setFilters};
+	return {filters, onFilter, setFilters};
 }

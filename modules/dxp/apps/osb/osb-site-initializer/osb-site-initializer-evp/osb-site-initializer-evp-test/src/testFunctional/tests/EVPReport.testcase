@@ -1,4 +1,4 @@
-@component-name = "OSB Site Initializer EVP"
+@component-name = "portal-site-management"
 definition {
 
 	var baseURL = PropsUtil.get("portal.url");

@@ -11,6 +11,7 @@ import {
 	SUPPORTED_OPERATORS_MAP,
 	TimeSpans
 } from '../constants';
+import {EntityType} from '../../context/referencedObjects';
 import {fromJS, Map} from 'immutable';
 import {Property} from 'shared/util/records';
 
@@ -513,6 +514,22 @@ describe('utils', () => {
 			expect(
 				utils.convertFieldMappingsToProperties(fieldMappingsIMap)
 			).toMatchSnapshot();
+		});
+	});
+
+	describe('parseReferencedEntityId', () => {
+		it('should parse referenced entity id', () => {
+			const referencedEntities = new Map({
+				assets: new Map({'123_title': 'test'})
+			});
+
+			expect(
+				utils.parseReferencedEntityId(
+					'123',
+					referencedEntities,
+					EntityType.Assets
+				)
+			).toBe('123_title');
 		});
 	});
 });

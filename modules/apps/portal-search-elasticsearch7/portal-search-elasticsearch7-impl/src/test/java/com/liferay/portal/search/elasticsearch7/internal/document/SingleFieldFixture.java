@@ -23,11 +23,9 @@ import org.elasticsearch.index.query.QueryBuilder;
 public class SingleFieldFixture {
 
 	public SingleFieldFixture(
-		RestHighLevelClient restHighLevelClient, IndexName indexName,
-		String type) {
+		RestHighLevelClient restHighLevelClient, IndexName indexName) {
 
 		_restHighLevelClient = restHighLevelClient;
-		_type = type;
 
 		_index = indexName.getName();
 	}
@@ -42,7 +40,7 @@ public class SingleFieldFixture {
 			_restHighLevelClient, _field, _createQueryBuilder(text), expected);
 	}
 
-	public void indexDocument(String value) {
+	public void indexDocument(Object value) {
 		IndexRequest indexRequest = Requests.indexRequest(_index);
 
 		indexRequest.source(_field, value);
@@ -73,6 +71,5 @@ public class SingleFieldFixture {
 	private final String _index;
 	private QueryBuilderFactory _queryBuilderFactory;
 	private final RestHighLevelClient _restHighLevelClient;
-	private final String _type;
 
 }

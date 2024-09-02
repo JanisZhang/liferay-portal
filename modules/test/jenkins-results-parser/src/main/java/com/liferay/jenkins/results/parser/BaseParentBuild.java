@@ -26,6 +26,7 @@ import org.dom4j.Element;
  */
 public abstract class BaseParentBuild extends BaseBuild implements ParentBuild {
 
+	@Override
 	public void addDownstreamBuilds(Map<String, String> urlAxisNames) {
 		if (urlAxisNames.isEmpty()) {
 			return;
@@ -346,18 +347,7 @@ public abstract class BaseParentBuild extends BaseBuild implements ParentBuild {
 			downstreamBuilds = getDownstreamBuilds(status);
 		}
 
-		for (Build downstreamBuild : downstreamBuilds) {
-			if (!(downstreamBuild instanceof ParentBuild)) {
-				continue;
-			}
-
-			ParentBuild parentBuild = (ParentBuild)downstreamBuild;
-
-			totalSlavesUsedCount += parentBuild.getTotalSlavesUsedCount(
-				status, modifiedBuildsOnly);
-		}
-
-		return totalSlavesUsedCount;
+		return totalSlavesUsedCount + downstreamBuilds.size();
 	}
 
 	@Override
@@ -632,6 +622,7 @@ public abstract class BaseParentBuild extends BaseBuild implements ParentBuild {
 		return failedDownstreamBuilds;
 	}
 
+	@Override
 	protected List<Element> getJenkinsReportTableRowElements(
 		String result, String status) {
 

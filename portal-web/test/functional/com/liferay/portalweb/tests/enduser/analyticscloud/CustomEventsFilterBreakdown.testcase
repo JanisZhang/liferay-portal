@@ -624,9 +624,7 @@ definition {
 		}
 
 		task ("Check that the analysis result appears") {
-			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "(");
-
-			var dataSourceName = StringUtil.trim(${dataSourceName});
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			ACTimeFilter.clickTimeFilterButton();
 
@@ -642,9 +640,8 @@ definition {
 		property test.run.type = "single";
 
 		var attributeName = "city";
-		var inputValue = "recife";
-
-		var attributeValueList = "${inputValue},los angeles,madrid";
+		var inputValue = "los angeles";
+		var attributeValueList = "los angeles,madrid";
 		var optionValueList = "contains,not contains,is,is not";
 
 		task ("Fill fields and create custom event") {
@@ -691,23 +688,23 @@ definition {
 					key_filterName = ${attributeName},
 					locator1 = "ACEventAnalysis#CHOOSE_FILTER");
 
-				Select(
-					locator1 = "Select#SELECT",
-					value1 = ${optionValue});
+				ACUtils.selectGenericOption(optionValue = ${optionValue});
 
 				Click(locator1 = "ACEventAnalysis#INPUT_CONDITION");
 
+				ACUtils.waitForLoading();
+
 				for (var attributeValue : list ${attributeValueList}) {
 					AssertElementPresent(
-						key_buttonName = ${attributeValue},
-						locator1 = "ACUtils#GENERIC_BUTTON");
+						key_optionName = ${attributeValue},
+						locator1 = "ACEventAnalysis#DROPDOWN_BY_OPTION");
 				}
 
 				Click(
-					key_buttonName = ${inputValue},
-					locator1 = "ACUtils#GENERIC_BUTTON");
+					key_optionName = ${inputValue},
+					locator1 = "ACEventAnalysis#DROPDOWN_BY_OPTION");
 
-				Click(locator1 = "ACEventAnalysis#FILTER_DONE_BUTTON");
+				Click(locator1 = "ACEventAnalysis#FILTER_APPLY_BUTTON");
 			}
 
 			task ("Check that the analysis result appears") {
@@ -772,9 +769,7 @@ definition {
 		}
 
 		task ("Check that the analysis result appears") {
-			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "(");
-
-			var dataSourceName = StringUtil.trim(${dataSourceName});
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			ACEventAnalysis.viewAnalysisInformation(informationValueList = "ac page - site name - ${dataSourceName}");
 		}
@@ -790,7 +785,7 @@ definition {
 		}
 
 		task ("Check that the analysis result does not appear") {
-			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - liferay dxp");
+			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - ${dataSourceName}");
 		}
 
 		task ("Remove the filter from the analysis") {
@@ -818,7 +813,7 @@ definition {
 		}
 
 		task ("Check that the analysis result does not appear") {
-			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - liferay dxp");
+			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - ${dataSourceName}");
 		}
 	}
 
@@ -874,9 +869,7 @@ definition {
 		}
 
 		task ("Check that the analysis result appears") {
-			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "(");
-
-			var dataSourceName = StringUtil.trim(${dataSourceName});
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			ACEventAnalysis.viewAnalysisInformation(informationValueList = "ac page - site name - ${dataSourceName}");
 		}
@@ -895,7 +888,7 @@ definition {
 		}
 
 		task ("Check that the analysis result does not appear") {
-			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - liferay dxp");
+			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - ${dataSourceName}");
 		}
 
 		task ("Remove the filter from the analysis") {
@@ -984,9 +977,7 @@ definition {
 		}
 
 		task ("Check that the analysis result appears") {
-			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "(");
-
-			var dataSourceName = StringUtil.trim(${dataSourceName});
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			ACEventAnalysis.viewAnalysisInformation(informationValueList = "ac page - site name - ${dataSourceName}");
 		}
@@ -1003,7 +994,7 @@ definition {
 		}
 
 		task ("Check that the analysis result does not appear") {
-			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - liferay dxp");
+			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - ${dataSourceName}");
 		}
 
 		task ("Remove the filter from the analysis") {
@@ -1284,6 +1275,10 @@ definition {
 				timeToSendCustomEvent = 3);
 		}
 
+		task ("Close sessions") {
+			ACUtils.closeAllSessionsAndWait();
+		}
+
 		task ("Sign in as new user") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "test@liferay.com",
@@ -1302,6 +1297,10 @@ definition {
 			ACCustomEvents.createCustomEvent(
 				customEventName = ${customEventName},
 				timeToSendCustomEvent = 2);
+		}
+
+		task ("Close sessions") {
+			ACUtils.closeAllSessionsAndWait();
 		}
 
 		task ("Fill fields and make new interactions with custom event") {

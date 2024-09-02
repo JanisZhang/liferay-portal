@@ -5,12 +5,14 @@
 
 package com.liferay.jethr0.entity;
 
-import com.liferay.jethr0.util.BaseRetryable;
-import com.liferay.jethr0.util.Retryable;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
 import com.liferay.jethr0.util.StringUtil;
+
+import java.net.URL;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,6 +51,13 @@ public abstract class BaseEntity implements Entity {
 	@Override
 	public Date getCreatedDate() {
 		return _createdDate;
+	}
+
+	@Override
+	public URL getEntityURL() {
+		return StringUtil.toURL(
+			StringUtil.combine(
+				Jethr0ContextUtil.getLiferayPortalURL(), "/#/", getId()));
 	}
 
 	@Override
@@ -105,6 +114,13 @@ public abstract class BaseEntity implements Entity {
 	}
 
 	@Override
+	public void setJSONObject(JSONObject jsonObject) {
+		_createdDate = _getDateFromJSON(jsonObject, "dateCreated");
+		_id = jsonObject.optLong("id");
+		_modifiedDate = _getDateFromJSON(jsonObject, "dateModified");
+	}
+
+	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		_modifiedDate = modifiedDate;
 	}
@@ -115,12 +131,16 @@ public abstract class BaseEntity implements Entity {
 	}
 
 	protected BaseEntity(JSONObject jsonObject) {
-		_createdDate = _getDateFromJSON(jsonObject, "dateCreated");
-		_id = jsonObject.optLong("id");
-		_modifiedDate = _getDateFromJSON(jsonObject, "dateModified");
+		setJSONObject(jsonObject);
 	}
 
 	protected void addRelatedEntities(Collection<? extends Entity> entities) {
+		if (entities == null) {
+			return;
+		}
+
+		entities.removeAll(Collections.singleton(null));
+
 		for (Entity entity : entities) {
 			addRelatedEntity(entity);
 		}
@@ -144,6 +164,12 @@ public abstract class BaseEntity implements Entity {
 	}
 
 	protected void removeRelatedEntities(Set<? extends Entity> entities) {
+		if (entities == null) {
+			return;
+		}
+
+		entities.removeAll(Collections.singleton(null));
+
 		for (Entity entity : entities) {
 			removeRelatedEntity(entity);
 		}
@@ -157,16 +183,7 @@ public abstract class BaseEntity implements Entity {
 	}
 
 	private Date _getDateFromJSON(JSONObject jsonObject, String dateKey) {
-		Retryable<Date> retryable = new BaseRetryable<Date>() {
-
-			@Override
-			public Date execute() {
-				return StringUtil.toDate(jsonObject.optString(dateKey));
-			}
-
-		};
-
-		return retryable.executeWithRetries();
+		return StringUtil.toDate(jsonObject.optString(dateKey));
 	}
 
 	private Class<? extends Entity> _getEntityClass(Class<?> entityClass) {

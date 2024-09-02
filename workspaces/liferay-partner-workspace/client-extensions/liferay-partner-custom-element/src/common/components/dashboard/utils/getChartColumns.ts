@@ -4,7 +4,7 @@
  */
 
 export default function getChartColumns(
-	mdfCurrency: any,
+	displayCurrency: any,
 	mdfRequests: any,
 	setColumnsMDFChart: any,
 	setTitleChart: any,
@@ -13,21 +13,22 @@ export default function getChartColumns(
 	const chartColumns: any[] = [];
 
 	const totalMDFActivitiesAmount = totalMDFRequested(
+		displayCurrency,
 		mdfRequests,
 		chartColumns
 	);
 
-	totalMDFApprovedRequests(mdfRequests, chartColumns);
+	totalMDFApprovedRequests(displayCurrency, mdfRequests, chartColumns);
 
-	totalRequestedMDFToClaims(mdfRequests, chartColumns);
+	totalRequestedMDFToClaims(displayCurrency, mdfRequests, chartColumns);
 
-	totalApprovedMDFToClaims(mdfRequests, chartColumns);
+	totalApprovedMDFToClaims(displayCurrency, mdfRequests, chartColumns);
 
-	totalPaidMDFToClaims(mdfRequests, chartColumns);
+	totalPaidMDFToClaims(displayCurrency, mdfRequests, chartColumns);
 
-	expiringSoonTotalActivities(mdfRequests, chartColumns);
+	expiringSoonTotalActivities(displayCurrency, mdfRequests, chartColumns);
 
-	expiredTotalActivites(mdfRequests, chartColumns);
+	expiredTotalActivites(displayCurrency, mdfRequests, chartColumns);
 	setValueChart(totalMDFActivitiesAmount);
 	setTitleChart('Total MDF ');
 	setColumnsMDFChart(chartColumns);
@@ -35,7 +36,11 @@ export default function getChartColumns(
 
 const expiredDate = 30;
 
-function expiredTotalActivites(mdfRequests: any, chartColumns: any) {
+function expiredTotalActivites(
+	displayCurrency: any,
+	mdfRequests: any,
+	chartColumns: any
+) {
 	const expiredActivities = mdfRequests?.items
 		?.map((activity: any) =>
 			activity?.mdfReqToActs?.filter(
@@ -44,7 +49,13 @@ function expiredTotalActivites(mdfRequests: any, chartColumns: any) {
 		)
 		.flat();
 	const totalExpiredActivities = expiredActivities?.reduce(
-		(acc: any, value: any) => acc + parseFloat(value.mdfRequestAmount),
+		(acc: any, value: any) =>
+			acc +
+			parseFloat(
+				displayCurrency === 'USD'
+					? value.convertedMDFRequestAmount
+					: value.mdfRequestAmount
+			),
 		0
 	);
 
@@ -57,7 +68,11 @@ function expiredTotalActivites(mdfRequests: any, chartColumns: any) {
 	]);
 }
 
-function expiringSoonTotalActivities(mdfRequests: any, chartColumns: any) {
+function expiringSoonTotalActivities(
+	displayCurrency: any,
+	mdfRequests: any,
+	chartColumns: any
+) {
 	const expiringSoonActivitiesDate = mdfRequests?.items
 		?.map((activity: any) =>
 			activity.mdfReqToActs.filter(
@@ -70,7 +85,13 @@ function expiringSoonTotalActivities(mdfRequests: any, chartColumns: any) {
 		.flat();
 
 	const totalExpiringSoonActivites = expiringSoonActivitiesDate?.reduce(
-		(acc: any, value: any) => acc + parseFloat(value.mdfRequestAmount),
+		(acc: any, value: any) =>
+			acc +
+			parseFloat(
+				displayCurrency === 'USD'
+					? value.convertedMDFRequestAmount
+					: value.mdfRequestAmount
+			),
 		0
 	);
 
@@ -83,7 +104,11 @@ function expiringSoonTotalActivities(mdfRequests: any, chartColumns: any) {
 	]);
 }
 
-function totalRequestedMDFToClaims(mdfRequests: any, chartColumns: any) {
+function totalRequestedMDFToClaims(
+	displayCurrency: any,
+	mdfRequests: any,
+	chartColumns: any
+) {
 	const claimesRequested = mdfRequests?.items
 		?.map((claim: any) =>
 			claim.mdfReqToMDFClms.filter(
@@ -96,7 +121,11 @@ function totalRequestedMDFToClaims(mdfRequests: any, chartColumns: any) {
 		.flat();
 
 	const totalClaimsRequestedAmount = claimesRequested?.reduce(
-		(acc: any, value: any) => acc + value?.totalClaimAmount || 0,
+		(acc: any, value: any) =>
+			acc +
+				(displayCurrency === 'USD'
+					? value?.convertedTotalClaimAmount
+					: value?.totalClaimAmount) || 0,
 		0
 	);
 
@@ -113,7 +142,11 @@ function totalRequestedMDFToClaims(mdfRequests: any, chartColumns: any) {
 	]);
 }
 
-function totalApprovedMDFToClaims(mdfRequests: any, chartColumns: any) {
+function totalApprovedMDFToClaims(
+	displayCurrency: any,
+	mdfRequests: any,
+	chartColumns: any
+) {
 	const claimsApproved = mdfRequests?.items
 		?.map((claim: any) =>
 			claim.mdfReqToMDFClms.filter(
@@ -124,7 +157,11 @@ function totalApprovedMDFToClaims(mdfRequests: any, chartColumns: any) {
 		.flat();
 
 	const totalClaimesApprovedAmount = claimsApproved?.reduce(
-		(acc: any, value: any) => acc + value?.totalClaimAmount || 0,
+		(acc: any, value: any) =>
+			acc +
+				(displayCurrency === 'USD'
+					? value?.convertedTotalClaimAmount
+					: value?.totalClaimAmount) || 0,
 		0
 	);
 
@@ -141,7 +178,11 @@ function totalApprovedMDFToClaims(mdfRequests: any, chartColumns: any) {
 	]);
 }
 
-function totalPaidMDFToClaims(mdfRequests: any, chartColumns: any) {
+function totalPaidMDFToClaims(
+	displayCurrency: any,
+	mdfRequests: any,
+	chartColumns: any
+) {
 	const claimsPaid = mdfRequests?.items
 		?.map((claim: any) =>
 			claim.mdfReqToMDFClms.filter(
@@ -151,7 +192,13 @@ function totalPaidMDFToClaims(mdfRequests: any, chartColumns: any) {
 		.flat();
 
 	const totalClaimsPaidAmount = claimsPaid?.reduce(
-		(acc: any, value: any) => acc + parseFloat(value.totalClaimAmount || 0),
+		(acc: any, value: any) =>
+			acc +
+			parseFloat(
+				(displayCurrency === 'USD'
+					? value.convertedClaimPaid
+					: value.claimPaid) || 0
+			),
 		0
 	);
 
@@ -168,10 +215,19 @@ function totalPaidMDFToClaims(mdfRequests: any, chartColumns: any) {
 	]);
 }
 
-function totalMDFRequested(mdfRequests: any, chartColumns: any) {
+function totalMDFRequested(
+	displayCurrency: any,
+	mdfRequests: any,
+	chartColumns: any
+) {
 	const totalMDFActivitiesAmount = mdfRequests?.items?.reduce(
 		(prevValue: any, currValue: any) =>
-			prevValue + (parseFloat(currValue.totalMDFRequestAmount) || 0),
+			prevValue +
+			(parseFloat(
+				displayCurrency === 'USD'
+					? currValue.convertedTotalMDFRequestAmount
+					: currValue.totalMDFRequestAmount
+			) || 0),
 		0
 	);
 
@@ -189,12 +245,22 @@ function totalMDFRequested(mdfRequests: any, chartColumns: any) {
 	return totalMDFActivitiesAmount;
 }
 
-function totalMDFApprovedRequests(mdfRequests: any, chartColumns: any) {
+function totalMDFApprovedRequests(
+	displayCurrency: any,
+	mdfRequests: any,
+	chartColumns: any
+) {
 	const mdfApprovedRequests = mdfRequests?.items?.filter(
 		(request: any) => request.mdfRequestStatus.key === 'approved'
 	);
 	const totalMDFApprovedRequestsAmount = mdfApprovedRequests?.reduce(
-		(acc: any, value: any) => acc + parseFloat(value.totalMDFRequestAmount),
+		(acc: any, value: any) =>
+			acc +
+			parseFloat(
+				displayCurrency === 'USD'
+					? value.convertedTotalMDFRequestAmount
+					: value.totalMDFRequestAmount
+			),
 		0
 	);
 

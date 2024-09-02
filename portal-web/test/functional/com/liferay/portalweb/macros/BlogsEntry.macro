@@ -575,11 +575,12 @@ definition {
 	macro executePingbackViacURL(entryTitle = null) {
 		var ip = ${ip};
 		var portalURL = ${portalURL};
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		var curl = '''
 			${portalURL}/xmlrpc/pingback \
 				-H 'Content-Type: text/xml' \
-				-u test@liferay.com:test \
+				-u test@liferay.com:${userPassword} \
 				-d '
 				<?xml version="1.0" encoding="iso-8859-1"?>
 				<methodCall>
@@ -1015,8 +1016,6 @@ definition {
 	@summary = "Default summary"
 	macro viewAutoTag(entryTitle = null) {
 		var key_entryTitle = ${entryTitle};
-		var tagName = StringUtil.lowerCase(${tagName});
-
 		var key_tagName = ${tagName};
 
 		if (IsElementNotPresent(locator1 = "BlogsEntry#TAG")) {
@@ -1426,12 +1425,12 @@ definition {
 		if (isSet(duplicate)) {
 			AssertElementNotPresent(
 				locator1 = "BlogsEntry#TAG_2",
-				tagName = StringUtil.lowerCase(${tagName}));
+				tagName = ${tagName});
 		}
 		else {
 			AssertElementNotPresent(
 				locator1 = "BlogsEntry#TAG",
-				tagName = StringUtil.lowerCase(${tagName}));
+				tagName = ${tagName});
 		}
 	}
 
@@ -1650,7 +1649,6 @@ definition {
 
 		if (isSet(tagNameList)) {
 			for (var tagName : list ${tagNameList}) {
-				var tagName = StringUtil.lowerCase(${tagName});
 				var key_tagName = "tagName";
 
 				AssertTextEquals(
@@ -1671,7 +1669,6 @@ definition {
 			}
 		}
 		else {
-			var tagName = StringUtil.lowerCase(${tagName});
 			var key_tagName = "tagName";
 
 			AssertTextEquals(
@@ -1696,11 +1693,9 @@ definition {
 	@summary = "Default summary"
 	macro viewTagNotPresentPG(tagNameList = null, entryTitle = null) {
 		for (var tagName : list ${tagNameList}) {
-			var lowerCaseTagName = StringUtil.lowerCase(${tagName});
-
 			AssertElementNotPresent(
 				key_entryTitle = ${entryTitle},
-				key_tagName = ${lowerCaseTagName},
+				key_tagName = ${tagName},
 				locator1 = "BlogsEntry#TAG");
 		}
 	}
@@ -1711,8 +1706,6 @@ definition {
 
 		if (isSet(tagNameList)) {
 			for (var tagName : list ${tagNameList}) {
-				var tagName = StringUtil.lowerCase(${tagName});
-
 				var key_tagName = ${tagName};
 
 				BlogsNavigator.gotoEntryPG(
@@ -1734,7 +1727,6 @@ definition {
 		}
 		else {
 			var key_tagName = ${tagName};
-			var tagName = StringUtil.upperCase(${tagName});
 
 			AssertClick(
 				locator1 = "BlogsEntry#TAG",

@@ -8,6 +8,7 @@ import {fetch} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useState} from 'react';
 
+import './account_selector.scss';
 import ServiceProvider from '../../ServiceProvider/index';
 import {
 	CURRENT_ACCOUNT_UPDATED,
@@ -20,9 +21,8 @@ import {selectAccount} from './util/index';
 import AccountsListView from './views/AccountsListView';
 import OrdersListView from './views/OrdersListView';
 
-const DeliveryCatalogAPIServiceProvider = ServiceProvider.DeliveryCatalogAPI(
-	'v1'
-);
+const DeliveryCatalogAPIServiceProvider =
+	ServiceProvider.DeliveryCatalogAPI('v1');
 
 function AccountSelector({
 	accountEntryAllowedTypes,
@@ -115,11 +115,7 @@ function AccountSelector({
 		>
 			{currentView === VIEWS.ACCOUNTS_LIST && (
 				<AccountsListView
-					accountEntryAllowedTypes={
-						accountEntryAllowedTypes
-							? JSON.parse(accountEntryAllowedTypes)
-							: ''
-					}
+					accountEntryAllowedTypes={accountEntryAllowedTypes}
 					changeAccount={changeAccount}
 					commerceChannelId={commerceChannelId}
 					currentAccount={currentAccount}
@@ -146,7 +142,7 @@ function AccountSelector({
 }
 
 AccountSelector.propTypes = {
-	accountEntryAllowedTypes: PropTypes.string.isRequired,
+	accountEntryAllowedTypes: PropTypes.array.isRequired,
 	alignmentPosition: PropTypes.number,
 	commerceChannelId: PropTypes.oneOfType([
 		PropTypes.number,

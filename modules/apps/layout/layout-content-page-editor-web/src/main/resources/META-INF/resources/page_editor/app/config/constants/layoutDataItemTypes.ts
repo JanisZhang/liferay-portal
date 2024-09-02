@@ -10,10 +10,13 @@ export const LAYOUT_DATA_ITEM_TYPES = {
 	container: 'container',
 	dropZone: 'drop-zone',
 	form: 'form',
+	formStep: 'form-step',
+	formStepContainer: 'form-step-container',
 	fragment: 'fragment',
 	fragmentDropZone: 'fragment-drop-zone',
 	root: 'root',
 	row: 'row',
 } as const;
 
-export type LayoutDataItemType = typeof LAYOUT_DATA_ITEM_TYPES[keyof typeof LAYOUT_DATA_ITEM_TYPES];
+export type LayoutDataItemType =
+	(typeof LAYOUT_DATA_ITEM_TYPES)[keyof typeof LAYOUT_DATA_ITEM_TYPES];

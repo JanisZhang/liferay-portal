@@ -30,6 +30,7 @@
 	</hint-collection>
 	<model name="com.liferay.announcements.kernel.model.AnnouncementsDelivery">
 		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
 		<field name="deliveryId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
@@ -264,6 +265,7 @@
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="fileEntryTypeId" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />
@@ -287,6 +289,7 @@
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="fileShortcutId" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />
@@ -729,6 +732,7 @@
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="plid" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />
@@ -969,8 +973,13 @@
 	</model>
 	<model name="com.liferay.portal.kernel.model.ListType">
 		<field name="mvccVersion" type="long" />
+		<field name="uuid" type="String" />
 		<field name="listTypeId" type="long" />
 		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
 		<field name="name" type="String" />
 		<field name="type" type="String" />
 	</model>
@@ -1117,7 +1126,9 @@
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
 		<field name="createDate" type="Date" />
-		<field name="password" type="String" />
+		<field name="password" type="String">
+			<hint name="max-length">255</hint>
+		</field>
 	</model>
 	<model name="com.liferay.portal.kernel.model.Phone">
 		<field name="mvccVersion" type="long" />
@@ -1165,7 +1176,7 @@
 		<field name="portalPreferencesId" type="long" />
 		<field name="index" type="int" />
 		<field name="key" type="String">
-			<hint name="max-length">255</hint>
+			<hint name="max-length">1024</hint>
 		</field>
 		<field name="largeValue" type="String">
 			<hint-collection name="CLOB" />
@@ -1311,6 +1322,17 @@
 			<hint name="max-length">1024</hint>
 		</field>
 	</model>
+	<model name="com.liferay.portal.kernel.model.RememberMeToken">
+		<field name="mvccVersion" type="long" />
+		<field name="rememberMeTokenId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="createDate" type="Date" />
+		<field name="expirationDate" type="Date" />
+		<field name="value" type="String">
+			<hint name="max-length">255</hint>
+		</field>
+	</model>
 	<model name="com.liferay.portal.kernel.model.Repository">
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
@@ -1387,6 +1409,7 @@
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="roleId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
@@ -1477,7 +1500,9 @@
 		<field name="createDate" type="Date" />
 		<field name="classNameId" type="long" />
 		<field name="classPK" type="long" />
-		<field name="key" type="String" />
+		<field name="key" type="String">
+			<hint name="max-length">255</hint>
+		</field>
 		<field name="type" type="int" />
 		<field name="extraInfo" type="String">
 			<hint-collection name="CLOB" />
@@ -1497,7 +1522,9 @@
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
 		<field name="contactId" type="long" />
-		<field name="password" type="String" />
+		<field name="password" type="String">
+			<hint name="max-length">255</hint>
+		</field>
 		<field name="passwordEncrypted" type="boolean" />
 		<field name="passwordReset" type="boolean" />
 		<field name="passwordModifiedDate" type="Date" />

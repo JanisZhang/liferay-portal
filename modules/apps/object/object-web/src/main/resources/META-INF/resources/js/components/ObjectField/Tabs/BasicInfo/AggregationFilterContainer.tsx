@@ -7,8 +7,9 @@ import {useModal} from '@clayui/modal';
 import {
 	API,
 	BuilderScreen,
-	getLocalizableLabel,
+	constantsUtils,
 	invalidateRequired,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import classNames from 'classnames';
 import React, {ElementType, useCallback, useEffect, useState} from 'react';
@@ -17,13 +18,10 @@ import {
 	FilterErrors,
 	FilterValidation,
 	ModalAddFilter,
+	OnSaveProps,
 } from '../../../ModalAddFilter';
 
 import '../../EditObjectFieldContent.scss';
-
-interface IItem extends LabelValueObject {
-	checked?: boolean;
-}
 
 interface AggregationFilters {
 	defaultSort?: boolean;
@@ -59,8 +57,6 @@ interface CustomWindow extends Window {
 	__isReactDndBackendSetUp?: boolean;
 }
 
-const REQUIRED_MSG = Liferay.Language.get('required');
-
 export function AggregationFilterContainer({
 	aggregationFilters,
 	containerWrapper: ContainerWrapper,
@@ -76,9 +72,8 @@ export function AggregationFilterContainer({
 	workflowStatuses,
 }: AggregationFilterProps) {
 	const [editingFilter, setEditingFilter] = useState(false);
-	const [editingObjectFieldName, setEditingObjectFieldName] = useState<
-		string
-	>('');
+	const [editingObjectFieldName, setEditingObjectFieldName] =
+		useState<string>('');
 	const [objectFields, setObjectFields] = useState<ObjectField[]>();
 	const [visibleModal, setVisibleModal] = useState(false);
 
@@ -96,14 +91,14 @@ export function AggregationFilterContainer({
 		let picklistFilterValues: string[] | number[] = [];
 
 		if (filterType === 'includes') {
-			picklistFilterValues = (parsedFilter.json as IncludesFilterOperator)[
-				'in'
-			];
+			picklistFilterValues = (
+				parsedFilter.json as IncludesFilterOperator
+			)['in'];
 		}
 		else {
-			picklistFilterValues = (parsedFilter.json as ExcludesFilterOperator)[
-				'not'
-			]['in'];
+			picklistFilterValues = (
+				parsedFilter.json as ExcludesFilterOperator
+			)['not']['in'];
 		}
 
 		return picklistFilterValues;
@@ -112,13 +107,15 @@ export function AggregationFilterContainer({
 	useEffect(() => {
 		if (objectDefinitionExternalReferenceCode2) {
 			const makeFetch = async () => {
-				const items = await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
-					objectDefinitionExternalReferenceCode2!
-				);
+				const items =
+					await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
+						objectDefinitionExternalReferenceCode2!
+					);
 
-				const objectDefinition2 = await API.getObjectDefinitionByExternalReferenceCode(
-					objectDefinitionExternalReferenceCode2!
-				);
+				const objectDefinition2 =
+					await API.getObjectDefinitionByExternalReferenceCode(
+						objectDefinitionExternalReferenceCode2!
+					);
 				setCreationLanguageId2(objectDefinition2.defaultLanguageId);
 
 				setObjectFields(items);
@@ -155,7 +152,7 @@ export function AggregationFilterContainer({
 
 				if (objectField && filterType) {
 					const aggregationFilter: AggregationFilters = {
-						fieldLabel: getLocalizableLabel(
+						fieldLabel: stringUtils.getLocalizableLabel(
 							creationLanguageId2 as Liferay.Language.Locale,
 							objectField.label,
 							objectField.name
@@ -168,9 +165,11 @@ export function AggregationFilterContainer({
 						value:
 							objectField.businessType === 'Integer' ||
 							objectField.businessType === 'LongInteger'
-								? (parsedFilter.json as {
-										[key: string]: string;
-								  })[filterType]
+								? (
+										parsedFilter.json as {
+											[key: string]: string;
+										}
+									)[filterType]
 								: undefined,
 					};
 
@@ -178,18 +177,20 @@ export function AggregationFilterContainer({
 						objectField.businessType === 'Date' &&
 						parsedFilter.filterType === 'range'
 					) {
-						const dateRangeFilterValues = parsedFilter.json as ObjectFieldDateRangeFilterSettings;
+						const dateRangeFilterValues =
+							parsedFilter.json as ObjectFieldDateRangeFilterSettings;
 
-						const aggregationFilterDateRangeValues: LabelValueObject[] = [
-							{
-								label: dateRangeFilterValues['ge'],
-								value: 'ge',
-							},
-							{
-								label: dateRangeFilterValues['le'],
-								value: 'le',
-							},
-						];
+						const aggregationFilterDateRangeValues: LabelValueObject[] =
+							[
+								{
+									label: dateRangeFilterValues['ge'],
+									value: 'ge',
+								},
+								{
+									label: dateRangeFilterValues['le'],
+									value: 'le',
+								},
+							];
 
 						const dateRangeAggregationFilter: AggregationFilters = {
 							...aggregationFilter,
@@ -200,20 +201,20 @@ export function AggregationFilterContainer({
 					}
 
 					if (objectField.businessType === 'Picklist') {
-						const picklistFilterValues = getPicklistFilterJSONValues(
-							filterType,
-							parsedFilter
-						) as string[];
+						const picklistFilterValues =
+							getPicklistFilterJSONValues(
+								filterType,
+								parsedFilter
+							) as string[];
 
-						const picklistValueList: LabelValueObject[] = picklistFilterValues.map(
-							(picklistFilterValue) => {
+						const picklistValueList: LabelValueObject[] =
+							picklistFilterValues.map((picklistFilterValue) => {
 								return {
 									checked: true,
 									label: picklistFilterValue,
 									value: picklistFilterValue,
 								};
-							}
-						);
+							});
 
 						const picklistAggregationFilter: AggregationFilters = {
 							...aggregationFilter,
@@ -246,7 +247,8 @@ export function AggregationFilterContainer({
 
 						const statusAggregationFilter: AggregationFilters = {
 							...aggregationFilter,
-							valueList: workflowStatusValueList as LabelValueObject[],
+							valueList:
+								workflowStatusValueList as LabelValueObject[],
 						};
 
 						return statusAggregationFilter;
@@ -277,11 +279,11 @@ export function AggregationFilterContainer({
 			const currentErrors: FilterErrors = {};
 
 			if (!selectedFilterBy) {
-				currentErrors.selectedFilterBy = REQUIRED_MSG;
+				currentErrors.selectedFilterBy = constantsUtils.REQUIRED_MSG;
 			}
 
 			if (!selectedFilterTypeValue) {
-				currentErrors.selectedFilterType = REQUIRED_MSG;
+				currentErrors.selectedFilterType = constantsUtils.REQUIRED_MSG;
 			}
 
 			if (
@@ -289,7 +291,7 @@ export function AggregationFilterContainer({
 					selectedFilterBy?.businessType === 'Picklist') &&
 				!checkedItems.length
 			) {
-				currentErrors.items = REQUIRED_MSG;
+				currentErrors.items = constantsUtils.REQUIRED_MSG;
 			}
 
 			if (
@@ -300,11 +302,11 @@ export function AggregationFilterContainer({
 				const endDate = items.find((date) => date.value === 'le');
 
 				if (!startDate) {
-					currentErrors.startDate = REQUIRED_MSG;
+					currentErrors.startDate = constantsUtils.REQUIRED_MSG;
 				}
 
 				if (!endDate) {
-					currentErrors.endDate = REQUIRED_MSG;
+					currentErrors.endDate = constantsUtils.REQUIRED_MSG;
 				}
 			}
 
@@ -313,7 +315,7 @@ export function AggregationFilterContainer({
 					selectedFilterBy?.businessType === 'LongInteger') &&
 				invalidateRequired(value)
 			) {
-				currentErrors.value = REQUIRED_MSG;
+				currentErrors.value = constantsUtils.REQUIRED_MSG;
 			}
 
 			setErrors(currentErrors);
@@ -324,19 +326,19 @@ export function AggregationFilterContainer({
 	);
 
 	const handleSaveFilterColumn = useCallback(
-		(
-			objectFieldName: string,
-			filterBy?: string,
-			fieldLabel?: LocalizedValue<string>,
-			objectFieldBusinessType?: string,
-			filterType?: string,
-			valueList?: IItem[],
-			value?: string
-		) => {
+		({
+			fieldLabel,
+			filterBy,
+			filterType,
+			objectFieldBusinessType,
+			objectFieldName,
+			value,
+			valueList,
+		}: OnSaveProps) => {
 			const newAggregationFilters = [
 				...aggregationFilters,
 				{
-					fieldLabel: getLocalizableLabel(
+					fieldLabel: stringUtils.getLocalizableLabel(
 						creationLanguageId2 as Liferay.Language.Locale,
 						fieldLabel,
 						objectFieldName
@@ -442,14 +444,13 @@ export function AggregationFilterContainer({
 					value: newFilterValues,
 				};
 
-				const newObjectFieldSettings:
-					| ObjectFieldSetting[]
-					| undefined = [
-					...(objectFieldSettings?.filter(
-						(fieldSetting) => fieldSetting.name !== 'filters'
-					) as ObjectFieldSetting[]),
-					newFilter,
-				];
+				const newObjectFieldSettings: ObjectFieldSetting[] | undefined =
+					[
+						...(objectFieldSettings?.filter(
+							(fieldSetting) => fieldSetting.name !== 'filters'
+						) as ObjectFieldSetting[]),
+						newFilter,
+					];
 
 				setAggregationFilters(newAggregationFilters);
 				setValues({
@@ -464,6 +465,7 @@ export function AggregationFilterContainer({
 				}
 			}
 		},
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[aggregationFilters, creationLanguageId2, values]
 	);
@@ -514,6 +516,7 @@ export function AggregationFilterContainer({
 				});
 			}
 		},
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[aggregationFilters, setAggregationFilters, setValues, values]
 	);
@@ -554,7 +557,8 @@ export function AggregationFilterContainer({
 			>
 				<div
 					className={classNames({
-						'lfr-objects__edit-object-field-model-builder-panel': modelBuilder,
+						'lfr-objects__edit-object-field-model-builder-panel':
+							modelBuilder,
 					})}
 				>
 					<BuilderScreen

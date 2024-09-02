@@ -16,7 +16,6 @@ import {Routes} from 'shared/util/router';
 import {sub} from 'shared/util/lang';
 import {TitleKey, Type} from './types';
 import {toThousands} from 'shared/util/numbers';
-import {useQueryRangeSelectors} from 'shared/hooks';
 
 function truncateText(text: string, limit: number) {
 	if (text.length > limit) {
@@ -76,6 +75,7 @@ export const Node = ({
 	index,
 	onNodeChange = () => {},
 	payload,
+	rangeSelectors,
 	selectedNode,
 	width: initialWidth,
 	x: initialX,
@@ -87,7 +87,6 @@ export const Node = ({
 	const y = normalizeNumber(initialY);
 
 	const {channelId, groupId} = useParams();
-	const rangeSelectors = useQueryRangeSelectors();
 
 	return (
 		<Layer
@@ -152,7 +151,7 @@ export const Node = ({
 							params: {
 								channelId,
 								groupId,
-								title: payload.name,
+								title: encodeURIComponent(payload.name),
 								touchpoint: payload.url
 							},
 							query: {
@@ -184,7 +183,7 @@ export const Node = ({
 						target='_blank'
 						title={
 							sub(Liferay.Language.get('visit-x'), [
-								payload.url
+								decodeURIComponent(payload.url)
 							]) as string
 						}
 					>
@@ -197,7 +196,7 @@ export const Node = ({
 							x={x + 20}
 							y={y - 10}
 						>
-							{truncateText(payload.url, 18)}
+							{truncateText(decodeURIComponent(payload.url), 18)}
 						</text>
 					</ClayLink>
 				</>

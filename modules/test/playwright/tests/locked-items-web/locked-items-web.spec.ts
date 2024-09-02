@@ -15,18 +15,20 @@ const test = mergeTests(
 	apiHelpersTest,
 	featureFlagsTest({
 		'LPD-11003': true,
-		'LPS-180328': true,
 	}),
 	lockedItemsPagesTest
 );
 
 test('the Locked Items page is shown', async ({lockedItemsPage}) => {
 	await lockedItemsPage.goto();
+
 	await expect(lockedItemsPage.pageTitle).toBeVisible();
 	await expect(lockedItemsPage.lockedPagesMenuItem).toBeVisible();
 });
 
 test('the locked Pages page is shown', async ({lockedItemsPage}) => {
+	await lockedItemsPage.goto();
 	await lockedItemsPage.goToLockedPages();
+
 	await expect(lockedItemsPage.lockedPagesTitle).toBeVisible();
 });

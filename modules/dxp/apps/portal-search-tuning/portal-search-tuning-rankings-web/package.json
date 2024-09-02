@@ -1,23 +1,23 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.111.0",
-		"@clayui/data-provider": "3.111.0",
-		"@clayui/drop-down": "3.111.0",
-		"@clayui/empty-state": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/data-provider": "3.116.0",
+		"@clayui/drop-down": "3.118.0",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/label": "3.111.0",
 		"@clayui/layout": "3.111.0",
 		"@clayui/link": "3.111.0",
 		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/modal": "3.111.0",
-		"@clayui/multi-select": "3.111.0",
-		"@clayui/navigation-bar": "3.111.0",
-		"@clayui/pagination-bar": "3.111.1",
+		"@clayui/modal": "3.117.0",
+		"@clayui/multi-select": "3.118.0",
+		"@clayui/navigation-bar": "3.116.0",
+		"@clayui/pagination-bar": "3.118.0",
 		"@clayui/sticker": "3.111.0",
 		"@clayui/table": "3.111.0",
-		"@clayui/tabs": "3.111.0",
+		"@clayui/tabs": "3.116.0",
 		"@liferay/frontend-js-react-web": "*",
 		"classnames": "2.3.1",
 		"frontend-js-components-web": "*",
@@ -41,11 +41,10 @@
 	"name": "portal-search-ranking-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"storybook": "liferay-npm-scripts storybook",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "3.0.80"
+	"version": "3.0.94"
 }

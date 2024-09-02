@@ -10,6 +10,7 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/add-layout-page-template-entry \
 				-u ${userLoginInfo} \
+				-d externalReferenceCode= \
 				-d groupId=${groupId} \
 				-d layoutPageTemplateCollectionId=0 \
 				-d classNameId=${classNameId} \
@@ -52,8 +53,9 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplatecollection/add-layout-page-template-collection \
 				-u ${userLoginInfo} \
+				-d externalReferenceCode='' \
 				-d groupId=${groupId} \
-				-d parentLayoutPageTemplateCollection=0 \
+				-d parentLayoutPageTemplateCollectionId=0 \
 				-d name=${layoutPageTemplateCollectionName} \
 				-d description=${description} \
 				-d type=${type} \
@@ -73,6 +75,7 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/add-layout-page-template-entry \
 				-u ${userLoginInfo} \
+				-d externalReferenceCode= \
 				-d groupId=${groupId} \
 				-d layoutPageTemplateCollectionId=${layoutPageTemplateCollectionId} \
 				-d name=${layoutPageTemplateEntryName} \
@@ -95,6 +98,7 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/layout.layoutpagetemplateentry/add-layout-page-template-entry \
 				-u ${userLoginInfo} \
+				-d externalReferenceCode= \
 				-d groupId=${groupId} \
 				-d layoutPageTemplateCollectionId=0 \
 				-d name=${masterPageTemplateEntryName} \

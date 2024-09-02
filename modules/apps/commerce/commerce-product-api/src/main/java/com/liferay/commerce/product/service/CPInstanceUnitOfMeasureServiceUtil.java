@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -35,26 +36,26 @@ public class CPInstanceUnitOfMeasureServiceUtil {
 			long cpInstanceId, boolean active,
 			java.math.BigDecimal incrementalOrderQuantity, String key,
 			Map<java.util.Locale, String> nameMap, int precision,
-			boolean primary, double priority, java.math.BigDecimal rate,
-			String sku)
+			java.math.BigDecimal pricingQuantity, boolean primary,
+			double priority, java.math.BigDecimal rate, String sku)
 		throws PortalException {
 
 		return getService().addCPInstanceUnitOfMeasure(
 			cpInstanceId, active, incrementalOrderQuantity, key, nameMap,
-			precision, primary, priority, rate, sku);
+			precision, pricingQuantity, primary, priority, rate, sku);
 	}
 
 	public static CPInstanceUnitOfMeasure addOrUpdateCPInstanceUnitOfMeasure(
 			long cpInstanceId, boolean active,
 			java.math.BigDecimal incrementalOrderQuantity, String key,
 			Map<java.util.Locale, String> nameMap, int precision,
-			boolean primary, double priority, java.math.BigDecimal rate,
-			String sku)
+			java.math.BigDecimal pricingQuantity, boolean primary,
+			double priority, java.math.BigDecimal rate, String sku)
 		throws PortalException {
 
 		return getService().addOrUpdateCPInstanceUnitOfMeasure(
 			cpInstanceId, active, incrementalOrderQuantity, key, nameMap,
-			precision, primary, priority, rate, sku);
+			precision, pricingQuantity, primary, priority, rate, sku);
 	}
 
 	public static CPInstanceUnitOfMeasure deleteCPInstanceUnitOfMeasure(
@@ -144,24 +145,23 @@ public class CPInstanceUnitOfMeasureServiceUtil {
 			long cpInstanceUnitOfMeasureId, long cpInstanceId, boolean active,
 			java.math.BigDecimal incrementalOrderQuantity, String key,
 			Map<java.util.Locale, String> nameMap, int precision,
-			boolean primary, double priority, java.math.BigDecimal rate,
-			String sku)
+			java.math.BigDecimal pricingQuantity, boolean primary,
+			double priority, java.math.BigDecimal rate, String sku)
 		throws PortalException {
 
 		return getService().updateCPInstanceUnitOfMeasure(
 			cpInstanceUnitOfMeasureId, cpInstanceId, active,
-			incrementalOrderQuantity, key, nameMap, precision, primary,
-			priority, rate, sku);
+			incrementalOrderQuantity, key, nameMap, precision, pricingQuantity,
+			primary, priority, rate, sku);
 	}
 
 	public static CPInstanceUnitOfMeasureService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPInstanceUnitOfMeasureService service) {
-		_service = service;
-	}
-
-	private static volatile CPInstanceUnitOfMeasureService _service;
+	private static final Snapshot<CPInstanceUnitOfMeasureService>
+		_serviceSnapshot = new Snapshot<>(
+			CPInstanceUnitOfMeasureServiceUtil.class,
+			CPInstanceUnitOfMeasureService.class);
 
 }

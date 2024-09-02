@@ -615,9 +615,15 @@ public class PullRequest {
 
 	public RemoteGitBranch getUpstreamRemoteGitBranch() {
 		if (_liferayRemoteGitBranch == null) {
+			String gitRepositoryName = getGitRepositoryName();
+
 			_liferayRemoteGitBranch = GitUtil.getRemoteGitBranch(
 				getUpstreamRemoteGitBranchName(), new File("."),
-				"git@github.com:liferay/" + getGitRepositoryName());
+				JenkinsResultsParserUtil.combine(
+					"git@github.com:",
+					JenkinsResultsParserUtil.getUpstreamUserName(
+						gitRepositoryName, getUpstreamRemoteGitBranchName()),
+					"/", gitRepositoryName, ".git"));
 		}
 
 		return _liferayRemoteGitBranch;
@@ -1012,7 +1018,7 @@ public class PullRequest {
 		}
 
 		public String getId() {
-			return String.valueOf(_commentJSONObject.getInt("id"));
+			return String.valueOf(_commentJSONObject.getLong("id"));
 		}
 
 		public Date getModifiedDate() {
@@ -1025,6 +1031,15 @@ public class PullRequest {
 					"Unable to parse modified date " +
 						_commentJSONObject.getString("modified_at"),
 					parseException);
+			}
+		}
+
+		public URL getURL() {
+			try {
+				return new URL(_commentJSONObject.getString("html_url"));
+			}
+			catch (MalformedURLException malformedURLException) {
+				throw new RuntimeException(malformedURLException);
 			}
 		}
 

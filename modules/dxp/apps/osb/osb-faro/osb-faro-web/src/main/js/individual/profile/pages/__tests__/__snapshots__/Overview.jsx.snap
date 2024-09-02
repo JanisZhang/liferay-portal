@@ -14,11 +14,11 @@ exports[`IndividualOverview should render 1`] = `
         <div
           class="card-header align-items-center d-flex justify-content-between"
         >
-          <h5
+          <div
             class="card-title"
           >
             Individual Events
-          </h5>
+          </div>
           <div
             class="d-flex"
           />
@@ -119,9 +119,11 @@ exports[`IndividualOverview should render 1`] = `
               <div
                 class="activities-date d-flex align-items-baseline"
               >
-                <h4>
+                <div
+                  class="h4"
+                >
                   Individual's Events - December 9, 2021 - December 10, 2021
-                </h4>
+                </div>
               </div>
               <div
                 class="details"
@@ -503,9 +505,11 @@ Chrome"
           >
             FB
           </div>
-          <h4>
+          <div
+            class="h4"
+          >
             Foo Bar
-          </h4>
+          </div>
           <div
             class="job-title"
           >
@@ -514,7 +518,7 @@ Chrome"
           <div
             class="first-seen"
           >
-            First Seen: July 8, 2018
+            First Seen: July 9, 2018
           </div>
         </div>
         <div
@@ -542,11 +546,11 @@ Chrome"
         <div
           class="card-header"
         >
-          <h5
+          <div
             class="card-title"
           >
             Current Interests
-          </h5>
+          </div>
         </div>
         <ul
           class="list-group list-group-root results-container no-border show-quick-actions-on-hover"
@@ -554,8 +558,8 @@ Chrome"
           <li
             class="interest list-group-item"
           >
-            <h4
-              class="list-group-title text-truncate"
+            <div
+              class="h4 list-group-title text-truncate"
             >
               <a
                 class="text-decoration-none"
@@ -563,7 +567,7 @@ Chrome"
               >
                 Bar0
               </a>
-            </h4>
+            </div>
           </li>
         </ul>
         <div
@@ -592,11 +596,11 @@ Chrome"
         <div
           class="card-header"
         >
-          <h5
+          <div
             class="card-title"
           >
             Associated Segments
-          </h5>
+          </div>
         </div>
         <div
           class="card-body"

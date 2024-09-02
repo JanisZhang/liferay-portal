@@ -6,6 +6,7 @@
 package com.liferay.portal.vulcan.internal.jaxrs.context.provider;
 
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.internal.jaxrs.lifecycle.SafeReleaseInstanceResourceProvider;
 import com.liferay.portal.vulcan.jaxrs.constants.JaxRsConstants;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
@@ -56,43 +57,7 @@ public class ContextProviderUtil {
 	}
 
 	public static Object getMatchedResource(Message message) {
-		Exchange exchange = message.getExchange();
-
-		Object resource = _fetchExistingResource(
-			exchange, JAXRSUtils.ROOT_INSTANCE,
-			JaxRsConstants.LAST_SERVICE_OBJECT);
-
-		if (resource != null) {
-			return resource;
-		}
-
-		OperationResourceInfo operationResourceInfo = exchange.get(
-			OperationResourceInfo.class);
-
-		ResourceContext resourceContext = new ResourceContextImpl(
-			message, operationResourceInfo);
-
-		ClassResourceInfo classResourceInfo =
-			operationResourceInfo.getClassResourceInfo();
-
-		ResourceProvider resourceProvider =
-			classResourceInfo.getResourceProvider();
-
-		if (resourceProvider != null) {
-			Object instance = resourceProvider.getInstance(message);
-
-			resourceContext.initResource(instance);
-
-			return instance;
-		}
-
-		UriInfo uriInfo = new UriInfoImpl(message);
-
-		List<Object> matchedResources = uriInfo.getMatchedResources();
-
-		Class<?> matchedResourceClass = (Class<?>)matchedResources.get(0);
-
-		return resourceContext.getResource(matchedResourceClass);
+		return _getMatchedResource(true, message);
 	}
 
 	public static MultivaluedHashMap<String, String> getMultivaluedHashMap(
@@ -107,6 +72,29 @@ public class ContextProviderUtil {
 		};
 	}
 
+	public static void releaseResourceInstance(Message message) {
+		Exchange exchange = message.getExchange();
+
+		Object resource = _getMatchedResource(false, message);
+
+		if (resource == null) {
+			return;
+		}
+
+		OperationResourceInfo operationResourceInfo = exchange.get(
+			OperationResourceInfo.class);
+
+		ClassResourceInfo classResourceInfo =
+			operationResourceInfo.getClassResourceInfo();
+
+		ResourceProvider resourceProvider =
+			classResourceInfo.getResourceProvider();
+
+		if (resourceProvider != null) {
+			resourceProvider.releaseInstance(message, resource);
+		}
+	}
+
 	private static Object _fetchExistingResource(
 		Exchange exchange, String... keys) {
 
@@ -117,6 +105,61 @@ public class ContextProviderUtil {
 		}
 
 		return resource;
+	}
+
+	private static Object _getMatchedResource(
+		boolean initialize, Message message) {
+
+		Exchange exchange = message.getExchange();
+
+		Object resource = _fetchExistingResource(
+			exchange, JAXRSUtils.ROOT_INSTANCE,
+			JaxRsConstants.LAST_SERVICE_OBJECT);
+
+		if (resource != null) {
+			return resource;
+		}
+
+		OperationResourceInfo operationResourceInfo = exchange.get(
+			OperationResourceInfo.class);
+
+		if (operationResourceInfo == null) {
+			return null;
+		}
+
+		ResourceContext resourceContext = new ResourceContextImpl(
+			message, operationResourceInfo);
+
+		ClassResourceInfo classResourceInfo =
+			operationResourceInfo.getClassResourceInfo();
+
+		ResourceProvider resourceProvider =
+			classResourceInfo.getResourceProvider();
+
+		if (resourceProvider != null) {
+			if (!(resourceProvider instanceof
+					SafeReleaseInstanceResourceProvider)) {
+
+				classResourceInfo.setResourceProvider(
+					new SafeReleaseInstanceResourceProvider(resourceProvider));
+			}
+
+			Object instance = resourceProvider.getInstance(message);
+
+			if (initialize) {
+				resourceContext.initResource(instance);
+			}
+
+			return instance;
+		}
+
+		UriInfo uriInfo = new UriInfoImpl(message);
+
+		List<Object> matchedResources = uriInfo.getMatchedResources();
+
+		Class<?> matchedResourceClass = (Class<?>)matchedResources.get(0);
+
+		return resourceContext.getResource(matchedResourceClass);
 	}
 
 	private static MultivaluedMap<String, String> _getPathParameters(

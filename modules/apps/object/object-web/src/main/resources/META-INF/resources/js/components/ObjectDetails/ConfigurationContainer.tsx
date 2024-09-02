@@ -104,6 +104,30 @@ export function ConfigurationContainer({
 
 			<ClayForm.Group>
 				<Toggle
+					disabled={disabled || values.active}
+					label={sub(
+						Liferay.Language.get('enable-x'),
+						Liferay.Language.get('indexed-search')
+					)}
+					name="enableIndexSearch"
+					onBlur={(event) => {
+						event.stopPropagation();
+
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+					onToggle={() =>
+						setValues({
+							enableIndexSearch: !values.enableIndexSearch,
+						})
+					}
+					toggled={values.enableIndexSearch}
+				/>
+			</ClayForm.Group>
+
+			<ClayForm.Group>
+				<Toggle
 					disabled={isLinkedObjectDefinition || isReadOnly}
 					label={sub(
 						Liferay.Language.get('enable-x'),
@@ -119,7 +143,8 @@ export function ConfigurationContainer({
 					}}
 					onToggle={() =>
 						setValues({
-							enableObjectEntryHistory: !values.enableObjectEntryHistory,
+							enableObjectEntryHistory:
+								!values.enableObjectEntryHistory,
 						})
 					}
 					toggled={values.enableObjectEntryHistory}
@@ -144,7 +169,8 @@ export function ConfigurationContainer({
 					}}
 					onToggle={() =>
 						setValues({
-							enableObjectEntryDraft: !values.enableObjectEntryDraft,
+							enableObjectEntryDraft:
+								!values.enableObjectEntryDraft,
 						})
 					}
 					toggled={values.enableObjectEntryDraft}

@@ -30,7 +30,7 @@ if (stagedLocally) {
 	stagingGroupId = stagingGroup.getGroupId();
 }
 
-BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskManagerUtil.fetchFirstBackgroundTask(liveGroupId, BackgroundTaskExecutorNames.LAYOUT_STAGING_BACKGROUND_TASK_EXECUTOR, true, new BackgroundTaskCreateDateComparator(false));
+BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskManagerUtil.fetchFirstBackgroundTask(liveGroupId, BackgroundTaskExecutorNames.LAYOUT_STAGING_BACKGROUND_TASK_EXECUTOR, true, BackgroundTaskCreateDateComparator.getInstance(false));
 %>
 
 <c:choose>
@@ -93,9 +93,7 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 							</div>
 						</clay:sheet-footer>
 
-						<aui:script require="frontend-js-web/index as frontendJsWeb">
-							var {delegate} = frontendJsWeb;
-
+						<aui:script sandbox="<%= true %>">
 							var pwcWarning = document.getElementById('<portlet:namespace />pwcWarning');
 							var remoteStagingOptions = document.getElementById(
 								'<portlet:namespace />remoteStagingOptions'
@@ -113,7 +111,7 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 								remoteStagingOptions &&
 								trashWarning
 							) {
-								delegate(stagingTypes, 'click', 'input', (event) => {
+								Liferay.Util.delegate(stagingTypes, 'click', 'input', (event) => {
 									var value = event.target.closest('input').value;
 
 									if (value != '<%= StagingConstants.TYPE_LOCAL_STAGING %>') {
@@ -168,9 +166,8 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 		function doSubmit() {
 			if (forceDisable) {
 				form.elements['<portlet:namespace />forceDisable'].value = true;
-				form.elements[
-					'<portlet:namespace />stagingType'
-				].value = <%= StagingConstants.TYPE_NOT_STAGED %>;
+				form.elements['<portlet:namespace />stagingType'].value =
+					<%= StagingConstants.TYPE_NOT_STAGED %>;
 			}
 
 			submitForm(form);

@@ -10,6 +10,7 @@ import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
+import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalService;
 import com.liferay.commerce.product.service.CPOptionCategoryLocalService;
@@ -56,17 +57,20 @@ public class ProductSpecificationResourceTest
 			testGroup.getGroupId(), "simple", true, false);
 
 		_cpOptionCategory = _cpOptionCategoryLocalService.addCPOptionCategory(
-			_user.getUserId(), RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomString(), _user.getUserId(),
+			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomDouble(), RandomTestUtil.randomString(),
 			_serviceContext);
 
 		_cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
-				_user.getUserId(), _cpOptionCategory.getCPOptionCategoryId(),
+				RandomTestUtil.randomString(), _user.getUserId(),
+				_cpOptionCategory.getCPOptionCategoryId(), 0,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
-				RandomTestUtil.randomString(), _serviceContext);
+				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
+				_serviceContext);
 	}
 
 	@Override
@@ -85,6 +89,36 @@ public class ProductSpecificationResourceTest
 				value = StringUtil.toLowerCase(RandomTestUtil.randomString());
 			}
 		};
+	}
+
+	@Override
+	protected ProductSpecification
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductSpecificationsPage_addProductSpecification(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode,
+				ProductSpecification productSpecification)
+		throws Exception {
+
+		return _addCPDefinitionSpecificationOptionValue(
+			_cpDefinition.getCProductId(), productSpecification);
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductSpecificationsPage_getChannelExternalReferenceCode()
+		throws Exception {
+
+		return _commerceChannel.getExternalReferenceCode();
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductSpecificationsPage_getProductExternalReferenceCode()
+		throws Exception {
+
+		CProduct cProduct = _cpDefinition.getCProduct();
+
+		return cProduct.getExternalReferenceCode();
 	}
 
 	@Override

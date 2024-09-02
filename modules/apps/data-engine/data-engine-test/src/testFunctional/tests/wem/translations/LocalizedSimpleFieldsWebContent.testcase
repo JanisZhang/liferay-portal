@@ -42,11 +42,18 @@ definition {
 		}
 
 		for (var fieldName : list "Select from List,Single Selection,Multiple Selection") {
+			DataEngine.viewField(
+				fieldFieldLabel = ${fieldName},
+				fieldName = ${fieldName});
+
 			for (var index : list "1,2,3") {
 				DataEngine.addFieldOption(
-					fieldFieldLabel = ${fieldName},
 					index = ${index},
 					optionValue = "Option ${index}");
+
+				if (${index} != 3) {
+					FormFields.clickAddOptionButton();
+				}
 			}
 		}
 
@@ -63,9 +70,12 @@ definition {
 		}
 
 		for (var fieldName : list "Select from List,Single Selection,Multiple Selection") {
+			DataEngine.viewField(
+				fieldFieldLabel = "${fieldName} - pt-BR",
+				fieldName = ${fieldName});
+
 			for (var index : list "1,2,3") {
 				DataEngine.addFieldOption(
-					fieldFieldLabel = "${fieldName} - pt-BR",
 					index = ${index},
 					optionValue = "Option ${index} - pt-BR");
 			}
@@ -110,9 +120,12 @@ definition {
 		}
 
 		for (var fieldName : list "Select from List,Single Selection,Multiple Selection") {
+			DataEngine.viewField(
+				fieldFieldLabel = "${fieldName} - edited",
+				fieldName = ${fieldName});
+
 			for (var index : list "1,2,3") {
 				DataEngine.addFieldOption(
-					fieldFieldLabel = "${fieldName} - edited",
 					index = ${index},
 					optionValue = "Option ${index} - edited");
 			}
@@ -127,9 +140,12 @@ definition {
 		}
 
 		for (var fieldName : list "Select from List,Single Selection,Multiple Selection") {
+			DataEngine.viewField(
+				fieldFieldLabel = "${fieldName} - pt-BR edited",
+				fieldName = ${fieldName});
+
 			for (var index : list "1,2,3") {
 				DataEngine.addFieldOption(
-					fieldFieldLabel = "${fieldName} - pt-BR edited",
 					index = ${index},
 					optionValue = "Option ${index} - pt-BR edited");
 			}
@@ -907,9 +923,13 @@ definition {
 			fieldFieldLabel = "Grid",
 			fieldName = "Grid");
 
+		DataEngine.viewField(
+			fieldFieldLabel = "Grid",
+			fieldName = "Grid");
+
 		for (var index : list "1,2,3") {
 			DataEngine.addFieldOption(
-				fieldFieldLabel = "Grid",
+				gridOptionType = "Rows",
 				index = ${index},
 				optionFieldLabel = "Rows",
 				optionValue = "Option ${index}");
@@ -917,7 +937,7 @@ definition {
 
 		for (var index : list "1,2,3") {
 			DataEngine.addFieldOption(
-				fieldFieldLabel = "Grid",
+				gridOptionType = "Columns",
 				index = ${index},
 				optionFieldLabel = "Columns",
 				optionValue = "Option ${index}");
@@ -934,7 +954,7 @@ definition {
 			fieldFieldLabelEdit = "Grid - ca-ES");
 
 		for (var index : list "1,2,3") {
-			DataEngine.addFieldOption(
+			DataEngine.editFieldOption(
 				fieldFieldLabel = "Grid - ca-ES",
 				index = ${index},
 				optionFieldLabel = "Rows",
@@ -942,7 +962,7 @@ definition {
 		}
 
 		for (var index : list "1,2,3") {
-			DataEngine.addFieldOption(
+			DataEngine.editFieldOption(
 				fieldFieldLabel = "Grid - ca-ES",
 				index = ${index},
 				optionFieldLabel = "Columns",

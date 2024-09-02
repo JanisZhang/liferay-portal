@@ -10,6 +10,7 @@ import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
 import com.liferay.commerce.frontend.util.ProductHelper;
+import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
@@ -17,7 +18,6 @@ import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.option.CommerceOptionType;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelLocalService;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOption;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Sku;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.converter.SkuDTOConverterContext;
@@ -53,17 +53,15 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"commerce.option.type.display.order:Integer=300",
-		"commerce.option.type.key=" + RadioCommerceOptionTypeImpl.KEY
+		"commerce.option.type.key=" + CPConstants.PRODUCT_OPTION_RADIO_KEY
 	},
 	service = CommerceOptionType.class
 )
 public class RadioCommerceOptionTypeImpl implements CommerceOptionType {
 
-	public static final String KEY = "radio";
-
 	@Override
 	public String getKey() {
-		return KEY;
+		return CPConstants.PRODUCT_OPTION_RADIO_KEY;
 	}
 
 	@Override
@@ -150,7 +148,7 @@ public class RadioCommerceOptionTypeImpl implements CommerceOptionType {
 						commerceContext,
 						_portal.getCompanyId(httpServletRequest), cpDefinition,
 						_portal.getLocale(httpServletRequest), minQuantity,
-						defaultCPInstanceId, StringPool.BLANK, null,
+						defaultCPInstanceId, null, StringPool.BLANK, null,
 						_portal.getUser(httpServletRequest)));
 			}
 		}
@@ -159,12 +157,9 @@ public class RadioCommerceOptionTypeImpl implements CommerceOptionType {
 
 		printWriter.write("<div>");
 
-		String moduleName = _npmResolver.resolveModuleName(
-			"commerce-frontend-js");
-
 		_reactRenderer.renderReact(
 			new ComponentDescriptor(
-				moduleName + "/components/product_options/ProductOptionRadio"),
+				"{ProductOptionRadio} from commerce-frontend-js"),
 			HashMapBuilder.<String, Object>put(
 				"accountId",
 				(accountEntry == null) ? 0 : accountEntry.getAccountEntryId()
@@ -228,9 +223,6 @@ public class RadioCommerceOptionTypeImpl implements CommerceOptionType {
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private NPMResolver _npmResolver;
 
 	@Reference
 	private Portal _portal;

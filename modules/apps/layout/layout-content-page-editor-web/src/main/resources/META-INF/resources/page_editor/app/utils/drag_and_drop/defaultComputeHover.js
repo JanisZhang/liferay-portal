@@ -23,6 +23,7 @@ const ORIENTATION_BORDER_SIZE = 80;
 
 export default function defaultComputeHover({
 	dispatch,
+	fragmentEntryLinksRef,
 	layoutDataRef,
 	monitor,
 	siblingItem = null,
@@ -99,7 +100,12 @@ export default function defaultComputeHover({
 		return dispatch({
 			dropItem: sourceItem,
 			dropTargetItem: targetItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
+			droppable: checkAllowedChild(
+				sourceItem,
+				targetItem,
+				layoutDataRef,
+				fragmentEntryLinksRef
+			),
 			elevate: null,
 			targetPositionWithMiddle,
 			targetPositionWithoutMiddle,
@@ -123,7 +129,12 @@ export default function defaultComputeHover({
 		return dispatch({
 			dropItem: sourceItem,
 			dropTargetItem: siblingItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
+			droppable: checkAllowedChild(
+				sourceItem,
+				targetItem,
+				layoutDataRef,
+				fragmentEntryLinksRef
+			),
 			elevate: true,
 			targetPositionWithMiddle,
 			targetPositionWithoutMiddle,
@@ -174,10 +185,8 @@ export default function defaultComputeHover({
 					!shouldBeIgnoredInElevation(parent)
 				) {
 					if (maximumDepth > 1) {
-						const [
-							grandParent,
-							parentSibling,
-						] = getElevatedTargetItem(parent, maximumDepth - 1);
+						const [grandParent, parentSibling] =
+							getElevatedTargetItem(parent, maximumDepth - 1);
 
 						if (grandParent) {
 							return [grandParent, parentSibling];
@@ -202,6 +211,7 @@ export default function defaultComputeHover({
 		if (elevatedTargetItem && elevatedTargetItem !== targetItem) {
 			return defaultComputeHover({
 				dispatch,
+				fragmentEntryLinksRef,
 				layoutDataRef,
 				monitor,
 				siblingItem,
@@ -265,15 +275,13 @@ function getItemPosition(item, monitor, targetRefs, orientation) {
 	const totalElevationBorderSize =
 		elevationStepSize * MAXIMUM_ELEVATION_STEPS;
 
-	const [
-		targetPositionWithMiddle,
-		targetPositionWithoutMiddle,
-	] = getDropTargetPosition(
-		clientOffset,
-		totalElevationBorderSize,
-		targetPositions,
-		targetData
-	);
+	const [targetPositionWithMiddle, targetPositionWithoutMiddle] =
+		getDropTargetPosition(
+			clientOffset,
+			totalElevationBorderSize,
+			targetPositions,
+			targetData
+		);
 
 	let elevationDepth = 0;
 

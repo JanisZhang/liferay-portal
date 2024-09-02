@@ -6,21 +6,10 @@
 package com.liferay.jethr0.event;
 
 import com.liferay.jethr0.bui1d.BuildEntity;
-import com.liferay.jethr0.bui1d.queue.BuildQueue;
-import com.liferay.jethr0.bui1d.repository.BuildEntityRepository;
-import com.liferay.jethr0.bui1d.repository.BuildRunEntityRepository;
 import com.liferay.jethr0.bui1d.run.BuildRunEntity;
-import com.liferay.jethr0.event.github.GitHubFactory;
-import com.liferay.jethr0.event.github.client.GitHubClient;
-import com.liferay.jethr0.event.jenkins.JenkinsEventProcessor;
 import com.liferay.jethr0.event.jrp.JRPEventProcessor;
-import com.liferay.jethr0.git.branch.repository.GitBranchEntityRepository;
-import com.liferay.jethr0.jenkins.JenkinsQueue;
-import com.liferay.jethr0.jenkins.repository.JenkinsCohortEntityRepository;
-import com.liferay.jethr0.jenkins.repository.JenkinsNodeEntityRepository;
-import com.liferay.jethr0.jenkins.repository.JenkinsServerEntityRepository;
 import com.liferay.jethr0.job.JobEntity;
-import com.liferay.jethr0.job.repository.JobEntityRepository;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
 import com.liferay.jethr0.util.StringUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
@@ -33,67 +22,8 @@ import org.json.JSONObject;
  */
 public abstract class BaseEventHandler implements EventHandler {
 
-	protected BaseEventHandler(
-		EventHandlerContext eventHandlerContext, JSONObject messageJSONObject) {
-
-		_eventHandlerContext = eventHandlerContext;
+	protected BaseEventHandler(JSONObject messageJSONObject) {
 		_messageJSONObject = messageJSONObject;
-	}
-
-	protected BuildQueue getBuildQueue() {
-		return _eventHandlerContext.getBuildQueue();
-	}
-
-	protected BuildEntityRepository getBuildRepository() {
-		return _eventHandlerContext.getBuildRepository();
-	}
-
-	protected BuildRunEntityRepository getBuildRunRepository() {
-		return _eventHandlerContext.getBuildRunRepository();
-	}
-
-	protected GitBranchEntityRepository getGitBranchEntityRepository() {
-		return _eventHandlerContext.getGitBranchEntityRepository();
-	}
-
-	protected GitHubClient getGitHubClient() {
-		return _eventHandlerContext.getGitHubClient();
-	}
-
-	protected GitHubFactory getGitHubFactory() {
-		return _eventHandlerContext.getGitHubFactory();
-	}
-
-	protected JenkinsCohortEntityRepository getJenkinsCohortEntityRepository() {
-		return _eventHandlerContext.getJenkinsCohortEntityRepository();
-	}
-
-	protected JenkinsEventProcessor getJenkinsEventProcessor() {
-		return _eventHandlerContext.getJenkinsEventProcessor();
-	}
-
-	protected JenkinsNodeEntityRepository getJenkinsNodeEntityRepository() {
-		return _eventHandlerContext.getJenkinsNodeEntityRepository();
-	}
-
-	protected JenkinsQueue getJenkinsQueue() {
-		return _eventHandlerContext.getJenkinsQueue();
-	}
-
-	protected JenkinsServerEntityRepository getJenkinsServerEntityRepository() {
-		return _eventHandlerContext.getJenkinsServerEntityRepository();
-	}
-
-	protected JobEntityRepository getJobEntityRepository() {
-		return _eventHandlerContext.getJobEntityRepository();
-	}
-
-	protected JRPEventProcessor getJRPEventProcessor() {
-		return _eventHandlerContext.getJRPEventProcessor();
-	}
-
-	protected String getLiferayPortalURL() {
-		return _eventHandlerContext.getLiferayPortalURL();
 	}
 
 	protected JSONObject getMessageJSONObject() {
@@ -115,7 +45,8 @@ public abstract class BaseEventHandler implements EventHandler {
 			return;
 		}
 
-		JRPEventProcessor jrpEventProcessor = getJRPEventProcessor();
+		JRPEventProcessor jrpEventProcessor =
+			Jethr0ContextUtil.getJRPEventProcessor();
 
 		Map<String, String> messageProperties = HashMapBuilder.put(
 			"jenkinsBuildId", jenkinsBuildId
@@ -138,7 +69,7 @@ public abstract class BaseEventHandler implements EventHandler {
 			).put(
 				"jethr0BuildURL",
 				StringUtil.combine(
-					getLiferayPortalURL(), "/#/jobs/builds/",
+					Jethr0ContextUtil.getLiferayPortalURL(), "/#/jobs/builds/",
 					buildEntity.getId())
 			);
 		}
@@ -160,7 +91,6 @@ public abstract class BaseEventHandler implements EventHandler {
 		jrpEventProcessor.sendMessage(jsonObject.toString(), messageProperties);
 	}
 
-	private final EventHandlerContext _eventHandlerContext;
 	private final JSONObject _messageJSONObject;
 
 }

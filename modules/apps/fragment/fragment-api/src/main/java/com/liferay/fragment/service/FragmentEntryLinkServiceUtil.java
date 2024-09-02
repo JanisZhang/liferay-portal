@@ -7,6 +7,7 @@ package com.liferay.fragment.service;
 
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 /**
  * Provides the remote service utility for FragmentEntryLink. This utility wraps
@@ -28,19 +29,19 @@ public class FragmentEntryLinkServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.fragment.service.impl.FragmentEntryLinkServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static FragmentEntryLink addFragmentEntryLink(
-			long groupId, long originalFragmentEntryLinkId,
-			long fragmentEntryId, long segmentsExperienceId, long plid,
-			String css, String html, String js, String configuration,
-			String editableValues, String namespace, int position,
-			String rendererKey, int type,
+			String externalReferenceCode, long groupId,
+			long originalFragmentEntryLinkId, long fragmentEntryId,
+			long segmentsExperienceId, long plid, String css, String html,
+			String js, String configuration, String editableValues,
+			String namespace, int position, String rendererKey, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFragmentEntryLink(
-			groupId, originalFragmentEntryLinkId, fragmentEntryId,
-			segmentsExperienceId, plid, css, html, js, configuration,
-			editableValues, namespace, position, rendererKey, type,
-			serviceContext);
+			externalReferenceCode, groupId, originalFragmentEntryLinkId,
+			fragmentEntryId, segmentsExperienceId, plid, css, html, js,
+			configuration, editableValues, namespace, position, rendererKey,
+			type, serviceContext);
 	}
 
 	public static FragmentEntryLink deleteFragmentEntryLink(
@@ -48,6 +49,22 @@ public class FragmentEntryLinkServiceUtil {
 		throws PortalException {
 
 		return getService().deleteFragmentEntryLink(fragmentEntryLinkId);
+	}
+
+	public static FragmentEntryLink deleteFragmentEntryLink(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteFragmentEntryLink(
+			externalReferenceCode, groupId);
+	}
+
+	public static FragmentEntryLink getFragmentEntryLinkByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getFragmentEntryLinkByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -84,13 +101,11 @@ public class FragmentEntryLinkServiceUtil {
 	}
 
 	public static FragmentEntryLinkService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(FragmentEntryLinkService service) {
-		_service = service;
-	}
-
-	private static volatile FragmentEntryLinkService _service;
+	private static final Snapshot<FragmentEntryLinkService> _serviceSnapshot =
+		new Snapshot<>(
+			FragmentEntryLinkServiceUtil.class, FragmentEntryLinkService.class);
 
 }

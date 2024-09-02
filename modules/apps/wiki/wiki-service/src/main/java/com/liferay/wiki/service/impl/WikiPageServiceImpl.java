@@ -324,7 +324,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 	 * reference code
 	 *
 	 * @param  groupId the primary key of the group
-	 * @param  externalReferenceCode the wiki page external reference code
+	 * @param  externalReferenceCode the wiki page's external reference code
 	 * @return the latest matching wiki page, or <code>null</code> if no
 	 *         matching wiki page could be found
 	 */
@@ -389,7 +389,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 	 * reference code
 	 *
 	 * @param  groupId the primary key of the group
-	 * @param  externalReferenceCode the wiki page external reference code
+	 * @param  externalReferenceCode the wiki page's external reference code
 	 * @return the latest matching wiki page
 	 * @throws PortalException if a portal exception occurred
 	 */
@@ -591,12 +591,12 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 		if (userId > 0) {
 			return wikiPagePersistence.filterFindByG_U_N_S(
 				groupId, userId, nodeId, status, start, end,
-				new PageCreateDateComparator(false));
+				PageCreateDateComparator.getInstance(false));
 		}
 
 		return wikiPagePersistence.filterFindByG_N_S(
 			groupId, nodeId, status, start, end,
-			new PageCreateDateComparator(false));
+			PageCreateDateComparator.getInstance(false));
 	}
 
 	@Override
@@ -660,7 +660,7 @@ public class WikiPageServiceImpl extends WikiPageServiceBaseImpl {
 		}
 
 		List<WikiPage> pages = wikiPageLocalService.getPages(
-			nodeId, title, 0, max, new PageCreateDateComparator(true));
+			nodeId, title, 0, max, PageCreateDateComparator.getInstance(true));
 
 		return _exportToRSS(
 			title, title, type, version, displayStyle, feedURL, entryURL,

@@ -6,6 +6,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import './style.css';
+
 const api = async (url, options = {}) => {
 	return fetch(window.location.origin + '/' + url, {
 		headers: {
@@ -43,6 +45,7 @@ class CustomElement extends HTMLElement {
 					}
 				})
 				.catch((error) => {
+
 					// eslint-disable-next-line no-console
 					console.log(error);
 				});
@@ -57,6 +60,7 @@ class CustomElement extends HTMLElement {
 const ELEMENT_NAME = 'liferay-sample-custom-element-4';
 
 if (customElements.get(ELEMENT_NAME)) {
+
 	// eslint-disable-next-line no-console
 	console.log(
 		'Skipping registration for <liferay-sample-custom-element-4> (already registered)'

@@ -10,11 +10,24 @@ import './index.scss';
 import ClayButton from '@clayui/button';
 
 import infoCircleFullIcon from '../../../../../assets/icons/icon_info_circle_full.svg';
+import useCart from '../../../../../hooks/useCart';
+import i18n from '../../../../../i18n';
 
 const MAX_ITEM = 99;
 const MIN_ITEM = 0;
 
-const LicenseSectorCard: React.FC<any> = ({
+type LicenseSectorCardProps = {
+	cartUtil: ReturnType<typeof useCart>;
+	licenseDescription: string;
+	licensetiers: {
+		skuId: number;
+		tierPrice: TierPrice[];
+	}[];
+	lisenceType: string;
+	productId?: number;
+	sku: DeliverySKU;
+};
+const LicenseSectorCard: React.FC<LicenseSectorCardProps> = ({
 	cartUtil,
 	licenseDescription,
 	licensetiers,
@@ -23,10 +36,26 @@ const LicenseSectorCard: React.FC<any> = ({
 	sku,
 }) => {
 	const count =
-		cartUtil.cartItems.find((item: any) => item.skuId === sku.id)
-			?.quantity || MIN_ITEM;
+		cartUtil.cartItems.find((item) => item.skuId === sku.id)?.quantity ||
+		MIN_ITEM;
 
-	const tiers = licensetiers[0];
+	const tierPrices = licensetiers[0]?.tierPrice ?? ([] as TierPrice[]);
+
+	const tierPriceText = (tierPrice: TierPrice, index: number) => {
+		const {priceFormatted, quantity} = tierPrice;
+
+		const minPriceLicenseOption = index === tierPrices?.length - 1;
+
+		const toLicenseQuantityValue = tierPrices[index + 1]?.quantity - 1;
+
+		const quantityText = `${quantity}${`${
+			minPriceLicenseOption ? '+ ' : `-${toLicenseQuantityValue}`
+		}`} ${i18n.translate('licenses')}:`;
+
+		const tierPriceValue = `${priceFormatted} ${i18n.translate('each')}`;
+
+		return `${quantityText} ${tierPriceValue}`;
+	};
 
 	return (
 		<div className="license__card p-3">
@@ -34,7 +63,7 @@ const LicenseSectorCard: React.FC<any> = ({
 				<span>
 					<div className="mb-1">
 						<span className="font-weight-bold text-capitalize">
-							{`${lisenceType} License`}
+							{`${lisenceType} ${i18n.translate('license')}`}
 						</span>
 						<span className="license__card__icon ml-3">
 							{lisenceType.toLowerCase() === 'standard' ? (
@@ -74,7 +103,9 @@ const LicenseSectorCard: React.FC<any> = ({
 						className="align-items-center d-flex justify-content-center license__card__buttons p-2"
 						disabled={count === MAX_ITEM}
 						displayType="primary"
-						onClick={() => cartUtil.addCart(productId, sku.id)}
+						onClick={() =>
+							cartUtil.addCart(Number(productId), sku.id)
+						}
 					>
 						<ClayIcon
 							aria-label="Plus Button"
@@ -85,24 +116,28 @@ const LicenseSectorCard: React.FC<any> = ({
 				</div>
 			</div>
 
-			{tiers?.tierPrice.length && (
-				<div className="d-flex flex-column license__card__tier mt-4 p-4">
-					<div className="font-weight-bold license__card__tier__title mb-1">
-						License Prices
-					</div>
-
-					{(tiers?.tierPrice as any[])?.map((tier: any, index) => (
-						<span
-							className="license__card__tier__price__text"
-							key={index}
-						>
-							{`${
-								tier?.minimumQuantity || tier?.quantity
-							} License: ${tier?.priceFormatted} each`}
-						</span>
-					))}
+			<div className="d-flex flex-column license__card__tier mt-4 p-4">
+				<div className="font-weight-bold license__card__tier__title mb-1">
+					{i18n.translate('license-prices')}
 				</div>
-			)}
+
+				{tierPrices.length > 1 ? (
+					tierPrices.map((tier: TierPrice, index: number) => {
+						return (
+							<span
+								className="license__card__tier__price__text"
+								key={index}
+							>
+								{tierPriceText(tier, index)}
+							</span>
+						);
+					})
+				) : (
+					<span className="license__card__tier__price__text">
+						{`1 License: ${sku?.price?.priceFormatted}`}
+					</span>
+				)}
+			</div>
 		</div>
 	);
 };

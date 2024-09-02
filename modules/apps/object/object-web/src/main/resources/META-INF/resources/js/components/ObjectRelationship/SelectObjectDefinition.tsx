@@ -8,7 +8,7 @@ import ClayLabel from '@clayui/label';
 import {
 	API,
 	SingleSelect,
-	getLocalizableLabel,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
@@ -51,7 +51,7 @@ export default function SelectObjectDefinition({
 	const objectDefinitionsItems = useMemo(() => {
 		return objectDefinitions.map(
 			({externalReferenceCode, label, name, system}) => ({
-				label: getLocalizableLabel(
+				label: stringUtils.getLocalizableLabel(
 					creationLanguageId as Liferay.Language.Locale,
 					label,
 					name
@@ -65,11 +65,10 @@ export default function SelectObjectDefinition({
 	useEffect(() => {
 		if (readOnly && !objectDefinition) {
 			const fetchObjectDefinition = async () => {
-				const {
-					externalReferenceCode,
-				} = await API.getObjectDefinitionByExternalReferenceCode(
-					objectDefinitionExternalReferenceCode as string
-				);
+				const {externalReferenceCode} =
+					await API.getObjectDefinitionByExternalReferenceCode(
+						objectDefinitionExternalReferenceCode as string
+					);
 
 				setSelectedObjectDefinitionExternalReferenceCode(
 					externalReferenceCode
@@ -78,6 +77,7 @@ export default function SelectObjectDefinition({
 
 			fetchObjectDefinition();
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 

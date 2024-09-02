@@ -39,6 +39,7 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -100,7 +101,7 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			ProductSpecificationResource.builder();
 
 		productSpecificationResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,21 +115,7 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				enable(SerializationFeature.INDENT_OUTPUT);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		ProductSpecification productSpecification1 =
 			randomProductSpecification();
@@ -143,20 +130,7 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 	@Test
 	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		ProductSpecification productSpecification =
 			randomProductSpecification();
@@ -166,6 +140,24 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 		Assert.assertEquals(
 			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
+			{
+				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+				configure(
+					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
+				enable(SerializationFeature.INDENT_OUTPUT);
+				setDateFormat(new ISO8601DateFormat());
+				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+				setSerializationInclusion(JsonInclude.Include.NON_NULL);
+				setVisibility(
+					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+				setVisibility(
+					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+			}
+		};
 	}
 
 	@Test
@@ -220,7 +212,10 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteProductSpecification() throws Exception {
-		ProductSpecification productSpecification =
+
+		// No namespace
+
+		ProductSpecification productSpecification1 =
 			testGraphQLDeleteProductSpecification_addProductSpecification();
 
 		Assert.assertTrue(
@@ -230,23 +225,61 @@ public abstract class BaseProductSpecificationResourceTestCase {
 						"deleteProductSpecification",
 						new HashMap<String, Object>() {
 							{
-								put("id", productSpecification.getId());
+								put("id", productSpecification1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteProductSpecification"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"productSpecification",
 					new HashMap<String, Object>() {
 						{
-							put("id", productSpecification.getId());
+							put("id", productSpecification1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		ProductSpecification productSpecification2 =
+			testGraphQLDeleteProductSpecification_addProductSpecification();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteProductSpecification",
+							new HashMap<String, Object>() {
+								{
+									put("id", productSpecification2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteProductSpecification"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"productSpecification",
+						new HashMap<String, Object>() {
+							{
+								put("id", productSpecification2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ProductSpecification
@@ -282,6 +315,8 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		ProductSpecification productSpecification =
 			testGraphQLGetProductSpecification_addProductSpecification();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				productSpecification,
@@ -297,11 +332,37 @@ public abstract class BaseProductSpecificationResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/productSpecification"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productSpecification,
+				ProductSpecificationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productSpecification",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												productSpecification.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productSpecification"))));
 	}
 
 	@Test
 	public void testGraphQLGetProductSpecificationNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -315,6 +376,25 @@ public abstract class BaseProductSpecificationResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productSpecification",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -749,6 +829,16 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"specificationPriority", additionalAssertFieldName)) {
+
+				if (productSpecification.getSpecificationPriority() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("value", additionalAssertFieldName)) {
 				if (productSpecification.getValue() == null) {
 					valid = false;
@@ -959,6 +1049,19 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				if (!Objects.deepEquals(
 						productSpecification1.getSpecificationKey(),
 						productSpecification2.getSpecificationKey())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"specificationPriority", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productSpecification1.getSpecificationPriority(),
+						productSpecification2.getSpecificationPriority())) {
 
 					return false;
 				}
@@ -1208,6 +1311,14 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("specificationPriority")) {
+			sb.append(
+				String.valueOf(
+					productSpecification.getSpecificationPriority()));
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("value")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1227,7 +1338,8 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1267,6 +1379,7 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				specificationId = RandomTestUtil.randomLong();
 				specificationKey = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				specificationPriority = RandomTestUtil.randomDouble();
 			}
 		};
 	}
@@ -1296,12 +1409,12 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1310,11 +1423,16 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1346,6 +1464,24 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1367,16 +1503,6 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

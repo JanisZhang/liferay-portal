@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -95,7 +96,7 @@ public class DLFileVersionTest {
 			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType = DLFileEntryTypeServiceUtil.addFileEntryType(
-			_group.getGroupId(), ddmStructure.getStructureId(), null,
+			null, _group.getGroupId(), ddmStructure.getStructureId(), null,
 			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -245,7 +246,8 @@ public class DLFileVersionTest {
 			_fileVersion.getMimeType(), _fileVersion.getTitle(),
 			StringPool.BLANK, _fileVersion.getDescription(),
 			_fileVersion.getChangeLog(), DLVersionNumberIncrease.MINOR,
-			_DATA_VERSION_1, _fileVersion.getDisplayDate(), new Date(),
+			_DATA_VERSION_1, _fileVersion.getDisplayDate(),
+			new Date(System.currentTimeMillis() + Time.MINUTE),
 			_fileVersion.getReviewDate(), _serviceContext);
 
 		Assert.assertNotEquals(

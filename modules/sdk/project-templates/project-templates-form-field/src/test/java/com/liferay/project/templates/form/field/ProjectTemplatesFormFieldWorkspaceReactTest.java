@@ -8,6 +8,7 @@ package com.liferay.project.templates.form.field;
 import com.liferay.maven.executor.MavenExecutor;
 import com.liferay.project.templates.BaseProjectTemplatesTestCase;
 import com.liferay.project.templates.extensions.util.Validator;
+import com.liferay.project.templates.extensions.util.VersionUtil;
 import com.liferay.project.templates.util.FileTestUtil;
 
 import java.io.File;
@@ -42,7 +43,8 @@ public class ProjectTemplatesFormFieldWorkspaceReactTest
 
 	@Parameterized.Parameters(name = "Testcase-{index}: testing {0}")
 	public static Iterable<Object[]> data() {
-		return Arrays.asList(new Object[][] {{"7.3.7"}, {"7.4.3.56"}});
+		return Arrays.asList(
+			new Object[][] {{"7.3.7"}, {"7.4.3.56"}, {"2024.q1.1"}});
 	}
 
 	@BeforeClass
@@ -76,41 +78,46 @@ public class ProjectTemplatesFormFieldWorkspaceReactTest
 		String liferayWorkspaceProduct = getLiferayWorkspaceProduct(
 			_liferayVersion);
 
+		String product = "portal";
+
 		if (liferayWorkspaceProduct != null) {
 			writeGradlePropertiesInWorkspace(
 				workspaceDir,
 				"liferay.workspace.product=" + liferayWorkspaceProduct);
+
+			product = liferayWorkspaceProduct.substring(
+				0, liferayWorkspaceProduct.indexOf("-"));
 		}
 
 		File gradleProjectDir = buildTemplateWithGradle(
 			new File(workspaceDir, "modules"), "form-field", name,
-			"--js-framework", "react", "--liferay-version", _liferayVersion);
+			"--js-framework", "react", "--liferay-product", product,
+			"--liferay-version", _liferayVersion);
 
-		if (Objects.equals(_liferayVersion, "7.2.1-1")) {
+		testContains(
+			gradleProjectDir, "build.gradle",
+			"jsCompile group: \"com.liferay\", name: " +
+				"\"com.liferay.dynamic.data.mapping.form.field.type\"");
+
+		if (Objects.equals(product, "dxp")) {
 			testContains(
-				gradleProjectDir, "build.gradle",
-				"compileOnly group: \"com.liferay\", name: " +
-					"\"com.liferay.dynamic.data.mapping.api\"",
-				"compileOnly group: \"com.liferay\", name: " +
-					"\"com.liferay.frontend.js.loader.modules.extender.api\"",
-				"jsCompile group: \"com.liferay\", name: " +
-					"\"com.liferay.dynamic.data.mapping.form.field.type\"",
-				DEPENDENCY_PORTAL_KERNEL);
+				gradleProjectDir, "build.gradle", DEPENDENCY_RELEASE_DXP_API);
 		}
-		else {
+		else if (Objects.equals(product, "portal")) {
 			testContains(
 				gradleProjectDir, "build.gradle",
-				"compileOnly group: \"com.liferay.portal\", name: " +
-					"\"release.portal.api\"",
-				"jsCompile group: \"com.liferay\", name: " +
-					"\"com.liferay.dynamic.data.mapping.form.field.type\"",
 				DEPENDENCY_RELEASE_PORTAL_API);
+		}
+
+		String jsLiferayApiVersion = _liferayVersion.substring(0, 3);
+
+		if (VersionUtil.isLiferayQuarterlyVersion(_liferayVersion)) {
+			jsLiferayApiVersion = "7.4";
 		}
 
 		testContains(
 			gradleProjectDir, "package.json", "\"@babel/cli\": \"^7.2.3\"",
-			"\"@liferay/portal-" + _liferayVersion.substring(0, 3) +
-				"\": \"*\"");
+			"\"@liferay/portal-" + jsLiferayApiVersion + "\": \"*\"");
 		testContains(
 			gradleProjectDir,
 			"src/main/java/foobar/form/field/FoobarDDMFormFieldType.java",

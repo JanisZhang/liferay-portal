@@ -5,16 +5,16 @@
 		"ckeditor4": "4.22.1",
 		"ckeditor4-react": "1.4.2",
 		"frontend-js-web": "*",
-		"liferay-ckeditor": "4.21.0-liferay.1",
+		"liferay-ckeditor": "4.21.0-liferay.3",
 		"prop-types": "15.7.2",
 		"react": "16.12.0"
 	},
-	"main": "index.js",
+	"main": "js/index.js",
 	"name": "frontend-editor-ckeditor-web",
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
-	"version": "5.0.92"
+	"version": "5.0.101"
 }

@@ -14,10 +14,8 @@ import CompareRunDetails from '.';
 import Container from '../../components/Layout/Container';
 import useHeader from '../../hooks/useHeader';
 import i18n from '../../i18n';
-import useCompareRuns from './useCompareRuns';
 
 const CompareRunsOutlet = () => {
-	const compareRuns = useCompareRuns('details');
 	const {setHeading} = useHeader({
 		icon: 'drop',
 		tabs: [],
@@ -66,9 +64,9 @@ const CompareRunsOutlet = () => {
 
 	return (
 		<>
-			<CompareRunDetails matrixData={compareRuns[0].values} runs={runs} />
+			<CompareRunDetails runs={runs} />
 
-			<Container className="mt-3">
+			<Container className="mt-2">
 				<ClayTabs className="header-container-tabs">
 					{[
 						{
@@ -82,9 +80,9 @@ const CompareRunsOutlet = () => {
 							title: i18n.translate('components'),
 						},
 						{
-							active: pathname.endsWith('/cases'),
-							path: 'cases',
-							title: i18n.translate('cases'),
+							active: pathname.endsWith('/details'),
+							path: 'details',
+							title: i18n.translate('details'),
 						},
 					].map((tab, index) => (
 						<ClayTabs.Item

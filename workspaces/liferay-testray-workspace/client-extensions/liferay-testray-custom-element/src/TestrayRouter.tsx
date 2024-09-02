@@ -253,6 +253,13 @@ const TestrayRoute = () => (
 						</Route>
 					</Route>
 
+					<Route
+						element={<CaseResultOutlet />}
+						path="case-result/:caseResultId"
+					>
+						<Route element={<CaseResult />} index />
+					</Route>
+
 					<Route element={<OutletBridge />} path="manage">
 						<Route element={<OutletBridge />} path="user">
 							<Route element={<Users />} index />
@@ -319,7 +326,7 @@ const TestrayRoute = () => (
 							path="components"
 						/>
 
-						<Route element={<CompareRunsCases />} path="cases" />
+						<Route element={<CompareRunsCases />} path="details" />
 
 						<Route element={<CompareRunsTeams />} path="teams" />
 					</Route>

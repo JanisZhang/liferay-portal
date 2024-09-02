@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.security.permission.DoAsUserThread;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
@@ -95,7 +96,7 @@ public class DLAppServiceWhenAddingAFileEntryTest extends BaseDLAppTestCase {
 			externalReferenceCode, fileEntry.getExternalReferenceCode());
 
 		fileEntry = dlAppService.getFileEntryByExternalReferenceCode(
-			group.getGroupId(), externalReferenceCode);
+			externalReferenceCode, group.getGroupId());
 
 		Assert.assertEquals(
 			externalReferenceCode, fileEntry.getExternalReferenceCode());
@@ -117,7 +118,7 @@ public class DLAppServiceWhenAddingAFileEntryTest extends BaseDLAppTestCase {
 			externalReferenceCode, fileEntry.getExternalReferenceCode());
 
 		fileEntry = dlAppService.getFileEntryByExternalReferenceCode(
-			group.getGroupId(), externalReferenceCode);
+			externalReferenceCode, group.getGroupId());
 
 		Assert.assertEquals(
 			externalReferenceCode, fileEntry.getExternalReferenceCode());
@@ -156,7 +157,8 @@ public class DLAppServiceWhenAddingAFileEntryTest extends BaseDLAppTestCase {
 
 	@Test
 	public void testFileEntryShouldSaveExpirationDate() throws Exception {
-		Date expirationDate = new Date();
+		Date expirationDate = new Date(
+			System.currentTimeMillis() + Time.MINUTE);
 
 		FileEntry fileEntry = DLAppServiceTestUtil.addFileEntry(
 			null, group.getGroupId(), parentFolder.getFolderId(),

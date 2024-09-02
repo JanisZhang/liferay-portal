@@ -36,11 +36,13 @@ import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -103,7 +103,7 @@ public abstract class BaseShipmentResourceTestCase {
 		ShipmentResource.Builder builder = ShipmentResource.builder();
 
 		shipmentResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +117,32 @@ public abstract class BaseShipmentResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Shipment shipment1 = randomShipment();
+
+		String json = objectMapper.writeValueAsString(shipment1);
+
+		Shipment shipment2 = ShipmentSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(shipment1, shipment2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Shipment shipment = randomShipment();
+
+		String json1 = objectMapper.writeValueAsString(shipment);
+		String json2 = ShipmentSerDes.toJSON(shipment);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +157,6 @@ public abstract class BaseShipmentResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Shipment shipment1 = randomShipment();
-
-		String json = objectMapper.writeValueAsString(shipment1);
-
-		Shipment shipment2 = ShipmentSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(shipment1, shipment2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Shipment shipment = randomShipment();
-
-		String json1 = objectMapper.writeValueAsString(shipment);
-		String json2 = ShipmentSerDes.toJSON(shipment);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -176,6 +167,7 @@ public abstract class BaseShipmentResourceTestCase {
 
 		shipment.setCarrier(regex);
 		shipment.setExternalReferenceCode(regex);
+		shipment.setOrderExternalReferenceCode(regex);
 		shipment.setShippingOptionName(regex);
 		shipment.setTrackingNumber(regex);
 		shipment.setTrackingURL(regex);
@@ -189,6 +181,7 @@ public abstract class BaseShipmentResourceTestCase {
 
 		Assert.assertEquals(regex, shipment.getCarrier());
 		Assert.assertEquals(regex, shipment.getExternalReferenceCode());
+		Assert.assertEquals(regex, shipment.getOrderExternalReferenceCode());
 		Assert.assertEquals(regex, shipment.getShippingOptionName());
 		Assert.assertEquals(regex, shipment.getTrackingNumber());
 		Assert.assertEquals(regex, shipment.getTrackingURL());
@@ -386,7 +379,7 @@ public abstract class BaseShipmentResourceTestCase {
 			(entityField, shipment1, shipment2) -> {
 				BeanTestUtil.setProperty(
 					shipment1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -524,6 +517,8 @@ public abstract class BaseShipmentResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject shipmentsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/shipments");
@@ -535,6 +530,27 @@ public abstract class BaseShipmentResourceTestCase {
 
 		shipmentsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/shipments");
+
+		Assert.assertEquals(
+			totalCount + 2, shipmentsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			shipment1,
+			Arrays.asList(
+				ShipmentSerDes.toDTOs(shipmentsJSONObject.getString("items"))));
+		assertContains(
+			shipment2,
+			Arrays.asList(
+				ShipmentSerDes.toDTOs(shipmentsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminShipment_v1_0
+
+		shipmentsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminShipment_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminShipment_v1_0",
 			"JSONObject/shipments");
 
 		Assert.assertEquals(
@@ -629,6 +645,8 @@ public abstract class BaseShipmentResourceTestCase {
 		Shipment shipment =
 			testGraphQLGetShipmentByExternalReferenceCode_addShipment();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				shipment,
@@ -650,6 +668,33 @@ public abstract class BaseShipmentResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/shipmentByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminShipment_v1_0
+
+		Assert.assertTrue(
+			equals(
+				shipment,
+				ShipmentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminShipment_v1_0",
+								new GraphQLField(
+									"shipmentByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													shipment.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminShipment_v1_0",
+						"Object/shipmentByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -658,6 +703,8 @@ public abstract class BaseShipmentResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -673,6 +720,27 @@ public abstract class BaseShipmentResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminShipment_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminShipment_v1_0",
+						new GraphQLField(
+							"shipmentByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -859,7 +927,10 @@ public abstract class BaseShipmentResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteShipment() throws Exception {
-		Shipment shipment = testGraphQLDeleteShipment_addShipment();
+
+		// No namespace
+
+		Shipment shipment1 = testGraphQLDeleteShipment_addShipment();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -868,23 +939,60 @@ public abstract class BaseShipmentResourceTestCase {
 						"deleteShipment",
 						new HashMap<String, Object>() {
 							{
-								put("shipmentId", shipment.getId());
+								put("shipmentId", shipment1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteShipment"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"shipment",
 					new HashMap<String, Object>() {
 						{
-							put("shipmentId", shipment.getId());
+							put("shipmentId", shipment1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminShipment_v1_0
+
+		Shipment shipment2 = testGraphQLDeleteShipment_addShipment();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminShipment_v1_0",
+						new GraphQLField(
+							"deleteShipment",
+							new HashMap<String, Object>() {
+								{
+									put("shipmentId", shipment2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminShipment_v1_0",
+				"Object/deleteShipment"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminShipment_v1_0",
+					new GraphQLField(
+						"shipment",
+						new HashMap<String, Object>() {
+							{
+								put("shipmentId", shipment2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Shipment testGraphQLDeleteShipment_addShipment()
@@ -913,6 +1021,8 @@ public abstract class BaseShipmentResourceTestCase {
 	public void testGraphQLGetShipment() throws Exception {
 		Shipment shipment = testGraphQLGetShipment_addShipment();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				shipment,
@@ -928,11 +1038,35 @@ public abstract class BaseShipmentResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/shipment"))));
+
+		// Using the namespace headlessCommerceAdminShipment_v1_0
+
+		Assert.assertTrue(
+			equals(
+				shipment,
+				ShipmentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminShipment_v1_0",
+								new GraphQLField(
+									"shipment",
+									new HashMap<String, Object>() {
+										{
+											put("shipmentId", shipment.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminShipment_v1_0",
+						"Object/shipment"))));
 	}
 
 	@Test
 	public void testGraphQLGetShipmentNotFound() throws Exception {
 		Long irrelevantShipmentId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -946,6 +1080,25 @@ public abstract class BaseShipmentResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminShipment_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminShipment_v1_0",
+						new GraphQLField(
+							"shipment",
+							new HashMap<String, Object>() {
+								{
+									put("shipmentId", irrelevantShipmentId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1178,6 +1331,16 @@ public abstract class BaseShipmentResourceTestCase {
 
 			if (Objects.equals("modifiedDate", additionalAssertFieldName)) {
 				if (shipment.getModifiedDate() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"orderExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (shipment.getOrderExternalReferenceCode() == null) {
 					valid = false;
 				}
 
@@ -1487,6 +1650,19 @@ public abstract class BaseShipmentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"orderExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						shipment1.getOrderExternalReferenceCode(),
+						shipment2.getOrderExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("orderId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						shipment1.getOrderId(), shipment2.getOrderId())) {
@@ -1774,20 +1950,20 @@ public abstract class BaseShipmentResourceTestCase {
 
 		if (entityFieldName.equals("createDate")) {
 			if (operator.equals("between")) {
+				Date date = shipment.getCreateDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(shipment.getCreateDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(shipment.getCreateDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1810,20 +1986,20 @@ public abstract class BaseShipmentResourceTestCase {
 
 		if (entityFieldName.equals("expectedDate")) {
 			if (operator.equals("between")) {
+				Date date = shipment.getExpectedDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(shipment.getExpectedDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(shipment.getExpectedDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1892,20 +2068,20 @@ public abstract class BaseShipmentResourceTestCase {
 
 		if (entityFieldName.equals("modifiedDate")) {
 			if (operator.equals("between")) {
+				Date date = shipment.getModifiedDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(shipment.getModifiedDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(shipment.getModifiedDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1916,6 +2092,52 @@ public abstract class BaseShipmentResourceTestCase {
 				sb.append(" ");
 
 				sb.append(_dateFormat.format(shipment.getModifiedDate()));
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("orderExternalReferenceCode")) {
+			Object object = shipment.getOrderExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
 			}
 
 			return sb.toString();
@@ -1943,20 +2165,20 @@ public abstract class BaseShipmentResourceTestCase {
 
 		if (entityFieldName.equals("shippingDate")) {
 			if (operator.equals("between")) {
+				Date date = shipment.getShippingDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(shipment.getShippingDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(shipment.getShippingDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2180,7 +2402,8 @@ public abstract class BaseShipmentResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -2218,6 +2441,8 @@ public abstract class BaseShipmentResourceTestCase {
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				modifiedDate = RandomTestUtil.nextDate();
+				orderExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				orderId = RandomTestUtil.randomLong();
 				shippingAddressId = RandomTestUtil.randomLong();
 				shippingDate = RandomTestUtil.nextDate();
@@ -2254,12 +2479,12 @@ public abstract class BaseShipmentResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2268,11 +2493,16 @@ public abstract class BaseShipmentResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2304,6 +2534,24 @@ public abstract class BaseShipmentResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2325,16 +2573,6 @@ public abstract class BaseShipmentResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

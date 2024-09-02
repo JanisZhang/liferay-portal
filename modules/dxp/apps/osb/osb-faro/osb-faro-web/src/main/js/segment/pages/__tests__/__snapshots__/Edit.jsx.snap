@@ -367,11 +367,17 @@ exports[`Edit should render 1`] = `
                       class="property-subgroups-list active"
                     >
                       <li>
+                        <div
+                          class="property-subgroup-label"
+                        >
+                          Default Events
+                        </div>
                         <ul
                           class="properties-list"
                         >
                           <li
                             class="criteria-sidebar-item-root color--web"
+                            data-testid="criteria-item-Downloaded Document & Media"
                             draggable="true"
                           >
                             <span
@@ -406,6 +412,7 @@ exports[`Edit should render 1`] = `
                           </li>
                           <li
                             class="criteria-sidebar-item-root color--web"
+                            data-testid="criteria-item-Submitted Form"
                             draggable="true"
                           >
                             <span
@@ -440,6 +447,7 @@ exports[`Edit should render 1`] = `
                           </li>
                           <li
                             class="criteria-sidebar-item-root color--web"
+                            data-testid="criteria-item-Viewed Form"
                             draggable="true"
                           >
                             <span
@@ -474,6 +482,7 @@ exports[`Edit should render 1`] = `
                           </li>
                           <li
                             class="criteria-sidebar-item-root color--web"
+                            data-testid="criteria-item-Viewed Page"
                             draggable="true"
                           >
                             <span
@@ -508,6 +517,7 @@ exports[`Edit should render 1`] = `
                           </li>
                           <li
                             class="criteria-sidebar-item-root color--web"
+                            data-testid="criteria-item-Commented on Blog"
                             draggable="true"
                           >
                             <span
@@ -542,6 +552,7 @@ exports[`Edit should render 1`] = `
                           </li>
                           <li
                             class="criteria-sidebar-item-root color--web"
+                            data-testid="criteria-item-Viewed Blog"
                             draggable="true"
                           >
                             <span
@@ -576,6 +587,7 @@ exports[`Edit should render 1`] = `
                           </li>
                           <li
                             class="criteria-sidebar-item-root color--web"
+                            data-testid="criteria-item-Viewed Document & Media"
                             draggable="true"
                           >
                             <span
@@ -610,6 +622,7 @@ exports[`Edit should render 1`] = `
                           </li>
                           <li
                             class="criteria-sidebar-item-root color--web"
+                            data-testid="criteria-item-Viewed Web Content"
                             draggable="true"
                           >
                             <span
@@ -641,6 +654,52 @@ exports[`Edit should render 1`] = `
                               </span>
                             </span>
                             Viewed Web Content
+                          </li>
+                        </ul>
+                      </li>
+                      <li>
+                        <div
+                          class="property-subgroup-label"
+                        >
+                          Custom Events
+                        </div>
+                        <ul
+                          class="properties-list"
+                        >
+                          <li
+                            class="criteria-sidebar-item-root color--event"
+                            data-testid="criteria-item-displayName-1"
+                            draggable="true"
+                          >
+                            <span
+                              class="inline-item"
+                            >
+                              <svg
+                                class="lexicon-icon lexicon-icon-drag icon-root"
+                                role="presentation"
+                              >
+                                <use
+                                  href="#drag"
+                                />
+                              </svg>
+                            </span>
+                            <span
+                              class="criteria-sidebar-item-type sticker"
+                            >
+                              <span
+                                class="inline-item"
+                              >
+                                <svg
+                                  class="lexicon-icon lexicon-icon-ac-event-analysis icon-root"
+                                  role="presentation"
+                                >
+                                  <use
+                                    href="#ac-event-analysis"
+                                  />
+                                </svg>
+                              </span>
+                            </span>
+                            displayName-1
                           </li>
                         </ul>
                       </li>

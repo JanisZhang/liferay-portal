@@ -90,7 +90,7 @@ public class ObjectActionUtil {
 			}
 		};
 
-		objectAction.setActions(actions);
+		objectAction.setActions(() -> actions);
 
 		return objectAction;
 	}
@@ -144,6 +144,11 @@ public class ObjectActionUtil {
 				value = JSONFactoryUtil.looseDeserialize((String)value);
 			}
 			else if (Objects.equals(entry.getKey(), "relatedObjectEntries")) {
+				value = GetterUtil.getBoolean(value);
+			}
+			else if (Objects.equals(
+						entry.getKey(), "usePreferredLanguageForGuests")) {
+
 				value = GetterUtil.getBoolean(value);
 			}
 

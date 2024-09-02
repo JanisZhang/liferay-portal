@@ -717,6 +717,16 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -737,6 +747,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -1436,6 +1447,16 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -2157,6 +2178,16 @@ exports[`Field LocalizableText fills with the default language value when the se
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -2878,6 +2909,16 @@ exports[`Field LocalizableText fills with the selected language value when the s
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -2903,6 +2944,7 @@ exports[`Field LocalizableText has a label 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -3602,6 +3644,16 @@ exports[`Field LocalizableText has a label 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
     <span
       class="sr-only"
       id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldDetails"
@@ -3628,6 +3680,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder="Placeholder"
           type="text"
@@ -4327,6 +4380,16 @@ exports[`Field LocalizableText has a placeholder 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -4347,6 +4410,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -5046,6 +5110,16 @@ exports[`Field LocalizableText is not readOnly 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -5066,6 +5140,7 @@ exports[`Field LocalizableText is not required 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -5765,6 +5840,16 @@ exports[`Field LocalizableText is not required 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -6486,6 +6571,16 @@ exports[`Field LocalizableText removes the translation of an item already transl
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -6506,6 +6601,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -7205,6 +7301,16 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -7225,6 +7331,7 @@ exports[`Field LocalizableText renders values 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -7924,6 +8031,16 @@ exports[`Field LocalizableText renders values 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -7944,6 +8061,7 @@ exports[`Field LocalizableText shows default language value when no other langua
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -8643,6 +8761,16 @@ exports[`Field LocalizableText shows default language value when no other langua
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;

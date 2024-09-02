@@ -388,6 +388,49 @@ public class SkuUnitOfMeasure implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _precisionSupplier;
 
+	@DecimalMin("0")
+	@Schema(example = "1.5")
+	@Valid
+	public BigDecimal getPricingQuantity() {
+		if (_pricingQuantitySupplier != null) {
+			pricingQuantity = _pricingQuantitySupplier.get();
+
+			_pricingQuantitySupplier = null;
+		}
+
+		return pricingQuantity;
+	}
+
+	public void setPricingQuantity(BigDecimal pricingQuantity) {
+		this.pricingQuantity = pricingQuantity;
+
+		_pricingQuantitySupplier = null;
+	}
+
+	@JsonIgnore
+	public void setPricingQuantity(
+		UnsafeSupplier<BigDecimal, Exception> pricingQuantityUnsafeSupplier) {
+
+		_pricingQuantitySupplier = () -> {
+			try {
+				return pricingQuantityUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected BigDecimal pricingQuantity;
+
+	@JsonIgnore
+	private Supplier<BigDecimal> _pricingQuantitySupplier;
+
 	@Schema(example = "true")
 	public Boolean getPrimary() {
 		if (_primarySupplier != null) {
@@ -763,6 +806,18 @@ public class SkuUnitOfMeasure implements Serializable {
 			sb.append(precision);
 		}
 
+		BigDecimal pricingQuantity = getPricingQuantity();
+
+		if (pricingQuantity != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pricingQuantity\": ");
+
+			sb.append(pricingQuantity);
+		}
+
 		Boolean primary = getPrimary();
 
 		if (primary != null) {
@@ -891,7 +946,10 @@ public class SkuUnitOfMeasure implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

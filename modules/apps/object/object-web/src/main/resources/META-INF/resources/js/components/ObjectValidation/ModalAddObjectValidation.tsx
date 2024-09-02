@@ -11,8 +11,8 @@ import {
 	API,
 	FormError,
 	Input,
-	REQUIRED_MSG,
 	SingleSelect,
+	constantsUtils,
 	invalidateRequired,
 	useForm,
 } from '@liferay/object-js-components-web';
@@ -21,6 +21,7 @@ import React, {useState} from 'react';
 import {defaultLanguageId} from '../../utils/constants';
 
 interface ModalAddObjectValidationProps {
+	allowScriptContentToBeExecutedOrIncluded: boolean;
 	apiURL: string;
 	objectValidationRuleEngines: LabelValueObject[];
 	setShowAddObjectRelationshipModal: (value: boolean) => void;
@@ -34,6 +35,7 @@ const initialValues: Partial<ObjectValidation> = {
 };
 
 export function ModalAddObjectValidation({
+	allowScriptContentToBeExecutedOrIncluded,
 	apiURL,
 	objectValidationRuleEngines,
 	setShowAddObjectRelationshipModal,
@@ -42,6 +44,20 @@ export function ModalAddObjectValidation({
 	const {observer, onClose} = useModal({
 		onClose: () => setShowAddObjectRelationshipModal(false),
 	});
+
+	const getObjectValidationRuleEngines = () => {
+		let newObjectValidationRuleEngines = [...objectValidationRuleEngines];
+
+		if (!allowScriptContentToBeExecutedOrIncluded) {
+			newObjectValidationRuleEngines =
+				newObjectValidationRuleEngines.filter(
+					(objectValidationRuleEngine) =>
+						objectValidationRuleEngine.value !== 'groovy'
+				);
+		}
+
+		return newObjectValidationRuleEngines;
+	};
 
 	const onSubmit = async (objectValidation: Partial<ObjectValidation>) => {
 		try {
@@ -53,7 +69,7 @@ export function ModalAddObjectValidation({
 							objectValidation.engine === 'compositeKey'
 								? Liferay.Language.get(
 										'the-field-values-are-already-in-use'
-								  )
+									)
 								: '',
 					},
 				} as Partial<ObjectValidation>,
@@ -75,7 +91,7 @@ export function ModalAddObjectValidation({
 		const label = validation.name?.[defaultLanguageId];
 
 		if (invalidateRequired(label)) {
-			errors.name = REQUIRED_MSG;
+			errors.name = constantsUtils.REQUIRED_MSG;
 		}
 
 		return errors;
@@ -123,7 +139,8 @@ export function ModalAddObjectValidation({
 
 						<SingleSelect<LabelValueObject>
 							error={errors.engine}
-							items={objectValidationRuleEngines}
+							id="objectValidationType"
+							items={getObjectValidationRuleEngines()}
 							label={Liferay.Language.get('type')}
 							onSelectionChange={(value) => {
 								setValues({

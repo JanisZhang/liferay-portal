@@ -2,23 +2,22 @@ import * as breadcrumbs from 'shared/util/breadcrumbs';
 import BasePage from 'shared/components/base-page';
 import BundleRouter from 'route-middleware/BundleRouter';
 import DownloadCSVReport from 'shared/components/download-report/DownloadCSVReport';
-import DownloadPDFReport, {
-	Containers
-} from 'shared/components/download-report/DownloadPDFReport';
+import DownloadPDFReport from 'shared/components/download-report/DownloadPDFReport';
 import Filter from '../hocs/Filter';
 import getCN from 'classnames';
 import Loading from 'shared/components/Loading';
 import React, {lazy, Suspense, useState} from 'react';
 import RouteNotFound from 'shared/components/RouteNotFound';
+import {CSVType} from 'shared/components/download-report/utils';
 import {ENABLE_GLOBAL_FILTER} from 'shared/util/constants';
 import {getMatchedRoute, Routes} from 'shared/util/router';
-import {getRangeSelectorsFromQuery} from 'shared/util/util';
 import {pickBy} from 'lodash';
 import {Router} from 'shared/types';
 import {sub} from 'shared/util/lang';
 import {Switch} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
-import {useDataSource} from 'shared/hooks';
+import {useDataSource} from 'shared/hooks/useDataSource';
+import {useQueryRangeSelectors} from 'shared/hooks/useQueryRangeSelectors';
 
 const Overview = lazy(
 	() => import(/* webpackChunkName: "FormsOverview" */ './Overview')
@@ -48,8 +47,7 @@ const Form: React.FC<{
 	router: Router;
 }> = ({className, router}) => {
 	const {
-		params: {assetId, channelId, groupId, title, touchpoint},
-		query
+		params: {assetId, channelId, groupId, title, touchpoint}
 	} = router;
 
 	const [filters, setFilters] = useState({});
@@ -58,7 +56,7 @@ const Form: React.FC<{
 
 	const decodedTitle = decodeURIComponent(title);
 
-	const rangeSelectorsFromQuery = getRangeSelectorsFromQuery(query);
+	const rangeSelectorsFromQuery = useQueryRangeSelectors();
 
 	const {selectedChannel} = useChannelContext();
 
@@ -99,13 +97,6 @@ const Form: React.FC<{
 				<BasePage.SubHeader>
 					<div className='d-flex justify-content-end w-100'>
 						<DownloadPDFReport
-							containers={[
-								Containers.VisitorsBehaviorCard,
-								Containers.AudienceCard,
-								Containers.SubmissionsByLocationCard,
-								Containers.SubmissionsByTechnologyCard,
-								Containers.AssetAppearsOnCard
-							]}
 							disabled={dataSourceStates.empty}
 							subtitle={selectedChannel?.name}
 							title={
@@ -126,15 +117,8 @@ const Form: React.FC<{
 							assetId={assetId}
 							assetType='form'
 							disabled={dataSourceStates.empty}
-							infoMessage={
-								sub(
-									Liferay.Language.get(
-										'the-x-list-will-be-downloaded-respecting-the-current-ordering,-filter,-and-search-results.-please-verify-if-the-desired-changes-are-applied'
-									),
-									[Liferay.Language.get('individuals')]
-								) as string
-							}
-							type='individual'
+							type={CSVType.Individual}
+							typeLang={Liferay.Language.get('known-individuals')}
 						/>
 					</div>
 				</BasePage.SubHeader>

@@ -28,7 +28,7 @@ long calendarId = BeanParamUtil.getLong(calendarBooking, request, "calendarId", 
 
 long startTime = BeanPropertiesUtil.getLong(calendarBooking, "startTime", defaultStartTimeJCalendar.getTimeInMillis());
 
-java.util.Calendar startTimeJCalendar = JCalendarUtil.getJCalendar(startTime, calendarBookingTimeZone);
+java.util.Calendar startTimeJCalendar = JCalendarUtil.getJCalendar(startTime, allDay ? TimeZone.getTimeZone(StringPool.UTC) : calendarBookingTimeZone);
 
 int startTimeYear = ParamUtil.getInteger(request, "startTimeYear", startTimeJCalendar.get(java.util.Calendar.YEAR));
 int startTimeMonth = ParamUtil.getInteger(request, "startTimeMonth", startTimeJCalendar.get(java.util.Calendar.MONTH));
@@ -54,7 +54,7 @@ defaultEndTimeJCalendar.add(java.util.Calendar.MINUTE, defaultDuration);
 
 long endTime = BeanPropertiesUtil.getLong(calendarBooking, "endTime", defaultEndTimeJCalendar.getTimeInMillis());
 
-java.util.Calendar endTimeJCalendar = JCalendarUtil.getJCalendar(endTime, calendarBookingTimeZone);
+java.util.Calendar endTimeJCalendar = JCalendarUtil.getJCalendar(endTime, allDay ? TimeZone.getTimeZone(StringPool.UTC) : calendarBookingTimeZone);
 
 int endTimeYear = ParamUtil.getInteger(request, "endTimeYear", endTimeJCalendar.get(java.util.Calendar.YEAR));
 int endTimeMonth = ParamUtil.getInteger(request, "endTimeMonth", endTimeJCalendar.get(java.util.Calendar.MONTH));
@@ -159,7 +159,7 @@ else {
 	groupIds = ArrayUtil.append(user.getGroupIds(), new long[] {scopeGroupId});
 }
 
-List<Calendar> manageableCalendars = CalendarServiceUtil.search(themeDisplay.getCompanyId(), groupIds, null, null, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS, new CalendarNameComparator(true), CalendarActionKeys.MANAGE_BOOKINGS);
+List<Calendar> manageableCalendars = CalendarServiceUtil.search(themeDisplay.getCompanyId(), groupIds, null, null, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS, CalendarNameComparator.getInstance(true), CalendarActionKeys.MANAGE_BOOKINGS);
 
 CalendarResource guestCalendarResource = CalendarResourceUtil.fetchGuestCalendarResource(themeDisplay.getCompanyId());
 
@@ -187,10 +187,12 @@ while (manageableCalendarsIterator.hasNext()) {
 <aui:script use="liferay-calendar-container,liferay-calendar-remote-services,liferay-component">
 	Liferay.component('<portlet:namespace />calendarContainer', () => {
 		var calendarContainer = new Liferay.CalendarContainer({
-			groupCalendarResourceId: <%= groupCalendarResource.getCalendarResourceId() %>,
+			groupCalendarResourceId:
+				<%= groupCalendarResource.getCalendarResourceId() %>,
 
 			<c:if test="<%= userCalendarResource != null %>">
-				userCalendarResourceId: <%= userCalendarResource.getCalendarResourceId() %>,
+				userCalendarResourceId:
+					<%= userCalendarResource.getCalendarResourceId() %>,
 			</c:if>
 
 			namespace: '<portlet:namespace />',
@@ -847,7 +849,8 @@ while (manageableCalendarsIterator.hasNext()) {
 
 				var calendar = manageableCalendars[calendarId];
 
-				var calendarListPendingComponent = <portlet:namespace />calendarListPending;
+				var calendarListPendingComponent =
+					<portlet:namespace />calendarListPending;
 
 				var calendarListCollection = [
 					<portlet:namespace />calendarListAccepted,
@@ -1024,10 +1027,14 @@ while (manageableCalendarsIterator.hasNext()) {
 
 				endDateContainer.style.display = 'block';
 
-				startTimeHours = <%= defaultStartTimeJCalendar.get(java.util.Calendar.HOUR_OF_DAY) %>;
-				startTimeMinutes = <%= defaultStartTimeJCalendar.get(java.util.Calendar.MINUTE) %>;
-				endTimeHours = <%= defaultEndTimeJCalendar.get(java.util.Calendar.HOUR_OF_DAY) %>;
-				endTimeMinutes = <%= defaultEndTimeJCalendar.get(java.util.Calendar.MINUTE) %>;
+				startTimeHours =
+					<%= defaultStartTimeJCalendar.get(java.util.Calendar.HOUR_OF_DAY) %>;
+				startTimeMinutes =
+					<%= defaultStartTimeJCalendar.get(java.util.Calendar.MINUTE) %>;
+				endTimeHours =
+					<%= defaultEndTimeJCalendar.get(java.util.Calendar.HOUR_OF_DAY) %>;
+				endTimeMinutes =
+					<%= defaultEndTimeJCalendar.get(java.util.Calendar.MINUTE) %>;
 			}
 
 			updateTimePickersValues(
@@ -1068,7 +1075,10 @@ while (manageableCalendarsIterator.hasNext()) {
 		var startTimePicker = intervalSelector.get('startTimePicker');
 
 		startTimePicker.selectDates([startDate]);
+		startTimePicker.updateTime(startDate);
+
 		endTimePicker.selectDates([endDate]);
+		endTimePicker.updateTime(endDate);
 	};
 
 	scheduler.load();

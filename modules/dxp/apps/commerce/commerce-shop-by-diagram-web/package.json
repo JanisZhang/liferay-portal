@@ -1,14 +1,14 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.111.0",
-		"@clayui/drop-down": "3.111.0",
-		"@clayui/empty-state": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/drop-down": "3.118.0",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/label": "3.111.0",
 		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/slider": "3.111.0",
+		"@clayui/slider": "3.116.0",
 		"@clayui/sticker": "3.111.0",
 		"@clayui/table": "3.111.0",
 		"@liferay/frontend-data-set-web": "*",
@@ -30,14 +30,15 @@
 			"<rootDir>/test/utilities.js"
 		]
 	},
+	"main": "js/index.js",
 	"name": "@liferay/commerce-shop-by-diagram-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"coverage": "liferay-npm-scripts test --coverage --silent --verbose",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test --passWithNoTests"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"coverage": "node-scripts test --coverage --silent --verbose",
+		"format": "node-scripts format",
+		"test": "node-scripts test --passWithNoTests"
 	},
-	"version": "1.0.84"
+	"version": "1.0.96"
 }

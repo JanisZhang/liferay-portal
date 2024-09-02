@@ -26,19 +26,26 @@ import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
+import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
@@ -16353,6 +16360,46 @@ public class FragmentEntryVersionPersistenceImpl
 		FragmentEntryVersionModelImpl fragmentEntryVersionModelImpl =
 			(FragmentEntryVersionModelImpl)fragmentEntryVersion;
 
+		if (Validator.isNull(fragmentEntryVersion.getExternalReferenceCode())) {
+			fragmentEntryVersion.setExternalReferenceCode(
+				String.valueOf(fragmentEntryVersion.getPrimaryKey()));
+		}
+		else {
+			if (!Objects.equals(
+					fragmentEntryVersionModelImpl.getColumnOriginalValue(
+						"externalReferenceCode"),
+					fragmentEntryVersion.getExternalReferenceCode())) {
+
+				long userId = GetterUtil.getLong(
+					PrincipalThreadLocal.getName());
+
+				if (userId > 0) {
+					long companyId = fragmentEntryVersion.getCompanyId();
+
+					long groupId = fragmentEntryVersion.getGroupId();
+
+					long classPK = 0;
+
+					if (!isNew) {
+						classPK = fragmentEntryVersion.getPrimaryKey();
+					}
+
+					try {
+						fragmentEntryVersion.setExternalReferenceCode(
+							SanitizerUtil.sanitize(
+								companyId, groupId, userId,
+								FragmentEntryVersion.class.getName(), classPK,
+								ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+								fragmentEntryVersion.getExternalReferenceCode(),
+								null));
+					}
+					catch (SanitizerException sanitizerException) {
+						throw new SystemException(sanitizerException);
+					}
+				}
+			}
+		}
+
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -16900,27 +16947,29 @@ public class FragmentEntryVersionPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
 		ctControlColumnNames.add("ctCollectionId");
 		ctStrictColumnNames.add("version");
 		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("externalReferenceCode");
 		ctStrictColumnNames.add("fragmentEntryId");
 		ctStrictColumnNames.add("groupId");
 		ctStrictColumnNames.add("companyId");
-		ctStrictColumnNames.add("userId");
-		ctStrictColumnNames.add("userName");
+		ctMergeColumnNames.add("userId");
+		ctMergeColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
 		ctStrictColumnNames.add("fragmentCollectionId");
 		ctStrictColumnNames.add("fragmentEntryKey");
 		ctStrictColumnNames.add("name");
-		ctStrictColumnNames.add("css");
-		ctStrictColumnNames.add("html");
-		ctStrictColumnNames.add("js");
+		ctMergeColumnNames.add("css");
+		ctMergeColumnNames.add("html");
+		ctMergeColumnNames.add("js");
 		ctStrictColumnNames.add("cacheable");
-		ctStrictColumnNames.add("configuration");
+		ctMergeColumnNames.add("configuration");
 		ctStrictColumnNames.add("icon");
 		ctStrictColumnNames.add("previewFileEntryId");
 		ctStrictColumnNames.add("readOnly");
@@ -16936,6 +16985,7 @@ public class FragmentEntryVersionPersistenceImpl
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("fragmentEntryVersionId"));

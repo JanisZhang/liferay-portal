@@ -11,6 +11,8 @@ import com.liferay.portal.db.partition.test.util.BaseDBPartitionTestCase;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.util.PropsValues;
 
@@ -19,12 +21,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.cm.PersistenceManager;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
@@ -42,11 +46,41 @@ public abstract class BaseVirtualInstanceOperationTestCase
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		BaseDBPartitionTestCase.setUpClass();
+
+		BaseDBPartitionTestCase.setUpDBPartitions();
+	}
+
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		BaseDBPartitionTestCase.tearDownDBPartitions();
 	}
 
 	@After
 	public void tearDown() throws Exception {
 		_deleteConfiguration();
+	}
+
+	protected void assertConfigurationIsDeletedAfterDeploy(String pid)
+		throws Exception {
+
+		Assert.assertNull(
+			_configurationAdmin.listConfigurations(
+				"(service.pid=" + pid + ")"));
+		Assert.assertFalse(Files.exists(_configurationPath));
+		Assert.assertNull(
+			ReflectionTestUtil.invoke(
+				_persistenceManager, "_getDictionary",
+				new Class<?>[] {String.class}, pid));
+	}
+
+	protected void assertLog(LogCapture logCapture, String expectedMessage) {
+		List<LogEntry> logEntries = logCapture.getLogEntries();
+
+		Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
+
+		LogEntry logEntry = logEntries.get(0);
+
+		Assert.assertEquals(expectedMessage, logEntry.getMessage());
 	}
 
 	protected void deployConfiguration(String pid, String content)
@@ -73,21 +107,6 @@ public abstract class BaseVirtualInstanceOperationTestCase
 	}
 
 	protected abstract String getComponentName();
-
-	protected void verifyConfigurationIsDeletedAfterDeploy(String pid)
-		throws Exception {
-
-		Assert.assertFalse(Files.exists(_configurationPath));
-
-		Assert.assertNull(
-			_configurationAdmin.listConfigurations(
-				"(service.pid=" + pid + ")"));
-
-		Assert.assertNull(
-			ReflectionTestUtil.invoke(
-				_persistenceManager, "_getDictionary",
-				new Class<?>[] {String.class}, pid));
-	}
 
 	private Configuration _createConfiguration(
 			String configurationPid, String content)

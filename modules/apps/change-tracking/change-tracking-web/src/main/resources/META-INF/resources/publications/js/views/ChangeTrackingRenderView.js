@@ -20,10 +20,14 @@ import {
 	fetch,
 	navigate as navigateUtil,
 	openConfirmModal,
+	openSimpleInputModal,
+	openToast,
 } from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import ExperienceDropdown from '../components/ExperienceDropdown';
+import {WorkflowStatusLabel} from '../components/WorkflowStatusLabel';
+import ChangeTrackingWorkflowView from './ChangeTrackingWorkflowView';
 
 const LocalizationDropdown = ({
 	currentLocale,
@@ -110,10 +114,10 @@ const LocalizationDropdown = ({
 													defaultLocale.label
 														? Liferay.Language.get(
 																'default'
-														  )
+															)
 														: Liferay.Language.get(
 																'translated'
-														  )}
+															)}
 												</ClayLabel>
 											</ClayLayout.ContentSection>
 										</ClayLayout.ContentCol>
@@ -135,11 +139,14 @@ export default function ChangeTrackingRenderView({
 	handleNavigation,
 	initialDataURL,
 	moveChangesURL,
+	namespace,
 	parentEntries,
 	showDropdown,
 	showHeader = true,
+	showWorkflow,
 	spritemap,
 	title,
+	workflowStatus,
 }) {
 	const CHANGE_TYPE_ADDED = 'added';
 	const CHANGE_TYPE_DELETED = 'deleted';
@@ -148,6 +155,7 @@ export default function ChangeTrackingRenderView({
 	const CONTENT_TYPE_PARENTS = 'parents';
 	const CONTENT_TYPE_RENDER = 'data';
 	const CONTENT_TYPE_PREVIEW = 'display';
+	const CONTENT_TYPE_WORKFLOW = 'workflow';
 	const VIEW_LEFT = 'VIEW_LEFT';
 	const VIEW_RIGHT = 'VIEW_RIGHT';
 	const VIEW_SPLIT = 'VIEW_SPLIT';
@@ -155,11 +163,12 @@ export default function ChangeTrackingRenderView({
 
 	const [dataURL, setDataURL] = useState(initialDataURL);
 	const [loading, setLoading] = useState(false);
+	const [refresh, setRefresh] = useState({});
 	const [selectedLocale, setSelectedLocale] = useState(defaultLocale);
-	const [
-		selectedSegmentsExperienceId,
-		setSelectedSegmentsExperienceId,
-	] = useState(null);
+	const [selectedSegmentsExperienceId, setSelectedSegmentsExperienceId] =
+		useState(null);
+	const [showWorkflowSuccessMessage, setShowWorkflowSuccessMessage] =
+		useState(false);
 	const [state, setState] = useState({
 		contentType: CONTENT_TYPE_PREVIEW,
 		renderData: null,
@@ -187,7 +196,6 @@ export default function ChangeTrackingRenderView({
 
 				const newState = {
 					children: childEntries,
-					contentType: CONTENT_TYPE_PREVIEW,
 					parents: parentEntries,
 					renderData: json,
 					view: VIEW_UNIFIED,
@@ -225,6 +233,7 @@ export default function ChangeTrackingRenderView({
 
 				if (
 					newState.view === VIEW_UNIFIED &&
+					newState.contentType !== CONTENT_TYPE_WORKFLOW &&
 					((newState.contentType === CONTENT_TYPE_RENDER &&
 						!Object.prototype.hasOwnProperty.call(
 							json,
@@ -234,7 +243,8 @@ export default function ChangeTrackingRenderView({
 							json,
 							'unifiedLocalizedRender'
 						)) ||
-						(newState.contentType === CONTENT_TYPE_PREVIEW &&
+						((!newState.contentType ||
+							newState.contentType === CONTENT_TYPE_PREVIEW) &&
 							!Object.prototype.hasOwnProperty.call(
 								json,
 								'unifiedPreview'
@@ -247,7 +257,7 @@ export default function ChangeTrackingRenderView({
 					newState.view = VIEW_SPLIT;
 				}
 
-				setState(newState);
+				setState((prevState) => ({...prevState, ...newState}));
 
 				setLoading(false);
 			})
@@ -261,7 +271,28 @@ export default function ChangeTrackingRenderView({
 					},
 				});
 			});
-	}, [childEntries, dataURL, parentEntries, selectedSegmentsExperienceId]);
+	}, [
+		childEntries,
+		dataURL,
+		parentEntries,
+		refresh,
+		selectedSegmentsExperienceId,
+	]);
+
+	useEffect(() => {
+		if (showWorkflowSuccessMessage) {
+			Liferay.fire('closeModal');
+
+			setRefresh({});
+
+			openToast({
+				message: Liferay.Language.get(
+					'your-request-completed-successfully'
+				),
+				type: 'success',
+			});
+		}
+	}, [showWorkflowSuccessMessage]);
 
 	let currentLocale = selectedLocale;
 	let currentTitle = title;
@@ -338,10 +369,9 @@ export default function ChangeTrackingRenderView({
 				return (
 					<div
 						dangerouslySetInnerHTML={{
-							__html:
-								state.renderData.leftLocalizedRender[
-									currentLocale.label
-								],
+							__html: state.renderData.leftLocalizedRender[
+								currentLocale.label
+							],
 						}}
 					/>
 				);
@@ -387,10 +417,9 @@ export default function ChangeTrackingRenderView({
 				return (
 					<div
 						dangerouslySetInnerHTML={{
-							__html:
-								state.renderData.leftLocalizedPreview[
-									currentLocale.label
-								],
+							__html: state.renderData.leftLocalizedPreview[
+								currentLocale.label
+							],
 						}}
 					/>
 				);
@@ -459,10 +488,9 @@ export default function ChangeTrackingRenderView({
 				return (
 					<div
 						dangerouslySetInnerHTML={{
-							__html:
-								state.renderData.rightLocalizedRender[
-									currentLocale.label
-								],
+							__html: state.renderData.rightLocalizedRender[
+								currentLocale.label
+							],
 						}}
 					/>
 				);
@@ -508,10 +536,9 @@ export default function ChangeTrackingRenderView({
 				return (
 					<div
 						dangerouslySetInnerHTML={{
-							__html:
-								state.renderData.rightLocalizedPreview[
-									currentLocale.label
-								],
+							__html: state.renderData.rightLocalizedPreview[
+								currentLocale.label
+							],
 						}}
 					/>
 				);
@@ -566,10 +593,9 @@ export default function ChangeTrackingRenderView({
 					<div className="taglib-diff-html">
 						<div
 							dangerouslySetInnerHTML={{
-								__html:
-									state.renderData.unifiedLocalizedRender[
-										currentLocale.label
-									],
+								__html: state.renderData.unifiedLocalizedRender[
+									currentLocale.label
+								],
 							}}
 						/>
 					</div>
@@ -619,10 +645,10 @@ export default function ChangeTrackingRenderView({
 					<div className="taglib-diff-html">
 						<div
 							dangerouslySetInnerHTML={{
-								__html:
-									state.renderData.unifiedLocalizedPreview[
-										currentLocale.label
-									],
+								__html: state.renderData
+									.unifiedLocalizedPreview[
+									currentLocale.label
+								],
 							}}
 						/>
 					</div>
@@ -637,6 +663,56 @@ export default function ChangeTrackingRenderView({
 		}
 		else if (loading) {
 			return '';
+		}
+
+		return (
+			<ClayAlert displayType="danger" spritemap={spritemap}>
+				{Liferay.Language.get(
+					'unable-to-display-content-due-to-an-unexpected-error'
+				)}
+			</ClayAlert>
+		);
+	};
+
+	const openWorkflowAssignModal = (href, label, modalHeight) => {
+		Liferay.Util.openModal({
+			center: true,
+			customEvents: [
+				{
+					name: `${namespace}workflowTaskUpdated`,
+					onEvent() {
+						const iframe = document.querySelector(
+							'.liferay-modal iframe'
+						);
+
+						iframe.contentWindow.location.reload();
+
+						setShowWorkflowSuccessMessage(true);
+					},
+				},
+			],
+			height: modalHeight,
+			onOpen: () => setShowWorkflowSuccessMessage(false),
+			size: 'lg',
+			title: label,
+			url: href,
+		});
+	};
+
+	const renderWorkflowView = () => {
+		if (
+			state.contentType === CONTENT_TYPE_WORKFLOW &&
+			Object.prototype.hasOwnProperty.call(
+				state.renderData,
+				'workflowData'
+			)
+		) {
+			return (
+				<ChangeTrackingWorkflowView
+					openWorkflowAssignModal={openWorkflowAssignModal}
+					workflowData={state.renderData.workflowData}
+				/>
+			);
 		}
 
 		return (
@@ -713,7 +789,7 @@ export default function ChangeTrackingRenderView({
 			return null;
 		}
 
-		const dropdownItems = [];
+		let dropdownItems = [];
 
 		if (state.renderData.editInPublication) {
 			dropdownItems.push({
@@ -755,6 +831,87 @@ export default function ChangeTrackingRenderView({
 				onClick: () => navigate(moveChangesURL),
 				symbolLeft: 'move-folder',
 			});
+		}
+
+		const workflowActionsDropdownItems = [];
+
+		state.renderData.workflowActions?.forEach((workflowAction, i) => {
+			if (workflowAction.modalHeight) {
+				workflowActionsDropdownItems.push({
+					label: workflowAction.label,
+					onClick: () =>
+						Liferay.Util.openModal({
+							center: true,
+							customEvents: [
+								{
+									name: `${namespace}workflowTaskUpdated`,
+									onEvent() {
+										const iframe = document.querySelector(
+											'.liferay-modal iframe'
+										);
+
+										iframe.contentWindow.location.reload();
+
+										setShowWorkflowSuccessMessage(true);
+									},
+								},
+							],
+							height: workflowAction.modalHeight,
+							onOpen: () => setShowWorkflowSuccessMessage(false),
+							size: 'lg',
+							title: workflowAction.label,
+							url: workflowAction.href,
+						}),
+					symbolLeft: 'workflow',
+				});
+			}
+			else {
+				workflowActionsDropdownItems.push({
+					id: `${namespace}${i}taskChangeStatusLink`,
+					label: workflowAction.label,
+					onClick: () => {
+						setShowWorkflowSuccessMessage(false);
+
+						openSimpleInputModal({
+							buttonSubmitLabel: Liferay.Language.get('done'),
+							center: true,
+							dialogTitle: workflowAction.label,
+							formSubmitURL: workflowAction.href,
+							mainFieldComponent: 'textarea',
+							mainFieldLabel: Liferay.Language.get('comment'),
+							mainFieldName: 'comment',
+							mainFieldPlaceholder:
+								Liferay.Language.get('comment'),
+							namespace,
+							onFormSuccess: () =>
+								setTimeout(
+									() => setShowWorkflowSuccessMessage(true),
+									250
+								),
+							required: false,
+							size: 'lg',
+						});
+					},
+					symbolLeft: 'workflow',
+				});
+			}
+		});
+
+		if (workflowActionsDropdownItems.length) {
+			dropdownItems = [
+				{
+					items: dropdownItems,
+					label: Liferay.Language.get('publication'),
+					type: 'group',
+				},
+				{type: 'divider'},
+				{
+					items: workflowActionsDropdownItems,
+					label: Liferay.Language.get('workflow'),
+					type: 'group',
+				},
+				{type: 'divider'},
+			];
 		}
 
 		if (discardURL !== null) {
@@ -995,7 +1152,7 @@ export default function ChangeTrackingRenderView({
 					description={Liferay.Language.get(
 						'there-are-no-changes-to-display-in-this-view'
 					)}
-					imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
+					imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.svg`}
 					title={Liferay.Language.get('no-results-found')}
 				/>
 			);
@@ -1008,7 +1165,7 @@ export default function ChangeTrackingRenderView({
 				currentTypeName = node.typeName;
 
 				rows.push(
-					<ClayTable.Row divider>
+					<ClayTable.Row divider key={node.typeName}>
 						<ClayTable.Cell>{node.typeName}</ClayTable.Cell>
 					</ClayTable.Row>
 				);
@@ -1017,6 +1174,7 @@ export default function ChangeTrackingRenderView({
 			rows.push(
 				<ClayTable.Row
 					className="cursor-pointer"
+					key={node.nodeId}
 					onClick={() => handleNavigation(node.nodeId)}
 				>
 					<ClayTable.Cell>
@@ -1069,6 +1227,7 @@ export default function ChangeTrackingRenderView({
 
 		return (
 			<ClayTable
+				borderless
 				className={classNames('publications-render-view', {
 					'publications-table':
 						state.contentType === CONTENT_TYPE_PARENTS ||
@@ -1078,6 +1237,7 @@ export default function ChangeTrackingRenderView({
 					state.contentType === CONTENT_TYPE_PARENTS ||
 					state.contentType === CONTENT_TYPE_CHILDREN
 				}
+				striped={state.contentType !== CONTENT_TYPE_WORKFLOW}
 			>
 				<ClayTable.Head>{renderToolbar()}</ClayTable.Head>
 
@@ -1128,6 +1288,14 @@ export default function ChangeTrackingRenderView({
 
 					{state.contentType === CONTENT_TYPE_CHILDREN &&
 						getTableRows(state.children)}
+
+					{state.contentType === CONTENT_TYPE_WORKFLOW && (
+						<tr>
+							<td className="publications-render-view-content">
+								{renderWorkflowView()}
+							</td>
+						</tr>
+					)}
 				</ClayTable.Body>
 			</ClayTable>
 		);
@@ -1218,7 +1386,7 @@ export default function ChangeTrackingRenderView({
 						)
 							? Liferay.Language.get(
 									'item-does-not-have-a-content-display'
-							  )
+								)
 							: ''
 					}
 				>
@@ -1266,7 +1434,7 @@ export default function ChangeTrackingRenderView({
 								? ''
 								: Liferay.Language.get(
 										'item-does-not-have-any-parents'
-								  )
+									)
 						}
 					>
 						{Liferay.Language.get('parents')}
@@ -1292,10 +1460,30 @@ export default function ChangeTrackingRenderView({
 								? ''
 								: Liferay.Language.get(
 										'item-does-not-have-any-children'
-								  )
+									)
 						}
 					>
 						{Liferay.Language.get('children')}
+					</ClayLink>
+				</ClayNavigationBar.Item>
+			);
+		}
+
+		if (workflowStatus !== null && showWorkflow) {
+			items.push(
+				<ClayNavigationBar.Item
+					active={state.contentType === CONTENT_TYPE_WORKFLOW}
+					key="workflow"
+				>
+					<ClayLink
+						onClick={() =>
+							setState((prevState) => ({
+								...prevState,
+								contentType: CONTENT_TYPE_WORKFLOW,
+							}))
+						}
+					>
+						{Liferay.Language.get('workflow')}
 					</ClayLink>
 				</ClayNavigationBar.Item>
 			);
@@ -1386,7 +1574,22 @@ export default function ChangeTrackingRenderView({
 								)}
 						</div>
 
-						<div className="entry-description">{description}</div>
+						<div className="entry-description">
+							<span>{description} </span>
+
+							{Liferay.FeatureFlags['LPD-10703'] ? (
+								<>
+									<WorkflowStatusLabel
+										workflowStatus={
+											state.renderData.workflowData
+												? state.renderData.workflowData
+														.status
+												: workflowStatus
+										}
+									/>
+								</>
+							) : null}
+						</div>
 					</div>
 
 					{renderDropdownMenu()}

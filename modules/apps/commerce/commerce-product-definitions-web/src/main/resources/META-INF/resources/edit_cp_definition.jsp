@@ -38,6 +38,7 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 	actions="<%= cpDefinitionsDisplayContext.getHeaderActionModels() %>"
 	bean="<%= cpDefinition %>"
 	beanIdLabel="id"
+	displayBeanId="<%= cpDefinition.getCProductId() %>"
 	dropdownItems="<%= cpDefinitionsDisplayContext.getDropdownItems() %>"
 	externalReferenceCode="<%= (cProduct == null) ? StringPool.BLANK : cProduct.getExternalReferenceCode() %>"
 	externalReferenceCodeEditUrl="<%= (cProduct == null) ? StringPool.BLANK : editCProductExternalReferenceCodeURL %>"
@@ -67,5 +68,5 @@ portletDisplay.setURLBack(String.valueOf(renderResponse.createRenderURL()));
 			"WORKFLOW_ACTION_PUBLISH", WorkflowConstants.ACTION_PUBLISH
 		).build()
 	%>'
-	module="js/edit_cp_definition"
+	module="{editCpDefinition} from commerce-product-definitions-web"
 />

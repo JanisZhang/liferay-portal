@@ -3,7 +3,7 @@
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" change-tracking-enabled="true" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.fragment">
 	<namespace>Fragment</namespace>
-	<entity local-service="true" name="FragmentCollection" remote-service="true" uuid="true">
+	<entity external-reference-code="group" local-service="true" name="FragmentCollection" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -48,7 +48,7 @@
 			<finder-column comparator="LIKE" name="name" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="FragmentComposition" remote-service="true" uuid="true">
+	<entity external-reference-code="group" local-service="true" name="FragmentComposition" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -119,7 +119,7 @@
 			<finder-column name="status" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="FragmentEntry" remote-service="true" uuid="true" versioned="true">
+	<entity external-reference-code="group" local-service="true" name="FragmentEntry" remote-service="true" uuid="true" versioned="true">
 
 		<!-- PK fields -->
 
@@ -132,8 +132,8 @@
 		<!-- Audit fields -->
 
 		<column name="companyId" type="long" />
-		<column name="userId" type="long" />
-		<column name="userName" type="String" />
+		<column change-tracking-resolution-type="merge" name="userId" type="long" />
+		<column change-tracking-resolution-type="merge" name="userName" type="String" />
 		<column name="createDate" type="Date" />
 		<column name="modifiedDate" type="Date" />
 
@@ -142,11 +142,11 @@
 		<column name="fragmentCollectionId" type="long" />
 		<column name="fragmentEntryKey" type="String" />
 		<column name="name" type="String" />
-		<column name="css" type="String" />
-		<column name="html" type="String" />
-		<column name="js" type="String" />
+		<column change-tracking-resolution-type="merge" name="css" type="String" />
+		<column change-tracking-resolution-type="merge" name="html" type="String" />
+		<column change-tracking-resolution-type="merge" name="js" type="String" />
 		<column name="cacheable" type="boolean" />
-		<column name="configuration" type="String" />
+		<column change-tracking-resolution-type="merge" name="configuration" type="String" />
 		<column name="icon" type="String" />
 		<column name="previewFileEntryId" type="long" />
 		<column name="readOnly" type="boolean" />
@@ -211,7 +211,7 @@
 			<finder-column name="status" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="FragmentEntryLink" remote-service="true" uuid="true">
+	<entity external-reference-code="group" local-service="true" name="FragmentEntryLink" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -242,13 +242,13 @@
 		<column change-tracking-resolution-type="merge" name="js" type="String" />
 		<column change-tracking-resolution-type="merge" name="configuration" type="String" />
 		<column name="deleted" type="boolean" />
-		<column name="editableValues" type="String" />
+		<column change-tracking-resolution-type="merge" name="editableValues" type="String" />
 		<column name="namespace" type="String" />
 		<column name="position" type="int" />
 		<column name="rendererKey" type="String" />
 		<column name="type" type="int" />
-		<column name="lastPropagationDate" type="Date" />
-		<column name="lastPublishDate" type="Date" />
+		<column change-tracking-resolution-type="merge" name="lastPropagationDate" type="Date" />
+		<column change-tracking-resolution-type="merge" name="lastPublishDate" type="Date" />
 
 		<!-- Order -->
 

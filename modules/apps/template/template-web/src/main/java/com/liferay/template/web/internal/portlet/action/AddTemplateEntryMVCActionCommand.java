@@ -84,7 +84,8 @@ public class AddTemplateEntryMVCActionCommand
 
 		try {
 			DDMTemplate ddmTemplate = _ddmTemplateLocalService.addTemplate(
-				themeDisplay.getUserId(), serviceContext.getScopeGroupId(),
+				null, themeDisplay.getUserId(),
+				serviceContext.getScopeGroupId(),
 				_portal.getClassNameId(TemplateEntry.class), 0,
 				_portal.getClassNameId(TemplateEntry.class), nameMap,
 				Collections.emptyMap(),
@@ -96,7 +97,8 @@ public class AddTemplateEntryMVCActionCommand
 
 			TemplateEntry templateEntry =
 				_templateEntryLocalService.addTemplateEntry(
-					themeDisplay.getUserId(), serviceContext.getScopeGroupId(),
+					null, themeDisplay.getUserId(),
+					serviceContext.getScopeGroupId(),
 					ddmTemplate.getTemplateId(), infoItemClassName,
 					infoItemFormVariationKey, serviceContext);
 

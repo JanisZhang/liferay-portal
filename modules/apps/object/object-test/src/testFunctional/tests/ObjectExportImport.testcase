@@ -1,4 +1,4 @@
-@component-name = "portal-object"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -24,6 +24,8 @@ definition {
 	@description = "LPS-142175 - Verify the field values persist for object entries with 100 fields"
 	@priority = 3
 	test AssertFieldValuesPersist {
+		property portal.upstream = "quarantine";
+
 		task ("Given a custom object with 100 fields") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 187390",
@@ -269,7 +271,6 @@ definition {
 	}
 
 	@description = "LPS-142175 - Verify it is possible to cancel importing an object"
-	@ignore = "Test Stub"
 	@priority = 4
 	test CanCancelImport {
 		ObjectAdmin.openObjectAdmin();
@@ -602,30 +603,6 @@ definition {
 		CreateObject.assertValuesOnScope(
 			valuePanelCategory = "Object",
 			valueScope = "Company");
-	}
-
-	@description = "LPS-142175 - Verify it is possible to publish an imported custom object"
-	@ignore = "Test Stub"
-	@priority = 4
-	test CanPublishImportedObject {
-		ObjectExportImport.importObject(
-			objectFileName = "ImportedObjectWithField",
-			objectName = "ImportedObjectWithField146365");
-
-		AssertElementPresent(
-			key_labelName = "Imported Object With Field",
-			locator1 = "CreateObject#OBJECT_NAME");
-
-		ObjectPortlet.selectCustomObject(label = "Imported Object With Field");
-
-		PortletEntry.publish();
-
-		ObjectAdmin.openObjectAdmin();
-
-		AssertTextEquals(
-			key_label = "Imported Object With Field",
-			locator1 = "ObjectAdmin#OBJECT_STATUS",
-			value1 = "Approved");
 	}
 
 	@description = "LPS-142175 - Verify that an imported custom object is created with Draft Status"

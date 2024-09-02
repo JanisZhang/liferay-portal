@@ -69,7 +69,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -81,7 +81,7 @@ definition {
 	@description = "This is a use case for LPS-102467 and LPS-110444. Configure e-mail template for Email One Time Password verification step."
 	@priority = 4
 	test AssertEditedEmailTemplate {
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -115,7 +115,7 @@ definition {
 
 		task ("Login and send OTP email") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			MultiFactorAuthentication.sendOTPEmailPG();
@@ -146,7 +146,7 @@ definition {
 
 		task ("Login at able.com") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -187,7 +187,7 @@ definition {
 			UserBar.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -206,7 +206,7 @@ definition {
 			UserBar.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080/",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -221,7 +221,7 @@ definition {
 				recipient = "test test",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 	}
 
@@ -240,7 +240,7 @@ definition {
 
 		task ("Login at able.com and enable OTP") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
@@ -279,7 +279,7 @@ definition {
 			SignOut.signOutOfSpecificURL(url = "http://www.able.com:8080");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080/",
 				userEmailAddress = "test@www.able.com");
 
@@ -292,7 +292,7 @@ definition {
 	@description = "LPS-92659 TC-3: Assert after user reached the number of allowed failed attempts will be blocked."
 	@priority = 4
 	test AssertUserIsBlockedAfterReachAllowedFailedAttempts {
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property osgi.module.configuration.file.names = "com.liferay.multi.factor.authentication.email.otp.configuration.MFAEmailOTPConfiguration.config";
 		property osgi.module.configurations = "emailFromAddress=\"test@liferay.com\"${line.separator}emailFromName=\"Joe\ Bloggs\"";
 		property portal.acceptance = "true";
@@ -317,7 +317,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -354,7 +354,7 @@ definition {
 
 		task ("Login at able.com and enable OTP") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
@@ -407,7 +407,7 @@ definition {
 
 		task ("Login at able.com") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -436,7 +436,7 @@ definition {
 
 		task ("Login at able.com and send OTP email") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080/",
 				userEmailAddress = "test@www.able.com");
 
@@ -449,7 +449,7 @@ definition {
 				recipient = "test test",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Sign out of able.com") {
@@ -466,7 +466,7 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -487,7 +487,7 @@ definition {
 
 		task ("Login at able.com") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -537,7 +537,7 @@ definition {
 	@description = "This is a use case for LPS-101720. Instance admin can enable and disable MFA for instance."
 	@priority = 4
 	test EnableOTPForInstanceAsInstanceAdminUser {
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -555,7 +555,7 @@ definition {
 
 		task ("Login into able.com") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -584,7 +584,7 @@ definition {
 
 		task ("Login into able.com and send OTP email") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080/",
 				userEmailAddress = "test@www.able.com");
 
@@ -597,7 +597,7 @@ definition {
 				recipient = "test test",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Disable OTP at able.com") {
@@ -610,7 +610,7 @@ definition {
 			User.logoutPG(specificURL = "http://www.able.com:8080/");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -720,7 +720,7 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -731,14 +731,14 @@ definition {
 				portalURL = ${portalURL},
 				recipient = "userfn userln",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 	}
 
 	@description = "LPS-92659 TC-4: User can login successfully after retry timeout."
 	@priority = 4
 	test LoginSuccessfulAfterRetryTimeout {
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property osgi.module.configuration.file.names = "com.liferay.multi.factor.authentication.email.otp.configuration.MFAEmailOTPConfiguration.config";
 		property osgi.module.configurations = "emailFromAddress=\"test@liferay.com\"${line.separator}emailFromName=\"Joe\ Bloggs\"";
 		property test.liferay.virtual.instance = "false";
@@ -760,7 +760,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -785,7 +785,7 @@ definition {
 				portalURL = ${portalURL},
 				recipient = "Test Test",
 				userEmailAddress = "test@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 	}
 
@@ -824,7 +824,7 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -858,7 +858,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -869,7 +869,7 @@ definition {
 				portalURL = ${portalURL},
 				recipient = "Test Test",
 				userEmailAddress = "test@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Search for Test Test on MFA IP OTP verification failure") {
@@ -894,9 +894,9 @@ definition {
 	@description = "This is a use case for LPS-101720. As an End User, OTP verification shows up in login process when OTP is enabled."
 	@priority = 4
 	test LoginWithOTPEnabled {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property osgi.module.configuration.file.names = "com.liferay.multi.factor.authentication.email.otp.configuration.MFAEmailOTPConfiguration.config";
@@ -930,7 +930,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -941,16 +941,16 @@ definition {
 				portalURL = ${portalURL},
 				recipient = "userfn userln",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 	}
 
 	@description = "This is a use case for LPS-101720. As an End User, OTP verification shows up in login process when OTP is enabled and scoped by Company Id."
 	@priority = 4
 	test LoginWithOTPEnabledByCompanyId {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property test.liferay.virtual.instance = "false";
@@ -989,7 +989,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -1000,16 +1000,16 @@ definition {
 				portalURL = ${portalURL},
 				recipient = "userfn userln",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 	}
 
 	@description = "This is a use case for LPS-101720. As an End User, OTP verification shows up in login process when OTP is enabled and scoped by Company Web Id."
 	@priority = 4
 	test LoginWithOTPEnabledByCompanyWebId {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property test.liferay.virtual.instance = "false";
@@ -1050,7 +1050,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -1061,7 +1061,7 @@ definition {
 				portalURL = ${portalURL},
 				recipient = "userfn userln",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 	}
 
@@ -1104,7 +1104,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -1115,7 +1115,7 @@ definition {
 				portalURL = ${portalURL},
 				recipient = "userfn userln",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Get TOTP") {
@@ -1134,7 +1134,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -1163,7 +1163,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -1222,7 +1222,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -1233,7 +1233,7 @@ definition {
 				portalURL = ${portalURL},
 				recipient = "userfn userln",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Get TOTP") {
@@ -1255,7 +1255,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -1338,7 +1338,7 @@ definition {
 
 		task ("Login at able.com") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -1437,7 +1437,7 @@ definition {
 
 		task ("Login at able.com") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -1473,7 +1473,7 @@ definition {
 			SignOut.signOut();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -1484,14 +1484,14 @@ definition {
 				portalURL = ${portalURL},
 				recipient = "test test",
 				userEmailAddress = "test@liferay.com",
-				userPassword = "test",
+				userPassword = PropsUtil.get("default.admin.password"),
 				validOtp = "false");
 
 			MultiFactorAuthentication.verifyOTP(
 				portalURL = ${portalURL},
 				recipient = "Test Test",
 				userEmailAddress = "test@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Search Test Test in OTP browser MFA Checker") {
@@ -1527,7 +1527,7 @@ definition {
 
 		task ("Login at able.com") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -1558,7 +1558,7 @@ definition {
 			SignOut.signOutOfSpecificURL(url = "http://www.able.com:8080");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080/",
 				userEmailAddress = "test@www.able.com");
 		}
@@ -1571,7 +1571,7 @@ definition {
 				recipient = "test test",
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Get TOTP") {
@@ -1590,7 +1590,7 @@ definition {
 			SignOut.signOutOfSpecificURL(url = "http://www.able.com:8080");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080/",
 				userEmailAddress = "test@www.able.com");
 		}

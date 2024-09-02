@@ -30,7 +30,7 @@ export class UserPersonalBarPage {
 		this.editConfigurationSubmitButton = page.getByTestId(
 			'submitConfiguration'
 		);
-		this.notificationBadge = page.getByTestId('notificationsCount');
+		this.notificationBadge = page.getByLabel('New Notification');
 		this.page = page;
 		this.processBuilderConfigurationTab = page.getByRole('link', {
 			name: 'Configuration',
@@ -42,13 +42,13 @@ export class UserPersonalBarPage {
 			.locator(
 				'#_com_liferay_portal_workflow_web_portlet_ControlPanelWorkflowPortlet_fm_search'
 			)
-			.getByPlaceholder('Search for');
+			.getByPlaceholder(/^Search/);
 		this.searchResultText = page.getByTestId('searchResultText');
 		this.searchSubmit = page
 			.locator(
 				'#_com_liferay_portal_workflow_web_portlet_ControlPanelWorkflowPortlet_fm_search'
 			)
-			.getByLabel('Search', {exact: true});
+			.getByLabel('Search for', {exact: true});
 		this.showNotificationBadgeInPersonalMenuLabel = page
 			.getByTestId('showNotificationBadgeInPersonalMenu')
 			.getByLabel('Show Notification Badge in Personal Menu', {

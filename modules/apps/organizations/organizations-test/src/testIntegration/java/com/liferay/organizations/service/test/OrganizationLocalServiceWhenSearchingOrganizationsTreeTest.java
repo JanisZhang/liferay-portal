@@ -34,8 +34,8 @@ import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.comparator.OrganizationNameComparator;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.search.test.util.AssertUtils;
-import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -225,7 +225,8 @@ public class OrganizationLocalServiceWhenSearchingOrganizationsTreeTest {
 				_user.getCompanyId(),
 				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID, null, null,
 				null, null, organizationParams, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, new OrganizationNameComparator(true));
+				QueryUtil.ALL_POS,
+				OrganizationNameComparator.getInstance(true));
 
 		AssertUtils.assertEquals(
 			String.valueOf(organizationParams),

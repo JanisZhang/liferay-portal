@@ -5,7 +5,7 @@
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {Text} from '@clayui/core';
-import ClayDropDown, {Align} from '@clayui/drop-down';
+import ClayDropDown from '@clayui/drop-down';
 import Layout from '@clayui/layout';
 import ClayTooltip from '@clayui/tooltip';
 import {ReactPortal} from '@liferay/frontend-js-react-web';
@@ -93,10 +93,8 @@ export default function SpacingBox({
 
 		event.preventDefault();
 
-		const {
-			position: currentPosition,
-			type: currentType,
-		} = document.activeElement.dataset;
+		const {position: currentPosition, type: currentType} =
+			document.activeElement.dataset;
 
 		let nextPosition = ARROW_TO_POSITION[event.key];
 		let nextType = currentType;
@@ -205,7 +203,6 @@ function SpacingSelectorButton({
 	return (
 		<ClayDropDown
 			active={active}
-			alignmentPosition={Align.BottomRight}
 			className={classNames(
 				`${DROPDOWN_CLASSNAME} ${DROPDOWN_CLASSNAME}--${type} ${DROPDOWN_CLASSNAME}--${type}-${position} align-items-stretch d-flex text-center`,
 				{disabled}
@@ -260,7 +257,7 @@ function SpacingSelectorButton({
 				</ClayButton>
 			}
 		>
-			<div ref={itemListRef}>
+			<div className={DROPDOWN_CLASSNAME} ref={itemListRef}>
 				<ClayDropDown.ItemList aria-labelledby={triggerId}>
 					{active && canSetCustomValue ? (
 						<>

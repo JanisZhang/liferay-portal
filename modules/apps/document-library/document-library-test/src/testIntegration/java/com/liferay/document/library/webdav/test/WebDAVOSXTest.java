@@ -16,6 +16,7 @@ import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.util.DLFileEntryTypeUtil;
+import com.liferay.document.library.webdav.test.rule.WebDAVEnvironmentConfigClassTestRule;
 import com.liferay.dynamic.data.mapping.kernel.DDMForm;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormField;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldOptions;
@@ -685,8 +686,9 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 
 			DLFileEntryType dlFileEntryType =
 				_dlFileEntryTypeLocalService.addFileEntryType(
-					TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
-					ddmStructure.getStructureId(), null,
+					null, TestPropsValues.getUserId(),
+					TestPropsValues.getGroupId(), ddmStructure.getStructureId(),
+					null,
 					Collections.singletonMap(
 						LocaleUtil.US, RandomTestUtil.randomString()),
 					Collections.singletonMap(
@@ -779,8 +781,9 @@ public class WebDAVOSXTest extends BaseWebDAVTestCase {
 
 			DLFileEntryType initialDLFileEntryType =
 				_dlFileEntryTypeLocalService.addFileEntryType(
-					TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
-					ddmStructure.getStructureId(), null,
+					null, TestPropsValues.getUserId(),
+					TestPropsValues.getGroupId(), ddmStructure.getStructureId(),
+					null,
 					Collections.singletonMap(
 						LocaleUtil.US, "New File Entry Type"),
 					Collections.singletonMap(

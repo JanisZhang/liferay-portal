@@ -400,13 +400,8 @@ definition {
 	}
 
 	@description = "Feature ID: LRAC-9248 | Automation ID: LRAC-10727 | Test Summary: Empty state of pages with no data source and no property"
-	@ignore = "true"
 	@priority = 2
 	test CheckAllMessagesRelatedToSettings {
-
-		// AC Bug: Individuals Attribute empty state showing blank page
-		// AC Bug ticket: LRAC-13973
-
 		property test.run.type = "single";
 
 		task ("Close the onboarding modal") {
@@ -445,14 +440,12 @@ definition {
 			SelectWindow(value1 = "title=Properties - Settings - Analytics Cloud");
 		}
 
-		task ("Go to Definitions then go to Individuals and check the empty page status message") {
+		task ("Go to Definitions then go to Individuals and check the list of field mapping attributes") {
 			ACSettings.goToDefinitions();
 
 			ACDefinitions.goToDefinitionType(definitionType = "Individuals");
 
-			ACUtils.viewGenericText(textValueList = "No Individuals Synced from Data Sources,Connect a data source with people data.,Access our documentation to learn more.");
-
-			ACUtils.viewGenericButton(buttonName = "Connect Data Source");
+			ACUtils.viewGenericText(textValueList = "additionalName,birthDate,email,familyName,givenName,jobTitle,languageId,modifiedDate,screenName");
 		}
 
 		task ("Go back to Definitions and go to Event Attributes and check the empty page status message then check the if the hyperlink is taking the user to the documentation") {
@@ -531,24 +524,28 @@ definition {
 			ACUtils.viewGenericText(textValueList = "No Requests Found,Create a request to get started.,Access our documentation to learn more.");
 		}
 
-		// The Suppressed User card was hidden after this ticket: LRAC-13620
+		task ("Go back to Data Control and Privacy, then go to Suppressed Users > Manage, and check the empty page status message then check the if the hyperlink is taking the user to the documentation") {
+			ACSettings.goToDataControlAndPrivacy();
 
-		//task ("Go back to Data Control and Privacy, then go to Suppressed Users > Manage, and check the empty page status message then check the if the hyperlink is taking the user to the documentation") {
-		//	ACSettings.goToDataControlAndPrivacy();
-		//	ACSettings.navigateToRequestOrSuppressedOptions(
-		//		optionName = "Suppressed Users",
-		//		optionValue = "Manage");
-		//	ACUtils.viewGenericText(textValueList = "No Suppressed Users Found,Access our documentation to learn more.");
-		//	var textValue = "To suppress a user, go to data control & privacy under settings and create a new request on the request log.";
-		//	AssertTextEquals.assertPartialText(
-		//		key_textValue = ${textValue},
-		//		locator1 = "ACUtils#GENERIC_TEXT",
-		//		value1 = ${textValue});
-		//	ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
-		//	SelectWindow(value1 = "title=Data Control and Privacy - Liferay Learn");
-		//	ACUtils.viewGenericText(textValueList = "Data Control and Privacy");
-		//}
+			ACSettings.navigateToRequestOrSuppressedOptions(
+				optionName = "Suppressed Users",
+				optionValue = "Manage");
 
+			ACUtils.viewGenericText(textValueList = "No Suppressed Users Found,Access our documentation to learn more.");
+
+			var textValue = "To suppress a user, go to data control & privacy under settings and create a new request on the request log.";
+
+			AssertTextEquals.assertPartialText(
+				key_textValue = ${textValue},
+				locator1 = "ACUtils#GENERIC_TEXT",
+				value1 = ${textValue});
+
+			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
+
+			SelectWindow(value1 = "title=Data Control and Privacy - Liferay Learn");
+
+			ACUtils.viewGenericText(textValueList = "Data Control and Privacy");
+		}
 	}
 
 	@description = "Feature ID: LRAC-10405 | Automation ID: LRAC-11119 | Test Summary: Empty state of no assets with data source and property"
@@ -682,9 +679,9 @@ definition {
 
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
 
-			SelectWindow(value1 = "title=Events Analysis - Liferay Learn");
+			SelectWindow(value1 = "title=Events - Liferay Learn");
 
-			ACUtils.viewGenericText(textValueList = "Events Analysis");
+			ACUtils.viewGenericText(textValueList = "Events");
 
 			Close.closeWindow();
 		}

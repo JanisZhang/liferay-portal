@@ -1,15 +1,19 @@
-import CardWithRangeKey from 'shared/hoc/CardWithRangeKey';
+import BaseCard from 'shared/components/base-card';
+import Card from 'shared/components/Card';
+import ClayIcon from '@clayui/icon';
+import ClayLink from '@clayui/link';
 import React from 'react';
 import SearchTermsQuery from 'shared/queries/SearchTermsQuery';
 import URLConstants from 'shared/util/url-constants';
 import {compositionListColumns} from 'shared/util/table-columns';
 import {CompositionTypes} from 'shared/util/constants';
-import {Containers} from 'shared/components/download-report/DownloadPDFReport';
 import {
 	getMapResultToProps,
 	mapCardPropsToOptions
 } from './mappers/composition-query';
 import {graphql} from '@apollo/react-hoc';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
+import {Routes, setUriQueryValues, toRoute} from 'shared/util/router';
 import {useParams} from 'react-router-dom';
 import {withTableData} from 'shared/hoc';
 
@@ -58,25 +62,51 @@ const TableWithData = withTableData(withData, {
 });
 
 const SearchTermsCard = props => {
-	const {channelId, id} = useParams();
+	const {channelId, groupId, id} = useParams();
 
 	return (
-		<CardWithRangeKey
+		<BaseCard
 			className='search-terms-card-root'
-			id={Containers.SearchTermsCard}
 			label={Liferay.Language.get('search-terms')}
 			legacyDropdownRangeKey={false}
+			reportContainer={ReportContainer.SearchTermsCard}
 		>
 			{({rangeSelectors}) => (
-				<TableWithData
-					{...props}
-					channelId={channelId}
-					id={id}
-					rangeSelectors={rangeSelectors}
-					rowBordered={false}
-				/>
+				<>
+					<TableWithData
+						{...props}
+						channelId={channelId}
+						id={id}
+						rangeSelectors={rangeSelectors}
+						rowBordered={false}
+					/>
+
+					<Card.Footer>
+						<ClayLink
+							borderless
+							button
+							className='button-root'
+							displayType='secondary'
+							href={setUriQueryValues(
+								rangeSelectors,
+								toRoute(Routes.SITES_SEARCH_TERMS, {
+									channelId,
+									groupId
+								})
+							)}
+							small
+						>
+							{Liferay.Language.get('all-search-terms')}
+
+							<ClayIcon
+								className='icon-root ml-2'
+								symbol='angle-right-small'
+							/>
+						</ClayLink>
+					</Card.Footer>
+				</>
 			)}
-		</CardWithRangeKey>
+		</BaseCard>
 	);
 };
 

@@ -7,7 +7,6 @@
 		height: 8.5rem;
 		margin-bottom: 1.5rem;
 		padding: 1rem;
-		width: 37.5rem;
 	}
 
 	&-icon-check {
@@ -132,13 +131,13 @@
 				line-height: 1rem;
 				width: 4.563rem;
 
+				transition: background-color 0.3s;
+				transition: color 0.3s;
+
 				&:hover {
 					background-color: #2b3a4b;
 					color: #fff;
 				}
-
-				transition: background-color 0.3s;
-				transition: color 0.3s;
 			}
 		}
 

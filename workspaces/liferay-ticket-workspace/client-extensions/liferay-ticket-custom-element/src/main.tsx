@@ -4,7 +4,8 @@
  */
 
 import {ClayIconSpriteContext} from '@clayui/icon';
-import {createRoot} from 'react-dom/client';
+import React from 'react';
+import * as ReactDOM from 'react-dom';
 import {QueryClient, QueryClientProvider} from 'react-query';
 
 import AllScreens from './pages/AllScreens';
@@ -17,10 +18,11 @@ export type LiferayTicketWorkspaceComponentsType = {
 	[key: string]: JSX.Element;
 };
 
-const LIFERAY_TICKET_WORKSPACE_COMPONENTS: LiferayTicketWorkspaceComponentsType = {
-	dashboard: <TicketsDashboard screenType={ScreenType.STANDALONE} />,
-	overview: <TicketsOverview />,
-};
+const LIFERAY_TICKET_WORKSPACE_COMPONENTS: LiferayTicketWorkspaceComponentsType =
+	{
+		dashboard: <TicketsDashboard screenType={ScreenType.STANDALONE} />,
+		overview: <TicketsOverview />,
+	};
 
 const DirectToCustomer: React.FC<{defaultScreen: string}> = ({defaultScreen}) =>
 	LIFERAY_TICKET_WORKSPACE_COMPONENTS[defaultScreen] ?? <AllScreens />;
@@ -37,10 +39,8 @@ const Main: React.FC<{defaultScreen: string}> = ({defaultScreen}) => (
 
 class WebComponent extends HTMLElement {
 	connectedCallback() {
-		const root = createRoot(this);
 		const defaultScreen = this.getAttribute('defaultScreen') || '';
-
-		root.render(<Main defaultScreen={defaultScreen} />);
+		ReactDOM.render(React.createElement(Main, {defaultScreen}), this);
 	}
 }
 

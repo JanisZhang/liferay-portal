@@ -9,14 +9,11 @@ import {useContext} from 'react';
 import {ApplicationPropertiesContext} from '../../context/ApplicationPropertiesContext';
 import SearchBuilder from '../../core/SearchBuilder';
 import i18n from '../../i18n';
-import {TestrayCaseResultIssue, testrayIssueImpl} from '../../services/rest';
 
 type JiraLinkProps = {
 	displayViewInJira?: boolean;
-	issue: TestrayCaseResultIssue | TestrayCaseResultIssue[];
+	issue?: string | string[];
 };
-
-const splitIssueName = (name: string) => name.split(testrayIssueImpl.DELIMITER);
 
 const JiraLink: React.FC<JiraLinkProps> = ({
 	displayViewInJira = true,
@@ -24,7 +21,16 @@ const JiraLink: React.FC<JiraLinkProps> = ({
 }) => {
 	const {jiraBaseURL} = useContext(ApplicationPropertiesContext);
 
-	const isArray = Array.isArray(issue);
+	if (!issue || !issue.length) {
+		return <span>-</span>;
+	}
+
+	const issues = Array.isArray(issue)
+		? issue
+		: issue
+				.split(',')
+				.map((name) => name.trim())
+				.filter(Boolean);
 
 	const Link = ({name}: {name: string}) => (
 		<a
@@ -36,45 +42,33 @@ const JiraLink: React.FC<JiraLinkProps> = ({
 		</a>
 	);
 
-	if (isArray) {
-		const issues = issue.map(
-			({name}) => splitIssueName(name).at(0) as string
-		);
+	return (
+		<div className="d-flex flex-column">
+			{displayViewInJira && (
+				<a
+					href={`${jiraBaseURL}/issues/?jql=${SearchBuilder.in(
+						'key',
+						issues
+					).replaceAll("'", '')}`}
+					target="_blank"
+				>
+					{i18n.translate('view-in-jira')}
 
-		return (
-			<div className="d-flex flex-column">
-				{displayViewInJira && (
-					<a
-						href={`${jiraBaseURL}/issues/?jql=${SearchBuilder.in(
-							'key',
-							issues
-						).replaceAll("'", '')}`}
-						target="_blank"
-					>
-						{i18n.translate('view-in-jira')}
+					<ClayIcon
+						className="ml-2"
+						fontSize={12}
+						symbol="shortcut"
+					/>
+				</a>
+			)}
 
-						<ClayIcon
-							className="ml-2"
-							fontSize={12}
-							symbol="shortcut"
-						/>
-					</a>
-				)}
-
-				<div>
-					{issues.map((name, index) => (
-						<Link key={index} name={name} />
-					))}
-				</div>
+			<div>
+				{issues.map((name, index) => (
+					<Link key={index} name={name} />
+				))}
 			</div>
-		);
-	}
-
-	const [name] = splitIssueName(issue.name);
-
-	return <Link name={name} />;
+		</div>
+	);
 };
-
-export {splitIssueName};
 
 export default JiraLink;

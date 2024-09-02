@@ -1,24 +1,24 @@
 {
 	"dependencies": {
 		"@clayui/alert": "3.111.0",
-		"@clayui/autocomplete": "3.111.0",
-		"@clayui/button": "3.111.0",
-		"@clayui/drop-down": "3.111.0",
-		"@clayui/empty-state": "3.111.0",
-		"@clayui/form": "3.111.0",
+		"@clayui/autocomplete": "3.118.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/drop-down": "3.118.0",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.116.0",
 		"@clayui/icon": "3.111.0",
 		"@clayui/layout": "3.111.0",
 		"@clayui/link": "3.111.0",
-		"@clayui/list": "3.111.0",
-		"@clayui/modal": "3.111.0",
-		"@clayui/navigation-bar": "3.111.0",
-		"@clayui/pagination-bar": "3.111.1",
-		"@clayui/panel": "3.111.0",
-		"@clayui/popover": "3.111.0",
+		"@clayui/list": "3.118.0",
+		"@clayui/modal": "3.117.0",
+		"@clayui/navigation-bar": "3.116.0",
+		"@clayui/pagination-bar": "3.118.0",
+		"@clayui/panel": "3.116.0",
+		"@clayui/popover": "3.116.1",
 		"@clayui/progress-bar": "3.111.0",
 		"@clayui/table": "3.111.0",
-		"@clayui/tabs": "3.111.0",
-		"@clayui/tooltip": "3.111.0",
+		"@clayui/tabs": "3.116.0",
+		"@clayui/tooltip": "3.116.0",
 		"@liferay/frontend-js-react-web": "*",
 		"@liferay/portal-workflow-instance-tracker-web": "*",
 		"classnames": "2.3.1",
@@ -52,14 +52,14 @@
 		],
 		"timers": "fake"
 	},
-	"main": "js/index.es.js",
+	"main": "js/index.js",
 	"name": "portal-workflow-metrics-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "RTL_SKIP_AUTO_CLEANUP=true liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "RTL_SKIP_AUTO_CLEANUP=true node-scripts test"
 	},
-	"version": "3.0.75"
+	"version": "3.0.87"
 }

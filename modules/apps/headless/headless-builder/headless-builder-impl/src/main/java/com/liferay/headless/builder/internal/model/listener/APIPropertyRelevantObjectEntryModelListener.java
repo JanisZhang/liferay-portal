@@ -22,6 +22,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -92,6 +93,15 @@ public class APIPropertyRelevantObjectEntryModelListener
 			objectDefinition = _objectEntryHelper.getPropertyObjectDefinition(
 				objectDefinition,
 				ListUtil.fromArray(objectRelationshipName.split(",")));
+
+			if (!ValidationHelper.isSupported(objectDefinition)) {
+				throw new ObjectEntryValuesException.InvalidObjectField(
+					null,
+					"An API property must belong to a modifiable object " +
+						"definition",
+					"an-api-property-must-belong-to-a-modifiable-object-" +
+						"definition");
+			}
 		}
 
 		ObjectField objectField = _objectFieldLocalService.fetchObjectField(
@@ -109,8 +119,8 @@ public class APIPropertyRelevantObjectEntryModelListener
 		try {
 			Map<String, Serializable> values = objectEntry.getValues();
 
-			long apiSchemaId = (long)values.get(
-				"r_apiSchemaToAPIProperties_c_apiSchemaId");
+			long apiSchemaId = GetterUtil.getLong(
+				values.get("r_apiSchemaToAPIProperties_c_apiSchemaId"));
 
 			if (!_validationHelper.isValidObjectEntry(
 					"L_API_SCHEMA", apiSchemaId)) {
@@ -172,8 +182,8 @@ public class APIPropertyRelevantObjectEntryModelListener
 				}
 			}
 
-			long parentAPIPropertyId = (long)values.get(
-				"r_apiPropertyToAPIProperties_c_apiPropertyId");
+			long parentAPIPropertyId = GetterUtil.getLong(
+				values.get("r_apiPropertyToAPIProperties_c_apiPropertyId"));
 
 			if (parentAPIPropertyId != 0) {
 				if (!_validationHelper.isValidObjectEntry(
@@ -232,7 +242,7 @@ public class APIPropertyRelevantObjectEntryModelListener
 					_objectEntryLocalService.getValuesList(
 						objectEntry.getGroupId(), objectEntry.getCompanyId(),
 						objectEntry.getUserId(),
-						objectEntry.getObjectDefinitionId(),
+						objectEntry.getObjectDefinitionId(), null,
 						_filterFactory.create(
 							StringBundler.concat(
 								"id ne '", objectEntry.getObjectEntryId(),

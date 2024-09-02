@@ -7,8 +7,6 @@ package com.liferay.osb.faro.service.impl;
 
 import com.liferay.osb.faro.exception.EmailAddressDomainException;
 import com.liferay.osb.faro.model.FaroProjectEmailDomain;
-import com.liferay.osb.faro.service.FaroProjectEmailDomainLocalService;
-import com.liferay.osb.faro.service.FaroProjectEmailDomainLocalServiceUtil;
 import com.liferay.osb.faro.service.base.FaroProjectEmailDomainLocalServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -18,8 +16,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
-
-import java.lang.reflect.Field;
 
 import java.util.HashSet;
 import java.util.List;
@@ -38,6 +34,7 @@ public class FaroProjectEmailDomainLocalServiceImpl
 	extends FaroProjectEmailDomainLocalServiceBaseImpl {
 
 	@Indexable(type = IndexableType.REINDEX)
+	@Override
 	public FaroProjectEmailDomain addFaroProjectEmailDomain(
 		long groupId, long faroProjectId, String emailDomain) {
 
@@ -53,6 +50,7 @@ public class FaroProjectEmailDomainLocalServiceImpl
 		return faroProjectEmailDomainPersistence.update(faroProjectEmailDomain);
 	}
 
+	@Override
 	public void addFaroProjectEmailDomains(
 		long groupId, long faroProjectId, List<String> emailAddressDomains) {
 
@@ -66,8 +64,6 @@ public class FaroProjectEmailDomainLocalServiceImpl
 	}
 
 	public void afterPropertiesSet() {
-		_setLocalServiceUtilService(faroProjectEmailDomainLocalService);
-
 		ClassLoader classLoader = getClassLoader();
 
 		try (InputStream inputStream = classLoader.getResourceAsStream(
@@ -82,6 +78,7 @@ public class FaroProjectEmailDomainLocalServiceImpl
 		}
 	}
 
+	@Override
 	public List<FaroProjectEmailDomain>
 		getFaroProjectEmailDomainsByFaroProjectId(long faroProjectId) {
 
@@ -89,27 +86,11 @@ public class FaroProjectEmailDomainLocalServiceImpl
 			faroProjectId);
 	}
 
+	@Override
 	public List<FaroProjectEmailDomain> getFaroProjectEmailDomainsByGroupId(
 		long groupId) {
 
 		return faroProjectEmailDomainPersistence.findByGroupId(groupId);
-	}
-
-	private void _setLocalServiceUtilService(
-		FaroProjectEmailDomainLocalService faroProjectEmailDomainLocalService) {
-
-		try {
-			Field field =
-				FaroProjectEmailDomainLocalServiceUtil.class.getDeclaredField(
-					"_service");
-
-			field.setAccessible(true);
-
-			field.set(null, faroProjectEmailDomainLocalService);
-		}
-		catch (ReflectiveOperationException reflectiveOperationException) {
-			throw new RuntimeException(reflectiveOperationException);
-		}
 	}
 
 	private void _validate(List<String> emailAddressDomains) {

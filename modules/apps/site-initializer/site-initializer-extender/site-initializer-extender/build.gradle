@@ -10,10 +10,13 @@ dependencies {
 	compileOnly group: "org.osgi", name: "org.osgi.service.component.annotations", version: "1.4.0"
 	compileOnly group: "org.osgi", name: "osgi.core", version: "6.0.0"
 	compileOnly project(":apps:account:account-api")
+	compileOnly project(":apps:asset:asset-api")
+	compileOnly project(":apps:asset:asset-link-api")
 	compileOnly project(":apps:asset:asset-list-api")
 	compileOnly project(":apps:client-extension:client-extension-api")
 	compileOnly project(":apps:client-extension:client-extension-type-api")
 	compileOnly project(":apps:data-engine:data-engine-rest-api")
+	compileOnly project(":apps:depot:depot-api")
 	compileOnly project(":apps:document-library:document-library-api")
 	compileOnly project(":apps:dynamic-data-mapping:dynamic-data-mapping-api")
 	compileOnly project(":apps:fragment:fragment-api")

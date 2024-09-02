@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -242,12 +243,12 @@ public class LayoutClassedModelUsageLocalServiceUtil {
 	}
 
 	public static LayoutClassedModelUsage fetchLayoutClassedModelUsage(
-		long classNameId, long classPK,
+		long groupId, long classNameId, long classPK,
 		String classedModelExternalReferenceCode, String containerKey,
 		long containerType, long plid) {
 
 		return getService().fetchLayoutClassedModelUsage(
-			classNameId, classPK, classedModelExternalReferenceCode,
+			groupId, classNameId, classPK, classedModelExternalReferenceCode,
 			containerKey, containerType, plid);
 	}
 
@@ -463,14 +464,23 @@ public class LayoutClassedModelUsageLocalServiceUtil {
 			layoutClassedModelUsage);
 	}
 
+	public static LayoutClassedModelUsage updateLayoutClassedModelUsage(
+			long classNameId, long classPK, String containerKey,
+			long containerType, long layoutClassedModelUsageId, long plid)
+		throws PortalException {
+
+		return getService().updateLayoutClassedModelUsage(
+			classNameId, classPK, containerKey, containerType,
+			layoutClassedModelUsageId, plid);
+	}
+
 	public static LayoutClassedModelUsageLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(LayoutClassedModelUsageLocalService service) {
-		_service = service;
-	}
-
-	private static volatile LayoutClassedModelUsageLocalService _service;
+	private static final Snapshot<LayoutClassedModelUsageLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			LayoutClassedModelUsageLocalServiceUtil.class,
+			LayoutClassedModelUsageLocalService.class);
 
 }

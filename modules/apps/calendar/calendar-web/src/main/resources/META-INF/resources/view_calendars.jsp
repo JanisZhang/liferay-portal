@@ -41,7 +41,7 @@ CalendarResource calendarResource = (CalendarResource)request.getAttribute(Calen
 		total="<%= CalendarServiceUtil.searchCount(themeDisplay.getCompanyId(), new long[] {calendarResource.getGroupId()}, new long[] {calendarResource.getCalendarResourceId()}, null, false) %>"
 	>
 		<liferay-ui:search-container-results
-			results="<%= CalendarServiceUtil.search(themeDisplay.getCompanyId(), new long[] {calendarResource.getGroupId()}, new long[] {calendarResource.getCalendarResourceId()}, null, false, QueryUtil.ALL_POS, QueryUtil.ALL_POS, new CalendarNameComparator(true)) %>"
+			results="<%= CalendarServiceUtil.search(themeDisplay.getCompanyId(), new long[] {calendarResource.getGroupId()}, new long[] {calendarResource.getCalendarResourceId()}, null, false, QueryUtil.ALL_POS, QueryUtil.ALL_POS, CalendarNameComparator.getInstance(true)) %>"
 		/>
 
 		<liferay-ui:search-container-row
@@ -153,13 +153,15 @@ CalendarResource calendarResource = (CalendarResource)request.getAttribute(Calen
 										}
 										catch (e) {}
 
-										const portletErrorMessage = document.getElementById(
-											'<portlet:namespace />portletErrorMessage'
-										);
+										const portletErrorMessage =
+											document.getElementById(
+												'<portlet:namespace />portletErrorMessage'
+											);
 
-										const portletSuccessMessage = document.getElementById(
-											'<portlet:namespace />portletSuccessMessage'
-										);
+										const portletSuccessMessage =
+											document.getElementById(
+												'<portlet:namespace />portletSuccessMessage'
+											);
 
 										const error =
 											responseData && responseData.error;
@@ -216,9 +218,10 @@ CalendarResource calendarResource = (CalendarResource)request.getAttribute(Calen
 								const portletErrorMessage = document.getElementById(
 									'<portlet:namespace />portletErrorMessage'
 								);
-								const portletSuccessMessage = document.getElementById(
-									'<portlet:namespace />portletSuccessMessage'
-								);
+								const portletSuccessMessage =
+									document.getElementById(
+										'<portlet:namespace />portletSuccessMessage'
+									);
 
 								hideMessage(portletErrorMessage);
 

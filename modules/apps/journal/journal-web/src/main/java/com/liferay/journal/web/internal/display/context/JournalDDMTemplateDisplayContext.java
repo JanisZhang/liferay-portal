@@ -297,7 +297,7 @@ public class JournalDDMTemplateDisplayContext {
 		String orderByCol = getOrderByCol();
 
 		if (orderByCol.equals("id")) {
-			orderByComparator = new TemplateIdComparator(orderByAsc);
+			orderByComparator = TemplateIdComparator.getInstance(orderByAsc);
 		}
 		else if (orderByCol.equals("modified-date")) {
 			orderByComparator = new TemplateModifiedDateComparator(orderByAsc);
@@ -321,6 +321,17 @@ public class JournalDDMTemplateDisplayContext {
 
 				if (Validator.isNotNull(keywords)) {
 					return keywords;
+				}
+
+				return null;
+			}
+		).setParameter(
+			"classPK",
+			() -> {
+				long classPK = ParamUtil.getLong(_renderRequest, "classPK");
+
+				if (classPK > 0) {
+					return classPK;
 				}
 
 				return null;

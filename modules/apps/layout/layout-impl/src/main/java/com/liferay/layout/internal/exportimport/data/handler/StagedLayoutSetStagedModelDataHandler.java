@@ -5,7 +5,6 @@
 
 package com.liferay.layout.internal.exportimport.data.handler;
 
-import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.model.ClientExtensionEntryRel;
 import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
@@ -219,7 +218,8 @@ public class StagedLayoutSetStagedModelDataHandler
 					portletDataContext, importedStagedLayoutSet);
 		}
 
-		_importClientExtensionEntryRels(portletDataContext, stagedLayoutSet);
+		_importClientExtensionEntryRels(
+			portletDataContext, stagedLayoutSet, importedStagedLayoutSet);
 		_importLogo(portletDataContext);
 		_importTheme(portletDataContext, stagedLayoutSet);
 
@@ -310,7 +310,12 @@ public class StagedLayoutSetStagedModelDataHandler
 			if ((sourcePrototypeLayout == null) &&
 				_layoutLocalService.hasLayout(
 					layout.getUuid(), layout.getGroupId(),
-					layout.isPrivateLayout())) {
+					layout.isPrivateLayout()) &&
+				!layout.getLayoutSet(
+				).getSettings(
+				).contains(
+					Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS
+				)) {
 
 				_layoutLocalService.deleteLayout(
 					layout, ServiceContextThreadLocal.getServiceContext());
@@ -383,6 +388,34 @@ public class StagedLayoutSetStagedModelDataHandler
 							exception);
 					}
 				}
+			}
+		}
+	}
+
+	private void _deleteUnnecessaryClientExtensionEntryRels(
+		StagedLayoutSet stagedLayoutSet,
+		StagedLayoutSet importedStagedLayoutSet) {
+
+		LayoutSet importedLayoutSet = importedStagedLayoutSet.getLayoutSet();
+
+		List<ClientExtensionEntryRel> importedClientExtensionEntryRels =
+			_clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
+				_portal.getClassNameId(LayoutSet.class),
+				importedLayoutSet.getLayoutSetId());
+
+		for (ClientExtensionEntryRel importedClientExtensionEntryRel :
+				importedClientExtensionEntryRels) {
+
+			ClientExtensionEntryRel stagedClientExtensionEntryRel =
+				_clientExtensionEntryRelLocalService.
+					fetchClientExtensionEntryRelByUuidAndGroupId(
+						importedClientExtensionEntryRel.getUuid(),
+						stagedLayoutSet.getGroupId());
+
+			if (stagedClientExtensionEntryRel == null) {
+				_clientExtensionEntryRelLocalService.
+					deleteClientExtensionEntryRel(
+						importedClientExtensionEntryRel);
 			}
 		}
 	}
@@ -485,10 +518,13 @@ public class StagedLayoutSetStagedModelDataHandler
 				Element layoutElement = portletDataContext.getExportDataElement(
 					layout);
 
-				layoutElement.addAttribute(Constants.ACTION, Constants.SKIP);
-				layoutElement.addAttribute(
-					"layout-parent-layout-id",
-					String.valueOf(layout.getParentLayoutId()));
+				if (layoutElement.attributeValue(Constants.ACTION) == null) {
+					layoutElement.addAttribute(
+						Constants.ACTION, Constants.SKIP);
+					layoutElement.addAttribute(
+						"layout-parent-layout-id",
+						String.valueOf(layout.getParentLayoutId()));
+				}
 
 				continue;
 			}
@@ -678,17 +714,12 @@ public class StagedLayoutSetStagedModelDataHandler
 
 	private void _importClientExtensionEntryRels(
 			PortletDataContext portletDataContext,
-			StagedLayoutSet stagedLayoutSet)
+			StagedLayoutSet stagedLayoutSet,
+			StagedLayoutSet importedStagedLayoutSet)
 		throws Exception {
 
-		LayoutSet layoutSet = stagedLayoutSet.getLayoutSet();
-
-		_clientExtensionEntryRelLocalService.deleteClientExtensionEntryRels(
-			_portal.getClassNameId(LayoutSet.class), layoutSet.getLayoutSetId(),
-			ClientExtensionEntryConstants.TYPE_GLOBAL_CSS);
-		_clientExtensionEntryRelLocalService.deleteClientExtensionEntryRels(
-			_portal.getClassNameId(LayoutSet.class), layoutSet.getLayoutSetId(),
-			ClientExtensionEntryConstants.TYPE_GLOBAL_JS);
+		_deleteUnnecessaryClientExtensionEntryRels(
+			stagedLayoutSet, importedStagedLayoutSet);
 
 		List<Element> clientExtensionEntryRelsElements =
 			portletDataContext.getReferenceDataElements(

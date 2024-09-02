@@ -37,9 +37,8 @@ const EnvironmentFactorsModal: React.FC<EnvironmentFactorsModalProps> = ({
 	onCloseModal,
 	routineId,
 }) => {
-	const [shouldRequestCategories, setShouldRequestCategories] = useState(
-		false
-	);
+	const [shouldRequestCategories, setShouldRequestCategories] =
+		useState(false);
 
 	const {
 		form: {onSuccess, submitting},
@@ -78,9 +77,10 @@ const EnvironmentFactorsModal: React.FC<EnvironmentFactorsModalProps> = ({
 		}
 	);
 
-	const factors = useMemo(() => factorResponse?.items || [], [
-		factorResponse?.items,
-	]);
+	const factors = useMemo(
+		() => factorResponse?.items || [],
+		[factorResponse?.items]
+	);
 
 	const getCategoryDualBox = useCallback(() => {
 		const selectedItems =
@@ -93,12 +93,11 @@ const EnvironmentFactorsModal: React.FC<EnvironmentFactorsModalProps> = ({
 						(item) => Number(item?.id) === Number(factorCategory.id)
 					)
 			) || [];
-
 		setState([
 			availableItems.map(onMapAvailable) as any,
 			selectedItems
 				.map(onMapAvailable as any)
-				.sort((a: any, b: any) => a.label.localeCompare(b.label)),
+				.sort((a: any, b: any) => a.label?.localeCompare(b.label)),
 		]);
 	}, [factorCategoryResponse?.items, factors, setState]);
 
@@ -180,6 +179,7 @@ const EnvironmentFactorsModal: React.FC<EnvironmentFactorsModalProps> = ({
 			)}
 
 			{environmentFactorModalFooterContainer &&
+
 				// eslint-disable-next-line @liferay/portal/no-react-dom-create-portal
 				createPortal(
 					<Form.Footer

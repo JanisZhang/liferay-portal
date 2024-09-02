@@ -12,6 +12,7 @@ import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -110,7 +111,7 @@ public class ConfigurationTestUtil {
 				StringBundler.concat(
 					"(", Constants.SERVICE_PID, "=", pid, ")")));
 
-		if ((configurations == null) || (configurations.length == 0)) {
+		if (ArrayUtil.isEmpty(configurations)) {
 			return null;
 		}
 
@@ -125,7 +126,7 @@ public class ConfigurationTestUtil {
 
 		Assert.assertNotNull(factoryPid);
 
-		CountDownLatch countDownLatch = new CountDownLatch(1);
+		CountDownLatch countDownLatch = new CountDownLatch(2);
 
 		ServiceRegistration<ManagedServiceFactory> serviceRegistration =
 			_bundleContext.registerService(
@@ -150,7 +151,7 @@ public class ConfigurationTestUtil {
 				StringBundler.concat(
 					"(", Constants.SERVICE_PID, "=", pid, ")")));
 
-		if ((configurations == null) || (configurations.length == 0)) {
+		if (ArrayUtil.isEmpty(configurations)) {
 			return null;
 		}
 

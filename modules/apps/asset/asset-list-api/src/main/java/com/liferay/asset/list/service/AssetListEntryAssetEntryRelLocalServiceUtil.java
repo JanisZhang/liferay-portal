@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -105,9 +106,11 @@ public class AssetListEntryAssetEntryRelLocalServiceUtil {
 	 *
 	 * @param assetListEntryAssetEntryRel the asset list entry asset entry rel
 	 * @return the asset list entry asset entry rel that was removed
+	 * @throws PortalException
 	 */
 	public static AssetListEntryAssetEntryRel deleteAssetListEntryAssetEntryRel(
-		AssetListEntryAssetEntryRel assetListEntryAssetEntryRel) {
+			AssetListEntryAssetEntryRel assetListEntryAssetEntryRel)
+		throws PortalException {
 
 		return getService().deleteAssetListEntryAssetEntryRel(
 			assetListEntryAssetEntryRel);
@@ -283,6 +286,13 @@ public class AssetListEntryAssetEntryRelLocalServiceUtil {
 
 		return getService().getAssetListEntryAssetEntryRel(
 			assetListEntryAssetEntryRelId);
+	}
+
+	public static List<AssetListEntryAssetEntryRel>
+		getAssetListEntryAssetEntryRelByAssetEntryId(long assetEntryId) {
+
+		return getService().getAssetListEntryAssetEntryRelByAssetEntryId(
+			assetEntryId);
 	}
 
 	/**
@@ -478,15 +488,12 @@ public class AssetListEntryAssetEntryRelLocalServiceUtil {
 	}
 
 	public static AssetListEntryAssetEntryRelLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		AssetListEntryAssetEntryRelLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile AssetListEntryAssetEntryRelLocalService _service;
+	private static final Snapshot<AssetListEntryAssetEntryRelLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			AssetListEntryAssetEntryRelLocalServiceUtil.class,
+			AssetListEntryAssetEntryRelLocalService.class);
 
 }

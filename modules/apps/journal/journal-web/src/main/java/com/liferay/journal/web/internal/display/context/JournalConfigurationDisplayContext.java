@@ -14,13 +14,19 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.journal.configuration.JournalGroupServiceConfiguration;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.web.internal.util.DDMStructureUtil;
 import com.liferay.journal.web.internal.util.JournalUtil;
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.constants.PortletPreferencesFactoryConstants;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -100,6 +106,30 @@ public class JournalConfigurationDisplayContext {
 			_journalGroupServiceConfiguration.emailFromName());
 
 		return _emailFromName;
+	}
+
+	public JSONArray getHighlightedDDMStructuresJSONArray() throws Exception {
+		return JSONUtil.toJSONArray(
+			DDMStructureUtil.getHighlightedDDMStructures(_themeDisplay),
+			ddmStructure -> JSONUtil.put(
+				"ddmStructureId", String.valueOf(ddmStructure.getStructureId())
+			).put(
+				"name", ddmStructure.getName(_themeDisplay.getLocale())
+			).put(
+				"scope",
+				() -> {
+					Group group = GroupLocalServiceUtil.fetchGroup(
+						ddmStructure.getGroupId());
+
+					if (group == null) {
+						return StringPool.BLANK;
+					}
+
+					return LanguageUtil.get(
+						_themeDisplay.getLocale(),
+						group.getScopeLabel(_themeDisplay));
+				}
+			));
 	}
 
 	public String getNavigation() {

@@ -12,12 +12,11 @@ import useHeader from '../../../hooks/useHeader';
 import i18n from '../../../i18n';
 import {
 	APIResponse,
-	TestraySubTask,
+	TestraySubtask,
 	TestrayTask,
 	liferayMessageBoardImpl,
-	testraySubTaskImpl,
+	testraySubtaskImpl,
 } from '../../../services/rest';
-import {testraySubtaskIssuesImpl} from '../../../services/rest/TestraySubtaskIssues';
 
 type OutletContext = {
 	data: {
@@ -28,6 +27,8 @@ type OutletContext = {
 	};
 };
 
+const uri = '/subtasks';
+
 const SubtaskOutlet = () => {
 	const {setHeading} = useHeader();
 	const {subtaskId} = useParams();
@@ -35,21 +36,25 @@ const SubtaskOutlet = () => {
 		data: {testrayTask},
 	} = useOutletContext<OutletContext>();
 
+	const buildId = String(testrayTask?.build?.id);
+	const projectId = String(testrayTask?.build?.project?.id);
+	const routineId = String(testrayTask?.build?.routine?.id);
+
 	const {
 		data: testraySubtask,
 		mutate: mutateSubtask,
 		revalidate: revalidateSubtask,
-	} = useFetch<TestraySubTask>(
-		testraySubTaskImpl.getResource(subtaskId as string),
+	} = useFetch<TestraySubtask>(
+		testraySubtaskImpl.getResource(subtaskId as string),
 		{
 			transformData: (response) =>
-				testraySubTaskImpl.transformData(response),
+				testraySubtaskImpl.transformData(response),
 		}
 	);
 
 	const {data: testraySubtaskToMerged} = useFetch<
-		APIResponse<TestraySubTask>
-	>(testraySubTaskImpl.resource, {
+		APIResponse<TestraySubtask>
+	>(uri, {
 		params: {
 			fields: 'name',
 			filter: SearchBuilder.eq(
@@ -59,30 +64,19 @@ const SubtaskOutlet = () => {
 			pageSize: 100,
 		},
 		transformData: (response) =>
-			testraySubTaskImpl.transformDataFromList(response),
+			testraySubtaskImpl.transformDataFromList(response),
 	});
-
-	const {data, mutate: mutateSubtaskIssues} = useFetch(
-		testraySubtaskIssuesImpl.resource,
-		{
-			params: {
-				filter: SearchBuilder.eq('subtaskId', subtaskId as string),
-			},
-			transformData: (response) =>
-				testraySubtaskIssuesImpl.transformDataFromList(response),
-		}
-	);
 
 	const {data: mbMessage} = useFetch(
 		testraySubtask?.mbMessageId
 			? liferayMessageBoardImpl.getMessagesIdURL(
 					testraySubtask.mbMessageId
-			  )
+				)
 			: null
 	);
 
-	const {data: testraySubtaskToSplit} = useFetch<APIResponse<TestraySubTask>>(
-		testraySubTaskImpl.resource,
+	const {data: testraySubtaskToSplit} = useFetch<APIResponse<TestraySubtask>>(
+		uri,
 		{
 			params: {
 				fields: 'name',
@@ -93,11 +87,9 @@ const SubtaskOutlet = () => {
 				pageSize: 100,
 			},
 			transformData: (response) =>
-				testraySubTaskImpl.transformDataFromList(response),
+				testraySubtaskImpl.transformDataFromList(response),
 		}
 	);
-
-	const subtaskIssues = data?.items || [];
 
 	const mergedSubtaskNames = (testraySubtaskToMerged?.items || [])
 		.map(({name}) => name)
@@ -129,16 +121,17 @@ const SubtaskOutlet = () => {
 		<Outlet
 			context={{
 				data: {
+					buildId,
 					mbMessage,
 					mergedSubtaskNames,
+					projectId,
+					routineId,
 					splitSubtaskNames,
-					subtaskIssues,
 					testraySubtask,
 					testrayTask,
 				},
 				mutate: {
 					mutateSubtask,
-					mutateSubtaskIssues,
 				},
 				revalidate: {
 					revalidateSubtask,

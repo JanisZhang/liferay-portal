@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public class Individual {
 
-	public long getActivitiesCount() {
+	public Long getActivitiesCount() {
 		return _activitiesCount;
 	}
 
@@ -53,6 +53,14 @@ public class Individual {
 	@JsonProperty("_embedded")
 	public Map<String, Object> getEmbeddedResources() {
 		return _embeddedResources;
+	}
+
+	public Date getFirstActivityDate() {
+		if (_firstActivityDate == null) {
+			return null;
+		}
+
+		return new Date(_firstActivityDate.getTime());
 	}
 
 	public String getId() {
@@ -101,6 +109,12 @@ public class Individual {
 		_embeddedResources = embeddedResources;
 	}
 
+	public void setFirstActivityDate(Date firstActivityDate) {
+		if (firstActivityDate != null) {
+			_firstActivityDate = new Date(firstActivityDate.getTime());
+		}
+	}
+
 	public void setId(String id) {
 		_id = id;
 	}
@@ -143,7 +157,7 @@ public class Individual {
 
 	}
 
-	private long _activitiesCount;
+	private Long _activitiesCount;
 	private Map<String, List<Field>> _custom = new HashMap<>();
 	private List<DataSourceIndividualPK> _dataSourceIndividualPKs =
 		new ArrayList<>();
@@ -151,6 +165,7 @@ public class Individual {
 	private Date _dateModified;
 	private Map<String, List<Field>> _demographics = new HashMap<>();
 	private Map<String, Object> _embeddedResources = new HashMap<>();
+	private Date _firstActivityDate;
 	private String _id;
 	private Date _lastActivityDate;
 

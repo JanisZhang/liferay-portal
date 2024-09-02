@@ -62,6 +62,8 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
+				ObjectActionThreadLocal.setSkipObjectActionExecution(false);
+
 				_execute(
 					objectActionId, objectDefinition,
 					GetterUtil.getLong(payloadJSONObject.getLong("classPK")),
@@ -161,6 +163,10 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 
 		Map<String, Object> values = ObjectEntryVariablesUtil.getValues(
 			_ddmExpressionFactory, parametersUnicodeProperties, variables);
+
+		if (!objectDefinition.isUnmodifiableSystemObject()) {
+			return values;
+		}
 
 		Map<String, Object> baseModel = (Map<String, Object>)variables.get(
 			"baseModel");

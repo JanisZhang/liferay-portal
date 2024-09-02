@@ -119,6 +119,7 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 		return _resourcesFolderId;
 	}
 
+	@Override
 	public Map<String, FileEntry> getResourcesMap() throws PortalException {
 		return _getResourcesMap(
 			PortletFileRepositoryUtil.getPortletFolder(getResourcesFolderId()),
@@ -315,7 +316,7 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 			else if (object instanceof FileEntry) {
 				FileEntry fileEntry = (FileEntry)object;
 
-				String fileEntryPath = fileEntry.getTitle();
+				String fileEntryPath = fileEntry.getFileName();
 
 				if (!Validator.isBlank(parentPath)) {
 					fileEntryPath =

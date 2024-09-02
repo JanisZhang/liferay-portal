@@ -56,6 +56,7 @@ String modelName = (String)request.getAttribute("liferay-ui:input-permissions:mo
 		List groupPermissions = ListUtil.fromArray(request.getParameterValues(groupPermissionsName));
 		List guestPermissions = ListUtil.fromArray(request.getParameterValues(guestPermissionsName));
 
+		Map<String, String[]> defaultPermissions = (Map<String, String[]>)request.getAttribute("liferay-ui:input-permissions:defaultPermissions");
 		List groupDefaultActions = (List)request.getAttribute("liferay-ui:input-permissions:groupDefaultActions");
 		List guestDefaultActions = (List)request.getAttribute("liferay-ui:input-permissions:guestDefaultActions");
 		List guestUnsupportedActions = (List)request.getAttribute("liferay-ui:input-permissions:guestUnsupportedActions");
@@ -171,7 +172,7 @@ String modelName = (String)request.getAttribute("liferay-ui:input-permissions:mo
 				var inputPermissionsOptionsButton = document.getElementById('<%= uniqueNamespace %>inputPermissionsOptionsButton');
 
 				if (inputPermissionsOptionsButton) {
-					inputPermissionsOptionsButton.innerText = force ? '<%= LanguageUtil.get(request, "hide-options") %>' :'<%= LanguageUtil.get(request, "more-options") %>' ;
+					inputPermissionsOptionsButton.innerText = force ? '<%= HtmlUtil.escapeJS(LanguageUtil.get(request, "hide-options")) %>' : '<%= HtmlUtil.escapeJS(LanguageUtil.get(request, "more-options")) %>' ;
 					inputPermissionsOptionsButton.ariaExpanded = force;
 					inputPermissionsOptionsButton.classList = force ? "btn btn-secondary btn-sm mb-1 mt-3" : "btn btn-secondary btn-sm mb-5 mt-3";
 				}

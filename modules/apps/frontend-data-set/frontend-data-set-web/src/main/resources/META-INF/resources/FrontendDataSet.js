@@ -26,16 +26,16 @@ import ClayEmptyState from '@clayui/empty-state';
 
 import FrontendDataSetContext from './FrontendDataSetContext';
 import ManagementBar from './management_bar/ManagementBar';
-import CreationMenu from './management_bar/components/CreationMenu';
-import {FILTER_IMPLEMENTATIONS} from './management_bar/components/filters/Filter';
+import CreationMenu from './management_bar/controls/CreationMenu';
+import {FILTER_IMPLEMENTATIONS} from './management_bar/controls/filters/Filter';
 import Modal from './modal/Modal';
 import SidePanel from './side_panel/SidePanel';
 import filterCreationActions from './utils/actionItems/filterCreationActions';
 import EVENTS from './utils/eventsDefinitions';
+import getRandomId from './utils/getRandomId';
 import {
 	formatItemChanges,
 	getCurrentItemUpdates,
-	getRandomId,
 	loadData,
 } from './utils/index';
 import {logError} from './utils/logError';
@@ -119,9 +119,8 @@ const FrontendDataSet = ({
 		let initialVisibleFieldNames = {};
 
 		if (activeViewSettings) {
-			const {name: activeViewName, visibleFieldNames} = JSON.parse(
-				activeViewSettings
-			);
+			const {name: activeViewName, visibleFieldNames} =
+				JSON.parse(activeViewSettings);
 
 			if (activeViewName) {
 				const activeView = views.find(
@@ -154,16 +153,14 @@ const FrontendDataSet = ({
 						const filterImplementation =
 							FILTER_IMPLEMENTATIONS[filter.type];
 
-						filter.odataFilterString = filterImplementation.getOdataString(
-							filter
-						);
-						filter.selectedItemsLabel = filterImplementation.getSelectedItemsLabel(
-							filter
-						);
+						filter.odataFilterString =
+							filterImplementation.getOdataString(filter);
+						filter.selectedItemsLabel =
+							filterImplementation.getSelectedItemsLabel(filter);
 					}
 
 					return filter;
-			  })
+				})
 			: [];
 
 		const paginationDelta =
@@ -212,6 +209,9 @@ const FrontendDataSet = ({
 			[]
 		);
 
+		const activeSorts =
+			sorts.length > 1 ? sorts.filter((sort) => sort.active) : sorts;
+
 		return loadData(
 			apiURL,
 			currentURL,
@@ -219,7 +219,7 @@ const FrontendDataSet = ({
 			searchParam,
 			paginationDelta,
 			pageNumber,
-			sorts
+			activeSorts
 		);
 	}, [
 		apiURL,
@@ -236,6 +236,10 @@ const FrontendDataSet = ({
 	function updateDataSetItems(dataSetData) {
 		setItems(dataSetData.items);
 		setTotal(dataSetData.totalCount);
+
+		if (!dataSetData.items.length && dataSetData.totalCount > 0) {
+			setPageNumber(() => dataSetData.lastPage);
+		}
 	}
 
 	useEffect(() => {
@@ -250,15 +254,24 @@ const FrontendDataSet = ({
 							}))
 					: [],
 				onLoad: (bindingContexts) => {
-					const newFilters = bindingContexts.map(
-						({
-							binding: clientExtensionFilterImplementation,
-							context: filter,
-						}) => ({
-							...filter,
-							clientExtensionFilterImplementation,
-						})
-					);
+					const newFilters = initialFilters.map((filter) => {
+						const bindingContext = bindingContexts.find(
+							(bindingContext) =>
+								bindingContext.context
+									.clientExtensionFilterURL ===
+								filter.clientExtensionFilterURL
+						);
+
+						if (bindingContext) {
+							return {
+								...filter,
+								clientExtensionFilterImplementation:
+									bindingContext.binding,
+							};
+						}
+
+						return filter;
+					});
 
 					viewsDispatch({
 						type: VIEWS_ACTION_TYPES.UPDATE_FILTERS,
@@ -484,13 +497,12 @@ const FrontendDataSet = ({
 
 						const filteredCreationMenu = {};
 
-						filteredCreationMenu.primaryItems = filterCreationActions(
-							{
+						filteredCreationMenu.primaryItems =
+							filterCreationActions({
 								customActions:
 									currentCreationMenu?.primaryItems,
 								globalCollectionActions: data?.actions,
-							}
-						);
+							});
 
 						return filteredCreationMenu;
 					});
@@ -584,7 +596,7 @@ const FrontendDataSet = ({
 						}
 						imgSrc={
 							themeDisplay.getPathThemeImages() +
-							(emptyState?.image ?? '/states/search_state.gif')
+							(emptyState?.image ?? '/states/search_state.svg')
 						}
 						title={
 							emptyState?.title ??
@@ -728,7 +740,7 @@ const FrontendDataSet = ({
 				: {
 						...itemsChanges,
 						[itemKey]: {},
-				  };
+					};
 		});
 	}
 
@@ -896,7 +908,11 @@ const FrontendDataSet = ({
 						/>
 					)}
 
-					<div className="data-set-wrapper" ref={wrapperRef}>
+					<div
+						className="data-set-wrapper"
+						data-testid={`visualization-mode-${activeView.name}`}
+						ref={wrapperRef}
+					>
 						{style === 'default' && (
 							<div className="data-set data-set-inline">
 								{managementBar}

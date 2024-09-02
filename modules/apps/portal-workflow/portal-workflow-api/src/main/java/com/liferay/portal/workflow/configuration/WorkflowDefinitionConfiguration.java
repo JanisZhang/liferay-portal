@@ -29,4 +29,11 @@ public interface WorkflowDefinitionConfiguration {
 	)
 	public boolean companyAdministratorCanPublish();
 
+	@Meta.AD(
+		deflt = "false",
+		description = "notifications-must-honor-site-membership-rule-description",
+		name = "notifications-must-honor-site-membership-rule", required = false
+	)
+	public boolean preventNotifyingAncestorSites();
+
 }

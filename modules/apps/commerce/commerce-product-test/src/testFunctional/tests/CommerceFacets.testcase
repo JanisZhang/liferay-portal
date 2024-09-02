@@ -64,11 +64,10 @@ definition {
 				locator1 = "Search#FACET_TERM_FREQUENCIES",
 				value1 = 2);
 
-			AssertTextEquals.assertPartialText(
+			AssertElementNotPresent(
 				key_facetType = "Price Range Facet",
 				key_termValue = "$ 1,000.00+",
-				locator1 = "Search#FACET_TERM_FREQUENCIES",
-				value1 = 0);
+				locator1 = "Search#FACET_TERM_FREQUENCIES");
 		}
 
 		task ("And then the user is able to filter products using the first two ranges on the newly set Price Range Facet widget") {
@@ -270,7 +269,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -291,7 +290,7 @@ definition {
 			SearchFacets.clearFacet();
 
 			for (var searchFieldValue : list "48,112") {
-				FormViewBuilder.viewCheckboxNotChecked(
+				CommerceWidget.viewCheckboxNotChecked(
 					fieldName = "Option Facet",
 					fieldValue = ${searchFieldValue});
 			}
@@ -317,7 +316,7 @@ definition {
 			SearchFacets.clearFacet();
 
 			for (var searchFieldValue : list "Steel,Rubber") {
-				FormViewBuilder.viewCheckboxNotChecked(
+				CommerceWidget.viewCheckboxNotChecked(
 					fieldName = "Specification Facet",
 					fieldValue = ${searchFieldValue});
 			}
@@ -343,7 +342,7 @@ definition {
 			SearchFacets.clearFacet();
 
 			for (var searchFieldValue : list "$ 0.00 - $ 49.99,$ 50.00 - $ 99.99") {
-				FormViewBuilder.viewCheckboxNotChecked(
+				CommerceWidget.viewCheckboxNotChecked(
 					fieldName = "Price Range Facet",
 					fieldValue = ${searchFieldValue});
 			}
@@ -384,7 +383,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -598,7 +597,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -675,7 +674,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -850,7 +849,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -908,7 +907,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -992,7 +991,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1058,7 +1057,7 @@ definition {
 		}
 
 		task ("And the term count of the other values doesn't change either") {
-			for (var priceRangeValueAndCount : list "$ 0.00 - $ 49.99:(21),$ 100.00 - $ 199.99:(10),$ 200.00 - $ 499.99:(4),$ 500.00 - $ 999.99:(2),000.00+:(0)") {
+			for (var priceRangeValueAndCount : list "$ 0.00 - $ 49.99:(21),$ 100.00 - $ 199.99:(10),$ 200.00 - $ 499.99:(4),$ 500.00 - $ 999.99:(2)") {
 				var priceRangeValue = StringUtil.extractFirst(${priceRangeValueAndCount}, ":");
 				var priceRangeCount = StringUtil.extractLast(${priceRangeValueAndCount}, ":");
 
@@ -1075,7 +1074,7 @@ definition {
 		}
 
 		task ("Then the term count of all values doesn't change") {
-			for (var priceRangeValueAndCount : list "$ 0.00 - $ 49.99:(21),$ 50.00 - $ 99.99:(12),$ 100.00 - $ 199.99:(10),$ 200.00 - $ 499.99:(4),$ 500.00 - $ 999.99:(2),000.00+:(0)") {
+			for (var priceRangeValueAndCount : list "$ 0.00 - $ 49.99:(21),$ 50.00 - $ 99.99:(12),$ 100.00 - $ 199.99:(10),$ 200.00 - $ 499.99:(4),$ 500.00 - $ 999.99:(2)") {
 				var priceRangeValue = StringUtil.extractFirst(${priceRangeValueAndCount}, ":");
 				var priceRangeCount = StringUtil.extractLast(${priceRangeValueAndCount}, ":");
 
@@ -1085,6 +1084,11 @@ definition {
 					locator1 = "Search#FACET_TERM_FREQUENCIES",
 					value1 = ${priceRangeCount});
 			}
+
+			AssertElementNotPresent(
+				key_facetType = "Price Range Facet",
+				key_termValue = "$ 1,000.00+",
+				locator1 = "Search#FACET_TERM_FREQUENCIES");
 		}
 	}
 

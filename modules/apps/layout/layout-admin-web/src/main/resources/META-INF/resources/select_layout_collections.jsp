@@ -45,21 +45,20 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-collection"));
 	</c:choose>
 </clay:container-fluid>
 
-<aui:script require="frontend-js-web/index as frontendJsWeb">
-	var {delegate} = frontendJsWeb;
-
+<aui:script sandbox="<%= true %>">
 	var collections = document.getElementById('<portlet:namespace />collections');
 
-	var selectLayoutMasterLayoutActionOptionQueryClickHandler = delegate(
-		collections,
-		'click',
-		'.select-collection-action-option',
-		(event) => {
-			Liferay.Util.navigate(
-				event.delegateTarget.dataset.selectLayoutMasterLayoutUrl
-			);
-		}
-	);
+	var selectLayoutMasterLayoutActionOptionQueryClickHandler =
+		Liferay.Util.delegate(
+			collections,
+			'click',
+			'.select-collection-action-option',
+			(event) => {
+				Liferay.Util.navigate(
+					event.delegateTarget.dataset.selectLayoutMasterLayoutUrl
+				);
+			}
+		);
 
 	function handleDestroyPortlet() {
 		selectLayoutMasterLayoutActionOptionQueryClickHandler.dispose();

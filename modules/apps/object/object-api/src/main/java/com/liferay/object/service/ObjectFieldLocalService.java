@@ -104,9 +104,9 @@ public interface ObjectFieldLocalService
 			long listTypeDefinitionId, long objectDefinitionId,
 			String businessType, String dbColumnName, String dbTableName,
 			String dbType, boolean indexed, boolean indexedAsKeyword,
-			String indexedLanguageId, Map<Locale, String> labelMap, String name,
-			String readOnly, String readOnlyConditionExpression,
-			boolean required, boolean state,
+			String indexedLanguageId, Map<Locale, String> labelMap,
+			boolean localized, String name, String readOnly,
+			String readOnlyConditionExpression, boolean required, boolean state,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException;
 
@@ -116,9 +116,9 @@ public interface ObjectFieldLocalService
 			long listTypeDefinitionId, long objectDefinitionId,
 			String businessType, String dbColumnName, String dbTableName,
 			String dbType, boolean indexed, boolean indexedAsKeyword,
-			String indexedLanguageId, Map<Locale, String> labelMap, String name,
-			String readOnly, String readOnlyConditionExpression,
-			boolean required, boolean state,
+			String indexedLanguageId, Map<Locale, String> labelMap,
+			boolean localized, String name, String readOnly,
+			String readOnlyConditionExpression, boolean required, boolean state,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException;
 
@@ -366,6 +366,10 @@ public interface ObjectFieldLocalService
 	public List<ObjectField> getObjectFields(
 		long objectDefinitionId, String dbTableName);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectField> getObjectFieldsByBusinessType(
+		long objectDefinitionId, String businessType);
+
 	/**
 	 * Returns the number of object fields.
 	 *
@@ -429,6 +433,9 @@ public interface ObjectFieldLocalService
 
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectField updateRequired(long objectFieldId, boolean required)
+		throws PortalException;
+
+	public void updateUserId(long companyId, long oldUserId, long newUserId)
 		throws PortalException;
 
 	public void validateExternalReferenceCode(

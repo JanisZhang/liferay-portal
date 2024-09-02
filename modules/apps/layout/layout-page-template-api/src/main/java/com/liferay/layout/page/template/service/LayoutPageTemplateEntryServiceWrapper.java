@@ -31,26 +31,29 @@ public class LayoutPageTemplateEntryServiceWrapper
 
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
-			long groupId, long layoutPageTemplateCollectionId, long classNameId,
+			String externalReferenceCode, long groupId,
+			long layoutPageTemplateCollectionId, long classNameId,
 			long classTypeId, String name, long masterLayoutPlid, int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-			groupId, layoutPageTemplateCollectionId, classNameId, classTypeId,
-			name, masterLayoutPlid, status, serviceContext);
+			externalReferenceCode, groupId, layoutPageTemplateCollectionId,
+			classNameId, classTypeId, name, masterLayoutPlid, status,
+			serviceContext);
 	}
 
 	@Override
 	public LayoutPageTemplateEntry addLayoutPageTemplateEntry(
-			long groupId, long layoutPageTemplateCollectionId, String name,
-			int type, long masterLayoutPlid, int status,
+			String externalReferenceCode, long groupId,
+			long layoutPageTemplateCollectionId, String name, int type,
+			long masterLayoutPlid, int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-			groupId, layoutPageTemplateCollectionId, name, type,
-			masterLayoutPlid, status, serviceContext);
+			externalReferenceCode, groupId, layoutPageTemplateCollectionId,
+			name, type, masterLayoutPlid, status, serviceContext);
 	}
 
 	@Override
@@ -98,6 +101,15 @@ public class LayoutPageTemplateEntryServiceWrapper
 	}
 
 	@Override
+	public LayoutPageTemplateEntry deleteLayoutPageTemplateEntry(
+			String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutPageTemplateEntryService.deleteLayoutPageTemplateEntry(
+			externalReferenceCode, groupId);
+	}
+
+	@Override
 	public LayoutPageTemplateEntry fetchDefaultLayoutPageTemplateEntry(
 		long groupId, int type, int status) {
 
@@ -121,6 +133,16 @@ public class LayoutPageTemplateEntryServiceWrapper
 
 		return _layoutPageTemplateEntryService.fetchLayoutPageTemplateEntry(
 			layoutPageTemplateEntryId);
+	}
+
+	@Override
+	public LayoutPageTemplateEntry fetchLayoutPageTemplateEntry(
+			long groupId, long layoutPageTemplateCollectionId, String name,
+			int type)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutPageTemplateEntryService.fetchLayoutPageTemplateEntry(
+			groupId, layoutPageTemplateCollectionId, name, type);
 	}
 
 	@Override
@@ -182,6 +204,14 @@ public class LayoutPageTemplateEntryServiceWrapper
 
 	@Override
 	public java.util.List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long groupId, int status) {
+
+		return _layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
+			groupId, status);
+	}
+
+	@Override
+	public java.util.List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
 		long groupId, int type, int status, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator
 			<LayoutPageTemplateEntry> orderByComparator) {
@@ -218,6 +248,14 @@ public class LayoutPageTemplateEntryServiceWrapper
 
 		return _layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
 			groupId, types, start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long groupId, long layoutPageTemplateCollectionId, int status) {
+
+		return _layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
+			groupId, layoutPageTemplateCollectionId, status);
 	}
 
 	@Override
@@ -572,6 +610,17 @@ public class LayoutPageTemplateEntryServiceWrapper
 
 		return _layoutPageTemplateEntryService.getLayoutPageTemplateEntry(
 			groupId, layoutPageTemplateEntryKey);
+	}
+
+	@Override
+	public LayoutPageTemplateEntry
+			getLayoutPageTemplateEntryByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutPageTemplateEntryService.
+			getLayoutPageTemplateEntryByExternalReferenceCode(
+				externalReferenceCode, groupId);
 	}
 
 	/**

@@ -202,6 +202,7 @@ public class HypersonicDB extends BaseDB {
 		runSQL(connection, sb.toString());
 	}
 
+	@Override
 	protected String getCopyTableStructureSQL(
 		String tableName, String newTableName) {
 
@@ -228,16 +229,22 @@ public class HypersonicDB extends BaseDB {
 		return _HYPERSONIC;
 	}
 
+	@Override
 	protected boolean isSupportsDDLRollback() {
 		return false;
 	}
 
+	@Override
 	protected boolean isSupportsDuplicatedIndexName() {
 		return false;
 	}
 
 	@Override
 	protected String reword(String data) throws IOException {
+		if (Validator.isNull(data)) {
+			return null;
+		}
+
 		try (UnsyncBufferedReader unsyncBufferedReader =
 				new UnsyncBufferedReader(new UnsyncStringReader(data))) {
 

@@ -472,6 +472,51 @@ public class CTCollection implements Serializable {
 	@JsonIgnore
 	private Supplier<Status> _statusSupplier;
 
+	@Schema(
+		description = "Info on when a publication was last published or modified."
+	)
+	public String getStatusMessage() {
+		if (_statusMessageSupplier != null) {
+			statusMessage = _statusMessageSupplier.get();
+
+			_statusMessageSupplier = null;
+		}
+
+		return statusMessage;
+	}
+
+	public void setStatusMessage(String statusMessage) {
+		this.statusMessage = statusMessage;
+
+		_statusMessageSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setStatusMessage(
+		UnsafeSupplier<String, Exception> statusMessageUnsafeSupplier) {
+
+		_statusMessageSupplier = () -> {
+			try {
+				return statusMessageUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "Info on when a publication was last published or modified."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String statusMessage;
+
+	@JsonIgnore
+	private Supplier<String> _statusMessageSupplier;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -650,6 +695,22 @@ public class CTCollection implements Serializable {
 			sb.append(String.valueOf(status));
 		}
 
+		String statusMessage = getStatusMessage();
+
+		if (statusMessage != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"statusMessage\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(statusMessage));
+
+			sb.append("\"");
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -702,7 +763,10 @@ public class CTCollection implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

@@ -107,13 +107,17 @@ public class ProductSpecificationUtil {
 		if (cpSpecificationOption == null) {
 			cpSpecificationOption =
 				cpSpecificationOptionService.addCPSpecificationOption(
+					null,
 					GetterUtil.get(
 						productSpecification.getOptionCategoryId(), 0),
+					0,
 					LanguageUtils.getLocalizedMap(
 						productSpecification.getLabel()),
 					LanguageUtils.getLocalizedMap(
 						productSpecification.getLabel()),
 					false, productSpecification.getSpecificationKey(),
+					GetterUtil.getDouble(
+						productSpecification.getSpecificationPriority()),
 					serviceContext);
 		}
 

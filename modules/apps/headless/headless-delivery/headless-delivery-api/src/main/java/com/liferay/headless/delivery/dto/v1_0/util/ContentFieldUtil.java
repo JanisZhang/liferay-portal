@@ -87,18 +87,33 @@ public class ContentFieldUtil {
 						ddmFormFieldValue.getValue()));
 				setContentFieldValue_i18n(
 					() -> {
-						if (!dtoConverterContext.isAcceptAllLanguages()) {
+						Value value = ddmFormFieldValue.getValue();
+
+						if (!dtoConverterContext.isAcceptAllLanguages() ||
+							(value == null)) {
+
 							return null;
 						}
 
 						Map<String, ContentFieldValue> map = new HashMap<>();
 
-						Value value = ddmFormFieldValue.getValue();
+						Locale defaultLocale = value.getDefaultLocale();
 
 						Map<Locale, String> values = value.getValues();
 
 						if (values == null) {
 							values = Collections.emptyMap();
+						}
+
+						if (!values.containsKey(defaultLocale)) {
+							map.put(
+								LocaleUtil.toBCP47LanguageId(defaultLocale),
+								_getContentFieldValue(
+									ddmFormField, dlAppService, dlURLHelper,
+									dtoConverterContext, journalArticleService,
+									layoutLocalService, defaultLocale,
+									String.valueOf(
+										value.getString(defaultLocale))));
 						}
 
 						for (Map.Entry<Locale, String> entry :
@@ -152,8 +167,25 @@ public class ContentFieldUtil {
 		try {
 			UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
-			if (Objects.equals(DDMFormFieldType.DATE, ddmFormField.getType()) ||
-				Objects.equals(ddmFormField.getType(), "date")) {
+			if (Objects.equals(
+					DDMFormFieldType.CHECKBOX, ddmFormField.getType())) {
+
+				return new ContentFieldValue() {
+					{
+						setData(
+							() -> {
+								if (Validator.isNull(valueString)) {
+									return Boolean.FALSE.toString();
+								}
+
+								return valueString;
+							});
+					}
+				};
+			}
+			else if (Objects.equals(
+						DDMFormFieldType.DATE, ddmFormField.getType()) ||
+					 Objects.equals(ddmFormField.getType(), "date")) {
 
 				return new ContentFieldValue() {
 					{
@@ -305,17 +337,21 @@ public class ContentFieldUtil {
 
 								String alt = jsonObject.getString("alt");
 
-								if (Validator.isNotNull(alt) &&
-									JSONUtil.isJSONObject(alt)) {
+								contentDocument.setDescription(
+									() -> {
+										if (Validator.isNotNull(alt) &&
+											JSONUtil.isJSONObject(alt)) {
 
-									JSONObject altJSONObject =
-										jsonObject.getJSONObject("alt");
+											JSONObject altJSONObject =
+												jsonObject.getJSONObject("alt");
 
-									alt = altJSONObject.getString(
-										LocaleUtil.toLanguageId(locale));
-								}
+											return altJSONObject.getString(
+												LocaleUtil.toLanguageId(
+													locale));
+										}
 
-								contentDocument.setDescription(alt);
+										return alt;
+									});
 
 								return contentDocument;
 							});
@@ -450,6 +486,10 @@ public class ContentFieldUtil {
 
 				LocalizedValue selectedOptionLabelLocalizedValue =
 					ddmFormFieldOptions.getOptionLabels(valueString);
+
+				if (selectedOptionLabelLocalizedValue == null) {
+					return new ContentFieldValue();
+				}
 
 				return new ContentFieldValue() {
 					{

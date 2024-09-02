@@ -12,8 +12,6 @@ import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useMemo, useRef} from 'react';
 
-import {addMappingFields} from '../../../../../app/actions/index';
-import {fromControlsId} from '../../../../../app/components/layout_data_items/Collection';
 import {ITEM_ACTIVATION_ORIGINS} from '../../../../../app/config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../../../../../app/config/constants/itemTypes';
 import {
@@ -26,7 +24,7 @@ import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../app/config/constants/layout
 import {VIEWPORT_SIZES} from '../../../../../app/config/constants/viewportSizes';
 import {
 	useActivationOrigin,
-	useActiveItemId,
+	useActiveItemIds,
 	useSelectItem,
 } from '../../../../../app/contexts/ControlsContext';
 import {
@@ -37,13 +35,16 @@ import {
 	useSetMovementText,
 } from '../../../../../app/contexts/KeyboardMovementContext';
 import {
+	useEditedNodeId,
+	useSetEditedNodeId,
+} from '../../../../../app/contexts/ShortcutContext';
+import {
 	useDispatch,
 	useSelector,
 	useSelectorCallback,
 	useSelectorRef,
 } from '../../../../../app/contexts/StoreContext';
 import selectCanUpdatePageStructure from '../../../../../app/selectors/selectCanUpdatePageStructure';
-import CollectionService from '../../../../../app/services/CollectionService';
 import moveItem from '../../../../../app/thunks/moveItem';
 import updateItemConfig from '../../../../../app/thunks/updateItemConfig';
 import canBeRenamed from '../../../../../app/utils/canBeRenamed';
@@ -69,39 +70,15 @@ import {formIsUnavailable} from '../../../../../app/utils/formIsUnavailable';
 import getFirstControlsId from '../../../../../app/utils/getFirstControlsId';
 import getMappingFieldsKey from '../../../../../app/utils/getMappingFieldsKey';
 import isItemWidget from '../../../../../app/utils/isItemWidget';
+import loadCollectionFields from '../../../../../app/utils/loadCollectionFields';
 
 const HOVER_EXPAND_DELAY = 1000;
 
-const loadCollectionFields = (
-	dispatch,
-	itemType,
-	itemSubtype,
-	mappingFieldsKey
-) => {
-	CollectionService.getCollectionMappingFields({
-		itemSubtype: itemSubtype || '',
-		itemType,
-	})
-		.then((response) => {
-			dispatch(
-				addMappingFields({
-					fields: response.mappingFields,
-					key: mappingFieldsKey,
-				})
-			);
-		})
-		.catch((error) => {
-			if (process.env.NODE_ENV === 'development') {
-				console.error(error);
-			}
-		});
-};
-
-export default function StructureTreeNode({node, setEditingNodeId}) {
+export default function StructureTreeNode({node}) {
 	const activationOrigin = useActivationOrigin();
-	const activeItemId = useActiveItemId();
+	const activeItemIds = useActiveItemIds();
 	const dispatch = useDispatch();
-	const isSelected = node.id === fromControlsId(activeItemId);
+	const isSelected = activeItemIds.includes(node.id);
 
 	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
 	const layoutData = useSelector((state) => state.layoutData);
@@ -121,6 +98,7 @@ export default function StructureTreeNode({node, setEditingNodeId}) {
 
 			const {
 				classNameId,
+				fieldName,
 				itemSubtype,
 				itemType,
 				key: collectionKey,
@@ -128,10 +106,18 @@ export default function StructureTreeNode({node, setEditingNodeId}) {
 
 			const key = classNameId
 				? getMappingFieldsKey(item.config.collection)
-				: collectionKey;
+				: fieldName
+					? `${collectionKey}-${fieldName}`
+					: collectionKey;
 
 			if (!mappingFields[key]) {
-				loadCollectionFields(dispatch, itemType, itemSubtype, key);
+				loadCollectionFields(
+					dispatch,
+					fieldName,
+					itemType,
+					itemSubtype,
+					key
+				);
 			}
 		}
 	}, [
@@ -149,7 +135,6 @@ export default function StructureTreeNode({node, setEditingNodeId}) {
 			isActive={node.activable && isSelected}
 			isMapped={node.mapped}
 			node={node}
-			setEditingNodeId={setEditingNodeId}
 		/>
 	);
 }
@@ -172,7 +157,6 @@ function StructureTreeNodeContent({
 	isActive,
 	isMapped,
 	node,
-	setEditingNodeId,
 }) {
 	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
 	const dispatch = useDispatch();
@@ -182,6 +166,7 @@ function StructureTreeNodeContent({
 		(state) => state.selectedViewportSize
 	);
 	const selectItem = useSelectItem();
+	const setEditedNodeId = useSetEditedNodeId();
 	const setText = useSetMovementText();
 
 	const layoutDataRef = useSelectorRef((store) => store.layoutData);
@@ -201,7 +186,7 @@ function StructureTreeNodeContent({
 		[layoutDataRef, node]
 	);
 
-	const fragmentEntryType = useSelectorCallback(
+	const {fieldTypes, fragmentEntryType} = useSelectorCallback(
 		(state) => {
 			if (!node.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
 				return null;
@@ -210,9 +195,13 @@ function StructureTreeNodeContent({
 			const fragmentEntryLink =
 				state.fragmentEntryLinks[item.config?.fragmentEntryLinkId];
 
-			return fragmentEntryLink?.fragmentEntryType ?? null;
+			return {
+				fieldTypes: fragmentEntryLink?.fieldTypes ?? [],
+				fragmentEntryType: fragmentEntryLink?.fragmentEntryType ?? null,
+			};
 		},
-		[item]
+		[item],
+		deepEqual
 	);
 
 	const isWidget = useSelectorCallback(
@@ -226,7 +215,7 @@ function StructureTreeNodeContent({
 	);
 
 	const {handlerRef, isDraggingSource: itemIsDraggingSource} = useDragItem(
-		{...item, fragmentEntryType, isWidget},
+		{...item, fieldTypes, fragmentEntryType, isWidget},
 		(parentItemId, position) =>
 			dispatch(
 				moveItem({
@@ -262,12 +251,12 @@ function StructureTreeNodeContent({
 			dispatch(
 				updateItemConfig({
 					itemConfig: {name: trimmedName},
-					itemId: node.id,
+					itemIds: [node.id],
 				})
 			);
 		}
 
-		setEditingNodeId(null);
+		setEditedNodeId(null);
 		setText(Liferay.Language.get('name-saved'));
 	};
 
@@ -292,7 +281,7 @@ function StructureTreeNodeContent({
 	useEffect(() => {
 		if (
 			item.itemId === keyboardMovementTargetId ||
-			(activationOrigin === ITEM_ACTIVATION_ORIGINS.pageEditor &&
+			(activationOrigin === ITEM_ACTIVATION_ORIGINS.layout &&
 				nodeRef.current &&
 				isActive)
 		) {
@@ -341,8 +330,6 @@ function StructureTreeNodeContent({
 				'drag-over-top':
 					isValidDrop && dropTargetPosition === TARGET_POSITIONS.TOP,
 				'dragged': isDraggingSource,
-				'font-weight-semi-bold':
-					node.activable && node.itemType !== ITEM_TYPES.editable,
 			})}
 			ref={targetRef}
 		>
@@ -366,8 +353,9 @@ function StructureTreeNodeContent({
 				}}
 				onDoubleClick={(event) => {
 					event.stopPropagation();
+
 					if (canBeRenamed(item)) {
-						setEditingNodeId(item.itemId);
+						setEditedNodeId(item.itemId);
 					}
 				}}
 				ref={
@@ -380,6 +368,7 @@ function StructureTreeNodeContent({
 
 			<MoveButton
 				canUpdate={canUpdatePageStructure}
+				fieldTypes={fieldTypes}
 				fragmentEntryType={fragmentEntryType}
 				isWidget={isWidget}
 				node={node}
@@ -389,11 +378,11 @@ function StructureTreeNodeContent({
 			/>
 
 			<NameLabel
-				editingName={node.editingName}
 				hidden={node.hidden || node.hiddenAncestor}
 				icon={node.icon}
 				isMapped={isMapped}
 				isMasterItem={node.isMasterItem}
+				itemId={node.id}
 				name={node.name}
 				nameInfo={node.nameInfo}
 				onEditName={onEditName}
@@ -421,11 +410,11 @@ function StructureTreeNodeContent({
 const NameLabel = React.forwardRef(
 	(
 		{
-			editingName,
 			hidden,
 			icon,
 			isMapped,
 			isMasterItem,
+			itemId,
 			name: defaultName,
 			nameInfo,
 			onEditName,
@@ -434,9 +423,11 @@ const NameLabel = React.forwardRef(
 		},
 		ref
 	) => {
+		const editedNodeId = useEditedNodeId();
 		const inputRef = useRef();
-
 		const [name, setName] = useControlledState(defaultName);
+
+		const editingName = editedNodeId === itemId;
 
 		useEffect(() => {
 			if (editingName && inputRef.current) {
@@ -449,9 +440,12 @@ const NameLabel = React.forwardRef(
 				className={classNames(
 					'page-editor__page-structure__tree-node__name d-flex flex-grow-1 align-items-center',
 					{
-						'page-editor__page-structure__tree-node__name--hidden': hidden,
-						'page-editor__page-structure__tree-node__name--mapped': isMapped,
-						'page-editor__page-structure__tree-node__name--master-item': isMasterItem,
+						'page-editor__page-structure__tree-node__name--hidden':
+							hidden,
+						'page-editor__page-structure__tree-node__name--mapped':
+							isMapped,
+						'page-editor__page-structure__tree-node__name--master-item':
+							isMasterItem,
 					}
 				)}
 				ref={ref}
@@ -539,6 +533,7 @@ const NameLabel = React.forwardRef(
 
 const MoveButton = ({
 	canUpdate,
+	fieldTypes,
 	fragmentEntryType,
 	isWidget,
 	node,
@@ -584,6 +579,7 @@ const MoveButton = ({
 			onBlur={(event) => event.stopPropagation()}
 			onClick={() =>
 				setMovementSource({
+					fieldTypes,
 					fragmentEntryType,
 					icon: node.icon,
 					isWidget,
@@ -614,6 +610,7 @@ const MoveButton = ({
 
 function computeHover({
 	dispatch,
+	fragmentEntryLinksRef,
 	layoutDataRef,
 	monitor,
 	siblingItem = null,
@@ -643,11 +640,8 @@ function computeHover({
 	// Apparently valid drag, calculate vertical position and
 	// nesting validation
 
-	const [
-		targetPositionWithMiddle,
-		targetPositionWithoutMiddle,
-		elevation,
-	] = getItemPosition(siblingItem || targetItem, monitor, targetRefs);
+	const [targetPositionWithMiddle, targetPositionWithoutMiddle, elevation] =
+		getItemPosition(siblingItem || targetItem, monitor, targetRefs);
 
 	// Drop inside target
 
@@ -686,7 +680,12 @@ function computeHover({
 		return dispatch({
 			dropItem: sourceItem,
 			dropTargetItem: targetItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
+			droppable: checkAllowedChild(
+				sourceItem,
+				targetItem,
+				layoutDataRef,
+				fragmentEntryLinksRef
+			),
 			elevate: null,
 			targetPositionWithMiddle,
 			targetPositionWithoutMiddle,
@@ -702,7 +701,12 @@ function computeHover({
 		return dispatch({
 			dropItem: sourceItem,
 			dropTargetItem: siblingItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
+			droppable: checkAllowedChild(
+				sourceItem,
+				targetItem,
+				layoutDataRef,
+				fragmentEntryLinksRef
+			),
 			elevate: true,
 			targetPositionWithMiddle,
 			targetPositionWithoutMiddle,
@@ -718,7 +722,7 @@ function computeHover({
 				? {
 						...layoutDataRef.current.items[target.parentId],
 						collectionItemIndex: target.collectionItemIndex,
-				  }
+					}
 				: null;
 
 			if (parent) {
@@ -745,13 +749,13 @@ function computeHover({
 			return [null, null];
 		};
 
-		const [elevatedTargetItem, siblingItem] = getElevatedTargetItem(
-			targetItem
-		);
+		const [elevatedTargetItem, siblingItem] =
+			getElevatedTargetItem(targetItem);
 
 		if (elevatedTargetItem && elevatedTargetItem !== targetItem) {
 			return computeHover({
 				dispatch,
+				fragmentEntryLinksRef,
 				layoutDataRef,
 				monitor,
 				siblingItem,
@@ -775,15 +779,13 @@ function getItemPosition(item, monitor, targetRefs) {
 	const clientOffsetY = monitor.getClientOffset().y;
 	const hoverBoundingRect = targetRef.current.getBoundingClientRect();
 
-	const [
-		targetPositionWithMiddle,
-		targetPositionWithoutMiddle,
-	] = getDropTargetPosition(
-		clientOffsetY,
-		ELEVATION_BORDER_SIZE,
-		getTargetPositions(ORIENTATIONS.vertical),
-		getTargetData(hoverBoundingRect, ORIENTATIONS.vertical)
-	);
+	const [targetPositionWithMiddle, targetPositionWithoutMiddle] =
+		getDropTargetPosition(
+			clientOffsetY,
+			ELEVATION_BORDER_SIZE,
+			getTargetPositions(ORIENTATIONS.vertical),
+			getTargetData(hoverBoundingRect, ORIENTATIONS.vertical)
+		);
 
 	const elevation = targetPositionWithMiddle !== TARGET_POSITIONS.MIDDLE;
 

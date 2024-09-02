@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {useContext} from 'react';
+import {useState} from 'react';
 import {useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
+import JiraLink from '~/components/JiraLink';
 
 import Avatar from '../../../components/Avatar';
 import AssignToMe from '../../../components/Avatar/AssignToMe';
@@ -15,16 +16,15 @@ import Loading from '../../../components/Loading';
 import StatusBadge from '../../../components/StatusBadge';
 import {StatusBadgeType} from '../../../components/StatusBadge/StatusBadge';
 import QATable from '../../../components/Table/QATable';
-import {ApplicationPropertiesContext} from '../../../context/ApplicationPropertiesContext';
 import i18n from '../../../i18n';
 import {
 	MessageBoardMessage,
-	TestraySubTask,
-	TestraySubTaskIssue,
+	TestraySubtask,
 	TestrayTask,
 } from '../../../services/rest';
-import {testraySubTaskImpl} from '../../../services/rest/TestraySubtask';
+import {testraySubtaskImpl} from '../../../services/rest/TestraySubtask';
 import {getTimeFromNow} from '../../../util/date';
+import SubtaskAlertBar from './SubtaskAlertBar';
 import SubtasksCaseResults from './SubtaskCaseResults';
 import SubtaskHeaderActions from './SubtaskHeaderActions';
 
@@ -33,8 +33,7 @@ type OutletContext = {
 		mbMessage: MessageBoardMessage;
 		mergedSubtaskNames: string;
 		splitSubtaskNames: string;
-		subtaskIssues: TestraySubTaskIssue[];
-		testraySubtask: TestraySubTask & {
+		testraySubtask: TestraySubtask & {
 			actions: {
 				[key: string]: string;
 			};
@@ -42,19 +41,17 @@ type OutletContext = {
 		testrayTask: TestrayTask;
 	};
 	mutate: {
-		mutateSubtask: KeyedMutator<TestraySubTask>;
+		mutateSubtask: KeyedMutator<TestraySubtask>;
 	};
 };
 
 const Subtasks = () => {
-	const {jiraBaseURL} = useContext(ApplicationPropertiesContext);
-
+	const [forceRefetch, setForceRefetch] = useState<number>(0);
 	const {
 		data: {
 			mbMessage,
 			mergedSubtaskNames,
 			splitSubtaskNames,
-			subtaskIssues,
 			testraySubtask,
 		},
 		mutate: {mutateSubtask},
@@ -68,7 +65,11 @@ const Subtasks = () => {
 
 	return (
 		<>
-			{hasSubtaskEditPermission && <SubtaskHeaderActions />}
+			{!hasSubtaskEditPermission || !!testraySubtask.mergedToSubtask ? (
+				<SubtaskAlertBar testraySubtask={testraySubtask} />
+			) : (
+				<SubtaskHeaderActions setForceRefetch={setForceRefetch} />
+			)}
 
 			<Container
 				className="pb-6"
@@ -83,10 +84,10 @@ const Subtasks = () => {
 									value: (
 										<StatusBadge
 											type={
-												testraySubtask.dueStatus.key.toLowerCase() as StatusBadgeType
+												testraySubtask.dueStatus?.key.toLowerCase() as StatusBadgeType
 											}
 										>
-											{testraySubtask.dueStatus.name}
+											{testraySubtask.dueStatus?.name}
 										</StatusBadge>
 									),
 								},
@@ -101,15 +102,22 @@ const Subtasks = () => {
 									) : (
 										<AssignToMe
 											onClick={() =>
-												testraySubTaskImpl
+												testraySubtaskImpl
 													.assignToMe(testraySubtask)
 													.then(mutateSubtask as any)
+													.then(() =>
+														setForceRefetch(
+															new Date().getTime()
+														)
+													)
 											}
 										/>
 									),
+
 									visible:
-										!!testraySubtask.user ||
-										hasSubtaskEditPermission,
+										!testraySubtask.mergedToSubtask &&
+										(!!testraySubtask.user ||
+											hasSubtaskEditPermission),
 								},
 								{
 									title: i18n.translate('updated'),
@@ -119,19 +127,11 @@ const Subtasks = () => {
 								},
 								{
 									title: i18n.translate('issues'),
-									value: subtaskIssues.map(
-										(
-											subtaskIssues: TestraySubTaskIssue,
-											index: number
-										) => (
-											<a
-												className="mr-2"
-												href={`${jiraBaseURL}/browse/${subtaskIssues?.issue?.name}`}
-												key={index}
-											>
-												{subtaskIssues?.issue?.name}
-											</a>
-										)
+									value: (
+										<JiraLink
+											displayViewInJira={false}
+											issue={testraySubtask.issues}
+										/>
 									),
 								},
 								{
@@ -193,7 +193,7 @@ const Subtasks = () => {
 			</Container>
 
 			<Container className="mt-5" title={i18n.translate('tests')}>
-				<SubtasksCaseResults />
+				<SubtasksCaseResults forceRefetch={forceRefetch} />
 			</Container>
 		</>
 	);

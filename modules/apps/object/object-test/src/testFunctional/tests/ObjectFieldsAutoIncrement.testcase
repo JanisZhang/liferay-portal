@@ -1,7 +1,6 @@
-@component-name = "portal-object"
+@component-name = "portal-bpm"
 definition {
 
-	property custom.properties = "feature.flag.LPS-196724=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Object";
@@ -143,7 +142,7 @@ definition {
 
 		task ("and Given the object entry is exported") {
 			ImportExport.exportAndUnzipFile(
-				entityType = "C_Shoe (v1_0 - Liferay Object REST)",
+				entityType = "Shoe (v1.0 - Liferay Object REST)",
 				exportFileFormat = "JSON");
 		}
 
@@ -165,7 +164,7 @@ definition {
 				locator1 = "TextInput#FILE",
 				value1 = ${filePath});
 
-			ImportExport.selectEntity(entityType = "C_Shoe (v1_0 - Liferay Object REST)");
+			ImportExport.selectEntity(entityType = "Shoe (v1.0 - Liferay Object REST)");
 
 			WaitForElementPresent(locator1 = "ImportExport#IMPORT_MAPPING_HEADER");
 		}

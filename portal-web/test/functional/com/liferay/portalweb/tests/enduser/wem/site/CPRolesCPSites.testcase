@@ -1,11 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-site-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Roles";
 	property testray.main.component.name = "Sites Administration";
 
 	static var randomSiteName = StringUtil.randomString(8);
@@ -55,7 +54,7 @@ definition {
 		}
 
 		task ("Add a new regular role") {
-			JSONRole.addRegularRole(roleTitle = ${randomRoleKey});
+			JSONRole.addRegularRole(roleKey = ${randomRoleKey});
 		}
 	}
 
@@ -116,7 +115,6 @@ definition {
 	@priority = 5
 	test SearchParenetAndChildSiteAndViewPermissions {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training";
 
 		var siteName = StringUtil.randomString(8);
 

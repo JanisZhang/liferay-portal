@@ -1,11 +1,11 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-12192=true${line.separator}jsonws.web.service.paths.excludes=";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-	property testray.main.component.name = "Order Management";
+	property testray.main.component.name = "Users and Organizations";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
@@ -53,112 +53,6 @@ definition {
 		}
 
 		CommerceConfiguration.commerceTearDown();
-	}
-
-	@description = "COMMERCE-9403. Verify new users can be added using the Organization Management widget."
-	@priority = 5
-	test CanAddNewUserUsingWidget {
-		property portal.acceptance = "true";
-
-		task ("Setup: Add an organization") {
-			JSONOrganization.addOrganization(
-				organizationName = "Organization 1",
-				organizationSite = "false");
-		}
-
-		task ("Given the Organization Management Widget Page is reached and the account svg node is reached") {
-			Navigator.openSitePage(
-				pageName = "Organization Management Widget Page",
-				siteName = "Minium");
-
-			CommerceWidget.gotoSVGNode(
-				key_nodeName = "Organization 1",
-				key_orgType = "user");
-		}
-
-		task ("Then the admin is able to create and add a new user to the Organization by adding the user email and selecting the organization role") {
-			CommerceWidget.addUserViaOrganizationManagementWidget(
-				key_roleOption = "Organization User",
-				value = "user@liferay.com");
-
-			CommerceWidget.assertOrganizationManagementWigetTitlePresent(key_nodeName = "user@life");
-		}
-
-		task ("Then the user is present in the admin console") {
-			CommerceWidget.assertOrganizationManagementWigetTitlePresent(key_nodeName = "user@life");
-		}
-	}
-
-	@description = "COMMERCE-9402. Verify the store admin can associate existing accounts to an organization by using the Organization Management widget."
-	@priority = 3
-	test CanAssociateExistingAccountUsingWidget {
-		property portal.acceptance = "false";
-
-		task ("Setup: Add an organization") {
-			JSONOrganization.addOrganization(
-				organizationName = "Organization 1",
-				organizationSite = "false");
-		}
-
-		task ("Given an account and the Organization Management Widget Page is reached") {
-			JSONAccountEntry.addAccountEntry(
-				accountEntryName = "Commerce Account",
-				accountEntryType = "Business");
-
-			Navigator.openSitePage(
-				pageName = "Organization Management Widget Page",
-				siteName = "Minium");
-		}
-
-		task ("And the account svg node is reached") {
-			CommerceWidget.gotoSVGNode(
-				key_nodeName = "Organization 1",
-				key_orgType = "account");
-		}
-
-		task ("When the admin is able to select an existing account to be associated with the organization") {
-			CommerceWidget.associateAccountWithOrganization(
-				key_radioOption = "Select Accounts",
-				value = "Commerce Account");
-		}
-
-		task ("Then the account is present in the admin console") {
-			CommerceWidget.assertOrganizationManagementWigetTitlePresent(key_nodeName = "Commerce Account");
-		}
-	}
-
-	@description = "COMMERCE-9403. Verify the store admin can associate existing users to an organization by using the Organization Management widget."
-	@priority = 3
-	test CanAssociateExistingUserUsingWidget {
-		property portal.acceptance = "false";
-
-		task ("Setup: Add an organization") {
-			JSONOrganization.addOrganization(
-				organizationName = "Organization 1",
-				organizationSite = "false");
-		}
-
-		task ("Given an Organization Management Widget Page is reached") {
-			Navigator.openSitePage(
-				pageName = "Organization Management Widget Page",
-				siteName = "Minium");
-		}
-
-		task ("When the user svg node is reached") {
-			CommerceWidget.gotoSVGNode(
-				key_nodeName = "Organization 1",
-				key_orgType = "user");
-		}
-
-		task ("And the admin is able to add an existing user's email to be associated with the organization") {
-			CommerceWidget.addUserViaOrganizationManagementWidget(
-				key_roleOption = "Organization User",
-				value = "buyer@liferay.com");
-		}
-
-		task ("Then the user is present in the admin console") {
-			CommerceWidget.assertOrganizationManagementWigetTitlePresent(key_nodeName = "Buyer User");
-		}
 	}
 
 	@description = "COMMERCE-12586 | Verify that changing the root configuration for the Organization Management widget affect the search results"
@@ -270,129 +164,8 @@ definition {
 				locator1 = "CommerceOrganizationManagementWidget#CHART_DISCOVERED_ENTRY");
 
 			AssertElementPresent(
-				key_searchResults = "0 Result for Org 2",
+				key_searchResults = "0 Results for Org 2",
 				locator1 = "CommerceOrganizationManagementWidget#CHART_SEARCH_RESULTS");
-		}
-	}
-
-	@description = "COMMERCE-9401. Verify new accounts can be created using the Organization Management widget."
-	@priority = 3
-	test CanCreateAccountUsingWidget {
-		property portal.acceptance = "false";
-
-		task ("Setup: Add an organization") {
-			JSONOrganization.addOrganization(
-				organizationName = "Organization 1",
-				organizationSite = "false");
-		}
-
-		task ("Given the Organization Management Widget Page is reached") {
-			Navigator.openSitePage(
-				pageName = "Organization Management Widget Page",
-				siteName = "Minium");
-		}
-
-		task ("And the organization svg node is clicked") {
-			CommerceWidget.gotoSVGNode(
-				key_nodeName = "Organization 1",
-				key_orgType = "account");
-		}
-
-		task ("When the admin is able to create a new account") {
-			CommerceWidget.addAccountViaOrganizationManagementWidget(
-				key_radioOption = "Create New Account",
-				value = "Account 1");
-		}
-
-		task ("Then the new account is present in the admin console") {
-			CommerceWidget.assertOrganizationManagementWigetTitlePresent(key_nodeName = "Account 1");
-		}
-	}
-
-	@description = "COMMERCE-9400. Verify new child organizations can be created using the Organization Management widget."
-	@priority = 3
-	test CanCreateOrganizationUsingWidget {
-		property portal.acceptance = "false";
-
-		task ("Setup: Add an organization") {
-			JSONOrganization.addOrganization(
-				organizationName = "Organization 1",
-				organizationSite = "false");
-		}
-
-		task ("Given the Organization Management Widget Page is reached") {
-			Navigator.openSitePage(
-				pageName = "Organization Management Widget Page",
-				siteName = "Minium");
-		}
-
-		task ("When the organization node is reached") {
-			CommerceWidget.gotoSVGNode(
-				key_nodeName = "Organization 1",
-				key_orgType = "organization");
-		}
-
-		task ("And the admin is able to create a new child organization") {
-			CommerceWidget.canCreateChildOrganization(value = "Child Org 1");
-		}
-
-		task ("Then the new child organization is present in the admin console") {
-			CommerceWidget.assertOrganizationManagementWigetTitlePresent(key_nodeName = "Child Org 1");
-		}
-	}
-
-	@description = "COMMERCE-9404. Verify accounts and organizations can be moved using the Organization Management widget."
-	@priority = 3
-	test CanMoveAccountsAndOrganizationsInWidget {
-		property portal.acceptance = "false";
-
-		task ("Setup: Add an organization") {
-			JSONOrganization.addOrganization(
-				organizationName = "Organization 1",
-				organizationSite = "false");
-		}
-
-		task ("Given a new organization with a child organization") {
-			JSONOrganization.addOrganization(
-				organizationName = "Organization 2",
-				organizationSite = "false");
-
-			JSONOrganization.addOrganization(
-				organizationName = "Child Org 1",
-				organizationSite = "false",
-				parentOrganizationName = "Organization 2");
-		}
-
-		task ("And given the account belongs to Organization 2") {
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Commerce Account");
-
-			Account.assignOrganizations(
-				accountName = "Commerce Account",
-				assigneeName = "Organization 2");
-		}
-
-		task ("When the Organization Management Widget Page is reached") {
-			Navigator.openSitePage(
-				pageName = "Organization Management Widget Page",
-				siteName = "Minium");
-		}
-
-		task ("And the admin is able to drag and drop the account to Organization 1 and the admin is able to drag and drop the child organization to Organization 1") {
-			CommerceWidget.canDragAndDropOrganizaitionAndChildOrganization(
-				key_nodeChild = "Child Org 1",
-				key_nodeDestination = "Organization 1",
-				key_nodeName = "Organization 2",
-				key_nodeOrigin = "Commerce Account");
-		}
-
-		task ("Then the admin is able to click on the child organization ellipses and click remove to move the child organization outside the parent organization") {
-			CommerceWidget.removeChildOrganization(
-				key_nodeChild = "Child Org 1",
-				key_nodeName = "Organization 1");
-
-			CommerceWidget.assertOrganizationManagementWigetTitlePresent(key_nodeName = "Child Org 1");
 		}
 	}
 
@@ -482,7 +255,7 @@ definition {
 
 			task ("And the message 2 entities found is present") {
 				AssertElementPresent(
-					key_searchResults = "2 Result for Buyer User",
+					key_searchResults = "2 Results for Buyer User",
 					locator1 = "CommerceOrganizationManagementWidget#CHART_SEARCH_RESULTS");
 			}
 
@@ -541,7 +314,7 @@ definition {
 
 			task ("And the message 2 entities found is still present") {
 				AssertElementPresent(
-					key_searchResults = "2 Result for Buyer User",
+					key_searchResults = "2 Results for Buyer User",
 					locator1 = "CommerceOrganizationManagementWidget#CHART_SEARCH_RESULTS");
 			}
 		}
@@ -632,7 +405,7 @@ definition {
 
 			task ("And the message 2 entities found is present") {
 				AssertElementPresent(
-					key_searchResults = "2 Result for Account A",
+					key_searchResults = "2 Results for Account A",
 					locator1 = "CommerceOrganizationManagementWidget#CHART_SEARCH_RESULTS");
 			}
 		}
@@ -1050,7 +823,7 @@ definition {
 
 		task ("And the message “0 entities found” is present") {
 			AssertElementPresent(
-				key_searchResults = "0 Result for Commerce Account",
+				key_searchResults = "0 Results for Commerce Account",
 				locator1 = "CommerceOrganizationManagementWidget#CHART_SEARCH_RESULTS");
 		}
 
@@ -1140,16 +913,8 @@ definition {
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Organization Management Widget Page");
 		}
 
-		task ("Then even without any entity, the widget is still usable") {
-			AssertElementPresent(
-				key_text = "Collapse All",
-				locator1 = "Button#ANY");
-
-			AssertElementPresent(locator1 = "CommerceOrganizationManagementWidget#REDUCE_ZOOM_BUTTON");
-
-			AssertElementPresent(locator1 = "CommerceOrganizationManagementWidget#INCREASE_ZOOM_BUTTON");
-
-			AssertElementPresent(locator1 = "CommerceOrganizationManagementWidget#EXPAND_BUTTON");
+		task ("Then when no entity is present, an alert message is displayed") {
+			AssertElementPresent(locator1 = "CommerceOrganizationManagementWidget#ALERT_INFO_MESSAGE");
 		}
 	}
 
@@ -1190,7 +955,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1283,7 +1048,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1348,7 +1113,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1445,7 +1210,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1541,7 +1306,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1564,7 +1329,7 @@ definition {
 				locator1 = "CommerceOrganizationManagementWidget#CHART_DISCOVERED_ENTRY");
 
 			AssertElementPresent(
-				key_searchResults = "0 Result for Commerce Account",
+				key_searchResults = "0 Results for Commerce Account",
 				locator1 = "CommerceOrganizationManagementWidget#CHART_SEARCH_RESULTS");
 		}
 	}
@@ -1634,7 +1399,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1657,7 +1422,7 @@ definition {
 				locator1 = "CommerceOrganizationManagementWidget#CHART_DISCOVERED_ENTRY");
 
 			AssertElementPresent(
-				key_searchResults = "0 Result for New User",
+				key_searchResults = "0 Results for New User",
 				locator1 = "CommerceOrganizationManagementWidget#CHART_SEARCH_RESULTS");
 		}
 
@@ -1700,7 +1465,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1799,7 +1564,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 

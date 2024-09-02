@@ -24,10 +24,7 @@ import com.liferay.portal.kernel.util.OSDetector;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
-import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchInstancePaths;
-import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchInstanceSettingsBuilder;
-import com.liferay.portal.search.elasticsearch7.internal.connection.HttpPortRange;
-import com.liferay.portal.search.elasticsearch7.internal.index.constants.SidecarVersionConstants;
+import com.liferay.portal.search.elasticsearch7.internal.sidecar.constants.SidecarConstants;
 import com.liferay.portal.search.elasticsearch7.internal.util.ResourceUtil;
 import com.liferay.portal.util.PropsValues;
 
@@ -102,8 +99,8 @@ public class Sidecar {
 		if (_log.isInfoEnabled()) {
 			_log.info(
 				StringBundler.concat(
-					"Sidecar Elasticsearch ", _getNodeName(), " started at ",
-					address));
+					"Sidecar Elasticsearch ", _getNodeVersion(),
+					StringPool.SPACE, _getNodeName(), " started at ", address));
 		}
 
 		_address = address;
@@ -288,7 +285,7 @@ public class Sidecar {
 
 	private Distribution _getElasticsearchDistribution() {
 		String versionNumber = ResourceUtil.getResourceAsString(
-			getClass(), SidecarVersionConstants.SIDECAR_VERSION_FILE_NAME);
+			getClass(), SidecarConstants.SIDECAR_VERSION_FILE_NAME);
 
 		if (versionNumber.equals(ElasticsearchDistribution.VERSION)) {
 			return new ElasticsearchDistribution();
@@ -374,7 +371,7 @@ public class Sidecar {
 		arguments.add("-Dfile.encoding=UTF-8");
 		arguments.add("-Djava.io.tmpdir=" + _sidecarTempDirPath);
 
-		if (JavaDetector.isJDK21()) {
+		if (JavaDetector.isJDK17() || JavaDetector.isJDK21()) {
 			arguments.add("-Djava.security.manager=allow");
 		}
 
@@ -460,14 +457,20 @@ public class Sidecar {
 			return nodeName;
 		}
 
-		return "liferay";
+		return "liferay_sidecar";
+	}
+
+	private String _getNodeVersion() {
+		return ResourceUtil.getResourceAsString(
+			getClass(), SidecarConstants.SIDECAR_VERSION_FILE_NAME);
 	}
 
 	private URL _getSecurityPolicyURL(URL bundleURL) {
 		try (URLClassLoader urlClassLoader = new URLClassLoader(
 				new URL[] {bundleURL})) {
 
-			return urlClassLoader.findResource("META-INF/sidecar.policy");
+			return urlClassLoader.findResource(
+				SidecarConstants.SIDECAR_POLICY_FILE_NAME);
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);

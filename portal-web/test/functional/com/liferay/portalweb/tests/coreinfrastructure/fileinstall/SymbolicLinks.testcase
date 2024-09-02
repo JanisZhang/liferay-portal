@@ -1,4 +1,4 @@
-@component-name = "portal-file-install"
+@component-name = "portal-core-infra"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -28,7 +28,7 @@ definition {
 		Navigator.openSpecificURL(url = "http://localhost:8080");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:8080",
 			userEmailAddress = "test@liferay.com");
 

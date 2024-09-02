@@ -218,7 +218,7 @@ public class AssetEntriesCheckerHelperTest {
 
 		AssetListEntry assetListEntry =
 			_assetListEntryLocalService.addAssetListEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				RandomTestUtil.randomString(),
 				AssetListEntryTypeConstants.TYPE_MANUAL, serviceContext);
 
@@ -229,8 +229,8 @@ public class AssetEntriesCheckerHelperTest {
 		}
 
 		portletPreferences.setValue(
-			"assetListEntryId",
-			String.valueOf(assetListEntry.getAssetListEntryId()));
+			"assetListEntryExternalReferenceCode",
+			assetListEntry.getExternalReferenceCode());
 		portletPreferences.setValue("selectionStyle", "asset-list");
 
 		portletPreferences.store();
@@ -299,9 +299,6 @@ public class AssetEntriesCheckerHelperTest {
 		ReflectionTestUtil.setFieldValue(
 			_assetEntriesCheckerHelper, "_assetListAssetEntryProvider",
 			_assetListAssetEntryProvider);
-		ReflectionTestUtil.setFieldValue(
-			_assetEntriesCheckerHelper, "_assetListEntryLocalService",
-			_assetListEntryLocalService);
 		ReflectionTestUtil.setFieldValue(
 			_assetEntriesCheckerHelper,
 			"_assetListEntrySegmentsEntryRelLocalService",

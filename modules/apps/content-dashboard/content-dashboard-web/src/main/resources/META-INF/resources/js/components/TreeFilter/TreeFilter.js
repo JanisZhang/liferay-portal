@@ -121,6 +121,7 @@ const TreeFilter = ({
 			setSelectedItemsCount(data.length);
 			setSelectedKeys(selectedNodes);
 		},
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[selectedNodesRefCount]
 	);
@@ -169,6 +170,7 @@ const TreeFilter = ({
 
 	useEffect(() => {
 		handleSelectionChange(selectedKeys);
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -305,7 +307,7 @@ const TreeFilter = ({
 								description={Liferay.Language.get(
 									'no-results-were-found'
 								)}
-								imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.gif`}
+								imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.svg`}
 								title={Liferay.Language.get('no-results-found')}
 							/>
 						)}

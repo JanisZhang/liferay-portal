@@ -106,9 +106,6 @@
 ##
 
 build.profile=dxp
-build.repository.private.password=${working.dir.build.repository.private.password}
-build.repository.private.url=${working.dir.build.repository.private.url}
-build.repository.private.username=${working.dir.build.repository.private.username}
 
 snapshot.bundle.base.url=${working.dir.snapshot.bundle.base.url}
 snapshot.bundle.url=${working.dir.snapshot.bundle.base.url}snapshot-${git.working.branch.name}-private/latest/liferay-portal-tomcat-${git.working.branch.name}-private.${snapshot.bundle.file.extension}</echo>
@@ -289,6 +286,7 @@ message.
 		<setup-sdk />
 
 		<setup-libs />
+		<setup-nodejs-sass />
 		<setup-yarn />
 
 		<gradle-execute dir="modules/core" task="deploy">
@@ -367,6 +365,8 @@ message.
 
 		<touch file="${liferay.home}/.liferay-home" />
 
+		<mkdir dir="${liferay.home}/deploy" />
+
 		<ant dir="sql" inheritAll="false" target="build-db" />
 
 		<deploy-properties />
@@ -406,8 +406,7 @@ message.
 					<arg value="-Dbuild.exclude.dirs=${build.exclude.dirs}" />
 					<arg value="-Dbuild.include.dirs=${build.include.dirs}" />
 					<arg value="-Dbuild.profile=${build.profile}" />
-					<arg if:true="${gradle.build.scan.enabled}" value="-Dgradle.build.scan.enabled=true" />
-					<arg if:set="gradle.build.scan.server.url" value="-Dgradle.build.scan.server.url=${gradle.build.scan.server.url}" />
+					<arg value="-Dgradle.develocity.tag=portal" />
 					<env key="WAS_HOME" value="${app.server.websphere.dir}" />
 				</gradle-execute>
 
@@ -992,6 +991,10 @@ This target has been renamed to "snapshot-bundle". Please call "snapshot-bundle"
 		<setup-libs />
 	</target>
 
+	<target name="setup-nodejs-sass">
+		<setup-nodejs-sass />
+	</target>
+
 	<target name="setup-profile-dxp">
 		<delete dir="git-clone-profile-dxp" />
 
@@ -1025,9 +1028,19 @@ This target has been renamed to "snapshot-bundle". Please call "snapshot-bundle"
 			todir="."
 		/>
 
-		<setup-profile-dxp
-			to.branch.name="${git.working.branch.name}-private"
-		/>
+		<if>
+			<matches pattern="release-\d{4}\.[q][1234]" string="${git.working.branch.name}" />
+			<then>
+				<setup-profile-dxp
+					to.branch.name="release-private"
+				/>
+			</then>
+			<else>
+				<setup-profile-dxp
+					to.branch.name="${git.working.branch.name}-private"
+				/>
+			</else>
+		</if>
 
 		<delete dir="git-clone-profile-dxp" />
 		<delete file="working.dir.properties" />
@@ -1352,6 +1365,9 @@ print AdminControl.invoke(appManager, 'startApplication', 'liferay-portal')
 	</target>
 
 	<target name="update-portal-osgi-configuration-properties">
+		<property name="instance.settings.schema.json.file" value="src/main/resources/schemas/client-extension-type-instance-settings.schema.json" />
+		<property name="workspace.module.dir" value="${project.dir}/modules/sdk/gradle-plugins-workspace" />
+
 		<exec dir="${project.dir}" executable="git" outputproperty="configuration.java.files">
 			<arg line="ls-files --full-name -- ':(glob)**/apps/**/configuration/**/*Configuration.java' ':!:**/*-test/**'" />
 		</exec>
@@ -1368,11 +1384,15 @@ print AdminControl.invoke(appManager, 'startApplication', 'liferay-portal')
 			newenvironment="true"
 		>
 			<arg value="configuration.java.files=${configuration.java.files}" />
-			<arg value="json.schema.output.file=${project.dir}/modules/sdk/gradle-plugins-workspace/src/main/resources/schemas/client-extension-type-instance-settings.schema.json" />
+			<arg value="json.schema.output.file=${workspace.module.dir}/${instance.settings.schema.json.file}" />
 			<arg value="language.properties.file=${project.dir}/${language.properties.file}" />
 			<arg value="properties.output.file=${project.dir}/portal-impl/src/portal-osgi-configuration.properties" />
 			<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
 		</java>
+
+		<gradle-execute dir="${workspace.module.dir}" task="formatSource">
+			<arg value="-Psource.files=${instance.settings.schema.json.file}" />
+		</gradle-execute>
 	</target>
 
 	<target name="validate-xml">

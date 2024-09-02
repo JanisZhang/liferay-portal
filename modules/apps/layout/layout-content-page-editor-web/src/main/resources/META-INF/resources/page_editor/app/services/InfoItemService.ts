@@ -149,6 +149,32 @@ function getPageContents({
 	});
 }
 
+function getInfoItemRelationships({
+	classNameId,
+	classTypeId,
+}: {
+	classNameId: string;
+	classTypeId?: string;
+}) {
+	const body: {
+		classNameId: string;
+		classTypeId?: string;
+	} = {
+		classNameId,
+	};
+
+	if (classTypeId) {
+		body.classTypeId = classTypeId;
+	}
+
+	return serviceFetch(config.getInfoItemOneToManyRelationshipsURL, {
+		body: {
+			classNameId,
+			classTypeId,
+		},
+	});
+}
+
 export default {
 	getAvailableListItemRenderers,
 	getAvailableListRenderers,
@@ -156,5 +182,6 @@ export default {
 	getAvailableTemplates,
 	getInfoItemActionErrorMessage,
 	getInfoItemFieldValue,
+	getInfoItemRelationships,
 	getPageContents,
 };

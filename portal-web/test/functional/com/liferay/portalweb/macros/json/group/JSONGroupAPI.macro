@@ -347,7 +347,7 @@ definition {
 		}
 
 		if (!(isSet(creatorPassword))) {
-			var creatorPassword = "test";
+			var creatorPassword = PropsUtil.get("default.admin.password");
 		}
 
 		var companyId = JSONCompany.getCompanyId(
@@ -519,6 +519,10 @@ definition {
 			portalURL = ${portalURL},
 			token = ${token});
 		var userLoginInfo = JSONUtil2.formatJSONUser();
+
+		if (${groupName} == "Global") {
+			var groupName = ${companyId};
+		}
 
 		var curl = '''
 			${portalURL}/api/jsonws/group/get-group \

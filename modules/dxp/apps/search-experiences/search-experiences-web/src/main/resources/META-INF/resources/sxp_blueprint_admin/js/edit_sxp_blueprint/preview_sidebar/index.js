@@ -12,6 +12,7 @@ import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {ClayPaginationWithBasicItems} from '@clayui/pagination';
 import ClayPaginationBar from '@clayui/pagination-bar';
 import {ClayTooltipProvider} from '@clayui/tooltip';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import getCN from 'classnames';
 import {ManagementToolbar} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
@@ -49,14 +50,20 @@ function PreviewSidebar({
 	const [showCancel, setShowCancel] = useState(false);
 	const [value, setValue] = useState('');
 
+	const isMounted = useIsMounted();
+
 	const _handleAttributesSubmit = (attributes) => {
 		setAttributes(attributes);
 	};
 
 	const _handleFetch = () => {
 		setShowCancel(false);
+		setTimeout(() => {
+			if (isMounted()) {
+				setShowCancel(true);
+			}
+		}, 10000);
 		onFetchResults(value, activeDelta, activePage, attributes);
-		setTimeout(() => setShowCancel(true), 10000);
 	};
 
 	useDidUpdateEffect(() => {
@@ -212,16 +219,16 @@ function PreviewSidebar({
 			className={getCN('preview-sidebar', 'sidebar', 'sidebar-light', {
 				open: visible,
 			})}
-			data-testid={TEST_IDS.PREVIEW_SIDEBAR}
+			data-qa-id={TEST_IDS.PREVIEW_SIDEBAR}
 		>
 			<div className="sidebar-header">
-				<h4 className="component-title">
+				<div className="component-title">
 					<span className="text-truncate-inline">
 						<span className="text-truncate">
 							{Liferay.Language.get('preview')}
 						</span>
 					</span>
-				</h4>
+				</div>
 
 				<span>
 					<PreviewAttributesModal

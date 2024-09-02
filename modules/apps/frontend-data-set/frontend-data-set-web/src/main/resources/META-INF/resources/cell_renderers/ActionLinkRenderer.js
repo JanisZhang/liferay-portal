@@ -15,12 +15,8 @@ import {openPermissionsModal} from '../utils/modals/openPermissionsModal';
 import DefaultContent from './DefaultRenderer';
 
 function ActionLinkRenderer({actions, itemData, itemId, options, value}) {
-	const {
-		executeAsyncItemAction,
-		highlightItems,
-		openModal,
-		openSidePanel,
-	} = useContext(FrontendDataSetContext);
+	const {executeAsyncItemAction, highlightItems, openModal, openSidePanel} =
+		useContext(FrontendDataSetContext);
 
 	if (!actions || !actions.length) {
 		return value ? <DefaultContent value={value} /> : null;
@@ -50,7 +46,8 @@ function ActionLinkRenderer({actions, itemData, itemId, options, value}) {
 	}
 
 	const formattedHref =
-		currentAction.href && formatActionURL(currentAction.href, itemData);
+		currentAction.href &&
+		formatActionURL(currentAction.href, itemData, currentAction.target);
 
 	function handleClickOnLink(event) {
 		const doAction = () => {
@@ -150,7 +147,7 @@ function ActionLinkRenderer({actions, itemData, itemId, options, value}) {
 										},
 									});
 								}
-						  }
+							}
 				}
 			>
 				{value || <ClayIcon symbol={currentAction.icon} />}

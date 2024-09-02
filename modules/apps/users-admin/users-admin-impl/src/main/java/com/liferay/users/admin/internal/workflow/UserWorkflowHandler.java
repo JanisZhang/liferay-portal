@@ -12,7 +12,6 @@ import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.BaseWorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
@@ -36,6 +35,22 @@ import org.osgi.service.component.annotations.Reference;
 	service = WorkflowHandler.class
 )
 public class UserWorkflowHandler extends BaseWorkflowHandler<User> {
+
+	@Override
+	public void contributeServiceContext(ServiceContext serviceContext) {
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
+
+		serviceContext.setAttribute(
+			"serverName", httpServletRequest.getServerName());
+		serviceContext.setAttribute(
+			"serverPort", httpServletRequest.getServerPort());
+
+		HttpSession httpSession = httpServletRequest.getSession();
+
+		serviceContext.setAttribute("sessionId", httpSession.getId());
+
+		serviceContext.setRequest(httpServletRequest);
+	}
 
 	@Override
 	public String getClassName() {
@@ -75,7 +90,7 @@ public class UserWorkflowHandler extends BaseWorkflowHandler<User> {
 			_updateAuditRequestThreadLocal(workflowContext);
 		}
 
-		return _userLocalService.updateStatus(userId, status, serviceContext);
+		return _userLocalService.updateStatus(user, status, serviceContext);
 	}
 
 	private void _updateAuditRequestThreadLocal(
@@ -97,29 +112,24 @@ public class UserWorkflowHandler extends BaseWorkflowHandler<User> {
 			auditRequestThreadLocal.setRealUserId(userId);
 		}
 
-		HttpServletRequest httpServletRequest =
-			_portal.getOriginalServletRequest(serviceContext.getRequest());
+		Serializable serverName = serviceContext.getAttribute("serverName");
 
-		if (httpServletRequest == null) {
+		if (serverName == null) {
 			return;
 		}
 
-		auditRequestThreadLocal.setServerName(
-			httpServletRequest.getServerName());
+		auditRequestThreadLocal.setServerName((String)serverName);
 		auditRequestThreadLocal.setServerPort(
-			httpServletRequest.getServerPort());
+			(int)serviceContext.getAttribute("serverPort"));
 
-		HttpSession httpSession = httpServletRequest.getSession();
+		Serializable sessionId = serviceContext.getAttribute("sessionId");
 
-		if (httpSession == null) {
+		if (sessionId == null) {
 			return;
 		}
 
-		auditRequestThreadLocal.setSessionID(httpSession.getId());
+		auditRequestThreadLocal.setSessionID((String)sessionId);
 	}
-
-	@Reference
-	private Portal _portal;
 
 	@Reference
 	private UserLocalService _userLocalService;

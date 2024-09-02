@@ -18,7 +18,6 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -84,9 +83,7 @@ public class PendingCommerceOrderItemFDSActionProvider
 			}
 		).add(
 			() -> {
-				if ((cpInstance == null) ||
-					!FeatureFlagManagerUtil.isEnabled("COMMERCE-9599")) {
-
+				if (cpInstance == null) {
 					return false;
 				}
 
@@ -98,7 +95,8 @@ public class PendingCommerceOrderItemFDSActionProvider
 				return _modelResourcePermission.contains(
 					PermissionThreadLocal.getPermissionChecker(), commerceOrder,
 					ActionKeys.UPDATE) &&
-					   (count > 0);
+					   ((count > 0) ||
+						cpInstance.hasCPInstanceUnitOfMeasures());
 			},
 			dropdownItem -> {
 				dropdownItem.setData(

@@ -9,7 +9,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		if (!(isSet(fromName))) {
@@ -40,10 +40,10 @@ definition {
 					"body": "${body}",
 					"recipients": [
 						{
-							"cc": "${cc}",
 							"bcc": "${bcc}",
-							"fromName": "${fromName}",
+							"cc": "${cc}",
 							"from": "${fromAddress}",
+							"fromName": "${fromName}",
 							"to": "${to}"
 						}
 					],

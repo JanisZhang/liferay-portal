@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -40,6 +41,7 @@ const TestFlow = () => {
 			<ListView
 				managementToolbarProps={{
 					addButton: () => modal.open(),
+					applyFilters: true,
 					filterSchema: 'testflow',
 					title: i18n.translate('tasks'),
 				}}
@@ -88,9 +90,9 @@ const TestFlow = () => {
 							value: i18n.translate('routine-name'),
 						},
 						{
-							clickable: true,
 							key: 'buildName',
 							render: (_, task) => task?.build?.name,
+							selectable: true,
 							size: 'lg',
 							value: i18n.translate('build-name'),
 						},
@@ -126,6 +128,7 @@ const TestFlow = () => {
 								_,
 								{
 									subtaskScoreCompleted,
+									subtaskScoreSelfCompleted,
 									subtaskScoreSelfIncomplete,
 								}: TestrayTask
 							) => (
@@ -133,12 +136,23 @@ const TestFlow = () => {
 									displayTotalCompleted={false}
 									items={[
 										[
+											StatusesProgressScore.SELF,
+											Number(subtaskScoreSelfCompleted) ??
+												0,
+										],
+										[
 											StatusesProgressScore.OTHER,
-											Number(subtaskScoreCompleted),
+											Number(subtaskScoreCompleted ?? 0) -
+												Number(
+													subtaskScoreSelfCompleted ??
+														0
+												),
 										],
 										[
 											StatusesProgressScore.INCOMPLETE,
-											Number(subtaskScoreSelfIncomplete),
+											Number(
+												subtaskScoreSelfIncomplete ?? 0
+											),
 										],
 									]}
 									taskbarClassNames={chartClassNames}

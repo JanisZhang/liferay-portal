@@ -1103,6 +1103,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 		return _rootPortletId;
 	}
 
+	@Override
 	public Set<String> getScopedPrimaryKeys() {
 		return _scopedPrimaryKeys;
 	}
@@ -1712,6 +1713,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 		_newLayouts = newLayouts;
 	}
 
+	@Override
 	public void setOriginalPrivateLayout(boolean originalPrivateLayout) {
 		_originalPrivateLayout = originalPrivateLayout;
 	}
@@ -2530,8 +2532,9 @@ public class PortletDataContextImpl implements PortletDataContext {
 
 			try {
 				workflowDefinition =
-					WorkflowDefinitionManagerUtil.getLatestWorkflowDefinition(
-						getCompanyId(), displayName);
+					WorkflowDefinitionManagerUtil.
+						liberalGetLatestWorkflowDefinition(
+							getCompanyId(), displayName);
 			}
 			catch (WorkflowException workflowException) {
 				if (_log.isDebugEnabled()) {

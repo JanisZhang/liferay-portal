@@ -599,13 +599,15 @@ name = HtmlUtil.escapeJS(name);
 										var currentEditor = ckeditorInstance.id;
 
 										if (currentEditor === initialEditor) {
-											var currentDialog = CKEDITOR.dialog.getCurrent();
+											var currentDialog =
+												CKEDITOR.dialog.getCurrent();
 
 											if (currentDialog) {
 												currentDialog.hide();
 											}
 
-											ckEditorContent = ckeditorInstance.getData();
+											ckEditorContent =
+												ckeditorInstance.getData();
 
 											window['<%= name %>'].dispose();
 
@@ -724,13 +726,14 @@ name = HtmlUtil.escapeJS(name);
 			toolbar: currentToolbarSet,
 		};
 
-		var editorConfig = <%= Validator.isNotNull(editorConfigJSONObject) ? editorConfigJSONObject : "{}" %>;
+		var editorConfig =
+			<%= Validator.isNotNull(editorConfigJSONObject) ? editorConfigJSONObject : "{}" %>;
 
 		var config = A.merge(defaultConfig, editorConfig);
 
 		var editorTransformerURLs = config.editorTransformerURLs;
 
-		if (Liferay.FeatureFlags['LPS-186870'] && editorTransformerURLs) {
+		if (editorTransformerURLs) {
 			var loadingIndicator = document.createElement('span');
 
 			loadingIndicator.classList.add('loading-animation');

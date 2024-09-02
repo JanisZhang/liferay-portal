@@ -17,7 +17,10 @@ import {
 	HOME_KEY_CODE,
 } from '../../config/constants/keyboardCodes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
-import {useSelectItem} from '../../contexts/ControlsContext';
+import {
+	useSelectItem,
+	useSelectMultipleItems,
+} from '../../contexts/ControlsContext';
 import {
 	useDisableKeyboardMovement,
 	useMovementSource,
@@ -35,7 +38,9 @@ import checkAllowedChild from '../../utils/drag_and_drop/checkAllowedChild';
 import {TARGET_POSITIONS} from '../../utils/drag_and_drop/constants/targetPositions';
 import getDropData from '../../utils/drag_and_drop/getDropData';
 import itemIsAncestor from '../../utils/drag_and_drop/itemIsAncestor';
+import {isMultistepForm} from '../../utils/isMultistepForm';
 import {isUnmappedCollection} from '../../utils/isUnmappedCollection';
+import {openFormConversionModal} from '../../utils/openFormConversionModal';
 
 const DIRECTIONS = {
 	down: 'down',
@@ -61,7 +66,12 @@ export default function KeyboardMovementManager() {
 	const setTarget = useSetMovementTarget();
 	const setText = useSetMovementText();
 	const selectItem = useSelectItem();
+	const selectMultipleItems = useSelectMultipleItems();
 	const dispatch = useDispatch();
+
+	const selectItems = Liferay.FeatureFlags['LPD-18221']
+		? selectMultipleItems
+		: selectItem;
 
 	keymapRef.current = {
 		disableMovement: {
@@ -110,6 +120,7 @@ export default function KeyboardMovementManager() {
 								portletId: source.portletId,
 								portletItemId: source.portletItemId,
 								position,
+								selectItems,
 							});
 						}
 						else {
@@ -118,6 +129,7 @@ export default function KeyboardMovementManager() {
 								groupId: source.groupId,
 								parentItemId: dropItemId,
 								position,
+								selectItems,
 								type: source.type,
 							});
 						}
@@ -127,27 +139,46 @@ export default function KeyboardMovementManager() {
 							itemType: source.type,
 							parentItemId: dropItemId,
 							position,
+							selectItems,
 						});
 					}
 				}
 
-				dispatch(thunk);
+				const executeAction = () => {
+					dispatch(thunk);
 
-				setText(
-					sub(Liferay.Language.get('x-placed-on-x-of-x'), [
-						source.name,
-						target.position,
-						target.name,
-					])
-				);
+					setText(
+						sub(Liferay.Language.get('x-placed-on-x-of-x'), [
+							source.name,
+							target.position,
+							target.name,
+						])
+					);
+
+					if (actionType === ACTION_TYPES.move) {
+						selectItem(source.itemId);
+					}
+				};
+
+				const targetItem = layoutDataRef.current.items[target.itemId];
+
+				if (
+					source.fieldTypes?.includes('stepper') &&
+					target.position === TARGET_POSITIONS.MIDDLE &&
+					targetItem.type === LAYOUT_DATA_ITEM_TYPES.form &&
+					isMultistepForm(targetItem)
+				) {
+					openFormConversionModal({
+						onContinue: () => executeAction(),
+					});
+				}
+				else {
+					executeAction();
+				}
 
 				setTimeout(() => setText(null), 1000);
 
 				disableMovement();
-
-				if (actionType === ACTION_TYPES.move) {
-					selectItem(source.itemId);
-				}
 			},
 			keyCode: ENTER_KEY_CODE,
 		},
@@ -156,7 +187,7 @@ export default function KeyboardMovementManager() {
 				const nextTarget = getNextTarget(
 					source,
 					target,
-					fragmentEntryLinksRef.current,
+					fragmentEntryLinksRef,
 					layoutDataRef,
 					DIRECTIONS.down
 				);
@@ -308,7 +339,7 @@ export default function KeyboardMovementManager() {
 	return null;
 }
 
-function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
+export function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 	const layoutData = layoutDataRef.current;
 	const fragmentEntryLinks = fragmentEntryLinksRef.current;
 
@@ -317,9 +348,14 @@ function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 	if (actionType === ACTION_TYPES.add) {
 		const root = layoutData.items[layoutData.rootItems.main];
 
-		if (!checkAllowedChild(source, root, layoutDataRef)) {
-			return null;
-		}
+		const canDropInRoot = checkAllowedChild(
+			source,
+			root,
+			layoutDataRef,
+			fragmentEntryLinksRef
+		);
+
+		// Check root children to see if someone is targetable
 
 		let childIndex = root.children.length - 1;
 
@@ -328,26 +364,51 @@ function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 			const child = layoutData.items[childId];
 
 			if (!isHidden(child)) {
+
+				// This child is targetable
+
 				const childName = selectLayoutDataItemLabel(
-					{fragmentEntryLinks},
+					{fragmentEntryLinks, layoutData},
 					child
 				);
 
-				return {
+				// If source can drop in root, return this child as target
+
+				const target = {
 					itemId: child.itemId,
 					name: childName,
 					position: TARGET_POSITIONS.BOTTOM,
 				};
+
+				if (canDropInRoot) {
+					return target;
+				}
+
+				// Otherwise, look for next valid target
+
+				else {
+					return getNextTarget(
+						source,
+						target,
+						fragmentEntryLinksRef,
+						layoutDataRef,
+						DIRECTIONS.up
+					);
+				}
 			}
 
 			childIndex--;
 		}
 
-		return {
-			itemId: root.itemId,
-			name: root.type,
-			position: TARGET_POSITIONS.MIDDLE,
-		};
+		// Root has no targetable child, return root as target if possible
+
+		return canDropInRoot
+			? {
+					itemId: root.itemId,
+					name: root.type,
+					position: TARGET_POSITIONS.MIDDLE,
+				}
+			: null;
 	}
 	else if (actionType === ACTION_TYPES.move) {
 		return {
@@ -361,10 +422,11 @@ function getInitialTarget(source, layoutDataRef, fragmentEntryLinksRef) {
 function getNextTarget(
 	source,
 	target,
-	fragmentEntryLinks,
+	fragmentEntryLinksRef,
 	layoutDataRef,
 	direction
 ) {
+	const fragmentEntryLinks = fragmentEntryLinksRef.current;
 	const layoutData = layoutDataRef.current;
 
 	const checkValidTarget = (nextTarget) => {
@@ -386,7 +448,7 @@ function getNextTarget(
 			return getNextTarget(
 				source,
 				nextTarget,
-				fragmentEntryLinks,
+				fragmentEntryLinksRef,
 				layoutDataRef,
 				direction
 			);
@@ -399,11 +461,18 @@ function getNextTarget(
 		}
 
 		if (nextTarget.position === TARGET_POSITIONS.BOTTOM) {
-			if (!checkAllowedChild(source, nextTargetParent, layoutDataRef)) {
+			if (
+				!checkAllowedChild(
+					source,
+					nextTargetParent,
+					layoutDataRef,
+					fragmentEntryLinksRef
+				)
+			) {
 				return getNextTarget(
 					source,
 					nextTarget,
-					fragmentEntryLinks,
+					fragmentEntryLinksRef,
 					layoutDataRef,
 					direction
 				);
@@ -413,12 +482,17 @@ function getNextTarget(
 		if (nextTarget.position === TARGET_POSITIONS.TOP) {
 			if (
 				nextTargetParent.children[0] !== nextTarget.itemId ||
-				!checkAllowedChild(source, nextTargetParent, layoutDataRef)
+				!checkAllowedChild(
+					source,
+					nextTargetParent,
+					layoutDataRef,
+					fragmentEntryLinksRef
+				)
 			) {
 				return getNextTarget(
 					source,
 					nextTarget,
-					fragmentEntryLinks,
+					fragmentEntryLinksRef,
 					layoutDataRef,
 					direction
 				);
@@ -428,12 +502,17 @@ function getNextTarget(
 		if (nextTarget.position === TARGET_POSITIONS.MIDDLE) {
 			if (
 				hasChildren(nextTargetItem, layoutData) ||
-				!checkAllowedChild(source, nextTargetItem, layoutDataRef)
+				!checkAllowedChild(
+					source,
+					nextTargetItem,
+					layoutDataRef,
+					fragmentEntryLinksRef
+				)
 			) {
 				return getNextTarget(
 					source,
 					nextTarget,
-					fragmentEntryLinks,
+					fragmentEntryLinksRef,
 					layoutDataRef,
 					direction
 				);
@@ -441,7 +520,7 @@ function getNextTarget(
 		}
 
 		const name = selectLayoutDataItemLabel(
-			{fragmentEntryLinks},
+			{fragmentEntryLinks, layoutData},
 			nextTargetItem
 		);
 

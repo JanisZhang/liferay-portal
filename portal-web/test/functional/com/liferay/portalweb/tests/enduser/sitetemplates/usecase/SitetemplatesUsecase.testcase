@@ -1,4 +1,4 @@
-@component-name = "portal-staging"
+@component-name = "portal-headless"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -23,7 +23,7 @@ definition {
 			Navigator.openURL();
 
 			User.logoutAndLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userLoginEmailAddress = "test@liferay.com",
 				userLoginFullName = "Test Test");
 
@@ -232,7 +232,7 @@ definition {
 				virtualHost = "www.able.com");
 
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 		}
@@ -495,7 +495,7 @@ definition {
 
 		task ("When: When the new user adds a new User group and add the Site template to it") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 
 			UserGroup.openUserGroupsAdmin();
@@ -574,14 +574,14 @@ definition {
 
 			UserNavigator.gotoUser(userScreenName = "usersn");
 
-			User.editPassword(newPassword = "test");
+			User.editPassword(newPassword = PropsUtil.get("default.admin.password"));
 
 			User.logoutPG();
 		}
 
 		task ("Then: The content and settings is inherited on the new personal site from the Site Template") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 
 			UserBar.gotoDropdownItem(dropdownItem = "My Dashboard");
@@ -598,7 +598,7 @@ definition {
 	@description = "This is a use case for LPS-86487. Page links on sites which were created in site templates should redirect correctly to other pages."
 	@priority = 3
 	test SiteTemplatePageLinkInWebContentRedirectCorrectly {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -671,9 +671,13 @@ definition {
 		}
 
 		task ("Then: The page link in the WCD portlet is be present") {
+			WaitForPageLoad();
+
 			Navigator.gotoSitePage(
 				pageName = "Page1 Name",
 				siteName = "Site Name");
+
+			WaitForPageLoad();
 
 			WebContentDisplayPortlet.viewContent(
 				displayText = ${entryExternalURL},
@@ -1203,10 +1207,14 @@ definition {
 				menuItem = "Configure",
 				pageName = 1);
 
+			var layoutId1 = JSONLayout.getLayoutIdByName(
+				groupName = "Export",
+				layoutName = 1);
+
 			AssertTextEquals(
 				inputFieldId = "friendlyURL",
 				locator1 = "TextInput#TEXT_INPUT_ID",
-				value1 = "/1");
+				value1 = "/${layoutId1}");
 		}
 
 		task ("And: Add a second page to the new site then verify that it has correct friendly URL") {
@@ -1220,10 +1228,14 @@ definition {
 				menuItem = "Configure",
 				pageName = 2);
 
+			var layoutId2 = JSONLayout.getLayoutIdByName(
+				groupName = "Export",
+				layoutName = 2);
+
 			AssertTextEquals(
 				inputFieldId = "friendlyURL",
 				locator1 = "TextInput#TEXT_INPUT_ID",
-				value1 = "/2");
+				value1 = "/${layoutId2}");
 		}
 
 		task ("And: Add a third page to the new site then verify that it has correct friendly URL") {
@@ -1274,6 +1286,39 @@ definition {
 			PagesAdmin.viewPagesOrder(
 				depth = 1,
 				pageNameList = "Home,1,2,Hello");
+		}
+
+		task ("And: The friendly URLs are correct") {
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = 1);
+
+			AssertTextEquals(
+				inputFieldId = "friendlyURL",
+				locator1 = "TextInput#TEXT_INPUT_ID",
+				value1 = "/${layoutId1}");
+
+			PagesAdmin.openPagesAdmin(siteURLKey = "new-site");
+
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = 2);
+
+			AssertTextEquals(
+				inputFieldId = "friendlyURL",
+				locator1 = "TextInput#TEXT_INPUT_ID",
+				value1 = "/${layoutId2}");
+
+			PagesAdmin.openPagesAdmin(siteURLKey = "new-site");
+
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Hello");
+
+			AssertTextEquals(
+				inputFieldId = "friendlyURL",
+				locator1 = "TextInput#TEXT_INPUT_ID",
+				value1 = "/hello");
 		}
 	}
 

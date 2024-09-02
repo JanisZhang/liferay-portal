@@ -1,11 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property custom.properties = "jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Personalization and Customization";
 	property testray.main.component.name = "Page Administration";
 
 	static var randomSiteName = StringUtil.randomString(8);
@@ -124,7 +123,7 @@ definition {
 		}
 
 		task ("Add a new regular role") {
-			JSONRole.addRegularRole(roleTitle = ${roleKey});
+			JSONRole.addRegularRole(roleKey = ${roleKey});
 		}
 
 		task ("Define the permissions of new role") {
@@ -267,7 +266,7 @@ definition {
 		}
 
 		task ("Add a new regular role") {
-			JSONRole.addRegularRole(roleTitle = ${roleKey});
+			JSONRole.addRegularRole(roleKey = ${roleKey});
 		}
 
 		task ("Define the permissions of new role") {

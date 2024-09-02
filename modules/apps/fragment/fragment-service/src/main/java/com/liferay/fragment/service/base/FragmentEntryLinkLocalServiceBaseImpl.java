@@ -12,7 +12,6 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
-import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkFinder;
 import com.liferay.fragment.service.persistence.FragmentEntryLinkPersistence;
 import com.liferay.petra.function.UnsafeFunction;
@@ -76,7 +75,7 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>FragmentEntryLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>FragmentEntryLinkLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>FragmentEntryLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -265,6 +264,23 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 		String uuid, long groupId) {
 
 		return fragmentEntryLinkPersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	@Override
+	public FragmentEntryLink fetchFragmentEntryLinkByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return fragmentEntryLinkPersistence.fetchByERC_G(
+			externalReferenceCode, groupId);
+	}
+
+	@Override
+	public FragmentEntryLink getFragmentEntryLinkByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return fragmentEntryLinkPersistence.findByERC_G(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -558,7 +574,6 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		FragmentEntryLinkLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -572,9 +587,6 @@ public abstract class FragmentEntryLinkLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		fragmentEntryLinkLocalService = (FragmentEntryLinkLocalService)aopProxy;
-
-		FragmentEntryLinkLocalServiceUtil.setService(
-			fragmentEntryLinkLocalService);
 	}
 
 	/**

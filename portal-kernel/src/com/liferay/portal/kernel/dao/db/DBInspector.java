@@ -33,25 +33,6 @@ import java.util.regex.Pattern;
  */
 public class DBInspector {
 
-	public static boolean isObjectTable(
-		List<Long> companyIds, String tableName) {
-
-		for (long companyId : companyIds) {
-
-			// See ObjectDefinitionImpl#getExtensionDBTableName and
-			// ObjectDefinitionLocalServiceImpl#_getDBTableName
-
-			if (tableName.endsWith("_x_" + companyId) ||
-				tableName.startsWith("L_" + companyId + "_") ||
-				tableName.startsWith("O_" + companyId + "_")) {
-
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	public DBInspector(Connection connection) {
 		_connection = connection;
 	}
@@ -241,36 +222,31 @@ public class DBInspector {
 	}
 
 	public boolean hasTable(String tableName) throws Exception {
-		return hasTable(tableName, false);
+		return _hasElement(tableName, "TABLE");
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             DBInspector#hasTable(String)}
+	 */
+	@Deprecated
 	public boolean hasTable(String tableName, boolean caseSensitive)
 		throws Exception {
 
-		DatabaseMetaData databaseMetaData = _connection.getMetaData();
-
-		if (!caseSensitive) {
-			tableName = normalizeName(tableName, databaseMetaData);
-		}
-
-		try (ResultSet resultSet = databaseMetaData.getTables(
-				getCatalog(), getSchema(), tableName, new String[] {"TABLE"})) {
-
-			while (resultSet.next()) {
-				return true;
-			}
-		}
-
-		return false;
+		return _hasElement(tableName, "TABLE");
 	}
 
-	public boolean isControlTable(List<Long> companyIds, String tableName)
-		throws Exception {
+	public boolean hasView(String viewName) throws Exception {
+		return _hasElement(viewName, "VIEW");
+	}
 
-		if (!isPartitionedControlTable(tableName) &&
-			!isObjectTable(companyIds, tableName) &&
-			(_controlTableNames.contains(StringUtil.toLowerCase(tableName)) ||
-			 !hasColumn(tableName, "companyId"))) {
+	public boolean isControlTable(String tableName) {
+		if (_controlTableNames.contains(StringUtil.toLowerCase(tableName)) ||
+			StringUtil.toLowerCase(
+				tableName
+			).startsWith(
+				"quartz"
+			)) {
 
 			return true;
 		}
@@ -299,6 +275,26 @@ public class DBInspector {
 
 			return false;
 		}
+	}
+
+	public boolean isObjectTable(List<Long> companyIds, String tableName) {
+		String lowerCaseTableName = StringUtil.toLowerCase(tableName);
+
+		for (long companyId : companyIds) {
+
+			// See ObjectDefinitionImpl#getExtensionDBTableName and
+			// ObjectDefinitionLocalServiceImpl#_getDBTableName
+
+			if (lowerCaseTableName.endsWith("_x_" + companyId) ||
+				lowerCaseTableName.startsWith("l_" + companyId + "_") ||
+				lowerCaseTableName.startsWith("o_" + companyId + "_") ||
+				lowerCaseTableName.startsWith("r_")) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public boolean isPartitionedControlTable(String tableName) {
@@ -406,6 +402,25 @@ public class DBInspector {
 			normalizeName(tableName, databaseMetaData), columnName);
 	}
 
+	private boolean _hasElement(String elementName, String elementType)
+		throws Exception {
+
+		DatabaseMetaData databaseMetaData = _connection.getMetaData();
+
+		elementName = normalizeName(elementName, databaseMetaData);
+
+		try (ResultSet resultSet = databaseMetaData.getTables(
+				getCatalog(), getSchema(), elementName,
+				new String[] {elementType})) {
+
+			if (resultSet.next()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private boolean _isColumnNullable(String typeName) {
 		typeName = typeName.trim();
 
@@ -427,9 +442,10 @@ public class DBInspector {
 	private static final Pattern _columnTypePattern = Pattern.compile(
 		"(^\\w+)", Pattern.CASE_INSENSITIVE);
 	private static final Set<String> _controlTableNames = new HashSet<>(
-		Arrays.asList("company", "virtualhost"));
+		Arrays.asList(
+			"company", "release_", "servicecomponent", "virtualhost"));
 	private static final Set<String> _partitionedControlTableNames =
-		new HashSet<>(Arrays.asList("classname_", "resourceaction"));
+		new HashSet<>(Arrays.asList("classname_", "counter", "resourceaction"));
 
 	private final Connection _connection;
 

@@ -33,7 +33,6 @@ import com.liferay.headless.delivery.internal.odata.entity.v1_0.SitePageEntityMo
 import com.liferay.headless.delivery.resource.v1_0.SitePageResource;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
@@ -44,7 +43,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.ServicePreAction;
 import com.liferay.portal.events.ThemeServicePreAction;
-import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -142,7 +140,6 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/site-page.properties",
 	scope = ServiceScope.PROTOTYPE, service = SitePageResource.class
 )
-@CTAware
 public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 	@Override
@@ -238,7 +235,8 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 						LayoutConstants.TYPE_LINK_TO_LAYOUT,
 						LayoutConstants.TYPE_FULL_PAGE_APPLICATION,
 						LayoutConstants.TYPE_PANEL,
-						LayoutConstants.TYPE_PORTLET, LayoutConstants.TYPE_URL
+						LayoutConstants.TYPE_PORTLET, LayoutConstants.TYPE_URL,
+						LayoutConstants.TYPE_UTILITY
 					});
 				searchContext.setAttribute(
 					"privateLayout", Boolean.FALSE.toString());
@@ -433,8 +431,9 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 		ServiceContext serviceContext = _createServiceContext(siteId, sitePage);
 
 		Layout layout = _layoutService.addLayout(
-			siteId, false, parentLayoutId, nameMap, titleMap, descriptionMap,
-			keywordsMap, robotsMap, LayoutConstants.TYPE_CONTENT,
+			null, siteId, false, parentLayoutId, nameMap, titleMap,
+			descriptionMap, keywordsMap, robotsMap,
+			LayoutConstants.TYPE_CONTENT,
 			typeSettingsUnicodeProperties.toString(), hidden, friendlyUrlMap, 0,
 			serviceContext);
 
@@ -449,8 +448,15 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 			Settings settings = pageDefinition.getSettings();
 
 			if (settings != null) {
-				layout = _layoutsImporter.importLayoutSettings(
-					contextUser.getUserId(), layout, settings.toString());
+				ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+				try {
+					layout = _layoutsImporter.importLayoutSettings(
+						contextUser.getUserId(), layout, settings.toString());
+				}
+				finally {
+					ServiceContextThreadLocal.popServiceContext();
+				}
 			}
 		}
 
@@ -490,7 +496,7 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 			assetTagNames = sitePage.getKeywords();
 		}
 
-		return ServiceContextBuilder.create(
+		ServiceContext serviceContext = ServiceContextBuilder.create(
 			groupId, contextHttpServletRequest, null
 		).assetCategoryIds(
 			assetCategoryIds
@@ -502,6 +508,10 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 				sitePage.getCustomFields(),
 				contextAcceptLanguage.getPreferredLocale())
 		).build();
+
+		serviceContext.setUserId(contextUser.getUserId());
+
+		return serviceContext;
 	}
 
 	private Map<String, Map<String, String>> _getBasicActions(Layout layout) {
@@ -930,7 +940,8 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 	private Layout _updateDraftLayout(Layout layout) throws Exception {
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		draftLayout = _layoutCopyHelper.copyLayoutContent(layout, draftLayout);
+		draftLayout = _layoutLocalService.copyLayoutContent(
+			layout, draftLayout);
 
 		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
 
@@ -1099,9 +1110,6 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

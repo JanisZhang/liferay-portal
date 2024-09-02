@@ -3,18 +3,19 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import DropdownProvider from './DropdownProvider';
+
 function initArticle() {
 
 	// Table of contents reading indicator
 
-	const headings = document.querySelectorAll('.article-body h2');
+	const headings = document.querySelectorAll('.learn-article-content h2');
 
 	let activeIndex;
+	const articleTOC = document.getElementById('articleTOC');
 	const targets = [];
 
-	if (headings) {
-		const articleTOC = document.getElementById('articleTOC');
-
+	if (headings && !!headings.length) {
 		if (articleTOC) {
 			articleTOC.innerHTML = '';
 		}
@@ -24,8 +25,8 @@ function initArticle() {
 
 			if (articleTOC) {
 				articleTOC.innerHTML += `
-				<li class="nav-item">
-					<a class="nav-link" data-senna-off="true" href="#${id}" id="toc-${id}">
+				<li class="learn-article-nav-item">
+					<a href="#${id}" id="toc-${id}">
 						${heading.innerText}
 					</a>
 				</li>`;
@@ -33,6 +34,9 @@ function initArticle() {
 
 			targets.push({id, isIntersecting: false});
 		});
+	}
+	else if (articleTOC) {
+		articleTOC.closest('.learn-article-page-nav').classList.add('hide');
 	}
 
 	const callback = (entries) => {
@@ -53,30 +57,7 @@ function initArticle() {
 		}
 	};
 
-	const headerSelectors = [
-		'.control-menu-container',
-		'.info-bar',
-		'.public-sites-navigation',
-	];
-
-	const headerOffset = headerSelectors
-		.map((headerSelector) => {
-			const headerElement = document.querySelector(headerSelector);
-			if (headerElement) {
-				return -1 * headerElement.offsetHeight;
-			}
-
-			return 0;
-		})
-		.reduce(
-			(previousValue, currentValue) => previousValue + currentValue,
-			0
-		);
-
-	const observer = new IntersectionObserver(callback, {
-		rootMargin: headerOffset + 'px',
-		threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
-	});
+	const observer = new IntersectionObserver(callback);
 
 	const setActiveIndex = () => {
 		activeIndex = targets.findIndex(
@@ -89,14 +70,14 @@ function initArticle() {
 			const node = document.getElementById(`toc-${target.id}`);
 
 			if (node) {
-				node.classList.remove('active');
+				node.classList.remove('selected');
 			}
 		});
 
 		const activeNode = document.getElementById(`toc-${id}`);
 
 		if (activeNode) {
-			activeNode.classList.add('active');
+			activeNode.classList.add('selected');
 		}
 	};
 
@@ -105,32 +86,15 @@ function initArticle() {
 
 		if (node) {
 			observer.observe(node);
-
-			const offsetMargin =
-				'margin-top: ' +
-				headerOffset +
-				'px; padding-top: ' +
-				headerOffset * -1 +
-				'px;';
-
-			node.style.cssText = offsetMargin;
 		}
 	});
 
-	// Left Nav mobile interaction
-
-	const docNavWrapper = document.querySelector('.doc-nav-wrapper');
-	const mobileDocNavToggler = document.getElementById('mobileDocNavToggler');
-
-	if (docNavWrapper && mobileDocNavToggler) {
-		const togglers = mobileDocNavToggler.querySelectorAll('button');
-
-		togglers.forEach((toggler) =>
-			toggler.addEventListener('click', () => {
-				docNavWrapper.classList.toggle('mobile-nav-hide');
-			})
-		);
-	}
+	new DropdownProvider(
+		'.learn-dropdown',
+		'.learn-dropdown-menu',
+		'show',
+		true
+	);
 }
 
 document.addEventListener('DOMContentLoaded', initArticle);

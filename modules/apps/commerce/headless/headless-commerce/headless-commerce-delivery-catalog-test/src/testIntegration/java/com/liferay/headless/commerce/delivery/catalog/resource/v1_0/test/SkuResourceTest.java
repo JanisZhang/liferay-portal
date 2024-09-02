@@ -6,12 +6,18 @@
 package com.liferay.headless.commerce.delivery.catalog.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
+import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
 import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.model.CommercePriceList;
+import com.liferay.commerce.price.list.service.CommercePriceEntryLocalServiceUtil;
+import com.liferay.commerce.price.list.service.CommercePriceListLocalServiceUtil;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstance;
+import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
@@ -27,6 +33,7 @@ import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.SkuUnitOfM
 import com.liferay.headless.commerce.delivery.catalog.client.dto.v1_0.TierPrice;
 import com.liferay.headless.commerce.delivery.catalog.client.pagination.Page;
 import com.liferay.headless.commerce.delivery.catalog.client.pagination.Pagination;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -35,13 +42,16 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Objects;
 
@@ -81,11 +91,37 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 
 	@Override
 	@Test
+	public void testGetChannelProductSku() throws Exception {
+		super.testGetChannelProductSku();
+
+		_testGetChannelProductSkuAllowMultiplePriceEntriesInTheSamePriceList();
+
+		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
+
+		_testGetChannelProductSkuAllowMultiplePriceEntriesInTheSamePromotion();
+	}
+
+	@Override
+	@Test
 	public void testGetChannelProductSkusPage() throws Exception {
 		super.testGetChannelProductSkusPage();
 
 		_testGetChannelProductSkusPageWithUnitOfMeasure();
 		_testGetChannelProductSkusPageWithUnitOfMeasurePrice();
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode()
+		throws Exception {
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGraphQLGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCodeNotFound()
+		throws Exception {
 	}
 
 	@Ignore
@@ -104,6 +140,70 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 	@Override
 	@Test
 	public void testPostChannelProductSku() {
+	}
+
+	@Override
+	protected Sku
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode_addSku()
+		throws Exception {
+
+		return _addCPInstance(randomSku());
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode_getChannelExternalReferenceCode()
+		throws Exception {
+
+		return _commerceChannel.getExternalReferenceCode();
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode_getProductExternalReferenceCode()
+		throws Exception {
+
+		CProduct cProduct = _cpDefinition.getCProduct();
+
+		return cProduct.getExternalReferenceCode();
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuByExternalReferenceCodeSkuExternalReferenceCode_getSkuExternalReferenceCode()
+		throws Exception {
+
+		CPInstance cpInstance = _cpInstances.get(_cpInstances.size() - 1);
+
+		return cpInstance.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Sku
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage_addSku(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode, Sku sku)
+		throws Exception {
+
+		return _addCPInstance(sku);
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage_getChannelExternalReferenceCode()
+		throws Exception {
+
+		return _commerceChannel.getExternalReferenceCode();
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkusPage_getProductExternalReferenceCode()
+		throws Exception {
+
+		CProduct cProduct = _cpDefinition.getCProduct();
+
+		return cProduct.getExternalReferenceCode();
 	}
 
 	@Override
@@ -151,6 +251,24 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 	}
 
 	@Override
+	protected Sku
+			testPostChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSku_addSku(
+				Sku sku)
+		throws Exception {
+
+		return _addCPInstance(sku);
+	}
+
+	@Override
+	protected Sku
+			testPostChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeSkuBySkuOption_addSku(
+				Sku sku)
+		throws Exception {
+
+		return _addCPInstance(sku);
+	}
+
+	@Override
 	protected Sku testPostChannelProductSkuBySkuOption_addSku(Sku sku)
 		throws Exception {
 
@@ -190,6 +308,7 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 				depth = cpInstance.getDepth();
 				displayDate = cpInstance.getDisplayDate();
 				expirationDate = cpInstance.getExpirationDate();
+				externalReferenceCode = cpInstance.getExternalReferenceCode();
 				gtin = cpInstance.getGtin();
 				height = cpInstance.getHeight();
 				id = cpInstance.getCPInstanceId();
@@ -214,8 +333,154 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 			_user.getUserId(), sku.getId(), active, BigDecimal.ONE,
 			RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
-			RandomTestUtil.randomInt(0, 5), true, RandomTestUtil.nextDouble(),
-			BigDecimal.ONE, sku.getSku());
+			RandomTestUtil.randomInt(0, 5), BigDecimal.ONE, true,
+			RandomTestUtil.nextDouble(), BigDecimal.ONE, sku.getSku());
+	}
+
+	private void _testGetChannelProductSkuAllowMultiplePriceEntriesInTheSamePriceList()
+		throws Exception {
+
+		CommerceCurrency commerceCurrency =
+			CommerceCurrencyTestUtil.addCommerceCurrency(
+				testCompany.getCompanyId());
+
+		CommerceCatalog commerceCatalog = CommerceTestUtil.addCommerceCatalog(
+			testGroup.getCompanyId(), testGroup.getGroupId(), _user.getUserId(),
+			commerceCurrency.getCode());
+
+		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
+			commerceCatalog.getGroupId());
+
+		CPDefinition cpDefinition = cpInstance.getCPDefinition();
+
+		CommercePriceList commercePriceList =
+			CommercePriceListTestUtil.addCommercePriceList(
+				commerceCatalog.getGroupId(), false,
+				CommercePriceListConstants.TYPE_PRICE_LIST, 1.0);
+
+		Calendar calendar = new GregorianCalendar();
+
+		CommercePriceEntry commercePriceEntry =
+			CommercePriceEntryLocalServiceUtil.addCommercePriceEntry(
+				RandomTestUtil.randomString(), cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commercePriceList.getCommercePriceListId(), true, null, null,
+				null, null, calendar.get(Calendar.MONTH),
+				calendar.get(Calendar.DAY_OF_MONTH),
+				calendar.get(Calendar.YEAR), calendar.get(Calendar.HOUR),
+				calendar.get(Calendar.MINUTE), calendar.get(Calendar.MONTH),
+				calendar.get(Calendar.DAY_OF_MONTH),
+				calendar.get(Calendar.YEAR) + 1, calendar.get(Calendar.HOUR),
+				calendar.get(Calendar.MINUTE), false, BigDecimal.ONE, false,
+				BigDecimal.ONE, StringPool.BLANK, _serviceContext);
+
+		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
+
+		CommercePriceEntryLocalServiceUtil.addCommercePriceEntry(
+			RandomTestUtil.randomString(), cpDefinition.getCProductId(),
+			cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), true, null, null, null,
+			null, calendar.get(Calendar.MONTH),
+			calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR),
+			calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE),
+			calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),
+			calendar.get(Calendar.YEAR) - 1, calendar.get(Calendar.HOUR),
+			calendar.get(Calendar.MINUTE), false, BigDecimal.TEN, false,
+			BigDecimal.TEN, StringPool.BLANK, _serviceContext);
+
+		Sku channelProductSku = skuResource.getChannelProductSku(
+			_commerceChannel.getCommerceChannelId(),
+			cpDefinition.getCProductId(), cpInstance.getCPInstanceId(), -1L);
+
+		Price price = channelProductSku.getPrice();
+
+		BigDecimal commercePriceEntryPrice = commercePriceEntry.getPrice();
+
+		Assert.assertTrue(
+			Objects.equals(
+				price.getPrice(), commercePriceEntryPrice.doubleValue()));
+	}
+
+	private void _testGetChannelProductSkuAllowMultiplePriceEntriesInTheSamePromotion()
+		throws Exception {
+
+		CommerceCurrency commerceCurrency =
+			CommerceCurrencyTestUtil.addCommerceCurrency(
+				testCompany.getCompanyId());
+
+		CommerceCatalog commerceCatalog = CommerceTestUtil.addCommerceCatalog(
+			testGroup.getCompanyId(), testGroup.getGroupId(), _user.getUserId(),
+			commerceCurrency.getCode());
+
+		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
+			commerceCatalog.getGroupId());
+
+		CPDefinition cpDefinition = cpInstance.getCPDefinition();
+
+		CommercePriceList catalogBaseCommercePriceList =
+			CommercePriceListLocalServiceUtil.
+				getCatalogBaseCommercePriceListByType(
+					commerceCatalog.getGroupId(),
+					CommercePriceListConstants.TYPE_PRICE_LIST);
+
+		Calendar calendar = new GregorianCalendar();
+
+		CommercePriceEntryLocalServiceUtil.addCommercePriceEntry(
+			RandomTestUtil.randomString(), cpDefinition.getCProductId(),
+			cpInstance.getCPInstanceUuid(),
+			catalogBaseCommercePriceList.getCommercePriceListId(), true, null,
+			null, null, null, calendar.get(Calendar.MONTH),
+			calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR),
+			calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE),
+			calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),
+			calendar.get(Calendar.YEAR) + 1, calendar.get(Calendar.HOUR),
+			calendar.get(Calendar.MINUTE), false, new BigDecimal(100), false,
+			BigDecimal.ONE, StringPool.BLANK, _serviceContext);
+
+		CommercePriceList commercePriceList =
+			CommercePriceListTestUtil.addCommercePriceList(
+				commerceCatalog.getGroupId(), false,
+				CommercePriceListConstants.TYPE_PROMOTION, 1.0);
+
+		CommercePriceEntry commercePriceEntry =
+			CommercePriceEntryLocalServiceUtil.addCommercePriceEntry(
+				RandomTestUtil.randomString(), cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commercePriceList.getCommercePriceListId(), true, null, null,
+				null, null, calendar.get(Calendar.MONTH),
+				calendar.get(Calendar.DAY_OF_MONTH),
+				calendar.get(Calendar.YEAR), calendar.get(Calendar.HOUR),
+				calendar.get(Calendar.MINUTE), calendar.get(Calendar.MONTH),
+				calendar.get(Calendar.DAY_OF_MONTH),
+				calendar.get(Calendar.YEAR) + 1, calendar.get(Calendar.HOUR),
+				calendar.get(Calendar.MINUTE), false, BigDecimal.ONE, false,
+				BigDecimal.ONE, StringPool.BLANK, _serviceContext);
+
+		_serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
+
+		CommercePriceEntryLocalServiceUtil.addCommercePriceEntry(
+			RandomTestUtil.randomString(), cpDefinition.getCProductId(),
+			cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), true, null, null, null,
+			null, calendar.get(Calendar.MONTH),
+			calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR),
+			calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE),
+			calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH),
+			calendar.get(Calendar.YEAR) - 1, calendar.get(Calendar.HOUR),
+			calendar.get(Calendar.MINUTE), false, BigDecimal.TEN, false,
+			BigDecimal.TEN, StringPool.BLANK, _serviceContext);
+
+		Sku channelProductSku = skuResource.getChannelProductSku(
+			_commerceChannel.getCommerceChannelId(),
+			cpDefinition.getCProductId(), cpInstance.getCPInstanceId(), -1L);
+
+		Price price = channelProductSku.getPrice();
+
+		BigDecimal commercePriceEntryPrice = commercePriceEntry.getPrice();
+
+		Assert.assertTrue(
+			Objects.equals(
+				price.getPromoPrice(), commercePriceEntryPrice.doubleValue()));
 	}
 
 	private void _testGetChannelProductSkusPageWithUnitOfMeasure()
@@ -316,11 +581,12 @@ public class SkuResourceTest extends BaseSkuResourceTestCase {
 
 				Price skuUnitOfMeasurePrice = skuUnitOfMeasure.getPrice();
 
-				Assert.assertNotNull(skuUnitOfMeasurePrice);
 				Assert.assertTrue(
 					BigDecimalUtil.eq(
 						commercePriceEntry.getPrice(),
 						BigDecimal.valueOf(skuUnitOfMeasurePrice.getPrice())));
+				Assert.assertNotNull(
+					skuUnitOfMeasurePrice.getPricingQuantityPriceFormatted());
 
 				TierPrice[] tierPrices = skuUnitOfMeasure.getTierPrices();
 

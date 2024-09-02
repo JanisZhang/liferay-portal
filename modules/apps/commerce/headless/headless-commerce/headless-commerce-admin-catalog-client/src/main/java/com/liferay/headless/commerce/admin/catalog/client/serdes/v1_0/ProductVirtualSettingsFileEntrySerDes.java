@@ -50,6 +50,16 @@ public class ProductVirtualSettingsFileEntrySerDes {
 
 		sb.append("{");
 
+		if (productVirtualSettingsFileEntry.getActions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(productVirtualSettingsFileEntry.getActions()));
+		}
+
 		if (productVirtualSettingsFileEntry.getAttachment() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -62,6 +72,16 @@ public class ProductVirtualSettingsFileEntrySerDes {
 			sb.append(_escape(productVirtualSettingsFileEntry.getAttachment()));
 
 			sb.append("\"");
+		}
+
+		if (productVirtualSettingsFileEntry.getId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"id\": ");
+
+			sb.append(productVirtualSettingsFileEntry.getId());
 		}
 
 		if (productVirtualSettingsFileEntry.getSrc() != null) {
@@ -128,6 +148,15 @@ public class ProductVirtualSettingsFileEntrySerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (productVirtualSettingsFileEntry.getActions() == null) {
+			map.put("actions", null);
+		}
+		else {
+			map.put(
+				"actions",
+				String.valueOf(productVirtualSettingsFileEntry.getActions()));
+		}
+
 		if (productVirtualSettingsFileEntry.getAttachment() == null) {
 			map.put("attachment", null);
 		}
@@ -136,6 +165,14 @@ public class ProductVirtualSettingsFileEntrySerDes {
 				"attachment",
 				String.valueOf(
 					productVirtualSettingsFileEntry.getAttachment()));
+		}
+
+		if (productVirtualSettingsFileEntry.getId() == null) {
+			map.put("id", null);
+		}
+		else {
+			map.put(
+				"id", String.valueOf(productVirtualSettingsFileEntry.getId()));
 		}
 
 		if (productVirtualSettingsFileEntry.getSrc() == null) {
@@ -182,14 +219,50 @@ public class ProductVirtualSettingsFileEntrySerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "attachment")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "src")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "url")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "version")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			ProductVirtualSettingsFileEntry productVirtualSettingsFileEntry,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "attachment")) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				if (jsonParserFieldValue != null) {
+					productVirtualSettingsFileEntry.setActions(
+						(Map<String, Map<String, String>>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "attachment")) {
 				if (jsonParserFieldValue != null) {
 					productVirtualSettingsFileEntry.setAttachment(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				if (jsonParserFieldValue != null) {
+					productVirtualSettingsFileEntry.setId(
+						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "src")) {
@@ -242,36 +315,7 @@ public class ProductVirtualSettingsFileEntrySerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -281,6 +325,38 @@ public class ProductVirtualSettingsFileEntrySerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

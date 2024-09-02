@@ -7,15 +7,27 @@ package com.liferay.layout.exporter;
 
 import java.io.File;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Eudaldo Alonso
  */
+@ProviderType
 public interface LayoutsExporter {
+
+	public File exportLayoutPageTemplateCollections(
+			long[] layoutPageTemplateCollectionIds)
+		throws Exception;
 
 	public File exportLayoutPageTemplateEntries(long groupId) throws Exception;
 
 	public File exportLayoutPageTemplateEntries(
 			long[] layoutPageTemplateEntryIds, int type)
+		throws Exception;
+
+	public File exportLayoutPageTemplateEntriesAndLayoutPageTemplateCollections(
+			long[] layoutPageTemplateEntryIds,
+			long[] layoutPageTemplateCollectionIds)
 		throws Exception;
 
 	public File exportLayoutUtilityPageEntries(long[] layoutUtilityPageEntryIds)

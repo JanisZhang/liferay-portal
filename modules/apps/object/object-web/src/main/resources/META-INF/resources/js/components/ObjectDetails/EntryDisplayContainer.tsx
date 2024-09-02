@@ -6,7 +6,7 @@
 import {
 	FormError,
 	SingleSelect,
-	getLocalizableLabel,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useMemo} from 'react';
 
@@ -37,7 +37,7 @@ export function EntryDisplayContainer({
 	const titleFieldOptions = useMemo(() => {
 		return nonRelationshipObjectFieldsInfo?.map(({label, name}) => {
 			return {
-				label: getLocalizableLabel(
+				label: stringUtils.getLocalizableLabel(
 					values.defaultLanguageId as Liferay.Language.Locale,
 					label,
 					name
@@ -57,6 +57,7 @@ export function EntryDisplayContainer({
 
 			setValues({titleObjectFieldName: idField?.name});
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -65,6 +66,7 @@ export function EntryDisplayContainer({
 			className={className}
 			disabled={isLinkedObjectDefinition}
 			error={errors.titleObjectFieldId}
+			id="lfr-objects__object-display-container-entry-title-field"
 			items={titleFieldOptions}
 			label={Liferay.Language.get('entry-title-field')}
 			onSelectionChange={(itemKey) => {

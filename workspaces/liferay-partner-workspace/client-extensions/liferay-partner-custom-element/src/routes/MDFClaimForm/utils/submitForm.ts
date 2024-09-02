@@ -17,6 +17,7 @@ import submitMDFClaim from './submitMDFClaim';
 import submitMDFClaimActivity from './submitMDFClaimActivity';
 import submitMDFClaimActivityDocuments from './submitMDFClaimActivityDocuments';
 import submitMDFClaimBudget from './submitMDFClaimBudget';
+import submitMDFClaimDocuments from './submitMDFClaimDocuments';
 import submitMDFClaimProxyAPI from './submitMDFClaimProxyAPI';
 
 export default async function submitForm(
@@ -57,6 +58,18 @@ export default async function submitForm(
 		submitValues.id = dtoMDFClaim?.id;
 		submitValues.externalReferenceCode = dtoMDFClaim?.externalReferenceCode;
 
+		if (
+			submitValues.reimbursementInvoices &&
+			dtoMDFClaim?.id &&
+			mdfRequest.r_accToMDFReqs_accountEntryId
+		) {
+			submitMDFClaimDocuments(
+				mdfRequest.r_accToMDFReqs_accountEntryId,
+				dtoMDFClaim.id,
+				submitValues.reimbursementInvoices
+			);
+		}
+
 		if (submitValues.activities?.length) {
 			for (const mdfClaimActivity of submitValues.activities) {
 				if (
@@ -93,11 +106,12 @@ export default async function submitForm(
 								mdfRequest.r_accToMDFReqs_accountEntryId &&
 								dtoMDFClaimActivity.id
 							) {
-								const dtoMDFClaimBudget = await submitMDFClaimBudget(
-									mdfClaimBudget,
-									mdfRequest.r_accToMDFReqs_accountEntryId,
-									dtoMDFClaimActivity.id
-								);
+								const dtoMDFClaimBudget =
+									await submitMDFClaimBudget(
+										mdfClaimBudget,
+										mdfRequest.r_accToMDFReqs_accountEntryId,
+										dtoMDFClaimActivity.id
+									);
 
 								mdfClaimBudget.id = dtoMDFClaimBudget.id;
 								mdfClaimBudget.externalReferenceCode =

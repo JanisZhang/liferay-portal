@@ -16,9 +16,12 @@ import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSettin
 import com.liferay.commerce.product.type.virtual.service.base.CPDVirtualSettingFileEntryServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+
+import java.io.InputStream;
 
 import java.util.List;
 
@@ -51,6 +54,48 @@ public class CPDVirtualSettingFileEntryServiceImpl
 			addCPDVirtualSettingFileEntry(
 				getUserId(), groupId, cpDefinitionVirtualSettingId, fileEntryId,
 				url, version);
+	}
+
+	@Override
+	public FileEntry addFileEntry(
+			long groupId, long folderId, InputStream inputStream,
+			String fileName, String mimeType, String serviceName)
+		throws PortalException {
+
+		CommerceCatalog commerceCatalog =
+			_commerceCatalogLocalService.fetchCommerceCatalogByGroupId(groupId);
+
+		if (commerceCatalog == null) {
+			throw new PrincipalException();
+		}
+
+		_commerceCatalogModelResourcePermission.check(
+			getPermissionChecker(), commerceCatalog, ActionKeys.UPDATE);
+
+		return cpdVirtualSettingFileEntryLocalService.addFileEntry(
+			getUserId(), groupId, CommerceCatalog.class.getName(),
+			commerceCatalog.getCommerceCatalogId(), serviceName, folderId,
+			inputStream, fileName, mimeType);
+	}
+
+	@Override
+	public CPDVirtualSettingFileEntry deleteCPDVirtualSettingFileEntry(
+			long cpdVirtualSettingFileEntryId)
+		throws PortalException {
+
+		CPDVirtualSettingFileEntry cpdVirtualSettingFileEntry =
+			cpdVirtualSettingFileEntryLocalService.
+				getCPDVirtualSettingFileEntry(cpdVirtualSettingFileEntryId);
+
+		CPDefinitionVirtualSetting cpDefinitionVirtualSetting =
+			cpdVirtualSettingFileEntry.getCPDefinitionVirtualSetting();
+
+		_checkPermission(
+			cpDefinitionVirtualSetting.getClassName(),
+			cpDefinitionVirtualSetting.getClassPK(), ActionKeys.UPDATE);
+
+		return cpdVirtualSettingFileEntryLocalService.
+			deleteCPDVirtualSettingFileEntry(cpdVirtualSettingFileEntryId);
 	}
 
 	@Override
@@ -139,15 +184,11 @@ public class CPDVirtualSettingFileEntryServiceImpl
 				cpdVirtualSettingFileEntryId, fileEntryId, url, version);
 	}
 
-	private void _checkCommerceCatalog(long cpDefinitionId, String actionId)
+	private void _checkCommerceCatalog(long groupId, String actionId)
 		throws PortalException {
 
-		CPDefinition cpDefinition = _cpDefinitionLocalService.getCPDefinition(
-			cpDefinitionId);
-
 		CommerceCatalog commerceCatalog =
-			_commerceCatalogLocalService.fetchCommerceCatalogByGroupId(
-				cpDefinition.getGroupId());
+			_commerceCatalogLocalService.fetchCommerceCatalogByGroupId(groupId);
 
 		if (commerceCatalog == null) {
 			throw new PrincipalException();
@@ -169,7 +210,10 @@ public class CPDVirtualSettingFileEntryServiceImpl
 			cpDefinitionId = cpInstance.getCPDefinitionId();
 		}
 
-		_checkCommerceCatalog(cpDefinitionId, action);
+		CPDefinition cpDefinition = _cpDefinitionLocalService.getCPDefinition(
+			cpDefinitionId);
+
+		_checkCommerceCatalog(cpDefinition.getGroupId(), action);
 	}
 
 	@Reference

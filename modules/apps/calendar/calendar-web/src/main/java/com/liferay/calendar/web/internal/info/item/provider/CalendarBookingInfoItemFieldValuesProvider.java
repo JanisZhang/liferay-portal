@@ -6,8 +6,12 @@
 package com.liferay.calendar.web.internal.info.item.provider;
 
 import com.liferay.calendar.constants.CalendarPortletKeys;
+import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarBooking;
+import com.liferay.calendar.service.CalendarBookingService;
+import com.liferay.calendar.util.RecurrenceUtil;
 import com.liferay.calendar.web.internal.info.item.CalendarBookingInfoItemFields;
+import com.liferay.calendar.workflow.constants.CalendarBookingWorkflowConstants;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
@@ -16,10 +20,13 @@ import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.layout.page.template.info.item.provider.DisplayPageInfoItemFieldSetProvider;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -29,10 +36,13 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.portlet.WindowState;
 
@@ -67,48 +77,13 @@ public class CalendarBookingInfoItemFieldValuesProvider
 					calendarBooking.getCalendarBookingId())
 			).build();
 		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(
+				"Unexpected portal exception", portalException);
+		}
 		catch (Exception exception) {
 			throw new RuntimeException("Unexpected exception", exception);
 		}
-	}
-
-	private List<InfoFieldValue<Object>> _getCalendarBookingInfoFieldValues(
-		CalendarBooking calendarBooking) {
-
-		return Arrays.asList(
-			new InfoFieldValue<>(
-				CalendarBookingInfoItemFields.titleInfoField,
-				InfoLocalizedValue.<String>builder(
-				).defaultLocale(
-					LocaleUtil.fromLanguageId(
-						calendarBooking.getDefaultLanguageId())
-				).values(
-					calendarBooking.getTitleMap()
-				).build()),
-			new InfoFieldValue<>(
-				CalendarBookingInfoItemFields.descriptionInfoField,
-				InfoLocalizedValue.<String>builder(
-				).defaultLocale(
-					LocaleUtil.fromLanguageId(
-						calendarBooking.getDefaultLanguageId())
-				).values(
-					calendarBooking.getDescriptionMap()
-				).build()),
-			new InfoFieldValue<>(
-				CalendarBookingInfoItemFields.locationInfoField,
-				calendarBooking.getLocation()),
-			new InfoFieldValue<>(
-				CalendarBookingInfoItemFields.eventURLInfoField,
-				_getCalendarBookingURL(calendarBooking)),
-			new InfoFieldValue<>(
-				CalendarBookingInfoItemFields.startDateInfoField,
-				new Date(calendarBooking.getStartTime())),
-			new InfoFieldValue<>(
-				CalendarBookingInfoItemFields.endDateInfoField,
-				new Date(calendarBooking.getEndTime())),
-			new InfoFieldValue<>(
-				CalendarBookingInfoItemFields.allDayInfoField,
-				calendarBooking.isAllDay()));
 	}
 
 	/**
@@ -116,21 +91,28 @@ public class CalendarBookingInfoItemFieldValuesProvider
 	 * com.liferay.calendar.internal.notification.NotificationTemplateContextFactory#_getCalendarBookingURL(
 	 * User, long)}
 	 */
-	private String _getCalendarBookingURL(CalendarBooking calendarBooking) {
+	protected String getCalendarBookingURL(CalendarBooking calendarBooking) {
 		try {
 			Company company = _companyLocalService.getCompany(
 				calendarBooking.getCompanyId());
 
-			String portalURL = company.getPortalURL(
-				calendarBooking.getGroupId());
-
 			Group group = _groupLocalService.getGroup(
 				calendarBooking.getGroupId());
 
-			String layoutActualURL = _portal.getLayoutActualURL(
-				_layoutLocalService.fetchLayout(group.getDefaultPublicPlid()));
+			Layout layout = _layoutLocalService.fetchLayout(
+				group.getDefaultPublicPlid());
 
-			String url = portalURL + layoutActualURL;
+			if (layout == null) {
+				Group guestGroup = _groupLocalService.getGroup(
+					company.getCompanyId(), GroupConstants.GUEST);
+
+				layout = _layoutLocalService.fetchLayout(
+					guestGroup.getDefaultPublicPlid());
+			}
+
+			String url =
+				company.getPortalURL(calendarBooking.getGroupId()) +
+					_portal.getLayoutActualURL(layout);
 
 			String namespace = _portal.getPortletNamespace(
 				CalendarPortletKeys.CALENDAR);
@@ -158,6 +140,113 @@ public class CalendarBookingInfoItemFieldValuesProvider
 		}
 	}
 
+	private List<InfoFieldValue<Object>> _getCalendarBookingInfoFieldValues(
+			CalendarBooking calendarBooking)
+		throws PortalException {
+
+		return Arrays.asList(
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.titleInfoField,
+				InfoLocalizedValue.<String>builder(
+				).defaultLocale(
+					LocaleUtil.fromLanguageId(
+						calendarBooking.getDefaultLanguageId())
+				).values(
+					calendarBooking.getTitleMap()
+				).build()),
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.descriptionInfoField,
+				InfoLocalizedValue.<String>builder(
+				).defaultLocale(
+					LocaleUtil.fromLanguageId(
+						calendarBooking.getDefaultLanguageId())
+				).values(
+					calendarBooking.getDescriptionMap()
+				).build()),
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.locationInfoField,
+				calendarBooking.getLocation()),
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.eventURLInfoField,
+				getCalendarBookingURL(calendarBooking)),
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.startDateInfoField,
+				new Date(calendarBooking.getStartTime())),
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.endDateInfoField,
+				new Date(calendarBooking.getEndTime())),
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.allDayInfoField,
+				calendarBooking.isAllDay()),
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.calendarNameInfoField,
+				InfoLocalizedValue.<String>builder(
+				).defaultLocale(
+					LocaleUtil.fromLanguageId(
+						calendarBooking.getDefaultLanguageId())
+				).values(
+					_getCalendarNameMap(calendarBooking)
+				).build()),
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.invitationsInfoField,
+				_getInvitations(calendarBooking)),
+			new InfoFieldValue<>(
+				CalendarBookingInfoItemFields.repetitionsInfoField,
+				RecurrenceUtil.getSummary(
+					calendarBooking, calendarBooking.getRecurrenceObj())));
+	}
+
+	private Map<Locale, String> _getCalendarNameMap(
+			CalendarBooking calendarBooking)
+		throws PortalException {
+
+		Calendar calendar = calendarBooking.getCalendar();
+
+		return calendar.getNameMap();
+	}
+
+	private String _getInvitations(CalendarBooking calendarBooking)
+		throws PortalException {
+
+		List<CalendarBooking> acceptedCalendarBookings =
+			_calendarBookingService.getChildCalendarBookings(
+				calendarBooking.getParentCalendarBookingId(),
+				WorkflowConstants.STATUS_APPROVED);
+		List<CalendarBooking> declinedCalendarBookings =
+			_calendarBookingService.getChildCalendarBookings(
+				calendarBooking.getParentCalendarBookingId(),
+				WorkflowConstants.STATUS_DENIED);
+
+		List<CalendarBooking> pendingCalendarBookings =
+			_calendarBookingService.getChildCalendarBookings(
+				calendarBooking.getParentCalendarBookingId(),
+				WorkflowConstants.STATUS_PENDING);
+
+		pendingCalendarBookings.addAll(
+			_calendarBookingService.getChildCalendarBookings(
+				calendarBooking.getParentCalendarBookingId(),
+				WorkflowConstants.STATUS_DRAFT));
+		pendingCalendarBookings.addAll(
+			_calendarBookingService.getChildCalendarBookings(
+				calendarBooking.getParentCalendarBookingId(),
+				CalendarBookingWorkflowConstants.STATUS_MASTER_PENDING));
+
+		List<CalendarBooking> maybeCalendarBookings =
+			_calendarBookingService.getChildCalendarBookings(
+				calendarBooking.getParentCalendarBookingId(),
+				CalendarBookingWorkflowConstants.STATUS_MAYBE);
+
+		return _language.format(
+			LocaleUtil.getMostRelevantLocale(),
+			"accepted-x-declined-x-pending-x-maybe-x",
+			new Integer[] {
+				acceptedCalendarBookings.size(),
+				declinedCalendarBookings.size(), pendingCalendarBookings.size(),
+				maybeCalendarBookings.size()
+			},
+			false);
+	}
+
 	private ThemeDisplay _getThemeDisplay() {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
@@ -173,6 +262,9 @@ public class CalendarBookingInfoItemFieldValuesProvider
 		CalendarBookingInfoItemFieldValuesProvider.class);
 
 	@Reference
+	private CalendarBookingService _calendarBookingService;
+
+	@Reference
 	private CompanyLocalService _companyLocalService;
 
 	@Reference
@@ -181,6 +273,9 @@ public class CalendarBookingInfoItemFieldValuesProvider
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

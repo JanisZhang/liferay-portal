@@ -39,6 +39,7 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -99,7 +100,7 @@ public abstract class BasePriceEntryResourceTestCase {
 		PriceEntryResource.Builder builder = PriceEntryResource.builder();
 
 		priceEntryResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -113,7 +114,32 @@ public abstract class BasePriceEntryResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		PriceEntry priceEntry1 = randomPriceEntry();
+
+		String json = objectMapper.writeValueAsString(priceEntry1);
+
+		PriceEntry priceEntry2 = PriceEntrySerDes.toDTO(json);
+
+		Assert.assertTrue(equals(priceEntry1, priceEntry2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		PriceEntry priceEntry = randomPriceEntry();
+
+		String json1 = objectMapper.writeValueAsString(priceEntry);
+		String json2 = PriceEntrySerDes.toJSON(priceEntry);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -128,40 +154,6 @@ public abstract class BasePriceEntryResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		PriceEntry priceEntry1 = randomPriceEntry();
-
-		String json = objectMapper.writeValueAsString(priceEntry1);
-
-		PriceEntry priceEntry2 = PriceEntrySerDes.toDTO(json);
-
-		Assert.assertTrue(equals(priceEntry1, priceEntry2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		PriceEntry priceEntry = randomPriceEntry();
-
-		String json1 = objectMapper.writeValueAsString(priceEntry);
-		String json2 = PriceEntrySerDes.toJSON(priceEntry);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -247,6 +239,8 @@ public abstract class BasePriceEntryResourceTestCase {
 		PriceEntry priceEntry =
 			testGraphQLGetPriceEntryByExternalReferenceCode_addPriceEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				priceEntry,
@@ -268,6 +262,33 @@ public abstract class BasePriceEntryResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/priceEntryByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertTrue(
+			equals(
+				priceEntry,
+				PriceEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v1_0",
+								new GraphQLField(
+									"priceEntryByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													priceEntry.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v1_0",
+						"Object/priceEntryByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -276,6 +297,8 @@ public abstract class BasePriceEntryResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -291,6 +314,27 @@ public abstract class BasePriceEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"priceEntryByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -333,7 +377,10 @@ public abstract class BasePriceEntryResourceTestCase {
 
 	@Test
 	public void testGraphQLDeletePriceEntry() throws Exception {
-		PriceEntry priceEntry = testGraphQLDeletePriceEntry_addPriceEntry();
+
+		// No namespace
+
+		PriceEntry priceEntry1 = testGraphQLDeletePriceEntry_addPriceEntry();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -342,23 +389,60 @@ public abstract class BasePriceEntryResourceTestCase {
 						"deletePriceEntry",
 						new HashMap<String, Object>() {
 							{
-								put("id", priceEntry.getId());
+								put("id", priceEntry1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deletePriceEntry"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"priceEntry",
 					new HashMap<String, Object>() {
 						{
-							put("id", priceEntry.getId());
+							put("id", priceEntry1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		PriceEntry priceEntry2 = testGraphQLDeletePriceEntry_addPriceEntry();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"deletePriceEntry",
+							new HashMap<String, Object>() {
+								{
+									put("id", priceEntry2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v1_0",
+				"Object/deletePriceEntry"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v1_0",
+					new GraphQLField(
+						"priceEntry",
+						new HashMap<String, Object>() {
+							{
+								put("id", priceEntry2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected PriceEntry testGraphQLDeletePriceEntry_addPriceEntry()
@@ -387,6 +471,8 @@ public abstract class BasePriceEntryResourceTestCase {
 	public void testGraphQLGetPriceEntry() throws Exception {
 		PriceEntry priceEntry = testGraphQLGetPriceEntry_addPriceEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				priceEntry,
@@ -402,11 +488,35 @@ public abstract class BasePriceEntryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/priceEntry"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertTrue(
+			equals(
+				priceEntry,
+				PriceEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v1_0",
+								new GraphQLField(
+									"priceEntry",
+									new HashMap<String, Object>() {
+										{
+											put("id", priceEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v1_0",
+						"Object/priceEntry"))));
 	}
 
 	@Test
 	public void testGraphQLGetPriceEntryNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -420,6 +530,25 @@ public abstract class BasePriceEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"priceEntry",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1621,7 +1750,8 @@ public abstract class BasePriceEntryResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1686,12 +1816,12 @@ public abstract class BasePriceEntryResourceTestCase {
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1700,11 +1830,16 @@ public abstract class BasePriceEntryResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1736,6 +1871,24 @@ public abstract class BasePriceEntryResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1757,16 +1910,6 @@ public abstract class BasePriceEntryResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

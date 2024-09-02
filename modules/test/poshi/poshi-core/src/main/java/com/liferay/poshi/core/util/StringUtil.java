@@ -73,7 +73,7 @@ public class StringUtil {
 		if (!contains(expectedText, actualText)) {
 			throw new RuntimeException(
 				"Expected text \"" + expectedText +
-					"\" does not contain atual text\"" + actualText + "\"");
+					"\" does not contain atual text \"" + actualText + "\"");
 		}
 	}
 
@@ -104,7 +104,7 @@ public class StringUtil {
 	}
 
 	public static String combine(String... strings) {
-		if ((strings == null) || (strings.length == 0)) {
+		if (ArrayUtil.isEmpty(strings)) {
 			return "";
 		}
 

@@ -17,9 +17,13 @@
 		},
 		"type": {
 			"enum": [
+				"CookiePolicy",
+				"CreateAccount",
 				"Error",
 				"ErrorCode404",
 				"ErrorCode500",
+				"ForgotPassword",
+				"Login",
 				"TermsOfUse"
 			],
 			"title": "The type Schema",

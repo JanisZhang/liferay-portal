@@ -137,7 +137,7 @@ public class LayoutTestUtil {
 
 	public static Layout addTypeContentLayout(Group group) throws Exception {
 		return LayoutLocalServiceUtil.addLayout(
-			TestPropsValues.getUserId(), group.getGroupId(), false,
+			null, TestPropsValues.getUserId(), group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
 			LayoutConstants.TYPE_CONTENT, false, StringPool.BLANK,
@@ -150,8 +150,8 @@ public class LayoutTestUtil {
 		throws Exception {
 
 		return LayoutLocalServiceUtil.addLayout(
-			TestPropsValues.getUserId(), group.getGroupId(), privateLayout,
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+			null, TestPropsValues.getUserId(), group.getGroupId(),
+			privateLayout, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
 			LayoutConstants.TYPE_CONTENT, false, system, StringPool.BLANK,
 			ServiceContextTestUtil.getServiceContext(
@@ -164,8 +164,8 @@ public class LayoutTestUtil {
 		throws Exception {
 
 		return LayoutLocalServiceUtil.addLayout(
-			TestPropsValues.getUserId(), group.getGroupId(), privateLayout,
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 0,
+			null, TestPropsValues.getUserId(), group.getGroupId(),
+			privateLayout, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 0,
 			HashMapBuilder.put(
 				LocaleUtil.US, RandomTestUtil.randomString()
 			).build(),
@@ -177,12 +177,27 @@ public class LayoutTestUtil {
 				group.getGroupId(), TestPropsValues.getUserId()));
 	}
 
+	public static Layout addTypeContentLayout(Group group, long parentPlid)
+		throws Exception {
+
+		Layout layout = LayoutLocalServiceUtil.addLayout(
+			null, TestPropsValues.getUserId(), group.getGroupId(), false,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
+			LayoutConstants.TYPE_CONTENT, false, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(
+				TestPropsValues.getGroupId(), TestPropsValues.getUserId()));
+
+		return LayoutLocalServiceUtil.updateParentLayoutId(
+			layout.getPlid(), parentPlid);
+	}
+
 	public static Layout addTypeContentLayout(
 			Group group, Map<Locale, String> nameMap)
 		throws Exception {
 
 		return LayoutLocalServiceUtil.addLayout(
-			TestPropsValues.getUserId(), group.getGroupId(), false,
+			null, TestPropsValues.getUserId(), group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 0, nameMap,
 			Collections.emptyMap(), Collections.emptyMap(),
 			Collections.emptyMap(), Collections.emptyMap(),
@@ -196,7 +211,7 @@ public class LayoutTestUtil {
 		throws Exception {
 
 		return LayoutLocalServiceUtil.addLayout(
-			TestPropsValues.getUserId(), group.getGroupId(), false,
+			null, TestPropsValues.getUserId(), group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, name, StringPool.BLANK,
 			StringPool.BLANK, LayoutConstants.TYPE_CONTENT, false,
 			StringPool.BLANK,
@@ -209,7 +224,7 @@ public class LayoutTestUtil {
 		throws Exception {
 
 		return LayoutLocalServiceUtil.addLayout(
-			TestPropsValues.getUserId(), group.getGroupId(), false,
+			null, TestPropsValues.getUserId(), group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, name, title,
 			StringPool.BLANK, LayoutConstants.TYPE_CONTENT, false,
 			StringPool.BLANK,
@@ -221,7 +236,7 @@ public class LayoutTestUtil {
 		throws Exception {
 
 		return LayoutLocalServiceUtil.addLayout(
-			userId, group.getGroupId(), false,
+			null, userId, group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
 			LayoutConstants.TYPE_CONTENT, false, StringPool.BLANK,
@@ -255,6 +270,24 @@ public class LayoutTestUtil {
 			layout.getUserId(), layout.getPlid(), status, serviceContext);
 	}
 
+	public static Layout addTypeEmbeddedLayout(long groupId) throws Exception {
+		Layout layout = addTypePortletLayout(groupId, false);
+
+		layout.setType(LayoutConstants.TYPE_EMBEDDED);
+
+		return LayoutLocalServiceUtil.updateLayout(layout);
+	}
+
+	public static Layout addTypeFullPageApplicationLayout(long groupId)
+		throws Exception {
+
+		Layout layout = addTypePortletLayout(groupId, false);
+
+		layout.setType(LayoutConstants.TYPE_FULL_PAGE_APPLICATION);
+
+		return LayoutLocalServiceUtil.updateLayout(layout);
+	}
+
 	public static Layout addTypeLinkToLayoutLayout(
 			long groupId, long linkedToLayoutId)
 		throws Exception {
@@ -283,6 +316,14 @@ public class LayoutTestUtil {
 		typeSettingsUnicodeProperties.setProperty("url", url);
 
 		layout.setType(LayoutConstants.TYPE_URL);
+
+		return LayoutLocalServiceUtil.updateLayout(layout);
+	}
+
+	public static Layout addTypePanelLayout(long groupId) throws Exception {
+		Layout layout = addTypePortletLayout(groupId, false);
+
+		layout.setType(LayoutConstants.TYPE_PANEL);
 
 		return LayoutLocalServiceUtil.updateLayout(layout);
 	}
@@ -372,7 +413,7 @@ public class LayoutTestUtil {
 			ServiceContextTestUtil.getServiceContext(groupId);
 
 		return LayoutLocalServiceUtil.addLayout(
-			serviceContext.getUserId(), groupId, privateLayout,
+			null, serviceContext.getUserId(), groupId, privateLayout,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, titleMap,
 			descriptionMap, keywordsMap, robotsMap,
 			LayoutConstants.TYPE_PORTLET, typeSettings, hidden, friendlyURLMap,
@@ -455,7 +496,7 @@ public class LayoutTestUtil {
 		}
 
 		return LayoutLocalServiceUtil.addLayout(
-			user.getUserId(), groupId, privateLayout,
+			null, user.getUserId(), groupId, privateLayout,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, name, null, description,
 			LayoutConstants.TYPE_PORTLET, hidden, friendlyURL, serviceContext);
 	}
@@ -509,6 +550,22 @@ public class LayoutTestUtil {
 			(LayoutTypePortlet)layout.getLayoutType();
 
 		return layoutTypePortlet.isColumnCustomizable(columnId);
+	}
+
+	public static Layout updateFriendlyURL(
+			Layout layout, Map<Locale, String> friendlyURLMap)
+		throws Exception {
+
+		return LayoutLocalServiceUtil.updateLayout(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			layout.getParentLayoutId(), layout.getNameMap(),
+			layout.getTitleMap(), layout.getDescriptionMap(),
+			layout.getKeywordsMap(), layout.getRobotsMap(), layout.getType(),
+			layout.isHidden(), friendlyURLMap, layout.getIconImage(), null,
+			layout.getStyleBookEntryId(), layout.getFaviconFileEntryId(),
+			layout.getMasterLayoutPlid(),
+			ServiceContextTestUtil.getServiceContext(
+				layout.getGroupId(), TestPropsValues.getUserId()));
 	}
 
 	public static Layout updateLayoutColumnCustomizable(

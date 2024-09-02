@@ -256,8 +256,8 @@ definition {
 	macro deleteLayoutPageTemplateEntry(groupName = null, site = null, layoutPageTemplateEntryName = null, type = null) {
 		Variables.assertDefined(parameterList = "${groupName},${layoutPageTemplateEntryName},${type}");
 
-		var groupId = JSONLayoutpagetemplateSetter.setGroupId(
-			groupKey = ${groupName},
+		var groupId = JSONLayoutpagetemplateSetter.setGroupIdByName(
+			groupName = ${groupName},
 			site = ${site});
 
 		var layoutPageTemplateEntryId = JSONLayoutpagetemplateSetter.setLayoutPageTemplateEntryId(
@@ -272,8 +272,8 @@ definition {
 	macro getLayoutPrototypeId(groupName = null, site = null, layoutPageTemplateType = null, layoutPageTemplateEntryName = null) {
 		Variables.assertDefined(parameterList = "${groupName},${layoutPageTemplateEntryName},${layoutPageTemplateType}");
 
-		var groupId = JSONLayoutpagetemplateSetter.setGroupId(
-			groupKey = ${groupName},
+		var groupId = JSONLayoutpagetemplateSetter.setGroupIdByName(
+			groupName = ${groupName},
 			site = ${site});
 		var type = JSONLayoutpagetemplateUtil._getType(layoutPageTemplateType = ${layoutPageTemplateType});
 
@@ -283,6 +283,21 @@ definition {
 			type = ${type});
 
 		return ${layoutPrototypeId};
+	}
+
+	@summary = "Default summary"
+	macro publishLayout(displayPageTemplateEntryName = null, groupName = null, site = null, privateLayout = null) {
+		Variables.assertDefined(parameterList = "${displayPageTemplateEntryName},${groupName}");
+
+		var groupId = JSONLayoutpagetemplateSetter.setGroupId(
+			groupKey = ${groupName},
+			site = ${site});
+
+		var plid = JSONLayoutpagetemplateSetter.setDisplayPageTemplatePlid(
+			displayPageTemplateEntryName = ${displayPageTemplateEntryName},
+			groupId = ${groupId});
+
+		JSONLayoutAPI._publishLayoutByPlid(plid = ${plid});
 	}
 
 	@summary = "Default summary"

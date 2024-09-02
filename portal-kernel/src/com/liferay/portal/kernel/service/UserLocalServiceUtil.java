@@ -706,23 +706,6 @@ public class UserLocalServiceUtil {
 		return getService().createUser(userId);
 	}
 
-	/**
-	 * Decrypts the user's primary key and password from their encrypted forms.
-	 * Used for decrypting a user's credentials from the values stored in an
-	 * automatic login cookie.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param name the encrypted primary key of the user
-	 * @param password the encrypted password of the user
-	 * @return the user's primary key and password
-	 */
-	public static com.liferay.portal.kernel.util.KeyValuePair decryptUserId(
-			long companyId, String name, String password)
-		throws PortalException {
-
-		return getService().decryptUserId(companyId, name, password);
-	}
-
 	public static void deleteGroupUser(long groupId, long userId) {
 		getService().deleteGroupUser(groupId, userId);
 	}
@@ -2369,22 +2352,17 @@ public class UserLocalServiceUtil {
 			user, emailAddress, serviceContext);
 	}
 
-	/**
-	 * Sends the password email to the user with the email address. The content
-	 * of this email can be specified in <code>portal.properties</code> with the
-	 * <code>admin.email.password</code> keys.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param emailAddress the user's email address
-	 * @param fromName the name of the individual that the email should be from
-	 * @param fromAddress the address of the individual that the email should be
-	 from
-	 * @param subject the email subject. If <code>null</code>, the subject
-	 specified in <code>portal.properties</code> will be used.
-	 * @param body the email body. If <code>null</code>, the body specified in
-	 <code>portal.properties</code> will be used.
-	 * @param serviceContext the service context to be applied
-	 */
+	public static boolean sendEmailUserCreationAttempt(
+			long companyId, String emailAddress, String fromName,
+			String fromAddress, String subject, String body,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().sendEmailUserCreationAttempt(
+			companyId, emailAddress, fromName, fromAddress, subject, body,
+			serviceContext);
+	}
+
 	public static boolean sendPassword(
 			long companyId, String emailAddress, String fromName,
 			String fromAddress, String subject, String body,
@@ -2471,6 +2449,17 @@ public class UserLocalServiceUtil {
 		throws PortalException {
 
 		return getService().sendPasswordByUserId(userId);
+	}
+
+	public static boolean sendPasswordLockout(
+			long companyId, String emailAddress, String fromName,
+			String fromAddress, String subject, String body,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().sendPasswordLockout(
+			companyId, emailAddress, fromName, fromAddress, subject, body,
+			serviceContext);
 	}
 
 	public static void setGroupUsers(long groupId, long[] userIds) {
@@ -2850,6 +2839,12 @@ public class UserLocalServiceUtil {
 		return getService().updateLastLogin(userId, loginIP);
 	}
 
+	public static User updateLastLogin(User user, String loginIP)
+		throws PortalException {
+
+		return getService().updateLastLogin(user, loginIP);
+	}
+
 	/**
 	 * Updates whether the user is locked out from logging in.
 	 *
@@ -3089,6 +3084,13 @@ public class UserLocalServiceUtil {
 		throws PortalException {
 
 		return getService().updateStatus(userId, status, serviceContext);
+	}
+
+	public static User updateStatus(
+			User user, int status, ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateStatus(user, status, serviceContext);
 	}
 
 	/**

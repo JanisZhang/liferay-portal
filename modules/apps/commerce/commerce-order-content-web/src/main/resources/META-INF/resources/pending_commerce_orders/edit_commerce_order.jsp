@@ -53,10 +53,13 @@ List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.
 	<aui:script>
 		Liferay.Util.openModal({
 			bodyHTML: '<%= errorMessages.get(0) %>',
-			title: '<liferay-ui:message key="warning" />',
+			containerProps: {
+				className: 'commerce-modal',
+			},
 			center: true,
 			size: 'm',
 			status: 'warning',
+			title: '<liferay-ui:message key="warning" />',
 		});
 	</aui:script>
 </c:if>
@@ -380,7 +383,7 @@ List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.
 						"url", viewCommerceOrderImporterTypeURLString
 					).build()
 				%>'
-				module="js/edit_commerce_order"
+				module="{editCommerceOrder} from commerce-order-content-web"
 			/>
 
 		<%
@@ -457,7 +460,7 @@ List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.
 			itemsPerPage="<%= 10 %>"
 			nestedItemsKey="orderItemId"
 			nestedItemsReferenceKey="orderItems"
-			propsTransformer="js/PendingOrderItemActionDropdownPropsTransformer"
+			propsTransformer="{PendingOrderItemActionDropdownPropsTransformer} from commerce-order-content-web"
 			style="stacked"
 		/>
 	</div>
@@ -532,7 +535,7 @@ List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.
 <%@ include file="/pending_commerce_orders/transition.jspf" %>
 
 <liferay-frontend:component
-	module="js/view"
+	module="{view} from commerce-order-content-web"
 />
 
 <aui:script use="aui-base">

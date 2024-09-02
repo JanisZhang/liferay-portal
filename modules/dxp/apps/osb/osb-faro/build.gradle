@@ -7,10 +7,26 @@ import com.bmuschko.gradle.docker.tasks.container.extras.DockerWaitHealthyContai
 buildscript {
 	dependencies {
 		classpath group: "com.bmuschko", name: "gradle-docker-plugin", version: "6.7.0"
-		classpath group: "gradle.plugin.com.liferay", name: "gradle-plugins-app-docker", version: "latest.release"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.app.docker", version: "1.0.14"
 	}
 
 	repositories {
+		File dir = rootProject.projectDir
+
+		while (dir != null) {
+			File tmpMavenRepositoryDir = new File(dir, ".m2-tmp")
+
+			if (tmpMavenRepositoryDir.exists()) {
+				maven {
+					url tmpMavenRepositoryDir
+
+					println tmpMavenRepositoryDir
+				}
+			}
+
+			dir = dir.getParentFile();
+		}
+
 		maven {
 			url "https://repository-cdn.liferay.com/nexus/content/groups/public"
 		}
@@ -22,6 +38,7 @@ apply plugin: "com.liferay.root.defaults.plugin"
 apply plugin: "com.liferay.yarn.defaults.plugin"
 
 task checkDocker(type: DockerWaitHealthyContainer)
+task copyDatabaseConnector(type: Copy)
 task copyDockerResources(type: Copy)
 task createDocker(type: DockerCreateContainer)
 task removeDocker(type: DockerRemoveContainer)
@@ -43,9 +60,22 @@ appDocker {
 	}
 }
 
+buildAppDockerImage {
+	mustRunAfter copyDockerResources
+}
+
 checkDocker {
 	targetContainerId {
 		dockerContainerId
+	}
+}
+
+copyDatabaseConnector {
+	from "../../../../../lib/development/mysql.jar"
+	into "osb-faro-docker/local/common/resources/lib"
+
+	onlyIf {
+		faroEnvironmentName.equals("local")
 	}
 }
 
@@ -95,6 +125,7 @@ docker {
 }
 
 prepareAppDockerImageInputDir {
+	dependsOn copyDatabaseConnector
 	finalizedBy copyDockerResources
 
 	rename {
@@ -149,7 +180,7 @@ stopDocker {
 configure(project(":dxp:apps:osb:osb-faro:osb-faro-dependencies")) {
 	task copyCloudResources(type: Copy)
 
-	String deployDir = "../osb-faro-docker/cloud/deploy"
+	String deployDir = "../osb-faro-docker/cloud/modules"
 
 	copyCloudResources {
 		doFirst {

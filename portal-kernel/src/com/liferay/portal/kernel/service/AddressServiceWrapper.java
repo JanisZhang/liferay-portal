@@ -61,6 +61,15 @@ public class AddressServiceWrapper
 		return _addressService.getAddresses(className, classPK);
 	}
 
+	@Override
+	public java.util.List<Address> getListTypeAddresses(
+			String className, long classPK, long[] listTypeIds)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _addressService.getListTypeAddresses(
+			className, classPK, listTypeIds);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -82,6 +91,24 @@ public class AddressServiceWrapper
 		return _addressService.updateAddress(
 			addressId, name, description, street1, street2, street3, city, zip,
 			regionId, countryId, listTypeId, mailing, primary, phoneNumber);
+	}
+
+	@Override
+	public Address updateExternalReferenceCode(
+			Address address, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _addressService.updateExternalReferenceCode(
+			address, externalReferenceCode);
+	}
+
+	@Override
+	public Address updateExternalReferenceCode(
+			long addressId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _addressService.updateExternalReferenceCode(
+			addressId, externalReferenceCode);
 	}
 
 	@Override

@@ -5,7 +5,9 @@
 
 package com.liferay.portal.search.internal.spi.model.index.contributor;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentContributor;
@@ -35,15 +37,43 @@ public class GroupedModelDocumentContributor
 
 		GroupedModel groupedModel = (GroupedModel)baseModel;
 
-		document.addKeyword(
-			Field.GROUP_ID,
-			GroupUtil.getSiteGroupId(
-				groupLocalService, groupedModel.getGroupId()));
+		long siteGroupId = GroupUtil.getSiteGroupId(
+			groupLocalService, groupedModel.getGroupId());
+
+		document.addKeyword(Field.GROUP_ID, siteGroupId);
 
 		document.addKeyword(Field.SCOPE_GROUP_ID, groupedModel.getGroupId());
+		document.addKeyword(
+			"groupExternalReferenceCode",
+			_getGroupExternalReferenceCode(siteGroupId));
+		document.addKeyword(
+			"scopeGroupExternalReferenceCode",
+			_getScopeGroupExternalReferenceCode(groupedModel));
 	}
 
 	@Reference
 	protected GroupLocalService groupLocalService;
+
+	private String _getGroupExternalReferenceCode(long siteGroupId) {
+		Group group = groupLocalService.fetchGroup(siteGroupId);
+
+		if (group == null) {
+			return StringPool.BLANK;
+		}
+
+		return group.getExternalReferenceCode();
+	}
+
+	private String _getScopeGroupExternalReferenceCode(
+		GroupedModel groupedModel) {
+
+		Group group = groupLocalService.fetchGroup(groupedModel.getGroupId());
+
+		if (group == null) {
+			return StringPool.BLANK;
+		}
+
+		return group.getExternalReferenceCode();
+	}
 
 }

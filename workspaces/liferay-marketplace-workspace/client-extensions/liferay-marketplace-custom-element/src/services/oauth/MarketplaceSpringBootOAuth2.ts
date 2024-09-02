@@ -58,7 +58,9 @@ type LicenseTypePayload = {
 		ipAddresses: string;
 		macAddresses: string;
 		orderId: string;
+		productId?: string;
 		productPurchaseKey: string;
+		productVersion: string;
 	};
 	skuId: number;
 	type: string;
@@ -69,6 +71,7 @@ export type SubscriptionsType = {
 	name: string;
 	perpetual: boolean;
 	productPurchasedKey: string;
+	productVersion: string;
 	provisionedCount: number;
 	purchasedCount: number;
 	startDate: string;
@@ -81,14 +84,34 @@ export default class MarketplaceSpringBootOAuth2 extends OAuth2Client {
 		);
 	}
 
+	async getAnalyticsPages(
+		searchParams: URLSearchParams = new URLSearchParams()
+	): Promise<AnalyticsViews> {
+		const response = await this.oAuth2Client.fetch(
+			`/analytics/pages?${searchParams.toString()}`
+		);
+
+		return response.json() as Promise<AnalyticsViews>;
+	}
+
+	async provisioningTrial(orderId: number): Promise<any> {
+
+		// No need to await the following request
+		// Will be processed as a Job.
+
+		this.oAuth2Client.fetch(`/trial/provisioning/${orderId}`, {
+			method: 'POST',
+		});
+	}
+
 	async createLicenseKey(payload: LicenseTypePayload): Promise<LicenseKey> {
-		return (this.oAuth2Client.fetch('/provisioning/license-keys', {
+		return this.oAuth2Client.fetch('/provisioning/license-keys', {
 			body: JSON.stringify(payload),
 			method: 'POST',
 
 			// Necessary due the response comes resolved already, not necessary to parse to .json()
 
-		}) as unknown) as Promise<LicenseKey>;
+		}) as unknown as Promise<LicenseKey>;
 	}
 
 	async deactivateLicenseKey(licenseKey: number) {
@@ -98,6 +121,10 @@ export default class MarketplaceSpringBootOAuth2 extends OAuth2Client {
 				method: 'POST',
 			}
 		);
+	}
+
+	async deleteTrial(orderId: string) {
+		await this.oAuth2Client.fetch(`/trial/${orderId}`, {method: 'DELETE'});
 	}
 
 	async downloadLicenseKey(id: number) {
@@ -150,6 +177,24 @@ export default class MarketplaceSpringBootOAuth2 extends OAuth2Client {
 		);
 
 		return response.json();
+	}
+
+	async getTrialAvailability(): Promise<Availability> {
+		try {
+			const response = await this.oAuth2Client.fetch(
+				'/trial/availability'
+			);
+
+			return response.json();
+		}
+		catch {
+			return {
+				active: false,
+				available: 0,
+				fallback: true,
+				max: 0,
+			};
+		}
 	}
 
 	async getSubscriptions(orderId: number): Promise<SubscriptionsType[]> {

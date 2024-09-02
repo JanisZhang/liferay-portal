@@ -145,7 +145,7 @@
 </tr>
 <tr>
 	<td>TABLE_CHECKBOX</td>
-	<td>//tr[.//*[normalize-space(text())='${key_tableMember}']]</td>
+	<td>//tr[.//*[contains(normalize-space(text()),'${key_tableMember}')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -176,16 +176,6 @@
 <tr>
 	<td>SEARCH_SEGMENT</td>
 	<td>//input[@type='text' and @placeholder = 'Search' and not(@disabled)]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SEGMENT_COMPOSITION_COUNT</td>
-	<td>//span[text()='${individualsType}']/parent::div/following-sibling::div</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SEGMENT_COMPOSITION_PERCENT</td>
-	<td>//span[text()='${individualsType}']/parent::div/following-sibling::div/following-sibling::div</td>
 	<td></td>
 </tr>
 <tr>
@@ -234,23 +224,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SEGMENT_MEMBERSHIP_CARD</td>
-	<td>//div[@class='criteria-row']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>SEGMENT_OVERVIEW_ATTRIBUTE</td>
 	<td>//div[contains(@class, 'input-group-item')]//input[contains(@id, 'property')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SEGMENT_TOP_INTERESTS_CARD</td>
-	<td>//div[contains(@class,'interests-card')]//*[@class='card-header']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SEGMENT_BREAKDOWN_CARD</td>
-	<td>//div[contains(@class,'distribution-card')]//*[@class='description']/h4</td>
 	<td></td>
 </tr>
 <tr>
@@ -338,7 +313,7 @@
 </tr>
 <tr>
 	<td>SEGMENT_AUTOCOMPLETE_DROPDOWN</td>
-	<td>//ul[contains(@class,'dropdown-menu')]/li/button[text()='${key_autocompleteText}']</td>
+	<td>//div[contains(@class,'dropdown-menu')]//li//button[contains(text(),'${key_autocompleteText}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -348,7 +323,7 @@
 </tr>
 <tr>
 	<td>SEGMENT_AUTOCOMPLETE_DROPDOWN_BY_INDEX</td>
-	<td>xpath=(//ul[contains(@class,'dropdown-menu')]/li)[${key_index}]</td>
+	<td>xpath=(//div[contains(@class,'dropdown-menu-select')]//li)[${key_index}]</td>
 	<td></td>
 </tr>
 <tr>
@@ -383,7 +358,7 @@
 </tr>
 <tr>
 	<td>NO_MEMBER_TITLE</td>
-	<td>//h4[@class='no-results-title']</td>
+	<td>//div[contains(@class,'no-results-title')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -507,7 +482,7 @@
 
 <tr>
 	<td>ATTRIBUTE_DROPDOWN_MENU_ITEM</td>
-	<td>//ul[contains(@class,'dropdown-menu')][contains(@class,'show')]//button[.//span[normalize-space(text())='${menuItem}']]</td>
+	<td>//div[contains(@class,'dropdown-menu')][contains(@class,'show')]//button[.//span[normalize-space(text())='${menuItem}']]</td>
 	<td></td>
 </tr>
 <tr>
@@ -517,7 +492,7 @@
 </tr>
 <tr>
 	<td>BREAKDOWN_CHART</td>
-	<td>//div[contains(@class,'chart-container')]</td>
+	<td>//div[contains(@class,'chart-container')]//div[@class='recharts-responsive-container']</td>
 	<td></td>
 </tr>
 

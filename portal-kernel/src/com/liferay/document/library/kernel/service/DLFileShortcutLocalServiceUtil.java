@@ -53,14 +53,14 @@ public class DLFileShortcutLocalServiceUtil {
 	}
 
 	public static DLFileShortcut addFileShortcut(
-			long userId, long groupId, long repositoryId, long folderId,
-			long toFileEntryId,
+			String externalReferenceCode, long userId, long groupId,
+			long repositoryId, long folderId, long toFileEntryId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFileShortcut(
-			userId, groupId, repositoryId, folderId, toFileEntryId,
-			serviceContext);
+			externalReferenceCode, userId, groupId, repositoryId, folderId,
+			toFileEntryId, serviceContext);
 	}
 
 	public static void addFileShortcutResources(
@@ -162,6 +162,13 @@ public class DLFileShortcutLocalServiceUtil {
 		throws PortalException {
 
 		getService().deleteFileShortcut(fileShortcutId);
+	}
+
+	public static void deleteFileShortcut(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		getService().deleteFileShortcut(externalReferenceCode, groupId);
 	}
 
 	public static void deleteFileShortcuts(long toFileEntryId)
@@ -297,6 +304,13 @@ public class DLFileShortcutLocalServiceUtil {
 		return getService().fetchDLFileShortcut(fileShortcutId);
 	}
 
+	public static DLFileShortcut fetchDLFileShortcutByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return getService().fetchDLFileShortcutByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the document library file shortcut matching the UUID and group.
 	 *
@@ -327,6 +341,14 @@ public class DLFileShortcutLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getDLFileShortcut(fileShortcutId);
+	}
+
+	public static DLFileShortcut getDLFileShortcutByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getDLFileShortcutByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -437,6 +459,10 @@ public class DLFileShortcutLocalServiceUtil {
 
 		return getService().getFileShortcutsCount(
 			groupId, folderId, active, status);
+	}
+
+	public static List<DLFileShortcut> getGroupFileShortcuts(long groupId) {
+		return getService().getGroupFileShortcuts(groupId);
 	}
 
 	public static

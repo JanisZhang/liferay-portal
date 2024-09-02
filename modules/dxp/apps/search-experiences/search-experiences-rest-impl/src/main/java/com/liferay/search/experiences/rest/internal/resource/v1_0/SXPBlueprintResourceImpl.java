@@ -189,7 +189,7 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 						getName();
 
 				sxpBlueprint.setActions(
-					HashMapBuilder.put(
+					() -> HashMapBuilder.put(
 						"create",
 						() -> addAction(
 							SXPActionKeys.ADD_SXP_BLUEPRINT, "postSXPBlueprint",
@@ -238,7 +238,8 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 					contextAcceptLanguage.getPreferredLocale(),
 					sxpBlueprint.getDescription(),
 					sxpBlueprint.getDescription_i18n()),
-				_getElementInstancesJSON(sxpBlueprint), _getSchemaVersion(),
+				_getElementInstancesJSON(sxpBlueprint),
+				_getSchemaVersion(sxpBlueprint),
 				LocalizedMapUtil.getLocalizedMap(
 					contextAcceptLanguage.getPreferredLocale(),
 					sxpBlueprint.getTitle(), sxpBlueprint.getTitle_i18n()),
@@ -284,7 +285,7 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 
 		SXPBlueprintUtil.unpack(sxpBlueprint);
 
-		sxpBlueprint.setId(sxpBlueprintId);
+		sxpBlueprint.setId(() -> sxpBlueprintId);
 
 		com.liferay.search.experiences.model.SXPBlueprint
 			serviceBuilderSXPBlueprint = _sxpBlueprintService.fetchSXPBlueprint(
@@ -307,7 +308,7 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 				_sxpBlueprintService.fetchSXPBlueprintByExternalReferenceCode(
 					externalReferenceCode, contextCompany.getCompanyId());
 
-		sxpBlueprint.setExternalReferenceCode(externalReferenceCode);
+		sxpBlueprint.setExternalReferenceCode(() -> externalReferenceCode);
 
 		if (serviceBuilderSXPBlueprint != null) {
 			return _updateSXPBlueprint(
@@ -334,8 +335,12 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 			ElementInstanceUtil.unpack(sxpBlueprint.getElementInstances()));
 	}
 
-	private String _getSchemaVersion() {
-		return "1.0";
+	private String _getSchemaVersion(SXPBlueprint sxpBlueprint) {
+		if (sxpBlueprint.getSchemaVersion() != null) {
+			return sxpBlueprint.getSchemaVersion();
+		}
+
+		return "1.1";
 	}
 
 	private SXPBlueprint _updateSXPBlueprint(
@@ -358,7 +363,8 @@ public class SXPBlueprintResourceImpl extends BaseSXPBlueprintResourceImpl {
 					contextAcceptLanguage.getPreferredLocale(),
 					sxpBlueprint.getDescription(),
 					sxpBlueprint.getDescription_i18n()),
-				_getElementInstancesJSON(sxpBlueprint), _getSchemaVersion(),
+				_getElementInstancesJSON(sxpBlueprint),
+				_getSchemaVersion(sxpBlueprint),
 				LocalizedMapUtil.getLocalizedMap(
 					contextAcceptLanguage.getPreferredLocale(),
 					sxpBlueprint.getTitle(), sxpBlueprint.getTitle_i18n()),

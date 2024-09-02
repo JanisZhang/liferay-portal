@@ -7,6 +7,7 @@ package com.liferay.commerce.price.list.service;
 
 import com.liferay.commerce.price.list.model.CommerceTierPriceEntry;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -135,18 +136,6 @@ public class CommerceTierPriceEntryServiceUtil {
 			externalReferenceCode, companyId);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	public static List<CommerceTierPriceEntry> fetchCommerceTierPriceEntries(
-			long companyId, int start, int end)
-		throws PortalException {
-
-		return getService().fetchCommerceTierPriceEntries(
-			companyId, start, end);
-	}
-
 	public static CommerceTierPriceEntry fetchCommerceTierPriceEntry(
 			long commerceTierPriceEntryId)
 		throws PortalException {
@@ -271,13 +260,12 @@ public class CommerceTierPriceEntryServiceUtil {
 	}
 
 	public static CommerceTierPriceEntryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceTierPriceEntryService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceTierPriceEntryService _service;
+	private static final Snapshot<CommerceTierPriceEntryService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceTierPriceEntryServiceUtil.class,
+			CommerceTierPriceEntryService.class);
 
 }

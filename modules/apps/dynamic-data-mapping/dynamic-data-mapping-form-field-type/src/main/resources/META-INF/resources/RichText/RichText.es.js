@@ -5,9 +5,9 @@
 
 import {ClayInput} from '@clayui/form';
 import {ClassicEditor} from 'frontend-editor-ckeditor-web';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
-import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import FieldBase from '../FieldBase/ReactFieldBase.es';
 import LocalesDropdown from '../util/localizable/LocalesDropdown';
 import {
 	convertStringToObject,
@@ -25,6 +25,15 @@ const INITIAL_EDITING_LOCALE = {
 	icon: normalizeLocaleId(themeDisplay.getDefaultLanguageId()),
 	localeId: themeDisplay.getDefaultLanguageId(),
 };
+
+const ALERT_REGEX = /alert\((.*?)\)/;
+const INNER_HTML_REGEX = /innerHTML\s*=\s*.*?/;
+const PHP_CODE_REGEX = /<\?[\s\S]*?\?>/g;
+const ASP_CODE_REGEX = /<%[\s\S]*?%>/g;
+const ASP_NET_CODE_REGEX = /(<asp:[^]+>[\s|\S]*?<\/asp:[^]+>)|(<asp:[^]+\/>)/gi;
+const HTML_TAG_WITH_ON_ATTRIBUTE_REGEX =
+	/<[^>]+?(\s+\bon\w+=(?:'[^']*'|"[^"]*"|[^'"\s>]+))*\s*\/?>/gi;
+const ON_ATTRIBUTE_REGEX = /(\s+\bon\w+=(?:'[^']*'|"[^"]*"|[^'"\s>]+))/gi;
 
 const RichText = ({
 	availableLocales,
@@ -54,16 +63,14 @@ const RichText = ({
 		[editable, predefinedValue, value]
 	);
 
-	const [currentAvailableLocales, setCurrentAvailableLocales] = useState(
-		availableLocales
-	);
-	const [currentEditingLocale, setCurrentEditingLocale] = useState(
-		editingLocale
-	);
+	const [currentAvailableLocales, setCurrentAvailableLocales] =
+		useState(availableLocales);
+	const [currentEditingLocale, setCurrentEditingLocale] =
+		useState(editingLocale);
 	const [currentValue, setCurrentValue] = useState(
 		convertStringToObject(
 			contents,
-			editingLanguageId ?? locale ?? defaultLocale?.localeId
+			editingLanguageId ?? defaultLocale?.localeId ?? locale
 		)
 	);
 	const [currentInternalValue, setCurrentInternalValue] = useState(
@@ -91,11 +98,13 @@ const RichText = ({
 		};
 
 		setCurrentAvailableLocales(availableLocales);
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentEditingLocale]);
 
 	useEffect(() => {
-		changeLanguage(editingLanguageId ?? locale ?? defaultLocale?.localeId);
+		changeLanguage(editingLanguageId ?? defaultLocale?.localeId ?? locale);
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [editingLanguageId, locale, predefinedValue]);
 
@@ -135,8 +144,6 @@ const RichText = ({
 				...currentValue,
 				[currentEditingLocale.localeId]: content,
 			};
-
-			setCurrentValue(newValue);
 			setCurrentInternalValue(content);
 
 			const {availableLocales} = {
@@ -149,19 +156,78 @@ const RichText = ({
 
 			setCurrentAvailableLocales(availableLocales);
 
-			onChange({
-				target: {
-					value: localizedObjectField
-						? newValue
-						: newValue[currentEditingLocale?.localeId],
-				},
-			});
+			if (
+				currentValue[currentEditingLocale?.localeId] ||
+				currentEditingLocale?.localeId === defaultLocale.localeId ||
+				currentValue[defaultLocale.localeId] !== content
+			) {
+				const newValue = {
+					...currentValue,
+					[currentEditingLocale.localeId]: content,
+				};
+
+				setCurrentValue(newValue);
+
+				onChange({
+					target: {
+						value: localizedObjectField
+							? newValue
+							: newValue[currentEditingLocale?.localeId],
+					},
+				});
+			}
 		}
 	};
+
+	function sanitezeHTML(html) {
+		if (Liferay.FeatureFlags['LPD-31212']) {
+			return html;
+		}
+
+		const sanitizedHtml = html
+			.replace(HTML_TAG_WITH_ON_ATTRIBUTE_REGEX, (match) => {
+				return match.replace(ON_ATTRIBUTE_REGEX, '');
+			})
+			.replace(ALERT_REGEX, '')
+			.replace(INNER_HTML_REGEX, '')
+			.replace(PHP_CODE_REGEX, '')
+			.replace(ASP_CODE_REGEX, '')
+			.replace(ASP_NET_CODE_REGEX, '');
+
+		return sanitizedHtml;
+	}
+
+	const resetTranslation = useCallback(() => {
+		editorRef.current.editor.setData(currentValue[defaultLocale.localeId]);
+	}, [editorRef, currentValue, defaultLocale]);
+
+	useEffect(() => {
+		const handleRestoreState = () => {
+			editorRef.current.editor.setData(value);
+		};
+
+		Liferay.after('ddm:restoreState', handleRestoreState);
+
+		return () => {
+			Liferay.detach('ddm:restoreState', handleRestoreState);
+		};
+	}, [value, currentValue]);
+
+	useEffect(() => {
+		Liferay.after('inputLocalized:resetTranslations', resetTranslation);
+
+		return () => {
+			Liferay.detach(
+				'inputLocalized:resetTranslations',
+				resetTranslation
+			);
+		};
+	}, [resetTranslation]);
 
 	return (
 		<FieldBase
 			{...otherProps}
+			fieldName={fieldName}
 			id={id}
 			name={name}
 			readOnly={readOnly}
@@ -189,10 +255,7 @@ const RichText = ({
 							if (editor.mode === 'source') {
 								const value = event.data.dataValue;
 
-								const sanitizedValue = value.replace(
-									/onerror="[^"]+"/gi,
-									''
-								);
+								const sanitizedValue = sanitezeHTML(value);
 
 								handleContentChange(sanitizedValue);
 
@@ -212,8 +275,8 @@ const RichText = ({
 						localizedObjectField
 							? currentValue || ''
 							: currentValue
-							? currentValue[currentEditingLocale?.localeId]
-							: ''
+								? currentValue[currentEditingLocale?.localeId]
+								: ''
 					}
 				/>
 

@@ -8,6 +8,7 @@ package com.liferay.jenkins.results.parser;
 import com.liferay.jenkins.results.parser.test.clazz.FunctionalTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.JUnitTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.ModulesTestClass;
+import com.liferay.jenkins.results.parser.test.clazz.PlaywrightJUnitTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.TestClass;
 import com.liferay.jenkins.results.parser.test.clazz.TestClassMethod;
 import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
@@ -17,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -179,7 +179,7 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 			workspaceGitRepository.storeCommitHistory(commitSHAs);
 		}
 		catch (Exception exception) {
-			failBuildRunner("Failed to store the commit history", exception);
+			failBuildRunner("Unable to store the commit history", exception);
 		}
 	}
 
@@ -406,7 +406,10 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 				return list;
 			}
 
-			_setBuildStartProperty("PORTAL_BATCH_TEST_SELECTOR", "**/*");
+			BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
+
+			buildDatabase.putProperty(
+				"start.properties", "PORTAL_BATCH_TEST_SELECTOR", "**/*");
 		}
 
 		BatchTestClassGroup batchTestClassGroup =
@@ -420,7 +423,9 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 
 				list.add(functionalTestClass.getTestClassMethodName());
 			}
-			else if (testClass instanceof JUnitTestClass) {
+			else if ((testClass instanceof JUnitTestClass) &&
+					 !(testClass instanceof PlaywrightJUnitTestClass)) {
+
 				String testClassFilePath =
 					JenkinsResultsParserUtil.getCanonicalPath(
 						testClass.getTestClassFile());
@@ -435,6 +440,9 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 
 					list.add(testClassMethod.getName());
 				}
+			}
+			else if (testClass instanceof PlaywrightJUnitTestClass) {
+				list.add(testClass.getName());
 			}
 		}
 
@@ -481,23 +489,6 @@ public class RootCauseAnalysisToolTopLevelBuildRunner
 		}
 
 		return false;
-	}
-
-	private void _setBuildStartProperty(
-		String propertyName, String propertyValue) {
-
-		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
-
-		Properties startProperties = new Properties();
-
-		if (buildDatabase.hasProperties("start.properties")) {
-			startProperties.putAll(
-				buildDatabase.getProperties("start.properties"));
-		}
-
-		startProperties.put(propertyName, propertyValue);
-
-		buildDatabase.putProperties("start.properties", startProperties);
 	}
 
 	private void _validateBuildParameterJenkinsGitHubURL() {

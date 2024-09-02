@@ -8,7 +8,12 @@ package com.liferay.portal.kernel.upgrade;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
+import com.liferay.portal.kernel.dao.db.DBTypeToSQLMap;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.util.LoggingTimer;
+import com.liferay.portal.kernel.util.PortletKeys;
+
+import java.io.IOException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,9 +28,15 @@ import java.util.List;
  */
 public abstract class BaseCompanyIdUpgradeProcess extends UpgradeProcess {
 
+	protected void disableProcessConcurrently() {
+		_processConcurrently = false;
+	}
+
 	@Override
 	protected void doUpgrade() throws Exception {
-		if (DBManagerUtil.getDBType() == DBType.SQLSERVER) {
+		if ((DBManagerUtil.getDBType() == DBType.SQLSERVER) ||
+			!_processConcurrently) {
+
 			for (TableUpdater tableUpdater : getTableUpdaters()) {
 				_addCompanyIdColumn(tableUpdater);
 			}
@@ -38,6 +49,125 @@ public abstract class BaseCompanyIdUpgradeProcess extends UpgradeProcess {
 	}
 
 	protected abstract TableUpdater[] getTableUpdaters();
+
+	protected class PortletPreferencesTableUpdater extends TableUpdater {
+
+		public PortletPreferencesTableUpdater(String tableName) {
+			super(tableName, "", "");
+		}
+
+		@Override
+		public void update(Connection connection)
+			throws IOException, SQLException {
+
+			long[] companyIds = PortalInstancePool.getCompanyIds();
+
+			if (companyIds.length == 1) {
+				runSQL(connection, getUpdateSQL(String.valueOf(companyIds[0])));
+
+				return;
+			}
+
+			// Company
+
+			runSQL(
+				connection,
+				_getUpdateSQL(
+					"Company", "companyId", "ownerId",
+					PortletKeys.PREFS_OWNER_TYPE_COMPANY));
+
+			// Group
+
+			runSQL(
+				connection,
+				_getUpdateSQL(
+					"Group_", "groupId", "ownerId",
+					PortletKeys.PREFS_OWNER_TYPE_GROUP));
+
+			// Layout
+
+			runSQL(
+				connection,
+				_getUpdateSQL(
+					"Layout", "plid", "plid",
+					PortletKeys.PREFS_OWNER_TYPE_LAYOUT));
+
+			// LayoutRevision
+
+			runSQL(
+				connection,
+				_getUpdateSQL(
+					"LayoutRevision", "layoutRevisionId", "plid",
+					PortletKeys.PREFS_OWNER_TYPE_LAYOUT));
+
+			// Organization
+
+			runSQL(
+				connection,
+				_getUpdateSQL(
+					"Organization_", "organizationId", "ownerId",
+					PortletKeys.PREFS_OWNER_TYPE_ORGANIZATION));
+
+			// PortletItem
+
+			runSQL(
+				connection,
+				_getUpdateSQL(
+					"PortletItem", "portletItemId", "ownerId",
+					PortletKeys.PREFS_OWNER_TYPE_ARCHIVED));
+
+			// User_
+
+			runSQL(
+				connection,
+				_getUpdateSQL(
+					"User_", "userId", "ownerId",
+					PortletKeys.PREFS_OWNER_TYPE_USER));
+		}
+
+		private String _getSelectSQL(
+				String foreignTableName, String foreignColumnName,
+				String columnName)
+			throws SQLException {
+
+			List<Long> companyIds = new ArrayList<>();
+
+			try (PreparedStatement preparedStatement =
+					connection.prepareStatement(
+						"select distinct companyId from " + foreignTableName);
+				ResultSet resultSet = preparedStatement.executeQuery()) {
+
+				while (resultSet.next()) {
+					long companyId = resultSet.getLong(1);
+
+					companyIds.add(companyId);
+				}
+			}
+
+			if (companyIds.size() == 1) {
+				return String.valueOf(companyIds.get(0));
+			}
+
+			return StringBundler.concat(
+				"select companyId from ", foreignTableName, " where ",
+				foreignTableName, ".", foreignColumnName, " = ", getTableName(),
+				".", columnName);
+		}
+
+		private String _getUpdateSQL(
+				String foreignTableName, String foreignColumnName,
+				String columnName, int ownerType)
+			throws IOException, SQLException {
+
+			return StringBundler.concat(
+				getUpdateSQL(
+					_getSelectSQL(
+						foreignTableName, foreignColumnName, columnName)),
+				" where ownerType = ", ownerType,
+				" and (companyId is null or companyId = 0)");
+		}
+
+	}
 
 	protected class TableUpdater {
 
@@ -64,22 +194,20 @@ public abstract class BaseCompanyIdUpgradeProcess extends UpgradeProcess {
 			return _tableName;
 		}
 
-		public void setCreateCompanyIdColumn(boolean createCompanyIdColumn) {
-			_createCompanyIdColumn = createCompanyIdColumn;
-		}
-
 		public void update(Connection connection) throws Exception {
 			for (String[] foreignNames : _foreignNamesArray) {
 				runSQL(
-					connection,
-					getUpdateSQL(connection, foreignNames[0], foreignNames[1]));
+					getUpdateDBTypeToSQLMap(
+						connection, foreignNames[0], foreignNames[1]));
 			}
 		}
 
-		protected String getSelectSQL(
+		protected DBTypeToSQLMap getUpdateDBTypeToSQLMap(
 				Connection connection, String foreignTableName,
 				String foreignColumnName)
 			throws SQLException {
+
+			DBTypeToSQLMap dbTypeToSQLMap = null;
 
 			List<Long> companyIds = new ArrayList<>();
 
@@ -94,23 +222,32 @@ public abstract class BaseCompanyIdUpgradeProcess extends UpgradeProcess {
 			}
 
 			if (companyIds.size() == 1) {
-				return String.valueOf(companyIds.get(0));
+				dbTypeToSQLMap = new DBTypeToSQLMap(
+					getUpdateSQL(String.valueOf(companyIds.get(0))));
+			}
+			else {
+				dbTypeToSQLMap = new DBTypeToSQLMap(
+					getUpdateSQL(
+						StringBundler.concat(
+							"select max(companyId) from ", foreignTableName,
+							" where ", foreignTableName, ".", foreignColumnName,
+							" > 0 and ", foreignTableName, ".",
+							foreignColumnName, " = ", _tableName, ".",
+							_columnName)));
+
+				dbTypeToSQLMap.add(
+					DBType.POSTGRESQL,
+					getUpdateSQL(
+						StringBundler.concat(
+							"select ", foreignTableName, ".companyId from ",
+							foreignTableName, " where ", foreignTableName, ".",
+							foreignColumnName, " > 0 and ", foreignTableName,
+							".", foreignColumnName, " = ", _tableName, ".",
+							_columnName, " order by ", foreignTableName,
+							".companyId desc limit 1")));
 			}
 
-			return StringBundler.concat(
-				"select max(companyId) from ", foreignTableName, " where ",
-				foreignTableName, ".", foreignColumnName, " > 0 and ",
-				foreignTableName, ".", foreignColumnName, " = ", _tableName,
-				".", _columnName);
-		}
-
-		protected String getUpdateSQL(
-				Connection connection, String foreignTableName,
-				String foreignColumnName)
-			throws SQLException {
-
-			return getUpdateSQL(
-				getSelectSQL(connection, foreignTableName, foreignColumnName));
+			return dbTypeToSQLMap;
 		}
 
 		protected String getUpdateSQL(String selectSQL) {
@@ -119,7 +256,6 @@ public abstract class BaseCompanyIdUpgradeProcess extends UpgradeProcess {
 		}
 
 		private final String _columnName;
-		private boolean _createCompanyIdColumn;
 		private final String[][] _foreignNamesArray;
 		private final String _tableName;
 
@@ -136,5 +272,7 @@ public abstract class BaseCompanyIdUpgradeProcess extends UpgradeProcess {
 			tableUpdater.update(connection);
 		}
 	}
+
+	private boolean _processConcurrently = true;
 
 }

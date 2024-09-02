@@ -8,8 +8,10 @@ package com.liferay.layout.seo.web.internal.portlet.action;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
+import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layout.seo.service.LayoutSEOEntryService;
 import com.liferay.layout.seo.web.internal.util.LayoutTypeSettingsUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -23,6 +25,7 @@ import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -98,6 +101,22 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 			PropertiesParamUtil.getProperties(
 				actionRequest, "TypeSettingsProperties--");
 
+		for (Map.Entry<Locale, String> entry : robotsMap.entrySet()) {
+			String value = entry.getValue();
+
+			if (Validator.isNotNull(value) &&
+				(StringUtil.containsIgnoreCase(
+					value, "nofollow", StringPool.BLANK) ||
+				 StringUtil.containsIgnoreCase(
+					 value, "noindex", StringPool.BLANK))) {
+
+				formTypeSettingsUnicodeProperties.setProperty(
+					LayoutTypePortletConstants.SITEMAP_INCLUDE, "0");
+
+				break;
+			}
+		}
+
 		themeDisplay.clearLayoutFriendlyURL(layout);
 
 		layout = LayoutTypeSettingsUtil.updateTypeSettings(
@@ -131,7 +150,7 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 		serviceContext.setAssetCategoryIds(assetEntry.getCategoryIds());
 		serviceContext.setAssetTagNames(assetEntry.getTagNames());
 
-		if (layout.isTypeAssetDisplay()) {
+		if (layout.isTypeAssetDisplay() || layout.isTypeUtility()) {
 			serviceContext.setAttribute(
 				"layout.instanceable.allowed", Boolean.TRUE);
 		}

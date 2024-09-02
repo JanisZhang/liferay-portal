@@ -149,6 +149,7 @@ export default function ({
 				displayType: 'primary',
 				height: '70vh',
 				id: 'cookiesBannerConfiguration',
+				iframeBodyCssClass: '',
 				onClose: onCloseFunction || undefined,
 				size: 'lg',
 				title: customTitle || title,
@@ -160,16 +161,18 @@ export default function ({
 			openCookieConsentModal({});
 		});
 
-		declineAllButton.addEventListener('click', () => {
-			cookieBanner.style.display = 'none';
+		if (declineAllButton !== null) {
+			declineAllButton.addEventListener('click', () => {
+				cookieBanner.style.display = 'none';
 
-			declineAllCookies(
-				optionalConsentCookieTypeNames,
-				requiredConsentCookieTypeNames
-			);
+				declineAllCookies(
+					optionalConsentCookieTypeNames,
+					requiredConsentCookieTypeNames
+				);
 
-			setUserConfigCookie();
-		});
+				setUserConfigCookie();
+			});
+		}
 	}
 }
 

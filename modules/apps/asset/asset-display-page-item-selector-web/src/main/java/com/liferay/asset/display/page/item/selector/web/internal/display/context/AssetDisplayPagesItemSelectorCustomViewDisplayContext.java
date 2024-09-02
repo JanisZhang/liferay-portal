@@ -79,7 +79,7 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 			() ->
 				LayoutPageTemplateEntryServiceUtil.
 					getLayoutPageCollectionsAndLayoutPageTemplateEntries(
-						_getGroupId(), _getLayoutPageTemplateCollectionId(),
+						_getGroupId(), getLayoutPageTemplateCollectionId(),
 						_assetDisplayPageSelectorCriterion.getClassNameId(),
 						_assetDisplayPageSelectorCriterion.getClassTypeId(),
 						_getKeywords(),
@@ -90,7 +90,7 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 						assetDisplayPageSearchContainer.getOrderByComparator()),
 			LayoutPageTemplateEntryServiceUtil.
 				getLayoutPageCollectionsAndLayoutPageTemplateEntriesCount(
-					_getGroupId(), _getLayoutPageTemplateCollectionId(),
+					_getGroupId(), getLayoutPageTemplateCollectionId(),
 					_assetDisplayPageSelectorCriterion.getClassNameId(),
 					_assetDisplayPageSelectorCriterion.getClassTypeId(),
 					_getKeywords(),
@@ -110,7 +110,7 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			LayoutPageTemplateCollectionLocalServiceUtil.
 				fetchLayoutPageTemplateCollection(
-					_getLayoutPageTemplateCollectionId());
+					getLayoutPageTemplateCollectionId());
 
 		return BreadcrumbEntryListBuilder.add(
 			breadcrumbEntry -> {
@@ -150,6 +150,19 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 						).build());
 			}
 		).build();
+	}
+
+	public long getLayoutPageTemplateCollectionId() {
+		if (_layoutPageTemplateCollectionId != null) {
+			return _layoutPageTemplateCollectionId;
+		}
+
+		_layoutPageTemplateCollectionId = ParamUtil.getLong(
+			_httpServletRequest, "layoutPageTemplateCollectionId",
+			LayoutPageTemplateConstants.
+				PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT);
+
+		return _layoutPageTemplateCollectionId;
 	}
 
 	public String getOrderByType() {
@@ -206,19 +219,6 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return _keywords;
 	}
 
-	private long _getLayoutPageTemplateCollectionId() {
-		if (_layoutPageTemplateCollectionId != null) {
-			return _layoutPageTemplateCollectionId;
-		}
-
-		_layoutPageTemplateCollectionId = ParamUtil.getLong(
-			_httpServletRequest, "layoutPageTemplateCollectionId",
-			LayoutPageTemplateConstants.
-				PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT);
-
-		return _layoutPageTemplateCollectionId;
-	}
-
 	private OrderByComparator<Object>
 		_getLayoutPageTemplateEntryOrderByComparator(
 			String orderByCol, String orderByType) {
@@ -233,13 +233,13 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 
 		if (orderByCol.equals("create-date")) {
 			orderByComparator =
-				new LayoutPageTemplateCollectionLayoutPageTemplateEntryCreateDateComparator(
-					orderByAsc);
+				LayoutPageTemplateCollectionLayoutPageTemplateEntryCreateDateComparator.
+					getInstance(orderByAsc);
 		}
 		else if (orderByCol.equals("name")) {
 			orderByComparator =
-				new LayoutPageTemplateCollectionLayoutPageTemplateEntryNameComparator(
-					orderByAsc);
+				LayoutPageTemplateCollectionLayoutPageTemplateEntryNameComparator.
+					getInstance(orderByAsc);
 		}
 
 		return orderByComparator;

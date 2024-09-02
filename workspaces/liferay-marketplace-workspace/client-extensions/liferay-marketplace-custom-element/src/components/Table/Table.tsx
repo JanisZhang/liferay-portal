@@ -17,6 +17,7 @@ type TableProps<T = any> = {
 	columns: TableColumn<T>[];
 	hasKebabButton?: boolean;
 	hasPagination?: boolean;
+	kebabClassName?: string;
 	onClickRow?: (row: T) => void;
 	paginationProps?: PaginationProps;
 	rows: T[];
@@ -33,18 +34,19 @@ type TableColumn<T = any> = {
 	onClick?: (item: T) => void;
 	render?: (value: any, item: T) => ReactNode | string;
 	styles?: string;
-	title: ReactNode;
+	title?: ReactNode;
 	truncate?: boolean;
+	width?: string;
 };
 
 type PaginationProps = {
-	active: number;
 	activeDelta: number;
+	activePage: number;
 	deltas?: {
 		label: number;
 	}[];
-	onActiveChange: (page: number) => void;
 	onDeltaChange: (pageSize: number) => void;
+	onPageChange: (page: number) => void;
 	totalItems: number;
 };
 
@@ -54,13 +56,14 @@ const Table: React.FC<TableProps> = ({
 	columns,
 	hasKebabButton,
 	hasPagination,
+	kebabClassName = '',
 	onClickRow,
 	paginationProps,
 	rows,
 }) => {
 	return (
 		<>
-			<ClayTable borderless className={className}>
+			<ClayTable borderless className={className} striped={false}>
 				<ClayTable.Head>
 					<ClayTable.Row className="border-bottom header-row">
 						{columns.map((column, index) => (
@@ -70,8 +73,9 @@ const Table: React.FC<TableProps> = ({
 								headingCell
 								key={index}
 								noWrap={column.noWrap}
+								style={{width: column.width}}
 							>
-								{column.title}
+								{column?.title}
 							</ClayTable.Cell>
 						))}
 
@@ -95,7 +99,7 @@ const Table: React.FC<TableProps> = ({
 									? column.render(data, {
 											...row,
 											rowIndex,
-									  })
+										})
 									: data;
 
 								return (
@@ -122,7 +126,7 @@ const Table: React.FC<TableProps> = ({
 
 							{hasKebabButton && (
 								<ClayTable.Cell
-									className="border-0"
+									className={kebabClassName}
 									columnTextAlignment="center"
 								>
 									{Actions && <Actions row={row} />}
@@ -135,7 +139,6 @@ const Table: React.FC<TableProps> = ({
 
 			{hasPagination && paginationProps && (
 				<ClayPaginationBarWithBasicItems
-					defaultActive={1}
 					ellipsisBuffer={3}
 					{...paginationProps}
 				/>

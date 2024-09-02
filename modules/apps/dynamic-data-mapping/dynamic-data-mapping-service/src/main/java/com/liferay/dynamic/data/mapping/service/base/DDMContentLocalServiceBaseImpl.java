@@ -7,7 +7,6 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMContent;
 import com.liferay.dynamic.data.mapping.service.DDMContentLocalService;
-import com.liferay.dynamic.data.mapping.service.DDMContentLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMContentPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
@@ -63,11 +62,8 @@ import org.osgi.service.component.annotations.Reference;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.dynamic.data.mapping.service.impl.DDMContentLocalServiceImpl
- * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
- DDMFieldLocalServiceImpl}
  * @generated
  */
-@Deprecated
 public abstract class DDMContentLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
 	implements AopService, DDMContentLocalService, IdentifiableOSGiService {
@@ -75,7 +71,7 @@ public abstract class DDMContentLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMContentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMContentLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMContentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMContentLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -511,7 +507,6 @@ public abstract class DDMContentLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		DDMContentLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -525,8 +520,6 @@ public abstract class DDMContentLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ddmContentLocalService = (DDMContentLocalService)aopProxy;
-
-		DDMContentLocalServiceUtil.setService(ddmContentLocalService);
 	}
 
 	/**
@@ -594,10 +587,6 @@ public abstract class DDMContentLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMContentLocalServiceBaseImpl.class);

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayIcon from '@clayui/icon';
+
 import './CardLink.scss';
 
 interface CardLinkProps {
@@ -11,24 +13,54 @@ interface CardLinkProps {
 	title: string;
 }
 
+const PROTOCOLS = ['http://', 'https://'];
+
+const SUPPORT_LINK_TYPE = {
+	email: 'mailto:',
+	url: '',
+};
+
 export function CardLink({description, icon, title}: CardLinkProps) {
+	const type = description?.includes('@') ? 'email' : 'url';
+
+	const getPrefixHref = (href: string) => {
+		const hasProtocol = PROTOCOLS.some((protocol) =>
+			href.includes(protocol)
+		);
+
+		if (type === 'url') {
+			if (hasProtocol) {
+				return href;
+			}
+
+			return `https://${href}`;
+		}
+
+		return `${SUPPORT_LINK_TYPE[type]}${href}`;
+	};
+
 	return (
 		<div className="card-link-container">
 			<div className="card-link-main-info">
 				<div className="card-link-icon">
-					<img
-						alt="Icon"
+					<ClayIcon
+						aria-label="Icon"
 						className="card-link-icon-image"
-						src={icon}
+						symbol={icon as string}
 					/>
 				</div>
 
 				<div className="card-link-info">
 					<span className="card-link-info-text">{title}</span>
-
-					<a className="card-link-info-description" href="#">
-						{description}
-					</a>
+					{description && (
+						<a
+							className="card-link-info-description"
+							href={getPrefixHref(description)}
+							target="_blank"
+						>
+							{description}
+						</a>
+					)}
 				</div>
 			</div>
 		</div>

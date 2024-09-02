@@ -8,6 +8,7 @@ package com.liferay.fragment.entry.processor.editable.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.util.DLURLHelper;
 import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
@@ -69,7 +70,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.LocalRepository;
 import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
@@ -122,10 +122,8 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -146,18 +144,6 @@ public class EditableFragmentEntryProcessorTest {
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(),
 			PermissionCheckerMethodTestRule.INSTANCE);
-
-	@BeforeClass
-	public static void setUpClass() throws Exception {
-		_originalName = PrincipalThreadLocal.getName();
-
-		PrincipalThreadLocal.setName(TestPropsValues.getUserId());
-	}
-
-	@AfterClass
-	public static void tearDownClass() throws Exception {
-		PrincipalThreadLocal.setName(_originalName);
-	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -736,10 +722,12 @@ public class EditableFragmentEntryProcessorTest {
 			RandomTestUtil.randomString(),
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			labelMap, RandomTestUtil.randomString(),
-			ObjectActionExecutorConstants.KEY_GROOVY,
+			ObjectActionExecutorConstants.KEY_WEBHOOK,
 			ObjectActionTriggerConstants.KEY_STANDALONE,
 			UnicodePropertiesBuilder.put(
-				"script", "println 'Action Executed'"
+				"secret", "standalone"
+			).put(
+				"url", "https://standalone.com"
 			).build(),
 			false);
 
@@ -800,7 +788,7 @@ public class EditableFragmentEntryProcessorTest {
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				fragmentEntry.getFragmentEntryId(),
 				_segmentsExperienceLocalService.
 					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
@@ -890,6 +878,30 @@ public class EditableFragmentEntryProcessorTest {
 		Assert.assertEquals(
 			fileEntry.getFileEntryId(),
 			GetterUtil.getLong(element.attr("data-fileentryid")));
+	}
+
+	@Test
+	public void testFragmentEntryProcessorEditableMappedDLPreview()
+		throws Exception {
+
+		FileEntry fileEntry = _addImageFileEntry();
+
+		String editableValues = _getEditableFieldValues(
+			_portal.getClassNameId(FileEntry.class), fileEntry.getFileEntryId(),
+			"fileURL", "fragment_entry_link_mapped_asset_field_image.json");
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "image-square", editableValues,
+			"fragment_entry_image.html", LocaleUtil.getSiteDefault(),
+			FragmentEntryLinkConstants.EDIT);
+
+		String src = element.attr("src");
+
+		Assert.assertFalse(src.contains("imagePreview=1"));
+		Assert.assertEquals(
+			_dlURLHelper.getPreviewURL(
+				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK),
+			src);
 	}
 
 	@Test
@@ -1177,14 +1189,14 @@ public class EditableFragmentEntryProcessorTest {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionService.addFragmentCollection(
-				_group.getGroupId(), "Fragment Collection", StringPool.BLANK,
-				serviceContext);
+				null, _group.getGroupId(), "Fragment Collection",
+				StringPool.BLANK, serviceContext);
 
 		return _fragmentEntryService.addFragmentEntry(
-			_group.getGroupId(), fragmentCollection.getFragmentCollectionId(),
-			"fragment-entry", "Fragment Entry", null,
-			_readFileToString(htmlFile), null, false, null, null, 0, false,
-			FragmentConstants.TYPE_SECTION, null,
+			null, _group.getGroupId(),
+			fragmentCollection.getFragmentCollectionId(), "fragment-entry",
+			"Fragment Entry", null, _readFileToString(htmlFile), null, false,
+			null, null, 0, false, FragmentConstants.TYPE_SECTION, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -1195,7 +1207,7 @@ public class EditableFragmentEntryProcessorTest {
 		FragmentEntry fragmentEntry = _addFragmentEntry(htmlFileName);
 
 		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
-			TestPropsValues.getUserId(), _group.getGroupId(), 0,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 			fragmentEntry.getFragmentEntryId(),
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				_layout.getPlid()),
@@ -1273,7 +1285,7 @@ public class EditableFragmentEntryProcessorTest {
 	private ObjectDefinition _addObjectDefinition() throws Exception {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				TestPropsValues.getUserId(), 0, false, false, false,
+				TestPropsValues.getUserId(), 0, false, true, false, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
@@ -1543,8 +1555,6 @@ public class EditableFragmentEntryProcessorTest {
 	@Inject(filter = "ddm.form.deserializer.type=json")
 	private static DDMFormDeserializer _jsonDDMFormDeserializer;
 
-	private static String _originalName;
-
 	private Company _company;
 
 	@Inject
@@ -1555,6 +1565,9 @@ public class EditableFragmentEntryProcessorTest {
 
 	@Inject
 	private DDMFormValuesToFieldsConverter _ddmFormValuesToFieldsConverter;
+
+	@Inject
+	private DLURLHelper _dlURLHelper;
 
 	@Inject
 	private FragmentCollectionService _fragmentCollectionService;

@@ -43,9 +43,8 @@ export function GlobalContextFrame({children, useIframe}) {
 					pageEditorStylesLinkId
 				)
 			) {
-				const pageEditorStylesLink = iframeElement.contentDocument.createElement(
-					'link'
-				);
+				const pageEditorStylesLink =
+					iframeElement.contentDocument.createElement('link');
 
 				pageEditorStylesLink.id = pageEditorStylesLinkId;
 				pageEditorStylesLink.rel = 'stylesheet';
@@ -58,7 +57,10 @@ export function GlobalContextFrame({children, useIframe}) {
 
 			const element =
 				iframeElement.contentDocument &&
-				iframeElement.contentDocument.getElementById('content');
+				(iframeElement.contentDocument.getElementById('content') ||
+					iframeElement.contentDocument.getElementById(
+						'main-content'
+					));
 
 			if (element) {
 				element.innerHTML = '';

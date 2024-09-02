@@ -24,6 +24,9 @@ import com.liferay.layout.list.retriever.LayoutListRetrieverContext;
 import com.liferay.layout.list.retriever.SegmentsEntryLayoutListRetriever;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 
@@ -68,6 +71,19 @@ public class AssetEntryListLayoutListRetriever
 				layoutListRetrieverContext.getPagination(), 0);
 		}
 
+		if (!StringUtil.equals(
+				assetListEntry.getAssetEntryType(),
+				classedModelListObjectReference.getItemType())) {
+
+			if (_log.isWarnEnabled()) {
+				_log.warn("Asset entry type does not equal item type");
+			}
+
+			return InfoPage.of(
+				Collections.emptyList(),
+				layoutListRetrieverContext.getPagination(), 0);
+		}
+
 		long[] segmentsEntryIds =
 			layoutListRetrieverContext.getSegmentsEntryIds();
 
@@ -81,39 +97,25 @@ public class AssetEntryListLayoutListRetriever
 			pagination = Pagination.of(QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 		}
 
-		List<AssetEntry> assetEntries =
-			_assetListAssetEntryProvider.getAssetEntries(
+		InfoPage<AssetEntry> infoPage =
+			_assetListAssetEntryProvider.getAssetEntriesInfoPage(
 				assetListEntry, segmentsEntryIds,
 				_getAssetCategoryIds(layoutListRetrieverContext),
 				_getAssetTagNames(layoutListRetrieverContext),
 				_getKeywords(layoutListRetrieverContext), StringPool.BLANK,
 				pagination.getStart(), pagination.getEnd());
 
-		long[] finalSegmentsEntryIds = segmentsEntryIds;
-
 		if (Objects.equals(
 				AssetEntry.class.getName(),
 				assetListEntry.getAssetEntryType())) {
 
-			return InfoPage.of(
-				Collections.unmodifiableList(assetEntries),
-				layoutListRetrieverContext.getPagination(),
-				() -> _assetListAssetEntryProvider.getAssetEntriesCount(
-					assetListEntry, finalSegmentsEntryIds,
-					_getAssetCategoryIds(layoutListRetrieverContext),
-					_getAssetTagNames(layoutListRetrieverContext),
-					_getKeywords(layoutListRetrieverContext),
-					StringPool.BLANK));
+			return infoPage;
 		}
 
 		return InfoPage.of(
-			_toAssetObjects(assetEntries),
+			_toAssetObjects((List<AssetEntry>)infoPage.getPageItems()),
 			layoutListRetrieverContext.getPagination(),
-			() -> _assetListAssetEntryProvider.getAssetEntriesCount(
-				assetListEntry, finalSegmentsEntryIds,
-				_getAssetCategoryIds(layoutListRetrieverContext),
-				_getAssetTagNames(layoutListRetrieverContext),
-				_getKeywords(layoutListRetrieverContext), StringPool.BLANK));
+			infoPage.getTotalCount());
 	}
 
 	@Override
@@ -196,6 +198,9 @@ public class AssetEntryListLayoutListRetriever
 
 		return assetObjects;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetEntryListLayoutListRetriever.class.getName());
 
 	private static final List<InfoFilter> _supportedInfoFilters = Arrays.asList(
 		new CategoriesInfoFilter(), new KeywordsInfoFilter(),

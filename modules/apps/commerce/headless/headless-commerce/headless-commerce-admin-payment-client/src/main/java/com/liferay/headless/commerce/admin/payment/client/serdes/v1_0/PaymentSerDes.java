@@ -218,6 +218,20 @@ public class PaymentSerDes {
 			sb.append("\"");
 		}
 
+		if (payment.getPayload() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"payload\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(payment.getPayload()));
+
+			sb.append("\"");
+		}
+
 		if (payment.getPaymentIntegrationKey() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -495,6 +509,13 @@ public class PaymentSerDes {
 			map.put("languageId", String.valueOf(payment.getLanguageId()));
 		}
 
+		if (payment.getPayload() == null) {
+			map.put("payload", null);
+		}
+		else {
+			map.put("payload", String.valueOf(payment.getPayload()));
+		}
+
 		if (payment.getPaymentIntegrationKey() == null) {
 			map.put("paymentIntegrationKey", null);
 		}
@@ -616,6 +637,103 @@ public class PaymentSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "amount")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "amountFormatted")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "callbackURL")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "cancelURL")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "channelId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "comment")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "createDate")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "currencyCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "errorMessages")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "languageId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "payload")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "paymentIntegrationKey")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "paymentIntegrationType")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "paymentStatus")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "paymentStatusStatus")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "reasonKey")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "reasonName")) {
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "redirectURL")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "relatedItemId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "relatedItemName")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "relatedItemNameLabel")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "transactionCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "type")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "typeLabel")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			Payment payment, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -623,7 +741,7 @@ public class PaymentSerDes {
 			if (Objects.equals(jsonParserFieldName, "actions")) {
 				if (jsonParserFieldValue != null) {
 					payment.setActions(
-						(Map)PaymentSerDes.toMap((String)jsonParserFieldValue));
+						(Map<String, Map<String, String>>)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "amount")) {
@@ -691,6 +809,11 @@ public class PaymentSerDes {
 					payment.setLanguageId((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "payload")) {
+				if (jsonParserFieldValue != null) {
+					payment.setPayload((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(
 						jsonParserFieldName, "paymentIntegrationKey")) {
 
@@ -729,7 +852,7 @@ public class PaymentSerDes {
 			else if (Objects.equals(jsonParserFieldName, "reasonName")) {
 				if (jsonParserFieldValue != null) {
 					payment.setReasonName(
-						(Map)PaymentSerDes.toMap((String)jsonParserFieldValue));
+						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "redirectURL")) {
@@ -804,36 +927,7 @@ public class PaymentSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -843,6 +937,38 @@ public class PaymentSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

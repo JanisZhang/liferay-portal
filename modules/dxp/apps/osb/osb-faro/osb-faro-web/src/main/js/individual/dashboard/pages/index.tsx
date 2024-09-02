@@ -1,17 +1,16 @@
 import * as breadcrumbs from 'shared/util/breadcrumbs';
 import BasePage from 'shared/components/base-page';
 import BundleRouter from 'route-middleware/BundleRouter';
-import DownloadPDFReport, {
-	Containers
-} from 'shared/components/download-report/DownloadPDFReport';
+import DownloadPDFReport from 'shared/components/download-report/DownloadPDFReport';
 import Loading from 'shared/components/Loading';
 import React, {lazy, Suspense} from 'react';
 import RouteNotFound from 'shared/components/RouteNotFound';
 import {DownloadIndividualReportModal} from 'shared/components/download-report/DownloadIndividualReportModal';
 import {getMatchedRoute, Routes} from 'shared/util/router';
+import {sub} from 'shared/util/lang';
 import {Switch, useParams} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
-import {useDataSource} from 'shared/hooks';
+import {useDataSource} from 'shared/hooks/useDataSource';
 
 const Distribution = lazy(
 	() =>
@@ -101,17 +100,19 @@ const Dashboard: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
 					routeParams={{channelId, groupId}}
 				/>
 			</BasePage.Header>
+
 			{matchedRoute === Routes.CONTACTS_INDIVIDUALS && (
 				<BasePage.SubHeader>
 					<div className='d-flex justify-content-end w-100'>
 						<DownloadPDFReport
-							containers={[
-								Containers.CurrentTotalsCard,
-								Containers.EnrichedProfilesCard,
-								Containers.ActiveIndividualsCard,
-								Containers.TopInterestsAsOfYesterdayCard,
-								Containers.DistributionBreakdownCard
-							]}
+							dateRangeDescription={
+								sub(
+									Liferay.Language.get(
+										'only-select-a-date-range-if-you-want-to-modify-the-current-date-filter-for-the-x-report'
+									),
+									[Liferay.Language.get('active-individuals')]
+								) as string
+							}
 							disabled={dataSourceStates.empty}
 							subtitle={selectedChannel?.name}
 							title={Liferay.Language.get(
@@ -121,6 +122,7 @@ const Dashboard: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
 					</div>
 				</BasePage.SubHeader>
 			)}
+
 			{matchedRoute === Routes.CONTACTS_INDIVIDUALS_KNOWN_INDIVIDUALS && (
 				<BasePage.SubHeader>
 					<div className='d-flex justify-content-end w-100'>

@@ -338,8 +338,10 @@ public class UtilityPageTemplate implements Serializable {
 	@GraphQLName("Type")
 	public static enum Type {
 
+		COOKIE_POLICY("CookiePolicy"), CREATE_ACCOUNT("CreateAccount"),
 		ERROR("Error"), ERROR_CODE404("ErrorCode404"),
-		ERROR_CODE500("ErrorCode500"), TERMS_OF_USE("TermsOfUse");
+		ERROR_CODE500("ErrorCode500"), FORGOT_PASSWORD("ForgotPassword"),
+		LOGIN("Login"), TERMS_OF_USE("TermsOfUse");
 
 		@JsonCreator
 		public static Type create(String value) {
@@ -414,7 +416,10 @@ public class UtilityPageTemplate implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

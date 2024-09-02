@@ -50,7 +50,7 @@ public interface CommercePaymentEntryService extends BaseService {
 	public CommercePaymentEntry addCommercePaymentEntry(
 			long classNameId, long classPK, long commerceChannelId,
 			BigDecimal amount, String callbackURL, String cancelURL,
-			String currencyCode, String languageId, String note,
+			String currencyCode, String languageId, String note, String payload,
 			String paymentIntegrationKey, int paymentIntegrationType,
 			String reasonKey, String transactionCode, int type,
 			ServiceContext serviceContext)
@@ -60,10 +60,10 @@ public interface CommercePaymentEntryService extends BaseService {
 			String externalReferenceCode, long classNameId, long classPK,
 			long commerceChannelId, BigDecimal amount, String callbackURL,
 			String cancelURL, String currencyCode, String errorMessages,
-			String languageId, String note, String paymentIntegrationKey,
-			int paymentIntegrationType, int paymentStatus, String reasonKey,
-			String redirectURL, String transactionCode, int type,
-			ServiceContext serviceContext)
+			String languageId, String note, String payload,
+			String paymentIntegrationKey, int paymentIntegrationType,
+			int paymentStatus, String reasonKey, String redirectURL,
+			String transactionCode, int type, ServiceContext serviceContext)
 		throws PortalException;
 
 	public CommercePaymentEntry deleteCommercePaymentEntry(
@@ -94,6 +94,11 @@ public interface CommercePaymentEntryService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCommercePaymentEntriesCount(
+			long companyId, long classNameId, long classPK, int type)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CommercePaymentEntry getCommercePaymentEntry(
 			long commercePaymentEntryId)
 		throws PortalException;
@@ -117,9 +122,10 @@ public interface CommercePaymentEntryService extends BaseService {
 			String externalReferenceCode, long commercePaymentEntryId,
 			long commerceChannelId, BigDecimal amount, String callbackURL,
 			String cancelURL, String currencyCode, String errorMessages,
-			String languageId, String note, String paymentIntegrationKey,
-			int paymentIntegrationType, int paymentStatus, String reasonKey,
-			String redirectURL, String transactionCode, int type)
+			String languageId, String note, String payload,
+			String paymentIntegrationKey, int paymentIntegrationType,
+			int paymentStatus, String reasonKey, String redirectURL,
+			String transactionCode, int type)
 		throws PortalException;
 
 	public CommercePaymentEntry updateExternalReferenceCode(

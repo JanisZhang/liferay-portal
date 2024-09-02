@@ -63,7 +63,7 @@ public class ResourceBundleUtil {
 	}
 
 	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no replacement
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
 	 */
 	@Deprecated
 	public static ResourceBundle getBundle(Locale locale, String symbolicName) {

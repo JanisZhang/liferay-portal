@@ -10,6 +10,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 
 import AJAX from '../../utilities/AJAX/index';
 
+import './summary.scss';
 function SummaryItemDividerVariant() {
 	return (
 		<div className="col-12">
@@ -42,10 +43,14 @@ function SummaryItemBigVariant(props) {
 	return (
 		<>
 			<div className="col-6 col-md-9">
-				<h4 className="my-2 summary-table-item-big">{props.label}</h4>
+				<div className="h4 my-2 summary-table-item-big">
+					{props.label}
+				</div>
 			</div>
 			<div className="col-6 col-md-3">
-				<h4 className="my-2 summary-table-item-big">{props.value}</h4>
+				<div className="h4 my-2 summary-table-item-big">
+					{props.value}
+				</div>
 			</div>
 		</>
 	);

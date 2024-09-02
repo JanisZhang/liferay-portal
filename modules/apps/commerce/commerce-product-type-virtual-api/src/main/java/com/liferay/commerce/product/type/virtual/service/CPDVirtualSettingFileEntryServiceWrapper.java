@@ -43,6 +43,27 @@ public class CPDVirtualSettingFileEntryServiceWrapper
 	}
 
 	@Override
+	public com.liferay.portal.kernel.repository.model.FileEntry addFileEntry(
+			long groupId, long folderId, java.io.InputStream inputStream,
+			String fileName, String mimeType, String serviceName)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpdVirtualSettingFileEntryService.addFileEntry(
+			groupId, folderId, inputStream, fileName, mimeType, serviceName);
+	}
+
+	@Override
+	public
+		com.liferay.commerce.product.type.virtual.model.
+			CPDVirtualSettingFileEntry deleteCPDVirtualSettingFileEntry(
+					long cpdVirtualSettingFileEntryId)
+				throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpdVirtualSettingFileEntryService.
+			deleteCPDVirtualSettingFileEntry(cpdVirtualSettingFileEntryId);
+	}
+
+	@Override
 	public
 		com.liferay.commerce.product.type.virtual.model.
 			CPDVirtualSettingFileEntry deleteCPDVirtualSettingFileEntry(

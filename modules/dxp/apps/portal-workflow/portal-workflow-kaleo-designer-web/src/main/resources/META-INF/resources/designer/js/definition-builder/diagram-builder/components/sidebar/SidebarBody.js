@@ -6,6 +6,7 @@
 import PropTypes from 'prop-types';
 import React, {useContext} from 'react';
 
+import {DefinitionBuilderContext} from '../../../DefinitionBuilderContext';
 import {DiagramBuilderContext} from '../../DiagramBuilderContext';
 import {nodeDescription, nodeTypes} from '../nodes/utils';
 
@@ -24,9 +25,20 @@ const onDragStart = (event, nodeType, setElementRectangle) => {
 };
 
 export default function SidebarBody({children, displayDefaultContent = true}) {
+	const {
+		allowScriptContentToBeExecutedOrIncluded,
+		hadGroovyOrJavaScriptBefore,
+	} = useContext(DefinitionBuilderContext);
 	const {setCollidingElements, setElementRectangle} = useContext(
 		DiagramBuilderContext
 	);
+
+	if (
+		!allowScriptContentToBeExecutedOrIncluded &&
+		!hadGroovyOrJavaScriptBefore
+	) {
+		delete nodeTypes['condition'];
+	}
 
 	return (
 		<div className="sidebar-body">
@@ -43,7 +55,7 @@ export default function SidebarBody({children, displayDefaultContent = true}) {
 								onDragStart(event, key, setElementRectangle)
 							}
 						/>
-				  ))
+					))
 				: children}
 		</div>
 	);

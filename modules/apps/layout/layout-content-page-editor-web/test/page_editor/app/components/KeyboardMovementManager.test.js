@@ -6,7 +6,9 @@
 import {render} from '@testing-library/react';
 import React from 'react';
 
-import KeyboardMovementManager from '../../../../src/main/resources/META-INF/resources/page_editor/app/components/keyboard_movement/KeyboardMovementManager';
+import KeyboardMovementManager, {
+	getInitialTarget,
+} from '../../../../src/main/resources/META-INF/resources/page_editor/app/components/keyboard_movement/KeyboardMovementManager';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/layoutDataItemTypes';
 import {
 	useDisableKeyboardMovement,
@@ -24,6 +26,7 @@ jest.mock(
 		};
 
 		const source = {
+			fieldTypes: [],
 			fragmentEntryType: 'component',
 			isWidget: false,
 			itemId: 'item-3',
@@ -100,6 +103,21 @@ const renderComponent = ({dispatch = () => {}} = {}) =>
 		</StoreMother.Component>
 	);
 
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/page_editor/app/config/index',
+	() => ({
+		config: {
+			formTypes: [
+				{
+					label: 'Form Type 1',
+					subtypes: [],
+					value: 'form-type-1',
+				},
+			],
+		},
+	})
+);
+
 describe('KeyboardMovementManager', () => {
 	it('calculates previous drop position when pressing up arrow', () => {
 		renderComponent();
@@ -128,7 +146,7 @@ describe('KeyboardMovementManager', () => {
 
 		document.body.dispatchEvent(
 			new KeyboardEvent('keydown', {
-				code: 'ArrrwDown',
+				code: 'ArrowDown',
 			})
 		);
 
@@ -177,5 +195,56 @@ describe('KeyboardMovementManager', () => {
 				position: 2,
 			})
 		);
+	});
+
+	it('looks for initial target recursively', () => {
+		const layoutDataWithUnmappedForm = {
+			deletedItems: [],
+
+			items: {
+				'form-id': {
+					children: [],
+					config: {
+						classNameId: 'form-type-1',
+						classTypeId: '0',
+					},
+					itemId: 'form-id',
+					parentId: 'root-id',
+					type: 'form',
+				},
+				'root-id': {
+					children: ['form-id'],
+					itemId: 'root-id',
+					type: 'root',
+				},
+			},
+			pageRules: [],
+			rootItems: {
+				main: 'root-id',
+			},
+		};
+
+		const formInputSource = {
+			fieldTypes: [],
+			fragmentEntryKey: 'INPUTS-date-input',
+			fragmentEntryType: 'input',
+			name: 'Date',
+			type: 'fragment',
+		};
+
+		const fragmentEntryLinksRef = {current: {}};
+		const layoutDataRef = {current: layoutDataWithUnmappedForm};
+
+		expect(
+			getInitialTarget(
+				formInputSource,
+				layoutDataRef,
+				fragmentEntryLinksRef
+			)
+		).toMatchObject({
+			itemId: 'form-id',
+			name: 'form-container',
+			position: 'middle',
+		});
 	});
 });

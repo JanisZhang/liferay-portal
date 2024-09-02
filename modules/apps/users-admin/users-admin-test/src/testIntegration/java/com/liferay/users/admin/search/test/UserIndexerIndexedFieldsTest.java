@@ -33,10 +33,10 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.model.uid.UIDFactory;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.IndexedFieldsFixture;
 import com.liferay.portal.search.test.util.IndexerFixture;
-import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -321,6 +321,8 @@ public class UserIndexerIndexedFieldsTest {
 			"emailAddress", user.getEmailAddress()
 		).put(
 			"emailAddressDomain", _getEmailAddressDomain(user.getEmailAddress())
+		).put(
+			"externalReferenceCode", user.getExternalReferenceCode()
 		).put(
 			"firstName", user.getFirstName()
 		).put(

@@ -21,13 +21,13 @@ WikiNodeInfoPanelDisplayContext wikiNodeInfoPanelDisplayContext = new WikiNodeIn
 
 			<div class="autofit-row sidebar-section">
 				<div class="autofit-col autofit-col-expand">
-					<h4 class="component-title">
+					<div class="component-title">
 						<%= HtmlUtil.escape(node.getName()) %>
-					</h4>
+					</div>
 
-					<h5 class="component-subtitle">
+					<div class="component-subtitle">
 						<liferay-ui:message key="wiki" />
-					</h5>
+					</div>
 				</div>
 
 				<div class="autofit-col">
@@ -50,14 +50,14 @@ WikiNodeInfoPanelDisplayContext wikiNodeInfoPanelDisplayContext = new WikiNodeIn
 		<c:when test="<%= wikiNodeInfoPanelDisplayContext.isMultipleNodeSelection() %>">
 			<div class="autofit-row sidebar-section">
 				<div class="autofit-col autofit-col-expand">
-					<h4 class="component-title"><liferay-ui:message arguments="<%= wikiNodeInfoPanelDisplayContext.getSelectedNodesCount() %>" key="x-items-are-selected" /></h4>
+					<div class="component-title"><liferay-ui:message arguments="<%= wikiNodeInfoPanelDisplayContext.getSelectedNodesCount() %>" key="x-items-are-selected" /></div>
 				</div>
 			</div>
 		</c:when>
 		<c:otherwise>
 			<div class="autofit-row sidebar-section">
 				<div class="autofit-col autofit-col-expand">
-					<h4 class="component-title"><liferay-ui:message key="wikis" /></h4>
+					<div class="component-title"><liferay-ui:message key="wikis" /></div>
 				</div>
 			</div>
 		</c:otherwise>

@@ -50,7 +50,7 @@ definition {
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		echo("Successfully logged in to both nodes on JDBC_PING");

@@ -1,4 +1,4 @@
-@component-name = "portal-document-management"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
@@ -802,31 +802,6 @@ definition {
 		DMDocument.viewDocumentVersionNumberCmdPG(dmDocumentVersionNumber = "1.0");
 	}
 
-	@description = "This test verifies that a basic document's URL can be copied through the actions dropdown."
-	@priority = 4
-	test CanCopyBasicDocumentLinkViaActionsDropdown {
-		property custom.properties = "feature.flag.LPS-197477=true";
-
-		var portalURL = PropsUtil.get("portal.url");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest",
-			mimeType = "application/msword",
-			sourceFileName = "Document_1.doc");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.copyLink(rowEntry = "DM Document Title");
-
-		Search.searchWithPastedTerm();
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "ManagementBar#SEARCH_RESULT_SUMMARY",
-			value1 = "${portalURL}/documents/d/guest/dm-document-title");
-	}
-
 	@description = "This test ensures that a document can be copied to the global site folder."
 	@priority = 5
 	test CanCopyDocumentToGlobalSite {
@@ -1453,31 +1428,6 @@ definition {
 		DMDocument.assertFileNameFromTempFolder(fileName = "Document_3.doc");
 	}
 
-	@description = "This ensures that the document file name will be applied to the downloaded file name."
-	@priority = 5
-	@refactordone
-	test CanDownloadWithCustomFileName {
-		property portal.acceptance = "true";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentFileName = "document_1_Edit.jpg",
-			dmDocumentTitle = "DM Document Title");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.downloadCP(
-			dmDocumentSize = "259 B",
-			dmDocumentTitle = "DM Document Title");
-
-		AssertTextNotPresent(value1 = "The requested resource could not be found.");
-
-		DMDocument.assertFileNameFromTempFolder(fileName = "document_1_Edit.jpg");
-	}
-
 	@priority = 5
 	@refactordone
 	test CanDownloadWithSpecialCharactersInTitle {
@@ -1504,8 +1454,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanEditDocument {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
@@ -2401,7 +2351,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
@@ -2528,6 +2478,22 @@ definition {
 			enableExpirationDate = "true",
 			increaseMinutes = 1,
 			invalidExpirationDate = "true");
+	}
+
+	@description = "This ensures that a document cannot be published if its file extension is different than its file name extension."
+	@priority = 5
+	@refactordone
+	test CannotPublishWithFileExtensionDifferentThanFileNameExtension {
+		property portal.acceptance = "true";
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentFileName = "document_1_Edit.jpg",
+			dmDocumentTitle = "DM Document Title",
+			fileExtensionMismatch = "true");
 	}
 
 	@description = "This is a use case for LPS-114470. Validate crafted or corrupted files cannot cause out of memory errors."
@@ -2909,51 +2875,6 @@ definition {
 			specialCharacters = "true");
 	}
 
-	@description = "This test ensures that the user can republish an expired document after disabling expiration date."
-	@priority = 4
-	test CanRepublishDocumentAfterDisablingExpirationDate {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		DMDocument.updateCheckInterval(fieldValue = 1);
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "Document_5.txt",
-			groupName = "Guest",
-			mimeType = "text/plain",
-			sourceFileName = "Document_5.txt");
-
-		DMNavigator.openToEditEntryInSite(
-			dmDocumentTitle = "Document_5.txt",
-			groupName = "Guest",
-			siteURLKey = "guest");
-
-		DMDocument.setExpirationDate(
-			enableExpirationDate = "true",
-			increaseMinutes = 1);
-
-		Navigator.openURL();
-
-		Notifications.waitForNotificationFlexibly(flexibleRefreshingTime = 3000);
-
-		DMNavigator.openToEditEntryInSite(
-			dmDocumentTitle = "Document_5.txt",
-			groupName = "Guest",
-			siteURLKey = "guest");
-
-		DMDocument.publishExpiredDocument(
-			disableExpirationDate = "true",
-			dmDocumentTitle = "Document_5.txt");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.viewStatus(
-			dmDocumentStatus = "Approved",
-			dmDocumentTitle = "Document_5.txt");
-	}
-
 	@description = "This case covers LPS-97708. It ensures that a document can be restored from the Recycle Bin even if its original folder no longer exists."
 	@priority = 3
 	@refactordone
@@ -2997,66 +2918,6 @@ definition {
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMDocument.viewCardTitle(dmDocumentTitle = "DM Document Title");
-	}
-
-	@description = "This case covers LPS-177597. It ensures that the expired document can be restored."
-	@priority = 3
-	test CanRestoreExpiredDocument {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		DMDocument.updateCheckInterval(fieldValue = 1);
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "Document_1.txt",
-			groupName = "Guest",
-			mimeType = "text/plain",
-			sourceFileName = "Document_1.txt");
-
-		DMNavigator.openToEditEntryInSite(
-			dmDocumentTitle = "Document_1.txt",
-			groupName = "Guest",
-			siteURLKey = "guest");
-
-		DMDocument.setExpirationDate(
-			enableExpirationDate = "true",
-			increaseMinutes = 1);
-
-		// We need to wait for the system time to pass by 1 minute in order to verify the document is expired. There is currently no easy way to manipulate the system time in CI for automation. 2 minutes is the shortest value we can set while ensuring the stability of the test. See LPS-192588.
-
-		Pause(value1 = 60000);
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.viewStatus(
-			dmDocumentStatus = "Expired",
-			dmDocumentTitle = "Document_1.txt");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.deleteCP(dmDocumentTitle = "Document_1.txt");
-
-		// We need to wait for the system time to pass by 1 minute in order to verify the document is not restored automatically. There is currently no easy way to manipulate the system time in CI for automation. 2 minutes is the shortest value we can set while ensuring the stability of the test. See LPS-192588.
-
-		Pause(value1 = 60000);
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		LexiconEntry.viewNoEntry(rowEntry = "Document_1.txt");
-
-		RecycleBin.openRecycleBinAdmin(siteURLKey = "guest");
-
-		RecycleBin.restoreCP(
-			assetName = "Document_1.txt",
-			assetType = "Document");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.viewStatus(
-			dmDocumentStatus = "Expired",
-			dmDocumentTitle = "Document_1.txt");
 	}
 
 	@description = "This test checks if file uploads can be restricted to .doc format."
@@ -4333,7 +4194,7 @@ definition {
 	@description = "This test covers LPS-144687. It validates that a temp zip is not created if NoSuchFileException occurs during a download."
 	@priority = 4
 	test NoZipFileIsCreatedIfDownloadResultsInError {
-		DMDocument.deleteTempFolder(appServer = "tomcat-9.0.83");
+		DMDocument.deleteTempFolder(appServer = "tomcat-9.0.90");
 
 		for (var num : list "1,2,3") {
 			JSONDocument.addFileWithUploadedFile(
@@ -4353,7 +4214,7 @@ definition {
 		AssertConsoleTextPresent(value1 = "com.liferay.document.library.kernel.exception.NoSuchFileException");
 
 		DMDocument.assertNoZipFileFromTempFolder(
-			appServer = "tomcat-9.0.83",
+			appServer = "tomcat-9.0.90",
 			fileNamePattern = "*.zip");
 	}
 

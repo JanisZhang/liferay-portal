@@ -66,6 +66,8 @@ public interface ObjectDefinition
 
 	public String getRESTContextPath();
 
+	public String getRootObjectDefinitionExternalReferenceCode();
+
 	public String getShortName();
 
 	public boolean isApproved();
@@ -73,6 +75,8 @@ public interface ObjectDefinition
 	public boolean isDefaultStorageType();
 
 	public boolean isLinkedToObjectFolder(long objectFolderId);
+
+	public boolean isModifiableAndSystem();
 
 	public boolean isNodeCandidate();
 

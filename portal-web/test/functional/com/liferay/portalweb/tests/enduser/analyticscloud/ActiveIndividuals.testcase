@@ -41,88 +41,6 @@ definition {
 		ACUtils.tearDownAC();
 	}
 
-	@description = "Feature ID: Legacy | Automation ID: LRAC-8913 | Test Summary: Assert Individual Activities Chart popover follows format"
-	@priority = 3
-	test AssertIndividualActivitiesChartPopover {
-		property portal.upstream = "quarantine";
-
-		// AC Quarantine Reason: Not finding the date pattern
-		// AC Refactor ticket: LRAC-10517
-
-		task ("Add DM to AC Page") {
-			ACUtils.createDMAndAddToPage();
-		}
-
-		task ("Add a new user in DXP") {
-			JSONUser.addUser(
-				userEmailAddress = "ac@liferay.com",
-				userFirstName = "ac",
-				userLastName = "ac",
-				userScreenName = "ac");
-		}
-
-		task ("Get site assigned property name") {
-			var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
-		}
-
-		task ("Sign in with the new user to visit the site pages") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "ac@liferay.com",
-				userLoginFullName = "ac ac");
-
-			ACUtils.navigateToSitePage(
-				actionType = "View DM",
-				documentTitleList = "DM AC Title,DM AC Title,DM AC Title",
-				pageName = "AC Page",
-				siteName = "Site Name");
-		}
-
-		task ("Close all sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
-
-		task ("Switch to new property in AC") {
-			ACUtils.launchAC();
-
-			ACProperties.switchProperty(propertyName = ${propertyName});
-		}
-
-		task ("Navigate to the Individual Activity Overview") {
-			ACNavigation.goToIndividuals();
-
-			ACNavigation.switchTab(tabName = "Known Individuals");
-
-			ACIndividualsDashboard.goToKnownIndividualDetails(individualName = "ac ac");
-		}
-
-		task ("Choose Custom Range") {
-			var displayDateDay = DateUtil.getCurrentDate();
-			var displayDateMonth = DateUtil.getCurrentMonthName();
-			var displayDateYear = DateUtil.getCurrentYear();
-			var previousDay = DateUtil.getFormattedDate("-1", "d");
-
-			ACTimeFilter.setCustomRange(
-				endDay = ${displayDateDay},
-				endMonth = ${displayDateMonth},
-				endYear = ${displayDateYear},
-				startDay = ${previousDay},
-				startMonth = ${displayDateMonth},
-				startYear = ${displayDateYear});
-
-			ACIndividualsDashboard.viewRechartsBarOnIndividualsActivitiesChart();
-		}
-
-		task ("Assert chart popover date formatted") {
-			var formattedDate = ACIndividualsDashboard.getChartPopoverDate();
-
-			var formattedDate = StringUtil.extractFirst(${formattedDate}, ",");
-
-			ACUtils.assertDatePattern(
-				date = ${formattedDate},
-				format = "MMM d");
-		}
-	}
-
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8916 | Test Summary: Selected individual activity point can clear date selection"
 	@priority = 3
 	test AssertIndividualActivitiesOverviewClearDate {
@@ -297,7 +215,7 @@ definition {
 	@description = "Assert an Individual's Segments"
 	@priority = 5
 	test CanAssertIndividualSegment {
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud();
+		ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -307,13 +225,18 @@ definition {
 
 		ACDXPSettings.syncNewContactData();
 
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "userea@liferay.com",
-			userLoginFullName = "userfn userln");
+		ACUtils.navigateToSitePageWithUser(
+			actionType = "View WC",
+			documentTitleList = "1,2,3,4",
+			emailList = "userea@liferay.com",
+			pageName = "AC Page",
+			siteName = "Site Name");
+
+		ACUtils.closeAllSessionsAndWait();
 
 		ACUtils.launchAC();
 
-		ACProperties.switchProperty(propertyName = ${propertyName});
+		ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 		ACNavigation.goToSegments();
 
@@ -409,51 +332,6 @@ definition {
 		ACTimeFilter.assertCurrentTimeFilterRange(timeFilterRange = "Jan 1, 2024 - Jan 30, 2024");
 
 		AssertElementNotPresent(locator1 = "ACIndividualsDashboard#ACTIVE_INDIVIDUAL_CHART");
-	}
-
-	@description = "Feature ID: Legacy | Automation ID: LRAC-8139 | Test Summary: Active individual graph shows activities from today when switched to the 24hr filter"
-	@ignore = "true"
-	@priority = 5
-	test GraphShowsActivitiesFromTodayWhenSwitchedTo24HrFilter {
-
-		// AC Refactor: Data doesn't appear on time
-		// AC Refactor ticket: LRAC-13994
-
-		ACUtils.createDMAndAddToPage();
-
-		var propertyName = ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Site Name");
-
-		JSONUser.addUser(
-			userEmailAddress = "ac@liferay.com",
-			userFirstName = "ac",
-			userLastName = "ac",
-			userScreenName = "ac");
-
-		ACDXPSettings.syncNewContactData();
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "ac@liferay.com",
-			userLoginFullName = "ac ac");
-
-		ACUtils.navigateToSitePage(
-			actionType = "View DM",
-			documentTitleList = "DM AC Title,DM AC Title,DM AC Title,DM AC Title",
-			pageName = "AC Page",
-			siteName = "Site Name");
-
-		ACUtils.closeAllSessionsAndWait();
-
-		ACUtils.launchAC();
-
-		ACProperties.switchProperty(propertyName = ${propertyName});
-
-		ACNavigation.goToIndividuals();
-
-		ACTimeFilter.clickTimeFilterButton();
-
-		ACTimeFilter.setLast24Hours();
-
-		ACUtils.assertActiveIndividualChart(timeFilter = "Last 24 hours");
 	}
 
 }

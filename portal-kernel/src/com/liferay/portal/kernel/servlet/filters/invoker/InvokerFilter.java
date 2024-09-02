@@ -5,6 +5,7 @@
 
 package com.liferay.portal.kernel.servlet.filters.invoker;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.PortalCache;
@@ -15,7 +16,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.HttpOnlyCookieServletResponse;
 import com.liferay.portal.kernel.servlet.NonSerializableObjectRequestWrapper;
 import com.liferay.portal.kernel.servlet.SanitizedServletResponse;
-import com.liferay.portal.kernel.util.BasePortalLifecycle;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -27,6 +27,10 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -43,11 +47,26 @@ import javax.servlet.http.HttpServletResponse;
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
  */
-public class InvokerFilter extends BasePortalLifecycle implements Filter {
+public class InvokerFilter implements Filter {
 
 	@Override
 	public void destroy() {
-		portalDestroy();
+		ServletContext servletContext = _filterConfig.getServletContext();
+
+		InvokerFilterHelper invokerFilterHelper =
+			(InvokerFilterHelper)servletContext.getAttribute(
+				InvokerFilterHelper.class.getName());
+
+		if (invokerFilterHelper != null) {
+			servletContext.removeAttribute(InvokerFilterHelper.class.getName());
+
+			invokerFilterHelper.destroy();
+		}
+
+		if (_INVOKER_FILTER_CHAIN_ENABLED) {
+			PortalCacheHelperUtil.removePortalCache(
+				PortalCacheManagerNames.SINGLE_VM, _getPortalCacheName());
+		}
 	}
 
 	@Override
@@ -108,58 +127,10 @@ public class InvokerFilter extends BasePortalLifecycle implements Filter {
 
 		_contextPath = servletContext.getContextPath();
 
-		boolean registerPortalLifecycle = GetterUtil.getBoolean(
-			_filterConfig.getInitParameter("register-portal-lifecycle"), true);
-
-		if (registerPortalLifecycle) {
-			registerPortalLifecycle();
-		}
-		else {
-			try {
-				doPortalInit();
-			}
-			catch (Exception exception) {
-				_log.error(exception);
-
-				throw new ServletException(exception);
-			}
-		}
-	}
-
-	protected void clearFilterChainsCache() {
-		if (_filterChainsPortalCache != null) {
-			_filterChainsPortalCache.removeAll();
-		}
-	}
-
-	@Override
-	protected void doPortalDestroy() {
-		ServletContext servletContext = _filterConfig.getServletContext();
-
-		InvokerFilterHelper invokerFilterHelper =
-			(InvokerFilterHelper)servletContext.getAttribute(
-				InvokerFilterHelper.class.getName());
-
-		if (invokerFilterHelper != null) {
-			servletContext.removeAttribute(InvokerFilterHelper.class.getName());
-
-			invokerFilterHelper.destroy();
-		}
-
-		if (_INVOKER_FILTER_CHAIN_ENABLED) {
-			PortalCacheHelperUtil.removePortalCache(
-				PortalCacheManagerNames.SINGLE_VM, _getPortalCacheName());
-		}
-	}
-
-	@Override
-	protected void doPortalInit() throws Exception {
 		if (_INVOKER_FILTER_CHAIN_ENABLED) {
 			_filterChainsPortalCache = PortalCacheHelperUtil.getPortalCache(
 				PortalCacheManagerNames.SINGLE_VM, _getPortalCacheName());
 		}
-
-		ServletContext servletContext = _filterConfig.getServletContext();
 
 		InvokerFilterHelper invokerFilterHelper =
 			(InvokerFilterHelper)servletContext.getAttribute(
@@ -182,6 +153,12 @@ public class InvokerFilter extends BasePortalLifecycle implements Filter {
 			_filterConfig.getInitParameter("dispatcher"));
 	}
 
+	protected void clearFilterChainsCache() {
+		if (_filterChainsPortalCache != null) {
+			_filterChainsPortalCache.removeAll();
+		}
+	}
+
 	protected InvokerFilterChain getInvokerFilterChain(
 		HttpServletRequest httpServletRequest, String uri,
 		FilterChain filterChain) {
@@ -195,8 +172,11 @@ public class InvokerFilter extends BasePortalLifecycle implements Filter {
 
 		String queryString = httpServletRequest.getQueryString();
 
-		if (Validator.isNotNull(queryString)) {
-			key = StringBundler.concat(key, StringPool.QUESTION, queryString);
+		if (Validator.isNotNull(queryString) &&
+			!_skipQueryStringURIs.contains(uri)) {
+
+			key = StringBundler.concat(
+				key, StringPool.QUESTION, _scrubQueryString(queryString));
 		}
 
 		InvokerFilterChain invokerFilterChain = _filterChainsPortalCache.get(
@@ -319,6 +299,40 @@ public class InvokerFilter extends BasePortalLifecycle implements Filter {
 			servletContextName, StringPool.DASH, _filterConfig.getFilterName());
 	}
 
+	private String _scrubQueryString(String queryString) {
+		String[] parameters = StringUtil.split(queryString, CharPool.AMPERSAND);
+
+		for (int i = 0; i < parameters.length; i++) {
+			String parameter = parameters[i];
+
+			int index = parameter.indexOf(CharPool.EQUAL);
+
+			if ((index != -1) &&
+				_queryStringIgnoredKeys.contains(
+					parameter.substring(0, index))) {
+
+				parameters[i] = StringPool.BLANK;
+			}
+		}
+
+		Arrays.sort(parameters);
+
+		StringBundler sb = new StringBundler();
+
+		for (String parameter : parameters) {
+			if (!parameter.isEmpty()) {
+				sb.append(parameter);
+				sb.append(StringPool.AMPERSAND);
+			}
+		}
+
+		if (sb.index() != 0) {
+			sb.setIndex(sb.index() - 1);
+		}
+
+		return sb.toString();
+	}
+
 	private static final boolean _INVOKER_FILTER_CHAIN_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.INVOKER_FILTER_CHAIN_ENABLED));
@@ -331,6 +345,16 @@ public class InvokerFilter extends BasePortalLifecycle implements Filter {
 		InvokerFilter.class.getName() + "SECURE_RESPONSE";
 
 	private static final Log _log = LogFactoryUtil.getLog(InvokerFilter.class);
+
+	private static final Set<String> _queryStringIgnoredKeys = new HashSet<>(
+		Arrays.asList(
+			PropsUtil.getArray(
+				PropsKeys.
+					INVOKER_FILTER_CHAIN_CACHE_QUERY_STRING_IGNORED_KEYS)));
+	private static final Set<String> _skipQueryStringURIs = new HashSet<>(
+		Arrays.asList(
+			PropsUtil.getArray(
+				PropsKeys.INVOKER_FILTER_CHAIN_CACHE_SKIP_QUERY_STRING_URIS)));
 
 	private String _contextPath;
 	private Dispatcher _dispatcher;

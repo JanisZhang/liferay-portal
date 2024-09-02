@@ -37,7 +37,7 @@ import {
 	SegmentsVariantType,
 } from '../types.es';
 import {
-	getSegmentsExperimentAction,
+	getSegmentsExperimentParameter,
 	navigateToExperience,
 } from '../util/navigation.es';
 import {
@@ -82,40 +82,50 @@ function SegmentsExperimentsSidebar({
 		terminateExperimentModal,
 	} = state;
 
-	const {
-		observer: creationModalObserver,
-		onClose: onCreationModalClose,
-	} = useModal({
-		onClose: () => dispatch(closeCreationModal()),
-	});
-	const {
-		observer: editionModalObserver,
-		onClose: onEditionModalClose,
-	} = useModal({
-		onClose: () => dispatch(closeEditionModal()),
-	});
-	const {
-		observer: deletionModalObserver,
-		onClose: onDeletionModalClose,
-	} = useModal({
-		onClose: () => dispatch(closeDeletionModal()),
-	});
-	const {
-		observer: terminateModalObserver,
-		onClose: onTerminateModalClose,
-	} = useModal({
-		onClose: () => dispatch(closeTerminateModal()),
-	});
+	const {observer: creationModalObserver, onClose: onCreationModalClose} =
+		useModal({
+			onClose: () => dispatch(closeCreationModal()),
+		});
+	const {observer: editionModalObserver, onClose: onEditionModalClose} =
+		useModal({
+			onClose: () => dispatch(closeEditionModal()),
+		});
+	const {observer: deletionModalObserver, onClose: onDeletionModalClose} =
+		useModal({
+			onClose: () => dispatch(closeDeletionModal()),
+		});
+	const {observer: terminateModalObserver, onClose: onTerminateModalClose} =
+		useModal({
+			onClose: () => dispatch(closeTerminateModal()),
+		});
 
-	const {
-		observer: publishModalObserver,
-		onClose: onPublishModalClose,
-	} = useModal({
-		onClose: () => dispatch(closePublishModal()),
-	});
+	const {observer: publishModalObserver, onClose: onPublishModalClose} =
+		useModal({
+			onClose: () => dispatch(closePublishModal()),
+		});
 
 	useEffect(() => {
-		const segmentsExperimentAction = getSegmentsExperimentAction();
+		if (!getSegmentsExperimentParameter) {
+			return;
+		}
+
+		const segmentsExperimentState = getSegmentsExperimentParameter(
+			'segmentsExperimentState'
+		);
+
+		if (segmentsExperimentState === 'variantPublished') {
+			const experienceName =
+				getSegmentsExperimentParameter('experienceName');
+
+			openSuccessToast(
+				sub(
+					Liferay.Language.get('x-was-published-successfully'),
+					decodeURIComponent(experienceName)
+				)
+			);
+		}
+
+		const segmentsExperimentAction = getSegmentsExperimentParameter();
 
 		if (!segmentsExperimentAction || !experiment) {
 			return;
@@ -295,7 +305,9 @@ function SegmentsExperimentsSidebar({
 					experiment &&
 					experiment.segmentsExperimentId === experimentId
 				) {
-					navigateToExperience(experiment.segmentsExperienceId);
+					navigateToExperience({
+						experienceId: experiment.segmentsExperienceId,
+					});
 				}
 			})
 			.catch((_error) => {
@@ -304,13 +316,8 @@ function SegmentsExperimentsSidebar({
 	}
 
 	function _handleExperimentCreation(experimentData) {
-		const {
-			description,
-			goal,
-			goalTarget,
-			name,
-			segmentsExperienceId,
-		} = experimentData;
+		const {description, goal, goalTarget, name, segmentsExperienceId} =
+			experimentData;
 
 		const body = {
 			description,
@@ -325,7 +332,7 @@ function SegmentsExperimentsSidebar({
 			.then(function _successCallback({
 				segmentsExperiment: {segmentsExperienceId},
 			}) {
-				navigateToExperience(segmentsExperienceId);
+				navigateToExperience({experienceId: segmentsExperienceId});
 
 				openSuccessToast();
 			})
@@ -370,13 +377,8 @@ function SegmentsExperimentsSidebar({
 	}
 
 	function _handleExperimentEdition(experimentData) {
-		const {
-			description,
-			goal,
-			goalTarget,
-			name,
-			segmentsExperimentId,
-		} = experimentData;
+		const {description, goal, goalTarget, name, segmentsExperimentId} =
+			experimentData;
 
 		const body = {
 			description,
@@ -444,14 +446,19 @@ function SegmentsExperimentsSidebar({
 			winnerSegmentsExperienceId: experienceId,
 		})
 			.then(() => {
-				openSuccessToast(
-					sub(
-						Liferay.Language.get('x-was-published-successfully'),
-						experienceName
-					)
-				);
-
-				navigateToExperience(experienceId);
+				navigateToExperience({
+					experienceId,
+					params: [
+						{
+							key: 'segmentsExperimentState',
+							value: 'variantPublished',
+						},
+						{
+							key: 'experienceName',
+							value: encodeURIComponent(experienceName),
+						},
+					],
+				});
 			})
 			.catch((_error) => {
 				openErrorToast();

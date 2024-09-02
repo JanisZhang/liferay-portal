@@ -5,7 +5,7 @@
 
 import {LiferayStorage} from '../core/Storage';
 
-export interface IOAuth2ClientAgentApplication {
+export type IOAuth2ClientAgentApplication = {
 	authorizeURL: string;
 	clientId: string;
 	encodedRedirectURL: string;
@@ -13,15 +13,15 @@ export interface IOAuth2ClientAgentApplication {
 	homePageURL: string;
 	redirectURIs: string[];
 	tokenURL: string;
-}
+};
 
-export interface IOAuth2Client {
+export type IOAuth2Client = {
 	FromUserAgentApplication: (
 		agentName: string
 	) => IOAuth2ClientAgentApplication;
-}
+};
 
-interface ILiferay {
+type ILiferay = {
 	CommerceContext: {
 		account?: {
 			accountId: number | string | null;
@@ -44,6 +44,7 @@ interface ILiferay {
 		getPathThemeImages: () => string;
 		getPortalURL: () => string;
 		getScopeGroupId: () => number;
+		getURLHome: () => string;
 		getUserEmailAddress: () => string;
 		getUserId: () => string;
 		getUserName: () => string;
@@ -52,18 +53,22 @@ interface ILiferay {
 	Util: {
 		LocalStorage: LiferayStorage;
 		SessionStorage: LiferayStorage;
+		fetch: typeof fetch;
 		navigate: (path: string) => void;
+		openModal: (options?: {}) => void;
 		openToast: (options?: {
 			message: string;
 			onClick?: ({event}: {event: any}) => void;
 			title?: string;
-			type?: 'danger' | 'success';
+			type?: 'danger' | 'info' | 'success';
 		}) => void;
 	};
 	authToken: string;
 	detach: Function;
+	fire: (event: string, data: unknown) => null;
 	on: Function;
-}
+};
+
 declare global {
 	interface Window {
 		Liferay: ILiferay;
@@ -85,6 +90,7 @@ export const Liferay = window.Liferay || {
 		getPathContext: () => '',
 		getPathThemeImages: () => '',
 		getPortalURL: () => '',
+		getURLHome: () => '',
 		getUserId: () => '',
 		isSignedIn: () => {
 			return false;
@@ -98,6 +104,7 @@ export const Liferay = window.Liferay || {
 		type: keyof WindowEventMap,
 		callback: EventListenerOrEventListenerObject
 	) => window.removeEventListener(type, callback),
+	fire: () => null,
 	on: (
 		type: keyof WindowEventMap,
 		callback: EventListenerOrEventListenerObject

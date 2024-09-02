@@ -219,8 +219,8 @@ interface IButtonInputTriggerProps {
 	dataSourceFn: (value: string) => Promise<any>;
 	editing: boolean;
 	label: string;
-	onBlur: () => void;
 	onChange: (value: string) => void;
+	onBlur: () => void;
 	onClick: () => void;
 	placeholder: string;
 	value: string;
@@ -234,7 +234,7 @@ const ButtonInputTrigger: React.FC<IButtonInputTriggerProps> = ({
 	...otherProps
 }) =>
 	editing ? (
-		<AutocompleteInput focusOnInit={!value} value={value} {...otherProps} />
+		<AutocompleteInput value={value} {...otherProps} />
 	) : (
 		<ClayButton
 			className='button-root'
@@ -254,8 +254,6 @@ export default class GeolocationInput extends React.Component<
 	IGeolocationInputProps,
 	{editCity: boolean; editRegion: boolean}
 > {
-	_completedAnalytics = false;
-
 	constructor(props) {
 		super(props);
 
@@ -265,25 +263,6 @@ export default class GeolocationInput extends React.Component<
 			editCity: !!getLocationTypeValue(value, CITY),
 			editRegion: !!getLocationTypeValue(value, REGION)
 		};
-	}
-
-	componentDidUpdate() {
-		const {
-			id,
-			property: {entityName, type},
-			valid: {country, dateFilter}
-		} = this.props;
-
-		const valid = country && dateFilter;
-
-		if (!id && valid && !this._completedAnalytics) {
-			this._completedAnalytics = true;
-
-			analytics.track('Dynamic Segment Creation - Completed Attribute', {
-				entityName,
-				type
-			});
-		}
 	}
 
 	getConjunctionDateFilterIMap(value) {

@@ -63,17 +63,12 @@ export default function EditObjectRelationship({
 		}
 	};
 
-	const {
-		errors,
-		handleChange,
-		handleSubmit,
-		setValues,
-		values,
-	} = useObjectRelationshipForm({
-		initialValues,
-		onSubmit,
-		parameterRequired,
-	});
+	const {errors, handleChange, handleSubmit, setValues, values} =
+		useObjectRelationshipForm({
+			initialValues,
+			onSubmit,
+			parameterRequired,
+		});
 
 	const readOnly =
 		!hasUpdateObjectDefinitionPermission ||
@@ -105,7 +100,6 @@ export default function EditObjectRelationship({
 				)}
 
 				<InputLocalized
-					disableFlag={readOnly}
 					disabled={readOnly}
 					error={errors.label}
 					label={Liferay.Language.get('label')}

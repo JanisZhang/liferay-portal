@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -354,6 +355,14 @@ public class CTCollectionLocalServiceUtil {
 			companyId, status, start, end, orderByComparator);
 	}
 
+	public static List<CTCollection> getCTCollections(
+		long companyId, int[] statuses, int start, int end,
+		OrderByComparator<CTCollection> orderByComparator) {
+
+		return getService().getCTCollections(
+			companyId, statuses, start, end, orderByComparator);
+	}
+
 	/**
 	 * Returns the number of ct collections.
 	 *
@@ -480,13 +489,11 @@ public class CTCollectionLocalServiceUtil {
 	}
 
 	public static CTCollectionLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CTCollectionLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CTCollectionLocalService _service;
+	private static final Snapshot<CTCollectionLocalService> _serviceSnapshot =
+		new Snapshot<>(
+			CTCollectionLocalServiceUtil.class, CTCollectionLocalService.class);
 
 }

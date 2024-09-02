@@ -416,6 +416,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>RECYCLE_BIN_WORKFLOW_STATUS</td>
+	<td>//span[contains(@class,'label-info')]/span</td>
+	<td></td>
+</tr>
+<tr>
 	<td>REQUIRED_INFO</td>
 	<td>//div[contains(@class,'required') and contains(@role,'alert')]</td>
 	<td></td>
@@ -523,6 +528,11 @@
 <tr>
 	<td>WARNING_FEEDBACK</td>
 	<td>//div[contains(@class,'form-feedback-item')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>WARNING_FEEDBACK_SPECIFIC</td>
+	<td>//div[contains(@class,'form-feedback-item') and contains(.,'${key_warningMessage}')]</td>
 	<td></td>
 </tr>
 <tr>

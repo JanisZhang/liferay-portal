@@ -14,6 +14,7 @@ import {
 } from 'shared/util/date';
 import {
 	DATA_RETENTION_PERIOD_KEY,
+	FaroEnv,
 	ONE_DAY,
 	ONE_MONTH,
 	SEVEN_MONTHS,
@@ -24,13 +25,12 @@ import {get} from 'lodash';
 import {Option, Picker} from '@clayui/core';
 import {Routes, toRoute} from 'shared/util/router';
 import {sub} from 'shared/util/lang';
+import {useCurrentUser} from 'shared/hooks/useCurrentUser';
 import {useMutation, useQuery} from '@apollo/react-hooks';
-import {User} from 'shared/util/records';
-import {withCurrentUser} from 'shared/hoc';
 
 let RETENTION_OPTIONS = [SEVEN_MONTHS, THIRTEEN_MONTHS];
 
-if (FARO_ENV === 'uat') {
+if (FARO_ENV === FaroEnv.Local || FARO_ENV === FaroEnv.Staging) {
 	RETENTION_OPTIONS = [ONE_DAY, TWO_DAYS, SEVEN_MONTHS, THIRTEEN_MONTHS];
 }
 
@@ -60,22 +60,18 @@ const fetchDownload = ({fromDate, groupId, toDate, type}) =>
 
 interface IOverviewProps {
 	close: () => void;
-	currentUser: User;
 	groupId: string;
 	open: (modalType: string, options: object) => void;
 }
 
-export const Overview: React.FC<IOverviewProps> = ({
-	close,
-	currentUser,
-	groupId,
-	open
-}) => {
+export const Overview: React.FC<IOverviewProps> = ({close, groupId, open}) => {
 	const [updatePreference] = useMutation(PreferenceMutation);
 
 	const {data} = useQuery(PreferenceQuery, {
 		variables: {key: DATA_RETENTION_PERIOD_KEY}
 	});
+
+	const currentUser = useCurrentUser();
 
 	const handleDateRetentionPeriodChange = value => {
 		const curVal = parseInt(data.preference.value);
@@ -94,12 +90,6 @@ export const Overview: React.FC<IOverviewProps> = ({
 					key: DATA_RETENTION_PERIOD_KEY,
 					value
 				}
-			}).then(response => {
-				analytics.track('Updated Retention Period', {
-					retentionPeriod: Number(value)
-				});
-
-				return response;
 			});
 
 		if (curVal > newVal) {
@@ -115,14 +105,14 @@ export const Overview: React.FC<IOverviewProps> = ({
 							)}
 						</p>
 
-						<h5>
+						<div className='h5'>
 							{sub(
 								Liferay.Language.get(
 									'you-will-permanently-lose-analytics-data-that-has-been-recorded-over-x-ago.-you-will-not-be-able-to-undo-this-operation'
 								),
 								[getRetentionLabel(newVal).toLowerCase()]
 							)}
-						</h5>
+						</div>
 					</div>
 				),
 				modalVariant: 'modal-warning',
@@ -187,11 +177,11 @@ export const Overview: React.FC<IOverviewProps> = ({
 							<div className='container'>
 								<div className='row justify-content-between'>
 									<div className='col-lg-8'>
-										<h4>
+										<div className='h4'>
 											{Liferay.Language.get(
 												'retention-period'
 											)}
-										</h4>
+										</div>
 
 										<p className='text-secondary'>
 											{Liferay.Language.get(
@@ -228,11 +218,11 @@ export const Overview: React.FC<IOverviewProps> = ({
 
 								<div className='row mt-3 justify-content-between'>
 									<div className='col-lg-8'>
-										<h4>
+										<div className='h4'>
 											{Liferay.Language.get(
 												'request-log'
 											)}
-										</h4>
+										</div>
 
 										<p className='text-secondary'>
 											{Liferay.Language.get(
@@ -270,11 +260,11 @@ export const Overview: React.FC<IOverviewProps> = ({
 
 								<div className='row mt-3 justify-content-between'>
 									<div className='col-lg-8'>
-										<h4>
+										<div className='h4'>
 											{Liferay.Language.get(
 												'suppressed-users'
 											)}
-										</h4>
+										</div>
 
 										<p className='text-secondary'>
 											{Liferay.Language.get(
@@ -320,7 +310,4 @@ export const Overview: React.FC<IOverviewProps> = ({
 	);
 };
 
-export default compose<any>(
-	withCurrentUser,
-	connect(null, {close, open})
-)(Overview);
+export default compose<any>(connect(null, {close, open}))(Overview);

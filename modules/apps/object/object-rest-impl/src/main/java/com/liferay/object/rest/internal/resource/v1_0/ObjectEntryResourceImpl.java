@@ -216,6 +216,11 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 	}
 
 	@Override
+	public String getResourceName() {
+		return _objectDefinition.getShortName();
+	}
+
+	@Override
 	public ObjectEntry getScopeScopeKeyByExternalReferenceCode(
 			String scopeKey, String externalReferenceCode)
 		throws Exception {
@@ -523,7 +528,7 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		ObjectEntry objectEntry, ObjectEntry existingObjectEntry) {
 
 		if (objectEntry.getStatus() != null) {
-			existingObjectEntry.setStatus(objectEntry.getStatus());
+			existingObjectEntry.setStatus(objectEntry::getStatus);
 		}
 	}
 

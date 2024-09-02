@@ -7,37 +7,60 @@ import {useEffect, useState} from 'react';
 
 import {Filters} from '../../../common/utils/constants/filters';
 import {getCamelCase} from '../../../common/utils/getCamelCase';
-import getSearchFilterTerm from '../../../common/utils/getSearchFilterTerm';
 import {INITIAL_FILTER} from '../utils/constants/initialFilter';
 import getDateCreatedFilterTerm from '../utils/getDateCreatedFilterTerm';
 
 export default function useFilters(
 	openClaimsFilter: boolean,
+	sort: string,
+	urlParams: URLSearchParams,
 	isChannel?: boolean
 ) {
-	const [filters, setFilters] = useState(
-		(JSON.parse(
-			sessionStorage.getItem('claimFilters')!
-		) as typeof INITIAL_FILTER) || INITIAL_FILTER
-	);
-	const [filtersTerm, setFilterTerm] = useState('');
+	const [filters, setFilters] = useState(() => {
+		const initialFilter: typeof INITIAL_FILTER =
+			structuredClone(INITIAL_FILTER);
+
+		if (urlParams.getAll('partner').length) {
+			initialFilter.partner.value = urlParams.getAll('partner')!;
+		}
+
+		if (urlParams.get('search')) {
+			initialFilter.searchTerm = urlParams.get('search')!;
+		}
+
+		if (urlParams.getAll('status').length) {
+			initialFilter.status.value = urlParams.getAll('status')!;
+		}
+
+		if (urlParams.get('enddate')) {
+			initialFilter.submitDate.dates.endDate = urlParams.get('enddate')!;
+		}
+
+		if (urlParams.get('startdate')) {
+			initialFilter.submitDate.dates.startDate =
+				urlParams.get('startdate')!;
+		}
+
+		if (urlParams.getAll('type').length) {
+			initialFilter.type.value = urlParams.getAll('type')!;
+		}
+
+		return initialFilter;
+	});
 
 	const mdfClaimRoleFilter = isChannel
 		? openClaimsFilter
 			? Filters.MDF_CLAIM_LISTING.channelsOpen
 			: Filters.MDF_CLAIM_LISTING.channelsCompleted
 		: openClaimsFilter
-		? Filters.MDF_CLAIM_LISTING.partnersOpen
-		: Filters.MDF_CLAIM_LISTING.partnersCompleted;
+			? Filters.MDF_CLAIM_LISTING.partnersOpen
+			: Filters.MDF_CLAIM_LISTING.partnersCompleted;
 
-	const onFilter = (newFilters: Partial<typeof INITIAL_FILTER>) =>
-		setFilters((previousFilters) => ({...previousFilters, ...newFilters}));
-
-	sessionStorage.setItem('claimFilters', JSON.stringify(filters));
-	sessionStorage.setItem(
-		'openClaimsFilter',
-		JSON.stringify(openClaimsFilter)
-	);
+	const onFilter = (newFilters: Partial<typeof INITIAL_FILTER>) => {
+		setFilters((previousFilters) => {
+			return {...previousFilters, ...newFilters};
+		});
+	};
 
 	useEffect(() => {
 		let initialFilter = '';
@@ -58,6 +81,24 @@ export default function useFilters(
 				initialFilter,
 				filters.submitDate
 			);
+
+			if (filters.submitDate?.dates.endDate) {
+				urlParams.set('enddate', filters.submitDate?.dates.endDate);
+			}
+			else {
+				urlParams.delete('enddate');
+			}
+
+			if (filters.submitDate?.dates.startDate) {
+				urlParams.set('startdate', filters.submitDate?.dates.startDate);
+			}
+			else {
+				urlParams.delete('startdate');
+			}
+		}
+		else {
+			urlParams.delete('enddate');
+			urlParams.delete('startdate');
 		}
 
 		if (filters.status.value.length) {
@@ -72,6 +113,15 @@ export default function useFilters(
 			initialFilter = initialFilter
 				? initialFilter.concat(` and (${statusFilter})`)
 				: initialFilter.concat(`(${statusFilter})`);
+
+			urlParams.delete('status');
+
+			filters.status.value.forEach((value) =>
+				urlParams.append('status', value)
+			);
+		}
+		else {
+			urlParams.delete('status');
 		}
 
 		if (filters.partner.value.length) {
@@ -86,6 +136,15 @@ export default function useFilters(
 			initialFilter = initialFilter
 				? initialFilter.concat(` and (${partnerFilter})`)
 				: initialFilter.concat(`(${partnerFilter})`);
+
+			urlParams.delete('partner');
+
+			filters.partner.value.forEach((value) =>
+				urlParams.append('partner', value)
+			);
+		}
+		else {
+			urlParams.delete('partner');
 		}
 
 		if (filters.type.value.length) {
@@ -100,29 +159,35 @@ export default function useFilters(
 			initialFilter = initialFilter
 				? initialFilter.concat(` and (${partnerFilter})`)
 				: initialFilter.concat(`(${partnerFilter})`);
-		}
 
-		if (filters.searchTerm) {
-			initialFilter = initialFilter.concat(
-				getSearchFilterTerm(filters.searchTerm)
+			urlParams.delete('type');
+
+			filters.type.value.forEach((value) =>
+				urlParams.append('type', value)
 			);
+		}
+		else {
+			urlParams.delete('type');
 		}
 
 		onFilter({
 			hasValue: hasFilter,
 		});
 
-		setFilterTerm(initialFilter);
+		urlParams.set('filter', initialFilter);
+		urlParams.set('sort', sort);
 	}, [
 		filters.submitDate,
 		filters.partner,
 		filters.searchTerm,
 		filters.status,
 		filters.type,
-		setFilters,
-		openClaimsFilter,
 		mdfClaimRoleFilter,
+		openClaimsFilter,
+		setFilters,
+		sort,
+		urlParams,
 	]);
 
-	return {filters, filtersTerm, onFilter, setFilters};
+	return {filters, onFilter, setFilters};
 }

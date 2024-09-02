@@ -49,6 +49,7 @@ const RoutineArchived = () => {
 					},
 				}}
 				managementToolbarProps={{
+					applyFilters: true,
 					buttons: (actions) =>
 						actions?.create && (
 							<BuildAddButton routineId={routineId as string} />
@@ -87,8 +88,9 @@ const RoutineArchived = () => {
 													className={classNames(
 														'label-chart symbol',
 														{
-															[task.dueStatus.key.toLowerCase()]: task
-																.dueStatus.key,
+															[task.dueStatus.key.toLowerCase()]:
+																task.dueStatus
+																	.key,
 														}
 													)}
 													symbol="circle"
@@ -106,7 +108,7 @@ const RoutineArchived = () => {
 							render: (dateCreated) =>
 								dayjs(dateCreated).format('lll'),
 							size: 'sm',
-							value: i18n.translate('create-date'),
+							value: i18n.translate('execution-date'),
 						},
 						{
 							clickable: true,
@@ -188,11 +190,14 @@ const RoutineArchived = () => {
 										'incomplete',
 									]}
 									items={{
-										blocked: build.caseResultBlocked as number,
+										blocked:
+											build.caseResultBlocked as number,
 										failed: build.caseResultFailed as number,
-										incomplete: build.caseResultIncomplete as number,
+										incomplete:
+											build.caseResultIncomplete as number,
 										passed: build.caseResultPassed as number,
-										test_fix: build.caseResultTestFix as number,
+										test_fix:
+											build.caseResultTestFix as number,
 									}}
 								/>
 							),

@@ -31,11 +31,9 @@ public interface JenkinsServerEntity extends Entity {
 
 	public long getJenkinsCohortEntityId();
 
+	public int getJenkinsNodeCount();
+
 	public Set<JenkinsNodeEntity> getJenkinsNodeEntities();
-
-	public String getJenkinsUserName();
-
-	public String getJenkinsUserPassword();
 
 	public String getName();
 
@@ -47,9 +45,7 @@ public interface JenkinsServerEntity extends Entity {
 
 	public void setJenkinsCohortEntity(JenkinsCohortEntity jenkinsCohortEntity);
 
-	public void setJenkinsUserName(String jenkinsUserName);
-
-	public void setJenkinsUserPassword(String jenkinsUserPassword);
+	public void setJenkinsNodeCount(int jenkinsNodeCount);
 
 	public void setName(String name);
 

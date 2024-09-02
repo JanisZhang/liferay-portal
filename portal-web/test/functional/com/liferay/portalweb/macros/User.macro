@@ -1,6 +1,6 @@
 definition {
 
-	var password = "test";
+	var password = PropsUtil.get("default.admin.password");
 	var userEmailAddress = "test@liferay.com";
 
 	@summary = "Default summary"
@@ -1200,7 +1200,7 @@ definition {
 			User.logoutPG();
 
 			User.loginUserPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = ${userEmailAddress});
 
 			User.logoutPG();
@@ -1209,7 +1209,7 @@ definition {
 				authenticationMethod = ${authenticationMethod},
 				newPassword = ${newPassword},
 				nodePort = ${nodePort},
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com",
 				userScreenName = ${userScreenName});
 		}
@@ -1240,7 +1240,7 @@ definition {
 				authenticationMethod = ${authenticationMethod},
 				newPassword = ${newPassword},
 				nodePort = ${nodePort},
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com",
 				userScreenName = ${userScreenName});
 		}
@@ -1646,7 +1646,7 @@ definition {
 		User.loginPG(
 			authenticationMethod = ${authenticationMethod},
 			nodePort = ${nodePort},
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com",
 			userScreenName = ${userScreenName});
 	}
@@ -1813,7 +1813,7 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro editUserInformation(password = null, userFirstNameEdit = null, userLastNameEdit = null, userCustomFieldLabel = null, userCustomField = null, userEmailAddressEdit = null, userMiddleNameEdit = null, userScreenNameEdit = null) {
+	macro editUserInformation(password = null, userFirstNameEdit = null, userLastNameEdit = null, userCustomFieldLabel = null, userCustomField = null, userCustomFieldType = null, userEmailAddressEdit = null, userMiddleNameEdit = null, userScreenNameEdit = null) {
 		AssertElementPresent.assertElementPresent(locator1 = "TextInput#FIRST_NAME");
 
 		if (isSet(userFirstNameEdit)) {
@@ -1835,10 +1835,17 @@ definition {
 		}
 
 		if (isSet(userCustomField)) {
-			Type(
-				key_fieldLabel = ${userCustomFieldLabel},
-				locator1 = "TextInput#GENERIC_TEXT_INPUT",
-				value1 = ${userCustomField});
+			if (${userCustomFieldType} == "Text Area") {
+				Type(
+					locator1 = "TextInput#CUSTOM_FIELD",
+					value1 = ${userCustomField});
+			}
+			else {
+				Type(
+					key_fieldLabel = ${userCustomFieldLabel},
+					locator1 = "TextInput#GENERIC_TEXT_INPUT",
+					value1 = ${userCustomField});
+			}
 		}
 
 		PortletEntry.save();
@@ -1938,8 +1945,6 @@ definition {
 		}
 		else {
 			for (var tagName : list ${tagNameList}) {
-				var tagName = StringUtil.lowerCase(${tagName});
-
 				AssetCategorization.addTag(tagName = ${tagName});
 			}
 		}
@@ -2284,7 +2289,7 @@ definition {
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed");
 		}
 	}
 
@@ -2531,7 +2536,7 @@ definition {
 				User.fillResetPasswordFields(password = ${newPassword});
 			}
 			else {
-				User.fillResetPasswordFields(password = "test");
+				User.fillResetPasswordFields(password = PropsUtil.get("default.admin.password"));
 			}
 
 			if (isSet(localizedSaveButton)) {
@@ -2587,8 +2592,6 @@ definition {
 		IFrame.selectTagFrame();
 
 		for (var tagName : list ${tagNameList}) {
-			var tagName = StringUtil.lowerCase(${tagName});
-
 			Check(
 				key_rowEntry = ${tagName},
 				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
@@ -2601,8 +2604,6 @@ definition {
 			value1 = "Done");
 
 		for (var tagName : list ${tagNameList}) {
-			var tagName = StringUtil.lowerCase(${tagName});
-
 			AssertTextEquals(
 				key_tagName = ${tagName},
 				locator1 = "AssetCategorization#TAG",
@@ -3250,7 +3251,12 @@ definition {
 			value1 = ${customFieldName});
 
 		if (isSet(startingValue)) {
-			if (${customFieldType} == "Text Field") {
+			if (${customFieldType} == "Text Area") {
+				AssertTextEquals(
+					locator1 = "TextInput#CUSTOM_FIELD",
+					value1 = ${startingValue});
+			}
+			else if (${customFieldType} == "Text Field") {
 				AssertTextEquals(
 					key_fieldLabel = ${customFieldName},
 					locator1 = "TextInput#GENERIC_TEXT_INPUT",

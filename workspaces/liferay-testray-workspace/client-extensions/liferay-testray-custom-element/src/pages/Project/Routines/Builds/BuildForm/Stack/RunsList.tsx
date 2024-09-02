@@ -55,6 +55,7 @@ const COLUMN_SIZE_SMALL = 3;
 const RunsList: React.FC<RunsListProps> = ({
 	append,
 	displayVertical,
+	factorItems,
 	fields,
 	optionsList,
 	register,
@@ -69,8 +70,10 @@ const RunsList: React.FC<RunsListProps> = ({
 						<ClayLayout.Col size={12}>
 							<ClayLayout.Row
 								className={classNames({
-									'align-items-center d-flex justify-content-space-between': !displayVertical,
-									'flex-column justify-content-space-between': displayVertical,
+									'align-items-center d-flex justify-content-space-between':
+										!displayVertical,
+									'flex-column justify-content-space-between':
+										displayVertical,
 								})}
 							>
 								{Object.keys(field).map(
@@ -84,23 +87,29 @@ const RunsList: React.FC<RunsListProps> = ({
 										const defaultOption =
 											field[optionItem as keyof Fields];
 
+										const isDefaultEnvironment =
+											factorItems?.find((item) =>
+												item.factorCategory?.name.includes(
+													formatedCategoryName
+												)
+											);
+
 										return (
-											<ClayLayout.Col
-												key={optionIndex}
-												size={
-													displayVertical &&
-													index === 0
-														? COLUMN_SIZE_MEDIUM
-														: COLUMN_SIZE_SMALL
-												}
-											>
-												{optionsList[
-													formatedCategoryName as any
-												] &&
-													defaultOption && (
+											<>
+												{isDefaultEnvironment && (
+													<ClayLayout.Col
+														key={optionIndex}
+														size={
+															displayVertical &&
+															index === 0
+																? COLUMN_SIZE_MEDIUM
+																: COLUMN_SIZE_SMALL
+														}
+													>
 														<Form.Select
 															defaultValue={
-																defaultOption as string
+																(defaultOption as string) ||
+																''
 															}
 															disabled={
 																field.disabled
@@ -109,10 +118,10 @@ const RunsList: React.FC<RunsListProps> = ({
 															label={
 																formatedCategoryName
 															}
-															name={`factorStacks.${index}.${optionIndex}.${optionItem}`}
+															name={`runOptions.${index}.${optionItem}`}
 															options={optionsList[
 																formatedCategoryName as any
-															].map(
+															]?.map(
 																({
 																	name,
 																}: any) => ({
@@ -123,9 +132,7 @@ const RunsList: React.FC<RunsListProps> = ({
 															register={register}
 															registerOptions={{
 																onBlur: (
-																	event: React.FocusEvent<
-																		HTMLSelectElement
-																	>
+																	event: React.FocusEvent<HTMLSelectElement>
 																) => {
 																	const runOptionName =
 																		event
@@ -136,10 +143,12 @@ const RunsList: React.FC<RunsListProps> = ({
 																				.selectedIndex
 																		]?.text;
 
-																	const dataToUpdate = {
-																		...(field as any),
-																		[optionItem]: runOptionName,
-																	};
+																	const dataToUpdate =
+																		{
+																			...field,
+																			[optionItem]:
+																				runOptionName,
+																		};
 
 																	update(
 																		index,
@@ -148,8 +157,9 @@ const RunsList: React.FC<RunsListProps> = ({
 																},
 															}}
 														/>
-													)}
-											</ClayLayout.Col>
+													</ClayLayout.Col>
+												)}
+											</>
 										);
 									}
 								)}

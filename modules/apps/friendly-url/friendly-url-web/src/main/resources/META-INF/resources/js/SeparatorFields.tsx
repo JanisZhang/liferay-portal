@@ -88,6 +88,7 @@ function Field({errors, field, url}: FieldProps) {
 				<ClayInput.GroupItem append>
 					<ClayInput
 						aria-describedby={descriptionId}
+						id={name}
 						name={name}
 						onChange={(event) => setValue(event.target.value)}
 						ref={ref}

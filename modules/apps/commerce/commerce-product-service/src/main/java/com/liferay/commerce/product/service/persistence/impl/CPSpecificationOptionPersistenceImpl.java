@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.product.service.persistence.impl;
 
+import com.liferay.commerce.product.exception.DuplicateCPSpecificationOptionExternalReferenceCodeException;
 import com.liferay.commerce.product.exception.NoSuchCPSpecificationOptionException;
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.model.CPSpecificationOptionTable;
@@ -27,14 +28,20 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
+import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -664,7 +671,9 @@ public class CPSpecificationOptionPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
@@ -874,7 +883,9 @@ public class CPSpecificationOptionPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
@@ -1686,7 +1697,9 @@ public class CPSpecificationOptionPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
@@ -1904,7 +1917,9 @@ public class CPSpecificationOptionPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
@@ -2661,7 +2676,9 @@ public class CPSpecificationOptionPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
@@ -2861,7 +2878,9 @@ public class CPSpecificationOptionPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
@@ -3577,7 +3596,9 @@ public class CPSpecificationOptionPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
@@ -3777,7 +3798,9 @@ public class CPSpecificationOptionPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
@@ -3948,6 +3971,933 @@ public class CPSpecificationOptionPersistenceImpl
 	private static final String
 		_FINDER_COLUMN_CPOPTIONCATEGORYID_CPOPTIONCATEGORYID_2 =
 			"cpSpecificationOption.CPOptionCategoryId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByListTypeDefinitionId;
+	private FinderPath _finderPathWithoutPaginationFindByListTypeDefinitionId;
+	private FinderPath _finderPathCountByListTypeDefinitionId;
+
+	/**
+	 * Returns all the cp specification options where listTypeDefinitionId = &#63;.
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @return the matching cp specification options
+	 */
+	@Override
+	public List<CPSpecificationOption> findByListTypeDefinitionId(
+		long listTypeDefinitionId) {
+
+		return findByListTypeDefinitionId(
+			listTypeDefinitionId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options where listTypeDefinitionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @return the range of matching cp specification options
+	 */
+	@Override
+	public List<CPSpecificationOption> findByListTypeDefinitionId(
+		long listTypeDefinitionId, int start, int end) {
+
+		return findByListTypeDefinitionId(
+			listTypeDefinitionId, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp specification options where listTypeDefinitionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp specification options
+	 */
+	@Override
+	public List<CPSpecificationOption> findByListTypeDefinitionId(
+		long listTypeDefinitionId, int start, int end,
+		OrderByComparator<CPSpecificationOption> orderByComparator) {
+
+		return findByListTypeDefinitionId(
+			listTypeDefinitionId, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp specification options where listTypeDefinitionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching cp specification options
+	 */
+	@Override
+	public List<CPSpecificationOption> findByListTypeDefinitionId(
+		long listTypeDefinitionId, int start, int end,
+		OrderByComparator<CPSpecificationOption> orderByComparator,
+		boolean useFinderCache) {
+
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPSpecificationOption.class)) {
+
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
+
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
+
+				if (useFinderCache) {
+					finderPath =
+						_finderPathWithoutPaginationFindByListTypeDefinitionId;
+					finderArgs = new Object[] {listTypeDefinitionId};
+				}
+			}
+			else if (useFinderCache) {
+				finderPath =
+					_finderPathWithPaginationFindByListTypeDefinitionId;
+				finderArgs = new Object[] {
+					listTypeDefinitionId, start, end, orderByComparator
+				};
+			}
+
+			List<CPSpecificationOption> list = null;
+
+			if (useFinderCache) {
+				list = (List<CPSpecificationOption>)finderCache.getResult(
+					finderPath, finderArgs, this);
+
+				if ((list != null) && !list.isEmpty()) {
+					for (CPSpecificationOption cpSpecificationOption : list) {
+						if (listTypeDefinitionId !=
+								cpSpecificationOption.
+									getListTypeDefinitionId()) {
+
+							list = null;
+
+							break;
+						}
+					}
+				}
+			}
+
+			if (list == null) {
+				StringBundler sb = null;
+
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						3 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(3);
+				}
+
+				sb.append(_SQL_SELECT_CPSPECIFICATIONOPTION_WHERE);
+
+				sb.append(
+					_FINDER_COLUMN_LISTTYPEDEFINITIONID_LISTTYPEDEFINITIONID_2);
+
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+				}
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					queryPos.add(listTypeDefinitionId);
+
+					list = (List<CPSpecificationOption>)QueryUtil.list(
+						query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			return list;
+		}
+	}
+
+	/**
+	 * Returns the first cp specification option in the ordered set where listTypeDefinitionId = &#63;.
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp specification option
+	 * @throws NoSuchCPSpecificationOptionException if a matching cp specification option could not be found
+	 */
+	@Override
+	public CPSpecificationOption findByListTypeDefinitionId_First(
+			long listTypeDefinitionId,
+			OrderByComparator<CPSpecificationOption> orderByComparator)
+		throws NoSuchCPSpecificationOptionException {
+
+		CPSpecificationOption cpSpecificationOption =
+			fetchByListTypeDefinitionId_First(
+				listTypeDefinitionId, orderByComparator);
+
+		if (cpSpecificationOption != null) {
+			return cpSpecificationOption;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("listTypeDefinitionId=");
+		sb.append(listTypeDefinitionId);
+
+		sb.append("}");
+
+		throw new NoSuchCPSpecificationOptionException(sb.toString());
+	}
+
+	/**
+	 * Returns the first cp specification option in the ordered set where listTypeDefinitionId = &#63;.
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
+	 */
+	@Override
+	public CPSpecificationOption fetchByListTypeDefinitionId_First(
+		long listTypeDefinitionId,
+		OrderByComparator<CPSpecificationOption> orderByComparator) {
+
+		List<CPSpecificationOption> list = findByListTypeDefinitionId(
+			listTypeDefinitionId, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last cp specification option in the ordered set where listTypeDefinitionId = &#63;.
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp specification option
+	 * @throws NoSuchCPSpecificationOptionException if a matching cp specification option could not be found
+	 */
+	@Override
+	public CPSpecificationOption findByListTypeDefinitionId_Last(
+			long listTypeDefinitionId,
+			OrderByComparator<CPSpecificationOption> orderByComparator)
+		throws NoSuchCPSpecificationOptionException {
+
+		CPSpecificationOption cpSpecificationOption =
+			fetchByListTypeDefinitionId_Last(
+				listTypeDefinitionId, orderByComparator);
+
+		if (cpSpecificationOption != null) {
+			return cpSpecificationOption;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("listTypeDefinitionId=");
+		sb.append(listTypeDefinitionId);
+
+		sb.append("}");
+
+		throw new NoSuchCPSpecificationOptionException(sb.toString());
+	}
+
+	/**
+	 * Returns the last cp specification option in the ordered set where listTypeDefinitionId = &#63;.
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
+	 */
+	@Override
+	public CPSpecificationOption fetchByListTypeDefinitionId_Last(
+		long listTypeDefinitionId,
+		OrderByComparator<CPSpecificationOption> orderByComparator) {
+
+		int count = countByListTypeDefinitionId(listTypeDefinitionId);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<CPSpecificationOption> list = findByListTypeDefinitionId(
+			listTypeDefinitionId, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the cp specification options before and after the current cp specification option in the ordered set where listTypeDefinitionId = &#63;.
+	 *
+	 * @param CPSpecificationOptionId the primary key of the current cp specification option
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next cp specification option
+	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
+	 */
+	@Override
+	public CPSpecificationOption[] findByListTypeDefinitionId_PrevAndNext(
+			long CPSpecificationOptionId, long listTypeDefinitionId,
+			OrderByComparator<CPSpecificationOption> orderByComparator)
+		throws NoSuchCPSpecificationOptionException {
+
+		CPSpecificationOption cpSpecificationOption = findByPrimaryKey(
+			CPSpecificationOptionId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			CPSpecificationOption[] array = new CPSpecificationOptionImpl[3];
+
+			array[0] = getByListTypeDefinitionId_PrevAndNext(
+				session, cpSpecificationOption, listTypeDefinitionId,
+				orderByComparator, true);
+
+			array[1] = cpSpecificationOption;
+
+			array[2] = getByListTypeDefinitionId_PrevAndNext(
+				session, cpSpecificationOption, listTypeDefinitionId,
+				orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected CPSpecificationOption getByListTypeDefinitionId_PrevAndNext(
+		Session session, CPSpecificationOption cpSpecificationOption,
+		long listTypeDefinitionId,
+		OrderByComparator<CPSpecificationOption> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(3);
+		}
+
+		sb.append(_SQL_SELECT_CPSPECIFICATIONOPTION_WHERE);
+
+		sb.append(_FINDER_COLUMN_LISTTYPEDEFINITIONID_LISTTYPEDEFINITIONID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(CPSpecificationOptionModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(listTypeDefinitionId);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						cpSpecificationOption)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<CPSpecificationOption> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns all the cp specification options that the user has permission to view where listTypeDefinitionId = &#63;.
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @return the matching cp specification options that the user has permission to view
+	 */
+	@Override
+	public List<CPSpecificationOption> filterFindByListTypeDefinitionId(
+		long listTypeDefinitionId) {
+
+		return filterFindByListTypeDefinitionId(
+			listTypeDefinitionId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the cp specification options that the user has permission to view where listTypeDefinitionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @return the range of matching cp specification options that the user has permission to view
+	 */
+	@Override
+	public List<CPSpecificationOption> filterFindByListTypeDefinitionId(
+		long listTypeDefinitionId, int start, int end) {
+
+		return filterFindByListTypeDefinitionId(
+			listTypeDefinitionId, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp specification options that the user has permissions to view where listTypeDefinitionId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPSpecificationOptionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param start the lower bound of the range of cp specification options
+	 * @param end the upper bound of the range of cp specification options (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp specification options that the user has permission to view
+	 */
+	@Override
+	public List<CPSpecificationOption> filterFindByListTypeDefinitionId(
+		long listTypeDefinitionId, int start, int end,
+		OrderByComparator<CPSpecificationOption> orderByComparator) {
+
+		if (!InlineSQLHelperUtil.isEnabled()) {
+			return findByListTypeDefinitionId(
+				listTypeDefinitionId, start, end, orderByComparator);
+		}
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				3 + (orderByComparator.getOrderByFields().length * 2));
+		}
+		else {
+			sb = new StringBundler(4);
+		}
+
+		if (getDB().isSupportsInlineDistinct()) {
+			sb.append(_FILTER_SQL_SELECT_CPSPECIFICATIONOPTION_WHERE);
+		}
+		else {
+			sb.append(
+				_FILTER_SQL_SELECT_CPSPECIFICATIONOPTION_NO_INLINE_DISTINCT_WHERE_1);
+		}
+
+		sb.append(_FINDER_COLUMN_LISTTYPEDEFINITIONID_LISTTYPEDEFINITIONID_2);
+
+		if (!getDB().isSupportsInlineDistinct()) {
+			sb.append(
+				_FILTER_SQL_SELECT_CPSPECIFICATIONOPTION_NO_INLINE_DISTINCT_WHERE_2);
+		}
+
+		if (orderByComparator != null) {
+			if (getDB().isSupportsInlineDistinct()) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator, true);
+			}
+			else {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_TABLE, orderByComparator, true);
+			}
+		}
+		else {
+			if (getDB().isSupportsInlineDistinct()) {
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
+			}
+			else {
+				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
+			}
+		}
+
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), CPSpecificationOption.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+			if (getDB().isSupportsInlineDistinct()) {
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_ALIAS, CPSpecificationOptionImpl.class);
+			}
+			else {
+				sqlQuery.addEntity(
+					_FILTER_ENTITY_TABLE, CPSpecificationOptionImpl.class);
+			}
+
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+			queryPos.add(listTypeDefinitionId);
+
+			return (List<CPSpecificationOption>)QueryUtil.list(
+				sqlQuery, getDialect(), start, end);
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	/**
+	 * Returns the cp specification options before and after the current cp specification option in the ordered set of cp specification options that the user has permission to view where listTypeDefinitionId = &#63;.
+	 *
+	 * @param CPSpecificationOptionId the primary key of the current cp specification option
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next cp specification option
+	 * @throws NoSuchCPSpecificationOptionException if a cp specification option with the primary key could not be found
+	 */
+	@Override
+	public CPSpecificationOption[] filterFindByListTypeDefinitionId_PrevAndNext(
+			long CPSpecificationOptionId, long listTypeDefinitionId,
+			OrderByComparator<CPSpecificationOption> orderByComparator)
+		throws NoSuchCPSpecificationOptionException {
+
+		if (!InlineSQLHelperUtil.isEnabled()) {
+			return findByListTypeDefinitionId_PrevAndNext(
+				CPSpecificationOptionId, listTypeDefinitionId,
+				orderByComparator);
+		}
+
+		CPSpecificationOption cpSpecificationOption = findByPrimaryKey(
+			CPSpecificationOptionId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			CPSpecificationOption[] array = new CPSpecificationOptionImpl[3];
+
+			array[0] = filterGetByListTypeDefinitionId_PrevAndNext(
+				session, cpSpecificationOption, listTypeDefinitionId,
+				orderByComparator, true);
+
+			array[1] = cpSpecificationOption;
+
+			array[2] = filterGetByListTypeDefinitionId_PrevAndNext(
+				session, cpSpecificationOption, listTypeDefinitionId,
+				orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected CPSpecificationOption filterGetByListTypeDefinitionId_PrevAndNext(
+		Session session, CPSpecificationOption cpSpecificationOption,
+		long listTypeDefinitionId,
+		OrderByComparator<CPSpecificationOption> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(4);
+		}
+
+		if (getDB().isSupportsInlineDistinct()) {
+			sb.append(_FILTER_SQL_SELECT_CPSPECIFICATIONOPTION_WHERE);
+		}
+		else {
+			sb.append(
+				_FILTER_SQL_SELECT_CPSPECIFICATIONOPTION_NO_INLINE_DISTINCT_WHERE_1);
+		}
+
+		sb.append(_FINDER_COLUMN_LISTTYPEDEFINITIONID_LISTTYPEDEFINITIONID_2);
+
+		if (!getDB().isSupportsInlineDistinct()) {
+			sb.append(
+				_FILTER_SQL_SELECT_CPSPECIFICATIONOPTION_NO_INLINE_DISTINCT_WHERE_2);
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				if (getDB().isSupportsInlineDistinct()) {
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByConditionFields[i],
+							true));
+				}
+				else {
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByConditionFields[i],
+							true));
+				}
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				if (getDB().isSupportsInlineDistinct()) {
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_ALIAS, orderByFields[i], true));
+				}
+				else {
+					sb.append(
+						getColumnName(
+							_ORDER_BY_ENTITY_TABLE, orderByFields[i], true));
+				}
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			if (getDB().isSupportsInlineDistinct()) {
+				sb.append(
+					CPSpecificationOptionModelImpl.
+						ORDER_BY_SQL_INLINE_DISTINCT);
+			}
+			else {
+				sb.append(CPSpecificationOptionModelImpl.ORDER_BY_SQL);
+			}
+		}
+
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), CPSpecificationOption.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+
+		SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+		sqlQuery.setFirstResult(0);
+		sqlQuery.setMaxResults(2);
+
+		if (getDB().isSupportsInlineDistinct()) {
+			sqlQuery.addEntity(
+				_FILTER_ENTITY_ALIAS, CPSpecificationOptionImpl.class);
+		}
+		else {
+			sqlQuery.addEntity(
+				_FILTER_ENTITY_TABLE, CPSpecificationOptionImpl.class);
+		}
+
+		QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+		queryPos.add(listTypeDefinitionId);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						cpSpecificationOption)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<CPSpecificationOption> list = sqlQuery.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the cp specification options where listTypeDefinitionId = &#63; from the database.
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 */
+	@Override
+	public void removeByListTypeDefinitionId(long listTypeDefinitionId) {
+		for (CPSpecificationOption cpSpecificationOption :
+				findByListTypeDefinitionId(
+					listTypeDefinitionId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+					null)) {
+
+			remove(cpSpecificationOption);
+		}
+	}
+
+	/**
+	 * Returns the number of cp specification options where listTypeDefinitionId = &#63;.
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @return the number of matching cp specification options
+	 */
+	@Override
+	public int countByListTypeDefinitionId(long listTypeDefinitionId) {
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPSpecificationOption.class)) {
+
+			FinderPath finderPath = _finderPathCountByListTypeDefinitionId;
+
+			Object[] finderArgs = new Object[] {listTypeDefinitionId};
+
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if (count == null) {
+				StringBundler sb = new StringBundler(2);
+
+				sb.append(_SQL_COUNT_CPSPECIFICATIONOPTION_WHERE);
+
+				sb.append(
+					_FINDER_COLUMN_LISTTYPEDEFINITIONID_LISTTYPEDEFINITIONID_2);
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					queryPos.add(listTypeDefinitionId);
+
+					count = (Long)query.uniqueResult();
+
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			return count.intValue();
+		}
+	}
+
+	/**
+	 * Returns the number of cp specification options that the user has permission to view where listTypeDefinitionId = &#63;.
+	 *
+	 * @param listTypeDefinitionId the list type definition ID
+	 * @return the number of matching cp specification options that the user has permission to view
+	 */
+	@Override
+	public int filterCountByListTypeDefinitionId(long listTypeDefinitionId) {
+		if (!InlineSQLHelperUtil.isEnabled()) {
+			return countByListTypeDefinitionId(listTypeDefinitionId);
+		}
+
+		StringBundler sb = new StringBundler(2);
+
+		sb.append(_FILTER_SQL_COUNT_CPSPECIFICATIONOPTION_WHERE);
+
+		sb.append(_FINDER_COLUMN_LISTTYPEDEFINITIONID_LISTTYPEDEFINITIONID_2);
+
+		String sql = InlineSQLHelperUtil.replacePermissionCheck(
+			sb.toString(), CPSpecificationOption.class.getName(),
+			_FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+			sqlQuery.addScalar(
+				COUNT_COLUMN_NAME, com.liferay.portal.kernel.dao.orm.Type.LONG);
+
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+			queryPos.add(listTypeDefinitionId);
+
+			Long count = (Long)sqlQuery.uniqueResult();
+
+			return count.intValue();
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	private static final String
+		_FINDER_COLUMN_LISTTYPEDEFINITIONID_LISTTYPEDEFINITIONID_2 =
+			"cpSpecificationOption.listTypeDefinitionId = ?";
 
 	private FinderPath _finderPathFetchByC_K;
 	private FinderPath _finderPathCountByC_K;
@@ -4211,6 +5161,277 @@ public class CPSpecificationOptionPersistenceImpl
 	private static final String _FINDER_COLUMN_C_K_KEY_3 =
 		"(cpSpecificationOption.key IS NULL OR cpSpecificationOption.key = '')";
 
+	private FinderPath _finderPathFetchByERC_C;
+	private FinderPath _finderPathCountByERC_C;
+
+	/**
+	 * Returns the cp specification option where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchCPSpecificationOptionException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching cp specification option
+	 * @throws NoSuchCPSpecificationOptionException if a matching cp specification option could not be found
+	 */
+	@Override
+	public CPSpecificationOption findByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchCPSpecificationOptionException {
+
+		CPSpecificationOption cpSpecificationOption = fetchByERC_C(
+			externalReferenceCode, companyId);
+
+		if (cpSpecificationOption == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("externalReferenceCode=");
+			sb.append(externalReferenceCode);
+
+			sb.append(", companyId=");
+			sb.append(companyId);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchCPSpecificationOptionException(sb.toString());
+		}
+
+		return cpSpecificationOption;
+	}
+
+	/**
+	 * Returns the cp specification option where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
+	 */
+	@Override
+	public CPSpecificationOption fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return fetchByERC_C(externalReferenceCode, companyId, true);
+	}
+
+	/**
+	 * Returns the cp specification option where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching cp specification option, or <code>null</code> if a matching cp specification option could not be found
+	 */
+	@Override
+	public CPSpecificationOption fetchByERC_C(
+		String externalReferenceCode, long companyId, boolean useFinderCache) {
+
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPSpecificationOption.class)) {
+
+			externalReferenceCode = Objects.toString(externalReferenceCode, "");
+
+			Object[] finderArgs = null;
+
+			if (useFinderCache) {
+				finderArgs = new Object[] {externalReferenceCode, companyId};
+			}
+
+			Object result = null;
+
+			if (useFinderCache) {
+				result = finderCache.getResult(
+					_finderPathFetchByERC_C, finderArgs, this);
+			}
+
+			if (result instanceof CPSpecificationOption) {
+				CPSpecificationOption cpSpecificationOption =
+					(CPSpecificationOption)result;
+
+				if (!Objects.equals(
+						externalReferenceCode,
+						cpSpecificationOption.getExternalReferenceCode()) ||
+					(companyId != cpSpecificationOption.getCompanyId())) {
+
+					result = null;
+				}
+			}
+
+			if (result == null) {
+				StringBundler sb = new StringBundler(4);
+
+				sb.append(_SQL_SELECT_CPSPECIFICATIONOPTION_WHERE);
+
+				boolean bindExternalReferenceCode = false;
+
+				if (externalReferenceCode.isEmpty()) {
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
+				}
+				else {
+					bindExternalReferenceCode = true;
+
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
+				}
+
+				sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					if (bindExternalReferenceCode) {
+						queryPos.add(externalReferenceCode);
+					}
+
+					queryPos.add(companyId);
+
+					List<CPSpecificationOption> list = query.list();
+
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							finderCache.putResult(
+								_finderPathFetchByERC_C, finderArgs, list);
+						}
+					}
+					else {
+						CPSpecificationOption cpSpecificationOption = list.get(
+							0);
+
+						result = cpSpecificationOption;
+
+						cacheResult(cpSpecificationOption);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (CPSpecificationOption)result;
+			}
+		}
+	}
+
+	/**
+	 * Removes the cp specification option where externalReferenceCode = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the cp specification option that was removed
+	 */
+	@Override
+	public CPSpecificationOption removeByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchCPSpecificationOptionException {
+
+		CPSpecificationOption cpSpecificationOption = findByERC_C(
+			externalReferenceCode, companyId);
+
+		return remove(cpSpecificationOption);
+	}
+
+	/**
+	 * Returns the number of cp specification options where externalReferenceCode = &#63; and companyId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the number of matching cp specification options
+	 */
+	@Override
+	public int countByERC_C(String externalReferenceCode, long companyId) {
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPSpecificationOption.class)) {
+
+			externalReferenceCode = Objects.toString(externalReferenceCode, "");
+
+			FinderPath finderPath = _finderPathCountByERC_C;
+
+			Object[] finderArgs = new Object[] {
+				externalReferenceCode, companyId
+			};
+
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if (count == null) {
+				StringBundler sb = new StringBundler(3);
+
+				sb.append(_SQL_COUNT_CPSPECIFICATIONOPTION_WHERE);
+
+				boolean bindExternalReferenceCode = false;
+
+				if (externalReferenceCode.isEmpty()) {
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
+				}
+				else {
+					bindExternalReferenceCode = true;
+
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
+				}
+
+				sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					if (bindExternalReferenceCode) {
+						queryPos.add(externalReferenceCode);
+					}
+
+					queryPos.add(companyId);
+
+					count = (Long)query.uniqueResult();
+
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			return count.intValue();
+		}
+	}
+
+	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
+		"cpSpecificationOption.externalReferenceCode = ? AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3 =
+		"(cpSpecificationOption.externalReferenceCode IS NULL OR cpSpecificationOption.externalReferenceCode = '') AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_COMPANYID_2 =
+		"cpSpecificationOption.companyId = ?";
+
 	public CPSpecificationOptionPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
@@ -4247,6 +5468,14 @@ public class CPSpecificationOptionPersistenceImpl
 				new Object[] {
 					cpSpecificationOption.getCompanyId(),
 					cpSpecificationOption.getKey()
+				},
+				cpSpecificationOption);
+
+			finderCache.putResult(
+				_finderPathFetchByERC_C,
+				new Object[] {
+					cpSpecificationOption.getExternalReferenceCode(),
+					cpSpecificationOption.getCompanyId()
 				},
 				cpSpecificationOption);
 		}
@@ -4350,6 +5579,16 @@ public class CPSpecificationOptionPersistenceImpl
 			finderCache.putResult(_finderPathCountByC_K, args, Long.valueOf(1));
 			finderCache.putResult(
 				_finderPathFetchByC_K, args, cpSpecificationOptionModelImpl);
+
+			args = new Object[] {
+				cpSpecificationOptionModelImpl.getExternalReferenceCode(),
+				cpSpecificationOptionModelImpl.getCompanyId()
+			};
+
+			finderCache.putResult(
+				_finderPathCountByERC_C, args, Long.valueOf(1));
+			finderCache.putResult(
+				_finderPathFetchByERC_C, args, cpSpecificationOptionModelImpl);
 		}
 	}
 
@@ -4499,6 +5738,76 @@ public class CPSpecificationOptionPersistenceImpl
 			String uuid = PortalUUIDUtil.generate();
 
 			cpSpecificationOption.setUuid(uuid);
+		}
+
+		if (Validator.isNull(
+				cpSpecificationOption.getExternalReferenceCode())) {
+
+			cpSpecificationOption.setExternalReferenceCode(
+				cpSpecificationOption.getUuid());
+		}
+		else {
+			if (!Objects.equals(
+					cpSpecificationOptionModelImpl.getColumnOriginalValue(
+						"externalReferenceCode"),
+					cpSpecificationOption.getExternalReferenceCode())) {
+
+				long userId = GetterUtil.getLong(
+					PrincipalThreadLocal.getName());
+
+				if (userId > 0) {
+					long companyId = cpSpecificationOption.getCompanyId();
+
+					long groupId = 0;
+
+					long classPK = 0;
+
+					if (!isNew) {
+						classPK = cpSpecificationOption.getPrimaryKey();
+					}
+
+					try {
+						cpSpecificationOption.setExternalReferenceCode(
+							SanitizerUtil.sanitize(
+								companyId, groupId, userId,
+								CPSpecificationOption.class.getName(), classPK,
+								ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+								cpSpecificationOption.
+									getExternalReferenceCode(),
+								null));
+					}
+					catch (SanitizerException sanitizerException) {
+						throw new SystemException(sanitizerException);
+					}
+				}
+			}
+
+			CPSpecificationOption ercCPSpecificationOption = fetchByERC_C(
+				cpSpecificationOption.getExternalReferenceCode(),
+				cpSpecificationOption.getCompanyId());
+
+			if (isNew) {
+				if (ercCPSpecificationOption != null) {
+					throw new DuplicateCPSpecificationOptionExternalReferenceCodeException(
+						"Duplicate cp specification option with external reference code " +
+							cpSpecificationOption.getExternalReferenceCode() +
+								" and company " +
+									cpSpecificationOption.getCompanyId());
+				}
+			}
+			else {
+				if ((ercCPSpecificationOption != null) &&
+					(cpSpecificationOption.getCPSpecificationOptionId() !=
+						ercCPSpecificationOption.
+							getCPSpecificationOptionId())) {
+
+					throw new DuplicateCPSpecificationOptionExternalReferenceCodeException(
+						"Duplicate cp specification option with external reference code " +
+							cpSpecificationOption.getExternalReferenceCode() +
+								" and company " +
+									cpSpecificationOption.getCompanyId());
+				}
+			}
 		}
 
 		ServiceContext serviceContext =
@@ -5055,16 +6364,19 @@ public class CPSpecificationOptionPersistenceImpl
 		ctControlColumnNames.add("mvccVersion");
 		ctControlColumnNames.add("ctCollectionId");
 		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("externalReferenceCode");
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
 		ctStrictColumnNames.add("CPOptionCategoryId");
+		ctStrictColumnNames.add("listTypeDefinitionId");
 		ctStrictColumnNames.add("title");
 		ctStrictColumnNames.add("description");
 		ctStrictColumnNames.add("facetable");
 		ctStrictColumnNames.add("key_");
+		ctStrictColumnNames.add("priority");
 		ctStrictColumnNames.add("lastPublishDate");
 
 		_ctColumnNamesMap.put(
@@ -5078,6 +6390,9 @@ public class CPSpecificationOptionPersistenceImpl
 			CTColumnResolutionType.STRICT, ctStrictColumnNames);
 
 		_uniqueIndexColumnNames.add(new String[] {"companyId", "key_"});
+
+		_uniqueIndexColumnNames.add(
+			new String[] {"externalReferenceCode", "companyId"});
 	}
 
 	/**
@@ -5173,6 +6488,25 @@ public class CPSpecificationOptionPersistenceImpl
 			"countByCPOptionCategoryId", new String[] {Long.class.getName()},
 			new String[] {"CPOptionCategoryId"}, false);
 
+		_finderPathWithPaginationFindByListTypeDefinitionId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
+			"findByListTypeDefinitionId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"listTypeDefinitionId"}, true);
+
+		_finderPathWithoutPaginationFindByListTypeDefinitionId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"findByListTypeDefinitionId", new String[] {Long.class.getName()},
+			new String[] {"listTypeDefinitionId"}, true);
+
+		_finderPathCountByListTypeDefinitionId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"countByListTypeDefinitionId", new String[] {Long.class.getName()},
+			new String[] {"listTypeDefinitionId"}, false);
+
 		_finderPathFetchByC_K = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_K",
 			new String[] {Long.class.getName(), String.class.getName()},
@@ -5182,6 +6516,16 @@ public class CPSpecificationOptionPersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_K",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "key_"}, false);
+
+		_finderPathFetchByERC_C = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"externalReferenceCode", "companyId"}, true);
+
+		_finderPathCountByERC_C = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_C",
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"externalReferenceCode", "companyId"}, false);
 
 		CPSpecificationOptionUtil.setPersistence(this);
 	}

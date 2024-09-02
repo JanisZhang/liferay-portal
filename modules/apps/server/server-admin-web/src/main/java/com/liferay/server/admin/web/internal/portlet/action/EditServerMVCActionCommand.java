@@ -5,6 +5,7 @@
 
 package com.liferay.server.admin.web.internal.portlet.action;
 
+import com.liferay.captcha.util.CaptchaUtil;
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.document.library.kernel.document.conversion.DocumentConversion;
 import com.liferay.document.library.kernel.model.DLProcessorConstants;
@@ -18,6 +19,7 @@ import com.liferay.image.Ghostscript;
 import com.liferay.image.ImageMagick;
 import com.liferay.mail.kernel.model.Account;
 import com.liferay.mail.kernel.service.MailService;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.convert.ConvertException;
@@ -26,6 +28,8 @@ import com.liferay.portal.convert.ConvertProcessUtil;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.SingleVMPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.cluster.ClusterExecutorUtil;
 import com.liferay.portal.kernel.cluster.ClusterMasterExecutorUtil;
 import com.liferay.portal.kernel.cluster.ClusterRequest;
@@ -34,6 +38,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncPrintWriter;
 import com.liferay.portal.kernel.log.Log;
@@ -94,7 +99,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.ThreadUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.portal.kernel.util.UnsyncPrintWriterPool;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.log4j.Log4JUtil;
 import com.liferay.portal.security.membershippolicy.RoleMembershipPolicyFactoryUtil;
@@ -157,13 +161,23 @@ public class EditServerMVCActionCommand extends BaseMVCActionCommand {
 
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
+		String redirect = ParamUtil.getString(actionRequest, "redirect");
+
 		PermissionChecker permissionChecker =
 			themeDisplay.getPermissionChecker();
 
-		if (!permissionChecker.isOmniadmin() &&
-			(!permissionChecker.isCompanyAdmin() ||
-			 !cmd.equals("updateMail"))) {
+		PortletPreferences portletPreferences = _prefsProps.getPreferences(
+			ParamUtil.getLong(actionRequest, "preferencesCompanyId"));
 
+		if (permissionChecker.isCompanyAdmin() && cmd.equals("updateMail")) {
+			_updateMail(actionRequest, portletPreferences);
+
+			sendRedirect(actionRequest, actionResponse, redirect);
+
+			return;
+		}
+
+		if (!permissionChecker.isOmniadmin()) {
 			SessionErrors.add(
 				actionRequest,
 				PrincipalException.MustBeOmniadmin.class.getName());
@@ -173,10 +187,15 @@ public class EditServerMVCActionCommand extends BaseMVCActionCommand {
 			return;
 		}
 
-		PortletPreferences portletPreferences = _prefsProps.getPreferences(
-			ParamUtil.getLong(actionRequest, "preferencesCompanyId"));
+		if (!cmd.equals("addLogLevel") &&
+			!cmd.equals("dlGenerateAudioPreviews") &&
+			!cmd.equals("dlGenerateOpenOfficePreviews") &&
+			!cmd.equals("dlGenerateVideoPreviews") &&
+			!cmd.equals("updateLogLevels") &&
+			!cmd.equals("updatePortalProperties")) {
 
-		String redirect = ParamUtil.getString(actionRequest, "redirect");
+			CaptchaUtil.check(actionRequest);
+		}
 
 		if (cmd.equals("addLogLevel")) {
 			_updateLogLevels(
@@ -456,7 +475,11 @@ public class EditServerMVCActionCommand extends BaseMVCActionCommand {
 
 		CacheRegistryUtil.setActive(true);
 
-		try (LoggingTimer loggingTimer = new LoggingTimer()) {
+		try (LoggingTimer loggingTimer = new LoggingTimer();
+			SafeCloseable safeCloseable =
+				CTSQLModeThreadLocal.setCTSQLModeWithSafeCloseable(
+					CTSQLModeThreadLocal.CTSQLMode.CT_ALL)) {
+
 			ActionableDynamicQuery actionableDynamicQuery =
 				_portletPreferencesLocalService.getActionableDynamicQuery();
 
@@ -475,46 +498,8 @@ public class EditServerMVCActionCommand extends BaseMVCActionCommand {
 				});
 			actionableDynamicQuery.setParallel(true);
 			actionableDynamicQuery.setPerformActionMethod(
-				(com.liferay.portal.kernel.model.PortletPreferences pref) -> {
-					if ((pref.getOwnerId() !=
-							PortletKeys.PREFS_OWNER_ID_DEFAULT) ||
-						(pref.getOwnerType() !=
-							PortletKeys.PREFS_OWNER_TYPE_LAYOUT)) {
-
-						return;
-					}
-
-					Layout layout = _layoutLocalService.getLayout(
-						pref.getPlid());
-
-					if (layout.isTypeContent() || layout.isTypeControlPanel()) {
-						return;
-					}
-
-					UnicodeProperties typeSettingsUnicodeProperties =
-						layout.getTypeSettingsProperties();
-
-					Set<String> keys = typeSettingsUnicodeProperties.keySet();
-
-					boolean orphan = true;
-
-					for (String key : keys) {
-						String value =
-							typeSettingsUnicodeProperties.getProperty(key);
-
-						if (value.contains(pref.getPortletId())) {
-							orphan = false;
-
-							break;
-						}
-					}
-
-					if (orphan) {
-						_portletPreferencesLocalService.
-							deletePortletPreferences(
-								pref.getPortletPreferencesId());
-					}
-				});
+				(com.liferay.portal.kernel.model.PortletPreferences
+					portletPreferences) -> _performAction(portletPreferences));
 
 			actionableDynamicQuery.performActions();
 		}
@@ -624,6 +609,56 @@ public class EditServerMVCActionCommand extends BaseMVCActionCommand {
 		runtime.gc();
 	}
 
+	private void _performAction(
+			com.liferay.portal.kernel.model.PortletPreferences
+				portletPreferences)
+		throws PortalException {
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					portletPreferences.getCtCollectionId())) {
+
+			if ((portletPreferences.getOwnerId() !=
+					PortletKeys.PREFS_OWNER_ID_DEFAULT) ||
+				(portletPreferences.getOwnerType() !=
+					PortletKeys.PREFS_OWNER_TYPE_LAYOUT)) {
+
+				return;
+			}
+
+			Layout layout = _layoutLocalService.getLayout(
+				portletPreferences.getPlid());
+
+			if (layout.isTypeAssetDisplay() || layout.isTypeContent() ||
+				layout.isTypeControlPanel()) {
+
+				return;
+			}
+
+			UnicodeProperties typeSettingsUnicodeProperties =
+				layout.getTypeSettingsProperties();
+
+			Set<String> keys = typeSettingsUnicodeProperties.keySet();
+
+			boolean orphan = true;
+
+			for (String key : keys) {
+				String value = typeSettingsUnicodeProperties.getProperty(key);
+
+				if (value.contains(portletPreferences.getPortletId())) {
+					orphan = false;
+
+					break;
+				}
+			}
+
+			if (orphan) {
+				_portletPreferencesLocalService.deletePortletPreferences(
+					portletPreferences.getPortletPreferencesId());
+			}
+		}
+	}
+
 	private void _runScript(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
@@ -642,7 +677,7 @@ public class EditServerMVCActionCommand extends BaseMVCActionCommand {
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
 
-		UnsyncPrintWriter unsyncPrintWriter = UnsyncPrintWriterPool.borrow(
+		UnsyncPrintWriter unsyncPrintWriter = new UnsyncPrintWriter(
 			unsyncByteArrayOutputStream);
 
 		portletObjects.put("out", unsyncPrintWriter);

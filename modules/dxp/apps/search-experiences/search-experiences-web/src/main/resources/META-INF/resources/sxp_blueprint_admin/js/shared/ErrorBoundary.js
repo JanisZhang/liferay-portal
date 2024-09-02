@@ -35,10 +35,10 @@ class ErrorBoundary extends Component {
 			? !this.props.toast && (
 					<ClayEmptyState
 						description={DEFAULT_ERROR}
-						imgSrc="/o/admin-theme/images/states/empty_state.gif"
+						imgSrc="/o/admin-theme/images/states/empty_state.svg"
 						title={Liferay.Language.get('unable-to-load-content')}
 					/>
-			  )
+				)
 			: this.props.children;
 	}
 }

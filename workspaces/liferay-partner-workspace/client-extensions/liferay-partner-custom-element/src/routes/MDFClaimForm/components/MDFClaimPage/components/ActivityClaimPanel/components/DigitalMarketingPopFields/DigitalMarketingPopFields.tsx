@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -12,6 +13,7 @@ import PRMFormik from '../../../../../../../../common/components/PRMFormik';
 import LiferayFile from '../../../../../../../../common/interfaces/liferayFile';
 import MDFClaim from '../../../../../../../../common/interfaces/mdfClaim';
 import MDFClaimActivity from '../../../../../../../../common/interfaces/mdfClaimActivity';
+import {ResourceName} from '../../../../../../../../common/services/liferay/object/enum/resourceName';
 
 interface IProps {
 	activity: MDFClaimActivity;
@@ -44,11 +46,12 @@ const DigitalMarketingPopFields = ({
 						activity.proofOfPerformance?.allContents
 							? activity.proofOfPerformance.allContents.concat(
 									liferayFiles as LiferayFile[]
-							  )
+								)
 							: liferayFiles
 					)
 				}
 				required={activity.selected}
+				resourceName={ResourceName.MDF_CLAIM_ACTIVITY_DOCUMENTS}
 				value={activity.proofOfPerformance?.allContents}
 			/>
 		</>

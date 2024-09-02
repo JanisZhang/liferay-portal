@@ -32,13 +32,10 @@ export default function EditEndpointConfiguration({
 	setData,
 }: EditEndpointConfigurationProps) {
 	const [schemaOptions, setSchemaOptions] = useState<SelectOption[]>([]);
-	const [selectedRequestBodySchema, setSelectedRequestBodySchema] = useState<
-		SelectOption
-	>();
-	const [
-		selectedResponseBodySchema,
-		setSelectedResponseBodySchema,
-	] = useState<SelectOption>();
+	const [selectedRequestBodySchema, setSelectedRequestBodySchema] =
+		useState<SelectOption>();
+	const [selectedResponseBodySchema, setSelectedResponseBodySchema] =
+		useState<SelectOption>();
 
 	useEffect(() => {
 		getAllItems<APISchemaItem>({
@@ -49,19 +46,29 @@ export default function EditEndpointConfiguration({
 				? result.map((apiSchemas) => ({
 						label: apiSchemas.name,
 						value: apiSchemas.id.toString(),
-				  }))
+					}))
 				: [];
 
 			if (options.length) {
-				setSchemaOptions(options);
+				setSchemaOptions([
+					{
+						label: Liferay.Language.get('not-selected'),
+						value: '0',
+					},
+					...options,
+				]);
 			}
 		});
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
 		if (schemaOptions.length) {
-			if (data.r_responseAPISchemaToAPIEndpoints_c_apiSchemaId) {
+			if (
+				data.r_responseAPISchemaToAPIEndpoints_c_apiSchemaId !==
+				undefined
+			) {
 				setSelectedResponseBodySchema(
 					schemaOptions.find(
 						(option) =>
@@ -70,7 +77,10 @@ export default function EditEndpointConfiguration({
 					)
 				);
 			}
-			if (data.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId) {
+			if (
+				data.r_requestAPISchemaToAPIEndpoints_c_apiSchemaId !==
+				undefined
+			) {
 				setSelectedRequestBodySchema(
 					schemaOptions.find(
 						(option) =>

@@ -14,6 +14,8 @@ import {
 	isNonnull,
 } from './util/index';
 
+import './price.scss';
+
 function Price({
 	compact,
 	displayDiscountLevels,
@@ -78,7 +80,11 @@ function Price({
 						{isUnitPricePriceOnApplication() ? (
 							<>{Liferay.Language.get('price-on-application')}</>
 						) : (
-							<>{activePrice.priceFormatted}</>
+							<>
+								{activePrice.pricingQuantityPriceFormatted
+									? activePrice.pricingQuantityPriceFormatted
+									: activePrice.priceFormatted}
+							</>
 						)}
 					</span>
 
@@ -114,7 +120,7 @@ function Price({
 												? level.slice(
 														0,
 														level.length - 3
-												  )
+													)
 												: level}
 										</span>
 									))

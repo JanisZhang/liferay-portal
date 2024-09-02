@@ -5,7 +5,6 @@
 
 import {SidebarPanel} from '../../types/SidebarPanel';
 import {Config} from '../../types/config';
-import {LAYOUT_TYPES, LayoutType} from './constants/layoutTypes';
 
 const DEFAULT_CONFIG: Partial<Config> = {
 	toolbarId: 'pageEditorToolbar',
@@ -28,34 +27,15 @@ export function initializeConfig(backendConfig: Config) {
 		return config;
 	}
 
-	const {
-		commonStyles,
-		layoutType,
-		pluginsRootPath,
-		portletNamespace,
-		sidebarPanels,
-	} = backendConfig;
+	const {commonStyles, portletNamespace, sidebarPanels} = backendConfig;
 
 	const toolbarId = `${portletNamespace}${DEFAULT_CONFIG.toolbarId}`;
-
-	// Special items requiring augmentation, creation, or transformation.
-
-	const augmentedPanels = augmentPanelData(
-		pluginsRootPath,
-		sidebarPanels as SidebarPanel[]
-	);
 
 	const syntheticItems: Partial<Config> = {
 		commonStyles: getCommonStyles(commonStyles),
 		commonStylesFields: getCommonStylesFields(commonStyles),
-		panels: generatePanels(augmentedPanels),
-		sidebarPanels: partitionPanels(augmentedPanels),
+		sidebarPanelsMap: generatePanels(sidebarPanels as SidebarPanel[]),
 		toolbarId,
-		toolbarPlugins: getToolbarPlugins(
-			layoutType,
-			pluginsRootPath,
-			toolbarId
-		),
 	};
 
 	config = {
@@ -65,54 +45,6 @@ export function initializeConfig(backendConfig: Config) {
 	};
 
 	return config;
-}
-
-/**
- * In general, we expect the sidebarPanelId to correspond with the name
- * of a plugin. Here we deal with the exceptions by mapping IDs to
- * plugin names.
- */
-const SIDEBAR_PANEL_IDS_TO_PLUGINS: Record<string, string> = {};
-
-function augmentPanelData(
-	pluginsRootPath: string,
-	sidebarPanels: SidebarPanel[]
-) {
-	return sidebarPanels.map((panel) => {
-		if (isSeparator(panel) || panel.isLink) {
-			return panel;
-		}
-
-		const mapping = SIDEBAR_PANEL_IDS_TO_PLUGINS[panel.sidebarPanelId];
-
-		const sidebarPanelId = mapping || panel.sidebarPanelId;
-
-		return {
-			...panel,
-
-			// https://github.com/liferay/liferay-js-toolkit/issues/324
-
-			pluginEntryPoint: `${pluginsRootPath}/${sidebarPanelId}/index`,
-
-			sidebarPanelId,
-		};
-	});
-}
-
-function generatePanels(sidebarPanels: SidebarPanel[]): Config['panels'] {
-	return sidebarPanels.reduce<SidebarPanel['sidebarPanelId'][][]>(
-		(groups, panel) => {
-			if (isSeparator(panel)) {
-				groups.push([]);
-			}
-			else {
-				groups[groups.length - 1].push(panel.sidebarPanelId);
-			}
-
-			return groups;
-		},
-		[[]]
-	);
 }
 
 function getCommonStyles(commonStyles: Config['commonStyles']) {
@@ -144,67 +76,12 @@ function getCommonStylesFields(
 	return commonStylesFields;
 }
 
-/**
- * Currently we have segments experience data sprinkled throughout the
- * server data. In the future we may choose to encapsulate it better and
- * deal with it inside the plugin.
- */
-function getToolbarPlugins(
-	layoutType: LayoutType,
-	pluginsRootPath: string,
-	toolbarId: string
-) {
-	const toolbarPluginId = 'experience';
-	const selectId = `${toolbarId}_${toolbarPluginId}`;
+function generatePanels(sidebarPanels: SidebarPanel[]) {
+	const map: Record<string, SidebarPanel> = {};
 
-	return layoutType === LAYOUT_TYPES.content
-		? [
-				{
-					loadingPlaceholder: `
-			<div class="page-editor__toolbar-experience">
-				<label class="d-lg-block d-none mr-2" for="${selectId}">
-					Experience
-				</label>
-				<button class="form-control-select pr-4 text-left text-truncate btn btn-sm btn-secondary"
-					type="button" 
-					id="${selectId}"
-					disabled>
-					<div class="autofit-row autofit-row-center">
-						<div class="autofit-col autofit-col-expand">
-							<span class="text-truncate">Default</span>
-						</div>
-						<div class="autofit-col"></div>
-					</div>
-				</button>
-			</div>
-		`,
-					pluginEntryPoint: `${pluginsRootPath}/experience/index`,
-					toolbarPluginId: 'experience',
-				},
-		  ]
-		: [];
-}
+	sidebarPanels.forEach((panel) => {
+		map[panel.sidebarPanelId] = panel;
+	});
 
-function isSeparator(panel: SidebarPanel) {
-	return panel.sidebarPanelId === 'separator';
-}
-
-/**
- * Instead of using fake panels with an ID of `separator`, partition the panels
- * array into an array of arrays; we'll draw a separator between each group.
- */
-type PartitionedSidebarPanels = Record<
-	SidebarPanel['sidebarPanelId'],
-	SidebarPanel
->;
-
-function partitionPanels(panels: SidebarPanel[]): PartitionedSidebarPanels {
-	return panels.reduce<PartitionedSidebarPanels>((map, panel) => {
-		const {sidebarPanelId} = panel;
-		if (!isSeparator(panel)) {
-			map[sidebarPanelId] = panel;
-		}
-
-		return map;
-	}, {});
+	return map;
 }

@@ -11,6 +11,7 @@ import {Status} from '../../../common/utils/constants/status';
 const getInitialFormValues = (
 	mdfRequestId: number,
 	currency: LiferayPicklist,
+	currencyExchangeRate: number,
 	activitiesDTO?: MDFRequestActivityDTO[],
 	totalMDFRequestAmount?: number,
 	mdfClaim?: MDFClaim
@@ -42,7 +43,7 @@ const getInitialFormValues = (
 					}
 
 					return {
-						expenseName: budget.expense.name,
+						expenseName: budget.expense?.name,
 						invoiceAmount: budget.cost,
 						r_bgtToMDFClmBgts_c_budgetId: budget.id,
 						requestAmount: budget.cost,
@@ -68,7 +69,7 @@ const getInitialFormValues = (
 			activityStatus: activity.activityStatus,
 			budgets: activity?.actToBgts?.map((budget) => {
 				return {
-					expenseName: budget.expense.name,
+					expenseName: budget.expense?.name,
 					invoiceAmount: budget.cost,
 					r_bgtToMDFClmBgts_c_budgetId: budget.id,
 					requestAmount: budget.cost,
@@ -94,6 +95,9 @@ const getInitialFormValues = (
 		};
 	}),
 	currency: mdfClaim?.currency ? mdfClaim?.currency : currency,
+	currencyExchangeRate: mdfClaim?.currencyExchangeRate
+		? mdfClaim.currencyExchangeRate
+		: currencyExchangeRate,
 	mdfClaimStatus: mdfClaim?.mdfClaimStatus
 		? mdfClaim.mdfClaimStatus
 		: Status.PENDING,

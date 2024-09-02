@@ -11,6 +11,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
@@ -115,6 +116,28 @@ public class SourceUtil {
 		}
 
 		return annotationsBlocks;
+	}
+
+	public static int getColumnIndex(
+		String tablesSQLContent, String tableName, String columnName) {
+
+		String tableSQL = _getTableSQL(tablesSQLContent, tableName);
+
+		if (tableSQL == null) {
+			return -1;
+		}
+
+		Pattern pattern = Pattern.compile(
+			StringBundler.concat(
+				"(?i)\n\\s*", columnName, "_?\\s+([\\w\\(\\)]+)[\\s,]"));
+
+		Matcher matcher = pattern.matcher(tableSQL);
+
+		if (matcher.find()) {
+			return matcher.start();
+		}
+
+		return -1;
 	}
 
 	public static String getIndent(String s) {
@@ -363,6 +386,73 @@ public class SourceUtil {
 		}
 
 		return annotations;
+	}
+
+	public static String stripQuotes(String s) {
+		return stripQuotes(s, CharPool.APOSTROPHE, CharPool.QUOTE);
+	}
+
+	public static String stripQuotes(String s, char... delimeters) {
+		List<Character> delimetersList = ListUtil.fromArray(delimeters);
+
+		char delimeter = CharPool.SPACE;
+		boolean insideQuotes = false;
+
+		StringBundler sb = new StringBundler();
+
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+
+			if (insideQuotes) {
+				if (c == delimeter) {
+					int precedingBackSlashCount = 0;
+
+					for (int j = i - 1; j >= 0; j--) {
+						if (s.charAt(j) == CharPool.BACK_SLASH) {
+							precedingBackSlashCount += 1;
+						}
+						else {
+							break;
+						}
+					}
+
+					if ((precedingBackSlashCount == 0) ||
+						((precedingBackSlashCount % 2) == 0)) {
+
+						insideQuotes = false;
+					}
+				}
+			}
+			else if (delimetersList.contains(c)) {
+				delimeter = c;
+				insideQuotes = true;
+			}
+			else {
+				sb.append(c);
+			}
+		}
+
+		return sb.toString();
+	}
+
+	private static String _getTableSQL(
+		String tablesSQLContent, String tableName) {
+
+		Pattern pattern = Pattern.compile("create table " + tableName + "_? ");
+
+		Matcher matcher = pattern.matcher(tablesSQLContent);
+
+		if (!matcher.find()) {
+			return null;
+		}
+
+		int x = tablesSQLContent.indexOf(");", matcher.start());
+
+		if (x == -1) {
+			return null;
+		}
+
+		return tablesSQLContent.substring(matcher.start(), x + 1);
 	}
 
 	private static final Pattern _annotationMemberValuePairPattern =

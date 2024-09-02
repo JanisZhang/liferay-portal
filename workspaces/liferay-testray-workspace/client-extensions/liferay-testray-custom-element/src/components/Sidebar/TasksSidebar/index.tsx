@@ -9,7 +9,7 @@ import {Link} from 'react-router-dom';
 
 import {useSidebarTask} from '../../../hooks/useSidebarTask';
 import i18n from '../../../i18n';
-import {TestraySubTask} from '../../../services/rest';
+import {TestraySubtask} from '../../../services/rest';
 import {StatusesProgressScore, chartClassNames} from '../../../util/constants';
 import TaskbarProgress from '../../ProgressBar/TaskbarProgress';
 import Tooltip from '../../Tooltip';
@@ -110,7 +110,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({expanded}) => {
 								<p className="tr-task-sidebar__ellipsis-text">
 									<TaskBadge
 										className="tr-task-sidebar__quantity-badge"
-										count={task?.subTasks?.length as number}
+										count={task?.subtasks?.length as number}
 									/>
 
 									<span className="ml-2">{task?.name}</span>
@@ -133,12 +133,21 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({expanded}) => {
 							<TaskbarProgress
 								displayTotalCompleted
 								items={[
-									[StatusesProgressScore.SELF, 0],
+									[
+										StatusesProgressScore.SELF,
+										Number(
+											task?.subtaskScoreSelfCompleted
+										) ?? 0,
+									],
 									[
 										StatusesProgressScore.OTHER,
 										Number(
 											task?.subtaskScoreCompleted ?? 0
-										),
+										) -
+											Number(
+												task?.subtaskScoreSelfCompleted ??
+													0
+											),
 									],
 									[
 										StatusesProgressScore.INCOMPLETE,
@@ -152,8 +161,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({expanded}) => {
 							/>
 						</div>
 
-						{task?.subTasks?.map(
-							(subtask: TestraySubTask, index) => (
+						{task?.subtasks?.map(
+							(subtask: TestraySubtask, index) => (
 								<SubtaskCard
 									key={index}
 									subtask={{

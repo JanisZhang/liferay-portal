@@ -23,13 +23,22 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.context.ContextUserReplace;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -109,7 +118,8 @@ public class AssetListEntryServiceTest {
 
 		AssetListEntry assetListEntry =
 			_assetListEntryService.addAssetListEntry(
-				_group.getGroupId(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), _group.getGroupId(),
+				RandomTestUtil.randomString(),
 				AssetListEntryTypeConstants.TYPE_MANUAL, serviceContext);
 
 		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
@@ -148,7 +158,8 @@ public class AssetListEntryServiceTest {
 
 		AssetListEntry assetListEntry =
 			_assetListEntryService.addAssetListEntry(
-				_group.getGroupId(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), _group.getGroupId(),
+				RandomTestUtil.randomString(),
 				AssetListEntryTypeConstants.TYPE_MANUAL, serviceContext);
 
 		AssetEntry assetEntry = AssetTestUtil.addAssetEntry(
@@ -185,7 +196,8 @@ public class AssetListEntryServiceTest {
 
 		AssetListEntry assetListEntry =
 			_assetListEntryService.addAssetListEntry(
-				_group.getGroupId(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), _group.getGroupId(),
+				RandomTestUtil.randomString(),
 				AssetListEntryTypeConstants.TYPE_MANUAL, serviceContext);
 
 		AssetEntry assetEntry = AssetTestUtil.addAssetEntry(
@@ -247,6 +259,77 @@ public class AssetListEntryServiceTest {
 	}
 
 	@Test
+	public void testFetchAndGetAssetListEntryByExternalReferenceCode()
+		throws Exception {
+
+		AssetListEntry assetListEntry = _addAssetListEntry(
+			RandomTestUtil.randomString());
+
+		Assert.assertEquals(
+			assetListEntry,
+			_assetListEntryService.fetchAssetListEntryByExternalReferenceCode(
+				assetListEntry.getExternalReferenceCode(),
+				_group.getGroupId()));
+		Assert.assertEquals(
+			assetListEntry,
+			_assetListEntryService.getAssetListEntryByExternalReferenceCode(
+				assetListEntry.getExternalReferenceCode(),
+				_group.getGroupId()));
+
+		RoleTestUtil.removeResourcePermission(
+			RoleConstants.GUEST, AssetListEntry.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(assetListEntry.getAssetListEntryId()),
+			ActionKeys.VIEW);
+		RoleTestUtil.removeResourcePermission(
+			RoleConstants.SITE_MEMBER, AssetListEntry.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(assetListEntry.getAssetListEntryId()),
+			ActionKeys.VIEW);
+
+		User user = UserTestUtil.addGroupUser(
+			_group, RoleConstants.SITE_MEMBER);
+
+		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+				user)) {
+
+			_assetListEntryService.fetchAssetListEntryByExternalReferenceCode(
+				assetListEntry.getExternalReferenceCode(), _group.getGroupId());
+
+			Assert.fail();
+		}
+		catch (PrincipalException.MustHavePermission principalException) {
+			String message = principalException.getMessage();
+
+			Assert.assertTrue(
+				message,
+				message.contains(
+					"User " + user.getUserId() +
+						" must have VIEW permission for"));
+		}
+
+		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
+				user)) {
+
+			_assetListEntryService.getAssetListEntryByExternalReferenceCode(
+				assetListEntry.getExternalReferenceCode(), _group.getGroupId());
+
+			Assert.fail();
+		}
+		catch (PrincipalException.MustHavePermission principalException) {
+			String message = principalException.getMessage();
+
+			Assert.assertTrue(
+				message,
+				message.contains(
+					"User " + user.getUserId() +
+						" must have VIEW permission for"));
+		}
+
+		_userLocalService.deleteUser(user);
+	}
+
+	@Test
 	public void testGetAssetListEntriesByGroup() throws PortalException {
 		List<AssetListEntry> originalAssetListEntries =
 			_assetListEntryService.getAssetListEntries(
@@ -283,16 +366,19 @@ public class AssetListEntryServiceTest {
 
 		AssetListEntry assetListEntry =
 			_assetListEntryService.addAssetListEntry(
-				_group.getGroupId(), "Test Name", 0, serviceContext);
+				RandomTestUtil.randomString(), _group.getGroupId(), "Test Name",
+				0, serviceContext);
 
 		_assetListEntryService.addAssetListEntry(
-			_group.getGroupId(), "A Test Name", 0, serviceContext);
+			RandomTestUtil.randomString(), _group.getGroupId(), "A Test Name",
+			0, serviceContext);
 
 		_assetListEntryService.addAssetListEntry(
-			_group.getGroupId(), "B Test name", 0, serviceContext);
+			RandomTestUtil.randomString(), _group.getGroupId(), "B Test name",
+			0, serviceContext);
 
 		OrderByComparator<AssetListEntry> orderByComparator =
-			new AssetListEntryCreateDateComparator(true);
+			AssetListEntryCreateDateComparator.getInstance(true);
 
 		List<AssetListEntry> assetListEntries =
 			_assetListEntryService.getAssetListEntries(
@@ -303,7 +389,8 @@ public class AssetListEntryServiceTest {
 
 		Assert.assertEquals(assetListEntry, firstAssetListEntry);
 
-		orderByComparator = new AssetListEntryCreateDateComparator(false);
+		orderByComparator = AssetListEntryCreateDateComparator.getInstance(
+			false);
 
 		assetListEntries = _assetListEntryService.getAssetListEntries(
 			_group.getGroupId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
@@ -325,13 +412,16 @@ public class AssetListEntryServiceTest {
 
 		AssetListEntry assetListEntry =
 			_assetListEntryService.addAssetListEntry(
-				_group.getGroupId(), "AA Asset List Entry", 0, serviceContext);
+				RandomTestUtil.randomString(), _group.getGroupId(),
+				"AA Asset List Entry", 0, serviceContext);
 
 		_assetListEntryService.addAssetListEntry(
-			_group.getGroupId(), "AB Asset List Entry", 0, serviceContext);
+			RandomTestUtil.randomString(), _group.getGroupId(),
+			"AB Asset List Entry", 0, serviceContext);
 
 		_assetListEntryService.addAssetListEntry(
-			_group.getGroupId(), "AC Asset List Entry", 0, serviceContext);
+			RandomTestUtil.randomString(), _group.getGroupId(),
+			"AC Asset List Entry", 0, serviceContext);
 
 		OrderByComparator<AssetListEntry> orderByComparator =
 			new AssetListEntryTitleComparator(true);
@@ -383,7 +473,8 @@ public class AssetListEntryServiceTest {
 
 		AssetListEntry assetListEntry =
 			_assetListEntryService.addAssetListEntry(
-				_group.getGroupId(), "Manual Asset List Entry",
+				RandomTestUtil.randomString(), _group.getGroupId(),
+				"Manual Asset List Entry",
 				AssetListEntryTypeConstants.TYPE_MANUAL, serviceContext);
 
 		AssetEntry assetEntry1 = AssetTestUtil.addAssetEntry(
@@ -440,7 +531,7 @@ public class AssetListEntryServiceTest {
 		throws PortalException {
 
 		return _assetListEntryService.addAssetListEntry(
-			_group.getGroupId(), title, 0,
+			RandomTestUtil.randomString(), _group.getGroupId(), title, 0,
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId()));
 	}
@@ -454,5 +545,8 @@ public class AssetListEntryServiceTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

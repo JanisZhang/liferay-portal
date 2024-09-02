@@ -18,24 +18,24 @@ dateSearchEntry.setDate(ddmStructure.getModifiedDate());
 %>
 
 <div class="clamp-container">
-	<h4 class="text-truncate">
+	<div class="h4 text-truncate">
 		<aui:a cssClass="form-instance-name" href="<%= (String)request.getAttribute(WebKeys.SEARCH_ENTRY_HREF) %>">
 			<%= HtmlUtil.escape(ddmStructure.getName(locale)) %>
 		</aui:a>
-	</h4>
+	</div>
 
-	<h5 class="text-default">
+	<div class="h5 text-default">
 		<div class="form-instance-description text-truncate">
 			<%= HtmlUtil.escape(ddmStructure.getDescription(locale)) %>
 		</div>
-	</h5>
+	</div>
 
-	<h5 class="text-default">
+	<div class="h5 text-default">
 		<span class="form-instance-id">
 			<liferay-ui:message key="id" />: <%= ddmStructure.getStructureId() %>
 		</span>
 		<span class="form-instance-modified-date">
 			<liferay-ui:message key="modified-date" />: <%= dateSearchEntry.getName(request) %>
 		</span>
-	</h5>
+	</div>
 </div>

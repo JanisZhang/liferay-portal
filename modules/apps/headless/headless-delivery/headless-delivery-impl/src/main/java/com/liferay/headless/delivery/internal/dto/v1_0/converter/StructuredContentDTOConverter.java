@@ -141,6 +141,7 @@ public class StructuredContentDTOConverter
 						journalArticle.getCompanyId(),
 						dtoConverterContext.getLocale()));
 				setDateCreated(journalArticle::getCreateDate);
+				setDateExpired(journalArticle::getExpirationDate);
 				setDateModified(journalArticle::getModifiedDate);
 				setDatePublished(journalArticle::getDisplayDate);
 				setDescription(
@@ -168,6 +169,14 @@ public class StructuredContentDTOConverter
 							JournalArticle.class.getName(),
 							journalArticle.getResourcePrimKey()),
 						AssetTag.NAME_ACCESSOR));
+				setNeverExpire(
+					() -> {
+						if (journalArticle.getExpirationDate() == null) {
+							return true;
+						}
+
+						return false;
+					});
 				setNumberOfComments(
 					() -> _commentManager.getCommentsCount(
 						JournalArticle.class.getName(),

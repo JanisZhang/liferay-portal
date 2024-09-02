@@ -7,7 +7,7 @@ import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {
 	API,
 	SingleSelect,
-	getLocalizableLabel,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
@@ -72,21 +72,17 @@ export function AggregationFormBase({
 	setValues,
 	values,
 }: AggregationFormBaseProps) {
-	const [objectRelationships, setObjectRelationships] = useState<
-		TObjectRelationship[]
-	>();
-	const [objectRelationshipFields, setObjectRelationshipFields] = useState<
-		ObjectField[]
-	>();
+	const [objectRelationships, setObjectRelationships] =
+		useState<TObjectRelationship[]>();
+	const [objectRelationshipFields, setObjectRelationshipFields] =
+		useState<ObjectField[]>();
 	const [reload, setReload] = useState(false);
 	const [
 		selectedRelatedObjectRelationship,
 		setSelectRelatedObjectRelationship,
 	] = useState<TObjectRelationship>();
-	const [
-		selectedSummarizeFieldName,
-		setSelectedSummarizeFieldName,
-	] = useState<string>();
+	const [selectedSummarizeFieldName, setSelectedSummarizeFieldName] =
+		useState<string>();
 	const [
 		selectedAggregationFunctionValue,
 		setSelectedAggregationFunctionValue,
@@ -94,7 +90,7 @@ export function AggregationFormBase({
 
 	const filteredObjectRelationships = useMemo(() => {
 		return objectRelationships?.map(({label, name}) => ({
-			label: getLocalizableLabel(
+			label: stringUtils.getLocalizableLabel(
 				creationLanguageId2 as Liferay.Language.Locale,
 				label,
 				name
@@ -105,7 +101,7 @@ export function AggregationFormBase({
 
 	const filteredObjectRelationshipFields = useMemo(() => {
 		return objectRelationshipFields?.map(({label, name}) => ({
-			label: getLocalizableLabel(
+			label: stringUtils.getLocalizableLabel(
 				creationLanguageId2 as Liferay.Language.Locale,
 				label,
 				name
@@ -124,9 +120,10 @@ export function AggregationFormBase({
 		setSelectRelatedObjectRelationship(selectedObjectRelationship);
 		setSelectedSummarizeFieldName(undefined);
 
-		const relatedFields = await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
-			selectedObjectRelationship?.objectDefinitionExternalReferenceCode2 as string
-		);
+		const relatedFields =
+			await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
+				selectedObjectRelationship?.objectDefinitionExternalReferenceCode2 as string
+			);
 
 		const numericFields = relatedFields.filter(
 			(objectField) =>
@@ -191,9 +188,10 @@ export function AggregationFormBase({
 		if (value === 'COUNT') {
 			setSelectedSummarizeFieldName(undefined);
 
-			const fieldSettingWithoutSummarizeField = objectFieldSettings.filter(
-				(fieldSettings) => fieldSettings.name !== 'objectFieldName'
-			);
+			const fieldSettingWithoutSummarizeField =
+				objectFieldSettings.filter(
+					(fieldSettings) => fieldSettings.name !== 'objectFieldName'
+				);
 
 			newObjectFieldSettings = [
 				...fieldSettingWithoutSummarizeField.filter(
@@ -271,9 +269,10 @@ export function AggregationFormBase({
 
 	useEffect(() => {
 		const makeFetch = async () => {
-			const objectRelationshipsData = await API.getObjectDefinitionByExternalReferenceCodeObjectRelationships(
-				objectDefinitionExternalReferenceCode
-			);
+			const objectRelationshipsData =
+				await API.getObjectDefinitionByExternalReferenceCodeObjectRelationships(
+					objectDefinitionExternalReferenceCode
+				);
 
 			setObjectRelationships(
 				objectRelationshipsData.filter(
@@ -296,10 +295,12 @@ export function AggregationFormBase({
 			const makeFetch = async () => {
 				const settings = normalizeFieldSettings(objectFieldSettings);
 
-				const currentRelatedObjectRelationship = objectRelationships.find(
-					(relationship) =>
-						relationship.name === settings.objectRelationshipName
-				) as ObjectRelationship;
+				const currentRelatedObjectRelationship =
+					objectRelationships.find(
+						(relationship) =>
+							relationship.name ===
+							settings.objectRelationshipName
+					) as ObjectRelationship;
 
 				const currentFunction = aggregationFunctions.find(
 					(aggregationFunction) =>
@@ -307,9 +308,10 @@ export function AggregationFormBase({
 				);
 
 				if (currentRelatedObjectRelationship) {
-					const relatedFields = await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
-						currentRelatedObjectRelationship.objectDefinitionExternalReferenceCode2
-					);
+					const relatedFields =
+						await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
+							currentRelatedObjectRelationship.objectDefinitionExternalReferenceCode2
+						);
 
 					const currentSummarizeField = relatedFields.find(
 						(relatedField) =>

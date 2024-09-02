@@ -8,6 +8,7 @@ package com.liferay.jenkins.results.parser;
 import com.liferay.jenkins.results.parser.testray.TestrayBuild;
 import com.liferay.jenkins.results.parser.testray.TestrayCaseResult;
 import com.liferay.jenkins.results.parser.testray.TestrayCaseType;
+import com.liferay.jenkins.results.parser.testray.TestrayFactory;
 import com.liferay.jenkins.results.parser.testray.TestrayRoutine;
 import com.liferay.jenkins.results.parser.testray.TestrayRun;
 import com.liferay.jenkins.results.parser.testray.TestrayServer;
@@ -35,7 +36,8 @@ public class TestHistoryMap {
 
 		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
-		List<TestrayBuild> testrayBuilds = testrayRoutine.getTestrayBuilds();
+		List<TestrayBuild> testrayBuilds = testrayRoutine.getTestrayBuilds(
+			maxBuildCount);
 
 		if (testrayBuilds.size() > maxBuildCount) {
 			testrayBuilds = testrayBuilds.subList(0, maxBuildCount);
@@ -478,7 +480,7 @@ public class TestHistoryMap {
 				TestrayServer testrayServer =
 					_latestTestrayBuild.getTestrayServer();
 
-				_testrayCaseType = testrayServer.getTestrayCaseType(
+				_testrayCaseType = testrayServer.getTestrayCaseTypeByName(
 					testrayCaseTypeName);
 
 				return _testrayCaseType;
@@ -493,7 +495,7 @@ public class TestHistoryMap {
 				return _testrayRun;
 			}
 
-			_testrayRun = new TestrayRun(
+			_testrayRun = TestrayFactory.newTestrayRun(
 				getLatestTestrayBuild(), getBatchName(), new ArrayList<File>());
 
 			return _testrayRun;

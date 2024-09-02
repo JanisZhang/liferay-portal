@@ -411,49 +411,52 @@ public class LayoutSetPrototypeHelperImpl implements LayoutSetPrototypeHelper {
 	private List<Layout> _getDuplicatedFriendlyURLSiteLayouts(Layout layout)
 		throws PortalException {
 
-		return _layoutLocalService.dslQuery(
-			DSLQueryFactoryUtil.selectDistinct(
-				LayoutTable.INSTANCE
-			).from(
-				LayoutTable.INSTANCE
-			).innerJoinON(
-				LayoutSetTable.INSTANCE,
-				LayoutSetTable.INSTANCE.companyId.eq(
-					LayoutTable.INSTANCE.companyId
-				).and(
-					LayoutSetTable.INSTANCE.groupId.eq(
-						LayoutTable.INSTANCE.groupId)
-				).and(
-					LayoutSetTable.INSTANCE.privateLayout.eq(
-						LayoutTable.INSTANCE.privateLayout)
-				)
-			).innerJoinON(
-				LayoutSetPrototypeTable.INSTANCE,
-				LayoutSetPrototypeTable.INSTANCE.companyId.eq(
-					LayoutSetTable.INSTANCE.companyId
-				).and(
-					LayoutSetPrototypeTable.INSTANCE.uuid.eq(
-						LayoutSetTable.INSTANCE.layoutSetPrototypeUuid)
-				)
-			).innerJoinON(
-				GroupTable.INSTANCE,
-				GroupTable.INSTANCE.companyId.eq(
-					LayoutSetPrototypeTable.INSTANCE.companyId
-				).and(
-					GroupTable.INSTANCE.classPK.eq(
-						LayoutSetPrototypeTable.INSTANCE.layoutSetPrototypeId)
-				)
-			).where(
-				LayoutSetTable.INSTANCE.companyId.eq(
-					layout.getCompanyId()
-				).and(
-					LayoutTable.INSTANCE.friendlyURL.eq(layout.getFriendlyURL())
-				).and(
-					LayoutTable.INSTANCE.sourcePrototypeLayoutUuid.isNull()
-				).and(
-					GroupTable.INSTANCE.groupId.eq(layout.getGroupId())
-				)
-			));
+		return _layoutLocalService.getLayouts(
+			_layoutLocalService.dslQuery(
+				DSLQueryFactoryUtil.selectDistinct(
+					LayoutTable.INSTANCE.plid
+				).from(
+					LayoutTable.INSTANCE
+				).innerJoinON(
+					LayoutSetTable.INSTANCE,
+					LayoutSetTable.INSTANCE.companyId.eq(
+						LayoutTable.INSTANCE.companyId
+					).and(
+						LayoutSetTable.INSTANCE.groupId.eq(
+							LayoutTable.INSTANCE.groupId)
+					).and(
+						LayoutSetTable.INSTANCE.privateLayout.eq(
+							LayoutTable.INSTANCE.privateLayout)
+					)
+				).innerJoinON(
+					LayoutSetPrototypeTable.INSTANCE,
+					LayoutSetPrototypeTable.INSTANCE.companyId.eq(
+						LayoutSetTable.INSTANCE.companyId
+					).and(
+						LayoutSetPrototypeTable.INSTANCE.uuid.eq(
+							LayoutSetTable.INSTANCE.layoutSetPrototypeUuid)
+					)
+				).innerJoinON(
+					GroupTable.INSTANCE,
+					GroupTable.INSTANCE.companyId.eq(
+						LayoutSetPrototypeTable.INSTANCE.companyId
+					).and(
+						GroupTable.INSTANCE.classPK.eq(
+							LayoutSetPrototypeTable.INSTANCE.
+								layoutSetPrototypeId)
+					)
+				).where(
+					LayoutSetTable.INSTANCE.companyId.eq(
+						layout.getCompanyId()
+					).and(
+						LayoutTable.INSTANCE.friendlyURL.eq(
+							layout.getFriendlyURL())
+					).and(
+						LayoutTable.INSTANCE.sourcePrototypeLayoutUuid.isNull()
+					).and(
+						GroupTable.INSTANCE.groupId.eq(layout.getGroupId())
+					)
+				)));
 	}
 
 	private long _getDuplicatedFriendlyURLSiteLayoutsCount(

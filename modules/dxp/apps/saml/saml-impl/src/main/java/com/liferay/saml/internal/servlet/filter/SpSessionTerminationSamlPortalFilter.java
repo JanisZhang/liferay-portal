@@ -7,7 +7,9 @@ package com.liferay.saml.internal.servlet.filter;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.saml.helper.SamlHttpRequestHelper;
 import com.liferay.saml.persistence.model.SamlSpSession;
+import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.servlet.profile.SingleLogoutProfile;
 
 import javax.servlet.Filter;
@@ -44,16 +46,13 @@ public class SpSessionTerminationSamlPortalFilter extends BaseSamlPortalFilter {
 	}
 
 	@Override
-	public boolean isFilterEnabled() {
-		return true;
-	}
-
-	@Override
 	public boolean isFilterEnabled(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
-		if (httpServletRequest.getSession(false) != null) {
+		if (_samlProviderConfigurationHelper.isEnabled() &&
+			(httpServletRequest.getSession(false) != null)) {
+
 			return true;
 		}
 
@@ -70,11 +69,18 @@ public class SpSessionTerminationSamlPortalFilter extends BaseSamlPortalFilter {
 			httpServletRequest);
 
 		if ((samlSpSession != null) && samlSpSession.isTerminated()) {
-			_singleLogoutProfile.terminateSpSession(
-				httpServletRequest, httpServletResponse);
+			String requestPath = _samlHttpRequestHelper.getRequestPath(
+				httpServletRequest);
 
-			_singleLogoutProfile.logout(
-				httpServletRequest, httpServletResponse);
+			if (!requestPath.equals("/c/portal/logout") &&
+				!requestPath.equals("/c/portal/saml/slo")) {
+
+				_singleLogoutProfile.terminateSpSession(
+					httpServletRequest, httpServletResponse);
+
+				_singleLogoutProfile.logout(
+					httpServletRequest, httpServletResponse);
+			}
 		}
 
 		filterChain.doFilter(httpServletRequest, httpServletResponse);
@@ -87,6 +93,12 @@ public class SpSessionTerminationSamlPortalFilter extends BaseSamlPortalFilter {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SpSessionTerminationSamlPortalFilter.class);
+
+	@Reference
+	private SamlHttpRequestHelper _samlHttpRequestHelper;
+
+	@Reference
+	private SamlProviderConfigurationHelper _samlProviderConfigurationHelper;
 
 	private ServletContext _servletContext;
 

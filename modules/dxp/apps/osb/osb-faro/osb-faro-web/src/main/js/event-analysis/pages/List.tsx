@@ -6,20 +6,18 @@ import React from 'react';
 import StatesRenderer from 'shared/components/states-renderer/StatesRenderer';
 import URLConstants from 'shared/util/url-constants';
 import {Routes, toRoute} from 'shared/util/router';
-import {useDataSource} from 'shared/hooks';
+import {useChannelContext} from 'shared/context/channel';
+import {useCurrentUser} from 'shared/hooks/useCurrentUser';
+import {useDataSource} from 'shared/hooks/useDataSource';
 import {useParams} from 'react-router-dom';
-import {User} from 'shared/util/records';
-import {withCurrentUser} from 'shared/hoc';
 
-interface IListProps extends React.HTMLAttributes<HTMLElement> {
-	currentUser: User;
-}
+const List = () => {
+	const {selectedChannel} = useChannelContext();
 
-const List: React.FC<IListProps> = ({currentUser}) => {
 	const {channelId, groupId} = useParams();
+	const currentUser = useCurrentUser();
 
-	const dataSourceStates = useDataSource();
-	const {empty, error, loading} = dataSourceStates;
+	const {empty, error, loading} = useDataSource();
 
 	const pageAction = [
 		{
@@ -43,7 +41,7 @@ const List: React.FC<IListProps> = ({currentUser}) => {
 					breadcrumbs.getHome({
 						channelId,
 						groupId,
-						label: Liferay.Language.get('home')
+						label: selectedChannel?.name
 					})
 				]}
 				groupId={groupId}
@@ -60,7 +58,9 @@ const List: React.FC<IListProps> = ({currentUser}) => {
 			</BasePage.Header>
 
 			<BasePage.Body>
-				<StatesRenderer {...dataSourceStates}>
+				<StatesRenderer empty={empty} error={error} loading={loading}>
+					<StatesRenderer.Loading />
+
 					<StatesRenderer.Empty
 						description={
 							<>
@@ -113,4 +113,4 @@ const List: React.FC<IListProps> = ({currentUser}) => {
 	);
 };
 
-export default withCurrentUser(List);
+export default List;

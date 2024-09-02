@@ -12,9 +12,9 @@ import org.elasticsearch.client.IndicesClient;
  */
 public interface IndexFactory {
 
-	public boolean createIndices(IndicesClient indicesClient, long companyId);
+	public boolean deleteIndex(long companyId, IndicesClient indicesClient);
 
-	public boolean deleteIndices(IndicesClient indicesClient, long companyId);
+	public boolean initializeIndex(long companyId, IndicesClient indicesClient);
 
 	public void registerCompanyId(long companyId);
 

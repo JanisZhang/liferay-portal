@@ -64,7 +64,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -84,8 +84,6 @@ definition {
 	@priority = 5
 	test AddAnOrderRuleOfTypeMinimumOrderSubtotalAmount {
 		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-		property osgi.module.configuration.file.names = "com.liferay.commerce.order.rule.configuration.COREntryConfiguration.config";
-		property osgi.module.configurations = "enabled=\"true\"";
 		property portal.acceptance = "true";
 
 		task ("Given a Minium site with a buyer user") {
@@ -157,7 +155,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -216,7 +214,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -360,7 +358,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -435,7 +433,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -521,7 +519,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -582,7 +580,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -903,7 +901,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -946,7 +944,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1148,7 +1146,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1218,7 +1216,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1245,9 +1243,7 @@ definition {
 		task ("And the admin goes into orders portlet") {
 			User.logoutPG();
 
-			User.loginUserPG(
-				password = "test",
-				userEmailAddress = "test@liferay.com");
+			User.loginUserPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1266,7 +1262,8 @@ definition {
 					editedName = "${addressType} Address Name",
 					editedRegion = "Lombardia",
 					editedStreet1 = "${addressType} Street 1",
-					editedZipCode = "${addressType} Zip");
+					editedZipCode = "${addressType} Zip",
+					selectOuterButton = "true");
 
 				Refresh();
 
@@ -1318,7 +1315,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				newPassword = "test",
+				newPassword = PropsUtil.get("default.admin.password"),
 				password = "ttest",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
@@ -1342,9 +1339,7 @@ definition {
 		}
 
 		task ("When the admin Orders page is reached by the admin") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1546,7 +1541,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1676,7 +1671,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1767,7 +1762,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1845,7 +1840,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1966,7 +1961,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2112,7 +2107,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2213,7 +2208,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				newPassword = "test",
+				newPassword = PropsUtil.get("default.admin.password"),
 				password = "ttest",
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
@@ -2243,9 +2238,7 @@ definition {
 		}
 
 		task ("When the admin Orders page is reached by the admin") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2324,7 +2317,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2517,118 +2510,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for COMMERCE-10086. As admin, I can update the status of a Partially Shipped order as Shipped once unshipped order items are deleted. And after clicking Deliver, the status is updated as Completed."
-	@priority = 3
-	test CanUpdateOrderStatusByDeletingUnshippedItems {
-		property portal.acceptance = "false";
-
-		task ("Given a Minium site with a business account is created") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-			JSONAccountEntry.addAccountEntry(
-				accountEntryName = "Commerce Account",
-				accountEntryType = "Business");
-
-			CommerceJSONAccountsAPI._addCommerceAccountAddress(
-				accountEntryName = "Commerce Account",
-				city = "Test Address",
-				countryISOCode = "US",
-				name = "Test Name",
-				street1 = "Test Street",
-				zip = "Test Zip Code");
-		}
-
-		task ("And a payment method is activated") {
-			CommerceChannels.openChannelsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
-
-			CommerceChannels.activatePaymentMethod(paymentMethod = "Money Order");
-		}
-
-		task ("And an order is placed with multiple products") {
-			CommerceJSONOrdersAPI._addCommerceOrder(
-				accountEntryName = "Commerce Account",
-				orderItems = "MIN55860:1",
-				orderStatus = 1,
-				paymentMethod = "Money Order",
-				paymentStatus = 0,
-				shippingAddressName = "Test Name",
-				shippingMethod = "Variable Rate",
-				shippingOption = "Standard Option");
-
-			CommerceJSONOrdersAPI._addCommerceOrderItem(productSKU = "MIN55859");
-		}
-
-		task ("When the order is accepted and shipped only partially") {
-			CommerceOrders.openOrdersAdmin();
-
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
-
-			Click(
-				key_index = "Accept Order",
-				locator1 = "WorkflowMetrics#SEARCH_FIELD_MAPPINGS_METRICS_INDEXES");
-
-			CommerceOrders.createShipment(
-				productSkuList = "MIN55860",
-				warehouseName = "Italy");
-		}
-
-		task ("Then the status of the order is Partially Shipped") {
-			CommerceOrders.openOrdersAdmin();
-
-			AssertElementPresent(
-				key_orderStatus = "Partially Shipped",
-				locator1 = "CommerceOrders#ORDER_ELLIPSIS_BY_STATUS");
-		}
-
-		task ("When the remaining order item is deleted from the order") {
-			ClickNoError(
-				key_orderStatus = "Partially Shipped",
-				locator1 = "CommerceOrders#ORDER_ELLIPSIS_BY_STATUS");
-
-			CommerceEntry.clickNoError(menuItem = "View");
-
-			CommerceOrders.deleteOrderItem(orderItemSku = "MIN55859");
-		}
-
-		task ("Then the status of the order is updated as Shipped") {
-			CommerceOrders.openOrdersAdmin();
-
-			AssertElementPresent(
-				key_orderStatus = "Shipped",
-				locator1 = "CommerceOrders#ORDER_ELLIPSIS_BY_STATUS");
-		}
-
-		task ("And the status of the order is Completed after Deliver is clicked") {
-			CommerceNavigator.gotoPortlet(
-				category = "Order Management",
-				portlet = "Shipments");
-
-			Click(
-				key_text = "Shipped",
-				locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
-
-			MenuItem.clickNoError(menuItem = "Edit");
-
-			Click(
-				key_index = "Deliver",
-				locator1 = "WorkflowMetrics#SEARCH_FIELD_MAPPINGS_METRICS_INDEXES");
-
-			Click(locator1 = "Icon#BACK");
-
-			AssertElementPresent(
-				key_text = "Delivered",
-				locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
-
-			CommerceOrders.openOrdersAdmin();
-
-			AssertElementPresent(
-				key_orderStatus = "Completed",
-				locator1 = "CommerceOrders#ORDER_ELLIPSIS_BY_STATUS");
-		}
-	}
-
 	@description = "This is a test for COMMERCE-10086. As admin, I can update the status of a Partially Shipped order as Completed once I edit unshipped order items quantity after Ship and Deliver is completed."
 	@priority = 3
 	test CanUpdateOrderStatusByEditingUnshippedItemsQuantity {
@@ -2724,117 +2605,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for COMMERCE-10829. As a user with permissions, I can add/edit Commerce Order Notes via API and verify the result in order notes section of the placed order's details page."
-	@priority = 5
-	test CanUserWithPermissionsAddCommerceOrderNotesViaAPI {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-		property portal.acceptance = "true";
-
-		task ("Given a Minium site with a buyer user") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And a payment method is activated") {
-			CommerceChannels.openChannelsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
-
-			CommerceChannels.activatePaymentMethod(paymentMethod = "Money Order");
-		}
-
-		task ("And an order is placed") {
-			var orderId = CommerceJSONOrdersAPI._addCommerceOrder(
-				accountEntryName = "Commerce Account",
-				orderItems = "MIN93015:1",
-				orderStatus = 1,
-				paymentMethod = "money-order",
-				paymentStatus = 0);
-		}
-
-		task ("When a new note added via API call to the order by buyer user without permissions") {
-			var requestStatus = CommerceJSONOrdersAPI.getOrderNotePostRequestField(
-				content = "This is a Commerce Order Test Note.",
-				field = "status",
-				orderId = ${orderId},
-				restricted = "true",
-				userEmail = "buyer");
-		}
-
-		task ("Then a FORBIDDEN error is thrown") {
-			TestUtils.assertEquals(
-				actual = ${requestStatus},
-				expected = "FORBIDDEN");
-		}
-
-		task ("When Manage Order Note and Manage Order Restricted Notes permissions are given to Buyer User") {
-			for (var notePermission : list "MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES,MANAGE_COMMERCE_ORDER_NOTES") {
-				Permissions.definePermissionViaJSONAPI(
-					resourceAction = ${notePermission},
-					resourceName = "com.liferay.commerce.order",
-					roleTitle = "Buyer",
-					roleType = "account");
-			}
-		}
-
-		task ("And a new note added via API call to the order by buyer user") {
-			var orderNoteId = CommerceJSONOrdersAPI.getOrderNotePostRequestField(
-				content = "This is a Commerce Order Test Note.",
-				field = "id",
-				orderId = ${orderId},
-				restricted = "true",
-				userEmail = "buyer");
-		}
-
-		task ("And buyer user logs in and goes to the Notes section of the placed orders details page") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Placed Orders");
-
-			Button.click(button = "View");
-
-			Click.javaScriptClick(locator1 = "CommerceFrontStore#ORDER_PAGES_NOTES_BUTTON");
-		}
-
-		task ("Then the note is shown correctly") {
-			CommerceOrders.viewCommerceOrderNote(
-				commerceOrderNoteAuthor = "Buyer User",
-				commerceOrderNoteBody = "This is a Commerce Order Test Note.");
-		}
-
-		task ("When the note is updated via API call by buyer user") {
-			CommerceJSONOrdersAPI._patchCommerceOrderNote(
-				content = "This is a Patched Commerce Order Test Note.",
-				orderNoteId = ${orderNoteId},
-				userEmail = "buyer");
-		}
-
-		task ("Then the note is shown correctly") {
-			Refresh();
-
-			CommerceOrders.viewCommerceOrderNote(
-				commerceOrderNoteAuthor = "Buyer User",
-				commerceOrderNoteBody = "This is a Patched Commerce Order Test Note.");
-		}
-	}
-
 	@description = "This is a test for the COMMERCE-10895. As a buyer user, I can only view the order created by myself when I log in via headless API"
 	@priority = 3
 	test CanViewOrderOnlyCreatedByCurrentUsersViaAPI {
@@ -2868,7 +2638,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2901,9 +2671,7 @@ definition {
 		}
 
 		task ("When the admin changes the active account on Minium") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
 
@@ -2983,7 +2751,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -3002,9 +2770,7 @@ definition {
 		}
 
 		task ("When the admin clicks 'Quote Processed' in the order details") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -3320,12 +3086,10 @@ definition {
 
 		task ("Then the admin can view the printed note is added in the open order via API") {
 			var printedNote = CommerceJSONOrdersAPI.getOrderField(
-				email = "test@liferay.com",
 				jsonPath = "$.printedNote",
 				orderId = ${orderId},
 				parameter = "fields",
-				parameterValue = "printedNote",
-				password = "test");
+				parameterValue = "printedNote");
 
 			TestUtils.assertEquals(
 				actual = ${printedNote},
@@ -3346,12 +3110,10 @@ definition {
 
 		task ("Then the admin can view the printed note is added in the placed order via API") {
 			var printedNote = CommerceJSONOrdersAPI.getOrderField(
-				email = "test@liferay.com",
 				jsonPath = "$.printedNote",
 				orderId = ${orderId},
 				parameter = "fields",
-				parameterValue = "printedNote",
-				password = "test");
+				parameterValue = "printedNote");
 
 			TestUtils.assertEquals(
 				actual = ${printedNote},
@@ -3383,10 +3145,7 @@ definition {
 		task ("And the admin checks out an order ") {
 			User.logoutPG();
 
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "test@liferay.com");
+			CommerceLogin.miniumLogin(urlAppend = "web/minium");
 
 			FrontStore.addInitializerProductToCart(
 				productName = "U-Joint",
@@ -3928,7 +3687,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -3953,10 +3712,7 @@ definition {
 
 		User.logoutPG();
 
-		CommerceLogin.miniumLogin(
-			password = "test",
-			urlAppend = "web/minium",
-			userEmailAddress = "test@liferay.com");
+		CommerceLogin.miniumLogin(urlAppend = "web/minium");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Pending Orders");
 
@@ -3976,7 +3732,7 @@ definition {
 
 		CommerceLogin.miniumLogin(
 			newPassword = "ttest",
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
 
@@ -4053,7 +3809,7 @@ definition {
 		User.logoutPG();
 
 		CommerceLogin.miniumLogin(
-			newPassword = "test",
+			newPassword = PropsUtil.get("default.admin.password"),
 			password = "ttest",
 			urlAppend = "web/minium",
 			userEmailAddress = "buyer@liferay.com");
@@ -4079,10 +3835,7 @@ definition {
 
 		User.logoutPG();
 
-		CommerceLogin.miniumLogin(
-			password = "test",
-			urlAppend = "web/minium",
-			userEmailAddress = "test@liferay.com");
+		CommerceLogin.miniumLogin(urlAppend = "web/minium");
 
 		CommerceOrders.openOrdersAdmin();
 
@@ -4111,8 +3864,6 @@ definition {
 	@priority = 5
 	test MakeAnOrderWithThreeActiveMinimumOrderAmountsWithDifferentPriority {
 		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-		property osgi.module.configuration.file.names = "com.liferay.commerce.order.rule.configuration.COREntryConfiguration.config";
-		property osgi.module.configurations = "enabled=\"true\"";
 		property portal.acceptance = "true";
 
 		task ("Given a Minium site with a buyer user") {
@@ -4166,7 +3917,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 

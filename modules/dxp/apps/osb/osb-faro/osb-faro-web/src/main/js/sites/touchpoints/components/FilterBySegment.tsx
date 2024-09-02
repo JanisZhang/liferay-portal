@@ -13,23 +13,37 @@ import {
 	getDefaultSortOrder,
 	NAME
 } from 'shared/util/pagination';
+import {getSafeRangeSelectors, getSafeTouchpoint} from 'shared/util/util';
+import {RangeSelectors} from 'shared/types';
 import {Routes, SEGMENTS, toRoute} from 'shared/util/router';
+import {
+	SegmentPageViewsQuery,
+	SegmentPageViewsQueryData,
+	SegmentPageViewsQueryVariables
+} from 'shared/queries/SegmentPageViewsQuery';
 import {sub} from 'shared/util/lang';
 import {useParams} from 'react-router-dom';
-import {useQueryPagination, useRequest} from 'shared/hooks';
+import {useQuery} from '@apollo/react-hooks';
+import {useQueryPagination} from 'shared/hooks/useQueryPagination';
+import {useRequest} from 'shared/hooks/useRequest';
 
 type Item = {
 	children: Item[];
+	disabled: boolean;
 	id: string;
 	name: string;
 };
 
 interface IFilterBySegment {
 	onFilterChange: (item: Item | null) => void;
+	rangeSelectors: RangeSelectors;
 }
 
-const filterBySegment: React.FC<IFilterBySegment> = ({onFilterChange}) => {
-	const {channelId, groupId} = useParams();
+const filterBySegment: React.FC<IFilterBySegment> = ({
+	onFilterChange,
+	rangeSelectors
+}) => {
+	const {channelId, groupId, title, touchpoint} = useParams();
 	const {delta, orderIOMap, page, query} = useQueryPagination({
 		initialOrderIOMap: createOrderIOMap(NAME, getDefaultSortOrder(NAME))
 	});
@@ -47,14 +61,44 @@ const filterBySegment: React.FC<IFilterBySegment> = ({onFilterChange}) => {
 		}
 	});
 
+	const {data: segmentData, loading: segmentLoading} = useQuery<
+		SegmentPageViewsQueryData,
+		SegmentPageViewsQueryVariables
+	>(SegmentPageViewsQuery, {
+		fetchPolicy: 'network-only',
+		skip: !data?.items.length,
+		variables: {
+			canonicalUrl: getSafeTouchpoint(touchpoint),
+			channelId,
+			segmentIds: data?.items.map(({id}) => id),
+			title: decodeURIComponent(title),
+			...getSafeRangeSelectors(rangeSelectors)
+		}
+	});
+
+	const items = useMemo(
+		() =>
+			data?.items.map(item => {
+				const selectedSegmentData = segmentData?.segmentPageViews.find(
+					({segmentId}) => segmentId === item.id
+				);
+
+				return {
+					...item,
+					disabled: !selectedSegmentData?.views
+				};
+			}) ?? [],
+		[data, segmentData]
+	);
+
 	return (
 		<div className='d-flex justify-content-between w-100 analytics-segment-filter-root'>
 			<div className='align-items-center d-flex'>
 				<Dropdown
 					channelId={channelId}
 					groupId={groupId}
-					items={data?.items ?? []}
-					loading={loading}
+					items={items}
+					loading={loading || segmentLoading}
 					onFilterChange={item => {
 						setSelectedItem(item);
 
@@ -160,6 +204,7 @@ const Dropdown = ({channelId, groupId, items, loading, onFilterChange}) => {
 					>
 						{(item: Item) => (
 							<ClayDropDown.Item
+								disabled={item.disabled}
 								key={item.name}
 								onClick={() => {
 									onFilterChange(item);
@@ -180,11 +225,11 @@ const Dropdown = ({channelId, groupId, items, loading, onFilterChange}) => {
 								className='d-flex flex-column justify-content-center'
 								style={{minHeight: 240}}
 							>
-								<h4 className='no-results-title'>
+								<div className='h4 no-results-title'>
 									{Liferay.Language.get(
 										'there-are-no-results-found'
 									)}
-								</h4>
+								</div>
 
 								{Liferay.Language.get(
 									'please-try-a-different-search-term'
@@ -204,11 +249,11 @@ const Dropdown = ({channelId, groupId, items, loading, onFilterChange}) => {
 								className='d-flex flex-column justify-content-center'
 								style={{minHeight: 240}}
 							>
-								<h4 className='no-results-title'>
+								<div className='h4 no-results-title'>
 									{Liferay.Language.get(
 										'there-are-no-segments'
 									)}
-								</h4>
+								</div>
 
 								{Liferay.Language.get(
 									'start-by-creating-a-segment'

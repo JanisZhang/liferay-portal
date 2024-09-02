@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-// @ts-ignore
-
 import {Locator, Page} from '@playwright/test';
 
 export class AccountSettingsPage {
@@ -12,7 +10,9 @@ export class AccountSettingsPage {
 	readonly page: Page;
 	readonly rolesMenuItem: Locator;
 	readonly saveButton: Locator;
+	readonly userDisplayData: Locator;
 	readonly userPersonalMenuButton: Locator;
+	readonly languageSelect: Locator;
 
 	constructor(page: Page) {
 		this.accountSettingsMenuItem = page.getByRole('menuitem', {
@@ -25,7 +25,9 @@ export class AccountSettingsPage {
 		this.saveButton = page.getByRole('button', {
 			name: 'Save',
 		});
+		this.userDisplayData = page.getByText('User Display Data');
 		this.userPersonalMenuButton = page.getByTestId('userPersonalMenu');
+		this.languageSelect = page.getByLabel('Language');
 	}
 
 	async goToAccountSettings() {
@@ -43,5 +45,10 @@ export class AccountSettingsPage {
 					resp.url().includes('screenNavigationEntryKey=roles')
 			),
 		]);
+	}
+
+	async selectAccountLanguage(option: string) {
+		await this.languageSelect.selectOption(option);
+		await this.saveButton.click();
 	}
 }

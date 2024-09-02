@@ -3,54 +3,98 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Locator, Page} from '@playwright/test';
+import {Locator, Page, expect} from '@playwright/test';
 
-import {ApplicationsMenuPage} from '../../../pages/product-navigation-applications-menu/ApplicationsMenuPage';
+import {liferayConfig} from '../../../liferay.config';
 
 export class ClientExtensionsPage {
-	readonly applicationsMenuPage: ApplicationsMenuPage;
-	readonly editorConfigContributorMenuItem: Locator;
-	readonly itemDeleteButton: Locator;
-	readonly itemEditButton: Locator;
-	readonly newClientExtensionButton: Locator;
+	readonly deleteMenuItem: Locator;
+	readonly editMenuItem: Locator;
+	readonly viewMenuItem: Locator;
+
+	readonly configuredFromTableHeader: Locator;
+	readonly nameTableHeader: Locator;
+
 	readonly page: Page;
 
 	constructor(page: Page) {
-		this.applicationsMenuPage = new ApplicationsMenuPage(page);
 
-		this.editorConfigContributorMenuItem = page.getByRole('menuitem', {
-			name: 'Add Editor Config Contributor',
-		});
+		// action buttons
 
-		this.itemDeleteButton = page.getByRole('menuitem', {
+		this.deleteMenuItem = page.getByRole('menuitem', {
 			name: 'Delete',
 		});
-		this.itemEditButton = page.getByRole('menuitem', {
+		this.editMenuItem = page.getByRole('menuitem', {
 			name: 'Edit',
 		});
+		this.viewMenuItem = page.getByRole('menuitem', {
+			name: 'View',
+		});
 
-		this.newClientExtensionButton = page
-			.getByRole('button')
-			.and(page.getByTitle('New'));
+		// table columns
 
+		this.nameTableHeader = page.getByLabel('Name', {exact: true});
+		this.configuredFromTableHeader = page.getByLabel('Configured From', {
+			exact: true,
+		});
 		this.page = page;
 	}
 
+	async deleteClientExtension(clientExtensionName: string) {
+		await this.openItemActionsDropdown(clientExtensionName);
+
+		this.page.on('dialog', (dialog) => dialog.accept());
+
+		await this.deleteMenuItem.click();
+	}
+
+	async editClientExtension(clientExtensionName: string) {
+		await this.openItemActionsDropdown(clientExtensionName);
+
+		await this.editMenuItem.click();
+	}
+
+	getRowByText(text: string) {
+		return this.page
+			.locator('.dnd-tbody')
+			.locator('.dnd-tr')
+			.filter({
+				has: this.page.getByText(text, {exact: true}).first(),
+			});
+	}
+
+	async viewClientExtension(clientExtensionName: string) {
+		await this.openItemActionsDropdown(clientExtensionName);
+
+		await this.viewMenuItem.click();
+	}
+
+	async assertIsConfiguredFrom(
+		clientExtensionName: string,
+		configuredFrom: string
+	) {
+		await expect(
+			this.getRowByText(clientExtensionName).locator('.dnd-td').nth(3)
+		).toHaveText(configuredFrom);
+	}
+
+	async assertName(clientExtensionName: string) {
+		await expect(
+			this.getRowByText(clientExtensionName).locator('.dnd-td').nth(0)
+		).toBeVisible();
+	}
+
 	async goto() {
-		await this.applicationsMenuPage.goToClientExtensions();
+		await this.page.goto(
+			`${liferayConfig.environment.baseUrl}/group/guest/~/control_panel/manage` +
+				'?p_p_id=com_liferay_client_extension_web_internal_portlet_ClientExtensionAdminPortlet'
+		);
 	}
 
-	async gotoNewEditorConfigContributorPage() {
-		await this.goto();
-
-		await this.newClientExtensionButton.click();
-		await this.editorConfigContributorMenuItem.click();
-	}
-
-	async openItemActionsDropdown({text}: {text: string}) {
+	async openItemActionsDropdown(clientExtensionName: string) {
 		await this.page
 			.locator('.dnd-tr')
-			.filter({has: this.page.getByText(text)})
+			.filter({has: this.page.getByText(clientExtensionName)})
 			.getByRole('button', {
 				name: 'Actions',
 			})

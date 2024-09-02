@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -94,8 +95,8 @@ public class ObjectFieldLocalServiceUtil {
 			String businessType, String dbColumnName, String dbTableName,
 			String dbType, boolean indexed, boolean indexedAsKeyword,
 			String indexedLanguageId, Map<java.util.Locale, String> labelMap,
-			String name, String readOnly, String readOnlyConditionExpression,
-			boolean required, boolean state,
+			boolean localized, String name, String readOnly,
+			String readOnlyConditionExpression, boolean required, boolean state,
 			List<com.liferay.object.model.ObjectFieldSetting>
 				objectFieldSettings)
 		throws PortalException {
@@ -103,8 +104,8 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().addOrUpdateSystemObjectField(
 			externalReferenceCode, userId, listTypeDefinitionId,
 			objectDefinitionId, businessType, dbColumnName, dbTableName, dbType,
-			indexed, indexedAsKeyword, indexedLanguageId, labelMap, name,
-			readOnly, readOnlyConditionExpression, required, state,
+			indexed, indexedAsKeyword, indexedLanguageId, labelMap, localized,
+			name, readOnly, readOnlyConditionExpression, required, state,
 			objectFieldSettings);
 	}
 
@@ -114,8 +115,8 @@ public class ObjectFieldLocalServiceUtil {
 			String businessType, String dbColumnName, String dbTableName,
 			String dbType, boolean indexed, boolean indexedAsKeyword,
 			String indexedLanguageId, Map<java.util.Locale, String> labelMap,
-			String name, String readOnly, String readOnlyConditionExpression,
-			boolean required, boolean state,
+			boolean localized, String name, String readOnly,
+			String readOnlyConditionExpression, boolean required, boolean state,
 			List<com.liferay.object.model.ObjectFieldSetting>
 				objectFieldSettings)
 		throws PortalException {
@@ -123,8 +124,8 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().addSystemObjectField(
 			externalReferenceCode, userId, listTypeDefinitionId,
 			objectDefinitionId, businessType, dbColumnName, dbTableName, dbType,
-			indexed, indexedAsKeyword, indexedLanguageId, labelMap, name,
-			readOnly, readOnlyConditionExpression, required, state,
+			indexed, indexedAsKeyword, indexedLanguageId, labelMap, localized,
+			name, readOnly, readOnlyConditionExpression, required, state,
 			objectFieldSettings);
 	}
 
@@ -456,6 +457,13 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().getObjectFields(objectDefinitionId, dbTableName);
 	}
 
+	public static List<ObjectField> getObjectFieldsByBusinessType(
+		long objectDefinitionId, String businessType) {
+
+		return getService().getObjectFieldsByBusinessType(
+			objectDefinitionId, businessType);
+	}
+
 	/**
 	 * Returns the number of object fields.
 	 *
@@ -549,6 +557,13 @@ public class ObjectFieldLocalServiceUtil {
 		return getService().updateRequired(objectFieldId, required);
 	}
 
+	public static void updateUserId(
+			long companyId, long oldUserId, long newUserId)
+		throws PortalException {
+
+		getService().updateUserId(companyId, oldUserId, newUserId);
+	}
+
 	public static void validateExternalReferenceCode(
 			String externalReferenceCode, long objectFieldId, long companyId,
 			long objectDefinitionId)
@@ -578,13 +593,11 @@ public class ObjectFieldLocalServiceUtil {
 	}
 
 	public static ObjectFieldLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(ObjectFieldLocalService service) {
-		_service = service;
-	}
-
-	private static volatile ObjectFieldLocalService _service;
+	private static final Snapshot<ObjectFieldLocalService> _serviceSnapshot =
+		new Snapshot<>(
+			ObjectFieldLocalServiceUtil.class, ObjectFieldLocalService.class);
 
 }

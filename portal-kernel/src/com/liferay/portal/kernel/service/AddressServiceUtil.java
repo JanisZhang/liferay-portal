@@ -57,6 +57,14 @@ public class AddressServiceUtil {
 		return getService().getAddresses(className, classPK);
 	}
 
+	public static List<Address> getListTypeAddresses(
+			String className, long classPK, long[] listTypeIds)
+		throws PortalException {
+
+		return getService().getListTypeAddresses(
+			className, classPK, listTypeIds);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -76,6 +84,22 @@ public class AddressServiceUtil {
 		return getService().updateAddress(
 			addressId, name, description, street1, street2, street3, city, zip,
 			regionId, countryId, listTypeId, mailing, primary, phoneNumber);
+	}
+
+	public static Address updateExternalReferenceCode(
+			Address address, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().updateExternalReferenceCode(
+			address, externalReferenceCode);
+	}
+
+	public static Address updateExternalReferenceCode(
+			long addressId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().updateExternalReferenceCode(
+			addressId, externalReferenceCode);
 	}
 
 	public static AddressService getService() {

@@ -1,5 +1,6 @@
 buildscript {
 	apply from: "build-buildscript.gradle", to: buildscript
+	apply from: "build-develocity-buildscript.gradle", to: buildscript
 
 	File buildFile = gradle.startParameter.buildFile
 
@@ -12,29 +13,7 @@ buildscript {
 
 apply plugin: "com.liferay.settings.plugin"
 
-if (Boolean.getBoolean("gradle.build.scan.enabled")) {
-	apply plugin: "com.gradle.enterprise"
-
-	gradleEnterprise {
-		buildScan {
-			allowUntrustedServer = true
-			captureTaskInputFiles = true
-			server = System.getProperty("gradle.build.scan.server.url") ?: null
-
-			publishAlwaysIf true
-			tag System.getenv("JENKINS_HOME") ? "CI" : "LOCAL"
-
-			if (System.getProperty("gradle.build.scan.tag")) {
-				tag System.getProperty("gradle.build.scan.tag")
-			}
-
-			if (!System.getProperty("gradle.build.scan.server.url")) {
-				termsOfServiceAgree = "yes"
-				termsOfServiceUrl = "https://gradle.com/terms-of-service"
-			}
-		}
-	}
-}
+apply from: "build-develocity.gradle"
 
 File privateYarnLockFile = new File(rootDir, "private/yarn.lock")
 

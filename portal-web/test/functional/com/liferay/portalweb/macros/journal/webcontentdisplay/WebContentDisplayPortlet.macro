@@ -554,7 +554,12 @@ definition {
 			SelectFrame(value1 = "relative=top");
 		}
 		else if (isSet(displayText)) {
-			Click(
+			WaitForElementPresent(
+				key_displayText = ${displayText},
+				key_webContentTitle = ${webContentTitle},
+				locator1 = "WCD#WEB_CONTENT_LINK");
+
+			Click.clickNoMouseOverNoWaitForVisible(
 				key_displayText = ${displayText},
 				key_webContentTitle = ${webContentTitle},
 				locator1 = "WCD#WEB_CONTENT_LINK");

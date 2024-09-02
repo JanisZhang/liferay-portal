@@ -46,28 +46,39 @@ public class FunctionalBatchBuildTestrayCaseResult
 	}
 
 	@Override
-	public String getErrors() {
+	public long getDuration() {
 		TestResult testResult = getTestResult();
 
 		if (testResult == null) {
-			Build build = getBuild();
+			return 0;
+		}
 
+		return testResult.getDuration();
+	}
+
+	@Override
+	public String getErrors() {
+		TestResult testResult = getTestResult();
+
+		Build build = getBuild();
+
+		if (testResult == null) {
 			if (build == null) {
-				return "Failed to run build on CI";
+				return "Unable to run build on CI";
 			}
 
 			String result = build.getResult();
 
 			if (result == null) {
-				return "Failed to finish build on CI";
+				return "Unable to finish build on CI";
 			}
 
 			if (result.equals("ABORTED")) {
-				return "Aborted prior to running test";
+				return build.getJobName() + " timed out after 2 hours";
 			}
 
 			if (result.equals("SUCCESS") || result.equals("UNSTABLE")) {
-				return "Failed to run test on CI";
+				return "Unable to run test on CI";
 			}
 
 			return "Failed prior to running test";
@@ -78,6 +89,10 @@ public class FunctionalBatchBuildTestrayCaseResult
 		}
 
 		String errorMessage = testResult.getErrorDetails();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+			errorMessage = build.getFailureMessage();
+		}
 
 		if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
 			return "Failed for unknown reason";

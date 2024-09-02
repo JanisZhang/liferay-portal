@@ -1,4 +1,4 @@
-@component-name = "portal-gogo-shell"
+@component-name = "portal-core-infra"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -94,7 +94,7 @@ definition {
 		AssertElementPresent(locator1 = "GogoShell#COMMAND_FIELD");
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 

@@ -13,7 +13,7 @@ import classNames from 'classnames';
 import {debounce, fetch, getOpener, openToast, sub} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
-export function SelectLayoutTree({
+export default function SelectLayoutTree({
 	checkDisplayPage,
 	config,
 	filter,
@@ -271,7 +271,7 @@ export function SelectLayoutTree({
 								}
 							>
 								{multiSelection && !item.disabled && (
-									<ClayCheckbox
+									<Checkbox
 										checked={selection.has(item.id)}
 										containerProps={{className: 'my-0'}}
 										onChange={(event) =>
@@ -291,10 +291,9 @@ export function SelectLayoutTree({
 								<ClayIcon symbol={item.icon} />
 
 								<div
-									className={classNames('d-flex', {
-										'align-items-center c-ml-1':
-											Liferay.FeatureFlags['LPS-196847'],
-									})}
+									className={classNames(
+										'align-items-center c-ml-1 d-flex'
+									)}
 								>
 									<span
 										className="flex-grow-0"
@@ -303,8 +302,7 @@ export function SelectLayoutTree({
 										{item.name}
 									</span>
 
-									{Liferay.FeatureFlags['LPS-196847'] &&
-									item.id !== '0' &&
+									{item.id !== '0' &&
 									!item.hasGuestViewPermission ? (
 										<span
 											aria-label={Liferay.Language.get(
@@ -317,7 +315,7 @@ export function SelectLayoutTree({
 										>
 											<ClayIcon
 												className="c-mt-0 text-4"
-												symbol="lock"
+												symbol="password-policies"
 											/>
 										</span>
 									) : null}
@@ -351,7 +349,7 @@ export function SelectLayoutTree({
 										}
 									>
 										{multiSelection && !item.disabled && (
-											<ClayCheckbox
+											<Checkbox
 												checked={selection.has(item.id)}
 												containerProps={{
 													className: 'my-0',
@@ -374,12 +372,9 @@ export function SelectLayoutTree({
 										<ClayIcon symbol={item.icon} />
 
 										<div
-											className={classNames('d-flex', {
-												'align-items-center c-ml-1':
-													Liferay.FeatureFlags[
-														'LPS-196847'
-													],
-											})}
+											className={classNames(
+												'align-items-center c-ml-1 d-flex'
+											)}
 										>
 											<span
 												className="flex-grow-0"
@@ -388,26 +383,23 @@ export function SelectLayoutTree({
 												{item.name}
 											</span>
 
-											{Liferay.FeatureFlags[
-												'LPS-196847'
-											] &&
-												item.hasGuestViewPermission ===
-													false && (
-													<span
-														aria-label={Liferay.Language.get(
-															'restricted-page'
-														)}
-														className="c-ml-2 lfr-portal-tooltip"
-														title={Liferay.Language.get(
-															'restricted-page'
-														)}
-													>
-														<ClayIcon
-															className="c-mt-0 text-4"
-															symbol="lock"
-														/>
-													</span>
-												)}
+											{item.hasGuestViewPermission ===
+												false && (
+												<span
+													aria-label={Liferay.Language.get(
+														'restricted-page'
+													)}
+													className="c-ml-2 lfr-portal-tooltip"
+													title={Liferay.Language.get(
+														'restricted-page'
+													)}
+												>
+													<ClayIcon
+														className="c-mt-0 text-4"
+														symbol="password-policies"
+													/>
+												</span>
+											)}
 										</div>
 									</ClayTreeView.Item>
 								)}
@@ -439,12 +431,14 @@ export function SelectLayoutTree({
 			description={Liferay.Language.get(
 				'try-again-with-a-different-search'
 			)}
-			imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
+			imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.svg`}
 			small
 			title={Liferay.Language.get('no-results-found')}
 		/>
 	);
 }
+
+const Checkbox = (props) => <ClayCheckbox {...props} />;
 
 function SearchResults({
 	checkDisplayPage,
@@ -457,42 +451,55 @@ function SearchResults({
 	selection,
 }) {
 	const [results, setResults] = useState([]);
+	const [loadMore, setLoadMore] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [loadingMore, setLoadingMore] = useState(false);
 
-	const onFindLayouts = useCallback((layouts) => {
+	const onFindLayouts = useCallback((layouts, hasMoreElements) => {
 		setLoading(false);
+		setLoadingMore(false);
 
-		setResults(layouts);
+		setResults((prevResults) => prevResults.concat(layouts));
+
+		setLoadMore(hasMoreElements);
 	}, []);
+
+	const onLoadMore = useCallback(
+		(start) =>
+			debouncedFindLayouts(
+				findLayoutsURL,
+				checkDisplayPage,
+				groupId,
+				itemSelectorReturnType,
+				filter,
+				onFindLayouts,
+				start
+			),
+		[
+			checkDisplayPage,
+			filter,
+			findLayoutsURL,
+			groupId,
+			itemSelectorReturnType,
+			onFindLayouts,
+		]
+	);
 
 	useEffect(() => {
 		setLoading(true);
-
-		debouncedFindLayouts(
-			findLayoutsURL,
-			checkDisplayPage,
-			groupId,
-			itemSelectorReturnType,
-			filter,
-			onFindLayouts
-		);
-	}, [
-		checkDisplayPage,
-		filter,
-		findLayoutsURL,
-		groupId,
-		itemSelectorReturnType,
-		onFindLayouts,
-	]);
+		setResults([]);
+		onLoadMore(0);
+	}, [onLoadMore]);
 
 	if (loading) {
 		return <ClayLoadingIndicator displayType="secondary" />;
 	}
 
-	return (
+	return results.length ? (
 		<div className="pt-3">
 			{results.map((layout) => (
 				<SearchResult
+					filter={filter}
 					key={layout.id}
 					layout={layout}
 					multiSelection={multiSelection}
@@ -500,15 +507,71 @@ function SearchResults({
 					selection={selection}
 				/>
 			))}
+
+			{loadMore && (
+				<ClayButton
+					className="load-more-btn mb-5 mt-2"
+					disabled={loadingMore}
+					displayType="secondary"
+					onClick={() => {
+						setLoadingMore(true);
+						onLoadMore(results.length);
+					}}
+				>
+					{loadingMore ? (
+						<ClayLoadingIndicator
+							className="mx-5"
+							displayType="secondary"
+							size="sm"
+						/>
+					) : (
+						Liferay.Language.get('load-more-results')
+					)}
+				</ClayButton>
+			)}
 		</div>
+	) : (
+		<ClayEmptyState
+			description={Liferay.Language.get(
+				'try-again-with-a-different-search'
+			)}
+			imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.svg`}
+			small
+			title={Liferay.Language.get('no-results-found')}
+		/>
 	);
 }
 
-function SearchResult({layout, multiSelection, onSelect, selection}) {
+function SearchResult({filter, layout, multiSelection, onSelect, selection}) {
+	const getMarkedText = () => {
+		const matchLayoutName = new RegExp(filter, 'i').exec(layout.name);
+
+		return matchLayoutName ? (
+			<>
+				<span className="sr-only">{layout.name}</span>
+
+				<span
+					aria-hidden={true}
+					className="search-results-mark-layout-name"
+				>
+					{matchLayoutName.input.substring(0, matchLayoutName.index)}
+
+					<mark className="px-0">{matchLayoutName[0]}</mark>
+
+					{matchLayoutName.input.substring(
+						matchLayoutName.index + matchLayoutName[0].length
+					)}
+				</span>
+			</>
+		) : (
+			layout.name
+		);
+	};
+
 	return (
-		<div className="align-items-center d-flex pb-2">
+		<div className="align-items-center d-flex pb-2 search-result">
 			{multiSelection && (
-				<ClayCheckbox
+				<Checkbox
 					checked={selection.has(layout.id)}
 					containerProps={{className: 'mr-3 my-0'}}
 					disabled={layout.disabled}
@@ -525,7 +588,9 @@ function SearchResult({layout, multiSelection, onSelect, selection}) {
 			))}
 
 			{multiSelection ? (
-				<span className="font-weight-semi-bold p-0">{layout.name}</span>
+				<span className="font-weight-semi-bold p-0">
+					{getMarkedText()}
+				</span>
 			) : (
 				<ClayButton
 					className="font-weight-semi-bold px-0 py-1 search-result-button"
@@ -533,7 +598,7 @@ function SearchResult({layout, multiSelection, onSelect, selection}) {
 					displayType="unstyled"
 					onClick={() => onSelect(layout)}
 				>
-					{layout.name}
+					{getMarkedText()}
 				</ClayButton>
 			)}
 		</div>
@@ -546,7 +611,8 @@ function findLayouts(
 	groupId,
 	itemSelectorReturnType,
 	keywords,
-	onFindLayouts
+	onFindLayouts,
+	start
 ) {
 	fetch(url, {
 		body: Liferay.Util.objectToURLSearchParams({
@@ -554,12 +620,14 @@ function findLayouts(
 			[`groupId`]: groupId,
 			[`itemSelectorReturnType`]: itemSelectorReturnType,
 			[`keywords`]: keywords,
+			[`searchOnlyByTitle`]: true,
+			[`start`]: start,
 		}),
 		method: 'post',
 	})
 		.then((response) => response.json())
-		.then(({layouts}) => {
-			onFindLayouts(layouts);
+		.then(({hasMoreElements, layouts}) => {
+			onFindLayouts(layouts, hasMoreElements);
 		})
 		.catch(() =>
 			openToast({
@@ -570,4 +638,4 @@ function findLayouts(
 		);
 }
 
-const debouncedFindLayouts = debounce(findLayouts, 300);
+const debouncedFindLayouts = debounce(findLayouts, 600);

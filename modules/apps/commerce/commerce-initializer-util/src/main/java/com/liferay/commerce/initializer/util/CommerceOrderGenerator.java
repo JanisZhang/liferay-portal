@@ -72,6 +72,7 @@ import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
@@ -131,6 +132,25 @@ public class CommerceOrderGenerator {
 			throw new PortalException(message);
 		}
 
+		// Commerce addresses
+
+		List<CommerceAddress> commerceAddresses =
+			_commerceAddressLocalService.getCommerceAddressesByCompanyId(
+				accountEntry.getCompanyId(), AccountEntry.class.getName(),
+				accountEntry.getAccountEntryId(), 0, 1, null);
+
+		if (commerceAddresses.isEmpty()) {
+			String message =
+				"There are no addresses related to the account " +
+					accountEntry.getAccountEntryId();
+
+			if (_log.isInfoEnabled()) {
+				_log.info(message);
+			}
+
+			throw new PortalException(message);
+		}
+
 		AccountEntryUserRel accountEntryUserRel = accountEntryUserRels.get(0);
 
 		// Add commerce order
@@ -165,25 +185,6 @@ public class CommerceOrderGenerator {
 		commerceOrder = _commerceOrderLocalService.recalculatePrice(
 			commerceOrder.getCommerceOrderId(), commerceContext);
 
-		// Commerce addresses
-
-		List<CommerceAddress> commerceAddresses =
-			_commerceAddressLocalService.getCommerceAddressesByCompanyId(
-				accountEntry.getCompanyId(), AccountEntry.class.getName(),
-				accountEntry.getAccountEntryId(), 0, 1, null);
-
-		if (commerceAddresses.isEmpty()) {
-			String message =
-				"There are no addresses related to the account " +
-					accountEntry.getAccountEntryId();
-
-			if (_log.isInfoEnabled()) {
-				_log.info(message);
-			}
-
-			throw new PortalException(message);
-		}
-
 		CommerceAddress commerceAddress = commerceAddresses.get(0);
 
 		commerceOrder.setShippingAddressId(
@@ -212,11 +213,10 @@ public class CommerceOrderGenerator {
 			commerceAddress.getCommerceAddressId(), commerceShippingMethodId,
 			commerceAddress.getCommerceAddressId(),
 			commerceOrder.getAdvanceStatus(),
-			commerceOrder.getCommercePaymentMethodKey(),
+			commerceOrder.getCommercePaymentMethodKey(), null,
 			commerceOrder.getPurchaseOrderNumber(),
 			commerceOrder.getShippingAmount(), commerceShippingOptionKey,
-			commerceOrder.getSubtotal(), commerceOrder.getTotal(),
-			commerceContext);
+			commerceOrder.getSubtotal(), commerceOrder.getTotal());
 
 		// Checkout commerce order
 
@@ -272,15 +272,21 @@ public class CommerceOrderGenerator {
 			// Add commerce order item
 
 			try {
+				BigDecimal minOrderQuantity =
+					cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance);
+
+				if (BigDecimalUtil.lt(maxOrderQuantity, minOrderQuantity)) {
+					continue;
+				}
+
 				List<CPInstanceUnitOfMeasure> cpInstanceUnitOfMeasures =
 					_cpInstanceUnitOfMeasureLocalService.
 						getCPInstanceUnitOfMeasures(
 							cpInstance.getCompanyId(), cpInstance.getSku());
 
 				BigDecimal quantity = _randomQuantity(
-					cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance),
-					maxOrderQuantity,
-					(cpInstanceUnitOfMeasures == null) ? null :
+					minOrderQuantity, maxOrderQuantity,
+					ListUtil.isEmpty(cpInstanceUnitOfMeasures) ? null :
 						cpInstanceUnitOfMeasures.get(0));
 
 				_commerceOrderItemLocalService.addCommerceOrderItem(
@@ -422,7 +428,7 @@ public class CommerceOrderGenerator {
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new CommerceShippingMethodPriorityComparator());
+				CommerceShippingMethodPriorityComparator.getInstance(false));
 
 		if (commerceShippingMethods.isEmpty()) {
 			return 0;

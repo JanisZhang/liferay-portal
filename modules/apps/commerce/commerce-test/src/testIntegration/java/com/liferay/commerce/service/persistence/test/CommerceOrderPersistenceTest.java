@@ -19,14 +19,18 @@ import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
+import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.Time;
+import com.liferay.portal.security.permission.SimplePermissionChecker;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
@@ -171,6 +175,8 @@ public class CommerceOrderPersistenceTest {
 		newCommerceOrder.setLastPriceUpdateDate(RandomTestUtil.nextDate());
 
 		newCommerceOrder.setManuallyAdjusted(RandomTestUtil.randomBoolean());
+
+		newCommerceOrder.setName(RandomTestUtil.randomString());
 
 		newCommerceOrder.setOrderDate(RandomTestUtil.nextDate());
 
@@ -392,6 +398,8 @@ public class CommerceOrderPersistenceTest {
 		Assert.assertEquals(
 			existingCommerceOrder.isManuallyAdjusted(),
 			newCommerceOrder.isManuallyAdjusted());
+		Assert.assertEquals(
+			existingCommerceOrder.getName(), newCommerceOrder.getName());
 		Assert.assertEquals(
 			Time.getShortTimestamp(existingCommerceOrder.getOrderDate()),
 			Time.getShortTimestamp(newCommerceOrder.getOrderDate()));
@@ -739,6 +747,24 @@ public class CommerceOrderPersistenceTest {
 
 	@Test
 	public void testFilterFindByGroupId() throws Exception {
+		PermissionThreadLocal.setPermissionChecker(
+			new SimplePermissionChecker() {
+				{
+					init(TestPropsValues.getUser());
+				}
+
+				@Override
+				public boolean isCompanyAdmin(long companyId) {
+					return false;
+				}
+
+			});
+
+		Assert.assertTrue(InlineSQLHelperUtil.isEnabled(0));
+
+		_persistence.filterFindByGroupId(
+			0, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
 		_persistence.filterFindByGroupId(
 			0, QueryUtil.ALL_POS, QueryUtil.ALL_POS, getOrderByComparator());
 	}
@@ -755,11 +781,11 @@ public class CommerceOrderPersistenceTest {
 			true, "shippingAddressId", true, "advanceStatus", true,
 			"commercePaymentMethodKey", true, "couponCode", true,
 			"deliveryCommerceTermEntryName", true, "lastPriceUpdateDate", true,
-			"manuallyAdjusted", true, "orderDate", true, "orderStatus", true,
-			"paymentCommerceTermEntryName", true, "paymentStatus", true,
-			"printedNote", true, "purchaseOrderNumber", true,
-			"requestedDeliveryDate", true, "shippable", true, "shippingAmount",
-			true, "shippingDiscountAmount", true,
+			"manuallyAdjusted", true, "name", true, "orderDate", true,
+			"orderStatus", true, "paymentCommerceTermEntryName", true,
+			"paymentStatus", true, "printedNote", true, "purchaseOrderNumber",
+			true, "requestedDeliveryDate", true, "shippable", true,
+			"shippingAmount", true, "shippingDiscountAmount", true,
 			"shippingDiscountPercentageLevel1", true,
 			"shippingDiscountPercentageLevel2", true,
 			"shippingDiscountPercentageLevel3", true,
@@ -1135,6 +1161,8 @@ public class CommerceOrderPersistenceTest {
 		commerceOrder.setLastPriceUpdateDate(RandomTestUtil.nextDate());
 
 		commerceOrder.setManuallyAdjusted(RandomTestUtil.randomBoolean());
+
+		commerceOrder.setName(RandomTestUtil.randomString());
 
 		commerceOrder.setOrderDate(RandomTestUtil.nextDate());
 

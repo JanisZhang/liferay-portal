@@ -6,7 +6,6 @@
 package com.liferay.layout.admin.web.internal.portlet.action;
 
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryService;
@@ -103,10 +102,9 @@ public class CopyLayoutUtilityPageEntryMVCActionCommand
 		Layout targetLayout = _layoutLocalService.getLayout(
 			layoutUtilityPageEntry.getPlid());
 
-		_layoutCopyHelper.copyLayoutContent(
-			sourceLayout.fetchDraftLayout(), targetLayout.fetchDraftLayout());
-
-		_layoutCopyHelper.copyLayoutContent(sourceLayout, targetLayout);
+		_layoutLocalService.copyLayoutContent(sourceLayout, targetLayout);
+		_layoutLocalService.copyLayoutContent(
+			sourceLayout, targetLayout.fetchDraftLayout());
 
 		return layoutUtilityPageEntry;
 	}
@@ -117,9 +115,6 @@ public class CopyLayoutUtilityPageEntryMVCActionCommand
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
-
-	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

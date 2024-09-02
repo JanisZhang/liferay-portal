@@ -13,6 +13,8 @@ import com.liferay.change.tracking.mapping.CTMappingTableInfo;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTEntryTable;
+import com.liferay.change.tracking.scheduler.PublishScheduler;
+import com.liferay.change.tracking.scheduler.ScheduledPublishInfo;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
@@ -25,8 +27,6 @@ import com.liferay.change.tracking.web.internal.frontend.data.set.filter.ChangeT
 import com.liferay.change.tracking.web.internal.frontend.data.set.filter.SiteSelectionFDSFilter;
 import com.liferay.change.tracking.web.internal.frontend.data.set.filter.TypeNameSelectionFDSFilter;
 import com.liferay.change.tracking.web.internal.frontend.data.set.filter.UserSelectionFDSFilter;
-import com.liferay.change.tracking.web.internal.scheduler.PublishScheduler;
-import com.liferay.change.tracking.web.internal.scheduler.ScheduledPublishInfo;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTPermission;
 import com.liferay.change.tracking.web.internal.util.PublicationsPortletURLUtil;
@@ -37,11 +37,14 @@ import com.liferay.frontend.data.set.model.FDSSortItemList;
 import com.liferay.frontend.data.set.model.FDSSortItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
+import com.liferay.knowledge.base.model.KBArticleModel;
 import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -59,11 +62,13 @@ import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTable;
+import com.liferay.portal.kernel.model.WorkflowInstanceLink;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -71,10 +76,15 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowException;
+import com.liferay.portal.kernel.workflow.WorkflowTask;
+import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.Serializable;
@@ -118,7 +128,9 @@ public class ViewChangesDisplayContext {
 		GroupLocalService groupLocalService, Language language, Portal portal,
 		PublicationsDisplayContext publicationsDisplayContext,
 		PublishScheduler publishScheduler, RenderRequest renderRequest,
-		RenderResponse renderResponse, UserLocalService userLocalService) {
+		RenderResponse renderResponse, UserLocalService userLocalService,
+		WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService,
+		WorkflowTaskManager workflowTaskManager) {
 
 		_activeCTCollectionId = activeCTCollectionId;
 		_basePersistenceRegistry = basePersistenceRegistry;
@@ -136,6 +148,8 @@ public class ViewChangesDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_userLocalService = userLocalService;
+		_workflowInstanceLinkLocalService = workflowInstanceLinkLocalService;
+		_workflowTaskManager = workflowTaskManager;
 
 		_httpServletRequest = portal.getHttpServletRequest(renderRequest);
 
@@ -217,7 +231,9 @@ public class ViewChangesDisplayContext {
 				_language.get(_httpServletRequest, "review-change"), "get",
 				"get", null));
 
-		if (_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) {
+		if ((_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) ||
+			(_ctCollection.getStatus() == WorkflowConstants.STATUS_EXPIRED)) {
+
 			fdsActionDropdownItems.add(
 				new FDSActionDropdownItem(
 					PortletURLBuilder.createRenderURL(
@@ -236,7 +252,9 @@ public class ViewChangesDisplayContext {
 					"move-folder", "move-changes",
 					_language.get(_httpServletRequest, "move-changes"), "post",
 					"move-changes", null));
+		}
 
+		if (_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) {
 			fdsActionDropdownItems.add(
 				new FDSActionDropdownItem(
 					PortletURLBuilder.createRenderURL(
@@ -290,6 +308,10 @@ public class ViewChangesDisplayContext {
 				"typeName"
 			).build()
 		).build();
+	}
+
+	public String getMyWorkflowTaskPortletNamespace() {
+		return PortalUtil.getPortletNamespace(PortletKeys.MY_WORKFLOW_TASK);
 	}
 
 	public Map<String, Object> getReactData() throws Exception {
@@ -389,6 +411,10 @@ public class ViewChangesDisplayContext {
 
 		for (Map.Entry<Long, Set<Long>> entry :
 				classNameIdClassPKsMap.entrySet()) {
+
+			if (entry.getKey() == 0) {
+				continue;
+			}
 
 			_populateEntryValues(
 				modelInfoMap, entry.getKey(), entry.getValue(),
@@ -1248,6 +1274,24 @@ public class ViewChangesDisplayContext {
 		return ctDisplayRenderer.getTypeName(locale);
 	}
 
+	private List<WorkflowTask> _getWorkflowTasks(
+			CTEntry ctEntry, long classPK, long groupId)
+		throws WorkflowException {
+
+		WorkflowInstanceLink workflowInstanceLink =
+			_workflowInstanceLinkLocalService.fetchWorkflowInstanceLink(
+				ctEntry.getCompanyId(), groupId,
+				_portal.getClassName(ctEntry.getModelClassNameId()), classPK);
+
+		if (workflowInstanceLink == null) {
+			return null;
+		}
+
+		return _workflowTaskManager.getWorkflowTasksByWorkflowInstance(
+			workflowInstanceLink.getCompanyId(), null,
+			workflowInstanceLink.getWorkflowInstanceId(), null, 0, 1, null);
+	}
+
 	private <T extends BaseModel<T>> boolean _isSite(T model) {
 		if (model instanceof Group) {
 			Group group = (Group)model;
@@ -1260,6 +1304,50 @@ public class ViewChangesDisplayContext {
 		}
 
 		return false;
+	}
+
+	private <T extends BaseModel<T>> boolean _isWorkflowTasksEmpty(
+			CTEntry ctEntry, long groupId, T model)
+		throws Exception {
+
+		long classPK = ctEntry.getModelClassPK();
+
+		if (model instanceof KBArticleModel) {
+			Map<String, Object> modelAttributes = model.getModelAttributes();
+
+			classPK = GetterUtil.getLong(
+				modelAttributes.get("resourcePrimKey"));
+		}
+
+		CTCollection ctCollection = _ctCollectionLocalService.getCTCollection(
+			ctEntry.getCtCollectionId());
+
+		if (ctCollection.getStatus() == WorkflowConstants.STATUS_APPROVED) {
+			List<WorkflowTask> workflowTasks = _getWorkflowTasks(
+				ctEntry, classPK, groupId);
+
+			if (workflowTasks == null) {
+				return true;
+			}
+
+			WorkflowTask workflowTask = workflowTasks.get(0);
+
+			return !workflowTask.isCompleted();
+		}
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ctEntry.getCtCollectionId())) {
+
+			List<WorkflowTask> workflowTasks = _getWorkflowTasks(
+				ctEntry, classPK, groupId);
+
+			if (workflowTasks == null) {
+				return true;
+			}
+
+			return false;
+		}
 	}
 
 	private <T extends BaseModel<T>> void _populateEntryValues(
@@ -1444,11 +1532,30 @@ public class ViewChangesDisplayContext {
 					"workflowStatus", (Integer)modelAttributes.get("status")
 				);
 
+				long groupId = 0;
+
 				if (model instanceof GroupedModel) {
 					GroupedModel groupedModel = (GroupedModel)model;
 
-					modelInfo._jsonObject.put(
-						"groupId", groupedModel.getGroupId());
+					groupId = groupedModel.getGroupId();
+
+					modelInfo._jsonObject.put("groupId", groupId);
+				}
+
+				if (FeatureFlagManagerUtil.isEnabled("LPD-10703")) {
+					int changeType = _ctDisplayRendererRegistry.getChangeType(
+						ctEntry, model);
+
+					if (_ctDisplayRendererRegistry.isWorkflowEnabled(
+							ctEntry, model) &&
+						(changeType != CTConstants.CT_CHANGE_TYPE_DELETION) &&
+						((Integer)modelAttributes.get("status") !=
+							WorkflowConstants.STATUS_DRAFT)) {
+
+						modelInfo._jsonObject.put(
+							"showWorkflow",
+							!_isWorkflowTasksEmpty(ctEntry, groupId, model));
+					}
 				}
 
 				modelInfo._site = _isSite(model);
@@ -1526,6 +1633,9 @@ public class ViewChangesDisplayContext {
 	private Map<String, Object> _toolbarReactData;
 	private final User _user;
 	private final UserLocalService _userLocalService;
+	private final WorkflowInstanceLinkLocalService
+		_workflowInstanceLinkLocalService;
+	private final WorkflowTaskManager _workflowTaskManager;
 
 	private static class ModelInfo {
 

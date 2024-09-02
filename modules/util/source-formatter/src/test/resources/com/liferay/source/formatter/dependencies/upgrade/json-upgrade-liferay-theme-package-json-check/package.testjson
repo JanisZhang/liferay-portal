@@ -10,8 +10,8 @@
 		"version": "7.3"
 	},
 	"scripts": {
-		"build": "liferay-npm-scripts theme build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build:theme",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	}
 }

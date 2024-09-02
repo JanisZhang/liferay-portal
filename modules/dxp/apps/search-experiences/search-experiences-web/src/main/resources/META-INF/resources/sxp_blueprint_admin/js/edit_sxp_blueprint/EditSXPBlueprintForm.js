@@ -53,7 +53,7 @@ import {
 	setInitialSuccessToast,
 } from '../utils/toasts';
 import {INPUT_TYPES} from '../utils/types/inputTypes';
-import {SIDEBAR_TYPES} from '../utils/types/sidebarTypes';
+import {SIDEBAR_INFO, SIDEBAR_TYPES} from '../utils/types/sidebarTypes';
 import validateBoost from '../utils/validation/validate_boost';
 import validateJSON from '../utils/validation/validate_json';
 import validateNumberRange from '../utils/validation/validate_number_range';
@@ -65,11 +65,13 @@ import PreviewSidebar from './preview_sidebar/index';
 import QueryBuilderTab from './query_builder_tab/index';
 
 // Tabs in display order
+
 /* eslint-disable sort-keys */
 const TABS = {
 	'query-builder': Liferay.Language.get('query-builder'),
 	'configuration': Liferay.Language.get('configuration'),
 };
+
 /* eslint-enable sort-keys */
 
 function EditSXPBlueprintForm({
@@ -93,10 +95,8 @@ function EditSXPBlueprintForm({
 	const controllerRef = useRef();
 
 	const [errors, setErrors] = useState([]);
-	const [
-		isTitleAndDescriptionEdited,
-		setIsTitleAndDescriptionEdited,
-	] = useState(false);
+	const [isTitleAndDescriptionEdited, setIsTitleAndDescriptionEdited] =
+		useState(false);
 	const [previewInfo, setPreviewInfo] = useState(() => ({
 		loading: false,
 		results: {},
@@ -110,12 +110,10 @@ function EditSXPBlueprintForm({
 	const [indexFields, setIndexFields] = useState(null);
 	const [searchIndexes, setSearchIndexes] = useState(null);
 
-	const {
-		data: searchableTypes,
-		refetch: refetchSearchableTypes,
-	} = useFetchData({
-		resource: `/o/search-experiences-rest/v1.0/searchable-asset-names/${locale}`,
-	});
+	const {data: searchableTypes, refetch: refetchSearchableTypes} =
+		useFetchData({
+			resource: `/o/search-experiences-rest/v1.0/searchable-asset-names/${locale}`,
+		});
 
 	const {
 		data: keywordQueryContributors,
@@ -284,8 +282,8 @@ function EditSXPBlueprintForm({
 				}
 
 				const configErrors = {};
-				const fieldSets = cleanUIConfiguration(uiConfiguration)
-					.fieldSets;
+				const fieldSets =
+					cleanUIConfiguration(uiConfiguration).fieldSets;
 
 				if (
 					!!fieldSets.length &&
@@ -724,9 +722,8 @@ function EditSXPBlueprintForm({
 
 			let msg;
 
-			const errorObjectIndex = responseContent.responseString.indexOf(
-				'{"error":{'
-			);
+			const errorObjectIndex =
+				responseContent.responseString.indexOf('{"error":{');
 
 			if (errorObjectIndex > 0) {
 				const errorJSONObject = JSON.parse(
@@ -760,9 +757,8 @@ function EditSXPBlueprintForm({
 							includeResponseString: true,
 							languageId: Liferay.ThemeDisplay.getLanguageId(),
 						},
-						searchContextAttributes: transformToSearchContextAttributes(
-							attributes
-						),
+						searchContextAttributes:
+							transformToSearchContextAttributes(attributes),
 					},
 					elementInstances,
 				}),
@@ -783,7 +779,7 @@ function EditSXPBlueprintForm({
 							? responseContent
 							: getResultsError({
 									msg: responseContent?.title,
-							  })
+								})
 					),
 				});
 			})
@@ -851,7 +847,8 @@ function EditSXPBlueprintForm({
 		if (
 			tab !== 'query-builder' &&
 			(openSidebar === SIDEBAR_TYPES.CLAUSE_CONTRIBUTORS ||
-				openSidebar === SIDEBAR_TYPES.INDEXER_CLAUSES)
+				openSidebar === SIDEBAR_TYPES.QUERY_CONTRIBUTORS_HELP ||
+				openSidebar === SIDEBAR_TYPES.INDEXER_CLAUSES_HELP)
 		) {
 			setOpenSidebar('');
 		}
@@ -948,21 +945,23 @@ function EditSXPBlueprintForm({
 						<Sidebar
 							className="info-sidebar"
 							onClose={_handleSidebarClose}
-							title={Liferay.Language.get(
-								'search-framework-indexer-clauses'
-							)}
-							visible={
-								openSidebar === SIDEBAR_TYPES.INDEXER_CLAUSES
-							}
+							title={SIDEBAR_INFO[openSidebar]?.title}
+							visible={[
+								SIDEBAR_TYPES.INDEXER_CLAUSES_HELP,
+								SIDEBAR_TYPES.QUERY_CONTRIBUTORS_HELP,
+							].includes(openSidebar)}
 						>
 							<div className="container-fluid text-secondary">
 								<span className="help-text">
-									{Liferay.Language.get(
-										'search-framework-indexer-clauses-description'
-									)}
+									{SIDEBAR_INFO[openSidebar]?.description}
 								</span>
 
-								<LearnMessage resourceKey="query-clause-contributors-configuration" />
+								<LearnMessage
+									resourceKey={
+										SIDEBAR_INFO[openSidebar]
+											?.learnMessageKey
+									}
+								/>
 							</div>
 						</Sidebar>
 
@@ -976,7 +975,9 @@ function EditSXPBlueprintForm({
 									SIDEBAR_TYPES.CLAUSE_CONTRIBUTORS,
 								'open-info':
 									openSidebar ===
-									SIDEBAR_TYPES.INDEXER_CLAUSES,
+										SIDEBAR_TYPES.INDEXER_CLAUSES_HELP ||
+									openSidebar ===
+										SIDEBAR_TYPES.QUERY_CONTRIBUTORS_HELP,
 							})}
 						>
 							<QueryBuilderTab
@@ -1064,7 +1065,7 @@ function EditSXPBlueprintForm({
 						className={getCN({
 							active: openSidebar === SIDEBAR_TYPES.PREVIEW,
 						})}
-						data-testid={TEST_IDS.PREVIEW_SIDEBAR_BUTTON}
+						data-qa-id={TEST_IDS.PREVIEW_SIDEBAR_BUTTON}
 						displayType="secondary"
 						onClick={_handleToggleSidebar(SIDEBAR_TYPES.PREVIEW)}
 						small

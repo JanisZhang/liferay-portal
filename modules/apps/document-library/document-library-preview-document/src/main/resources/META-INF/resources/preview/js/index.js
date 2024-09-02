@@ -24,23 +24,7 @@ const KEY_CODE_ESC = 27;
  * @type {Array<number>}
  */
 const VALID_KEY_CODES = [
-	8,
-	9,
-	37,
-	38,
-	39,
-	40,
-	46,
-	48,
-	49,
-	50,
-	51,
-	52,
-	53,
-	54,
-	55,
-	56,
-	57,
+	8, 9, 37, 38, 39, 40, 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
 ];
 
 /**
@@ -54,7 +38,7 @@ const WAIT_BETWEEN_GO_TO_PAGE = 250;
  * @review
  */
 
-const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
+const DocumentPreviewer = ({alt, baseImageURL, initialPage, totalPages}) => {
 	const [currentPage, setCurrentPage] = useState(initialPage);
 	const [currentPageLoading, setCurrentPageLoading] = useState(false);
 	const [expanded, setExpanded] = useState(false);
@@ -210,6 +194,7 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 					<ClayLoadingIndicator />
 				) : (
 					<img
+						alt={alt}
 						className={`preview-file-document ${
 							!expanded && 'preview-file-document-fit'
 						}`}

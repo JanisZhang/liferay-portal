@@ -4,28 +4,15 @@
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
-import PropTypes from 'prop-types';
 import React from 'react';
 
-import {useDispatch, useSelector} from '../../contexts/StoreContext';
-import redo from '../../thunks/redo';
-import undo from '../../thunks/undo';
+import {
+	useSelectItem,
+	useSelectMultipleItems,
+} from '../../contexts/ControlsContext';
+import {useSelector} from '../../contexts/StoreContext';
 import UndoHistory from './UndoHistory';
-
-export function useUndoRedo() {
-	const dispatch = useDispatch();
-	const store = useSelector((state) => state);
-
-	const onUndo = () => {
-		dispatch(undo({store}));
-	};
-
-	const onRedo = () => {
-		dispatch(redo({store}));
-	};
-
-	return {onRedo, onUndo};
-}
+import useUndoRedoActions from './useUndoRedoActions';
 
 export function useDisabledUndo() {
 	const undoHistory = useSelector((state) => state.undoHistory);
@@ -42,7 +29,13 @@ export function useDisabledRedo() {
 export default function Undo() {
 	const disabledRedo = useDisabledRedo();
 	const disabledUndo = useDisabledUndo();
-	const {onRedo, onUndo} = useUndoRedo();
+	const {onRedo, onUndo} = useUndoRedoActions();
+	const selectItem = useSelectItem();
+	const selectMultipleItems = useSelectMultipleItems();
+
+	const selectItems = Liferay.FeatureFlags['LPD-18221']
+		? selectMultipleItems
+		: selectItem;
 
 	return (
 		<>
@@ -52,7 +45,7 @@ export default function Undo() {
 					className="btn-monospaced"
 					disabled={disabledUndo}
 					displayType="secondary"
-					onClick={onUndo}
+					onClick={() => onUndo({selectItems})}
 					size="sm"
 					symbol="undo"
 					title={Liferay.Language.get('undo')}
@@ -63,7 +56,7 @@ export default function Undo() {
 					className="btn-monospaced"
 					disabled={disabledRedo}
 					displayType="secondary"
-					onClick={onRedo}
+					onClick={() => onRedo({selectItems})}
 					size="sm"
 					symbol="redo"
 					title={Liferay.Language.get('redo')}
@@ -76,8 +69,3 @@ export default function Undo() {
 		</>
 	);
 }
-
-Undo.propTypes = {
-	onRedo: PropTypes.func,
-	onUndo: PropTypes.func,
-};

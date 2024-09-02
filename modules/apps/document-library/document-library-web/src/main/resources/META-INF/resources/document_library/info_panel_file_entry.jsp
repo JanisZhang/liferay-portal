@@ -46,6 +46,13 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 				<aui:model-context bean="<%= fileVersion %>" model="<%= DLFileVersion.class %>" />
 
 				<aui:workflow-status model="<%= DLFileEntry.class %>" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= fileVersion.getStatus() %>" />
+
+				<c:if test="<%= !fileVersion.isApproved() && dlViewFileVersionDisplayContext.hasApprovedVersion() %>">
+					<clay:label
+						displayType="success"
+						label="approved"
+					/>
+				</c:if>
 			</clay:content-section>
 		</clay:content-col>
 
@@ -512,7 +519,7 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 
 				<%
 				try {
-					List<DDMStructure> ddmStructures = DDMStructureLocalServiceUtil.getClassStructures(company.getCompanyId(), PortalUtil.getClassNameId(RawMetadataProcessor.class), StructureStructureKeyComparator.INSTANCE_DESCENDING);
+					List<DDMStructure> ddmStructures = DDMStructureLocalServiceUtil.getClassStructures(company.getCompanyId(), PortalUtil.getClassNameId(RawMetadataProcessor.class), StructureStructureKeyComparator.getInstance(false));
 
 					for (DDMStructure ddmStructure : ddmStructures) {
 						DDMFormValues ddmFormValues = null;
@@ -567,5 +574,5 @@ long assetClassPK = DLAssetHelperUtil.getAssetClassPK(fileEntry, fileVersion);
 </div>
 
 <liferay-frontend:component
-	module="document_library/js/InfoPanel.es"
+	module="{InfoPanel} from document-library-web"
 />

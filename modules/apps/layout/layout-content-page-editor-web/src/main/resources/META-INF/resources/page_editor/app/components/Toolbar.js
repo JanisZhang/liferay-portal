@@ -9,9 +9,7 @@ import classNames from 'classnames';
 import {openConfirmModal} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
-import useLazy from '../../common/hooks/useLazy';
-import useLoad from '../../common/hooks/useLoad';
-import usePlugins from '../../common/hooks/usePlugins';
+import ExperienceToolbarSection from '../../plugins/experience/components/ExperienceToolbarSection';
 import * as Actions from '../actions/index';
 import {LAYOUT_TYPES} from '../config/constants/layoutTypes';
 import {SERVICE_NETWORK_STATUS_TYPES} from '../config/constants/serviceNetworkStatusTypes';
@@ -30,12 +28,11 @@ import PublishButton from './PublishButton';
 import ToggleConfigurationSidebarButton from './ToggleConfigurationSidebarButton';
 import ToolbarActionsDropdown from './ToolbarActionsDropdown';
 import Translation from './Translation';
-import UnsafeHTML from './UnsafeHTML';
 import ViewportSizeSelector from './ViewportSizeSelector';
 import ZoomAlert from './ZoomAlert';
 import Undo from './undo/Undo';
 
-const {Suspense, useCallback, useRef} = React;
+const {useRef} = React;
 
 function ToolbarBody({className}) {
 	const discardDraftFormRef = useRef();
@@ -43,9 +40,6 @@ function ToolbarBody({className}) {
 	const dropClearRef = useDropClear();
 	const editableProcessorUniqueId = useEditableProcessorUniqueId();
 	const formRef = useRef();
-	const {getInstance, register} = usePlugins();
-	const isMounted = useIsMounted();
-	const load = useLoad();
 	const selectItem = useSelectItem();
 	const store = useSelector((state) => state);
 
@@ -59,61 +53,6 @@ function ToolbarBody({className}) {
 		segmentsExperimentStatus,
 		selectedViewportSize,
 	} = store;
-
-	const loadingRef = useRef(() => {
-		Promise.all(
-			config.toolbarPlugins.map((toolbarPlugin) => {
-				const {pluginEntryPoint} = toolbarPlugin;
-				const promise = load(pluginEntryPoint, pluginEntryPoint);
-
-				const app = {
-					Actions,
-					config,
-					dispatch,
-					store,
-				};
-
-				return register(pluginEntryPoint, promise, {
-					app,
-					toolbarPlugin,
-				}).then((plugin) => {
-					if (!plugin) {
-						throw new Error(
-							`Failed to get instance from ${pluginEntryPoint}`
-						);
-					}
-					else if (isMounted()) {
-						if (typeof plugin.activate === 'function') {
-							plugin.activate();
-						}
-					}
-				});
-			})
-		).catch((error) => {
-			if (process.env.NODE_ENV === 'development') {
-				console.error(error);
-			}
-		});
-	});
-
-	if (loadingRef.current) {
-
-		// Do this once only.
-
-		loadingRef.current();
-		loadingRef.current = null;
-	}
-
-	const ToolbarSection = useLazy(
-		useCallback(({instance}) => {
-			if (typeof instance.renderToolbarSection === 'function') {
-				return instance.renderToolbarSection();
-			}
-			else {
-				return null;
-			}
-		}, [])
-	);
 
 	const onPublish = () => {
 		if (!config.masterUsed) {
@@ -176,31 +115,9 @@ function ToolbarBody({className}) {
 			<ZoomAlert />
 
 			<ul className="navbar-nav start" onClick={deselectItem}>
-				{config.toolbarPlugins.map(
-					({loadingPlaceholder, pluginEntryPoint}) => {
-						return (
-							<li className="nav-item" key={pluginEntryPoint}>
-								<ErrorBoundary>
-									<Suspense
-										fallback={
-											<UnsafeHTML
-												hideFromAccessibilityTree={
-													false
-												}
-												markup={loadingPlaceholder}
-											/>
-										}
-									>
-										<ToolbarSection
-											getInstance={getInstance}
-											pluginId={pluginEntryPoint}
-										/>
-									</Suspense>
-								</ErrorBoundary>
-							</li>
-						);
-					}
-				)}
+				<li className="nav-item">
+					<ExperienceToolbarSection />
+				</li>
 
 				<li className="nav-item">
 					<Translation
@@ -242,11 +159,7 @@ function ToolbarBody({className}) {
 					<NetworkStatusBar {...network} />
 				</li>
 
-				<li
-					className={classNames('nav-item', {
-						'd-lg-flex d-none': Liferay.FeatureFlags['LPD-10988'],
-					})}
-				>
+				<li className="d-lg-flex d-none nav-item">
 					<Undo />
 				</li>
 
@@ -254,11 +167,7 @@ function ToolbarBody({className}) {
 					<EditModeSelector />
 				</li>
 
-				<li
-					className={classNames('nav-item', {
-						'd-lg-flex d-none': Liferay.FeatureFlags['LPD-10988'],
-					})}
-				>
+				<li className="d-lg-flex d-none nav-item">
 					<ul className="navbar-nav">
 						<li className="nav-item">
 							<HideSidebarButton />
@@ -266,11 +175,7 @@ function ToolbarBody({className}) {
 					</ul>
 				</li>
 
-				<li
-					className={classNames('nav-item', {
-						'd-lg-flex d-none': Liferay.FeatureFlags['LPD-10988'],
-					})}
-				>
+				<li className="d-lg-flex d-none nav-item">
 					<form
 						action={config.discardDraftURL}
 						method="POST"
@@ -280,13 +185,11 @@ function ToolbarBody({className}) {
 					</form>
 				</li>
 
-				{Liferay.FeatureFlags['LPD-10988'] ? (
-					<li className="d-lg-none nav-item">
-						<ToolbarActionsDropdown
-							discardDraftFormRef={discardDraftFormRef}
-						/>
-					</li>
-				) : null}
+				<li className="d-lg-none nav-item">
+					<ToolbarActionsDropdown
+						discardDraftFormRef={discardDraftFormRef}
+					/>
+				</li>
 
 				<li className="nav-item">
 					<PublishButton
@@ -297,41 +200,12 @@ function ToolbarBody({className}) {
 					/>
 				</li>
 
-				{Liferay.FeatureFlags['LPD-10988'] ? (
-					<li className="d-md-none nav-item">
-						<ToggleConfigurationSidebarButton />
-					</li>
-				) : null}
+				<li className="d-md-none nav-item">
+					<ToggleConfigurationSidebarButton />
+				</li>
 			</ul>
 		</ClayLayout.ContainerFluid>
 	);
-}
-
-class ErrorBoundary extends React.Component {
-	static getDerivedStateFromError(_error) {
-		return {hasError: true};
-	}
-
-	constructor(props) {
-		super(props);
-
-		this.state = {hasError: false};
-	}
-
-	componentDidCatch(error) {
-		if (process.env.NODE_ENV === 'development') {
-			console.error(error);
-		}
-	}
-
-	render() {
-		if (this.state.hasError) {
-			return null;
-		}
-		else {
-			return this.props.children;
-		}
-	}
 }
 
 export default function Toolbar() {

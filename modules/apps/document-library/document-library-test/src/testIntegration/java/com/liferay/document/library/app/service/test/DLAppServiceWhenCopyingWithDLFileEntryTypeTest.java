@@ -60,6 +60,7 @@ public class DLAppServiceWhenCopyingWithDLFileEntryTypeTest
 		new LiferayIntegrationTestRule();
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
@@ -76,7 +77,7 @@ public class DLAppServiceWhenCopyingWithDLFileEntryTypeTest
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 		_dlFileEntryType = _dlFileEntryTypeLocalService.addFileEntryType(
-			group.getCreatorUserId(), group.getGroupId(),
+			null, group.getCreatorUserId(), group.getGroupId(),
 			ddmStructure.getStructureId(), null,
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()

@@ -4,8 +4,7 @@ definition {
 	property custom.properties = "feature.flag.LPS-178642=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -82,6 +81,10 @@ definition {
 				fieldName = "sort",
 				name = "testendpoint",
 				title = "My-app");
+
+			Alert.viewSuccessMessage();
+
+			WaitForElementNotPresent(locator1 = "Message#SUCCESS");
 		}
 
 		task ("When I call endpoint with '?sort=age:desc' in API Explorer") {
@@ -201,7 +204,6 @@ definition {
 		}
 	}
 
-	@ignore = "true"
 	@priority = 3
 	test SortingIsLimitedByODataCharacterLimit {
 		task ("When setting the Sorting with 10001 characters") {

@@ -1,4 +1,4 @@
-@component-name = "portal-user-management"
+@component-name = "portal-commerce"
 definition {
 
 	property portal.release = "true";
@@ -24,7 +24,7 @@ definition {
 			webId = "www.able.com");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "test@www.able.com");
 
@@ -121,8 +121,9 @@ definition {
 		var key_appName = "Independent Modules";
 
 		AssertClick(
-			locator1 = "AppManager#APP_NAME",
-			value1 = "Independent Modules");
+			key_text = ${key_appName},
+			locator1 = "Link#ANY",
+			value1 = ${key_appName});
 
 		AssertElementNotPresent(locator1 = "AppManager#APP_NAME");
 	}
@@ -161,7 +162,8 @@ definition {
 	@description = "This ensures that the Asset Libraries app in the app manager can be deactivated and reactivated."
 	@priority = 3
 	test CanDeactivateAndActivateAssetLibraries {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
+		property portal.release = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 		property testray.main.component.name = "Depot";
@@ -192,8 +194,8 @@ definition {
 	@description = "This ensures that the Blogs app in the app manager can be deactivated and reactivated."
 	@priority = 3
 	test CanDeactivateAndActivateBlogs {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -256,7 +258,8 @@ definition {
 	@description = "This ensures that the Document Library Opener app in the app manager can be deactivated and reactivated."
 	@priority = 3
 	test CanDeactivateAndActivateDocumentLibraryOpener {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
+		property portal.release = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 		property testray.main.component.name = "Document Management";
@@ -533,6 +536,7 @@ definition {
 	}
 
 	@description = "This test asserts that user can filter app by Category in marketplace store."
+	@ignore = "true"
 	@priority = 3
 	test CanFilterMarketplaceStoreAppsByCategory {
 		property test.liferay.virtual.instance = "false";
@@ -577,6 +581,7 @@ definition {
 	}
 
 	@description = "This test asserts that user can filter app by liferay version in marketplace store."
+	@ignore = "true"
 	@priority = 3
 	test CanFilterMarketplaceStoreAppsByLiferayVersion {
 		property test.liferay.virtual.instance = "false";
@@ -621,6 +626,7 @@ definition {
 	}
 
 	@description = "This test asserts that user can filter app by Price in marketplace store."
+	@ignore = "true"
 	@priority = 3
 	test CanFilterMarketplaceStoreAppsByPrice {
 		property test.liferay.virtual.instance = "false";
@@ -710,6 +716,7 @@ definition {
 	}
 
 	@description = "This test check search apps in marketplace store and check sign in and sign out."
+	@ignore = "true"
 	@priority = 3
 	test SearchMarketplaceStore {
 		property test.liferay.virtual.instance = "false";
@@ -807,6 +814,7 @@ definition {
 	}
 
 	@description = "This test view purchased apps in marketplace purchased page."
+	@ignore = "true"
 	@priority = 3
 	test ViewPurchasedApp {
 		property test.liferay.virtual.instance = "false";

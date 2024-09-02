@@ -4,6 +4,9 @@ import com.liferay.gradle.util.FileUtil
 import com.liferay.gradle.util.GradleUtil
 import com.liferay.gradle.util.copy.StripPathSegmentsAction
 
+import groovy.json.JsonSlurper
+
+import java.util.Objects
 import java.util.concurrent.ConcurrentSkipListSet
 
 import org.apache.tools.ant.DirectoryScanner
@@ -25,13 +28,13 @@ apply plugin: "com.liferay.yarn.defaults.plugin"
 
 ext {
 	projectTemplateTokens = [
-		"biz.aQute.bnd.version": "5.3.0",
-		"com.liferay.ant.bnd.version": "3.2.10",
+		"biz.aQute.bnd.version": "6.4.0",
+		"com.liferay.ant.bnd.version": "3.2.12",
 		"com.liferay.css.builder.version": "3.1.4",
 		"com.liferay.gradle.plugins.css.builder.version": "5.0.9",
 		"com.liferay.gradle.plugins.theme.builder.version": "2.0.17",
 		"com.liferay.portal.tools.bundle.support.version": "3.7.5",
-		"com.liferay.portal.tools.service.builder.version": "1.0.475",
+		"com.liferay.portal.tools.service.builder.version": "1.0.481",
 		"com.liferay.portal.tools.rest.builder.version": "1.0.222",
 		"com.liferay.portal.tools.soy.builder.version": "3.0.4",
 		"com.liferay.portal.tools.theme.builder.version": "1.1.9",
@@ -41,6 +44,8 @@ ext {
 
 task portalYarnCheckFormat
 task portalYarnFormat
+task portalYarnFormatCurrentBranch
+task portalYarnFormatLocalChanges
 task portalYarnInstall
 
 Set<File> bndPrintJarFiles = null
@@ -55,7 +60,7 @@ if (Boolean.getBoolean("build.bnd.print.enabled")) {
 	}
 
 	dependencies {
-		bnd group: "biz.aQute.bnd", name: "biz.aQute.bnd", version: "5.3.0"
+		bnd group: "biz.aQute.bnd", name: "biz.aQute.bnd", version: "6.4.0"
 	}
 
 	repositories {
@@ -84,44 +89,22 @@ if (FileUtil.exists(rootProject, "private/yarn.lock")) {
 		dependsOn ":private:packageRunFormat"
 	}
 
+	portalYarnFormatCurrentBranch {
+		dependsOn ":private:packageRunFormatCurrentBranch"
+	}
+
+	portalYarnFormatLocalChanges {
+		dependsOn ":private:packageRunFormatLocalChanges"
+	}
+
 	portalYarnInstall {
 		dependsOn ":private:yarnInstall"
 	}
 }
 
-File workspacesYarnLockFile = new File(rootDir.parentFile, "workspaces/yarn.lock")
-
-if (workspacesYarnLockFile.exists()) {
-	task portalWorkspacesYarnCheckFormat(type: PackageRunTask)
-	task portalWorkspacesYarnFormat(type: PackageRunTask)
-	task portalWorkspacesYarnInstall(type: ExecutePackageManagerTask)
-
-	portalWorkspacesYarnCheckFormat {
-		dependsOn portalWorkspacesYarnInstall
-
-		scriptName = "checkFormat"
-		workingDir = new File(rootDir.parentFile, "workspaces")
-	}
-
-	portalWorkspacesYarnFormat {
-		dependsOn portalWorkspacesYarnInstall
-
-		scriptName = "format"
-		workingDir = new File(rootDir.parentFile, "workspaces")
-	}
-
-	portalWorkspacesYarnInstall {
-		args "install", "--frozen-lockfile", "--ignore-engines"
-		workingDir = new File(rootDir.parentFile, "workspaces")
-	}
-
-	portalYarnCheckFormat.finalizedBy portalWorkspacesYarnCheckFormat
-	portalYarnFormat.finalizedBy portalWorkspacesYarnFormat
-}
-
 buildDir = new File(rootDir.parentFile, "build")
 
-for (String gradleVersion in ["7.3.3"]) {
+for (String gradleVersion in ["8.5"]) {
 	String gradleDistributionURL = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
 	String suffix = gradleVersion.replace(".", "")
 
@@ -162,6 +145,14 @@ portalYarnCheckFormat {
 
 portalYarnFormat {
 	dependsOn ":packageRunFormat"
+}
+
+portalYarnFormatCurrentBranch {
+	dependsOn ":packageRunFormatCurrentBranch"
+}
+
+portalYarnFormatLocalChanges {
+	dependsOn ":packageRunFormatLocalChanges"
 }
 
 portalYarnInstall {
@@ -384,14 +375,16 @@ gradle.beforeProject {
 						!it.endsWith(".gitignore")
 					}
 
-					ant.jar(basedir: project.file("classes"), defaultexcludes: false, destfile: jar.archivePath, excludes: filteredDefaultExcludes.join(","), includes: "**/.gitignore", update: true)
+					if (sourceSets.main.output.resourcesDir.exists()) {
+						ant.jar(basedir: sourceSets.main.output.resourcesDir, defaultexcludes: false, destfile: jar.archivePath, excludes: filteredDefaultExcludes.join(","), includes: "**/.gitignore", update: true)
+					}
 				}
 			}
 
 			processResources {
 				exclude "**/.sass-cache/"
 
-				filesMatching(["**/*.gradle", "**/pom.xml"]) {
+				filesMatching(["**/*.gradle", "**/*.properties", "**/pom.xml"]) {
 					filter(ReplaceTokens, tokens: projectTemplateTokens)
 				}
 
@@ -437,17 +430,44 @@ gradle.beforeProject {
 				rtlExcludedPathRegexps = [".+"]
 			}
 
-			if (FileUtil.exists(project, "package.json")) {
-				File packageJSONFile = project.file("package.json")
+			if (project.name.equals("portal-osgi-web-wab-reference-support-test") || project.path.contains("-theme")) {
+				if (FileUtil.exists(project, "package.json")) {
+					JsonSlurper jsonSlurper = new JsonSlurper()
 
-				if (packageJSONFile.text.contains("liferay-npm-scripts build")) {
-					buildCSS {
-						enabled = false
+					File packageJSONFile = project.file("package.json")
+
+					Map<String, Object> packageJSONMap = jsonSlurper.parse(packageJSONFile, "UTF-8")
+
+					Map<String, String> scriptsJSONMap = packageJSONMap.get("scripts")
+
+					boolean liferayESModule = false
+
+					if (scriptsJSONMap != null) {
+						for (Map.Entry<String, String> entry : scriptsJSONMap.entrySet()) {
+							if (Objects.equals(entry.key, "build") && (Objects.equals(entry.value, "node-scripts") || entry.value.startsWith("node-scripts "))) {
+								liferayESModule = true
+							}
+						}
 					}
 
-					copyCSS {
-						enabled = false
+					if (packageJSONFile.text.contains("liferay-npm-scripts build") || liferayESModule) {
+						buildCSS {
+							enabled = false
+						}
+
+						copyCSS {
+							enabled = false
+						}
 					}
+				}
+			}
+			else if (!project.path.startsWith(":dxp:apps:osb:osb-faro:") && !project.path.startsWith(":sdk:") && !project.path.startsWith(":test:") && !project.path.startsWith(":util:") && !project.path.contains("site-initializer-")) {
+				buildCSS {
+					enabled = false
+				}
+
+				copyCSS {
+					enabled = false
 				}
 			}
 		}
@@ -501,8 +521,22 @@ gradle.beforeProject {
 				mustRunAfter "formatSource"
 			}
 
-			jarSources {
-				mustRunAfter buildPluginDescriptor
+			if (tasks.findByName("generateJSPJava")) {
+				generateJSPJava {
+					mustRunAfter "generatePomFileForMavenPublication"
+				}
+			}
+
+			if (tasks.findByName("jarSources")) {
+				jarSources {
+					mustRunAfter "buildPluginDescriptor"
+				}
+			}
+
+			if (tasks.findByName("javadoc")) {
+				javadoc {
+					mustRunAfter "generatePomFileForMavenPublication"
+				}
 			}
 		}
 
@@ -559,7 +593,7 @@ gradle.beforeProject {
 					jvmArgs project.properties["junit.java.add.opens"].split("\\s+")
 				}
 
-				jvmArgs "-Djava.locale.providers=JRE,COMPAT,CLDR"
+				jvmArgs "-Djava.locale.providers=CLDR"
 
 				if (project.properties["junit.java.security.manager"]) {
 					systemProperty "java.security.manager", project.properties["junit.java.security.manager"]
@@ -576,7 +610,7 @@ gradle.beforeProject {
 						return
 					}
 
-					FileTree fileTree = fileTree(dir: reports.junitXml.destination, exclude: "TEST-*-*.xml", include: "TEST-*.xml")
+					FileTree fileTree = fileTree(dir: reports.junitXml.outputLocation.get().getAsFile(), exclude: "TEST-*-*.xml", include: "TEST-*.xml")
 
 					ant.taskdef classname: "com.oopsconsultancy.xmltask.ant.XmlTask", classpath: configurations.xmltask.asPath, name: "xmltask"
 
@@ -684,10 +718,6 @@ gradle.beforeProject {
 					if (!it.dependencyProject.name.endsWith("-theme")) {
 						mustRunAfter "${it.dependencyProject.path}:processResources"
 					}
-				}
-
-				outputs.cacheIf {
-					false
 				}
 			}
 

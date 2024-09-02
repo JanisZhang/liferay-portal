@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -418,11 +419,11 @@ public class CommerceTierPriceEntryLocalServiceUtil {
 			externalReferenceCode, companyId);
 	}
 
-	public static List<CommerceTierPriceEntry> fetchCommerceTierPriceEntries(
-		long companyId, int start, int end) {
+	public static CommerceTierPriceEntry fetchClosestCommerceTierPriceEntry(
+		long commercePriceEntryId, java.math.BigDecimal minQuantity) {
 
-		return getService().fetchCommerceTierPriceEntries(
-			companyId, start, end);
+		return getService().fetchClosestCommerceTierPriceEntry(
+			commercePriceEntryId, minQuantity);
 	}
 
 	public static CommerceTierPriceEntry fetchCommerceTierPriceEntry(
@@ -455,20 +456,6 @@ public class CommerceTierPriceEntryLocalServiceUtil {
 			uuid, companyId);
 	}
 
-	public static CommerceTierPriceEntry findClosestCommerceTierPriceEntry(
-		long commercePriceEntryId, java.math.BigDecimal minQuantity) {
-
-		return getService().findClosestCommerceTierPriceEntry(
-			commercePriceEntryId, minQuantity);
-	}
-
-	public static List<CommerceTierPriceEntry> findCommerceTierPriceEntries(
-		long commercePriceEntryId, java.math.BigDecimal minQuantity) {
-
-		return getService().findCommerceTierPriceEntries(
-			commercePriceEntryId, minQuantity);
-	}
-
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -490,6 +477,20 @@ public class CommerceTierPriceEntryLocalServiceUtil {
 		int start, int end) {
 
 		return getService().getCommerceTierPriceEntries(start, end);
+	}
+
+	public static List<CommerceTierPriceEntry> getCommerceTierPriceEntries(
+		long commercePriceEntryId, java.math.BigDecimal minQuantity) {
+
+		return getService().getCommerceTierPriceEntries(
+			commercePriceEntryId, minQuantity);
+	}
+
+	public static List<CommerceTierPriceEntry> getCommerceTierPriceEntries(
+		long commercePriceEntryId, int status) {
+
+		return getService().getCommerceTierPriceEntries(
+			commercePriceEntryId, status);
 	}
 
 	public static List<CommerceTierPriceEntry> getCommerceTierPriceEntries(
@@ -727,13 +728,12 @@ public class CommerceTierPriceEntryLocalServiceUtil {
 	}
 
 	public static CommerceTierPriceEntryLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceTierPriceEntryLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceTierPriceEntryLocalService _service;
+	private static final Snapshot<CommerceTierPriceEntryLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceTierPriceEntryLocalServiceUtil.class,
+			CommerceTierPriceEntryLocalService.class);
 
 }

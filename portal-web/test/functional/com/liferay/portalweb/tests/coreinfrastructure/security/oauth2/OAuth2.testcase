@@ -322,7 +322,7 @@ definition {
 		task ("Log in the second portal and verify Analytics and portal services are present in scopes") {
 			User.loginPG(
 				nodePort = 9080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			OAuth2.openOAuth2Admin(baseURL = "http://localhost:9080");
@@ -340,7 +340,7 @@ definition {
 
 		task ("Log in on the first portal then fill the clientId and client secret values") {
 			User.loginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			OAuth2.openOAuth2Admin();
@@ -640,8 +640,7 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for OAUTH2-259 and LPS-156552. Verify that client credential is in the user scope and can be added to an external application. Blocked by LPS-191261."
-	@ignore = "true"
+	@description = "This is a use case for OAUTH2-259 and LPS-156552. Verify that client credential is in the user scope and can be added to an external application."
 	@priority = 5
 	test ClientCredentialsShouldBeConfigurableInUserScope {
 		property custom.properties = "access.control.sanitize.security.exception=false${line.separator}json.service.serialize.throwable=true";
@@ -776,7 +775,7 @@ definition {
 
 		task ("Login at able.com and unassign power user role from the test user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 
@@ -992,8 +991,8 @@ definition {
 	@description = "This is a use case for LRQA-40687. User can add and edit external application on the OAuth 2 administration page."
 	@priority = 5
 	test ExternalApplicationCanBeAddedAndEdited {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -1171,8 +1170,8 @@ definition {
 	@description = "This is a use case for LRQA-41000. User can view and revoke granted authorizations."
 	@priority = 5
 	test GrantedAuthorizationsCanBeRevoked {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
@@ -1740,7 +1739,7 @@ definition {
 
 		task ("Then: Log in node2 and oAuthApplication* are present in scopes on node2") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://localhost:9080",
 				userEmailAddress = "test@liferay.com");
 
@@ -2248,7 +2247,7 @@ definition {
 
 		task ("Login at able.com and unassign power user role from the test user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 

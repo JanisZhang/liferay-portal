@@ -20,10 +20,12 @@ import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -32,6 +34,7 @@ import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -57,10 +60,6 @@ public class ObjectFieldUtil {
 			return 0;
 		}
 
-		if (objectField.getListTypeDefinitionId() != null) {
-			return objectField.getListTypeDefinitionId();
-		}
-
 		ListTypeDefinition listTypeDefinition =
 			listTypeDefinitionLocalService.
 				fetchListTypeDefinitionByExternalReferenceCode(
@@ -69,27 +68,18 @@ public class ObjectFieldUtil {
 
 		if (listTypeDefinition == null) {
 			listTypeDefinition =
-				listTypeDefinitionLocalService.addListTypeDefinition(
-					objectField.getListTypeDefinitionExternalReferenceCode(),
-					userId, objectField.getSystem());
+				listTypeDefinitionLocalService.fetchListTypeDefinition(
+					GetterUtil.getLong(objectField.getListTypeDefinitionId()));
 		}
 
-		ObjectFieldSetting[] objectFieldSettings = ArrayUtil.filter(
-			objectField.getObjectFieldSettings(),
-			objectFieldSetting -> StringUtil.equals(
-				objectFieldSetting.getName(),
-				ObjectFieldSettingConstants.NAME_STATE_FLOW));
-
-		if (ArrayUtil.isEmpty(objectFieldSettings)) {
+		if (listTypeDefinition != null) {
 			return listTypeDefinition.getListTypeDefinitionId();
 		}
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			JSONFactoryUtil.looseSerializeDeep(
-				objectFieldSettings[0].getValue()));
-
-		JSONArray objectStatesJSONArray = jsonObject.getJSONArray(
-			"objectStates");
+		listTypeDefinition =
+			listTypeDefinitionLocalService.addListTypeDefinition(
+				objectField.getListTypeDefinitionExternalReferenceCode(),
+				userId, GetterUtil.getBoolean(objectField.getSystem()));
 
 		Map<String, ListTypeEntry> listTypeEntries = new HashMap<>();
 
@@ -99,22 +89,65 @@ public class ObjectFieldUtil {
 			listTypeEntry -> listTypeEntries.put(
 				listTypeEntry.getKey(), listTypeEntry));
 
-		for (int i = 0; i < objectStatesJSONArray.length(); i++) {
-			JSONObject objectStateJSONObject =
-				objectStatesJSONArray.getJSONObject(i);
+		ObjectFieldSetting[] stateFlowObjectFieldSettings = ArrayUtil.filter(
+			objectField.getObjectFieldSettings(),
+			objectFieldSetting -> StringUtil.equals(
+				objectFieldSetting.getName(),
+				ObjectFieldSettingConstants.NAME_STATE_FLOW));
 
-			String key = objectStateJSONObject.getString("key");
+		if (!ArrayUtil.isEmpty(stateFlowObjectFieldSettings)) {
+			JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+				JSONFactoryUtil.looseSerializeDeep(
+					stateFlowObjectFieldSettings[0].getValue()));
 
-			if (listTypeEntries.containsKey(key)) {
-				listTypeEntries.remove(key);
+			JSONArray objectStatesJSONArray = jsonObject.getJSONArray(
+				"objectStates");
 
-				continue;
+			for (int i = 0; i < objectStatesJSONArray.length(); i++) {
+				JSONObject objectStateJSONObject =
+					objectStatesJSONArray.getJSONObject(i);
+
+				String key = objectStateJSONObject.getString("key");
+
+				if (listTypeEntries.containsKey(key)) {
+					listTypeEntries.remove(key);
+
+					continue;
+				}
+
+				listTypeEntryLocalService.addListTypeEntry(
+					null, userId, listTypeDefinition.getListTypeDefinitionId(),
+					key,
+					Collections.singletonMap(LocaleUtil.getDefault(), key));
 			}
-
-			listTypeEntryLocalService.addListTypeEntry(
-				null, userId, listTypeDefinition.getListTypeDefinitionId(), key,
-				Collections.singletonMap(LocaleUtil.getDefault(), key));
 		}
+
+		ObjectFieldSetting[] defaultObjectFieldSettings = null;
+
+		if (!GetterUtil.getBoolean(objectField.getState())) {
+			defaultObjectFieldSettings = ArrayUtil.filter(
+				objectField.getObjectFieldSettings(),
+				objectFieldSetting -> StringUtil.equals(
+					objectFieldSetting.getName(),
+					ObjectFieldSettingConstants.NAME_DEFAULT_VALUE));
+		}
+
+		if (ArrayUtil.isEmpty(defaultObjectFieldSettings)) {
+			return listTypeDefinition.getListTypeDefinitionId();
+		}
+
+		String defaultObjectFieldSettingValue = GetterUtil.getString(
+			defaultObjectFieldSettings[0].getValue());
+
+		if (listTypeEntries.containsKey(defaultObjectFieldSettingValue)) {
+			listTypeEntries.remove(defaultObjectFieldSettingValue);
+		}
+
+		listTypeEntryLocalService.addListTypeEntry(
+			null, userId, listTypeDefinition.getListTypeDefinitionId(),
+			defaultObjectFieldSettingValue,
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), defaultObjectFieldSettingValue));
 
 		for (ListTypeEntry listTypeEntry : listTypeEntries.values()) {
 			listTypeEntryLocalService.deleteListTypeEntry(listTypeEntry);
@@ -176,7 +209,7 @@ public class ObjectFieldUtil {
 	}
 
 	public static com.liferay.object.model.ObjectField toObjectField(
-		boolean enableLocalization,
+		Locale defaultLocale, boolean enableLocalization,
 		ListTypeDefinitionLocalService listTypeDefinitionLocalService,
 		ObjectField objectField,
 		ObjectFieldLocalService objectFieldLocalService,
@@ -219,8 +252,33 @@ public class ObjectFieldUtil {
 			GetterUtil.getBoolean(objectField.getIndexedAsKeyword()));
 		serviceBuilderObjectField.setIndexedLanguageId(
 			objectField.getIndexedLanguageId());
-		serviceBuilderObjectField.setLabelMap(
-			LocalizedMapUtil.getLocalizedMap(objectField.getLabel()));
+
+		Map<Locale, String> labelMap = LocalizedMapUtil.getLocalizedMap(
+			objectField.getLabel());
+
+		Locale siteDefaultLocale = LocaleUtil.getSiteDefault();
+
+		if (!Objects.equals(defaultLocale, siteDefaultLocale) &&
+			Validator.isNull(labelMap.get(siteDefaultLocale)) &&
+			Validator.isNotNull(labelMap.get(defaultLocale))) {
+
+			if (GetterUtil.getBoolean(objectField.getSystem())) {
+				labelMap.put(
+					siteDefaultLocale,
+					LanguageUtil.get(
+						siteDefaultLocale,
+						_systemObjectFieldLabelKeys.get(objectField.getName()),
+						labelMap.get(defaultLocale)));
+			}
+			else {
+				labelMap.put(siteDefaultLocale, labelMap.get(defaultLocale));
+			}
+		}
+
+		labelMap.putIfAbsent(siteDefaultLocale, objectField.getName());
+
+		serviceBuilderObjectField.setLabelMap(labelMap);
+
 		serviceBuilderObjectField.setLocalized(
 			GetterUtil.getBoolean(
 				objectField.getLocalized(), enableLocalization));
@@ -248,5 +306,20 @@ public class ObjectFieldUtil {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectFieldUtil.class);
+
+	private static final Map<String, String> _systemObjectFieldLabelKeys =
+		HashMapBuilder.put(
+			"createDate", "create-date"
+		).put(
+			"creator", "author"
+		).put(
+			"externalReferenceCode", "external-reference-code"
+		).put(
+			"id", "id"
+		).put(
+			"modifiedDate", "modified-date"
+		).put(
+			"status", "status"
+		).build();
 
 }

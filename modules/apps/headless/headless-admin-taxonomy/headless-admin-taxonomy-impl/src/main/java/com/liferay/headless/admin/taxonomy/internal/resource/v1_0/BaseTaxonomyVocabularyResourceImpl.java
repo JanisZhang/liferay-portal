@@ -11,7 +11,6 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Resource;
@@ -23,11 +22,11 @@ import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.PermissionServiceUtil;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -35,7 +34,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParser;
@@ -51,7 +49,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.permission.ModelPermissionsUtil;
 import com.liferay.portal.vulcan.permission.Permission;
-import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 
@@ -532,9 +529,8 @@ public abstract class BaseTaxonomyVocabularyResourceImpl
 
 		String portletName = getPermissionCheckerPortletName(assetLibraryId);
 
-		PermissionUtil.checkPermission(
-			ActionKeys.PERMISSIONS, groupLocalService, portletName,
-			assetLibraryId, assetLibraryId);
+		PermissionServiceUtil.checkPermission(
+			assetLibraryId, portletName, assetLibraryId);
 
 		return toPermissionPage(
 			HashMapBuilder.put(
@@ -588,9 +584,8 @@ public abstract class BaseTaxonomyVocabularyResourceImpl
 
 		String portletName = getPermissionCheckerPortletName(assetLibraryId);
 
-		PermissionUtil.checkPermission(
-			ActionKeys.PERMISSIONS, groupLocalService, portletName,
-			assetLibraryId, assetLibraryId);
+		PermissionServiceUtil.checkPermission(
+			assetLibraryId, portletName, assetLibraryId);
 
 		resourcePermissionLocalService.updateResourcePermissions(
 			contextCompany.getCompanyId(), assetLibraryId, portletName,
@@ -1060,9 +1055,7 @@ public abstract class BaseTaxonomyVocabularyResourceImpl
 
 		String portletName = getPermissionCheckerPortletName(siteId);
 
-		PermissionUtil.checkPermission(
-			ActionKeys.PERMISSIONS, groupLocalService, portletName, siteId,
-			siteId);
+		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
 
 		return toPermissionPage(
 			HashMapBuilder.put(
@@ -1114,9 +1107,7 @@ public abstract class BaseTaxonomyVocabularyResourceImpl
 
 		String portletName = getPermissionCheckerPortletName(siteId);
 
-		PermissionUtil.checkPermission(
-			ActionKeys.PERMISSIONS, groupLocalService, portletName, siteId,
-			siteId);
+		PermissionServiceUtil.checkPermission(siteId, portletName, siteId);
 
 		resourcePermissionLocalService.updateResourcePermissions(
 			contextCompany.getCompanyId(), siteId, portletName,
@@ -1470,9 +1461,9 @@ public abstract class BaseTaxonomyVocabularyResourceImpl
 			taxonomyVocabularyId);
 		Long resourceId = getPermissionCheckerResourceId(taxonomyVocabularyId);
 
-		PermissionUtil.checkPermission(
-			ActionKeys.PERMISSIONS, groupLocalService, resourceName, resourceId,
-			getPermissionCheckerGroupId(taxonomyVocabularyId));
+		PermissionServiceUtil.checkPermission(
+			getPermissionCheckerGroupId(taxonomyVocabularyId), resourceName,
+			resourceId);
 
 		return toPermissionPage(
 			HashMapBuilder.put(
@@ -1528,9 +1519,9 @@ public abstract class BaseTaxonomyVocabularyResourceImpl
 			taxonomyVocabularyId);
 		Long resourceId = getPermissionCheckerResourceId(taxonomyVocabularyId);
 
-		PermissionUtil.checkPermission(
-			ActionKeys.PERMISSIONS, groupLocalService, resourceName, resourceId,
-			getPermissionCheckerGroupId(taxonomyVocabularyId));
+		PermissionServiceUtil.checkPermission(
+			getPermissionCheckerGroupId(taxonomyVocabularyId), resourceName,
+			resourceId);
 
 		resourcePermissionLocalService.updateResourcePermissions(
 			contextCompany.getCompanyId(),
@@ -1702,6 +1693,10 @@ public abstract class BaseTaxonomyVocabularyResourceImpl
 		return null;
 	}
 
+	public String getResourceName() {
+		return "TaxonomyVocabulary";
+	}
+
 	public String getVersion() {
 		return "v1.0";
 	}
@@ -1863,6 +1858,9 @@ public abstract class BaseTaxonomyVocabularyResourceImpl
 				resourceName, null));
 	}
 
+	/**
+	 * @see com.liferay.portal.vulcan.permission.PermissionUtil#getPermissions(long, List, long, String, String[])
+	 */
 	private Collection<Permission> _getPermissions(
 			long companyId, List<ResourceAction> resourceActions,
 			long resourceId, String resourceName, String[] roleNames)
@@ -2004,13 +2002,6 @@ public abstract class BaseTaxonomyVocabularyResourceImpl
 
 	public void setContextHttpServletRequest(
 		HttpServletRequest contextHttpServletRequest) {
-
-		if ((contextHttpServletRequest != null) &&
-			(contextHttpServletRequest.getAttribute(WebKeys.CTX) == null)) {
-
-			contextHttpServletRequest.setAttribute(
-				WebKeys.CTX, ServletContextPool.get(StringPool.BLANK));
-		}
 
 		this.contextHttpServletRequest = contextHttpServletRequest;
 	}

@@ -7,6 +7,8 @@ package com.liferay.portal.workflow.kaleo.change.tracking.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.messaging.Message;
+import com.liferay.portal.kernel.messaging.MessageListener;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -20,6 +22,8 @@ import com.liferay.portal.workflow.kaleo.model.KaleoNode;
 import com.liferay.portal.workflow.kaleo.model.KaleoTask;
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskInstanceToken;
 import com.liferay.portal.workflow.kaleo.model.KaleoTimer;
+import com.liferay.portal.workflow.kaleo.model.KaleoTimerInstanceToken;
+import com.liferay.portal.workflow.kaleo.runtime.constants.KaleoRuntimeDestinationNames;
 import com.liferay.portal.workflow.kaleo.runtime.util.WorkflowContextUtil;
 import com.liferay.portal.workflow.kaleo.service.KaleoTimerInstanceTokenLocalService;
 
@@ -36,6 +40,7 @@ public class KaleoTimerInstanceTokenTableReferenceDefinitionTest
 	extends BaseKaleoTableReferenceDefinitionTestCase {
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
@@ -69,12 +74,26 @@ public class KaleoTimerInstanceTokenTableReferenceDefinitionTest
 
 	@Override
 	protected CTModel<?> addCTModel() throws Exception {
-		return _kaleoTimerInstanceTokenLocalService.addKaleoTimerInstanceToken(
-			_kaleoInstanceToken.getKaleoInstanceTokenId(),
-			_kaleoTaskInstanceToken.getKaleoTaskInstanceTokenId(),
-			_kaleoTimer.getKaleoTimerId(), _kaleoTimer.getName(),
-			WorkflowContextUtil.convert(_kaleoInstance.getWorkflowContext()),
-			serviceContext);
+		Message message = new Message();
+
+		KaleoTimerInstanceToken kaleoTimerInstanceToken =
+			_kaleoTimerInstanceTokenLocalService.addKaleoTimerInstanceToken(
+				_kaleoInstanceToken.getKaleoInstanceTokenId(),
+				_kaleoTaskInstanceToken.getKaleoTaskInstanceTokenId(),
+				_kaleoTimer.getKaleoTimerId(), _kaleoTimer.getName(),
+				WorkflowContextUtil.convert(
+					_kaleoInstance.getWorkflowContext()),
+				serviceContext);
+
+		message.put(
+			"kaleoTimerInstanceTokenId",
+			kaleoTimerInstanceToken.getKaleoTimerInstanceTokenId());
+
+		_messageListener.receive(message);
+
+		return _kaleoTimerInstanceTokenLocalService.
+			fetchKaleoTimerInstanceToken(
+				kaleoTimerInstanceToken.getKaleoTimerInstanceTokenId());
 	}
 
 	private KaleoInstance _kaleoInstance;
@@ -85,5 +104,10 @@ public class KaleoTimerInstanceTokenTableReferenceDefinitionTest
 	@Inject
 	private KaleoTimerInstanceTokenLocalService
 		_kaleoTimerInstanceTokenLocalService;
+
+	@Inject(
+		filter = "destination.name=" + KaleoRuntimeDestinationNames.WORKFLOW_TIMER
+	)
+	private MessageListener _messageListener;
 
 }

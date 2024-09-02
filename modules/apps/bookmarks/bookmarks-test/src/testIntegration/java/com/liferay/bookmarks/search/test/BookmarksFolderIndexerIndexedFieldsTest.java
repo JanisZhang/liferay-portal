@@ -23,15 +23,16 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.Searcher;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.IndexedFieldsFixture;
-import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -203,10 +204,21 @@ public class BookmarksFolderIndexerIndexedFieldsTest {
 			"assetEntryId_sortable",
 			String.valueOf(_getAssetEntryId(bookmarksFolder))
 		).put(
+			"groupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
+			"scopeGroupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
 			"statusByUserId",
 			String.valueOf(bookmarksFolder.getStatusByUserId())
 		).put(
 			"title_sortable", StringUtil.lowerCase(bookmarksFolder.getName())
+		).put(
+			"userExternalReferenceCode",
+			() -> {
+				User user = TestPropsValues.getUser();
+
+				return user.getExternalReferenceCode();
+			}
 		).put(
 			"visible", "true"
 		).build();

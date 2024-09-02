@@ -10,19 +10,28 @@ import {sub} from 'frontend-js-web';
 import React, {Dispatch, SetStateAction, useContext, useState} from 'react';
 
 import {EditSchemaContext} from '../EditAPIApplicationContext';
-import {BUSINESS_TYPES_TO_SYMBOLS} from '../utils/constants';
+import {
+	ALLOWED_UNMODIFIABLE_OBJECTS,
+	BUSINESS_TYPES_TO_SYMBOLS,
+} from '../utils/constants';
 
 interface BaseAPISchemaPropertyProps {
 	added: boolean;
-	objectDefinitionName: string;
+	objectDefinition: ObjectDefinitionProps;
 	objectField: ObjectField;
 	objectRelationshipName?: string;
 	setSchemaUIData: Dispatch<SetStateAction<APISchemaUIData>>;
 }
 
+interface ObjectDefinitionProps {
+	externalReferenceCode: string;
+	modifiable?: boolean;
+	name: string;
+}
+
 export default function BaseAPISchemaProperty({
 	added,
-	objectDefinitionName,
+	objectDefinition,
 	objectField,
 	objectRelationshipName,
 	setSchemaUIData,
@@ -30,9 +39,15 @@ export default function BaseAPISchemaProperty({
 	const {apiSchemaId} = useContext(EditSchemaContext);
 	const [focused, setFocused] = useState(false);
 
-	const localizedPropertyName = objectField.label[
-		Liferay.ThemeDisplay.getDefaultLanguageId()
-	]!;
+	const disabled =
+		added ||
+		(!objectDefinition.modifiable &&
+			!ALLOWED_UNMODIFIABLE_OBJECTS.includes(
+				objectDefinition.externalReferenceCode
+			));
+
+	const localizedPropertyName =
+		objectField.label[Liferay.ThemeDisplay.getDefaultLanguageId()]!;
 
 	const handleClick = () => {
 		setSchemaUIData((previous) => {
@@ -40,7 +55,7 @@ export default function BaseAPISchemaProperty({
 				previous.schemaProperties.unshift({
 					businessType: objectField.businessType,
 					name: localizedPropertyName,
-					objectDefinitionName,
+					objectDefinitionName: objectDefinition.name,
 					objectFieldERC: objectField.externalReferenceCode,
 					objectFieldId: objectField.id,
 					objectFieldName: objectField.name,
@@ -70,12 +85,12 @@ export default function BaseAPISchemaProperty({
 			className="property-container"
 			displayType="unstyled"
 			onBlur={() => setFocused(false)}
-			onClick={() => !added && handleClick()}
+			onClick={() => !disabled && handleClick()}
 			onFocus={() => setFocused(true)}
 		>
 			<div
 				className={classNames({
-					'disabled': added,
+					disabled,
 					'icon-container': true,
 				})}
 			>
@@ -86,7 +101,7 @@ export default function BaseAPISchemaProperty({
 
 			<div
 				className={classNames({
-					'disabled': added,
+					disabled,
 					'label-container': true,
 					'text-truncate': true,
 				})}
@@ -94,7 +109,7 @@ export default function BaseAPISchemaProperty({
 				{objectField.label[Liferay.ThemeDisplay.getDefaultLanguageId()]}
 			</div>
 
-			{!added && (
+			{!disabled && (
 				<div
 					className={classNames({
 						'focused-parent': focused,

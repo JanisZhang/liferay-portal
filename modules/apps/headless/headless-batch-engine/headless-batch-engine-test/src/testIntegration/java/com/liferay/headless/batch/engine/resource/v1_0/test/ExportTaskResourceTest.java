@@ -15,6 +15,7 @@ import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -39,6 +40,7 @@ import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 
 import java.io.InputStream;
 
@@ -122,9 +124,19 @@ public class ExportTaskResourceTest {
 		Map<ServiceReference<Object>, String> map =
 			_serviceTracker.getTracked();
 
-		_testableClassNames = map.values();
+		_testableClassNames = TransformUtil.transform(
+			map.values(),
+			className -> {
+				if (_untestableDTOClassNames.contains(className) ||
+					StringUtil.startsWith(
+						className,
+						"com.liferay.object.rest.dto.v1_0.ObjectEntry#C_")) {
 
-		_testableClassNames.removeAll(_untestableDTOClassNames);
+					return null;
+				}
+
+				return className;
+			});
 	}
 
 	@AfterClass
@@ -221,7 +233,7 @@ public class ExportTaskResourceTest {
 		ExportTaskResource.Builder builder = ExportTaskResource.builder();
 
 		ExportTaskResource exportTaskResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).header(
 			HttpHeaders.ACCEPT, ContentTypes.APPLICATION_JSON
 		).build();
@@ -235,7 +247,7 @@ public class ExportTaskResourceTest {
 			exportTaskResource);
 
 		exportTaskResource = builder.authentication(
-			"test@able.com", "test"
+			"test@able.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			"www.able.com:8080", "http"
 		).header(
@@ -305,7 +317,7 @@ public class ExportTaskResourceTest {
 		ExportTaskResource.Builder builder = ExportTaskResource.builder();
 
 		ExportTaskResource exportTaskResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).header(
 			HttpHeaders.ACCEPT, ContentTypes.APPLICATION_JSON
 		).build();
@@ -324,7 +336,7 @@ public class ExportTaskResourceTest {
 		String json = null;
 
 		exportTaskResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).header(
 			HttpHeaders.ACCEPT, ContentTypes.APPLICATION_OCTET_STREAM
 		).build();
@@ -361,7 +373,7 @@ public class ExportTaskResourceTest {
 
 		ImportTaskResource importTaskResource = ImportTaskResource.builder(
 		).authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).header(
 			HttpHeaders.ACCEPT, ContentTypes.APPLICATION_JSON
 		).header(
@@ -468,6 +480,8 @@ public class ExportTaskResourceTest {
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Diagram",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.GroupedProduct",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.LinkedProduct",
+		"com.liferay.headless.commerce.admin.catalog.dto.v1_0." +
+			"ListTypeDefinition",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.LowStockAction",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.MappedProduct",
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Option",
@@ -492,11 +506,15 @@ public class ExportTaskResourceTest {
 		"com.liferay.headless.commerce.admin.catalog.dto.v1_0.Specification",
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0." +
 			"AccountAddressChannel",
+		"com.liferay.headless.commerce.admin.channel.dto.v1_0." +
+			"CategoryDisplayPage",
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0.ChannelAccount",
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0." +
 			"PaymentMethodGroupRelOrderType",
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0." +
 			"PaymentMethodGroupRelTerm",
+		"com.liferay.headless.commerce.admin.channel.dto.v1_0." +
+			"ProductDisplayPage",
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0." +
 			"ShippingFixedOptionOrderType",
 		"com.liferay.headless.commerce.admin.channel.dto.v1_0." +
@@ -616,6 +634,7 @@ public class ExportTaskResourceTest {
 		"com.liferay.headless.delivery.dto.v1_0.ContentTemplate",
 		"com.liferay.headless.delivery.dto.v1_0.Document",
 		"com.liferay.headless.delivery.dto.v1_0.DocumentFolder",
+		"com.liferay.headless.delivery.dto.v1_0.DocumentShortcut",
 		"com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseArticle",
 		"com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseAttachment",
 		"com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseFolder",
@@ -644,6 +663,7 @@ public class ExportTaskResourceTest {
 		"com.liferay.object.admin.rest.dto.v1_0.ObjectRelationship",
 		"com.liferay.object.admin.rest.dto.v1_0.ObjectValidationRule",
 		"com.liferay.object.admin.rest.dto.v1_0.ObjectView",
+		"com.liferay.portal.language.rest.dto.v1_0.Message",
 		"com.liferay.portal.search.rest.dto.v1_0.SearchResult",
 		"com.liferay.portal.workflow.metrics.rest.dto.v1_0.Assignee",
 		"com.liferay.portal.workflow.metrics.rest.dto.v1_0.AssigneeMetric",

@@ -5,7 +5,7 @@
 
 import {
 	FormError,
-	REQUIRED_MSG,
+	constantsUtils,
 	invalidateRequired,
 	useForm,
 } from '@liferay/object-js-components-web';
@@ -18,22 +18,21 @@ export function useListTypeForm({initialValues, onSubmit}: IUseListTypeForm) {
 		const label = picklist.name_i18n?.[defaultLanguageId];
 
 		if (invalidateRequired(label)) {
-			errors.name_i18n = REQUIRED_MSG;
+			errors.name_i18n = constantsUtils.REQUIRED_MSG;
 		}
 		if (invalidateRequired(picklist.externalReferenceCode)) {
-			errors.externalReferenceCode = REQUIRED_MSG;
+			errors.externalReferenceCode = constantsUtils.REQUIRED_MSG;
 		}
 
 		return errors;
 	};
 
-	const {errors, handleChange, handleSubmit, setValues, values} = useForm<
-		ListTypeDefinition
-	>({
-		initialValues,
-		onSubmit,
-		validate,
-	});
+	const {errors, handleChange, handleSubmit, setValues, values} =
+		useForm<ListTypeDefinition>({
+			initialValues,
+			onSubmit,
+			validate,
+		});
 
 	return {errors, handleChange, handleSubmit, setValues, values};
 }

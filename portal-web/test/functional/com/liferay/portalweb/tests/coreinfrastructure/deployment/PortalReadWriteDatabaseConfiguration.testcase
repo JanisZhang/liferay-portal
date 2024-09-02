@@ -121,12 +121,12 @@ definition {
 			entryTitle = "Blogs Entry1 Title");
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
